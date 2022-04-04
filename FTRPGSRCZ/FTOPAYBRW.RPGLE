@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. ERZ123             Date 29Jan13               *      
+      *                 CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 260903             Date 25Apr14               *
       *                 CFT151             Date 20Mar14               *
       *                 MD019877           Date 10Apr13               *
@@ -55,6 +57,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
+      *  ERZ123 - FT Select Payment on Beneficiary Line 1             *
+      *           Added hooks: FTH00618, FTH00619, FTH00621,          *
+      *           FTH00622, FTH00624, FTH00625, FTH00626, FTH00627,   *
+      *           FTH00628, FTH00629, FTH00630, FTH00631, FTH00636,   *
+      *           FTH00637, FTH00638, FTH00639, FTH00640, FTH00663    *
+      *           Used hook: FTH00050                                 *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *

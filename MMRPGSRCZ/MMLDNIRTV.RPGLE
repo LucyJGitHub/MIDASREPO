@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. AR926400           Date 19Jun13               * 
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058285           Date 22Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -101,6 +102,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR926400 - Unable to update Front Office ID. Allow changes   *
+      *             on HKFRNT. (Child: AR926403)                      * 
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -610,9 +613,13 @@
       * ACCESS DEAL WITH FRONT OFFICE TRANSACTION ID
      C*****FOTRID        CHAIN     MMDELFOI                           99                      259924
      C     FOTRID        CHAIN     FRNTOFCL1                          99                      259924
+                                                                                            AR926400
+     C                   MOVE      DDDLNO        WKDN38            6 0                      AR926400
 
       * IF INSERT
      C     DDACTN        IFEQ      'I'
+     C     DDACTN        OREQ      'A'                                                      AR926400
+     C     HKDN38        ANDNE     WKDN38                                                   AR926400
 
       * FRONT OFFICE TRANSACTION ID CAN'T BE PRESENT ALREADY
       ** For CDL006, if record retrieved has no last change date yet (still to                209905
@@ -627,7 +634,12 @@
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
+     C     DDACTN        IFEQ      'I'                                                      AR926400
      C                   MOVEL     'APM0102'     MsgIdArr(Ix)
+     C                   ELSE                                                               AR926400
+     C                   MOVEL     'FOTRID'      FldNameArr(Ix)                             AR926400
+     C                   MOVEL     '45045927'    MsgIdArr(Ix)                               AR926400
+     C                   ENDIF                                                              AR926400
      C**********         MOVEL     FOTRID        MsgDtaArr(Ix)                              MD000091
      C                   EVAL      BLen = %Len(%Trim(FOTRID))                               MD000091
      C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOTRID)                    MD000091
@@ -658,7 +670,8 @@
      C     RepoFlag      ANDNE     'Y'                                                        CAP067
 
       * ERROR IF DEAL NOT FOUND
-     C     FOASID        CHAIN     MMDELFOI                           99
+     C*****FOASID        CHAIN     MMDELFOI                           99                    AR926400
+     C     FOASID        CHAIN     FRNTOFCL1                          99                    AR926400
      C     *IN99         IFEQ      '1'
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Ix

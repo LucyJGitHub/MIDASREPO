@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058763           Date 08Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059046           Date 05Jan22               *
+      *  Prev Amend No. MD058763           Date 08Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR918361           Date 02Apr12               *
       *                 MD029863           Date 18Jan18               *
@@ -174,6 +175,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to skip checking  *
+      *             of Auto Loan allocate if loan is from 24X7.       *
       *  MD058763 - Error message LER5607 is displayed despite valid  *
       *             input. Amend conditions to conform with           *
       *             alphanumeric base rates.                          *
@@ -1117,6 +1121,7 @@
      D CAS016          S              1                                                       CAS019
      D CLE025          S              1                                                       CLE025
      D CLE134          S              1                                                       CLE134
+     D CAP774          S              1                                                     MD059046
                                                                                               CLE134
       ** Work Variables for CLE141                                                            CLE141
      D CLE141          S              1A                                                      CLE141
@@ -1935,6 +1940,10 @@
                                                                                              BUG8436
      C                   MOVE      *BLANKS       WFOTRID           8                        MD032052
      C                   MOVEL     APFOTranID    WFOTRID                                    MD032052
+     C     CAP774        IFEQ      'Y'                                                      MD059046
+     C     APSRCSYS      ANDEQ     'MIDASCOB'                                               MD059046
+     C     WFOTRID       ANDNE     'LE000473'                                               MD059046
+     C                   ELSE                                                               MD059046
      C     CLE134        IFEQ      'N'                                                      MD031225
      C     CLE134        OREQ      'Y'                                                      MD031225
      C     MPHAS         ANDNE     'C'                                                      MD031225
@@ -1949,6 +1958,7 @@
      C                   Eval      MsgIDXAr(Idx) = 'LEL0541'                                 BUG6108
      C                   EndIf                                                           E03 BUG6108
      C                   ENDIF                                                              MD031225
+     C                   ENDIF                                                              MD059046
                                                                                              BUG8436
      C                   ENDIF                                                               BUG8436
                                                                                              BUG8436
@@ -9527,6 +9537,7 @@ B001 C     ZERR          IFNE      *BLANKS
       ** Front Office ID                                                                    MD032052
      C                   PARM                    APFOTranID       20                        MD032052
      C**********         PARM                    PDCLBlock         1              MD022807 MD022807C
+     C                   PARM                    APSRCSYS          8                        MD059046
       *
       **********                                                                             BUG7029
       *****Get*ZMUSER*to*access*default*branch.                                              BUG7029
@@ -10002,6 +10013,19 @@ E004 C                   ENDIF
      C                   EVAL      CLE158 = 'Y'                                               CLE158
      C                   ENDIF                                                                CLE158
                                                                                               CLE158
+      ** Determine if CAP774 is switched on                                                 MD059046
+                                                                                            MD059046
+     C                   EVAL      CAP774 = 'N'                                             MD059046
+     C                   CALLB     'AOSARDR0'                                               MD059046
+     C                   PARM      *BLANKS       PRTCD                                      MD059046
+     C                   PARM      '*VERIFY'     POPTN                                      MD059046
+     C                   PARM      'CAP774'      PSARD                                      MD059046
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059046
+                                                                                            MD059046
+     C                   IF        PRTCD = *BLANKS                                          MD059046
+     C                   EVAL      CAP774 = 'Y'                                             MD059046
+     C                   ENDIF                                                              MD059046
+                                                                                            MD059046
       *                                                                                       CER050
       ** Determine if CER050 feature is enabled                                               CER050
      C                   EVAL      CER050 = 'N'                                               CER050

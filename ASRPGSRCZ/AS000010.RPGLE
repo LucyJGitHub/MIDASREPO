@@ -417,6 +417,7 @@
                                                                                               CAS005
      D CAS006          S              1                                                       CAS006
                                                                                               CAS006
+     D CAS020          S              1                                                       CAS020
       ** Fields used in GLZADD/GLZSUM
      D ZZAMT           S             15  3
      D ZZAMTI          S             15  0
@@ -4168,7 +4169,7 @@
                                                                                               CAS020
      C                   ENDSR                                                                CAS020
       *****************************************************************                       CAS020
-      /EJECT                                                                                  CAS020      
+      /EJECT                                                                                  CAS020
       *****************************************************************
       *                                                               *
       * SRReport - Write report details                               *
@@ -5391,7 +5392,7 @@
      C                   ENDIF                                                                CAS006
                                                                                               CAS006
      C                   ENDIF                                                                CAS006
-     
+
       ** Check if Profit Center of Derivative is to be used                                   CAS020
                                                                                               CAS020
      C                   EVAL      CAS020 = 'N'                                               CAS020

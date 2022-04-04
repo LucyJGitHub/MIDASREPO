@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059104           Date 02Dec21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059424           Date 29Mar22               *
+      *  Prev Amend No. MD059104           Date 02Dec21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
@@ -23,6 +24,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059424 - Calculator returned rates for previous period     *
+      *             of deal defined with forward rate prior to        *
+      *             backward rate amendment                           *
       *  MD059104 - Connection error encountered in SDC000114 when    *
       *             using SSL port in ARR Adapter Service.            *
       *             Use https if ARRadapterURLSSL is configured.      *
@@ -218,10 +222,12 @@
      D ExtractFLDS     ds                  likeds(LELIBEDS)
      D IRLIBEDS      e ds                  extname(IRLIBEPD)                                  CIR020
      D ExtractFLIR     ds                  likeds(IRLIBEDS)                                   CIR020
+     D ExtractFLIRX    ds                  likeds(IRLIBEDS)                                 MD059424
 
       ** Audit Log
      D SDARRLDS      e ds                  extname(SDARRLOGTD)
      D AuditLogDS      ds                  likeds(SDARRLDS)
+     D AuditLogDSX     ds                  likeds(SDARRLDS)                                 MD059424
 
       ** ARR Daily Rates History File
      D ARRDLYDS      e ds                  extname(SDHSDRTD)
@@ -249,6 +255,9 @@
      D UPDATE          c                   const(1)
      D BLANK_FLOOR     c                   const('9999.9999999')                            MD057871
      D SDHSDRTD2       c                   const(2)                                         MD058040
+      *
+     D isDuplicate     pr             1n                                                    MD059424
+     D  fileToCheck                  10a   value                                            MD059424
 
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
@@ -1345,9 +1354,13 @@
                       values (:ExtractFLDS);
                     // Start of change CIR020
                    when moduleID  = 'RU' or moduleID = 'RT';
-                     FileID = 'IRLIBEPD';
-                      exec sql insert into IRLIBEPD
-                      values (:ExtractFLIR);
+                    // Start of change MD059424
+                     if not(isDuplicate('IRLIBEPD'));
+                        FileID = 'IRLIBEPD';
+                         exec sql insert into IRLIBEPD
+                         values (:ExtractFLIR);
+                     endif;
+                    // End of change MD059424
                     // End of change CIR020
                    endsl;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
@@ -1509,24 +1522,28 @@
                    // for the same transaction reference (i.e. RatesKnown = N)
                    if (AuditLogDS.SJSTAT = 'C' and writeLogs = 'Y') or
                       (AuditLogDS.SJSTAT = 'F' and RatesKnownInd = 'N');
-                       exec sql insert into SDARRLOGTD
-                       values (
-                            : AuditLogDS.SJMODI,
-                            : AuditLogDS.SJTREF,
-                            : AuditLogDS.SJSTAT,
-                            : AuditLogDS.SJMDAY,
-                            : AuditLogDS.SJTMST,
-                            : AuditLogDS.SJCODE,
-                            : AuditLogDS.SJEXMS,
-                            : logData
-                       );
-                       if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                          AuditLogDS.SJTMST = %timestamp();
-                          AuditLogDS.SJEXMS = 'Error in access SDARRLOGTD';
-                          AuditLogDS.SJCODE = '012';
-                          isError = True;
-                          exsr errorHandler;
-                       endif;
+                       // Start of change MD059424
+                       if not(isDuplicate('SDARRLOGTD'));
+                          exec sql insert into SDARRLOGTD
+                          values (
+                               : AuditLogDS.SJMODI,
+                               : AuditLogDS.SJTREF,
+                               : AuditLogDS.SJSTAT,
+                               : AuditLogDS.SJMDAY,
+                               : AuditLogDS.SJTMST,
+                               : AuditLogDS.SJCODE,
+                               : AuditLogDS.SJEXMS,
+                               : logData
+                          );
+                         // End of change MD059424
+                          if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                             AuditLogDS.SJTMST = %timestamp();
+                             AuditLogDS.SJEXMS = 'Error in access SDARRLOGTD';
+                             AuditLogDS.SJCODE = '012';
+                             isError = True;
+                             exsr errorHandler;
+                          endif;
+                      endif;
                    endif;
 
        endsr;
@@ -1675,10 +1692,74 @@
        //*************************************************************
 
       /end-free
+      *****************************************************************                     MD059424
+      /EJECT                                                                                MD059424
+
 
      C/COPY ZSRSRC,ZACCHLE
      C/COPY ZSRSRC,ZBKDT_ILE
      C/COPY ZSRSRC,ZFWDT_ILE
+      *****************************************************************                     MD059424
+      *                                                               *                     MD059424
+      *  isDuplicate - Check for Duplicate Records                    *                     MD059424
+      *                                                               *                     MD059424
+      *****************************************************************                     MD059424
+                                                                                            MD059424
+     P isDuplicate     b                                                                    MD059424
+     D isDuplicate     pi             1n                                                    MD059424
+     D    fileToCheck                10a   value                                            MD059424
+      /free
+                   // Start of change MD059424
+                   if fileToCheck = 'IRLIBEPD';
+                        wSQLStr = 'select * from IRLIBEPD ' +
+                                  'where LRLNRF = '
+                                     + QUO + ExtractFLIR.LRLNRF + QUO +
+                                  ' and LRVDAT = '
+                                     +  %char(ExtractFLIR.LRVDAT)  +
+                                  ' and LRINDT = '
+                                     +  %char(ExtractFLIR.LRINDT)  +
+                                  ' and LRINPD = '
+                                     +  %char(ExtractFLIR.LRINPD)  +
+                                  ' and LRCART = '
+                                    +  %char(ExtractFLIR.LRCART)  +
+                                  ' and LRLEGF = '
+                                    + QUO + ExtractFLIR.LRLEGF + QUO;
+                   elseif fileToCheck = 'SDARRLOGTD';
+                        wSQLStr = 'select * from SDARRLOGTD ' +
+                                  'where SJMODI = '
+                                     + QUO + AuditLogDS.SJMODI + QUO +
+                                  ' and SJTREF = '
+                                      + QUO + AuditLogDS.SJTREF + QUO +
+                                  ' and SJSTAT = '
+                                     + QUO + AuditLogDS.SJSTAT + QUO +
+                                  ' and SJMDAY = '
+                                     +  %char(AuditLogDS.SJMDAY) ;
+
+                   endif;
+                   exec sql close P0;
+                   exec sql prepare P0 from :wSQLStr;
+                   exec sql declare P0 cursor for P0;
+                   exec sql open P0;
+
+                   if fileToCheck = 'SDARRLOGTD';
+                        exec sql fetch next From P0 into :AuditLogDSX;
+                   elseif fileToCheck = 'IRLIBEPD';
+                        exec sql fetch next From P0 into :ExtractFLIRX;
+                   endif;
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      return False;
+                   endif;
+
+                   if sqlCod = NO_RECORD;
+                      return False;
+                   else;
+                      return True;
+                   endif;
+                   // End change MD059424
+
+      /end-free
+     P isDuplicate     E                                                                    MD059424
 ** CPY@   **      OBJECT COPYRIGHT
 (c) Finastra International Limited 2020
 ** arrCalLoc

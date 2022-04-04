@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 251701             Date 08Apr13              */
+/*       Last Amend No. MD058733           Date 16Feb22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      251701             Date 08Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058733 - In download to STORQM, DOWNLOAD directory is not */
+/*                  recreated in IFS and DAT file authorities are    */
+/*                  wrong.                                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*  251701 - Emergency workaround to stop ORF download failure       */
 /*           at monthend - don't use QDLS                            */
@@ -149,8 +153,10 @@
              CRTPF      FILE(&DPLIB/MAORDSTMF) RCDLEN(1) +
                           MAXMBRS(*NOMAX) SIZE(*NOMAX)                                    /*251701*/
              MONMSG     MSGID(CPF5813 CPF7302)                                            /*251701*/
+/**********  CPYTOSTMF  FROMMBR(&FROMPATH) TOSTMF(&TOPATH) +      *********/            /*MD058733*/
+/**********               STMFOPT(*REPLACE) STMFCODPAG(*PCASCII)  *********/ /*251701*/ /*MD058733*/
              CPYTOSTMF  FROMMBR(&FROMPATH) TOSTMF(&TOPATH) +
-                          STMFOPT(*REPLACE) STMFCODPAG(*PCASCII)                          /*251701*/
+                          STMFOPT(*REPLACE) AUT(*INDIR) STMFCODPAG(*PCASCII)            /*MD058733*/
              ENDDO                                                                        /*251701*/
                                                                                           /*251701*/
 /*/COPY WNCPYSRC,MAC0130004                                          */

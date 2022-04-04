@@ -20,11 +20,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058656           Date 23Aug21               *
-      *  Prev Amend No. BA1008   *CREATE   Date 03Jun21               *
+      *  Last Amend No. MD059522           Date 07Feb22               *
+      *  Prev Amend No. MD058656           Date 23Aug21               *
+      *                 BA1008   *CREATE   Date 03Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059522 - Replication job RPTRGSRV01 dumps with error on    *
+      *             call to QMQM in module A1008009. (Recompile)      *
       *  MD058656 - Compilation Issue                                 *
       *           - Add REPBASE in *LIBL during compilation           *
       *  BA1008 - Replication of Trades to consolidated Branches      *

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 22Dec21               *
-      *  Prev Amend No. MD058975           Date 22Dec21               *
+      *  Last Amend No. MD058379           Date 02Apr22               *
+      *  Prev Amend No. MD059304           Date 22Dec21               *
+      *                 MD058975           Date 22Dec21               *
       *                 250161             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
@@ -143,6 +144,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field             *
+      *           - Applied for MD059745.                             *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -1171,7 +1175,8 @@
      C**********         EVAL      FIDTScnRpt = %SUBST(Buffer2:1563) +               CSF011 MD042711
      C**********         EVAL      FIDTScnRpt = %SUBST(Buffer2:1777) +             MD042711 MD044873
      C**********         EVAL      FIDTScnRpt = %SUBST(Buffer2:1563) +             MD044873 MD054028
-     C                   EVAL      FIDTScnRpt = %SUBST(Buffer2:1783) +                      MD054028
+     C**********         EVAL      FIDTScnRpt = %SUBST(Buffer2:1783) +             MD054028 MD058379
+     C                   EVAL      FIDTScnRpt = %SUBST(Buffer2:1833) +                      MD058379
      C**********                                %SUBST(BufferEx2:1:2315)             CSF011 MD054028
      C                                          BufferEx2                                   MD054028
      C                   EndIf                                                               BUG9827

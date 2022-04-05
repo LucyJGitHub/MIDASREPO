@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD031031           Date 24Feb15               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD058379           Date 02Apr22               *
+      *  Prev Amend No. MD031031           Date 24Feb15               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
@@ -66,6 +67,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *           - Applied for MD059745.                             *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
       *             whether CLE025 is *ON or *OFF.                    *

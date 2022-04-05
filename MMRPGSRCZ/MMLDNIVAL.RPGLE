@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *  Last Amend No. MD058379           Date 02Apr22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057049           Date 03Nov20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD047719           Date 24Jul18               *
@@ -157,6 +158,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *           - Applied for MD059745.                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057049 - BNDCSP not passed to MMVLDRRAT                    *

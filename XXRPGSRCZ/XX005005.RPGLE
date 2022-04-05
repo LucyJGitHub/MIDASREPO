@@ -15,12 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059406           Date 17Dec21               *
-      *  Prev Amend No. MD059075           Date 13Oct21               *
+      *  Last Amend No. MD059773           Date 05Apr22               *
+      *  Prev Amend No. MD059406           Date 17Dec21               *
+      *                 MD059075           Date 13Oct21               *
       *                 DRI005  *CREATE    Date 13Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059773 - EDW Layout file changes                           *
+      *              Recompile due to changes in PF/XXEDWETD          *
       *  MD059406 - Extract issues with Feeder and Proofing files     *
       *              Remove Product Code from Proofing file           *
       *              Recompile for changes in XXFEEDDTD               *

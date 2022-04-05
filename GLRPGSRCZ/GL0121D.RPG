@@ -32,8 +32,9 @@
      F*****************************************************************
      F*                                                               *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027587           Date 19Jun14               *
+      *  Last Amend No. MD059634           Date 21Mar22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027587           Date 19Jun14               *
       *                 AR659451           Date 29Nov12               *
       *                 AR740098           Date 02Apr11               *
       *                 CER059             Date 19Jul10               *
@@ -65,6 +66,10 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD059634 - Batch postings records jumbled when it arrive in  *
+      *             Midas. Batch items on Display Journal Enquiries   *
+      *             inside Journal Entry based on Interface File are  *
+      *             not sorted by posting amount and DR/CR indicator. *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027587 - Unable to used the C for Copy and T for Template  *
       *             (Recompile)                                       *
@@ -107,7 +112,8 @@
      F                                              KINFDS INFDS#
       * DSP: Midas GL Display J. Entry Batch posting
       *
-     FGLJENPL1IF  E           K        DISK
+     F*GLJENPL1IF**E           K        DISK                                                MD059634
+     FGLJENPLBIF  E           K        DISK                                                 MD059634
      F                                              KINFDS INFDS1
       * RTV : Midas GL Journal Entry Posting Rtv
       *
@@ -314,6 +320,12 @@
      C           KPOS      KLIST
      C                     KFLD           BTBTNB           Batch number
      C                     KFLD           BTBINB           Batch item no.
+      *                                                                                     MD059634
+     C           KPOSB     KLIST                                                            MD059634
+     C                     KFLD           BTBTNB           Batch number                     MD059634
+     C                     KFLD           BTPTAM           Batch posting amount             MD059634
+     C                     KFLD           BTDCIN           Batch DR/CR ind.                 MD059634
+     C                     KFLD           BTBINB           Batch item no.                   MD059634
       *                                                                                     BUG23742
       ** Klist for the file GLMNARL3                                                        BUG23742
       *                                                                                     BUG23742
@@ -324,7 +336,10 @@
       * Setup key
      C                     MOVEL#2BTNB    BTBTNB           Batch number
      C                     Z-ADD#2BINB    BTBINB           Batch item no.
-     C           KPOS      SETLL@BTREAL
+     C                     Z-ADD#2PTAM    BTPTAM           Batch posting amount             MD059634
+     C                     MOVEL#2DCIN    BTDCIN           Batch DR/CR ind.                 MD059634
+     C           KPOSB     SETLL@BTREAL                                                     MD059634
+     C********** KPOS      SETLL@BTREAL                                                     MD059634
      C/COPY WNCPYSRC,GL0121DC10
      C           KRST      KLIST
      C                     KFLD           BTBTNB           Batch number
@@ -993,6 +1008,8 @@
      C                     MOVELP1BTNB    #2BTNB           Batch number
      C                     Z-ADD*ZERO     #2BINB           Batch item no.
      C                     Z-ADD*ZERO     #2RRNM           Relative rec no
+     C                     Z-ADD*ZERO     #2PTAM           Batch posting amount             MD059634
+     C                     MOVEL*BLANK    #2DCIN           Batch DR/CR ind.                 MD059634
       * Check restriction within
      C                     EXSR VACKRL
       *================================================================

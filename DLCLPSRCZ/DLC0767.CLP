@@ -9,16 +9,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD059571           Date 09Mar22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG6474            Date 18Apr05              */
+/*                      BUG6474            Date 18Apr05              */
 /*                      CDL012  *CREATE    Date 12Aug03              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD059571 - Component DLC0766 looping in EOY COB             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG6474 (00041016) - Commitment definition not valid.       */
 /*       CDL012 - Interest Statements for Call/Time Deposits.        */
@@ -120,6 +122,7 @@
  
              CHGVAR     VAR(&RDATA) VALUE(%SST(&RPARM 1 18))
              CALL       PGM(DL0767) PARM(&RSEQ &RLEV &RENT &RDATA)
+             RCLRSC     LVL(*CALLER)                                                    /*MD059571*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 CHGVAR     VAR(&MESSAGE) VALUE('Error in printing +
                              statements for Time/Call deposits')

@@ -164,10 +164,10 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
 
-     D***DSSDY       E DS                  EXTNAME(DSSDY)                                   MD039655
-      ***Second*DS*for*Aacces*Programs,*Long*Data*Structure***********                      MD039655
-     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD039655
-      ** Third Data Structure used by Access Program                                        MD039655
+     D***DSSDY       E DS                  EXTNAME(DSSDY)                                   MD059655
+      ***Second*DS*for*Aacces*Programs,*Long*Data*Structure***********                      MD059655
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD059655
+      ** Third Data Structure used by Access Program                                        MD059655
 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank Details Accessed via Access Program

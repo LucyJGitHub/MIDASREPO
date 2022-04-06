@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059665           Date 07Mar22               *
+      *  Prev Amend No. CAS020             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -42,6 +44,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059665 - IAS Issues found during CAS020 Testing            *
+      *  CAS020 - Use Profit Center of Derivative rather than Profit  *
+      *           Center of Hedged or Hedging Item                    *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -134,6 +139,22 @@
      FASHTRNLA  UF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(T)
 
+      ** Midas AS Hedge Transaction File Retrieval                                            CAS020
+     FASHTRNLB  IF   E           K DISK    INFSR(*PSSR)                                       CAS020
+     F                                     RENAME(ASHTRND0:ASHTRNDB)                          CAS020
+     F                                     PREFIX(BB)                                         CAS020
+                                                                                              CAS020
+      ** Midas Deals by DLNO                                                                  CAS020
+     FDEALALL   IF   E           K DISK    INFSR(*PSSR)                                       CAS020
+     F                                     PREFIX(AL)                                         CAS020
+     F                                     RENAME(DEALSDBF:DB)                                CAS020
+     F                                     RENAME(DEALSDGF:DG)                                CAS020
+     F                                     IGNORE(DEALSDAF)                                   CAS020
+     F                                     IGNORE(DEALSDCF)                                   CAS020
+     F                                     IGNORE(DEALSDDF)                                   CAS020
+     F                                     IGNORE(DEALSDEF)                                   CAS020
+     F                                     IGNORE(DEALSDFF)                                   CAS020
+                                                                                              CAS020
       ** Midas DL Deals File
      FDLDLHGL1  IF   E           K DISK    INFSR(*PSSR)
 
@@ -214,6 +235,9 @@
      D SPOOLU          DS
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
+                                                                                              CAS020
+      ** External DS for Switchable Features File                                             CAS020
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS020
 
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -287,6 +311,7 @@
      D POption         S              7
      D PCurr           S              3
      D PBranch         S              3
+     D PSard           S              6                                                       CAS020
 
      D WkNoRecD        S              5  0
      D WkVlIntD        S             15  0
@@ -328,9 +353,14 @@
      D KMod            S              2
      D KTRNM           S              6  0
      D KTRNMA          S              6A                                                      CLE148
+     D KTRNID          S              6A                                                    MD059665
+     D KMODFH          S              2A                                                    MD059665
      D KBrca           S              3
 
      D PrBRCA          S              3
+                                                                                              CAS020
+      ** Parameter for switchable feature                                                     CAS020
+     D CAS020          S              1                                                       CAS020
 
       ** Fields used in GLZADD/GLZSUM
      D ZZAMT           S             15  3
@@ -562,6 +592,11 @@
      C     SRProcLvTrn   BEGSR
 
      C                   EVAL      WkDelFlg = 'N'
+      *                                                                                     MD059665
+      ** Use Forecast Transaction ID to access Hedging Transaction file                     MD059665
+      *                                                                                     MD059665
+     C                   MOVE      FSTRID        KTRNID                                     MD059665
+     C                   MOVE      'FH'          KMODFH                                     MD059665
 
       ** Check if the loan was partially deleted or not
 
@@ -1121,6 +1156,15 @@
      C                   EVAL      DKCHNACH = CHNA
      C                   EVAL      DKFACO = *BLANKS
      C                   EVAL      DKPRFC = PRFC
+                                                                                              CAS020
+      ** If CAS020 is active and it is a hedged item -                                        CAS020
+      ** override with Profit Centre of Derivative Transaction                                CAS020
+                                                                                              CAS020
+     C                   IF        CAS020 = 'Y' AND                                           CAS020
+     C                             tfsdhin = 'H'                                              CAS020
+     C                   EXSR      SRDeriv                                                    CAS020
+     C                   ENDIF                                                                CAS020
+                                                                                              CAS020
      C                   EVAL      DKOSBR = *BLANKS
      C                   IF        BNBCPL = 'Y' AND FSMOD = 'DL' OR
      C                             BPBCPL = 'Y' AND FSMOD = 'LE'
@@ -1171,6 +1215,15 @@
      C                   EVAL      LKACOF = ACOF
      C                   EVAL      LKFACO = FACO
      C                   EVAL      LKPRFC = PRFC
+                                                                                              CAS020
+      ** If CAS020 is active and it is a hedged item -                                        CAS020
+      ** override with Profit Centre of Derivative Transaction                                CAS020
+                                                                                              CAS020
+     C                   IF        CAS020 = 'Y' AND                                           CAS020
+     C                             tfsdhin = 'H'                                              CAS020
+     C                   EXSR      SRDeriv                                                    CAS020
+     C                   ENDIF                                                                CAS020
+                                                                                              CAS020
      C                   EVAL      LKBOKC = BOKC
      C                   EVAL      LKORED = ORED
      C                   EVAL      LKOLNO = OLNO
@@ -1199,6 +1252,82 @@
 
       *****************************************************************
       /EJECT
+      *****************************************************************                       CAS020
+      *                                                               *                       CAS020
+      * SRDERIV - Override with Derivative Profit Centre              *                       CAS020
+      *                                                               *                       CAS020
+      *****************************************************************                       CAS020
+     C     SRDeriv       BEGSR                                                                CAS020
+                                                                                              CAS020
+      ** Save the module of the transaction being processed                                   CAS020
+                                                                                              CAS020
+     C     *LIKE         DEFINE    fsmod         hedged_mod                                   CAS020
+     C                   EVAL      hedged_mod=fsmod                                           CAS020
+                                                                                              CAS020
+      ** Define and load the derivative key                                                   CAS020
+                                                                                              CAS020
+     C     *LIKE         DEFINE    tfshedi       deriv_hedi                                   CAS020
+     C                   EVAL      deriv_hedi=tfshedi                                         CAS020
+     C     *LIKE         DEFINE    tfsdhin       deriv_dhin                                   CAS020
+     C                   EVAL      deriv_dhin='D'                                             CAS020
+                                                                                              CAS020
+     C     Deriv_Key     KLIST                                                                CAS020
+     C                   KFLD                    Deriv_hedi                                   CAS020
+     C                   KFLD                    Deriv_dhin                                   CAS020
+                                                                                              CAS020
+      ** Define & initialise fields to be used for the transaction key                        CAS020
+                                                                                              CAS020
+     C******LIKE         DEFINE    tfsdlno       tran_dlno                           CAS020 MD059665
+     C     *LIKE         DEFINE    aldlno        tran_dlno                                  MD059665
+     C                   EVAL      tran_dlno=*zeros                                           CAS020
+                                                                                              CAS020
+      ** Access Hedge Transaction file with the derivative key                                CAS020
+      ** and read until encounter the first live record                                       CAS020
+                                                                                              CAS020
+     C     Deriv_Key     SETLL     ashtrndb                                                   CAS020
+     C     Deriv_Key     READE     ashtrndb                                                   CAS020
+     C                   DOW       not %eof(ashtrnlb)                                         CAS020
+                                                                                              CAS020
+     C                   IF        bbfshtid='D'                                               CAS020
+     C**********         EVAL      tran_dlno=bbfsdlno                                CAS020 MD059665
+     C                   MOVEL     bbfsdlno      tran_dlno                                  MD059665
+     C                   LEAVE                                                                CAS020
+     C                   ENDIF                                                                CAS020
+                                                                                              CAS020
+     C     Deriv_key     READE     ashtrndb                                                   CAS020
+     C                   ENDDO                                                                CAS020
+                                                                                              CAS020
+      ** If a live derivative transaction has been found - use the deal                       CAS020
+      ** number to access the Deals file to retrieve Profit Centre; use                       CAS020
+      ** the deal's Profit Centre for the output to the acct. key file                        CAS020
+                                                                                              CAS020
+     C                   IF        tran_dlno <> *zeros                                        CAS020
+     C     tran_dlno     CHAIN     dealall                                                    CAS020
+                                                                                              CAS020
+     C                   IF        not %found(dealall)                                        CAS020
+     C     *LOCK         IN        LDA                                                        CAS020
+     C                   EVAL      DBFILE =  'DEALALL '                                       CAS020
+     C                   MOVEL     tran_dlno     DBKEY                                        CAS020
+     C                   EVAL      DBASE  =  014                                              CAS020
+     C                   OUT       LDA                                                        CAS020
+     C                   EXSR      *PSSR                                                      CAS020
+     C                   ENDIF                                                                CAS020
+                                                                                              CAS020
+     C                   SELECT                                                               CAS020
+     C                   WHEN      hedged_mod = 'DL'                                          CAS020
+     C                   EVAL      dkprfc = alprfc                                            CAS020
+     C                   WHEN      hedged_mod = 'LE'                                          CAS020
+     C                   EVAL      lkprfc = alprfc                                            CAS020
+     C                   ENDSL                                                                CAS020
+                                                                                              CAS020
+      ** Restore the original value of the module                                             CAS020
+                                                                                              CAS020
+     C                   EVAL      fsmod = hedged_mod                                         CAS020
+     C                   ENDIF                                                                CAS020
+                                                                                              CAS020
+     C                   ENDSR                                                                CAS020
+      *****************************************************************                       CAS020
+      /EJECT                                                                                  CAS020
       *****************************************************************
       *                                                               *
       * SRReport - Write a Report                                     *
@@ -2001,6 +2130,30 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                              CAS020
+      ** Check if Profit Center of Derivative is to be used                                   CAS020
+                                                                                              CAS020
+     C                   EVAL      CAS020 = 'N'                                               CAS020
+     C                   CALL      'AOSARDR0'                                                 CAS020
+     C                   PARM      *BLANKS       PRetCode                                     CAS020
+     C                   PARM      '*VERIFY'     POption                                      CAS020
+     C                   PARM      'CAS020'      PSard                                        CAS020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CAS020
+                                                                                              CAS020
+     C                   IF        PRetCode = *BLANKS                                         CAS020
+     C                   EVAL      CAS020 = 'Y'                                               CAS020
+     C                   ELSE                                                                 CAS020
+                                                                                              CAS020
+     C                   IF        PRetCode <> '*NRF   '                                      CAS020
+     C     *LOCK         IN        LDA                                                        CAS020
+     C                   EVAL      DBFile =  'SCSARDPD'                                       CAS020
+     C                   EVAL      DBKey  =  'CAS020'                                         CAS020
+     C                   EVAL      DBase  =  013                                              CAS020
+     C                   OUT       LDA                                                        CAS020
+     C                   EXSR      *PSSR                                                      CAS020
+     C                   ENDIF                                                                CAS020
+                                                                                              CAS020
+     C                   ENDIF                                                                CAS020
 
       ** Set on Indicator for Multi-Branching process
 

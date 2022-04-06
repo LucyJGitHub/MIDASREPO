@@ -11,11 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058193           Date 07Sep20               *
-      *  Prev Amend No. MD056235  *CREATE  Date 03Jun20               *
+      *  Last Amend No. MD059760           Date 29Mar22               *
+      *  Prev Amend No. MD058193           Date 07Sep20               *
+      *                 MD056235  *CREATE  Date 03Jun20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059760 - BANKFUSION_wasadmin must be added in CTD,         *
+      *             possibly record may already exist                 *
       *  MD058193 - Deliverable Data Split for SDFACCTD (re-work)     *
       *  MD056235 - Name Space Bindings for JMS has passwords is in   *
       *             clear text format                                 *
@@ -37,6 +40,7 @@
      D WChangeType     S              1A
      D WLastChgUser    S             10A
      D WRun            S              1A
+     D RecCount        S              5  0                                                  MD059760
 
       ** PGM/SD000404 Parameters
      D PReturnCode     S              7A
@@ -46,6 +50,7 @@
      D PIDName         S            100A
      D PPass           S            128A
      D PDescr          S           1000A
+     D PDescrX         S             20A                                                    MD059760
 
      D/COPY GPCPYSRCG,PSDS
 
@@ -60,6 +65,7 @@
      C+ select
      C+   SMUSER
      C+ , SMPASS
+     C+ , SMUDSC                                                                            MD059760
      C+ from SMUSPWTD
      C/end-exec
 
@@ -73,6 +79,7 @@
      C+ into
      C+   :Username
      C+ , :Password
+     C+ , :PDescrX                                                                          MD059760
      C/end-exec
 
      C                   DOW       SQLCOD <> 100
@@ -120,7 +127,8 @@
      C                   PARM                    PLibrary
      C                   PARM                    PIDName
      C                   PARM                    PPass
-     C                   PARM      *BLANKS       PDescr
+     C**********         PARM      *BLANKS       PDescr                                     MD059760
+     C                   PARM      PDescrX       PDescr                                     MD059760
 
       ** Add record to SDFACXTD file
      C                   EXSR      SrInsFACX
@@ -135,6 +143,7 @@
      C+ into
      C+   :Username
      C+ , :Password
+     C+ , :PDescrX                                                                          MD059760
      C/end-exec
 
      C                   ENDDO
@@ -163,7 +172,17 @@
      C                   EVAL      WUserDesc = *BLANKS
      C                   EVAL      WChangeType = 'I'
      C                   EVAL      WLastChgUser = PSUser
+     C                   EVAL      WUserDesc = PDescrX                                      MD059760
 
+     C                   eval      RecCount = 0                                             MD059760
+     C/exec SQL                                                                             MD059760
+     C+ select count(*) into :RecCount                                                      MD059760
+     C+ from SDFUCXTD                                                                       MD059760
+     C+ where INUNIQ = :WUniq                                                               MD059760
+     C/end-exec                                                                             MD059760
+      ** Key does not exist                                                                 MD059760
+     C                   IF        RecCount = 0                                             MD059760
+                                                                                            MD059760
      C/exec SQL
      C**insert*into SDFACXTD                                                                MD058193
      C+ insert into SDFUCXTD                                                                MD058193
@@ -189,8 +208,19 @@
      C+  ,'B'                                                                               MD058193
      C+ )
      C/end-exec
+     C                   endif                                                              MD059760
+     C                   eval      RecCount = 0                                             MD059760
+     C/exec SQL                                                                             MD059760
+     C+ select count(*) into :RecCount                                                      MD059760
+     C+ from SDFUCCTD                                                                       MD059760
+     C+ where INUNIQ = :WUniq                                                               MD059760
+     C/end-exec                                                                             MD059760
+      ** Key does not exist                                                                 MD059760
+     C                   IF        RecCount = 0                                             MD059760
+                                                                                            MD059760
      C/exec SQL                                                                             MD058193
-     C+ insert into SDFUCBTD                                                                MD058193
+     C**insert*into SDFUCBTD                                                       MD058193 MD059760
+     C+ insert into SDFUCCTD                                                                MD059760
      C+ (                                                                                   MD058193
      C+   ININTF                                                                            MD058193
      C+  ,INUSER                                                                            MD058193
@@ -213,8 +243,10 @@
      C+  ,'B'                                                                               MD058193
      C+ )                                                                                   MD058193
      C/end-exec                                                                             MD058193
+     C                   endif                                                              MD059760
 
      C                   IF        SQLCOD <> 0
+     C                             and RecCount = 0                                         MD059760
      C                   EVAL      PReturn = 'E'
      C                   EXSR      *PSSR
      C                   ENDIF

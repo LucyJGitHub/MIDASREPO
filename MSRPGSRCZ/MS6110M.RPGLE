@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 20Jun19               *       
-      *  Prev Amend No. MD058137           Date 18May21               *
+      *  Last Amend No. MD059765           Date 04Apr22               *
+      *  Prev Amend No. MD041126           Date 20Jun19               *
+      *                 MD058137           Date 18May21               *
       *                 MD051624           Date 23Sep20               *
       *                 AR989496           Date 13Jun12               *
       *                 CSD102             Date 08Jan19               *
@@ -84,8 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059765 - Applied missing core fix MD058137                 *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
-      *           - Applied for MD053614.                             *      
+      *           - Applied for MD053614.                             *
       *  MD058137 - Midas is not generating unique MQ MessageID if    *
       *             via MGOREF message generation                     *
       *  MD051624 - MT940's msgs found in the Outstanding Message     *
@@ -471,7 +473,7 @@
      D PDateIn         S              8                                                     MD051624
      D PMDNO           S              5P 0                                                  MD051624
      D PDATE6          S              6  0                                                  MD051624
-     D PDATE7          S              7                                                     MD051624     
+     D PDATE7          S              7                                                     MD051624
                                                                                             MD041126
       ** MQ Parameters                                                                      MD041126
      D HCONN           S             10I 0                                                  MD041126
@@ -740,6 +742,7 @@
      C**********         PARM                    CCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
+     C                   Z-ADD     PMNMID        PMOPT                                      MD059765
      C                   CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :                      MD041126
      C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
      C                                    CCODE : REASON )                                  MD041126

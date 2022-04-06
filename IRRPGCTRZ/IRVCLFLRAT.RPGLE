@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1019919          Date 30Oct15               *
+      *  Last Amend No. MD058974           Date 15Feb22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1019919          Date 30Oct15               *
       *                 MD033488           Date 11Mar15               *
       *                 245692             Date 10Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058974 - Caps And Floors API clarification required        *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1019919 - Negative Base Rate input. (Child: AR1019920)     *
       *              Applied for MD034478                             *
@@ -54,7 +56,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -73,77 +75,77 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** Ceiling rate passed from calling program as a parameter (SCLRAT)
      D  SCLRAT         S             12A
- 
+
       **  Floor Rate passed from calling program as a parameter (SFLRAT)
      D   SFLRAT        S             12A
- 
+
       ** New Deal type passed as a parameter from calling program
      D  NEWDT          S              2A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Valid Ceiling rate passed back as a parameter to calling program
      D  CLRATX         S             11  7
- 
+
       ** Valid Floor rate passed back as a parameter to calling program
      D  FLRATX         S             11  7
- 
+
       ** 'Error found in ceiling rate validation' field used in module only
      D  ClRteError     S              1A
- 
+
       ** 'Error found in floor rate validation' field used in module only.
      D  FlRteError     S              1A
- 
+
       **  Work field pass to ZALIGN as a parameter
      D  ZFIELD         S             16A
- 
+
       ** Decimal data length passed to ZALIGN as a parameter
      D  ZADEC          S              1  0
- 
+
       ** Digital data length passed to ZALIGN as a parameter
      D  ZADIG          S              2  0
- 
+
       ***Error*Flag*passed*back*from*ZALIGN*as*a*parameter                                    CAP055
      D**ErrorFlag******S              1A                                                      CAP055
                                                                                               CAP055
       ** OK Flag passed back from ZALIGN as a parameter                                       CAP055
      D  ZALIGNok       S              1A                                                      CAP055
- 
+
       ** Error message passed back to calling program as a parameter
      D  Msgid1         S                   LIKE(#Msgid)
- 
+
       ** Error message passed back to calling program as a parameter
      D  Msgid2         S                   LIKE(#Msgid)
                                                                                               245692
@@ -175,7 +177,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -183,12 +185,12 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
      C                   MOVE      'N'           ClRteError
      C                   MOVE      'N'           FlRteError
- 
+
       ** Validate Ceiling Rate.
      C                   Z-ADD     0             CLRATX           11 7
      C                   Z-ADD     0             @@AMT                                        245692
@@ -291,7 +293,7 @@
      C*****ErrorFlag     IFEQ      'Y'                                                        CAP055
      C*****ZALIGNok      IFEQ      'N'                                                 CAP055 245692
      C     @@ERCD        IFNE      0                                                          245692
-     C     FLRATX        OREQ      0
+     C*****FLRATX        OREQ      0                                                        MD058974
      C**********         MOVE      'Y'           ErrorFlag                                    CAP055
      C                   EVAL      ErrorFound = 'Y'                                           CAP055
      C                   MOVEL     'MMA0052'     MsgId2
@@ -326,14 +328,14 @@
       ****
      C                   END
      C*
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
- 
+
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -345,9 +347,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -358,15 +360,15 @@
      C                   PARM                    FLRATX
      C                   PARM                    CLRATX
      C                   PARM                    BNDCSP                                       245692
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031097           Date 15Mar22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD048708           Date 01Dec17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL098             Date 06Oct17               *
@@ -64,6 +65,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031097 - System is diplaying error as 'Deal does not exist'*
+      *             upon enquiry of matured deals in Internal Contract*
+      *             Applied for MD-59041.                             *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048708 - [MIDAS-QA][FB2.1][SP16][MA][Sprint 3][CDL098] -   *
@@ -130,6 +134,9 @@
      FDLCANCI0  IF   E           K DISK    INFSR(*PSSR)                                       CDL098
       *                                                                                       CDL098
      FABCOMPLL  IF   E           K DISK    INFSR(*PSSR)
+     FABCOMPL1  IF   E           K DISK    INFSR(*PSSR)                                     MD031097
+     F                                     RENAME(ABDEALP0:ABDEALF0)                        MD031097
+     F                                     RENAME(ABDEALP1:ABDEALF1)                        MD031097
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)
      FFDDLNMLL  IF   E             DISK    INFSR(*PSSR)
      FFRNTOFCL1 IF   E           K DISK    INFSR(*PSSR)                                       259924
@@ -595,10 +602,14 @@
       *
       ** Check record exists on LF/ABDEALLL
       *
-     C     @@DLNO1       CHAIN     ABDEALP0                           99
-     C   99@@DLNO1       CHAIN     ABDEALP1                           99
-     C   99@@DLNO2       CHAIN     ABDEALP0                           99
-     C   99@@DLNO2       CHAIN     ABDEALP1                           99
+     C*****@@DLNO1       CHAIN     ABDEALP0                           99                    MD031097
+     C***99@@DLNO1       CHAIN     ABDEALP1                           99                    MD031097
+     C***99@@DLNO2       CHAIN     ABDEALP0                           99                    MD031097
+     C***99@@DLNO2       CHAIN     ABDEALP1                           99                    MD031097
+     C     @@DLNO1       CHAIN     ABDEALF0                           99                    MD031097
+     C   99@@DLNO1       CHAIN     ABDEALF1                           99                    MD031097
+     C   99@@DLNO2       CHAIN     ABDEALF0                           99                    MD031097
+     C   99@@DLNO2       CHAIN     ABDEALF1                           99                    MD031097
      C     *IN99         IFEQ      '1'
      C     JPDLTF        ORNE      ' '
      C                   MOVE      'N'           ddL1DNok

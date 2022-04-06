@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL077             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR700044           Date 04Mar22               *
+      *  Prev Amend No. CGL077             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055785           Date 20May20               *
       *                 MD055784           Date 19May20               *
       *                 MD055690           Date 06May20               *
@@ -194,6 +195,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR700044 - GL-uncorrectly initialized field FEEPCT. Amended  *
+      *             program to correctly initialize this field by     *
+      *             placing '0' on position 52 to signify that this   *
+      *             field is numeric and not character.               *
+      *             (Child: AR700323)                                 *
+      *           - Applied for MD058198.                             *
+
       *  CGL077 - Account opening date on Batch Posting.              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055785 - Initialise K24C for new GL account.               *
@@ -1324,7 +1332,8 @@
      I                                332  351  ACKEY
      I                                352  352  FEEFLG
      I                             P  353  359 0FEEVAL
-     I                                360  364  FEEPCT
+     I**********                      360  364  FEEPCT                                      AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT
      I                                385  386  RORCTY
      I                                387  406  RORBNK
@@ -1376,7 +1385,8 @@
      I                                332  351  ACKEY
      I                                352  352  FEEFLG
      I                             P  353  359 0FEEVAL
-     I                                360  364  FEEPCT
+     I**********                      360  364  FEEPCT                                      AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT
      I                                385  386  RORCTY
      I                                387  406  RORBNK

@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. FCM101             Date 20Feb19               *
+      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *                 CLE172             Date 01Oct20               *
       *                 MD057604           Date 06Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
@@ -76,6 +77,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 - Floor Rates on LE module                            *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD057604 - EUC0190 fails in COB. Do not allow input of sett  *
@@ -663,7 +665,8 @@
      C                                      @ACTRV + ##RECS + ##PAYS +                      AR702532
      C**********                            InfData + ExtData                          246576 CLE172
      C                                      InfData + ExtData +                               CLE172
-     C                                      LeriScnBlrt                                       CLE172
+     C**********                            LeriScnBlrt                                CLE172 FCM101
+     C                                      LeriScnBlrt + TransQLeri                          FCM101
      C                   Endif                                                                246576
      C                   Else                                                                BUG8145
       ** Remerge buffer with all relevant data structures
@@ -675,7 +678,8 @@
      C                                      @ACTRV + ##RECS + ##PAYS +                      AR702532
      C**********                            InfData + ExtData                          CAP086 CLE172
      C                                      InfData + ExtData +                               CLE172
-     C                                      LeriScnBlrt                                       CLE172
+     C**********                            LeriScnBlrt                                CLE172 FCM101
+     C                                      LeriScnBlrt + TransQLeri                          FCM101
      C                   EndIf                                                               BUG8145
 
      C                   MOVE      '1'           *INLR
@@ -1026,6 +1030,7 @@
      C                   PARM                    CLE011            1
      C                   PARM                    S01465            1
      C                   PARM      *blank        @@CTU             1
+     C                   PARM                    TransQLeri       12                          FCM101
 
      C     EValidTr      ENDSR
       *****************************************************************
@@ -2823,6 +2828,19 @@
      C                   ELSE                                                                BUG2579
      C                   MOVE      'N'           CLE023                                      BUG2579
      C                   ENDIF                                                               BUG2579
+                                                                                              FCM101
+      * Determine if FCM101 is switched on                                                    FCM101
+                                                                                              FCM101
+     C                   CALLB     'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       @RTCD                                        FCM101
+     C                   PARM      '*VERIFY'     @OPTN                                        FCM101
+     C                   PARM      'FCM101'      @SARD                                        FCM101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        FCM101
+     C                   IF        @RTCD = *BLANK                                             FCM101
+     C                   MOVEL     'Y'           FCM101            1                          FCM101
+     C                   ELSE                                                                 FCM101
+     C                   MOVEL     'N'           FCM101                                       FCM101
+     C                   ENDIF                                                                FCM101
                                                                                               CLE106
       ** Determine if CLE106 is installed                                                     CLE106
                                                                                               CLE106

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. FCM101             Date 04Mar19               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 207964             Date 23Aug02               *
       *                 MD031292           Date 06Nov19               *
       *                 MD025836           Date 06Nov19               *
@@ -166,6 +167,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 - Floor Rates on LE module                            *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  207964 - Incorrect exposure if loan is in base currency. Do  *
@@ -690,6 +692,7 @@
       ** Switchable feature CER020                                                            CER020
      D CER020          S              1A                                                      CER020
      D CRE073          S              1A                                                      CRE073
+     D FCM101          S              1A                                                      FCM101
      D CLE141          S              1A                                                      CLE141
      D CLE172          S              1A                                                      CLE172
 
@@ -3833,6 +3836,11 @@
      C                   EVAL      RDMT = L_CLRDMT                                            CRE073
      C                   EVAL      RDFD = L_CLRDFD                                            CRE073
      C                   ENDIF                                                                CRE073
+                                                                                              FCM101
+     C                   IF        FCM101 = 'Y'                                               FCM101
+     C                   Z-ADD     L_CLCNSP      CNSP                                         FCM101
+     C                   MOVEL     L_CLCNSG      CNSG                                         FCM101
+     C                   ENDIF                                                                FCM101
                                                                                               CLE134
       ** If Past Due Processing;                                                              CLE134
       ** Set Miscellaneous Values.                                                            CLE134
@@ -9551,6 +9559,16 @@
      C                   ELSE                                                                 CER020
      C                   EVAL      CER020 = 'N'                                               CER020
      C                   ENDIF                                                                CER020
+                                                                                              FCM101
+     C                   MOVE      'N'           FCM101                                       FCM101
+     C                   CALLB     'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       @RTCD                                        FCM101
+     C                   PARM      '*VERIFY'     @OPTN                                        FCM101
+     C                   PARM      'FCM101'      @SARD                                        FCM101
+                                                                                              FCM101
+     C     @RTCD         IFEQ      *BLANKS                                                    FCM101
+     C                   MOVE      'Y'           FCM101                                       FCM101
+     C                   ENDIF                                                                FCM101
       *                                                                                       CER020
       ** Check if CRE073 Interest Rate Rounding feature is instaled                           CRE073
       *                                                                                       CRE073

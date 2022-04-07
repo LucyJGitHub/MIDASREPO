@@ -42,6 +42,7 @@
       *  SrWrite   - Determine which Feature will be written          *
       *  SrWriteSard - Insert SCSARDPD Record                         *
       *  SrWritePass - Insert SCPASSPD Record                         *
+      *  SrGetPass - Get Password for Validation List SCSWPSVL        *
       *  SrCache   - Call Caching of Features                         *
       *  *PSSR     - Error processing                                 *
       *  *INZSR    - Initialise                                       *

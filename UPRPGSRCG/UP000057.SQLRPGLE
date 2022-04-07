@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD059742             Date 23Mar22             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059742 - Cope with change in Alternative field name        *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -196,6 +198,7 @@
 
       ** if field name is different, check if it is a rename or a new field
      C                   WHEN      A1FLDI(Idx1) <> A2FLDI(Idx2)
+     C                             or A1ALIS(Idx1) <> A2ALIS(Idx2)                          MD059742
      C                   EVAL      #Field = A1FLDI(Idx1)
      C                   EXSR      SrRebuild
      C                   EVAL      Idx1 = Idx1 + 1

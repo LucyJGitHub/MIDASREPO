@@ -12,11 +12,13 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD058585             Date 17Aug21             *
-      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD059742             Date 23Mar22             *
+      *  Prev Amend No. MD058585             Date 17Aug21             *
+      *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059742 - Cope with change in Alternative field name        *
       *  MD058585 - aDBU does not detect if LF has different keys     *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
@@ -320,7 +322,9 @@
      C                             WFLDA = 'WHFLDT' or WFLDA = 'WHVARL' or
      C                             WFLDA = 'WHCHD1' or WFLDA = 'WHCHD2' or
      C                             WFLDA = 'WHCHD3'or WFLDA = 'WHFTXT' or
-     C                             WFLDA = 'WHFLDP')
+     C*********                    WFLDA = 'WHFLDP')                                        MD059742
+     C                             WFLDA = 'WHFLDP' or WFLDA = 'WHALIS' or                  MD059742
+     C                             WFLDA = 'WHALI2')                                        MD059742
      C                   eval      @AmFld = 'Y'
       * reset the duplicate flag as file will be rebuild
      C                   eval      @FlDup = ' '

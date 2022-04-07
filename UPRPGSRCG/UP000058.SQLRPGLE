@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD059742             Date 23Mar22             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059742 - Cope with change in Alternative field name        *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -1042,66 +1044,156 @@
 
      C                   IF        SQLStr = *BLANKS
      C                   IF        DataType = 'TIMESTAMP'
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +
      C                             '/' + %TRIMR(#File) + ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType)
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +                 MD059742
+     C                             '/' + %TRIMR(#File) + ' add column ' +                   MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType)                 MD059742
+     C                   endif                                                              MD059742
      C                   ELSE
      C                   If        DataType = 'GRAPHIC'
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +
      C                             '/' + %TRIMR(#File) + ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType) +
      C                             ' (' + %TRIMR(DataLen) + ')' +
      C                             ' CCSID 1200 '
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +                 MD059742
+     C                             '/' + %TRIMR(#File) + ' add column ' +                   MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType) +               MD059742
+     C                             ' (' + %TRIMR(DataLen) + ')' +                           MD059742
+     C                             ' CCSID 1200 '                                           MD059742
+     C                   endif                                                              MD059742
      C                   ELSE
      C                   If        DataType = 'OPEN'
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +
      C                             '/' + %TRIMR(#File) + ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  'char' +
      C                             ' (' + %TRIMR(DataLen) + ')' +
      C                             ' FOR MIXED DATA '
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +                 MD059742
+     C                             '/' + %TRIMR(#File) + ' add column ' +                   MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  'char' +                         MD059742
+     C                             ' (' + %TRIMR(DataLen) + ')' +                           MD059742
+     C                             ' FOR MIXED DATA '                                       MD059742
+     C                   endif                                                              MD059742
      C                   ELSE
      C                   IF        DataLen = *BLANKS
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +
      C                             '/' + %TRIMR(#File) + ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType)
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +                 MD059742
+     C                             '/' + %TRIMR(#File) + ' add column ' +                   MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType)                 MD059742
+     C                   endif                                                              MD059742
      C                   ELSE
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +
      C                             '/' + %TRIMR(#File) + ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType) +
      C                             ' (' + %TRIMR(DataLen) + ')'
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = 'alter table ' + %TRIMR(#Lib) +                 MD059742
+     C                             '/' + %TRIMR(#File) + ' add column ' +                   MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType) +               MD059742
+     C                             ' (' + %TRIMR(DataLen) + ')'                             MD059742
+     C                   endif                                                              MD059742
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ELSE
      C                   IF        DataType = 'TIMESTAMP'
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = %TRIMR(SQLStr) +
      C                             ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType)
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = %TRIMR(SQLStr) +                                MD059742
+     C                             ' add column ' +                                         MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType)                 MD059742
+     C                   endif                                                              MD059742
      C                   ELSE
      C                   If        DataType = 'GRAPHIC'
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = %TRIMR(SQLStr) +
      C                             ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType) +
      C                             ' (' + %TRIMR(DataLen) + ')' +
      C                              ' CCSID 1200 '
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = %TRIMR(SQLStr) +                                MD059742
+     C                             ' add column ' +                                         MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType) +               MD059742
+     C                             ' (' + %TRIMR(DataLen) + ')' +                           MD059742
+     C                              ' CCSID 1200 '                                          MD059742
+     C                   endif                                                              MD059742
      C                   ELSE
      C                   If        DataType = 'OPEN'
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = %TRIMR(SQLStr) +
      C                             ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  'char'  +
      C                             ' (' + %TRIMR(DataLen) + ')' +
      C                             ' FOR MIXED DATA '
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = %TRIMR(SQLStr) +                                MD059742
+     C                             ' add column ' +                                         MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  'char'  +                        MD059742
+     C                             ' (' + %TRIMR(DataLen) + ')' +                           MD059742
+     C                             ' FOR MIXED DATA '                                       MD059742
+     C                   endif                                                              MD059742
      C                   ELSE
      C                   IF        DataLen = *BLANKS
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = %TRIMR(SQLStr) +
      C                             ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType)
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = %TRIMR(SQLStr) +                                MD059742
+     C                             ' add column ' +                                         MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType)                 MD059742
+     C                   endif                                                              MD059742
      C                   ELSE
+     C                   If        ARFLDI(Index) = ARALIS(Index)                            MD059742
+     C                             or ARALIS(Index) = *blanks                               MD059742
      C                   EVAL      SQLStr = %TRIMR(SQLStr) +
      C                             ' add column ' +
      C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType) +
      C                             ' (' + %TRIMR(DataLen) + ')'
+     C                   else                                                               MD059742
+     C                   EVAL      SQLStr = %TRIMR(SQLStr) +                                MD059742
+     C                             ' add column ' +                                         MD059742
+     C                             %TRIMR(ARALIS(Index)) + ' for column ' +                 MD059742
+     C                             %TRIMR(#FLDNM) + ' ' +  %TRIMR(DataType) +               MD059742
+     C                             ' (' + %TRIMR(DataLen) + ')'                             MD059742
+     C                   endif                                                              MD059742
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF

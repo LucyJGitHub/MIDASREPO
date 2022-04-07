@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. 241521             Date 31Mar22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -33,6 +34,11 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       241521 - ENDCMTCTL not allowed.  Problem is intermittent    */
+/*                and maybe caused by global processing. Error       */
+/*                is also occurring on LEC0212A but this program     */
+/*                traps all error message for ENDCMTCTL.  Fix just   */
+/*                to make it work like LEC0212A.                     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CLE044 - Always run LE0130 regardless of S01465.            */
@@ -241,6 +247,8 @@ MIDPGM:      IF         COND(%SWITCH(XXXXX000)) THEN(DO)
              ENDDO
 /**/
              ENDCMTCTL                                                /*LN0470*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                    /*241521*/
+                                                                                          /*241521*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /**/                                                                  /*124684*/

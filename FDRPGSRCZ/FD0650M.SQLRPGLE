@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056555           Date 31Aug20               *
-      *  Prev Amend No. MD056992           Date 04Nov20               *
+      *  Last Amend No. 259451A            Date 07Feb22               *
+      *                 259451             Date 07Feb22               *
+      *                 MD056555           Date 31Aug20               *
+      *                 MD056992           Date 04Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039356           Date 13Jul16               *
       *                 CGL165             Date 17Feb15               *
@@ -89,6 +91,11 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  259451A - Make sure that 'N' or Blank input on Type Amort is *
+      *            allowed for all DTST combination and only MM and   *
+      *            NA DTST combination will allow input of 'Y'.       *
+      *  259451 - Amort-type feild should not be amended once it was  *
+      *           set-up it cannot be changed.                        *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD056992 - Added non-display attribute for spot indicator    *
       *  MD046248 - Finastra Rebranding                               *
@@ -254,8 +261,8 @@
       ** Midas SC Switchable Feature Initialisation PGM index                                 231563
       *                                                                                       231563
      F***DEALSL7 IF  E           K        DISK                                         231563 CAS011
-     FDEALSL10  IF   E           K DISK
-      ** Midas DL DEALSDB/DEALSDC by Deal Type/Sub Type                                       231563
+     F***DEALSL10IF  E           K        DISK                                                259451
+      ***Midas*DL*DEALSDB/DEALSDC*by*Deal*Type/Sub*Type****************                231563 259451
      F*                                                                   S01408
      F/COPY WNCPYSRC,FD0650MFPG                                           S01408
      F*                                                                   S01408
@@ -920,8 +927,8 @@
      C                   EXSR      ZASNMS                                       Send message
      C                   ELSE
       *                                                                                       CAS009
-     C     #1ACAI        IFEQ      'Y'
-     C     #1ACAI        OREQ      'N'
+     C     #1ACAI        IFEQ      'Y'                                                            
+     C*****#1ACAI        OREQ      'N'                                                       259451A
       *                                                                                       CAS009
      C     #1DTPE        LOOKUP    @DL                                    85
       *                                                                                       CAS009
@@ -958,18 +965,20 @@
      C     KDTST#        CHAIN     FDDTSTL1                           70
       *                                                                                       231563
      C     #1ACAI        IFNE      FSACAI
+     C     *IN70         ANDEQ     *OFF                                                      259451A
       *                                                                                       231563
-      ** Check If Deal Type/Sub Type is attached to a Live Deal.                              231563
-      ** If it is, do not allow changing of ACAI                                              231563
+      ***Check*If*Deal*Type/Sub*Type*is*attached*to*a*Live*Deal.******                 231563 259451
+      ***If*it*is,*do*not*allow*changing*of*ACAI**********************                 231563 259451
      C********** KDTST#    CHAINDEALSL7              70                                231563 CAS011
-     C     KDTST#        CHAIN     DEALSL10                           70
-     C     *IN70         IFEQ      *OFF
-     C                   MOVEL     'USR9652'     ZAMSID                         Message id.
+     C*****KDTST#        CHAIN     DEALSL10                           70                      259451
+     C******IN70         IFEQ      *OFF                                                       259451
+     C**********         MOVEL     'USR9652'     ZAMSID                         Message id.   259451
+     C                   MOVEL     'USR9701'     ZAMSID                         Message id.   259451
      C                   MOVEL     'SDUSRMSG'    ZAMSGF                         Message file.
      C                   EXSR      ZASNMS                                       Send message
      C                   MOVE      *ON           *IN69
      C                   MOVE      *ON           *IN98
-     C                   ENDIF
+     C**********         ENDIF                                                                259451
       *                                                                                       231563
      C                   ENDIF
       *                                                                                       231563

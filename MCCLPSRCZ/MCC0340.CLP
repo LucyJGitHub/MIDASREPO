@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 230928             Date 21Mar22              */      
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGL029             Date 01Sep03              */
+/*                      CGL029             Date 01Sep03              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -23,6 +24,9 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       230928 - GEPC2PD/GEPC2ZZ not being cleared caused Gap      */
+/*                Funding Accrual being doubled when re-open I/C    */
+/*                and run COB again.                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*       135682 - Spot revaluations incorrect if Spot Position      */
@@ -48,6 +52,8 @@
                           Entry Split') TOMSGQ(MRUNQ)
 /**/
              CHGJOB     SWS(XXXXXX00)
+                 CLRPFM     FILE(GEPC2PD)                                      /*230928*/
+                 CLRPFM     FILE(GEPC2ZZ)                                      /*230928*/             
 /*/COPY WNCPYSRC,MCH00005                                            */
 /**/
 /* Clear Ouput files */

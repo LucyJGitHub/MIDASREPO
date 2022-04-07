@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD059626           Date 22Mar22               *
+      *  Prev Amend No. 219850             Date 22Mar22               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -56,6 +58,9 @@
       *                 LN0255             DATE 15Jun90               *
       *****************************************************************
       *                                                               *
+      *  MD059626 - Amendment to GEMS 219850                          *
+      *  219850 - Corporate Action fields still being shown even-     *
+      *           though it is not switched on. Applied fix 207500.   *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -210,6 +215,7 @@
       * Screen two error indicator store
      I                                        1 100 @I2
      I                                       31  31 INSCR2
+     I                                       71  82 COAC                                      219850
      I@@I3        DS
       * Screen three error indicator store
      I                                        1 100 @I3
@@ -620,6 +626,14 @@
      C           W0SCR     IFEQ 2
       * Set error
      C                     MOVEAINSCR2    *IN,31
+     C                     MOVEACOAC      *IN,71                                              219850
+      *                                                                                       219850
+      ** If Corporate Actions feature is on, ensure fields will be displayed                  219850
+      *                                                                                       219850
+     C           WUCOAC    IFEQ 'Y'                                                           219850
+     C                     MOVE '1'       *IN80                                               219850
+     C                     ENDIF                                                              219850
+      *                                                                                       219850
       * Set cursor by *SET CURSOR data
      C           YSETCS    IFEQ 'Y'
      C                     EXSR Y2SET
@@ -704,6 +718,7 @@
      C                     MOVE *ZERO     INSCR1
      C                     MOVE *ZERO     INSCR2
      C                     MOVE *ZERO     INSCR3
+     C                     MOVE *ZERO     COAC                                                219850
       *================================================================
      CSR         CCEXIT    ENDSR
       /EJECT
@@ -742,6 +757,7 @@
      C                     MOVE *ZEROS    INSCR1
      C                     MOVE *ZEROS    INSCR2
      C                     MOVE *ZEROS    INSCR3
+     C                     MOVE *ZEROS    COAC                                                219850
      C                     EXSR DCVLDL
       * Display first screen in error
      C           INSCR3    IFNE *ZEROS
@@ -2065,19 +2081,22 @@
      C                     MOVELW0CLPG    ZAMSDA           Message data   CSE007
      C                     EXSR ZASNMS                                    CSE007
      C                     END                                            CSE007
+      *                                                                                       219850
+     C                     MOVE '0'       *IN80                                               219850
       *                                                                   CSE007
       * Check return code.                                                CSE007
       * CASE: WRK.Access Pgm Return Code is *Normal                       CSE007
      C           WUAPRC    IFEQ *BLANK                     *IF            CSE007
      C                     MOVEL'Y'       WUCOAC           SAR CSE007     CSE007
-     C                     MOVE *OFF      *IN80                           CSE007
+     C**********           MOVE *OFF      *IN80                                        CSE007 219850
+     C                     MOVE '1'       *IN80                                               219850
      C                     ELSE                                           CSE007
       * CASE: *OTHERWISE                                                  CSE007
      C                     MOVEL'N'       WUCOAC           SAR CSE007     CSE007
-     C                     MOVE *ON       *IN80                           CSE007
+     C**********           MOVE *ON       *IN80                                        CSE007 219850
      C                     END                             *FI            CSE007
       *                                                                   CSE007
-     C           *IN80     IFEQ *ON                                       CEU017
+     C********** *IN80     IFEQ *ON                                                    CEU017 219850
       *                                                                   CEU017
       ** Check if CEU017 is present                                       CEU017
       *                                                                   CEU017
@@ -2105,12 +2124,12 @@
       * CASE: WRK.Access Pgm Return Code is *Normal                       CEU017
      C           WUAPRC    IFEQ *BLANK                     *IF            CEU017
      C                     MOVEL'Y'       WUEURO           SAR CEU017     CEU017
-     C                     MOVE *OFF      *IN80                           CEU017
+     C**********           MOVE *OFF      *IN80                                        CEU017 219850
+     C**********           MOVE '1'       *IN80                                      219850 MD059626
      C                     ELSE                                           CEU017
       * CASE: *OTHERWISE                                                  CEU017
      C                     MOVEL'N'       WUEURO           SAR CEU017     CEU017
-     C                     MOVE *ON       *IN80                           CEU017
-     C                     END                             *FI            CEU017
+     C**********           MOVE *ON       *IN80                                        CEU017 219850
      C                     END                             *FI            CEU017
       *                                                                   CEU017
       *                                                                   CSE006

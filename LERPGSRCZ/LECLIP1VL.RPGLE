@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058763           Date 08Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD051827           Date 03Mar22               *
+      *  Prev Amend No. MD058763           Date 08Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR918361           Date 02Apr12               *
       *                 MD029863           Date 18Jan18               *
@@ -174,6 +175,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051827 - System allows maturity date of a parts purchased  *
+      *             loan to be amended with an earlier date than loan *
+      *             fee's end date. Instead of LEFEEDL2, use LEFEEDL6 *
+      *             as this just uses loan number as key to check if  *
+      *             the loan has any fees attached to it.             *
       *  MD058763 - Error message LER5607 is displayed despite valid  *
       *             input. Amend conditions to conform with           *
       *             alphanumeric base rates.                          *
@@ -543,8 +549,10 @@
       *
      FSDBRCHL5  IF   E           K DISK    INFSR(*PSSR)
       *
-     FLEFEEDL2  IF   E           K DISK    INFSR(*PSSR)
-     F                                     RENAME(LEFEEDF:LEFEED2F)
+     F***LEFEEDL2  IF   E           K DISK    INFSR(*PSSR)                                  MD051827
+     F**********                           RENAME(LEFEEDF:LEFEED2F)                         MD051827
+     FLEFEEDL6  IF   E           K DISK    INFSR(*PSSR)                                     MD051827
+     F                                     RENAME(LEFEEDF:LEFEED6F)                         MD051827
       *
      FPSOLDLL   IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF:PSOLDF)
@@ -7569,8 +7577,10 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     DDCUST        FCNUM
      C                   MOVEL     DDLNRF        FLOAN
       *
-     C     LEFKEY        SETLL     LEFEEDL2
-     C     LEFKEY        READE     LEFEEDL2                               99
+     C*****LEFKEY        SETLL     LEFEEDL2                                                 MD051827
+     C*****LEFKEY        READE     LEFEEDL2                               99                MD051827
+     C     FLOAN         SETLL     LEFEEDL6                                                 MD051827
+     C     FLOAN         READE     LEFEEDL6                               99                MD051827
       *
      C     *IN99         DOWEQ     *OFF
       *
@@ -7627,7 +7637,8 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   ENDIF                                                                261084
       *
      C                   ENDIF                                                             AR1053735
-     C     LEFKEY        READE     LEFEEDL2                               99
+     C*****LEFKEY        READE     LEFEEDL2                               99                MD051827
+     C     FLOAN         READE     LEFEEDL6                               99                MD051827
      C                   ENDDO
       *
      C                   ENDIF

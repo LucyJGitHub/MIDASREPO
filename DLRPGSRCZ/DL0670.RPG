@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 250716             Date 23Feb22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -60,6 +61,7 @@
 0011 F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  250716 - Produce DL0670P1 to say 'NO DETAILS TO REPORT'.     *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -636,6 +638,8 @@
      C**********           MOVE OSAC      @OSAC  12                                    049265 CGL029
      C                     MOVE OSAC      @OSAC  18                                           CGL029
      C                     MOVE TSEN      @TSEN  10                       049265
+     C           RRIT      ADD  1         RRIT    50                                          250716
+     C                     ENDIF                                                              250716
 0288 C*****      RRIT      ADD  1         RRIT    50                      S01117
 0288 C***02*58   RRIT      ADD  1         RRIT    50               S01117 LN0232
 0288 C***02*58   WRIT      ADD  1         WRIT                     E147   LN0232
@@ -655,25 +659,36 @@
      C***SET*OFF**IN38                                              LN0613LN1050
      C***********                                                   LN0613LN1050
      C***********          MOVE '0'       *IN38                     LN0613LN1050
+     C                     GOTO END                                                           250716
+      *                                                                                       250716
+      ** Set error indicators.                                                                250716
+      *                                                                                       250716
+     C           ERROR     TAG                             ** ERROR TAG **                    250716
+     C                     MOVE '1'       *INU7                                               250716
+     C                     MOVE '1'       *INU8                                               250716
+     C                     MOVE '1'       *INLR                                               250716
+      *                                                                                       250716
+     C           END       TAG                             ** END TAG **                      250716
      C*                                                                   LN1050
      C** AS THERE IS A DETAIL TO BE PRINTED NEED P1 REPORT OPENED         LN1050
      C** CHANGE P1 REPORTS IF CHANGE OF BRANCH OR HAS BEEN A CHANGE OF    LN1050
      C** BRANCH BUT PREVIOUS DETAILS NOT PRINTED                          LN1050
      C*                                                                   LN1050
      C           *INL1     IFEQ '1'                                       LN1050
-     C           *IN38     OREQ '1'                                       LN1050
+     C********** *IN38     OREQ '1'                                                    LN1050 250716
      C*                                                                   LN1050
      C                     SETOF                     38                   LN1050
-     C                     SETON                     L1                   LN1050
+     C**********           SETON                     L1                                LN1050 250716
      C                     CLOSEDL0670P1                                  LN0613
      C           BRNCH     IFEQ 'ALL'                                     LN0613
      C           BRNCH     OREQ EBRC                                      LN0613
      C                     SETON                     58    ALLOW OUTPUT   LN0613
      C                     OPEN DL0670P1                                  LN0613
+     C                     MOVE 'Y'       RECS    1                                           250716
      C**                                                                  LN0613
      C                     Z-ADD0         PAGE                            LN0613
      C***********          Z-ADD0         WRIT    50                LN0613LN1050
-     C           RRIT      ADD  1         RRIT    50                      LN1050
+     C********** RRIT      ADD  1         RRIT    50                                   LN1050 250716
      C** ENSURE REPORT SPOOL FILE RECORDED BY RCF                         LN0613
      C*                                                                   LN0613
       ** TRANSFER BINARY DATA INTO NUMERIC FIELD                          LN0613
@@ -710,6 +725,11 @@
      C                     SETOF                     5831                 LN0613
      C                     END                                            LN0613
      C                     END                                            LN0613
+     C           *IN02     IFEQ '1'                                                           250716
+     C           *IN28     ANDEQ'0'                                                           250716
+     C           *IN58     ANDEQ'1'                                                           250716
+     C                     MOVE '1'       *IN38                                               250716
+     C                     ENDIF                                                              250716
 0260 C**                                                                  LN0613
      C*                                                                   LN0613
      C***********WRIT      IFEQ 1                                   LN0232LN1050
@@ -719,15 +739,15 @@
      C***********                                                   LN0232LN1050
      C***********          END                                      LN0232LN1050
      C***********                                                   LN0232LN1050
-     C                     END                                            049265
-0289 C                     GOTO END
+     C**********           END                                                         049265 250716
+0289 C**********           GOTO END                                                           250716
 0290 C*
-0291 C*    SET ERROR INDICATORS.
-0292 C           ERROR     TAG                             ** ERROR TAG **
+0291 C*****SET*ERROR*INDICATORS.***************************************                       250716
+0292 C********** ERROR     TAG                             ** ERROR TAG **                    250716
 0293 C*********************SETON                     U7U8                 S01194
-0293 C                     SETON                     U7U8LR               S01194
+0293 C**********           SETON                     U7U8LR                            S01194 250716
 0294 C*
-0295 C           END       TAG                             ** END TAG **
+0295 C********** END       TAG                             ** END TAG **                      250716
      C*                                                                   E147
 0261 C**   IF DETAILS TO REPORT EXIST, SET INDICATOR                      E147
      C***********WRIT      COMP 0                    31               E147LN1050
@@ -736,12 +756,38 @@
      C** CHANGE OF BRANCH BUT FIRST DETAIL FOR THAT BRANCH DOES NOT       LN1050
      C** NEED PRINTING                                                    LN1050
      C*                                                                   LN1050
-     C           *INL1     IFEQ '1'                                       LN1050
-     C           *IN28     ANDEQ'1'                                       LN1050
-     C                     SETON                     38                   LN1050
-     C                     END                                            LN1050
+     C********** *INL1     IFEQ '1'                                                    LN1050 250716
+     C********** *IN28     ANDEQ'1'                                                    LN1050 250716
+     C**********           SETON                     38                                LN1050 250716
+     C**********           END                                                         LN1050 250716
 0296 C*
 0297 C*    TOTAL TIME CALCULATIONS
+      *                                                                                       250716
+      ** If no records read, no details to report.                                            250716
+      *                                                                                       250716
+     CLR         RECS      IFNE 'Y'                                                           250716
+     CLR                   MOVE '0'       *IN38                                               250716
+     CLR                   OPEN DL0670P1                                                      250716
+     CLR                   Z-ADDSFNUMU    ZSNUMU                                              250716
+     CLR                   CALL 'ZSFILE'                                                      250716
+     CLR                   PARM           SEQ                                                 250716
+     CLR                   PARM *BLANK    @PARM                                               250716
+     CLR                   PARM           SFILEU                                              250716
+     CLR                   PARM           ZSNUMU                                              250716
+     CLR                   PARM *BLANK    ZSERR                                               250716
+      *                                                                                       250716
+     CLR         ZSERR     IFEQ 'Y'                                                           250716
+     CLR                   MOVE '1'       *INU7                                               250716
+     CLR                   MOVE '1'       *INU8                                               250716
+     CLR                   RETRN                                                              250716
+     CLR                   ENDIF                                                              250716
+     CLR                   ELSE                                                               250716
+      *                                                                                       250716
+      ** If records have been read from the file do not output                                250716
+      ** anything on LR processing.                                                           250716
+      *                                                                                       250716
+     CLR                   MOVE '1'       *IN31                                               250716
+     CLR                   ENDIF                                                              250716
      C**                                                                  S01117
      C** ENSURE TOTALS SPOOL FILE RECORDED BY RCF                         S01117
      C*                                                                   S01117
@@ -1040,8 +1086,10 @@
 0547 O*******OR**203***OF*58**                                      S01117E147
 0546 O*DL0670P1H* 203   L1 58 31                                      E147LN1050
 0547 O*******OR**203   OF 58 31                                       E147LN1050
-0546 ODL0670P1H  203   L1 58N38                                           LN1050
-0547 O       OR  203   OF 58N38                                           LN1050
+0546 O***DL0670P1H**203***L1 58N38                                                     LN1050 250716
+0547 O*******OR* 203   OF 58N38                                                        LN1050 250716
+     ODL0670P1H  203   L1 58                                                                  250716
+     O       OR  203   OF 58                                                                  250716
 0548 O                                   24 'REFERENCE DL0670P1'          S01117
 0549 O*************************TITL      89                               S01194
 0549 O                         BJURPT    89                               S01194
@@ -1056,8 +1104,10 @@
 0555 O*******OR**1*****OF*58**                                      S01117E147
 0554 O********H**1     L1 58 31                                       E147LN1050
 0555 O*******OR**1     OF 58 31                                       E147LN1050
-     O        H  1     L1 58N38                                           LN1050
-     O       OR  1     OF 58N38                                           LN1050
+     O********H* 1     L1 58N38                                                        LN1050 250716
+     O*******OR* 1     OF 58N38                                                        LN1050 250716
+     O        H  1     L1 58                                                                  250716
+     O       OR  1     OF 58                                                                  250716
 0556 O                                   67 'OUTSTANDING DELIVERY '
 0557 O                                   79 'INSTRUCTIONS'
 0558 O********H**2     01                                                 S01117
@@ -1066,16 +1116,20 @@
 0559 O*******OR**2*****OF*58**                                      S01117E147
 0558 O********H**2     L1 58 31                                       E147LN1050
 0559 O*******OR**2     OF 58 31                                       E147LN1050
-     O        H  2     L1 58N38                                           LN1050
-     O       OR  2     OF 58N38                                           LN1050
+     O********H* 2     L1 58N38                                                        LN1050 250716
+     O*******OR* 2     OF 58N38                                                        LN1050 250716
+     O        H  2     L1 58                                                                  250716
+     O       OR  2     OF 58                                                                  250716
 0560 O                                   67 '---------------------'
 0561 O                                   79 '------------'
 0558 O********H**2*****L1*58**                                      S01117E147
 0559 O*******OR**2*****OF*58**                                      S01117E147
 0558 O********H**2     L1 58 31                                       E147LN1050
 0559 O*******OR**2     OF 58 31                                       E147LN1050
-     O        H  2     L1 58N38                                           LN1050
-     O       OR  2     OF 58N38                                           LN1050
+     O********H* 2     L1 58N38                                                        LN1050 250716
+     O*******OR* 2     OF 58N38                                                        LN1050 250716
+     O        H  2     L1 58                                                                  250716
+     O       OR  2     OF 58                                                                  250716
      O                                   12 'BRANCH'                      S01117
      O                         EBRC      16                               S01117
      O                         A8BRNM    48                               S01117
@@ -1085,10 +1139,11 @@
 0562 O********H**1*****L1*58**                                      S01117E147
 0563 O*******OR**1*****OFNLR*58                                     S01117E147
 0562 O********H**1     L1 58 31                                       E147LN1050
-     O        H  1     L1 58N38                                           LN1050
+     O********H* 1     L1 58N38                                                        LN1050 250716
+     O        H  1     L1 58                                                                  250716
 0563 O       OR  1     OFNLR 58                                           E147
 0563 O*******AND*      31                                             E147LN1050
-     O       AND      N38                                                 LN1050
+     O*******AND      N38                                                              LN1050 250716
 0564 O                                   68 'DEAL           EVENT'
 0565 O                                   83 'SETTL''T'
 0566 O********H**2     01                                                 S01117
@@ -1096,10 +1151,11 @@
 0566 O********H**2*****L1*58**                                      S01117E147
 0567 O*******OR**2*****OFNLR*58                                     S01117E147
 0566 O********H**2     L1 58 31                                       E147LN1050
-     O        H  2     L1 58N38                                           LN1050
+     O********H* 2     L1 58N38                                                        LN1050 250716
+     O        H  2     L1 58                                                                  250716
 0567 O       OR  2     OFNLR 58                                           E147
 0563 O*******AND*      31                                             E147LN1050
-     O       AND      N38                                                 LN1050
+     O*******AND      N38                                                              LN1050 250716
 0568 O                                   14 'CUSTOMER'
 0569 O                                   63 'NUMBER      TYPE'
 0570 O                                   81 'DATE     TYPE'
@@ -1153,11 +1209,40 @@
 0597 O*****                              71 'REPORT  ***'                 S01117
      O        T 3      L1 58NU7                                           S01117
      O*******AND*      31                                             E147LN1050
-     O       AND      N38                                                 LN1050
+     O*******AND*     N38                                                              LN1050 250716
+     O       AND       38                                                                     250716
      O***********                        71 '*** END OF BRANCH REPORT'    LN0813
      O***********                        75 ' ***'                        LN0813
      O                                   71 '*** END OF REPORT FOR '      LN0813
      O                                   81 'BRANCH ***'                  LN0813
+     O        T  203   LRNU7N31                                                               250716
+     O       AND      N38                                                                     250716
+     O                                   24 'REFERENCE DL0670P1'                              250716
+     O                         BJURPT    89                                                   250716
+     O                                  104 'DATE'                                            250716
+     O                         BJMRDT   112                                                   250716
+     O                                  122 'PAGE'                                            250716
+     O                         PAGE     127                                                   250716
+     O        T  1     LRNU7N31                                                               250716
+     O       AND      N38                                                                     250716
+     O                                   67 'OUTSTANDING DELIVERY '                           250716
+     O                                   79 'INSTRUCTIONS'                                    250716
+     O        T  2     LRNU7N31                                                               250716
+     O       AND      N38                                                                     250716
+     O                                   67 '---------------------'                           250716
+     O                                   79 '------------'                                    250716
+     O        T 3      L1NU7N38                                                               250716
+     O       AND       58                                                                     250716
+     O       OR 3      LRNU7N31                                                               250716
+     O       AND      N38                                                                     250716
+     O                                   69 '***  NO DETAILS TO '                             250716
+     O                                   80 'REPORT  ***'                                     250716
+     O        T 3      L1NU7N38                                                               250716
+     O       AND       58                                                                     250716
+     O       OR 3      LRNU7N31                                                               250716
+     O       AND      N38                                                                     250716
+     O                                   71 '*** END OF REPORT FOR '                          250716
+     O                                   81 'BRANCH ***'                                      250716
 0624 O        T        LR U7 U8                                           S01117
 0625 O                                   22 'REFERENCE DL0670'            S01117
 0626 O                                   62 'PRINT TERMINTATED, '         S01117

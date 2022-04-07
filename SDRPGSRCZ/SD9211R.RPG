@@ -12,8 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD059626           Date 22Mar22               *
+      *  Prev Amend No. 219850             Date 22Mar22               *
+      *                 MD059625           Date 18Feb22               *
+      *                 224528             Date 18Feb22               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -95,6 +99,16 @@
       *                 S01212             Date 14SEP89               *
       *****************************************************************
       *                                                               *
+      *  MD059626 - Amendment to GEMS 219850                          *
+      *  219850 - Corporate Action fields still being shown even-     *
+      *           though it is not switched on. Applied fix 207500.   *
+      *  MD059625 - Amendment to GEMS 224528 fix                      *
+      *  224528 - Allow Retention of Settled Trade (#1ROST) to be     *
+      *           greater than Retention of Matured Security (#1ROMS).*
+      *           This should not cause problems, such as Settled     *
+      *           Trades existing for non-existent Securities,        *
+      *           because SE2570 does not drop Securities if Trade    *
+      *           records exist.                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -2094,7 +2108,7 @@
       ** Customer' and 'Trade Subtypes in Corporate A/C Key'.             CSE007
       *                                                                   CSE007
      C           WUCOAC    IFEQ 'Y'                                       CSE007
-     C           WUEURO    OREQ 'Y'                                       CEU017
+     C********** WUEURO    OREQ 'Y'                                                    CEU017 219850
       *                                                                   CSE007
       ** Corporate Action Trade Customer                                  CSE007
       *                                                                   CSE007
@@ -2427,7 +2441,7 @@
       *If Corporate Actions feature is on ensure fields will be displayed 182471
       *                                                                   182471
      C           WUCOAC    IFEQ 'Y'                                       182471
-     C           WUEURO    OREQ 'Y'                                       203557
+     C********** WUEURO    OREQ 'Y'                                                  203557 MD059626
      C                     MOVE 1         *IN80                           182471
      C                     ENDIF                                          182471
       *                                                                   182471
@@ -3635,10 +3649,14 @@
      C*
      C                     MOVE WUZAFF    #1ROST           Retention of se
       * CASE: DTL.Retention of settled trd is valid range
-     C           #1ROST    IFGE 1                          *IF
+     C********** #1ROST    IFGE 1                          *IF                                224528
      C***********#1ROST    ANDLE99                                        138229
      C********** #1ROST    ANDLE12                                                     138229 198623
-     C           #1ROST    ANDLE99                                                            198623
+     C********** #1ROST    ANDLE99                                                     198623 224528
+     C********** #1ROST    IFLT 1                          *IF                       224528 MD059625
+     C********** #1ROST    ORGT 99                                                   224528 MD059625
+     C           #1ROST    IFGE 1                                                           MD059625
+     C           #1ROST    ANDLE99                                                          MD059625
       **Check*that*the*retention*period*for*trades*+*the*back*value       138229
       **period*is*less*than*the*retention*period*for*securities.          138229
      C***********#1BVP     DIV  30        WUTRBV           Trade Ret Prd  138229
@@ -3647,17 +3665,17 @@
       **Compare*the*sum*of*ret*period*and*bvp*against*ret*period*for*secs 138229
       **CASE:*WRK.Trade*Ret*Prd*+*BVP*GT*DTL.Retention*of*matured*sec.    138229
      C***********WUTRBV    IFGT #1ROMS                     *IF            138229
-      * CASE: DTL.Retention of settled trd GT DTL.Retention of matured SE 138229
-     C           #1ROST    IFGT #1ROMS                     *IF            138229
-      * Setup message data for message
-     C                     MOVEL#DSTFF    ZA0008           Settled Trades
-      * Send message 'Settled less than Matured'
-     C                     MOVEL'USR0980' ZAMSID
-     C                     EXSR ZASNMS
-     C                     SETON                     99    *
-     C                     MOVEL'1'       @I1,32           *
+      **CASE:*DTL.Retention*of*settled*trd*GT*DTL.Retention*of*matured*SE              138229 224528
+     C********** #1ROST    IFGT #1ROMS                     *IF                         138229 224528
+      **Setup*message*data*for*message*********************************                       224528
+     C**********           MOVEL#DSTFF    ZA0008           Settled Trades                     224528
+      **Send*message*'Settled*less*than*Matured'***********************                       224528
+     C**********           MOVEL'USR0980' ZAMSID                                              224528
+     C**********           EXSR ZASNMS                                                        224528
+     C**********           SETON                     99    *                                  224528
+     C**********           MOVEL'1'       @I1,32           *                                  224528
       *
-     C                     END                             *FI
+     C**********           END                             *FI                                224528
       *                                                                                       203506
       ** Check if CSE023 - Treaty Withholding Tax present                                     203506
       *                                                                                       203506
@@ -3723,8 +3741,9 @@
      C                     MOVEL'1'       @I1,32           *                                  203506
       *                                                                                       203506
      C                     END                             *FI                                203506
-     C                     ELSE
-      * CASE: *OTHERWISE
+     C**********           ELSE                                                               224528
+      **CASE:**OTHERWISE***********************************************                       224528
+     C                     ELSE                                                             MD059625
       * Setup message data for message
      C                     MOVEL#DSTFF    ZA0009           Settled Trades
       * Send message 'Settled Trades range'
@@ -8521,7 +8540,7 @@
       ** If SAR CSE007 is ON                                              CSE007
       *                                                                   CSE007
      C           WUCOAC    IFEQ 'Y'                                       CSE007
-     C           WUEURO    OREQ 'Y'                                       CEU017
+     C********** WUEURO    OREQ 'Y'                                                    CEU017 219850
       *                                                                   CSE007
       ** Corporate Action Trade Customer.                                 CSE007
       *                                                                   CSE007
@@ -13696,7 +13715,7 @@
       * Check return code.                                                CEU017
       * CASE: WRK.Access Pgm Return Code is *Normal                       CEU017
      C           WUAPRC    IFEQ *BLANK                     *IF            CEU017
-     C                     MOVE '1'       *IN80                           CEU017
+     C**********           MOVE '1'       *IN80                                      CEU017 MD059626
      C                     MOVEL'Y'       WUEURO           SAR CEU017     CEU017
      C                     ELSE                                           CEU017
       * CASE: *OTHERWISE                                                  CEU017

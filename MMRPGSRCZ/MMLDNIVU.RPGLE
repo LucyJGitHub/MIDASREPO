@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 26Jan22               *
-      *  Prev Amend No. MD059321           Date 21Dec21               *
+      *  Last Amend No. 252024             Date 14Feb08               *
+      *  Prev Amend No. MD059304           Date 26Jan22               *
+      *                 MD059321           Date 21Dec21               *
       *                 MD059368           Date 17Dec21               *
       *                 MD058975           Date 20Oct21               *
       *                 MD058379           Date 12Jul21               *
@@ -148,6 +149,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252024 - Ensure std settl inst are defaulted.                *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -2336,12 +2338,16 @@
      C**********                   AND (InPaySttmt = *blank)                                MD027337
      C                   IF            (DDRSTM = *blank)                                    MD027337
      C                             AND (DDPSTM = *blank)                                    MD027337
-     C                             AND DDCcy  <> *BLANK                                       241685
-     C                             AND DDCust <> *BLANK                                       241685
+     C**********                   AND DDCcy  <> *BLANK                                241685 252024
+     C**********                   AND DDCust <> *BLANK                                241685 252024
+     C                             AND OKCUST = 'Y'                                           252024
+     C                             AND OKCCY = 'Y'                                            252024
      C                             AND DDACTN = 'I'                                        MD027337A
      C                             OR  DDACTN = 'A'                                        MD027337A
-     C                             AND DDCcy  <> *BLANK                                    MD027337A
-     C                             AND DDCust <> *BLANK                                    MD027337A
+     C**********                   AND DDCcy  <> *BLANK                             MD027337A 252024
+     C**********                   AND DDCust <> *BLANK                             MD027337A 252024
+     C                             AND OKCUST = 'Y'                                           252024
+     C                             AND OKCCY = 'Y'                                            252024
      C                             AND (DDRSTM = *blank                                    MD027337A
      C                             OR  DDPSTM = *blank)                                    MD027337A
 

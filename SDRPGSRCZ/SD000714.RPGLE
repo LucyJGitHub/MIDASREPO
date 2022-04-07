@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD057255           Date 27Nov20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD035923           Date 07Feb22               *
+      *  Prev Amend No. MD057255           Date 27Nov20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD051233           Date 03May18               *
       *                 MD050598           Date 03May18               *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035923 - Program SD000714 dumps due to missing non-account *
+      *             holders                                           *
       *  MD057255 - Controlling Person not removed in report          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
@@ -250,6 +253,7 @@
      D POPTN           S              7A
      D PPFTC           S              5A
      D PCUST           S              6A
+     D PCUST10A        S             10A                                                    MD035923
      D PNAHO           S             10A
      D PInDate         S              8A
      D PMDate          S              5  0
@@ -366,6 +370,28 @@
      C                   READ      SDFTCSL0
 
      C                   DOW       NOT %EOF(SDFTCSL0)
+      ** Check if customer is existing in Customer Details                                  MD035923
+     C                   CALL      'AOCUSTR0'                                               MD035923
+     C                   PARM      *BLANKS       PRTCD                                      MD035923
+     C                   PARM      '*KEY   '     POPTN                                      MD035923
+     C                   PARM      FACUST        PCUST10A                                   MD035923
+     C                   PARM      *BLANKS       PKYST                                      MD035923
+     C     SDCUST        PARM      SDCUST        DSSDY                                      MD035923
+      ** If Customer not found or deleted and LCD is 'D'                                    MD035923
+      ** then read next record                                                              MD035923
+     C                   IF        PRTCD = '*NRF'                                           MD035923
+     C                             OR PRTCD = '*CUSDEL'                                     MD035923
+     C                             AND FALCTP = 'D'                                         MD035923
+     C                   READ      SDFTCSL0                                                 MD035923
+     C                   ITER                                                               MD035923
+     C                   ENDIF                                                              MD035923
+      ** If customer not found, dberror on Customer Details                                 MD035923
+     C                   IF        PRTCD <> *BLANKS                                         MD035923
+     C                   EVAL      DBFILE = 'SDCUSTPD'                                      MD035923
+     C                   EVAL      DBASE  = 902                                             MD035923
+     C                   EVAL      DBKEY  = FACUST                                          MD035923
+     C                   EXSR      *PSSR                                                    MD035923
+     C                   ENDIF                                                              MD035923
 
      C                   EVAL      WArrCnt = 0
 

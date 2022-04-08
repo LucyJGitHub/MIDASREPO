@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056344           Date 03Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CGL082             Date 02Nov21               *
+      *  Prev Amend No. MD056344           Date 03Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1042971          Date 07May14               *
       *                 AR668282           Date 07May14               *
       *                 AR659451           Date 29Nov12               *
@@ -71,6 +72,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CGL082 - Journal Entry User Audit                            *
       *  MD056344 - JRNE. Batch Header details corrupted.             *
       *             Retrieve the current batch details before         *
       *             processing the action code.                       *
@@ -1786,6 +1788,16 @@
       * CASE: PGM.*Return code is Batch Deleted
      C           W0RTN     IFEQ '*DELBCH'                  *IF
      C/COPY WNCPYSRC,GL0100DC17
+      *                                                                                       CGL082
+      ** Batch has been deleted so call GL0081 passing 'D'                                    CGL082
+      *                                                                                       CGL082
+     C           CGL082    IFEQ 'Y'                                                           CGL082
+     C                     CALL 'GL0081'                                                      CGL082
+     C                     PARM           BRBTNB                                              CGL082
+     C                     PARM           BRBCDA                                              CGL082
+     C                     PARM 'D'       LACTN   1                                           CGL082
+     C                     END                                                                CGL082
+      *                                                                                       CGL082
       * Setup message data for message
      C                     MOVELWUBTNB    ZA0010           Batch number
       * Send message 'Batch Deleted'
@@ -2707,6 +2719,19 @@
      C                     ELSE                                           CGL009
      C                     MOVE ' '       CGL009                          CGL009
      C                     ENDIF                                          CGL009
+      *                                                                                       CGL082
+      **  Access SAR details file to see if CGL082 SAR is installed.                          CGL082
+      *                                                                                       CGL082
+     C                     CALL 'AOSARDR0'                                                    CGL082
+     C                     PARM *BLANKS   @RTCD   7                                           CGL082
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL082
+     C                     PARM 'CGL082'  @KEY    6                                           CGL082
+      *                                                                                       CGL082
+     C           @RTCD     IFEQ *BLANK                                                        CGL082
+     C                     MOVE 'Y'       CGL082  1                                           CGL082
+     C                     ELSE                                                               CGL082
+     C                     MOVE ' '       CGL082                                              CGL082
+     C                     ENDIF                                                              CGL082
      C/COPY WNCPYSRC,GLH00487
       **********                                                                      186206 BUG2798
       ****Access*SAR*details*file*to*see*if*CAP032*SAR*is*installed.***************   186206 BUG2798

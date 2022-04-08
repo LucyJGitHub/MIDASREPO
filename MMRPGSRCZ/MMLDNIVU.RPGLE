@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD029160           Date 05Sep14               *
-      *  Prev Amend No. 250161             Date 22May20               *
+      *  Last Amend No. MD058975           Date 06Apr22               *
+      *  Prev Amend No. MD029160           Date 05Sep14               *
+      *                 250161             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
       *                 MD056313           Date 21Sep20               *
@@ -142,6 +143,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058975 - Unable to insert a Call Depost deal. Set Maturity *
+      *             Date to 99999 if the field is zero.               *
+      *           - Applied for MD059722.                             *
       *  MD029160 - APISERVER job fall over when trying to send in a  *
       *             LDNI Cancellation. Recompiled due to changes in   *
       *             MMVLDNIPD.                                        *
@@ -2704,6 +2708,9 @@
      C                   IF           DDType = 'IP' OR DDType = 'TI'
      C                             OR DDType = 'CL' OR DDType = 'LN'
      C                             OR DDType = 'DL'
+     C                             OR DDType = 'FL' AND CDL006 =' Y'                        MD058975
+     C                             OR DDType = 'DP' AND CDL006 = 'Y'                        MD058975
+     C                             OR DDType = 'LP' AND CDL006 = 'Y'                        MD058975
      C**********         EVAL      PayDat = ValDateMDN                                        250161
      C                   EVAL      LOD = 'L'                                                  250161
      C                   ELSE
@@ -2767,22 +2774,34 @@
      C                   PARM                    ErrorFlag                                    250161
      C                   EVAL      PayDat = ValDateMDN                                        250161
      C                   ELSE                                                                 250161
+      *                                                                                     MD058975
+     C                   IF        DDMDAT <> *BLANKS                                        MD058975
      C                   CALLB     'ZDATE1'                                                   250161
      C                   PARM                    DDMDAT                                       250161
      C                   PARM                    ValDateMDN                                   250161
      C                   PARM                    BJDFIN                                       250161
      C                   PARM                    ErrorFlag                                    250161
      C                   EVAL      PayDat = ValDateMDN                                        250161
+     C                   ELSE                                                               MD058975
+     C                   Z-ADD     99999         PayDat                                     MD058975
+     C                   ENDIF                                                              MD058975
+      *                                                                                     MD058975
      C                   Endif                                                                250161
                                                                                               250161
       ** Receive date = maturity date for loan, value date for deposit                        250161
      C                   IF        LOD = 'L'                                                  250161
+      *                                                                                     MD058975
+     C                   IF        DDMDAT <> *BLANKS                                        MD058975
      C                   CALLB     'ZDATE1'                                                   250161
      C                   PARM                    DDMDAT                                       250161
      C                   PARM                    ValDateMDN                                   250161
      C                   PARM                    BJDFIN                                       250161
      C                   PARM                    ErrorFlag                                    250161
      C                   EVAL      RecDat = ValDateMDN                                        250161
+     C                   ELSE                                                               MD058975
+     C                   Z-ADD     99999         RecDat                                     MD058975
+     C                   ENDIF                                                              MD058975
+      *                                                                                     MD058975
      C                   ELSE                                                                 250161
      C                   CALLB     'ZDATE1'                                                   250161
      C                   PARM                    DDVDAT                                       250161

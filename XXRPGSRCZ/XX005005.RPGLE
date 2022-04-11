@@ -23,7 +23,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD059773 - EDW Layout file changes                           *
-      *              Recompile due to changes in PF/XXEDWETD          *
+      *              Recompile due to changes in PF/XXEDWETD.         *
       *  MD059406 - Extract issues with Feeder and Proofing files     *
       *              Remove Product Code from Proofing file           *
       *              Recompile for changes in XXFEEDDTD               *

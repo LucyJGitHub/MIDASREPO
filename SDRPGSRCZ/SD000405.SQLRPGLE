@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD056613           Date 20Sep20               *
-      *  Prev Amend No. MD056633           Date 07Sep20               *
+      *  Last Amend No. MD059709           Date 16Mar22               *
+      *  Prev Amend No. MD056613           Date 20Sep20               *
+      *                 MD056633           Date 07Sep20               *
       *                 MD054605           Date 17Oct19               *
       *                 MD053487           Date 28May19               *
       *                 MD053450           Date 11May19               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059709 - Remove U7 U8 switch at the end                    *
       *  MD056613 - Deliverable Data Split for CSD101                 *
       *  MD056633 - Deliverable Data Split for SDFACCTD (re-work)     *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -331,8 +333,8 @@
      C                   IF        %OPEN (SD000405P1)                                       MD053109
      C                             AND PFKnum = ' '                                         MD053109
      C                   CLOSE     SD000405P1                                               MD053109
-     C                   EVAL      *INU7 = *ON                                              MD053109
-     C                   EVAL      *INU8 = *ON                                              MD053109
+     C**********         EVAL      *INU7 = *ON                                     MD053109 MD059709
+     C**********         EVAL      *INU8 = *ON                                     MD053109 MD059709
      C                   EVAL      *INLR = *ON                                              MD053109
      C                   ENDIF                                                              MD053109
                                                                                             MD053109

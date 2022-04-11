@@ -831,9 +831,9 @@
      C                   Z-Add     SVBRTE        PBaseRateXX                                  FCM101
      C                   Endif                                                                FCM101
                                                                                               FCM101
-     C                   If        SVBRTT <> *ZERO                                            FCM101
-     C                   EVAL      PBaseCode = %CHAR(SVBRTT)                                  FCM101
-     C                   Endif                                                                FCM101
+     C                   IF        SVBRTT <> *BLANKS                                          FCM101
+     C                   EVAL      PBaseCode = SVBRTT                                         FCM101
+     C                   ENDIF                                                                FCM101
       *                                                                                       FCM101
       ** The following validation can only be done if currency is ok                          FCM101
      C     DDCURROK      IFEQ      'Y'                                                        FCM101

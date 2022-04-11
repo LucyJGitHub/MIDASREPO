@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058307           Date 06Aug21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. AR466900           Date 27May10               *
+      *  Prev Amend No. MD058307           Date 06Aug21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD054876           Date 26Aug20               *
@@ -104,6 +105,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR466900 - Added processing of DDGASS. It should not always  *
+      *             default to 'P'. Incorporate fix 259207.           *
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to use larger workfield for FA_FAMT and     *
       *             CAF_FAMT.                                         *
@@ -499,6 +502,10 @@
 
       ** Loan amendment in screen format - input fields
      D LoamScnFmt    E DS                  EXTNAME(LELOAMPD)
+
+      ** Loan amendment in screen format 2                                                  AR466900
+     D LoamSc2Fmt    E DS                  EXTNAME(LELOA2PD)                                AR466900
+      *                                                                                     AR466900
 
       ** Current loan amendment in file format
      D CurFilLoam    E DS                  EXTNAME(LOAMSDK) PREFIX(CAM_)
@@ -5501,7 +5508,14 @@
      C                   MOVE      'M'           LAMNSG
       *
      C**********         MOVE      'N'           LAGASS                                       CLE106
+      *                                                                                     AR466900
+      ** GASS should be 'A' if generated from assignment else 'P'                           AR466900
+      *                                                                                     AR466900
+     C     DDGASS        IFEQ      'A'                                                      AR466900
+     C                   MOVE      DDGASS        LAGASS                                     AR466900
+     C                   ELSE                                                               AR466900
      C                   MOVE      'P'           LAGASS                                       CLE106
+     C                   ENDIF                                                              AR466900
       *
      C     DDATYP        IFEQ      'BC'
      C                   Z-ADD     BRTE          LABRTE
@@ -6069,6 +6083,10 @@
 
       ** Transaction information (DS) from source system  (screen format)
      C                   PARM                    LoamScnFmt
+      *                                                                                     AR466900
+      ** Transaction information 2                                                          AR466900
+      *                                                                                     AR466900
+     C                   PARM                    LoamSc2Fmt                                 AR466900
 
       ** Current loan amendment in file format from caller
      C                   PARM                    CurFilLoam

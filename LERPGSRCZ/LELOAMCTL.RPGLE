@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR466900           Date 27May10               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR466900 - Added processing of DDGASS. It should not always  *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -211,6 +213,9 @@
 
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
+      * Incoming Transaction 2                                                              AR466900
+     D TranInLOA2    E DS                  EXTNAME(LELOA2PD)                                AR466900
+     D                                     PREFIX(D_)                                       AR466900
 
       * Incoming amendment in screen format
      D TranInLOAM    E DS                  EXTNAME(LELOAMPD)
@@ -792,6 +797,10 @@
 
       ** Transaction information (DS) from source system (screen format)
      C                   PARM                    LoamScnFmt
+      *                                                                                     AR466900
+      ** Secondary transaction information                                                  AR466900
+      *                                                                                     AR466900
+     C                   PARM                    TranInLOA2                                 AR466900
 
       ** Current Loan Amendment in file format from caller
      C                   PARM                    CurFilLoam

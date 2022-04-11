@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. MD057922           Date 04May21               *
+      *  Last Amend No. AR466900           Date 27May10               *
+      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *                 MD057922           Date 04May21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD024811           Date 24Jan20               *
@@ -104,6 +105,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR466900 = Added DDGASS processing. Incorporate fix 259207.  *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -1471,6 +1473,10 @@
 
       ** Transaction information (DS) from source system (screen format)
      C                   PARM                    TranInLOAM
+      *                                                                                     AR466900
+      ** Secondary transaction information                                                  AR466900
+      *                                                                                     AR466900
+     C                   PARM                    TranInLOA2                                 AR466900
 
       ** Current Loan Amendment in file format from caller
      C                   PARM                    CurFilLoam

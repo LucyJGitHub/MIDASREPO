@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059640           Date 21Mar22               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD043086           Date 13Dec16               *
       *                 CGL165             Date 23Feb15               *
       *                 CSF011A            Date 28Nov11               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059640  - Cannot change IBAN. Move validation to GLVIBAC.  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043086 - IBAN should be non-amendable but gets cleared by  *
@@ -279,12 +281,12 @@
      C*-----------------------------------------*                                           MD043086
      C** The IBAN field is not amendable                                                    MD043086
      C*                                                                                     MD043086
-     C     DDIBAN        IFNE      @DDIBAN                                                  MD043086
-     C                   ADD       1             Idx                                        MD043086
-     C                   EVAL      FldNameArr(Idx) = 'DDIBAN'                               MD043086
-     C                   EVAL      MsgIDArr(Idx)   = 'RE72034'                              MD043086
-     C                   EVAL      DDIBANOK        = 'N'                                    MD043086
-     C                   ENDIF                                                              MD043086
+     C*****DDIBAN        IFNE      @DDIBAN                                         MD043086 MD059640
+     C**********         ADD       1             Idx                               MD043086 MD059640
+     C**********         EVAL      FldNameArr(Idx) = 'DDIBAN'                      MD043086 MD059640
+     C**********         EVAL      MsgIDArr(Idx)   = 'RE72034'                     MD043086 MD059640
+     C**********         EVAL      DDIBANOK        = 'N'                           MD043086 MD059640
+     C**********         ENDIF                                                     MD043086 MD059640
      C*                                                                                     MD043086
      C*-----------------------------------------*
      C* Number of Copies                        *

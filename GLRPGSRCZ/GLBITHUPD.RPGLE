@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL118             Date 02Nov21               *
-      *  Prev Amend No. MD057429           Date 17Jun21               *
+      *  Last Amend No. CGL082             Date 02Nov21               *
+      *  Prev Amend No. CGL118             Date 02Nov21               *
+      *                 MD057429           Date 17Jun21               *
       *                 254657             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057237           Date 04Dec20               *
@@ -90,6 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL082 - Journal Entry User Audit                            *
       *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD057429 - Check for and delete any items in repair if the   *
       *             batch header is being deleted                     *
@@ -772,6 +774,16 @@
      C                   ENDIF                                                               BUG3500
      C                   SETOFF                                       9899                   BUG3500
      C/COPY WNCPYSRC,GLBITHDC03
+      *                                                                                       CGL082
+      ** If CGL082 is 'Y', then call GL0081 to wriet/Update file GLEJAUPD                     CGL082
+      *                                                                                       CGL082
+     C     CGL082        IFEQ      'Y'                                                        CGL082
+     C                   CALL      'GL0081'                                                   CGL082
+     C                   PARM                    BRBTNB                                       CGL082
+     C                   PARM                    BRBCDA                                       CGL082
+     C                   PARM      'D'           LastActn                                     CGL082
+     C                   END                                                                  CGL082
+      *                                                                                       CGL082
      C                   DELETE    @BRREAG                                                    CAP084
       *                                                                                       CER001
       ** Delete batch items in extension file                                                 CER001
@@ -945,6 +957,21 @@
      C                   ENDIF                                                             AR992022A
       *
      C/COPY OFCPYSRCZ,CGL135_016                                                             CGL135A
+      *                                                                                       CGL082
+      ** If CGL082 is 'Y', then call GL0081 to wriet/Update file GLEJAUPD                     CGL082
+      *                                                                                       CGL082
+     C     CGL082        IFEQ      'Y'                                                        CGL082
+     C     B1BTSF        IFEQ      'A'                                                        CGL082
+     C                   MOVE      'X'           LastActN          1                          CGL082
+     C                   End                                                                  CGL082
+     C     B1BTSF        IFEQ      'H'                                                        CGL082
+     C                   MOVE      'A'           LastActN          1                          CGL082
+     C                   End                                                                  CGL082
+     C                   CALL      'GL0081'                                                   CGL082
+     C                   PARM                    BRBTNB                                       CGL082
+     C                   PARM                    BRBCDA                                       CGL082
+     C                   PARM                    LastActn                                     CGL082
+     C                   END                                                                  CGL082
       *                                                                                       CAP084
       ** If batch status is accepted, submit batch for shadow                                 CAP084
       ** posting.                                                                             CAP084
@@ -1120,6 +1147,15 @@
      C                   ENDIF                                                                CAP086
       *
      C                   WRITE     @BRREMA
+      *                                                                                       CGL082
+      ** If CGL082 is 'Y', then call GL0081 to write/Update file GLEJAUPD                     CGL082
+      *                                                                                       CGL082
+     C     CGL082        IFEQ      'Y'                                                        CGL082
+     C                   CALL      'GL0081'                                                   CGL082
+     C                   PARM                    BRBTNB                                       CGL082
+     C                   PARM                    BRBCDA                                       CGL082
+     C                   PARM      'I'           LastActn                                     CGL082
+     C                   END                                                                  CGL082
       *
      C                   ENDSR
       *
@@ -1319,6 +1355,9 @@
       *
       ** Security on Journal Entry
      C                   PARM                    CGL008            1
+      *                                                                                       CGL082
+      * Journal Entry User Audit                                                              CGL082
+     C                   PARM                    CGL082            1                          CGL082
       *
       ** Valid JE Header (DS) - for file update
      C                   PARM                    PVBITH

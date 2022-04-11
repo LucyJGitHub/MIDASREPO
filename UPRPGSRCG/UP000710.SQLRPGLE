@@ -12,12 +12,15 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD057231             Date 18Nov20             *
-      *  Prev Amend No. MD055681             Date 31Jul20             *
+      *  Last Amend No. MD059702             Date 15Mar22             *
+      *  Prev Amend No. MD057231             Date 18Nov20             *
+      *                 MD055681             Date 31Jul20             *
       *                 MD056103   *CREATE   Date 17Jun20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059702 - Align UP000710 (migration) with UP000703 (upgrade)*
+      *             And correct location of SCSAREPD                  *
       *  MD057231 - In case of error, add SETON LR and dump           *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD056103 - Deliverable Data Split migration                  *
@@ -421,6 +424,165 @@
      C                   Endif
 
 
+      ** here are some BTD records that may need to be removed                              MD059702
+     C                   If        DDSFILE = 'SCTRGCTD'                                     MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from SCTRGBTD where TRFILE = 'SCSARDPD' or TRFILE                            MD059702
+     C+ = 'SCSAREPD' or TRFILE = 'REAPWDPD'                                                 MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from SCTRGXTD where TRFILE = 'SCSARDPD' or TRFILE                            MD059702
+     C+ = 'SCSAREPD' or TRFILE = 'REAPWDPD'                                                 MD059702
+     C/END-EXEC                                                                             MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
+     C                   If        DDSFILE = 'APFUNCTD'                                     MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from APFUNBTD WHERE AAINSERTID = 'CER047'                                    MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from APFUNXTD WHERE AAINSERTID = 'CER047' and AAMODE = 'B'                   MD059702
+     C/END-EXEC                                                                             MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
+     C                   If        DDSFILE = 'GPGLFCTD'                                     MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from GPGLFBTD where GFGPF ='GZREAPWDPD'                                      MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from GPGLFXTD where GFGPF ='GZREAPWDPD'                                      MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from GPGLFBTD where GFGPF ='GZSCSAREPD'                                      MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from GPGLFXTD where GFGPF ='GZSCSAREPD'                                      MD059702
+     C/END-EXEC                                                                             MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
+     C                   If        DDSFILE = 'APNDCCTD'                                     MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from APNDCBTD where NCDFLD = 'SFORMIDTPC'                                    MD059702
+     C+ or NCDFLD = 'SPIDFTPC' or NCDFLD = 'SFORMIDOPC'                                     MD059702
+     C+ or NCDFLD = 'SPIDFOPC'                                                              MD059702
+     C+ or (NCDFLD = 'VDAT' and NCAPDT = 'V_LOANAMD')                                       MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from APNDCXTD where NCDFLD = 'SFORMIDTPC'                                    MD059702
+     C+ or NCDFLD = 'SPIDFTPC' or NCDFLD = 'SFORMIDOPC'                                     MD059702
+     C+ or NCDFLD = 'SPIDFOPC'                                                              MD059702
+     C+ or (NCDFLD = 'VDAT' and NCAPDT = 'V_LOANAMD')                                       MD059702
+     C/END-EXEC                                                                             MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
+     C                   If        DDSFILE = 'GLGXMCTD'                                     MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from GLGXMBTD where XMORDR = 11                                              MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from GLGXMXTD where XMORDR = 11                                              MD059702
+     C/END-EXEC                                                                             MD059702
+     C                   Endif                                                              MD059702
+     C                   If        DDSFILE = 'SDSCOCTD'                                     MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from SDSCOBTD  WHERE SRCODE = 'CYCL' and SRCDDP = 'PEND'                     MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from SDSCOXTD  WHERE SRCODE = 'CYCL' and SRCDDP = 'PEND'                     MD059702
+     C/END-EXEC                                                                             MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
+     C                   If        DDSFILE = 'SCSRVCTD'                                     MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from SCSRVBTD  WHERE GSSVAL = 'KYCPassword'                                  MD059702
+     C+ or GSSVAL = 'PEASystemPassword'                                                     MD059702
+     C+ or GSSVAL = 'PEASystemUsername'                                                     MD059702
+     C+ or GSSVAL = 'PEAFTPUserID'                                                          MD059702
+     C+ or GSSVAL = 'KYCDBUser'                                                             MD059702
+     C+ or GSSVAL = 'FTPUserLogin'                                                          MD059702
+     C+ or GSSVAL = 'FTPUserPassword'                                                       MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from SCSRVXTD  WHERE GSSVAL = 'KYCPassword'                                  MD059702
+     C+ or GSSVAL = 'PEASystemPassword'                                                     MD059702
+     C+ or GSSVAL = 'PEASystemUsername'                                                     MD059702
+     C+ or GSSVAL = 'PEAFTPUserID'                                                          MD059702
+     C+ or GSSVAL = 'KYCDBUser'                                                             MD059702
+     C+ or GSSVAL = 'FTPUserLogin'                                                          MD059702
+     C+ or GSSVAL = 'FTPUserPassword'                                                       MD059702
+     C/END-EXEC                                                                             MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
+     C                   If        DDSFILE = 'SDSVLCTD'                                     MD059702
+     C                   eval      SQLDynStmt = *Blanks                                     MD059702
+     C                   eval      SQLDynStmt = 'delete from ' +                            MD059702
+     C                             %trimr(SCHEMAM) + '/' + TABLEB +                         MD059702
+     C                             ' WHERE GISVAL = ''KYCPassword''' +                      MD059702
+     C                             ' or GISVAL = ''PEASystemPassword''' +                   MD059702
+     C                             ' or GISVAL = ''PEASystemUsername''' +                   MD059702
+     C                             ' or GISVAL = ''PEAFTPUserID''' +                        MD059702
+     C                             ' or GISVAL = ''KYCDBUser''' +                           MD059702
+     C                             ' or GISVAL = ''FTPUserLogin''' +                        MD059702
+     C                             ' or GISVAL = ''FTPUserPassword'''                       MD059702
+                                                                                            MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ prepare DynSQLStmnt                                                                 MD059702
+     C+ from :SQLDynStmt                                                                    MD059702
+     C/END-EXEC                                                                             MD059702
+                                                                                            MD059702
+     C/exec SQL                                                                             MD059702
+     C+ execute DynSQLStmnt                                                                 MD059702
+     C/end-exec                                                                             MD059702
+                                                                                            MD059702
+     C                   If        SQLCode <> 0                                             MD059702
+     C                             and SQLCode <> 100                                       MD059702
+     C                   eval      ERROR = '*Error'                                         MD059702
+     C                   Dump                                                               MD059702
+     C                   Seton                                        LR                    MD059702
+     C                   Return                                                             MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
+     C                   eval      SQLDynStmt = *Blanks                                     MD059702
+     C                   eval      SQLDynStmt = 'delete from ' +                            MD059702
+     C                             %trimr(SCHEMAM) + '/' + 'SDSVLXTD' +                     MD059702
+     C                             ' WHERE GISVAL = ''KYCPassword''' +                      MD059702
+     C                             ' or GISVAL = ''PEASystemPassword''' +                   MD059702
+     C                             ' or GISVAL = ''PEASystemUsername''' +                   MD059702
+     C                             ' or GISVAL = ''PEAFTPUserID''' +                        MD059702
+     C                             ' or GISVAL = ''KYCDBUser''' +                           MD059702
+     C                             ' or GISVAL = ''FTPUserLogin''' +                        MD059702
+     C                             ' or GISVAL = ''FTPUserPassword'''                       MD059702
+                                                                                            MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ prepare DynSQLStmnt                                                                 MD059702
+     C+ from :SQLDynStmt                                                                    MD059702
+     C/END-EXEC                                                                             MD059702
+                                                                                            MD059702
+     C/exec SQL                                                                             MD059702
+     C+ execute DynSQLStmnt                                                                 MD059702
+     C/end-exec                                                                             MD059702
+                                                                                            MD059702
+     C                   If        SQLCode <> 0                                             MD059702
+     C                             and SQLCode <> 100                                       MD059702
+     C                   eval      ERROR = '*Error'                                         MD059702
+     C                   Dump                                                               MD059702
+     C                   Seton                                        LR                    MD059702
+     C                   Return                                                             MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
+     C                   If        DDSFILE = 'SCTRGCTD'                                     MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from SCTRGBTD  WHERE TRFILE = 'SCSARIPD' or TRFILE =                         MD059702
+     C+ 'SCSARWPD' or TRFILE = 'SDPDWHPD' or TRFILE = 'SDPDWNPD'                            MD059702
+     C/END-EXEC                                                                             MD059702
+     C/EXEC SQL                                                                             MD059702
+     C+ delete from SCTRGBTD  WHERE TRFILE = 'SCSARIPD' or TRFILE =                         MD059702
+     C+ 'SCSARWPD' or TRFILE = 'SDPDWHPD' or TRFILE = 'SDPDWNPD'                            MD059702
+     C/END-EXEC                                                                             MD059702
+     C                   Endif                                                              MD059702
+                                                                                            MD059702
      C                   ENDSR
 
       *****************************************************************
@@ -594,11 +756,13 @@
      C                   eval      OSCHEMA_S = OSCHEMA                                      MD055681
      C                   if        DDSFILE = 'SCSRDCTD'                                     MD055681
      C                   eval      OLDFILE = 'SCSAREPD'                                     MD055681
-     C                   eval      OSCHEMA = %SUBST(OSCHEMA:1:2) + 'DMLIB'                  MD055681
+     C**********         eval      OSCHEMA = %SUBST(OSCHEMA:1:2) + 'DMLIB'         MD055681 MD059702
+     C                   eval      OSCHEMA = %SUBST(OSCHEMA:1:2) + 'DTALIB'                 MD059702
      C                   endif                                                              MD055681
      C                   if        DDSFILE = 'GPSRDCTD'                                     MD055681
      C                   eval      OLDFILE = 'GPSAREPD'                                     MD055681
-     C                   eval      OSCHEMA = %SUBST(OSCHEMA:1:2) + 'GMLIB'                  MD055681
+     C**********         eval      OSCHEMA = %SUBST(OSCHEMA:1:2) + 'GMLIB'         MD055681 MD059702
+     C                   eval      OSCHEMA = %SUBST(OSCHEMA:1:2) + 'GTALIB'                 MD059702
      C                   endif                                                              MD055681
                                                                                             MD055681
      C                   eval      TotRow = 0                                               MD055681

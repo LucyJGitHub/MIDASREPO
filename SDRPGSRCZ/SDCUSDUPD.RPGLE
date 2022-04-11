@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 252069             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD052595           Date 08Feb19               *
+      *  Prev Amend No. 252069             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056982           Date 12Oct20               *
       *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
@@ -158,6 +159,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052595 - CRS Detail Authority Flag not updated.            *
       *  252069 - Database error message occurs when there is a       *
       *           record locking issue.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -3572,6 +3574,7 @@
      C                   EVAL      CDPHON = D_CVPHON                                          CGL157
      C                   EVAL      CDRPAY = D_CVRPAY                                          CGL157
      C                   EVAL      CDTINS = D_CVTINS                                          CGL177
+     C                   EVAL      CDAUHO = D_CVAUHO                                        MD052595
      C                   IF        %SUBST(PCrsdZ:207:3) = *Blanks                             CGL157
      C                   EVAL      CDEFFD = *Zero                                             CGL157
      C                   ELSE                                                                 CGL157
@@ -5087,6 +5090,7 @@
      C                   EVAL      CDPHON = D_CVPHON                                          CGL157
      C                   EVAL      CDRPAY = D_CVRPAY                                          CGL157
      C                   EVAL      CDTINS = D_CVTINS                                          CGL177
+     C                   EVAL      CDAUHO = D_CVAUHO                                        MD052595
      C                   IF        %SUBST(PCrsdZ:207:3) = *Blanks                             CGL157
      C                   EVAL      CDEFFD = *Zero                                             CGL157
      C                   ELSE                                                                 CGL157

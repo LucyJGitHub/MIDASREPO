@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. FCM101             Date 11Mar19               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD034915           Date 26Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 -  Floor Rates on LE module                           *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
@@ -414,6 +416,23 @@
      C                   ENDIF
       *
      C                   MOVEL     NCHI          DDNCHI
+                                                                                              FCM101
+     C                   IF        FCM101 = 'Y'                                               FCM101
+                                                                                              FCM101
+      ** New Contractual Spread                                                               FCM101
+                                                                                              FCM101
+     C     NNSP          IFNE      *ZERO                                                      FCM101
+     C                   MOVE      *BLANKS       ZFIELD                                       FCM101
+     C                   MOVE      NNSP          ZFIELD                                       FCM101
+     C                   Z-ADD     7             ZADEC                                        FCM101
+     C                   EXSR      ZEDIT                                                      FCM101
+     C                   EVAL      DDCNS2 = ZFIELD                                            FCM101
+     C                   ENDIF                                                                FCM101
+                                                                                              FCM101
+      ** New Contractual Spread Sign                                                          FCM101
+                                                                                              FCM101
+     C                   MOVEL     NNSG          DDCNG2                                       FCM101
+     C                   ENDIF                                                                FCM101
                                                                                               CRE073
      C                   IF        CRE073 = 'Y'                                               CRE073
                                                                                               CRE073
@@ -1065,7 +1084,19 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CRE073
      C                   MOVE      'Y'           CRE073                                       CRE073
      C                   ENDIF                                                                CRE073
-
+                                                                                              FCM101
+      ** Check if FCM101 Floor Rates on LE is ON                                              FCM101
+                                                                                              FCM101
+     C                   Move      'N'           FCM101            1                          FCM101
+     C                   CALLB     'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       @Rtcd                                        FCM101
+     C                   PARM      '*VERIFY'     @Optn                                        FCM101
+     C                   PARM      'FCM101'      @SARD                                        FCM101
+                                                                                              FCM101
+     C                   IF        @Rtcd = *Blanks                                            FCM101
+     C                   EVAL      FCM101 = 'Y'                                               FCM101
+     C                   ENDIF                                                                FCM101
+                                                                                              FCM101
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *

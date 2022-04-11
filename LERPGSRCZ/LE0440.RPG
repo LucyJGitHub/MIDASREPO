@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055407           Date 07Nov20               *
+      *  Last Amend No. FCM101A            Date 29Mar19               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055407           Date 07Nov20               *
       *                 MD054229           Date 30Aug19               *
       *                 AR700107A          Date 09Feb18               *
       *                 MD051890           Date 16Sep18               *
@@ -105,6 +106,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  FCM101A - Floor Rates on LE module, output Contractual Spread*
+      *            and sign on NLAMSQD rebuild                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055407  - Decimal data error in AMCNSP field in CLOAMSQD   *
       *              file. If new record, CRE073 fields are set to    *
@@ -327,7 +330,9 @@
      F***CLOAN** IF  F    1782  7AI     2 DISK                                         CER020 CRE073
      F***CLOAN** IF  F    1829  7AI     2 DISK                                         CRE073 CLE134
      FCLOAN   IF  F    1874  7AI     2 DISK                                                   CLE134
-     FCLOAMQL0IF  E           K        DISK                                                 MD055407
+     F***CLOAMQL0IF  E           K        DISK                                      MD055407 FCM101A
+     FCLOAMQL0IF  E           K        DISK         KINFSR *PSSR                             FCM101A   
+     ** Midas LE Loan amendments extension file                                              FCM101A 
 0016 FNLAMSDH O   F     320            DISK
 0016 F***NLAMSDK*O   F     320            DISK                            S01518
      F***NLAMSDK*O   F     949            DISK                     S01518 CAC001
@@ -1432,6 +1437,19 @@
      C           WPNAM     ANDEQ'NEWLECOB'                                                  AR786878
      C                     MOVE 'Y'       NEWCOB                                            AR786878
      C                     ENDIF                                                            AR786878
+      *                                                                                      FCM101A
+     C                     MOVE 'N'       FCM101  1                                          FCM101A
+     C                     MOVE '0'       *IN25   1                                          FCM101A
+     C                     CALL 'AOSARDR0'                                                   FCM101A
+     C                     PARM *BLANKS   P@RTCD                                             FCM101A
+     C                     PARM '*VERIFY' P@OPTN                                             FCM101A
+     C                     PARM 'FCM101'  P@SARD                                             FCM101A
+     C           SCSARD    PARM SCSARD    DSFDY                                              FCM101A
+      *                                                                                      FCM101A
+     C           P@RTCD    IFEQ *BLANKS                                                      FCM101A
+     C                     MOVE 'Y'       FCM101                                             FCM101A
+     C                     MOVE '1'       *IN25                                              FCM101A
+     C                     ENDIF                                                             FCM101A
       *                                                                                       CLE034
       *                                                                   CEU004
       *                                                                   CEU004
@@ -1588,6 +1606,25 @@
      C                     ENDIF                                          180044
       *                                                                   180044
 0393 C   03NMR             EXSR LAUNM
+      *                                                                                      FCM101A
+     C           QKEY      KLIST                                                             FCM101A
+     C                     KFLD           LNRF                                               FCM101A
+     C                     KFLD           VDAT                                               FCM101A
+     C                     KFLD           LASN                                               FCM101A
+      *                                                                                      FCM101A
+     C           FCM101    IFEQ 'Y'                                                          FCM101A
+     C           *IN03     ANDEQ'1'                                                          FCM101A
+     C           AMTP      ANDEQ'SC'                                                         FCM101A
+     C           *IN41     ANDEQ'1'                                                          FCM101A
+     C           QKEY      CHAINCLOAMQL0             26                                      FCM101A
+      *                                                                                      FCM101A
+      ** If not found, initialise fields for output to NLAMSQD                               FCM101A
+      *                                                                                      FCM101A
+     C           *IN26     IFEQ '1'                                                          FCM101A
+     C                     Z-ADD*ZERO     AMCNSP                                             FCM101A
+     C                     MOVE *BLANK    AMCNSG                                             FCM101A
+     C                     ENDIF                                                             FCM101A
+     C                     ENDIF                                                             FCM101A
      C**                                                                  S01117
      C**   MULTIBRANCH MAIN PROCESSING                                    S01117
      C**                                                                  S01117
@@ -3645,8 +3682,10 @@
      O                         LASN      14                                                   258399
      O                         BRCA      17                                                   258399
      O                         AMFRID    37                                                 MD055407
-     O                         AMCNSP    43P                                                MD055407
-     O                         AMCNSG    44                                                 MD055407
+     O**********               AMCNSP    43P                                         MD055407 FCM101
+     O**********               AMCNSG    44                                          MD055407 FCM101
+     O                 41 25   AMCNSP    43P                                                  FCM101
+     O                 41 25   AMCNSG    44                                                   FCM101
      O                         AMRDMT    51                                                 MD055407
      O                         AMRDFD    55                                                 MD055407
       *                                                                                       258399

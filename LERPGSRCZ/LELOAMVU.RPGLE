@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. MD057922           Date 04May21               *
+      *  Last Amend No. FCM101             Date 20Feb19               *
+      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *                 MD057922           Date 04May21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD024811           Date 24Jan20               *
@@ -104,6 +105,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 - Floor Rates on LE module                            *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -792,6 +794,7 @@
      C**********                                 + ExtData                            BUG9493 247172
      C                                           + S_Rec + S_Pay                              CLE106
      C                                           + InfData                                   BUG9493
+     C                                           + TransQLoam                                 FCM101
      C                                           + ExtData                                    247172
 
      C                   RETURN
@@ -1545,6 +1548,7 @@
 
       ** Valid Loan Amendment layout (DS) from/to caller
      C                   PARM                    ValidLoam
+     C                   PARM                    TransQLoam       12                          FCM101
 
                                                                                              CSF011A
       ** If Syndications Manager is off, override UTN with PC Ref value                      CSF011A
@@ -2212,6 +2216,19 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
+                                                                                              FCM101
+      * Determine if FCM101 is switched on                                                    FCM101
+                                                                                              FCM101
+     C                   CALLB     'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       @RTCD                                        FCM101
+     C                   PARM      '*VERIFY'     @OPTN                                        FCM101
+     C                   PARM      'FCM101'      @SARD                                        FCM101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        FCM101
+     C                   IF        @RTCD = *BLANK                                             FCM101
+     C                   MOVEL     'Y'           FCM101            1                          FCM101
+     C                   ELSE                                                                 FCM101
+     C                   MOVEL     'N'           FCM101                                       FCM101
+     C                   ENDIF                                                                FCM101
       ** Determine if CLE034 (Lending Enhancements)                                           CLE034
                                                                                               CLE034
      C                   MOVE      'N'           CLE034                                       CLE034

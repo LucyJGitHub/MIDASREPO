@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. FCM101             Date 04Mar19               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 - Floor Rates on LE module                            *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -816,6 +818,11 @@
      C                   EVAL      NDBAV = L_CLNDBA                                           CLE172
      C                   ENDIF                                                                CLE172
       *
+     C                   IF        FCM101 = 'Y'                                               FCM101
+     C                   EVAL      NNSP = L_CLCNSP                                            FCM101
+     C                   EVAL      NNSG = L_CLCNSG                                            FCM101
+     C                   ENDIF                                                                FCM101
+      *                                                                                       FCM101
      C                   Z-ADD     BJRDNB        LCD
       *
      C                   EVAL      TNLU = PNATN
@@ -2027,6 +2034,18 @@
      C                   EVAL      CLE172 = 'Y'                                               CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
+      ** Verify if FCM101 is switched ON                                                      FCM101        
+     C                   MOVE      'N'           FCM101            1                          FCM101
+     C                   CALL      'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       PRetCode                                     FCM101
+     C                   PARM      '*VERIFY'     POption                                      FCM101
+     C                   PARM      'FCM101'      PSARD                                        FCM101
+     C     SCSARD        PARM      *BLANKS       DSFDY                                        FCM101
+                                                                                              FCM101
+     C                   IF        PRetCode = *BLANKS                                         FCM101
+     C                   EVAL      FCM101 = 'Y'                                               FCM101
+     C                   ENDIF                                                                FCM101
+                                                                                              FCM101
      C                   ENDSR
       ****************************************************************
       /EJECT

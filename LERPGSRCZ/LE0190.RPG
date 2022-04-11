@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. FCM101             Date 22Mar19               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055733           Date 03Jul20               *
       *                 CER050             Date 16Jun19               *
@@ -194,6 +195,9 @@
 0011 F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 -  Floor Rates on LE Module                           *
+      *            Re-use indicator *IN46 to *IN48 (no longer used by *
+      *            core processing)                                   *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -512,7 +516,8 @@
      F***LE0190FMCF  F     632            WORKSTN                                      CLE028 CLE028
      F***LE0190FMCF  F     644            WORKSTN                                      CLE028 238863
      F***LE0190FMCF  F     646            WORKSTN                                      238863 CER020
-     FLE0190FMCF  F     661            WORKSTN                                                CER020
+     F***LE0190FMCF  F     661            WORKSTN                                      CER020 FCM101
+     FLE0190FMCF  F     674            WORKSTN                                                FCM101
      F/COPY WNCPYSRC,LE0190F001
 0017 F*LOAN***IF**F     400  7AI     2 DISK                               S01270
 0017 F***CLOAN   IF  F     434  7AI     2 DISK                      S01270S01220
@@ -535,6 +540,7 @@
      F***CLOAN** IF  F    1782  7AI     2 DISK                                         CER020 CLE134
      F***CLOAN** IF  F    1874  7AI     2 DISK                                         CLE134 CLE141
      FCLOAN   IF  F    2025  7AI     2 DISK                                                   CLE141
+     FXXCLOQY0IF  E           K        DISK                                                   FCM101
 0018 F*CLINT***IF**F     256  7AI     2 DISK                              S01194
 0019 F***LOAMS***IF  F     320 14AI     2 DISK                            S01518
 0019 F***LOAMS***IF**F     949 14AI     2 DISK                     S01518 CAC001
@@ -1726,6 +1732,19 @@
      C           PRTCD     IFEQ *BLANKS                                                       CLE141
      C                     MOVE 'Y'       CLE141                                              CLE141
      C                     ENDIF                                                              CLE141
+      *                                                                                       FCM101
+      ** Determine if FCM101 is switched ON                                                   FCM101
+      *                                                                                       FCM101
+     C                     MOVE 'N'       FCM101  1                                           FCM101
+     C                     CALL 'AOSARDR0'                                                    FCM101
+     C                     PARM *BLANKS   PRTCD                                               FCM101
+     C                     PARM '*VERIFY' POPTN                                               FCM101
+     C                     PARM 'FCM101'  PSARD                                               FCM101
+     C           SCSARD    PARM SCSARD    DSFDY                                               FCM101
+      *                                                                                       FCM101
+     C           PRTCD     IFEQ *BLANKS                                                       FCM101
+     C                     MOVE 'Y'       FCM101                                              FCM101
+     C                     ENDIF                                                              FCM101
       *                                                                   CAC001
       **  If Analytical Accounting is on, enable F19                      CAC001
       **  or Revenue Analysis is installed, enable F19                    CDE002
@@ -2417,6 +2436,11 @@
      C                     MOVE *BLANKS   SCRTN  10                       S01465
      C                     MOVE *BLANKS   SOMDT   7                       S01465
      C                     MOVE *BLANKS   WRK115                                              211119
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C                     MOVEA'000'     *IN,46                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
      C*                                                                   S01465
 0680 C**********************************
 0681 C**   SET UP GENERAL DETAILS
@@ -2661,6 +2685,59 @@
      C           BRTT      IFNE *BLANKS                                                       CSD103
      C                     MOVE BRTT      SBRTT                                               CLE036
      C                     ENDIF                                                              CLE036
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+      *                                                                                       FCM101
+     C                     MOVE *OFF      *IN46                                               FCM101
+     C           PTYP      IFEQ 61                                                            FCM101
+     C           PTYP      OREQ 62                                                            FCM101
+     C           PTYP      OREQ 64                                                            FCM101
+     C           PTYP      OREQ 66                                                            FCM101
+     C           PTYP      OREQ 68                                                            FCM101
+     C           PTYP      OREQ 69                                                            FCM101
+     C           PTYP      OREQ 70                                                            FCM101
+     C           PTYP      OREQ 71                                                            FCM101
+     C           PTYP      OREQ 72                                                            FCM101
+      *                                                                                       FCM101
+     C           SLNREF    CHAINXXCLOQY0             46                                       FCM101
+      *                                                                                       FCM101
+     C           *IN46     IFEQ *OFF                                                          FCM101
+     C           XQAISG    ANDNE*BLANKS                                                       FCM101
+     C           *IN46     OREQ *OFF                                                          FCM101
+     C           XQBRSG    ANDNE*BLANKS                                                       FCM101
+     C                     MOVE '1'       *IN46                                               FCM101
+      *                                                                                       FCM101
+     C           XQAISG    IFNE *BLANK                                                        FCM101
+     C                     MOVE *BLANKS   ZFIELD                                              FCM101
+     C                     MOVE XQAIRF    ZFIELD                                              FCM101
+     C                     MOVE *ON       *IN47                                               FCM101
+     C                     MOVE *OFF      *IN48                                               FCM101
+     C                     MOVE XQAIRF    ZFIELD                                              FCM101
+     C                     Z-ADDXQAIRF    FLOOR  117                                          FCM101
+     C           XQAISG    IFEQ '-'                                                           FCM101
+     C                     Z-SUBFLOOR     FLOOR                                               FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ELSE                                                               FCM101
+     C           XQBRSG    IFNE *BLANK                                                        FCM101
+     C                     MOVE *BLANKS   ZFIELD                                              FCM101
+     C                     MOVE XQBRTF    ZFIELD                                              FCM101
+     C                     MOVE *ON       *IN48                                               FCM101
+     C                     MOVE *OFF      *IN47                                               FCM101
+     C                     Z-ADDXQBRTF    FLOOR                                               FCM101
+     C           XQBRSG    IFEQ '-'                                                           FCM101
+     C                     Z-SUBFLOOR     FLOOR                                               FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ELSE                                                               FCM101
+      *                                                                                       FCM101
+      ** Do not output Floor Details                                                          FCM101
+      *                                                                                       FCM101
+     C                     MOVE *OFF      *IN46                                               FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
      C*                                                                   053700
      C** Set up Recourse Indicator                                        053700
      C*                                                                   053700
@@ -3463,7 +3540,9 @@
       *                                                                   CLE004
       ** Format status of a live loan                                     CLE004
       *                                                                   CLE004
+     C           FCM101    IFNE 'Y'                                                           FCM101
      C                     MOVEA'000'     *IN,46                          CLE004
+     C                     ENDIF                                                              FCM101
      C********** *IN60     IFEQ '0'                                                  CLE004 AR690629
      C********** *IN61     ANDEQ'0'                                                  CLE004 AR690629
      C           *IN61     IFEQ '0'                                                         AR690629
@@ -6614,6 +6693,7 @@
      O                         SINSDT   653                                                   CER020
      O                         SFNMDT   660                                                   CER020
      O                         PSDSP    661                                                   CER020
+     O                       46FLOOR    674 '  0 .       -'                                   FCM101
      O/COPY WNCPYSRC,LE0190O006
       ***PARTICIPATION*SOLD***                                            147830
      O                       62          82 'ORIGINAL LOAN NO./BORR.'     147830

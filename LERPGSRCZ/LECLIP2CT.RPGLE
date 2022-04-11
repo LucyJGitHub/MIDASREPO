@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. FCM101             Date 11Mar19               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 -  Floor Rates on LE module                           *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -215,7 +217,9 @@
      D CLE172          S              1A                                                      CLE172
      D WWBadj          S             11P 7                                                    CLE172
      D WWFlor          S             11P 7                                                    CLE172
+     D FCM101          S              1                                                       FCM101
                                                                                               CLE035
+                                                                                                   
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -586,6 +590,25 @@
      C                   MOVE      ZFIELD        DDEAIR                                       CLE143
      C                   ENDIF                                                                CLE143
                                                                                               CLE143
+     C                   IF        FCM101 = 'Y'                                               FCM101
+                                                                                              FCM101
+      ** Contractual Spread                                                                   FCM101
+                                                                                              FCM101
+     C     CNSP          IFNE      *ZEROS                                                     FCM101
+     C                   MOVEL     *BLANKS       ZFIELD                                       FCM101
+     C                   MOVE      CNSP          ZFIELD                                       FCM101
+     C                   Z-ADD     7             ZDEC                                         FCM101
+     C                   CALL      'ZEDIT'                                                    FCM101
+     C                   PARM                    ZFIELD                                       FCM101
+     C                   PARM                    ZDEC                                         FCM101
+     C                   MOVE      ZFIELD        DDCNSP                                       FCM101
+     C                   ENDIF                                                                FCM101
+                                                                                              FCM101
+      ** Contractual Spread Sign                                                              FCM101
+                                                                                              FCM101
+     C                   MOVEL     CNSG          DDCNSG                                       FCM101
+     C                   ENDIF                                                                FCM101
+                                                                                              CRE073
      C                   IF        CRE073 = 'Y'                                               CRE073
                                                                                               CRE073
       ** Contractual Spread                                                                   CRE073
@@ -834,6 +857,19 @@
      C                   EVAL      CLE172 = 'Y'                                               CLE172
      C                   ENDIF                                                                CLE172
                                                                                               CLE172
+      ** Check if FCM101 Floor Rates on LE is ON                                              FCM101
+                                                                                              FCM101
+     C                   EVAL      FCM101 = 'N'                                               FCM101
+     C                   CALLB     'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       PRtcd                                        FCM101
+     C                   PARM      '*VERIFY'     POptn                                        FCM101
+     C                   PARM      'FCM101'      PSARD                                        FCM101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        FCM101
+                                                                                              FCM101
+     C                   IF        PRtcd = *Blanks                                            FCM101
+     C                   EVAL      FCM101 = 'Y'                                               FCM101
+     C                   ENDIF                                                                FCM101
+                                                                                              FCM101                                                                                         
      C                   ENDSR
       *****************************************************************
       /EJECT

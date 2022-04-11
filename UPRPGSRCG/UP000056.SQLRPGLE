@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD059742             Date 23Mar22             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059742 - Cope with change in Alternative field name        *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -476,6 +478,7 @@
      C                             Prefix + %trimr(%subst(MovLib:3:8)) + ')'
      C                   eval      TOLIB =  Prefix + %trimr(%subst(MovLib:3:8))
      C                   else
+     C                   eval      #Lib2 = RefSys + %SUBST(DRLIB:3:8)                       MD059742
      C                   eval      SCCMD = 'CRTDUPOBJ OBJ(' +
      C                             %trimr(DRFILE) + ') FROMLIB(' +
      C                             %trimr(#Lib2) + ') OBJTYPE(*FILE) TOLIB(' +

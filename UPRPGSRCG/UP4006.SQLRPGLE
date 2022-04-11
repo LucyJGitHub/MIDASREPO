@@ -14,11 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058089             Date 01Sep21             *
-      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD059742             Date 23Mar22             *
+      *  Prev Amend No. MD058089             Date 01Sep21             *
+      *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059742 - Cope with change in Alternative field name        *
       *  MD058089 - Deliverable Data Split for SM and UP              *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
@@ -27,7 +29,8 @@
      FUP4006P1  O    E             PRINTER OFLIND(*IN37)
       /EJECT
 
-     D FLDA@           S              6    DIM(19) CTDATA PERRCD(1)
+     D*FLDA@****       S              6    DIM(19) CTDATA PERRCD(1)                         MD059742
+     D FLDA@           S              6    DIM(21) CTDATA PERRCD(1)                         MD059742
      D Dep_Fil         S             10    DIM(999)
      D DepF            S             10
      D S_DepF          S             10
@@ -658,3 +661,5 @@ WHFLDG
 WHPSUD
 WHDBLL
 WHNULL
+WHALIS                                                                                      MD059742
+WHALI2                                                                                      MD059742

@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD059742             Date 23Mar22             *
-      *  Prev Amend No. MD058585             Date 17Aug21             *
+      *  Last Amend No. MD059751             Date 25Mar22             *
+      *  Prev Amend No. MD059742             Date 23Mar22             *
+      *                 MD058585             Date 17Aug21             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059751 - SQL view statement change is not detected by aDBU *
       *  MD059742 - Cope with change in Alternative field name        *
       *  MD058585 - aDBU does not detect if LF has different keys     *
       *  CUT017 - Adaptive Database Upgrade                           *
@@ -36,6 +38,7 @@
      D @FlDup          S              1
      D @ATICAP         S              1
      D @ATACCP         S              1
+     D @SQLSTM         S              1                                                     MD059751
      D @FileC          S              1
      D RcdCount        S              5  0
      D RcdCount2       S              5  0
@@ -149,6 +152,7 @@
      C                   eval      @FlDup = *BLANKS
      C                   eval      @ATICAP = *BLANKS
      C                   eval      @ATACCP = *BLANKS
+     C                   eval      @SQLSTM = *BLANKS                                        MD059751
      C                   eval      @FileC = *BLANKS
      C                   eval      @DTAQ = *BLANKS
      C                   eval      @DTAARA = *BLANKS
@@ -496,6 +500,19 @@
      C                   iter
      C                   ENDIF
 
+      * If SQL statement view  is changed                                                   MD059751
+     C                   If        WDESC = 'SQL view statement'                             MD059751
+     C                   eval      @SQLSTM = 'Y'                                            MD059751
+      * Get next                                                                            MD059751
+     C/exec SQL                                                                             MD059751
+     C+ fetch next                                                                          MD059751
+     C+ from EachRdZ                                                                        MD059751
+     C+ into :UPZLOG                                                                        MD059751
+     C/end-exec                                                                             MD059751
+                                                                                            MD059751
+     C                   iter                                                               MD059751
+     C                   ENDIF                                                              MD059751
+                                                                                            MD059751
       * If DTAQ
      C                   If        WTYPE = 'DTAQ'
      C                   Select
@@ -640,6 +657,12 @@
      C                   eval      DRALLC = 'N'
      C                   ENDIF
 
+      * if the SQL statement view was changed and file has not been reported yet            MD059751
+     C                   if        @SQLSTM = 'Y'  and DRACTN = ' '                          MD059751
+     C                   eval      DRACTN = 'Existing file will be duplicated'              MD059751
+     C                   eval      DRALLC = 'N'                                             MD059751
+     C                   ENDIF                                                              MD059751
+                                                                                            MD059751
       * flag EXCEPTION if @ATICAP is still 'Y' or @ATACCP
      C                   if        @ATICAP = 'Y'
      C                             or @ATACCP = 'Y'

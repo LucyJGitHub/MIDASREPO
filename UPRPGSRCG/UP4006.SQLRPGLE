@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059742             Date 23Mar22             *
-      *  Prev Amend No. MD058089             Date 01Sep21             *
+      *  Last Amend No. MD059751             Date 25Mar22             *
+      *  Prev Amend No. MD059742             Date 23Mar22             *
+      *                 MD058089             Date 01Sep21             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059751 - SQL view statement change is not detected by aDBU *
       *  MD059742 - Cope with change in Alternative field name        *
       *  MD058089 - Deliverable Data Split for SM and UP              *
       *  CUT017 - Adaptive Database Upgrade                           *
@@ -446,6 +448,10 @@
      C                   eval      R_DESC = WDESC
      C                   eval      R_DIFF = 'DTAQswill be duplicated'
 
+     C                   WHEN      WDESC= 'SQL view statement'                              MD059751
+     C                   eval      R_DESC = WDESC                                           MD059751
+     C                   eval      R_DIFF = 'Different SQL statement'                       MD059751
+                                                                                            MD059751
      C                   OTHER
      C                   eval      R_ATTR = WFLDA
      C                   eval      R_DESC = WFDEC

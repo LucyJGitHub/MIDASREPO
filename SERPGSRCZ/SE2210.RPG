@@ -16,8 +16,14 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD033891           Date 07Jul15               *
-      *  Prev Amend No. MD030796           Date 30Oct14               *
+      *  Last Amend No. 261031             Date 11Mar22               *
+      *  Prev Amend No  260853             Date 11Mar22               *
+      *                 ADEFIX             Date 11Mar22               *
+      *                 MD031386           Date 11Mar22               *
+      *                 260712             Date 11Mar22               *
+      *                 232670             Date 11Mar22               *
+      *                 MD033891           Date 07Jul15               *
+      *                 MD030796           Date 30Oct14               *
       *                 MD050604           Date 21Feb20               *
       *                 249688             Date 01Jul19               *
       *                 262293             Date 31May19               *
@@ -171,6 +177,24 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  261031 - Corrected convertion from Unamortized to AIBD.      *
+      *         - Applied for MD059606.                               *
+      *  260853 - Incorrect reversal in processing type '8'. Fix      *
+      *           patterned after 219968 and 249368                   *
+      *         - Applied for MD059606.                               *
+      *  MD031386 - Incorrect rate used when recalculation New        *
+      *             Unamortised amout.                                *
+      *          - Applied for MD059606.                              *
+      *  ADEFIX - IF LAVP/LAVN  100 DON'T CHANGE IT.                  *
+      *           IF ISSUE DATE IN FUTURE KEEP PREVIOUS LAVP          *
+      *         - Applied for MD059606.                               *
+      *  260712 - No amortization should take place if average price  *
+      *           is 100. Applied fix 232220                          *
+      *         - Applied for MD059606.                               *
+      *  232670 - Use the original trade basis value when converting  *
+      *           the market price in order to arrive at the correct  *
+      *           unrealised p/l.                                     *
+      *         - Applied for MD059606.                               *
       *  MD033891 - LAVP issue on Branch 900. Recompiled due to       *
       *             changes in /COPY ZYLDZ2.                          *
       *  MD030796 - Portuguese Upgrade - Discount/Premium Amortisation*
@@ -1915,13 +1939,22 @@ SP   C                     Z-ADD1         Z
      C*                                                                   E39495
      C                     Z-ADDNPSN      ZNOML                           E39495
      C*                                                                   S01232
+     C           CSE032    IFEQ 'Y'                                                           232670
+     C           WOTBS     ANDNE*BLANK                                                        232670
+     C                     MOVE WOTBS     STBS                                                232670
+     C                     ENDIF                                                              232670
+      *                                                                                       232670
      C                     EXSR ZPRCI
      C                     Z-ADD@BACDT    ZFDATE                                             BUG8858
      C*
      C*  CALCULATE PRICE DIFFERENCE
      C*
      C/COPY WNCPYSRC,SE2210C072
-     C           ZPRCOT    SUB  LAVP      WPRICE 158
+     C********** ZPRCOT    SUB  LAVP      WPRICE 158                                        MD031386
+      ** ZPROCT is not the currrent market price.  WPRICE must be the difference between    MD031386
+      ** Current market price and new Average price to compute the new Unamortised amount   MD031386
+      ** using new average price.                                                           MD031386
+     C           ZPRCIN    SUB  LAVP      WPRICE 158                                        MD031386
      C*
      C* OBTAIN NEW UNREALISED P/L
      C*
@@ -1954,6 +1987,12 @@ SP   C                     Z-ADD1         Z
      C***********          END                                            E21097
      C*                                                                   E21097
      C                     Z-ADDNPSN      ZNOML                           E21097
+      *                                                                                       260853
+      ** Adjust nominal by the mortgage factor.                                               260853
+      *                                                                                       260853
+     C           PROT      IFEQ '8'                                                           260853
+     C                     EXSR FACTOR                                                        260853
+     C                     ENDIF                                                              260853
      C                     Z-ADDWPRICE    ZPRC                            E21097
      C                     EXSR ZCNSD                                     E21097
      C                     Z-ADDZCONS     UPPT                            E21097
@@ -2815,6 +2854,7 @@ SP   C                     Z-ADD1         Z
      C           STAD      OREQ 'C'                                       CSE032
      C           SYBS      ANDNE*BLANKS                                   CSE032
      C           NPSN      ANDNE*ZERO                                     CSE032
+     C           LAVP      ANDNE100                                                           260712
      C*                                                                   CSE032
      C* AMORTIZE PREM/DISC ON YIELD CURVE BASIS FOR AUSTRALIA.            CSE032
      C*  -IF YIELD CURVE BASIS                                            CSE032
@@ -2826,6 +2866,17 @@ SP   C                     Z-ADD1         Z
      C           FIFO      ANDNE'Y'                                       CSE032
      C********** PROT      ANDNE'6'                                                    CSE032 226138
      C           SYBS      ANDNE*BLANKS                                   CSE032
+      *                                                                                       261031
+     C           STBS      IFEQ 'P'                                                           261031
+     C           SPBS      ANDEQ'P'                                                           261031
+     C           DPAP      ANDEQ*ZERO                                                         261031
+     C           BUDU      ANDEQ*ZERO                                                         261031
+     C                     Z-ADDNPSN      ZNOML                                               261031
+     C                     Z-ADD100       ZPRC                                                261031
+     C                     EXSR ZCNSD                                                         261031
+     C                     Z-ADDZCONS     BKVAL  150                                          261031
+     C           BKVAL     SUB  APNC      BUDU                                                261031
+     C                     ENDIF                                                              261031
      C*                                                                   CSE032
      C** Override trade basis to 'Y' as ZPRCI and ZPRCO standard          CSE032
      C** subroutines calculate yield for 'Y' trade basis only.            CSE032
@@ -3128,6 +3179,10 @@ SP   C                     Z-ADD1         Z
      C                     ENDIF                                                              CAS006
       *                                                                                       CAS006
      C                     END                                            CSE032
+      * IF ISSUE DATE IN FUTURE KEEP PREVIOUS LAVP                                            ADEFIX
+     C           ITLD      IFGT ACDT                                                          ADEFIX
+     C                     GOTO EAMORT                                                        ADEFIX
+     C                     END                                                                ADEFIX
      C           STAD      IFEQ 'C'                                                           230973
      C           FIFO      ANDNE'Y'                                                           230973
      C           SYBS      ANDNE*BLANKS                                                       230973
@@ -4605,6 +4660,7 @@ SP   C                     Z-ADD1         Z
      C*********************MULT SDCP      EVAM                     099885 099882
      C*********************MULT SDCP      EVAM      H              099882 103946
      C                     MULT SDCP      UPPT      H                     103946
+     C                     MULT SDCP      ZNOML     H                                         260853
      C*                                                                   099885
      C***  Else use the Current Factor from the Security File             099885
      C*                                                                   099885
@@ -4613,6 +4669,7 @@ SP   C                     Z-ADD1         Z
      C*********************MULT CFCT      EVAM                     099885 099882
      C*********************MULT CFCT      EVAM      H                     103946
      C                     MULT CFCT      UPPT      H                     103946
+     C                     MULT CFCT      ZNOML     H                                         260853
      C*                                                                   099885
      C                     END                                            099885
      C                     ENDSR                                          099885
@@ -4946,6 +5003,8 @@ AW   C                     END
      C                     SETOF                     52                   S01232
      C                     END                                            S01232
      C*
+     C                     MOVE STBS      WOTBS   1                                           232670
+      *                                                                                       232670
      C                     ENDSR
       *
       *****************************************************************

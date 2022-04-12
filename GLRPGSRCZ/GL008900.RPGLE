@@ -18,8 +18,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD059370           Date 13Dec21               *
-      *  Prev Amend No. MD058711           Date 16Sep21               *
+      *  Last Amend No. MD059723           Date 29Mar22               *
+      *  Prev Amend No. MD048076           Date 29Mar22               *
+      *                 AR1093845 (CDL087) Date 29Mar22               *
+      *                 MD059370           Date 13Dec21               *
+      *                 MD058711           Date 16Sep21               *
       *                 MD050216           Date 15Nov18               *
       *                 MD032070           Date 20Mar15               *
       *                 MD046248           Date 27Oct17               *
@@ -32,6 +35,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059723 - Changes for FM 2.1 upgrade.                       *
+      *  MD048076 - Incorrect Spot Trade Equivalent Account is used   *
+      *             for foreign ccy. Recompile due to changes in /COPY*
+      *             CDL087_103.                                       *
+      *             Applied for MD059723.                             *
+      *  AR1093845 - Incorporate CDL087 Changes                       *
+      *             Hooks added CDL087_099, CDL087_100, CDL087_101,   *
+      *             CDL087_102, CDL087_103, CDL087_104                *
+      *             Applied for MD059723.                             *
       *  MD059370 - Component GLC008900 fails in COB with blank DBASE *
       *             error when CSC054 is OFF and PEASystemPrefix is   *
       *             blank. Checking of system value PEASystemPrefix   *
@@ -165,6 +177,7 @@
      D BASAM2                  1     15  2
      D BASAM3                  1     15  3
 
+     D/COPY OFCPYSRCZ,CDL087_099                                                              CDL087
       ** Bank Details Data Structure
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
@@ -195,6 +208,7 @@
       ** Long Access Object Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
 
+     D/COPY OFCPYSRCZ,CDL087_100                                                              CDL087
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -323,6 +337,7 @@
      C                   IF        *IN51 = '1'
      C                   EXSR      SRBrchDet
 
+     D/COPY OFCPYSRCZ,CDL087_101                                                              CDL087
       ** For each corrective batch that post to foreign ccy income or
       ** expense & booking date is the previous accrual date or earlier
 
@@ -352,6 +367,7 @@
      C                   ENDIF
 
      C                   ENDIF
+     D/COPY OFCPYSRCZ,CDL087_104                                                              CDL087
      C                   ENDIF
 
      C                   READ      GLJENPJ0                               70
@@ -679,6 +695,7 @@
      C                   ADD       ZZAMTI        ZZTOTI
 
      C                   ENDSR
+     D/COPY OFCPYSRCZ,CDL087_103                                                              CDL087
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1042,6 +1059,7 @@
      C                   EVAL      PLTY  = A5ACTY
      C                   EVAL      PLSC  = A5ACSC
 
+     C/COPY OFCPYSRCZ,CDL087_102                                                              CDL087
      C                   ENDSR
       *****************************************************************
       /EJECT

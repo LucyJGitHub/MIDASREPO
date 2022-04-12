@@ -11,9 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR918343           Date 25Apr12               *
-      *                 MD027517           Date 08Jul14               *      
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR918343           Date 25Apr12               *
+      *                 MD027517           Date 08Jul14               *
       *               . MD053093           Date 03Sep19               *
       *                 MD048074           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
@@ -77,13 +78,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR918343 - Tried to remove drawing types from facility but   *
       *             BFM did not allow.                                *
       *             Defaulting of drawing types should only occured   *
       *             during insert and at the start (Child: AR918344)  *
       *  MD027517 - Also validate Last Availability of CA against TR. *
-      *             Extend validation of 244684.                      *      
+      *             Extend validation of 244684.                      *
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
       *             truncated CANM.                                   *
       *           - Applied for MD052591.                             *

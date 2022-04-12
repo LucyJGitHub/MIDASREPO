@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *                 CLE172             Date 01Oct20               *
       *                 MD057604           Date 06Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
@@ -76,6 +77,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD057604 - EUC0190 fails in COB. Do not allow input of sett  *

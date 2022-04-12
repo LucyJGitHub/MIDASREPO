@@ -42,7 +42,6 @@
       *  SrWrite   - Determine which Feature will be written          *
       *  SrWriteSard - Insert SCSARDPD Record                         *
       *  SrWritePass - Insert SCPASSPD Record                         *
-      *  SrGetPass - Get Password for Validation List SCSWPSVL        *
       *  SrCache   - Call Caching of Features                         *
       *  *PSSR     - Error processing                                 *
       *  *INZSR    - Initialise                                       *
@@ -95,7 +94,6 @@
      D**********                      6    INZ('CSW220')                           MD055694 MD057885
      D**********                      6    INZ('CSW221')                           MD055694 MD059471
      D*Feat*****                      6    DIM(N) OVERLAY(FeatDS)                           MD059471
-     D Feat                           6    DIM(N)                                           MD059471
       *
       ** Data Structure for Feature Password
      D*PWordDS*********DS******************************************************             MD059471
@@ -103,8 +101,11 @@
      D*******************************16****INZ('*******')**********************    MD057885 MD059471
      D*******************************16****INZ('**********')*******************    MD055694 MD059471
      D*PWord****                     16    DIM(N) OVERLAY(PWordDS)                          MD059471
-     D PWord                         16    DIM(N)                                           MD059471
       *
+     D SQLDs           DS                                                                   MD059471
+     D  XXFeat                        6A                                                    MD059471
+     D  XXActDat                      5A                                                    MD059471
+      *                                                                                     MD059471
      D CacheDT       E DS                  EXTNAME(CACHEDT) DTAARA(CACHEDT)
       *
      D SDBank        E DS                  EXTNAME(SDBankpd)
@@ -130,7 +131,7 @@
      D Msg             S            100A
      D PRetCode        S              7A
      D POption         S              7A
-     D XXFeat          S              6A                                                    MD055681
+     D*XXFeat*****     S              6A                                           MD055681 MD059471
      D P@SARN          S              6A                                                    MD054346
      D PASS            S             16A                                                    MD054346
      D PReturnCode     S              7A                                                    MD054346
@@ -147,9 +148,7 @@
      D Reset           C                   CONST('R')                                       MD054346
      D Delete          C                   CONST('D')                                       MD054346
      D Find            C                   CONST('F')                                       MD054346
-
-      ** SQL Statements.                                                                    MD059471
-
+      * SQL Statements.
      D GetKeySQLStmnt  S           2000A   INZ(*BLANKS)                                     MD059471
       *
       /EJECT
@@ -174,13 +173,14 @@
       ** skip processing and proceed to the next feature.
       *
                                                                                             MD059471
+      *                                                                                     MD059471
       ** Get key from MESWACTD for checking SCSRDJW0                                        MD059471
-                                                                                            MD059471
-     C                   EVAL      GetKeySQLStmnt = 'SELECT SWFEAT FROM ' +                 MD059471
-     C                             'MESWACTD'                                               MD059471
-                                                                                            MD059471
+      *                                                                                     MD059471
+     C                   EVAL      GetKeySQLStmnt = 'SELECT SWFEAT, SWACDT' +               MD059471
+     C                             ' FROM MESWACTD'                                         MD059471
+      *                                                                                     MD059471
       ** PREPARE CURSOR TO FETCH RECORDS FROM THE FILE.                                     MD059471
-                                                                                            MD059471
+      *                                                                                     MD059471
      C/EXEC SQL                                                                             MD059471
      C+  PREPARE P1 FROM :GetKeySQLStmnt                                                    MD059471
      C/END-EXEC                                                                             MD059471
@@ -194,12 +194,12 @@
      C/END-EXEC                                                                             MD059471
       *                                                                                     MD059471
      C/EXEC SQL                                                                             MD059471
-     C+  FETCH FROM P1 INTO :XXFeat                                                         MD059471
+     C+  FETCH FROM P1 INTO :SQLDs                                                          MD059471
      C/END-EXEC                                                                             MD059471
-                                                                                            MD059471
+      *                                                                                     MD059471
       ** IF TABLE IS NOT OPEN, OPEN TABLE AND FETCH NEXT RECORD                             MD059471
       ** Processing for Global/Zonal Layer                                                  MD059471
-                                                                                            MD059471
+      *                                                                                     MD059471
      C                   IF        SQLCOD = -501                                            MD059471
      C/EXEC SQL                                                                             MD059471
      C+  OPEN P1                                                                            MD059471
@@ -209,9 +209,9 @@
      C+  FETCH NEXT FROM P1 INTO :XXFeat                                                    MD059471
      C/END-EXEC                                                                             MD059471
      C                   ENDIF                                                              MD059471
-                                                                                            MD059471
+      *                                                                                     MD059471
       ** EXECUTE LOOP UNTIL RECORDS ARE FOUND.                                              MD059471
-                                                                                            MD059471
+      *                                                                                     MD059471
      C                   DOW       SQLCOD = 0                                               MD059471
       *                                                                                     MD059471
      C**********         FOR        I = 1 to N                                              MD059471
@@ -226,9 +226,9 @@
      C/END-EXEC                                                                             MD055681
      C**********         IF        %FOUND(SCSARDL0)                                         MD055681
      C                   IF        SQLCODE = 0                                              MD055681
-                                                                                            MD059471
+      *                                                                                     MD059471
       ** Fetch next record from file                                                        MD059471
-                                                                                            MD059471
+      *                                                                                     MD059471
      C/EXEC SQL                                                                             MD059471
      C+  FETCH NEXT FROM P1 INTO :XXFeat                                                    MD059471
      C/END-EXEC                                                                             MD059471
@@ -240,22 +240,22 @@
      C                   ITER
       *
      C                   ELSE
-     C*****Feat(I)       CHAIN     MESWACL0                                        MD056781 MD059471
-     C*EXEC*SQL*                                                                   MD056781 MD059471
-     C**SELECT**                                                                   MD056781 MD059471
-     C**into*:MESWAC                                                               MD056781 MD059471
-     C**from*MESWAJW0                                                              MD056781 MD059471
-     C**where*SWFEAT*=*:XXFeat                                                     MD056781 MD059471
-     C*END-EXEC*                                                                   MD056781 MD059471
-     C**********         IF        %FOUND(MESWACL0) AND                            MD056781 MD059471
-     C                   IF        SQLCODE = 0 AND                                 MD056781 MD059471
+     C*****Feat(I)       CHAIN     MESWACL0                                                 MD056781
+     C*EXEC SQL                                                                             MD056781
+     C**SELECT *                                                                            MD056781
+     C**into :MESWAC                                                                        MD056781
+     C**from MESWAJW0                                                                       MD056781
+     C**where SWFEAT = :XXFeat                                                              MD056781
+     C*END-EXEC                                                                             MD056781
+     C**********         IF        %FOUND(MESWACL0) AND                                     MD056781
+     C                   IF        SQLCODE = 0 AND                                          MD056781
      C**********                   BJDNWD >= SWACDT                                         MD059471
      C                             BJDNWD >= XXActDat                                       MD059471
      C                   EXSR      SrWrite
      C                   ENDIF
-                                                                                            MD059471
+      *                                                                                     MD059471
       ** Fetch next record from file                                                        MD059471
-                                                                                            MD059471
+      *                                                                                     MD059471
      C/EXEC SQL                                                                             MD059471
      C+  FETCH NEXT FROM P1 INTO :XXFeat                                                    MD059471
      C/END-EXEC                                                                             MD059471

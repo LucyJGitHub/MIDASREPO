@@ -14,12 +14,14 @@
       *                                                               *
       *  (C) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date  04Dec19              *
-      *  Prev Amend No. CLE159   *Create   Date  18Jul18              *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. AR674226           Date  04Dec19              *
+      *                 CLE159   *Create   Date  18Jul18              *
       *                 xxxxxx             Date  ddmmmyy              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *

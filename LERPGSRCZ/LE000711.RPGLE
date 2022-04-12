@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057538           Date 11Feb21               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057538           Date 11Feb21               *
       *                 MD055657           Date 14May20               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057538 - LEC000711 failed in COB due to WCPAM work variable*
       *             overflow. Loop to LEFCAMLA to read all relevant   *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD032890           Date 18Feb15               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD032890           Date 18Feb15               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD032890 - Cannot amend Retail account with expired facility *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -73,13 +75,13 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** LE Customer Lending Facility File
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYFNF)
      F                                     IGNORE(FCLTYZZF)
- 
+
       ** LE Aggregate Facility File                                                          BUG5948
      FLEAGFCL0  IF   E           K DISK    INFSR(*PSSR)                                      BUG5948
      F                                     IGNORE(FCLTYHHF)                                  BUG5948
@@ -105,43 +107,43 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of fields in warning
      D WFldNamXA       S             10A   DIM(XArrayMax)                                   MD032890
                                                                                             MD032890
@@ -155,16 +157,16 @@
      D WIx             S              3P 0                                                  MD032890
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
      D NUM             S              1    DIM(10) CTDATA PERRCD(10)
      D ZONE            S              1    DIM(2)
- 
+
       ** External DS for Facility Details
      D SDFACT        E DS                  EXTNAME(SDFACTPD)
                                                                                               CLE025
@@ -174,7 +176,7 @@
                                                                                               CLE025
       ** External DS for Customer Details                                                     CLE025
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CLE025
- 
+
       ***External DS for Account Code Details                                        BUG4067 BUG4481
      D*SDACOD***     E DS                  EXTNAME(SDACODPD)                         BUG4067 BUG4481
       **********                                                                     BUG4067 BUG4481
@@ -186,7 +188,7 @@
                                                                                              BUG4067
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure                                   CLE025
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CLE025
                                                                                               CLE025
@@ -194,12 +196,12 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D CLE025          S              1                                                       CLE025
@@ -215,7 +217,7 @@
      D*DDACOD***       S             10                                              BUG4067 BUG4481
      D PACOD           S             10                                                      BUG4067
      D DDACOD          S             10                                                      BUG4067
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -230,9 +232,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MoveL     *Blanks       RetCodeIn
      C                   MoveL     *Blanks       FldNamXAr
      C                   MoveL     *Blanks       MsgIDXAr
@@ -452,7 +454,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -531,9 +533,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

@@ -24,13 +24,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054782           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD054782           Date 04Dec19               *
+      *                 MD046248           Date 05Feb18               *
       *                 MD022057 *CREATE   Date 08Nov16               *
       *                 Xxxxxxxx           Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD054782 - Manual transaction reached 999. Increase the size *
       *             of SQNO to accomodate 9999 transactions.          *
       *             Recompile.                                        *

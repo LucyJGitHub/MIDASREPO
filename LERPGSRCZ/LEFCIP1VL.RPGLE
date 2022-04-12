@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058307           Date 06Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD058307           Date 06Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD027065           Date 22Sep20               *
       *                 MD053093           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
@@ -85,13 +86,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to add validation when overline % will      *
       *             cause overdrawn amount to exceed 13digits.        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD027065 - Expiry date of CA facility cannot be earlier than *
-      *             TR facility attached to it. Pattern after 239194. *      
+      *             TR facility attached to it. Pattern after 239194. *
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
       *             truncated CANM. .                                 *
       *           - Applied for MD052591.                             *
@@ -3328,7 +3330,7 @@ E4   C                   ENDIF
       *                                                                                     MD039655
       ** Reject Action                                                                      MD039655
       *                                                                                     MD039655
-     C                   PARM                    @ACTRV            1                        MD039655 
+     C                   PARM                    @ACTRV            1                        MD039655
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS

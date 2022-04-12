@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CER049             Date 06Dec10               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -83,16 +85,16 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSD000081DFCF   E             WORKSTN
      F                                     SFILE(SD000081S0:S0SFRRN)
      F                                     SFILE(SD000081S1:S1SFRRN)
- 
+
      FGPZONEL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Zone files
       ** --------------------------------------------------------------
- 
+
      FSDACODPD  IF   E             DISK    INFSR(*PSSR)
      FACKEYAL   IF   E             DISK    INFSR(*PSSR)
      FFACKYD    IF   E             DISK    INFSR(*PSSR)
@@ -114,10 +116,10 @@
      FSDBRCHPD  IF   E             DISK    INFSR(*PSSR)
      FTABLEV4   IF   E             DISK    INFSR(*PSSR)
      FSDLENOPD  IF   E             DISK    INFSR(*PSSR)
- 
+
       ** Central files
       ** --------------------------------------------------------------
- 
+
      FGPACODPD  UF A E             DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     PREFIX(A5:2)
@@ -178,12 +180,12 @@
      FGPLENOPD  UF A E             DISK    INFSR(*PSSR)
      F                                     RENAME(SDLENOD0:GPLENOF)
      F                                     USROPN
- 
+
       ** Temporary files containing the copied data from the default
       ** zone. Using the declared SDACODPD instead of SD000081AC limits
       ** the ability to access the SDACODPD of different zones.
       ** --------------------------------------------------------------
- 
+
       ** Account Codes
      FSD000081ACIF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(SDACODD0:UTACODD0)
@@ -197,7 +199,7 @@
      FSD000081CRIF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(SDCURRD0:UTCURRD0)
      F                                     USROPN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -217,30 +219,30 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +-----------------------------------------------------------------+
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D TbCmd           S            100A   DIM(1) CTDATA PERRCD(1)
       ** Compile-time array of commands
- 
+
      D*DsGPACOD      E DS                  EXTNAME(GPACODPD)
      D*                                    PREFIX(A5:2)
      D DsGPACOD      E DS                  EXTNAME(SDZACODPD)
@@ -254,18 +256,18 @@
      D**C_A5TRCA     E                     EXTFLD(ACTRCA)
      D**C_A5EACC     E                     EXTFLD(ACEACC)
       ** DS for account codes
- 
+
      D DsGPAKEY      E DS                  EXTNAME(GPAKEYPD)
       ** DS for DL account keys
- 
+
      D DsGPFAKY      E DS                  EXTNAME(GPFAKYPD)
      D                                     PREFIX(FK)
       ** DS for FF account keys
- 
+
      D DsGPSAKY      E DS                  EXTNAME(GPSAKYPD)
      D                                     PREFIX(SK)
       ** DS for SE account keys
- 
+
      D*DsGPCUST      E DS                  EXTNAME(GPCUSTPD)
      D**                                   PREFIX(BBB:2)
      D DsGPCUST      E DS                  EXTNAME(SDZCUSTPD)
@@ -283,23 +285,23 @@
      D  C_CUMGTP     E                     EXTFLD(CUMGTP)
      D  C_CUEACC     E                     EXTFLD(CUEACC)
       ** DS for account codes
- 
+
      D DsGPDLST      E DS                  EXTNAME(GPDLSTPD)
       ** DS for Sub-types
- 
+
      D DsGPDTST      E DS                  EXTNAME(GPDTSTPD)
       ** DS for deal type/sub-types
- 
+
      D DsGPFACT      E DS                  EXTNAME(GPFACTPD)
       ** DS for facility types
- 
+
      D DsGPHOLI      E DS                  EXTNAME(GPHOLIPD)
       ** DS for holidays
- 
+
      D DsGPLOAN      E DS                  EXTNAME(GPLOANPD)
      D                                     PREFIX(LE)
       ** DS for LE type/sub-types
- 
+
      D*DsGPCURR      E DS                  EXTNAME(GPCURRPD)
      D***                                  PREFIX(A6:2)
      D DsGPCURR      E DS                  EXTNAME(SDZCURRPD)
@@ -353,47 +355,47 @@
      D  Z6FXDY       E                     EXTFLD(Z6FXDY)
      D  Z6EACC       E                     EXTFLD(Z6EACC)
       ** DS for currencies
- 
+
      D DsGPNARR      E DS                  EXTNAME(GPNARRPD)
       ** DS for narratives
- 
+
      D*DsGPACOF      E DS                  EXTNAME(GPACOFPD)
       ** DS for account officers
      D DsGPACOF      E DS                  EXTNAME(SDZACOFPD)
       ** DS for account officers
- 
+
      D DsGPCTRY      E DS                  EXTNAME(GPCTRYPD)
       ** DS for countries
- 
+
      D DsGPLOCN      E DS                  EXTNAME(GPLOCNPD)
       ** DS for locations
- 
+
      D DsGPREGN      E DS                  EXTNAME(GPREGNPD)
       ** DS for regions
- 
+
      D*DsGPBRCH      E DS                  EXTNAME(GPBRCHPD)
       ** DS for branches
      D DsGPBRCH      E DS                  EXTNAME(SDZBRCHPD)
       ** DS for branches
- 
+
      D DsGPRECG      E DS                  EXTNAME(GPRECGPD)
      D                                     PREFIX(RE)
       ** DS for RE customer groups
- 
+
      D DsGPLENO      E DS                  EXTNAME(GPLENOPD)
       ** DS for LE number ranges
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank ICD details
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D WFrmLib         S             10A
      D WFrmFil         S             10A
@@ -401,17 +403,17 @@
      D WToFil          S             10A
      D WCmdTxt         S            200A
      D WCmdLen         S             15P 5 INZ(200)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      ISDCURRD0
      I              A6SPRT                      A6SPRT_Z
- 
+
      IUTCURRD0
      I              A6SPRT                      A6SPRT_Z
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -421,47 +423,47 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   DOW       *INKC = *OFF
- 
- 
+
+
       ** Default Zone screen
       ** --------------------------------------------------------------
- 
+
      C                   IF        WScr = 1
      C                   EXSR      SRScrDftZne
      C                   ENDIF
- 
+
       ** Cascade-to-zone screen
       ** --------------------------------------------------------------
      C                   IF        WScr = 2
      C                   EXSR      SRScrCasZne
      C                   ENDIF
- 
+
       ** Confirmation screen
       ** --------------------------------------------------------------
      C                   IF        WScr = 3
      C                   EXSR      SRScrConf
      C                   ENDIF
- 
+
       ** Process action/s
       ** --------------------------------------------------------------
      C                   IF        WScr = 4
- 
+
       ** Upload default zone data to central
      C                   EXSR      SRUpdGlo
- 
+
       ** Cascade to all zones except for the default zone
      C     *LOVAL        SETLL     GPZONEL1
      C                   READ      GPZONEL1                               51
      C                   DOW       *IN51 = *OFF
- 
+
      C                   IF        ZOMSYS <> WQDftZnePfx
- 
+
       ** Determine if zone was selected to be cascaded with central data
      C                   MOVE      *ON           *IN47
      C                   READC     SD000081S0                             52
@@ -472,24 +474,24 @@
      C                   ENDIF
      C                   READC     SD000081S0                             52
      C                   ENDDO
- 
+
      C                   IF        *IN52=*OFF
      C                   EXSR      SRCscZne
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      GPZONEL1                               51
- 
+
      C                   ENDDO
- 
+
       ** Set screen to initial screen
      C                   Z-ADD     1             WScr
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
       *
@@ -505,11 +507,11 @@
       *                                                               *
       *****************************************************************
      C     SRScrDftZne   BEGSR
- 
+
       ** --------------------------------------------------------------
       ** Initialization
       ** --------------------------------------------------------------
- 
+
       ** Reset default zone name and zone system prefix
      C                   MOVE      *BLANKS       WQDftZneNme
      C                   MOVE      *BLANKS       WQDftZnePfx
@@ -531,16 +533,16 @@
      C                   WRITE     SD000081C0
      C                   MOVE      *OFF          *IN46
      C                   Z-ADD     0             S0SFRRN
- 
+
       ** --------------------------------------------------------------
       ** Upload zones from file to subfile
       ** --------------------------------------------------------------
- 
+
      C     *LOVAL        SETLL     GPZONEL1
      C                   READ      GPZONEL1                               50
- 
+
      C                   DOW       *IN50=*OFF
- 
+
      C                   MOVE      ZOZONE        S0ZONE
      C                   MOVE      ZOMSYS        S0MSYS
      C                   MOVE      *BLANK        S0ACTN
@@ -549,18 +551,18 @@
      C                   ADD       1             S0SFRRN
      C                   WRITE     SD000081S0
      C                   READ      GPZONEL1                               50
- 
+
      C                   ENDDO
- 
+
       ** --------------------------------------------------------------
       ** Process user' screen action
       ** --------------------------------------------------------------
- 
+
       ** Reposition subfile record counter to the top
      C                   Z-ADD     1             S0SFRRN
- 
+
      C                   DOW       *INKC=*OFF
- 
+
       ** Write screen and read screen input
       **    show subfile control
      C                   MOVE      *ON           *IN48
@@ -571,25 +573,25 @@
      C                   WRITE     SD000081C0
      C                   WRITE     #MSGCTL
      C                   EXFMT     SD000081F9
- 
+
       ** Call program to clear program queue
      C                   CALL      'ZA0250'
       ** Reset screen-error indicators
      C                   MOVE      *OFF          *IN22
- 
+
       ** Process screen input
      C                   SELECT
- 
+
       ** <F3> - leave the loop
       ** --------------------------------------------------------------
      C                   WHEN      *INKC=*ON
- 
+
      C                   LEAVE
- 
+
       ** <F5> - refresh action fields and loop again
       ** --------------------------------------------------------------
      C                   WHEN      *INKE=*ON
- 
+
      C                   READC     SD000081S0                             50
      C                   DOW       *IN50=*OFF
      C                   MOVE      *BLANK        S0ACTN
@@ -597,23 +599,23 @@
      C                   READC     SD000081S0                             50
      C                   ENDDO
      C                   ITER
- 
+
       ** <ENTER> - process action fields
       ** --------------------------------------------------------------
      C                   OTHER
- 
+
       ** Validate the action code of each changed subfile record
      C                   Z-ADD     0             WCtr              3 0
      C                   MOVE      'N'           WErr              1
      C                   READC     SD000081S0                             50
- 
+
      C                   DOW       *IN50=*OFF
- 
+
       ** --- If action field is blank, then ignore record
      C                   IF        S0ACTN=*BLANK
      C                   MOVE      *OFF          *IN22
      C                   MOVE      *BLANK        S0DFTZ
- 
+
       ** --- action field is not blank
      C                   ELSE
       ** ---+--- If the action is 1, then increment counter.
@@ -641,32 +643,32 @@
      C                   MOVE      *BLANK        S0DFTZ
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   UPDATE    SD000081S0
      C                   READC     SD000081S0                             50
- 
+
      C                   ENDDO
- 
+
       ** If an invalid action field is input, then loop
      C                   IF        WErr='Y'
      C                   ITER
      C                   ENDIF
- 
+
       ** If no selection made, then loop
      C                   IF        WCtr=0
      C                   ITER
      C                   ENDIF
- 
+
       ** At this point, a default zone has been selected
      C                   ADD       1             WScr
      C                   LEAVE
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
       ** --------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -680,11 +682,11 @@
       *                                                               *
       *****************************************************************
      C     SRScrCasZne   BEGSR
- 
+
       ** --------------------------------------------------------------
       ** Initialization
       ** --------------------------------------------------------------
- 
+
       ** Subtitle toggle
      C                   MOVE      *ON           *IN49
       ** Show 1=Select
@@ -703,13 +705,13 @@
      C                   UPDATE    SD000081S0
      C                   READC     SD000081S0                             50
      C                   ENDDO
- 
+
       ** --------------------------------------------------------------
       ** Process user' screen action
       ** --------------------------------------------------------------
- 
+
      C                   DOW       *INKC=*OFF
- 
+
       ** Write screen and read screen input
       **    show subfile and subfile control
      C                   MOVE      *ON           *IN45
@@ -717,23 +719,23 @@
      C                   WRITE     SD000081C0
      C                   WRITE     #MSGCTL
      C                   EXFMT     SD000081F9
- 
+
       ** Call program to clear program queue
      C                   CALL      'ZA0250'
       ** Reset screen-error indicators
      C                   MOVE      *OFF          *IN22
- 
+
       ** Process screen input
      C                   SELECT
- 
+
       ** <F3> - leave the loop
      C                   WHEN      *INKC=*ON
- 
+
      C                   LEAVE
- 
+
       ** <F5> - refresh action fields and loop again
      C                   WHEN      *INKE=*ON
- 
+
      C                   READC     SD000081S0                             50
      C                   DOW       *IN50=*OFF
      C                   MOVE      *BLANK        S0ACTN
@@ -741,16 +743,16 @@
      C                   READC     SD000081S0                             50
      C                   ENDDO
      C                   ITER
- 
+
       ** <F12> - return to previous screen
      C                   WHEN      *INKL=*ON
- 
+
      C                   SUB       1             WScr
      C                   LEAVE
- 
+
       ** <ENTER> - process action fields
      C                   OTHER
- 
+
      C                   Z-ADD     0             WCtr
      C                   MOVE      'N'           WErr              1
      C                   READC     SD000081S0                             50
@@ -783,13 +785,13 @@
       **       At this point, all valid zones have been selected
      C                   ADD       1             WScr
      C                   LEAVE
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
       ** --------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -803,11 +805,11 @@
       *                                                               *
       *****************************************************************
      C     SRScrConf     BEGSR
- 
+
       ** --------------------------------------------------------------
       ** Initialization
       ** --------------------------------------------------------------
- 
+
       ** Reset action code
      C                   MOVE      *BLANK        S1ACTN
       ** Show 1=Select
@@ -821,11 +823,11 @@
      C                   WRITE     SD000081C1
      C                   MOVE      *OFF          *IN46
      C                   Z-ADD     0             S1SFRRN
- 
+
       ** --------------------------------------------------------------
       ** Upload procedure steps to subfile
       ** --------------------------------------------------------------
- 
+
      C                   CALL      'SDRTVTXT'
      C                   PARM      'UT00003'     WMsgID           10
      C                   PARM      'UTMSGF'      WMsgF            10
@@ -833,7 +835,7 @@
      C                   ADD       1             S1SFRRN
      C                   MOVEL(P)  WMsgTxt       S1NARR
      C                   WRITE     SD000081S1
- 
+
      C                   CALL      'SDRTVTXT'
      C                   PARM      'UT00004'     WMsgID
      C                   PARM      'UTMSGF'      WMsgF
@@ -841,13 +843,13 @@
      C                   ADD       1             S1SFRRN
      C                   MOVEL(P)  WMsgTxt       S1NARR
      C                   WRITE     SD000081S1
- 
+
       ** --------------------------------------------------------------
       ** Process user' screen action
       ** --------------------------------------------------------------
- 
+
      C                   DOW       *INKC=*OFF
- 
+
       ** If subfile is not empty, then show it
      C                   IF        S1SFRRN > 0
      C                   MOVE      *ON           *IN45
@@ -858,29 +860,29 @@
      C                   WRITE     #MSGCTL
      C                   WRITE     SD000081F9
      C                   READ      SD000081C1
- 
+
       ** Call program to clear program queue
      C                   CALL      'ZA0250'
       ** Reset screen-error indicators
      C                   MOVE      *OFF          *IN21
- 
+
       ** Process screen input
      C                   SELECT
- 
+
       ** <F3> - leave the loop
      C                   WHEN      *INKC=*ON
      C                   LEAVE
- 
+
       ** <F5> - refresh action fields and loop again
      C                   WHEN      *INKE=*ON
      C                   MOVE      *BLANK        S1ACTN
      C                   ITER
- 
+
       ** <F12> - return to previous screen
      C                   WHEN      *INKL=*ON
      C                   SUB       1             WScr
      C                   LEAVE
- 
+
       ** <ENTER> - validate action code
      C                   OTHER
       **       If the action field is not Y, then error
@@ -896,11 +898,11 @@
      C                   ADD       1             WScr
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -915,15 +917,15 @@
       *                                                               *
       *****************************************************************
      C     SRUpdGlo      BEGSR
- 
+
       ** Default values
      C                   EVAL      WFrmLib=WQDftZnePfx+'DMLIB'
- 
+
       ** Upload Account Codes
      C                   IF        CSD032 = 'Y'
      C                   EXSR      SRCpyF_ACOD
      C                   ENDIF
- 
+
       ** Upload DL Account Keys
      C                   IF        CSD033 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -935,7 +937,7 @@
      C                   PARM      '*NO '        WCrtFil          10
      C                   PARM      '*MAP*DROP '  WFmtOpt          10
      C                   ENDIF
- 
+
       ** Upload FF Account Keys
      C                   IF        CSD034 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -947,7 +949,7 @@
      C                   PARM      '*NO '        WCrtFil          10
      C                   PARM      '*MAP*DROP '  WFmtOpt          10
      C                   ENDIF
- 
+
       ** Upload SE Account Keys
      C                   IF        CSD036 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -959,12 +961,12 @@
      C                   PARM      '*NO '        WCrtFil          10
      C                   PARM      '*MAP*DROP '  WFmtOpt          10
      C                   ENDIF
- 
+
       ** Upload Customers
      C                   IF        CSD037 = 'Y'
      C                   EXSR      SRCpyF_CUST
      C                   ENDIF
- 
+
       ** Upload Sub-types
      C                   IF        CSD038 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -976,7 +978,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Deal Type/Sub-types
      C                   IF        CSD039 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -988,7 +990,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Facility Types
      C                   IF        CSD040 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1000,7 +1002,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Holidays
      C                   IF        CSD041 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1012,7 +1014,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Loan type/sub-types
      C                   IF        CSD042 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1024,12 +1026,12 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Currencies
      C                   IF        CSD043 = 'Y'
      C                   EXSR      SRCpyF_CURR
      C                   ENDIF
- 
+
       ** Upload Narratives
      C                   IF        CSD044 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1041,7 +1043,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Account Officers
      C                   IF        CSD045 = 'Y'
       ** --- clear cross-reference file
@@ -1059,9 +1061,9 @@
      C                   PARM      '*REPLACE  '  WMbrOpt
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
- 
+
      C                   ENDIF
- 
+
       ** Upload Country Codes
      C                   IF        CSD046 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1073,7 +1075,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Locations
      C                   IF        CSD047 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1085,7 +1087,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Regions
      C                   IF        CSD048 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1097,7 +1099,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Branches
      C                   IF        CSD049 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1109,7 +1111,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Retail Customer Groups
      C                   IF        CSD050 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1121,7 +1123,7 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Upload Loan Number Ranges
      C                   IF        CSD051 = 'Y'
      C                   CALL      'SDCCPYF'
@@ -1133,11 +1135,11 @@
      C                   PARM      '*NO '        WCrtFil
      C                   PARM      '*MAP*DROP '  WFmtOpt
      C                   ENDIF
- 
+
       ** Call program to clear program queue.
       ** The clearing message is sent to the program queue.
      C                   CALL      'ZA0250'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1151,21 +1153,21 @@
       *                                                               *
       *****************************************************************
      C     SRCpyF_ACOD   BEGSR
- 
+
       ** Clear cross-reference file
      C                   EVAL      WCmdTxt=%SUBST(TbCmd(1):1:12)
      C                                   + 'GPACODXPD)'
      C                   CALL      'QCMDEXC'
      C                   PARM                    WCmdTxt
      C                   PARM                    WCmdLen
- 
+
       ** Clear target file
      C                   EVAL      WCmdTxt=%SUBST(TbCmd(1):1:12)
      C                                   + 'GPACODPD)'
      C                   CALL      'QCMDEXC'
      C                   PARM                    WCmdTxt
      C                   PARM                    WCmdLen
- 
+
       ** Copy file from the default zone to a temporary file
      C                   CALL      'SDCCPYF'
      C                   PARM                    WFrmLib
@@ -1175,15 +1177,15 @@
      C                   PARM      '*REPLACE  '  WMbrOpt
      C                   PARM      '*YES'        WCrtFil
      C                   PARM      *BLANKS       WFmtOpt
- 
+
       ** Read record from default zone and copy to central file
- 
+
      C                   OPEN      GPACODPD
      C                   OPEN      SD000081AC
      C                   READ      SD000081AC                             50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      A5GACD = A5ACCD
      C                   EVAL      A5DESC = A5ACCN
      C                   EVAL      A5IUSR = A5AUSR
@@ -1193,12 +1195,12 @@
      C                   EVAL      A5GPDT = 'Y'
      C                   WRITE     GPACODD0
      C                   READ      SD000081AC                             50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPACODPD
      C                   CLOSE     SD000081AC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1212,21 +1214,21 @@
       *                                                               *
       *****************************************************************
      C     SRCpyF_CUST   BEGSR
- 
+
       ** Clear cross-reference files
      C                   EVAL      WCmdTxt=%SUBST(TbCmd(1):1:12)
      C                                   + 'GPCUSTXPD)'
      C                   CALL      'QCMDEXC'
      C                   PARM                    WCmdTxt
      C                   PARM                    WCmdLen
- 
+
       ** Clear target file
      C                   EVAL      WCmdTxt=%SUBST(TbCmd(1):1:12)
      C                                   + 'GPCUSTPD)'
      C                   CALL      'QCMDEXC'
      C                   PARM                    WCmdTxt
      C                   PARM                    WCmdLen
- 
+
       ** Copy file from the default zone to a temporary file
      C                   CALL      'SDCCPYF'
      C                   PARM                    WFrmLib
@@ -1236,15 +1238,15 @@
      C                   PARM      '*REPLACE  '  WMbrOpt
      C                   PARM      '*YES'        WCrtFil
      C                   PARM      *BLANKS       WFmtOpt
- 
+
       ** Read record from default zone and copy to central file
- 
+
      C                   OPEN      GPCUSTPD
      C                   OPEN      SD000081CS
      C                   READ      SD000081CS                             50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVALR     BBBGCUS = BBBCUST
      C                   EVAL      BBBGACO = BBBACOC
      C                   EVAL      BBBGICD = BBBLICD
@@ -1257,12 +1259,12 @@
      C                   EVAL      BBBGPDT = 'Y'
      C                   WRITE     GPCUSTD0
      C                   READ      SD000081CS                             50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPCUSTPD
      C                   CLOSE     SD000081CS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1276,14 +1278,14 @@
       *                                                               *
       *****************************************************************
      C     SRCpyF_CURR   BEGSR
- 
+
       ** Clear target file
      C                   EVAL      WCmdTxt=%SUBST(TbCmd(1):1:12)
      C                                   + 'GPCURRPD)'
      C                   CALL      'QCMDEXC'
      C                   PARM                    WCmdTxt
      C                   PARM                    WCmdLen
- 
+
       ** Copy file from the default zone to a temporary file
      C                   CALL      'SDCCPYF'
      C                   PARM                    WFrmLib
@@ -1293,15 +1295,15 @@
      C                   PARM      '*REPLACE  '  WMbrOpt
      C                   PARM      '*YES'        WCrtFil
      C                   PARM      *BLANKS       WFmtOpt
- 
+
       ** Read record from default zone and copy to central file
- 
+
      C                   OPEN      GPCURRPD
      C                   OPEN      SD000081CR
      C                   READ      SD000081CR                             50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      A6DESC = A6CYNM
      C                   EVAL      A6SPRT = A6SPRT_Z
      C                   EVAL      A6CHTP = 'I'
@@ -1314,12 +1316,12 @@
      C
      C                   WRITE     GPCURRD0
      C                   READ      SD000081CR                             50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPCURRPD
      C                   CLOSE     SD000081CR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1333,27 +1335,27 @@
       *                                                               *
       *****************************************************************
      C     SRCscZne      BEGSR
- 
+
       ** --------------------------------------------------------------
       ** Initialization
       ** --------------------------------------------------------------
- 
+
      C                   EVAL      WDtqNme = 'SDACCPDTQ'
      C                   EVAL      WDtqLib = ZOMSYS + 'DPLIB'
- 
+
       ** --------------------------------------------------------------
       ** Cascade Account Codes to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD032 = 'Y'
- 
+
      C                   OPEN      GPACODPD
      C                   EVAL      WDtqDta = 'GPACODPD'
- 
+
      C                   READ      GPACODPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   MOVE      A5LCD         A5LCD1
      C                   MOVE      A5SRLC        A5SRLC1
      C                   MOVE      A5SRFC        A5SRFC1
@@ -1363,7 +1365,7 @@
      C                   MOVE      A5TRDA        A5TRDA1
      C                   MOVE      A5TRCA        A5TRCA1
      C                   MOVE      A5EACC        A5EACC1
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = A5GACD
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPACOD
      C                   CALL      'SDCSNDDTQ'
@@ -1371,26 +1373,26 @@
      C                   PARM                    WDtqLib          10
      C                   PARM                    WDtqDta        4040
      C                   READ      GPACODPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPACODPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade DL Account Keys to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD033 = 'Y'
- 
+
      C                   OPEN      GPAKEYPD
      C                   EVAL      WDtqDta = 'GPAKEYPD'
- 
+
      C                   READ      GPAKEYPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = AKEY
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPAKEY
      C                   CALL      'SDCSNDDTQ'
@@ -1398,26 +1400,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPAKEYPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPAKEYPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade FF Account Keys to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD034 = 'Y'
- 
+
      C                   OPEN      GPFAKYPD
      C                   EVAL      WDtqDta = 'GPFAKYPD'
- 
+
      C                   READ      GPFAKYPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = FKFFKY
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPFAKY
      C                   CALL      'SDCSNDDTQ'
@@ -1425,26 +1427,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPFAKYPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPFAKYPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade SE Account Keys to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD036 = 'Y'
- 
+
      C                   OPEN      GPSAKYPD
      C                   EVAL      WDtqDta = 'GPSAKYPD'
- 
+
      C                   READ      GPSAKYPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = SKACKE
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPSAKY
      C                   CALL      'SDCSNDDTQ'
@@ -1452,26 +1454,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPSAKYPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPSAKYPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Customers to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD037 = 'Y'
- 
+
      C                   OPEN      GPCUSTPD
      C                   EVAL      WDtqDta = 'GPCUSTPD'
- 
+
      C                   READ      GPCUSTPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   MOVE      BBBCHID       C_CUCHID
      C                   MOVE      BBBCHSC       C_CUCHSC
      C                   MOVE      BBBCABA       C_CUCABA
@@ -1484,7 +1486,7 @@
      C                   MOVE      BBBDEDT       C_CUDEDT
      C                   MOVE      BBBMGTP       C_CUMGTP
      C                   MOVE      BBBEACC       C_CUEACC
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = BBBCUST
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPCUST
      C                   CALL      'SDCSNDDTQ'
@@ -1492,26 +1494,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPCUSTPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPCUSTPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Sub-types to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD038 = 'Y'
- 
+
      C                   OPEN      GPDLSTPD
      C                   EVAL      WDtqDta = 'GPDLSTPD'
- 
+
      C                   READ      GPDLSTPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = ASDSTC
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPDLST
      C                   CALL      'SDCSNDDTQ'
@@ -1519,26 +1521,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPDLSTPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPDLSTPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade DL type/sub-types to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD039 = 'Y'
- 
+
      C                   OPEN      GPDTSTPD
      C                   EVAL      WDtqDta = 'GPDTSTPD'
- 
+
      C                   READ      GPDTSTPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = DTPE11 + DLST11
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPDTST
      C                   CALL      'SDCSNDDTQ'
@@ -1546,26 +1548,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPDTSTPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPDTSTPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Facility Types to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD040 = 'Y'
- 
+
      C                   OPEN      GPFACTPD
      C                   EVAL      WDtqDta = 'GPFACTPD'
- 
+
      C                   READ      GPFACTPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = AMFCTY
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPFACT
      C                   CALL      'SDCSNDDTQ'
@@ -1573,26 +1575,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPFACTPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPFACTPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Holidays to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD041 = 'Y'
- 
+
      C                   OPEN      GPHOLIPD
      C                   EVAL      WDtqDta = 'GPHOLIPD'
- 
+
      C                   READ      GPHOLIPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = DGCYCD + DGLCCD
      C                                                     + DGYRNB
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPHOLI
@@ -1601,26 +1603,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPHOLIPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPHOLIPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade LE Type/Sub-types to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD042 = 'Y'
- 
+
      C                   OPEN      GPLOANPD
      C                   EVAL      WDtqDta = 'GPLOANPD'
- 
+
      C                   READ      GPLOANPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = LEAYLNTY + LEAYLNST
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPLOAN
      C                   CALL      'SDCSNDDTQ'
@@ -1628,26 +1630,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPLOANPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPLOANPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Currencies to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD043 = 'Y'
- 
+
      C                   OPEN      GPCURRPD
      C                   EVAL      WDtqDta = 'GPCURRPD'
- 
+
      C                   READ      GPCURRPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   MOVE      A6NBDP        Z6NBDP
      C                   MOVE      A6SPRT        Z6SPRT
      C                   MOVE      A6LCD         Z6LCD
@@ -1696,7 +1698,7 @@
      C                   MOVE      A6IRDP        Z6IRDP
      C                   MOVE      A6FXDY        Z6FXDY
      C                   MOVE      A6EACC        Z6EACC
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = A6CYCD
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPCURR
      C                   CALL      'SDCSNDDTQ'
@@ -1704,26 +1706,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPCURRPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPCURRPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Narratives to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD044 = 'Y'
- 
+
      C                   OPEN      GPNARRPD
      C                   EVAL      WDtqDta = 'GPNARRPD'
- 
+
      C                   READ      GPNARRPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = ALNVCD
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPNARR
      C                   CALL      'SDCSNDDTQ'
@@ -1731,30 +1733,30 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPNARRPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPNARRPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Account Officers to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD045 = 'Y'
- 
+
      C                   OPEN      GPACOFPD
      C                   EVAL      WDtqDta = 'GPACOFPD'
- 
+
      C                   READ      GPACOFPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   MOVE      AZLCD         ZZLCD
      C                   MOVE      AZACOT        ZZACOT
      C                   MOVE      AZEACC        ZZEACC
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = AZACOC
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPACOF
      C                   CALL      'SDCSNDDTQ'
@@ -1762,26 +1764,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPACOFPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPACOFPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Countries to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD046 = 'Y'
- 
+
      C                   OPEN      GPCTRYPD
      C                   EVAL      WDtqDta = 'GPCTRYPD'
- 
+
      C                   READ      GPCTRYPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = A4CNCD
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPCTRY
      C                   CALL      'SDCSNDDTQ'
@@ -1789,26 +1791,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPCTRYPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPCTRYPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Locations to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD047 = 'Y'
- 
+
      C                   OPEN      GPLOCNPD
      C                   EVAL      WDtqDta = 'GPLOCNPD'
- 
+
      C                   READ      GPLOCNPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = DVLCCD
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPLOCN
      C                   CALL      'SDCSNDDTQ'
@@ -1816,26 +1818,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPLOCNPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPLOCNPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Regions to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD048 = 'Y'
- 
+
      C                   OPEN      GPREGNPD
      C                   EVAL      WDtqDta = 'GPREGNPD'
- 
+
      C                   READ      GPREGNPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = A3RGCD
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPREGN
      C                   CALL      'SDCSNDDTQ'
@@ -1843,26 +1845,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPREGNPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPREGNPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade Branches to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD049 = 'Y'
- 
+
      C                   OPEN      GPBRCHPD
      C                   EVAL      WDtqDta = 'GPBRCHPD'
- 
+
      C                   READ      GPBRCHPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   MOVE      A8LCD         Z8LCD
      C                   MOVE      A8STCD        Z8STCD
      C                   MOVE      A8SUOP        Z8SUOP
@@ -1886,7 +1888,7 @@
      C                   MOVE      A8TMOF        Z8TMOF
      C                   MOVE      A8STOF        Z8STOF
      C                   MOVE      A8EACC        Z8EACC
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = A8BRCD
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPBRCH
      C                   CALL      'SDCSNDDTQ'
@@ -1894,26 +1896,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPBRCHPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPBRCHPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade RE Customer Groups to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD050 = 'Y'
- 
+
      C                   OPEN      GPRECGPD
      C                   EVAL      WDtqDta = 'GPRECGPD'
- 
+
      C                   READ      GPRECGPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = REZZ010
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPRECG
      C                   CALL      'SDCSNDDTQ'
@@ -1921,26 +1923,26 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPRECGPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPRECGPD
- 
+
      C                   ENDIF
- 
+
       ** --------------------------------------------------------------
       ** Cascade LE Number Ranges to a zone
       ** --------------------------------------------------------------
- 
+
      C                   IF        CSD051 = 'Y'
- 
+
      C                   OPEN      GPLENOPD
      C                   EVAL      WDtqDta = 'GPLENOPD'
- 
+
      C                   READ      GPLENOPD                               50
- 
+
      C                   DOW       *IN50 = *OFF
- 
+
      C                   EVAL      %SUBST(WDtqDta:11:30) = F9RGNB
      C                   EVAL      %SUBST(WDtqDta:41:4000) = DsGPLENO
      C                   CALL      'SDCSNDDTQ'
@@ -1948,13 +1950,13 @@
      C                   PARM                    WDtqLib
      C                   PARM                    WDtqDta
      C                   READ      GPLENOPD                               50
- 
+
      C                   ENDDO
- 
+
      C                   CLOSE     GPLENOPD
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1968,12 +1970,12 @@
       *                                                               *
       *****************************************************************
      C     SRSndMsg      BEGSR
- 
+
      C                   CALL      'ZA0350'
      C                   PARM                    WMsgF            10
      C                   PARM                    WMsgID           10
      C                   PARM                    WMsgDta          45
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1986,24 +1988,24 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Default zone name and zone system prefix
      C     *LIKE         DEFINE    ZOZONE        WQDftZneNme
      C     *LIKE         DEFINE    ZOMSYS        WQDftZnePfx
- 
+
      C                   MOVEL     PSUser        SUSER
      C                   MOVEL     PSJobName     SWSID
      C                   MOVEL     PSProcPgm     ##PGM
      C                   MOVEL     'UTMSGF'      WMsgF
- 
+
       ** Data base error in file (file)
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   EVAL      DBMOD  =  PSProcMod
- 
+
       ** Bank ICD
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       WRTCD
@@ -2015,410 +2017,410 @@
      C                   EVAL      DBKEY = '*FIRST'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVE      BJMRDT        SRUNA
- 
+
       ** Enhancement flag for the Account Codes
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD             7
      C                   PARM      '*VERIFY'     WOPTN             7
      C                   PARM      'CSD032'      WSARD             6
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD032            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 2
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD032
      C                   ENDSL
- 
+
       ** Enhancement flag for the Dealing Account Keys
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD033'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD033            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 3
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD033
      C                   ENDSL
- 
+
       ** Enhancement flag for the Futures and Options Account Keys
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD034'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD034            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 4
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD034
      C                   ENDSL
- 
+
       ** Enhancement flag for the Securities Account Keys
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD036'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD036            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 5
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD036
      C                   ENDSL
- 
+
       ** Enhancement flag for the Customers
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD037'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD037            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 6
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD037
      C                   ENDSL
- 
+
       ** Enhancement flag for the Deal Sub-Types
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD038'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD038            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 7
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD038
      C                   ENDSL
- 
+
       ** Enhancement flag for the Deal Type/Sub-types
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD039'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD039            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 8
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD039
      C                   ENDSL
- 
+
       ** Enhancement flag for the Facility Types
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD040'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD040            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 9
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD040
      C                   ENDSL
- 
+
       ** Enhancement flag for the Holidays
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD041'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD041            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 10
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD041
      C                   ENDSL
- 
+
       ** Enhancement flag for the Loan types/sub-types
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD042'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD042            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 11
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD042
      C                   ENDSL
- 
+
       ** Enhancement flag for the Currencies
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD043'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD043            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 12
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD043
      C                   ENDSL
- 
+
       ** Enhancement flag for the Narratives
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD044'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD044            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 13
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD044
      C                   ENDSL
- 
+
       ** Enhancement flag for the Account Officers
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD045'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD045            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 14
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD045
      C                   ENDSL
- 
+
       ** Enhancement flag for the Countries
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD046'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD046            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 15
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD046
      C                   ENDSL
- 
+
       ** Enhancement flag for the Locations
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD047'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD047            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 16
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD047
      C                   ENDSL
- 
+
       ** Enhancement flag for the Region Code
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD048'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD048            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 17
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD048
      C                   ENDSL
- 
+
       ** Enhancement flag for the Branche Code
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD049'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD049            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 18
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD049
      C                   ENDSL
- 
+
       ** Enhancement flag for Retail Customer groups
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD050'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD050            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 19
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD050
      C                   ENDSL
- 
+
       ** Enhancement flag for the Loan Number ranges
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       WRTCD
      C                   PARM      '*VERIFY'     WOPTN
      C                   PARM      'CSD051'      WSARD
- 
+
      C                   SELECT
      C                   WHEN      WRTCD = *BLANKS
      C                   MOVE      'Y'           CSD051            1
- 
+
      C                   WHEN      WRTCD <> '*NRF   '
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 20
      C                   EVAL      DBKEY = WSARD
      C                   EXSR      *PSSR
- 
+
      C                   OTHER
      C                   MOVE      'N'           CSD051
      C                   ENDSL
- 
+
       ** Initialise to start with the initial screen
      C                   Z-ADD     1             WScr              1 0
- 
+
      C                   ENDSR
       *********************************************************************
       /EJECT
@@ -2435,23 +2437,23 @@
       *                                                                   *
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
 ** TbCmd - Compile-time array of commands
 CLRPFM FILE(&L/&F)

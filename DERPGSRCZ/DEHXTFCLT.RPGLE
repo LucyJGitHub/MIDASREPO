@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR674226 - Manual transaction reached 999. Increase the size *
@@ -108,7 +110,7 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -128,19 +130,19 @@
       *
       ** DE Historic cash flows
      FDEHCASHPD O    E             DISK    INFSR(*PsSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** Standard D-specs
       ** ================
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -150,35 +152,35 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
       /COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       /COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ ===================================  ¦
@@ -220,7 +222,7 @@
       * E X T R A C T   P E R I O D   D E F I N I T I O N
       /COPY DECPYSRC,DEXTPERDD
       *****************************************************************
- 
+
      D W#FCID          DS
      D**W#CNUM**               1      6  0                                                    CSD027
      D  W#CNUM                 1      6A                                                      CSD027
@@ -230,7 +232,7 @@
       ** Indicator Array
      D Indicators      DS                  BASED(IndicatorP)
      D  EndOfFile             01     01
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
@@ -247,7 +249,7 @@
      D PRtCd           S              7A
      D POptn           S              7A
      D I#ERMS          S             30A
- 
+
      D I#RDNB          S              5P 0
      D I#DNWD          S              5P 0
      D I#HCOD          S              5P 0
@@ -258,29 +260,29 @@
      D POSN_Exp        S              1A
      D EVNT_Exp        S              1A
      D CASH_Exp        S              1A
- 
+
      D WDate           S              5  0
      D WStartBal       S             13  0
      D WAmount         S             13  0
       *
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ *INZSR is executed at program activation.                  ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
@@ -308,7 +310,7 @@
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      I#RTCD = '*ERROR '
      C                   EVAL      I#ERMS = 'AOBANKR0'
@@ -323,13 +325,13 @@
      C                   PARM      '*FIRST '     POptn
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      I#RTCD = '*ERROR '
      C                   EVAL      I#ERMS = 'AOGELRR0'
      C                   EVAL      *INLR  = *ON
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -352,9 +354,9 @@
       ** Perform Commitment as per /COPY DEXTCOMMO
       *
      C                   EXSR      COMIT
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -385,13 +387,13 @@
       *
       ** Access facility type details to set transaction description
      C                   MOVE      FC_FACT       PKey
- 
+
      C                   CALLB     'AOFACTR0'
      C                   PARM      '*MSG   '     PRtCd
      C                   PARM      '*KEY'        POptn
      C                   PARM                    PKey
      C     SDFACT        PARM      SDFACT        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      I#RTCD = '*ERROR '
      C                   EVAL      I#ERMS = 'AOFACTR0'
@@ -422,7 +424,7 @@
      C                   PARM      '*KEY'        POptn
      C                   PARM      FC_FCCY       PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      I#RTCD = '*ERROR '
      C                   EVAL      I#ERMS = 'AOCURRR0'
@@ -440,7 +442,7 @@
      C                   EVAL      POSN_Exp = *BLANKS
      C                   EVAL      EVNT_Exp = *BLANKS
      C                   EVAL      CASH_Exp = *BLANKS
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -457,12 +459,12 @@
       *
       ** Import Opening Position
      C                   EXSR      SrImpOPos
- 
+
      C     WKeyList1     SETGT     FACHSAL1
      C     WKeyList2     READE     FACHSAL1                               01
- 
+
      C                   DOW       EndOfFile = False
- 
+
      C                   EVAL      WDate     = FADATE
      C                   EVAL      WAmount   = WStartBal - FACFAM
      C**********         EVAL      WStartBal = FC_FAMT                                        217456
@@ -472,10 +474,10 @@
      C                   IF        WAmount <> 0
      C                   EXSR      SrImpoMvt
      C                   ENDIF
- 
+
      C**********         READ      FACHSAL1                               01                  217456
      C     WKeyList2     READE     FACHSAL1                               01                  217456
- 
+
      C                   ENDDO
       *
       ** Clear event details data structure
@@ -504,7 +506,7 @@
       *
       ** Import a period end dates
      C                   EXSR      IMP_PE
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -552,7 +554,7 @@
       *
      C                   EVAL      W#MODE = '*IMPOPBL'
      C                   EXSR      WRKEDTA
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -593,7 +595,7 @@
       *
      C                   EVAL      W#MODE = '*IMPEVNT'
      C                   EXSR      WRKEDTA
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -608,7 +610,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** Return code
@@ -656,13 +658,13 @@
      C     WKeyList2     KLIST
      C                   KFLD                    FH_FACNUM
      C                   KFLD                    FH_FAFCTY
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
- 
+
       *                                                                                       208221
       **  Set up Type for DEWRKEDTA                                                           208221
       *                                                                                       208221

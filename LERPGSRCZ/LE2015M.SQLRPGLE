@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD056888           Date 20Sep20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD056888           Date 20Sep20               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055681           Date 31Jul20               *
@@ -156,6 +157,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD056888 - Deliverable Data Split for SDCODEPD               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *

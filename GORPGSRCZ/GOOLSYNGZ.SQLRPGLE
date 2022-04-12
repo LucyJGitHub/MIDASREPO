@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056557           Date 31Aug20               *
-      *  Prev Amend No. MD056556           Date 31Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD056557           Date 31Aug20               *
+      *                 MD056556           Date 31Aug20               *
       *                 MD055681           Date 31Jul20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD055147           Date 24Jan20               *
@@ -115,6 +116,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD056557 - Deliverable Data Split for Pulldown               *
       *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
       *  MD055681 - Deliverable Data Split for SAR                    *

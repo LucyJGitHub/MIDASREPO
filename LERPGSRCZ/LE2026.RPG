@@ -27,10 +27,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Pret Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
-      *                 CLE148             Date 23Jul12               *
+      *                 CLE148             Date v3Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 246090             Date 01Mar07               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes of Facilities                           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -119,6 +121,8 @@
      FLEFCLTLGIF  E           K        DISK         KINFSR *PSSR
       *
      F/COPY WNCPYSRC,LE2026F001
+     FLEFCLTLHIF  E           K        DISK                                                   CLE138
+     F            LEFCLTD0                          KRENAMEFCLTLH                             CLE138
       *
       **
      FLE2026DFCF  E                    WORKSTN      KINFSR *PSSR      UC
@@ -496,6 +500,28 @@
      C                     MOVE FACT      S#FACT
      C                     MOVE FCNO      S#FCNO
      C/COPY WNCPYSRC,LEH00499
+      *                                                                                       CLE138
+     C                     MOVE *BLANKS   S#FCLS                                              CLE138
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+      *                                                                                       CLE138
+     C                     MOVE CNUM      K@CNUM  6                                           CLE138
+     C                     MOVE FACT      K@FACT  3                                           CLE138
+     C                     MOVE FCNO      K@FCNO  2                                           CLE138
+     C           FCLTYB    CHAINLEFCLTLH             80                                       CLE138
+     C           *IN80     IFEQ *OFF                                                          CLE138
+     C                     MOVE FCXCLS    S#FCLS                                              CLE138
+     C                     ELSE                                                               CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVE 'LEFCLTQD'DBFILE           ****************                   CLE138
+     C                     Z-ADD901       DBASE            * DB ERROR 900 *                   CLE138
+     C                     MOVE *BLANKS   DBKEY            ****************                   CLE138
+     C                     MOVELS#FACT    DBKEY                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
       *
       ** Joining Date
       ** ~~~~~~~~~~~~
@@ -1792,6 +1818,44 @@
      C                     EXSR ZEDIT
      C                     MOVE ZFIELD    S#FAMT
      C/COPY WNCPYSRC,LEH00500
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM '       ' @RTCD                                               CLE138
+     C                     PARM '*VERIFY' @OPTN                                               CLE138
+     C                     PARM 'CLE138'  @SARD   6                                           CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           FCLTYB    KLIST                                                              CLE138
+     C                     KFLD           K@CNUM                                              CLE138
+     C                     KFLD           K@FACT                                              CLE138
+     C                     KFLD           K@FCNO                                              CLE138
+      *                                                                                       CLE138
+     C                     MOVE *BLANKS   S#PCLS                                              CLE138
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+      *                                                                                       CLE138
+     C                     MOVELF1PMFC    K@CNUM                                              CLE138
+     C                     MOVELF1PMFT    K@FACT                                              CLE138
+     C                     MOVELF1PMFN    K@FCNO                                              CLE138
+     C           FCLTYB    CHAINLEFCLTLH             80                                       CLE138
+     C           *IN80     IFEQ *OFF                                                          CLE138
+     C                     MOVE FCXCLS    S#PCLS                                              CLE138
+     C                     ELSE                                                               CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVE 'LEFCLTQD'DBFILE           ****************                   CLE138
+     C                     Z-ADD900       DBASE            * DB ERROR 900 *                   CLE138
+     C                     MOVE *BLANKS   DBKEY            ****************                   CLE138
+     C                     MOVELS#PMFT    DBKEY                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
       *
       ** Open Display file LE2026DF
       *  ~~~~~~~~~~~~~~~~~~~~~~~~~~

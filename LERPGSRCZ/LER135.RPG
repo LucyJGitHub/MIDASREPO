@@ -308,6 +308,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes of Facilities                           *
       *  MD058499 - Calculated facility fee with payment date due on  *
       *             next working date appears on LER160P1 report.     *
       *             Introduce system value CalcFeePayDueDatProc that  *
@@ -1017,6 +1018,7 @@
      F/SPACE 3
      FLEFEADL1IF  E           K        DISK
      F/COPY WNCPYSRC,LER135FFP1                                           S01408
+     FLEFCLTLHIF  E           K        DISK                                                   CLE138
      FFACHISH IF  E           K        DISK
      FFACHSAL1IF  E           K        DISK
      F***SDCURRPDIF  E           K        DISK                                                CSC042
@@ -1188,7 +1190,8 @@
      E**********          TABACC  1  22  2   TABACN 26   FACILITY ACTIONS              CLE023 CLE028
      E/COPY WNCPYSRC,LER135E002
      E**********          TABACC  1  24  2   TABACN 26   FACILITY ACTIONS              CLE028 258414
-     E                    TABACC  1  25  2   TABACN 26   FACILITY ACTIONS                     258414
+     E**********          TABACC  1  25  2   TABACN 26   FACILITY ACTIONS              258414 CLE138
+     E                    TABACC  1  26  2   TABACN 26   FACILITY ACTIONS                     CLE138
      E/COPY WNCPYSRC,LER135E003
      E                    POWER   1   7  7 3             POWER ARRAY
      E/COPY WNCPYSRC,LEH00667
@@ -1990,6 +1993,12 @@
      I              CHTP                            #CHTPZ                                    CLE139
      I              TNLU                            #TNLUZ                                    CLE139
      I/COPY WNCPYSRC,LEH00378
+     ILEFCLTD0                                                                                CLE138
+     I              FCCAFT                          F1CAFT                                    CLE138
+     I              FCCAFN                          F1CAFN                                    CLE138
+     I              FCCANM                          F1CANM                                    CLE138
+     I              FCCDTE                          F1CDTE                                    CLE138
+      *
      ILEFHSTA                                                                               MD031473
       ** Rename fields                                                                      MD031473
      I              HIRECI                          LORECI                                  MD031473
@@ -2471,6 +2480,10 @@
      I              'ZAAMLSETLE'          C         AMLPRI                                    CGL020
       *                                                                                       CGL020
      I***/COPY*WNCPYSRC,LER135I001***                                                         CFC006
+     IDSFCTY      DS                              6                                           CLE138
+     I                                        1   3 DSFTYP                                    CLE138
+     I                                        4   4 DSSLSH                                    CLE138
+     I                                        5   6 DSFSEQ                                    CLE138
      I/COPY WNCPYSRC,LER135I001                                                             MD020563
      I              'LER135001'           C         SECTN1                                    CFC006
      I              'LER135002'           C         SECTN2                                    CFC006
@@ -7670,6 +7683,23 @@
      C                     MOVEAFECLAS    AKY,11                                            AR745249
       *
      C/COPY WNCPYSRC,LEH00379
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+      *                                                                                       CLE138
+     C                     MOVELFEFACL    KFTYP   3                                           CLE138
+     C                     MOVE FEFACL    KFNUM   2                                           CLE138
+     C           LKREVI    IFNE 1                                                             CLE138
+     C           FCTYB     CHAINLEFCLTLH             89                                       CLE138
+     C           *IN89     IFEQ *OFF                                                          CLE138
+     C                     MOVE FCXCLS    FECLAS                                              CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
+     C                     MOVEAFECLAS    AKY,11                                              CLE138
+      *                                                                                       CLE138
+     C                     MOVE FTYP      DSFTYP                                              CLE138
+     C                     MOVE FSEQ      DSFSEQ                                              CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
      C                     MOVEAAKY       LKAKEY
      C**********           Z-ADDFECNUM    LKCNUM                                              CSD027
      C                     MOVE FECNUM    LKCNUM                                              CSD027
@@ -9583,6 +9613,38 @@
       ** Set up copyright statement
      C                     MOVEACPY@      BIS@   80
      C/COPY WNCPYSRC,LER135CCP1                                           S01408
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   WRTCD                                               CLE138
+     C                     PARM '*VERIFY' WOPTN                                               CLE138
+     C                     PARM 'CLE138'  WSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           WRTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE *ON       *IN12                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     MOVE *OFF      *IN12                                               CLE138
+     C                     END                                                                CLE138
+      *                                                                                       CLE138
+     C           WRTCD     IFNE *BLANKS                                                       CLE138
+     C           WRTCD     ANDNE'*NRF  '                                                      CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVEL'LER135'  DBPGM                                               CLE138
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
+     C                     Z-ADD900       DBASE                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     END                                                                CLE138
+      *                                                                                       CLE138
+     C           FCTYB     KLIST                                                              CLE138
+     C                     KFLD           FECNUM                                              CLE138
+     C                     KFLD           KFTYP                                               CLE138
+     C                     KFLD           KFNUM                                               CLE138
+      *                                                                                       CLE138
+     C                     MOVE '/'       DSSLSH                                              CLE138
+      *                                                                                       CLE138
       *
       ** Define LDA
      C           *NAMVAR   DEFN           LDA
@@ -11103,6 +11165,10 @@
      C                     MOVE *BLANK    SUTP                            CLE009
      C                     MOVE *BLANK    CLAS                                                CLE042
      C/COPY WNCPYSRC,LEH00380
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVE FECLAS    CLAS                                                CLE138
+     C                     ENDIF                                                              CLE138
      C                     Z-ADD*ZEROS    PTYP                            CLE009
      C                     MOVE FABRCA    BRCA                            CLE009
      C                     MOVE FACNUM    CNUM                            CLE009
@@ -15164,6 +15230,7 @@ CHCHARGES ADDED-ON                                                              
 IAINTEREST ADDED-ON                                                                           CLE028
 RDRATE CHANGE                                                                                 258414
      X/COPY WNCPYSRC,LEH00381
+CCFACILITY CLASS CHANGE                                                                       CLE138
 **  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
 0000001
 0000010

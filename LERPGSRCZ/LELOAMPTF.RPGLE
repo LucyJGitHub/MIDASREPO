@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. AR466900           Date 27May10               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057739           Date 15Mar21               *
+      *  Prev Amend No. MD026384           Date 16Sep14               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -26,7 +27,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR466900 - Recompiled due to changes done in LELOA2PD.       *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers. (Recompile)                        *
+      *  MD026384 - Added generation by assignment processing.        *
+      *             Recompiled due to changes in LELOA2PD.            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *

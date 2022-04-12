@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058090           Date 12May21               *
-      *  Prev Amend No. MD053345           Date 01Jun20               *
+      *  Last Amend No. MD059520           Date 21Feb22               *
+      *  Prev Amend No. MD058090           Date 12May21               *
+      *                 MD053345           Date 01Jun20               *
       *                 MD057294           Date 03Dec20               *
       *                 MD050526           Date 27Oct20               *
       *                 AR970389B          Date 16Sep20               *
@@ -160,6 +161,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
+      *             netting tab not showing records.                  *
       *  MD058090 - Reinstate /COPY SDCUSDVU03 with correct starting  *
       *             position (pos 7).                                 *
       *  MD053345 - Dead lock when amending customer through JMS CUSD *
@@ -1197,7 +1200,8 @@
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
      D FillerBufEx4    S           6039A                                                    MD044880
      D TranInCtnm1     S              8A                                                    MD041996
-     D TranInCtnm2     S            110A                                                    MD041996
+     D***TranInCtnm2     S            110A                                         MD041996 MD059520
+     D TranInCtnm2     S            330A                                                    MD059520
      D FillerBufEx5    S           9999A                                                      CGL157
      D PPCOLC          S              2A                                                    MD026693
      D CuCdFil         S            219A   DIM(30)                                            CGL157
@@ -1344,10 +1348,10 @@
      C     LLN007        IFEQ      'Y'                                                      AR316373
       *                                                                                     AR316373
      C                   MOVE      DDCUSN        LVCUST                                     AR316373
-     C                   MOVE      DDCUSN        BYCUST                                     AR665308
-     C                   MOVE      DDLINC        BYLINC                                     AR665308
-     C                   MOVE      DDLICD        BYLICD                                     AR665308
-     C                   MOVE      DDCOLC        BYCOLC                                     AR665308
+     C                   MOVE      DDCUSN        BYCUST            6                        AR665308
+     C                   MOVE      DDLINC        BYLINC            2                        AR665308
+     C                   MOVE      DDLICD        BYLICD            2                        AR665308
+     C                   MOVE      DDCOLC        BYCOLC            2                        AR665308
      C                   CALLB     'BYCUSDW0VL'                                             AR316373
      C                   PARM                    DDACTN                                     AR316373
      C                   PARM                    DATA                                       AR316373
@@ -4527,6 +4531,86 @@
      C                   MOVEL     CTDDCCY2_10   V_TNCCY2_10                               AR1086546
      C                   MOVEL     CTDDTIME_10   V_TNTIME_10                               AR1086546
      C                   MOVEL     CTDDRNTD_10   V_TNRNTD_10                               AR1086546
+     C                   MOVEL     CTDDCCY1_11   V_TNCCY1_11                                MD059520
+     C                   MOVEL     CTDDCCY2_11   V_TNCCY2_11                                MD059520
+     C                   MOVEL     CTDDTIME_11   V_TNTIME_11                                MD059520
+     C                   MOVEL     CTDDRNTD_11   V_TNRNTD_11                                MD059520
+     C                   MOVEL     CTDDCCY1_12   V_TNCCY1_12                                MD059520
+     C                   MOVEL     CTDDCCY2_12   V_TNCCY2_12                                MD059520
+     C                   MOVEL     CTDDTIME_12   V_TNTIME_12                                MD059520
+     C                   MOVEL     CTDDRNTD_12   V_TNRNTD_12                                MD059520
+     C                   MOVEL     CTDDCCY1_13   V_TNCCY1_13                                MD059520
+     C                   MOVEL     CTDDCCY2_13   V_TNCCY2_13                                MD059520
+     C                   MOVEL     CTDDTIME_13   V_TNTIME_13                                MD059520
+     C                   MOVEL     CTDDRNTD_13   V_TNRNTD_13                                MD059520
+     C                   MOVEL     CTDDCCY1_14   V_TNCCY1_14                                MD059520
+     C                   MOVEL     CTDDCCY2_14   V_TNCCY2_14                                MD059520
+     C                   MOVEL     CTDDTIME_14   V_TNTIME_14                                MD059520
+     C                   MOVEL     CTDDRNTD_14   V_TNRNTD_14                                MD059520
+     C                   MOVEL     CTDDCCY1_15   V_TNCCY1_15                                MD059520
+     C                   MOVEL     CTDDCCY2_15   V_TNCCY2_15                                MD059520
+     C                   MOVEL     CTDDTIME_15   V_TNTIME_15                                MD059520
+     C                   MOVEL     CTDDRNTD_15   V_TNRNTD_15                                MD059520
+     C                   MOVEL     CTDDCCY1_16   V_TNCCY1_16                                MD059520
+     C                   MOVEL     CTDDCCY2_16   V_TNCCY2_16                                MD059520
+     C                   MOVEL     CTDDTIME_16   V_TNTIME_16                                MD059520
+     C                   MOVEL     CTDDRNTD_16   V_TNRNTD_16                                MD059520
+     C                   MOVEL     CTDDCCY1_17   V_TNCCY1_17                                MD059520
+     C                   MOVEL     CTDDCCY2_17   V_TNCCY2_17                                MD059520
+     C                   MOVEL     CTDDTIME_17   V_TNTIME_17                                MD059520
+     C                   MOVEL     CTDDRNTD_17   V_TNRNTD_17                                MD059520
+     C                   MOVEL     CTDDCCY1_18   V_TNCCY1_18                                MD059520
+     C                   MOVEL     CTDDCCY2_18   V_TNCCY2_18                                MD059520
+     C                   MOVEL     CTDDTIME_18   V_TNTIME_18                                MD059520
+     C                   MOVEL     CTDDRNTD_18   V_TNRNTD_18                                MD059520
+     C                   MOVEL     CTDDCCY1_19   V_TNCCY1_19                                MD059520
+     C                   MOVEL     CTDDCCY2_19   V_TNCCY2_19                                MD059520
+     C                   MOVEL     CTDDTIME_19   V_TNTIME_19                                MD059520
+     C                   MOVEL     CTDDRNTD_19   V_TNRNTD_19                                MD059520
+     C                   MOVEL     CTDDCCY1_20   V_TNCCY1_20                                MD059520
+     C                   MOVEL     CTDDCCY2_20   V_TNCCY2_20                                MD059520
+     C                   MOVEL     CTDDTIME_20   V_TNTIME_20                                MD059520
+     C                   MOVEL     CTDDRNTD_20   V_TNRNTD_20                                MD059520
+     C                   MOVEL     CTDDCCY1_21   V_TNCCY1_21                                MD059520
+     C                   MOVEL     CTDDCCY2_21   V_TNCCY2_21                                MD059520
+     C                   MOVEL     CTDDTIME_21   V_TNTIME_21                                MD059520
+     C                   MOVEL     CTDDRNTD_21   V_TNRNTD_21                                MD059520
+     C                   MOVEL     CTDDCCY1_22   V_TNCCY1_22                                MD059520
+     C                   MOVEL     CTDDCCY2_22   V_TNCCY2_22                                MD059520
+     C                   MOVEL     CTDDTIME_22   V_TNTIME_22                                MD059520
+     C                   MOVEL     CTDDRNTD_22   V_TNRNTD_22                                MD059520
+     C                   MOVEL     CTDDCCY1_23   V_TNCCY1_23                                MD059520
+     C                   MOVEL     CTDDCCY2_23   V_TNCCY2_23                                MD059520
+     C                   MOVEL     CTDDTIME_23   V_TNTIME_23                                MD059520
+     C                   MOVEL     CTDDRNTD_23   V_TNRNTD_23                                MD059520
+     C                   MOVEL     CTDDCCY1_24   V_TNCCY1_24                                MD059520
+     C                   MOVEL     CTDDCCY2_24   V_TNCCY2_24                                MD059520
+     C                   MOVEL     CTDDTIME_24   V_TNTIME_24                                MD059520
+     C                   MOVEL     CTDDRNTD_24   V_TNRNTD_24                                MD059520
+     C                   MOVEL     CTDDCCY1_25   V_TNCCY1_25                                MD059520
+     C                   MOVEL     CTDDCCY2_25   V_TNCCY2_25                                MD059520
+     C                   MOVEL     CTDDTIME_25   V_TNTIME_25                                MD059520
+     C                   MOVEL     CTDDRNTD_25   V_TNRNTD_25                                MD059520
+     C                   MOVEL     CTDDCCY1_26   V_TNCCY1_26                                MD059520
+     C                   MOVEL     CTDDCCY2_26   V_TNCCY2_26                                MD059520
+     C                   MOVEL     CTDDTIME_26   V_TNTIME_26                                MD059520
+     C                   MOVEL     CTDDRNTD_26   V_TNRNTD_26                                MD059520
+     C                   MOVEL     CTDDCCY1_27   V_TNCCY1_27                                MD059520
+     C                   MOVEL     CTDDCCY2_27   V_TNCCY2_27                                MD059520
+     C                   MOVEL     CTDDTIME_27   V_TNTIME_27                                MD059520
+     C                   MOVEL     CTDDRNTD_27   V_TNRNTD_27                                MD059520
+     C                   MOVEL     CTDDCCY1_28   V_TNCCY1_28                                MD059520
+     C                   MOVEL     CTDDCCY2_28   V_TNCCY2_28                                MD059520
+     C                   MOVEL     CTDDTIME_28   V_TNTIME_28                                MD059520
+     C                   MOVEL     CTDDRNTD_28   V_TNRNTD_28                                MD059520
+     C                   MOVEL     CTDDCCY1_29   V_TNCCY1_29                                MD059520
+     C                   MOVEL     CTDDCCY2_29   V_TNCCY2_29                                MD059520
+     C                   MOVEL     CTDDTIME_29   V_TNTIME_29                                MD059520
+     C                   MOVEL     CTDDRNTD_29   V_TNRNTD_29                                MD059520
+     C                   MOVEL     CTDDCCY1_30   V_TNCCY1_30                                MD059520
+     C                   MOVEL     CTDDCCY2_30   V_TNCCY2_30                                MD059520
+     C                   MOVEL     CTDDTIME_30   V_TNTIME_30                                MD059520
+     C                   MOVEL     CTDDRNTD_30   V_TNRNTD_30                                MD059520
      C                   ENDIF                                                             AR1086546
       *
      C                   ENDSR

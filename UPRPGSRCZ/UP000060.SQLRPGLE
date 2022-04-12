@@ -11,10 +11,13 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD059777             Date 12Apr22             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059777 - When LF/view is a dependency without being an     *
+      *             affected dependent, it is ignored by the script   *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -166,9 +169,22 @@
      C                   eval      S##MNLIB = ORMLIB
      C                   endif
 
+      ** if dependency is from VLIB, check that it exists in the dependent                 MD059777
+     C                   eval      RcdCount = 0                                            MD059777
+     C                   if        ORFLCY <> ORMFIL                                        MD059777
+     C                             and %subst(ORLBCY:4:1) = 'V'                            MD059777
+     C/exec SQL                                                                            MD059777
+     C+ select count(*) into :RcdCount                                                     MD059777
+     C+ from UPZORDTD where ORFILE = :ORFLCY                                               MD059777
+     C+ and ORMFIL = :ORMFIL                                                               MD059777
+     C/end-exec                                                                            MD059777
+     C                   endif                                                             MD059777
       ** Dependency if not the main file
      C                   if        ORFLCY <> ORMFIL
      C                             and %subst(ORLBCY:4:1) <> 'V'
+     C                             or ORFLCY <> ORMFIL                                     MD059777
+     C                             and %subst(ORLBCY:4:1) = 'V'                            MD059777
+     C                             and RcdCount = 0                                        MD059777
      C                   eval      ArrFPF = ORFLCY
      C                   eval      ArrLPF = ORLBCY
 

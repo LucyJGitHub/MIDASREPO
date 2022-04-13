@@ -418,7 +418,7 @@
      C                   PARM      *Blanks       PReturnCode                                MD054346
      C                   PARM      Insert        PAction                                    MD054346
      C**********         PARM                    PValidList                        MD054346 MD059471
-     C                   PARM      'SCFEATVL'    PValidList                                 MD054346
+     C                   PARM      'SCFEATVL'    PValidList                                 MD059471
      C                   PARM                    PLibrary                                   MD054346
      C                   PARM      P@SARN        PIDName                                    MD054346
      C                   PARM      PASS          PPass1                                     MD054346

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD058160           Date 11Apr22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058160 - No MT94x generated due to deletion of Network     *
+      *             account                                           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
@@ -66,6 +69,13 @@
      FME002305DFCF   E             WORKSTN SFILE(ME002305S0:S0RRN)
       ** Midas ME Network Account MT94x Details Browse Display
       *
+     FMGF942L0  IF   E           K DISK    INFSR(*PSSR)                                     MD058160
+                                                                                            MD058160
+      ** Midas MG MT942 Gen. Extract File - Account detail                                  MD058160
+                                                                                            MD058160
+     FMGF941L0  IF   E           K DISK    INFSR(*PSSR)                                     MD058160
+                                                                                            MD058160
+      ** Midas MG MT941 Gen. Extract File - Account detail                                  MD058160
 
       *========================================================================*
       * Use of Indicators                                                      *
@@ -713,6 +723,28 @@
  E4  C                   ENDIF
 
  E3  C                   ENDDO
+                                                                                            MD058160
+      ** Add validation to not allow deletion if a request                                  MD058160
+      ** is ongoing processing                                                              MD058160
+                                                                                            MD058160
+     C                   IF        *IN99                                                    MD058160
+                                                                                            MD058160
+      ** Check the MT94x extraction file to check if there                                  MD058160
+      ** is an ongoing generation of MT for the account                                     MD058160
+                                                                                            MD058160
+     C     KGLMR94Lx     SETLL     MGF942L0                                                 MD058160
+     C     KGLMR94Lx     CHAIN     MGF942L0                           98                    MD058160
+     C                   IF        %FOUND(MGF942L0)                                         MD058160
+     C                   EVAL      *IN99 = *OFF                                             MD058160
+     C                   ENDIF                                                              MD058160
+                                                                                            MD058160
+     C     KGLMR94Lx     SETLL     MGF941L0                                                 MD058160
+     C     KGLMR94Lx     CHAIN     MGF941L0                           98                    MD058160
+     C                   IF        %FOUND(MGF941L0)                                         MD058160
+     C                   EVAL      *IN99 = *OFF                                             MD058160
+     C                   ENDIF                                                              MD058160
+                                                                                            MD058160
+     C                   ENDIF                                                              MD058160
 
  B3  C                   IF        *IN99
      C                   EXSR      $DeletRcd

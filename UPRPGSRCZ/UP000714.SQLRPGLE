@@ -8,11 +8,11 @@
       *                                                               *
       *  Midas - Bridge                                               *
       *                                                               *
-      *  UP000712 - Midas UP Password for mandatory zone features     *
+      *  UP000714 - Midas UP Password for SWIFT Changes               *
       *                                                               *
       *  Function:  This program will read through validation list    *
       *             SCSWPSVL (in the Bridge library) and make sure    *
-      *             all passwords exist in the system (SCFEATVL)      *
+      *             all passwords exist in the system (SCSWPSVL)      *
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
@@ -36,8 +36,6 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
 
-      * Validation list entries maintenance display file.
-     FSCSRDCTD  IP   E             DISK
       *
       *
       /EJECT
@@ -81,29 +79,30 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
-      * Logical conditions.
-     D True            C                   *ON
-     D False           C                   *OFF
-      *
-      * Default ID / password / description length.
+
+      ** Default ID / password / description length.
+
      D ID_LEN          C                   100
      D PWD_LEN         C                   100
      D DSC_LEN         C                    50
-      * Default column text.
+
+      ** Default column text.
+
      D ID_TX           C                   'Validation List ID'
       *
      D WRun            S              1A
-      *
-      * Entry parameters.
+
+      ** Entry parameters.
+
      D PValidList      S             10A
      D PLibrary        S             10A
      D BLibrary        S             10A
      D Library         S             10A
      D Error           S              7A
      D PASS            S             16A
-      *
-      *
-      * UT00032 parameters.
+
+      ** UT00032 parameters.
+
      D PReturnCode     S              7A
      D PAction         S              1A
      D PID             S            100A
@@ -115,8 +114,9 @@
       *****************************************************************
       * MAIN - Processing
       *****************************************************************
-      *
-      * Retrieve Password from BridgeLib/SCSWPSVL
+
+      ** Retrieve Password from BridgeLib/SCSWPSVL
+
      C                   CALL      'UT000033'
      C                   PARM      *Blanks       PReturnCode
      C                   PARM      Find          PAction
@@ -134,12 +134,12 @@
      C                   return
      C                   Endif
 
-      *
-      * and insert entry in the system validation list
+      ** and insert entry in the system validation list
+
      C                   CALL      'UT000033'
      C                   PARM      *Blanks       PReturnCode
      C                   PARM      Insert        PAction
-     C                   PARM      'SCFEATVL'    PValidList
+     C                   PARM      'SCSWPSVL'    PValidList
      C                   PARM      PLibrary      Library
      C                   PARM      SARN          PID
      C                   PARM      PASS          PPass1
@@ -166,14 +166,14 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-      *
-      * Parameters.
+
+      ** Parameters.
+
      C     *ENTRY        PLIST
      C                   PARM                    BLibrary         10
      C                   PARM                    PFX               2
      C                   PARM                    Error
       *
-     C                   EVAL      PValidList = 'SCFEATVL'
      C                   EVAL      PLibrary   = PFX + 'DMLIB'
       *
       *

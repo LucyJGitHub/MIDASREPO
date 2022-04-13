@@ -148,7 +148,9 @@
      D Reset           C                   CONST('R')                                       MD054346
      D Delete          C                   CONST('D')                                       MD054346
      D Find            C                   CONST('F')                                       MD054346
-      * SQL Statements.
+
+      ** SQL Statements.                                                                    MD059471
+
      D GetKeySQLStmnt  S           2000A   INZ(*BLANKS)                                     MD059471
       *
       /EJECT
@@ -415,6 +417,7 @@
      C                   CALL      'UT000033'                                               MD054346
      C                   PARM      *Blanks       PReturnCode                                MD054346
      C                   PARM      Insert        PAction                                    MD054346
+     C**********         PARM                    PValidList                        MD054346 MD059471
      C                   PARM      'SCFEATVL'    PValidList                                 MD054346
      C                   PARM                    PLibrary                                   MD054346
      C                   PARM      P@SARN        PIDName                                    MD054346

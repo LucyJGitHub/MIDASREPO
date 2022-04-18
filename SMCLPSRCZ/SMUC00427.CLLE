@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Utility migration for CSD101 (UPGB)')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00427 - Midas SM Utility migration for CSD101 (UPGB)    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD059699 *CREATE   Date 14Mar22              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*        MD059699 - Introduce new program for migration purpose     */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&OPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/** Global monitor message.  */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             SNDPGMMSG  MSG('SMUC00427 - Utility for CSD101 +
+                            migration program') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Setup system prefixes from UPJSVALJ0  */
+
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgOldZonePrefix' &SVAL1 'BrgMidasSystemPrefix' &SVAL2 ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+             IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                          *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             IF         COND(%SST(&SVAL2 1 4) *EQ '*NRF' *OR &RTNCDE +
+                          *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             CHGVAR     VAR(&OPFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&NPFX) VALUE(%SST(&SVAL2 1 2))
+
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&NPFX)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&OPFX)
+
+CHECK1:
+             CHKOBJ     OBJ(&DPLIB/ZREAPWDPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK2))
+             DLTF       FILE(ZREAPWDPD)
+
+CHECK2:
+
+/* copy the file from the old system into work file in the new system */
+             CPYF       FROMFILE(&DMLIB/REAPWDPD) +
+                        TOFILE(&DPLIB/ZREAPWDPD) MBROPT(*REPLACE) +
+                        CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('SMUC00427 - Error occured in copying +
+                          PF/REAPWDPD to PF/ZREAPWDPD. Process +
+                          terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ERROR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC00427 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+
+END:
+
+             ENDPGM
+
+

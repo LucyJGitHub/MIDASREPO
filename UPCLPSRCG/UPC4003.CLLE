@@ -10,11 +10,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD058585           Date 17Aug21              */
-/*       Prev Amend No. CUT017 *CREATE     Date 17Mar20              */
+/*       Last Amend No. MD059751           Date 25Mar22              */
+/*       Prev Amend No. MD058585           Date 17Aug21              */
+/*                      CUT017 *CREATE     Date 17Mar20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059751 - SQL view statement change is not detected by aDBU*/
 /*       MD058585 - aDBU does not detect if LF has different keys    */
 /*       CUT017 - Adapptive Database Upgrade                         */
 /*                                                                   */
@@ -323,6 +325,34 @@ NEXT2:
 /* Check for difference in keys */                                                      /*MD058585*/
              CALL       PGM(UP4023) PARM(&LIB1 &LIB2 &LAYER)                            /*MD058585*/
                                                                                         /*MD058585*/
+/* Check for difference in SQL statement for views */                                   /*MD059751*/
+             DLTF       FILE(QTEMP/SQLSTM_C1)                                           /*MD059751*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059751*/
+             DLTF       FILE(QTEMP/SQLSTM_C2)                                           /*MD059751*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059751*/
+                                                                                        /*MD059751*/
+             CRTDUPOBJ  OBJ(UPSQLSTD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(SQLSTM_C1)                                /*MD059751*/
+             CRTDUPOBJ  OBJ(UPSQLSTD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(SQLSTM_C2)                                /*MD059751*/
+                                                                                        /*MD059751*/
+/* insert into both files */                                                            /*MD059751*/
+             CALL       PGM(UP4024) PARM(&LIB1 &LIB2 &LAYER)                            /*MD059751*/
+                                                                                        /*MD059751*/
+/* scan replace system reference by 'XX' */                                             /*MD059751*/
+             OVRDBF     FILE(UPSQLSTD) TOFILE(SQLSTM_C1)                                /*MD059751*/
+             CALL       PGM(UP4025) PARM(&LIB1 &LAYER)                                  /*MD059751*/
+             DLTOVR     FILE(UPSQLSTD)                                                  /*MD059751*/
+                                                                                        /*MD059751*/
+             OVRDBF     FILE(UPSQLSTD) TOFILE(SQLSTM_C2)                                /*MD059751*/
+             CALL       PGM(UP4025) PARM(&LIB2 &LAYER)                                  /*MD059751*/
+             DLTOVR     FILE(UPSQLSTD)                                                  /*MD059751*/
+                                                                                        /*MD059751*/
+/* insert into log file   */                                                            /*MD059751*/
+             OVRDBF     FILE(UPGLOGPD) TOFILE(&LOGFILE)                                 /*MD059751*/
+             CALL       PGM(UP4026) PARM(&LIB1 &LIB2 &LAYER)                            /*MD059751*/
+                                                                                        /*MD059751*/
+                                                                                        /*MD059751*/
 DONE:
 /* Update Compare Work File */
              RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)

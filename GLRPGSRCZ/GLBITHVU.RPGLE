@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL118             Date 02Nov21               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. CGL082             Date 02Nov21               *
+      *  Prev Amend No. CGL118             Date 02Nov21               *
+      *                 MD054696           Date 29Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL082 - Journal Entry User Audit                            *
       *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *      
@@ -714,6 +716,9 @@
       *
       ** Security on Journal Entry
      C                   PARM                    CGL008
+      *                                                                                       CGL082
+      ** Journal Entry User Audit                                                             CGL082
+     C                   PARM                    CGL082                                       CGL082
       *
       ** Valid JE Headers (DS) - for file update
      C                   PARM                    PVBITH
@@ -1227,6 +1232,33 @@
       *                                                                                       CGL118
      C                   MOVE      *BLANKS       PRTCD                                       BUG9713
                                                                                              BUG9713
+      *                                                                                       CGL082
+      ** Access SAR file to determine if CGL082 (Journal Entry User Audit)                    CGL082
+      ** is installed.                                                                        CGL082
+      *                                                                                       CGL082
+     C                   CALLB     'AOSARDR0'                                                 CGL082
+     C                   PARM      *BLANKS       PRTCD                                        CGL082
+     C                   PARM      '*VERIFY'     POPTN                                        CGL082
+     C                   PARM      'CGL082'      PSARD             6                          CGL082
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL082
+      *                                                                                       CGL082
+      ** An NRF (No Record Found) return code is valid.  Issue database error                 CGL082
+      ** only for error return codes.                                                         CGL082
+      *                                                                                       CGL082
+     C     PRTCD         IFNE      *BLANKS                                                    CGL082
+     C     PRTCD         ANDNE     '*NRF   '                                                  CGL082
+     C                   MOVEL     'CGL082'      DBKEY                                        CGL082
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CGL082
+     C                   Z-ADD     005           DBASE                                        CGL082
+     C                   EXSR      *PSSR                                                      CGL082
+     C                   ENDIF                                                                CGL082
+      *                                                                                       CGL082
+     C     PRTCD         IFEQ      *BLANK                                                     CGL082
+     C                   MOVE      'Y'           CGL082            1                          CGL082
+     C                   ELSE                                                                 CGL082
+     C                   MOVE      'N'           CGL082                                       CGL082
+     C                   ENDIF                                                                CGL082
+      *                                                                                       CGL082
      C/COPY WNCPYSRC,GLBITH05                                                                 GOC001
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

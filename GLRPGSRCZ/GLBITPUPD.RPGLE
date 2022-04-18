@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL118             Date 02Nov21               *
-      *  Prev Amend No. MD058173           Date 28Jun21               *
+      *  Last Amend No. CGL082             Date 02Nov21               *
+      *  Prev Amend No. CGL118             Date 02Nov21               *
+      *                 MD058173           Date 28Jun21               *
       *                 AR573975           Date 01Jun20               *
       *                 254657             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
@@ -98,6 +99,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL082 - Journal Entry User Audit                            *
       *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD058173 - Hash Item input count on JRNE is updated when user*
       *             amend the batch item details. Hash Item No. Input *
@@ -843,6 +845,20 @@
      C                   ELSE                                                                 CAP084
      C                   UPDATE    @BTREAK                                                    CAP084
      C                   ENDIF                                                                CAP084
+      *                                                                                       CGL082
+      ** If CGL082 is 'Y', then call GL0081 to wriet/Update file GLEJAUPD                     CGL082
+      *                                                                                       CGL082
+     C     CGL082        IFEQ      'Y'                                             B* Audit   CGL082
+     C                   MOVE      'A'           LastActn          1                          CGL082
+     C     B2VALI        IFEQ      '*'                                             B* Audit   CGL082
+     C                   MOVE      'D'           LastActn                                     CGL082
+     C                   END                                                                  CGL082
+     C                   CALL      'GL0081'                                                   CGL082
+     C                   PARM                    BRBTNB                                       CGL082
+     C                   PARM                    BRBCDA                                       CGL082
+     C                   PARM                    LastActn                                     CGL082
+     C                   END                                                       E* Audit   CGL082
+      *                                                                                       CGL082     
      C/COPY OFCPYSRCZ,CGL135_062                                                             CGL135A
       *                                                                                       246418
       ** CGL013 processing                                                                    246418
@@ -978,6 +994,16 @@
       *
      C*******************WRITE     @BTREMG                                      CGL016
      C                   WRITE     @BTREMG                              91      CGL016
+      *                                                                                       CGL082
+      ** If CGL082 is 'Y', then call GL0081 to write/Update file GLEJAUPD                     CGL082
+      *                                                                                       CGL082
+     C     CGL082        IFEQ      'Y'                                             B* Audit   CGL082
+     C                   CALL      'GL0081'                                                   CGL082
+     C                   PARM                    BRBTNB                                       CGL082
+     C                   PARM                    BRBCDA                                       CGL082
+     C                   PARM      'I'           LastActn                                     CGL082
+     C                   END                                                       E* Audit   CGL082
+      *                                                                                       CGL082     
      C/COPY OFCPYSRCZ,CGL135_063                                                             CGL135A
       *                                                                                       239466
       ** Update presented cheques for debit postings where cheque is used                     239466
@@ -1278,6 +1304,15 @@ E2   C                   ENDIF                                                  
       *                                                                         CGL016
 E1   C     *IN99         IFEQ      *OFF                                         CGL016
      C                   UPDATE    @BTREAK                                      CGL016
+      *                                                                                       CGL082
+      ** If CGL082 is 'Y', then call GL0081 to wriet/Update file GLEJAUPD                     CGL082
+      *                                                                                       CGL082
+     C     CGL082        IFEQ      'Y'                                             B* Audit   CGL082
+     C                   CALL      'GL0081'                                                   CGL082
+     C                   PARM                    BRBTNB                                       CGL082
+     C                   PARM                    BRBCDA                                       CGL082
+     C                   PARM      'A'           LastActn                                     CGL082
+     C                   END                                                       E* Audit   CGL082     
       *                                                                                       CRE019
       ** Update presented cheques for debit postings where cheque is used                     CRE019
       ** except when cheque used has been previously presented                                CRE019
@@ -1451,6 +1486,15 @@ E1   C                   ENDIF                                                  
                                                                                               CSC011
       *
      C                   WRITE     @BRREMA
+      *                                                                                       CGL082
+      ** If CGL082 is 'Y', then call GL0081 to wriet/Update file GLEJAUPD                     CGL082
+      *                                                                                       CGL082
+     C     CGL082        IFEQ      'Y'                                             B* Audit   CGL082
+     C                   CALL      'GL0081'                                                   CGL082
+     C                   PARM                    BRBTNB                                       CGL082
+     C                   PARM                    BRBCDA                                       CGL082
+     C                   PARM      'I'           LastActn                                     CGL082
+     C                   END                                                       E* Audit   CGL082     
       *
      C                   ENDSR
       *
@@ -2346,6 +2390,9 @@ z    C     KCHQB2        READPE    CHQBKPDF                               43    
       *                                                                                       CRE019
       ** Cheque processing and maintenance                                                    CRE019
      C                   PARM                    CRE019            1                          CRE019
+      *                                                                                       CGL082
+      ** Journal Entry User Audit                                                             CGL082
+     C                   PARM                    CGL082            1                          CGL082     
       *                                                                                       246418
       ** MT94x Messages Generation                                                            246418
      C                   PARM                    CGL013            1                          246418

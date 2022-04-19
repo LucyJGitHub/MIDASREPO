@@ -20,12 +20,17 @@
       ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************                       JMI111
       *  (c) Finastra  International Limited 2018                     *                       JMI111
       *                                                               *
-      *  Last Amend No. JMI111             Date 18May18               *
-      *  Prev Amend No. CGL019             Date 17Sep07               *
+      *  Last Amend No. MD058332           Date 19Apr22               *
+      *  Prev Amend No. JMI111             Date 18May18               *
+      *                 CGL019             Date 17Sep07               *
       *                 CGL019  *CREATE    Date 20Apr07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058332 - OPICS transactions could not be inserted in       *
+      *             FBM as the batch number reached # 999.            *
+      *             Amend to prevent looping and pass return code     *
+      *             properly.                                         *
       *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
       *  CGL019 - Wrong GL batch number determined resulting to       *
       *           non-sequential batch numbers.                       *
@@ -317,10 +322,11 @@
       *
      C     WBRBT         IFEQ      WOPX
      C                   ADD       1             WOPX
-     C                   READ      GLBTNOL0                               01
+     C**********         READ      GLBTNOL0                               01                MD058332
      C                   ELSE
      C                   Z-ADD     WOPX          WBTNB
      C                   ENDIF
+     C                   READ      GLBTNOL0                               01                MD058332
       *
      C                   ENDDO
       *
@@ -328,7 +334,8 @@
       ** return code.
       *
      C     WBTNB         IFGT      OPURBN
-     C                   MOVE      'Y'           RETURN
+     C***********        MOVE      'Y'           RETURN                                     MD058332
+     C                   MOVEL     'Y'           RETURN                                     MD058332
      C                   ENDIF
       *
      C                   ENDSR

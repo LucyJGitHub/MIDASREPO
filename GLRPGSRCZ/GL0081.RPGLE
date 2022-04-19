@@ -13,17 +13,22 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CGL082   *Create   Date 02Nov21               *
+      *  Last Amend No. MD059784           Date 12Apr22               *
+      *  Prev Amend No. CGL082   *Create   Date 02Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059784 - Record inserted during cancellation of amendment  *
+      *             for journal entry.                                *
       *  CGL082 - Journal Entry User Audit                            *
       *                                                               *
       *****************************************************************
-     FGLJENHL0  IF   E           K DISK
-      * Journal Entry Header
+     F****GLJENHL0  IF   E           K DISK
+     FGLJENHL0  IF   E           K DISK    COMMIT                                           MD059784
+      * Journal Entry Header                                                                MD059784
       *
-     FGLJEAUL0  O    E           K DISK
+     F****GLJEAUL0  O    E           K DISK                                                 MD059784
+     FGLJEAUL0  O    E           K DISK    COMMIT                                           MD059784
       * Journal Entry Extension
       *
       /EJECT

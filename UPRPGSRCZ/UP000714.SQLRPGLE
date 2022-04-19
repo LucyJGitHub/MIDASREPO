@@ -36,6 +36,13 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
 
+      * Validation list entries maintenance display file.
+     FMESWACTD  IP   E             DISK
+      *
+      *
+      /EJECT
+      *****************************************************************
+
       *
       *
       /EJECT
@@ -109,7 +116,6 @@
      D PPass1          S            600A
      D PPass2          S            600A
      D PDescr          S           1000A
-     D SARN            S              6A
       *
       /EJECT
       *****************************************************************
@@ -123,7 +129,7 @@
      C                   PARM      Find          PAction
      C                   PARM      'SCSWPSVL'    PValidList
      C                   PARM      BLibrary      Library
-     C                   PARM      SARN          PID
+     C                   PARM      SWFEAT        PID
      C     PASS          PARM      *Blanks       PPass1
      C                   PARM      *Blanks       PPass2
      C                   PARM      *Blanks       PDescr
@@ -142,7 +148,7 @@
      C                   PARM      Insert        PAction
      C                   PARM      'SCSWPSVL'    PValidList
      C                   PARM      PLibrary      Library
-     C                   PARM      SARN          PID
+     C                   PARM      SWFEAT        PID
      C                   PARM      PASS          PPass1
      C                   PARM      PASS          PPass2
      C                   PARM      *Blanks       PDescr

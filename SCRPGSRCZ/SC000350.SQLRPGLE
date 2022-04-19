@@ -148,9 +148,9 @@
      D Reset           C                   CONST('R')                                       MD054346
      D Delete          C                   CONST('D')                                       MD054346
      D Find            C                   CONST('F')                                       MD054346
-
+                                                                                            MD059471
       ** SQL Statements.                                                                    MD059471
-
+                                                                                            MD059471
      D GetKeySQLStmnt  S           2000A   INZ(*BLANKS)                                     MD059471
       *
       /EJECT

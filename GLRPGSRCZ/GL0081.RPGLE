@@ -23,9 +23,9 @@
       *  CGL082 - Journal Entry User Audit                            *
       *                                                               *
       *****************************************************************
-     F****GLJENHL0  IF   E           K DISK
+     F****GLJENHL0  IF   E           K DISK                                                 MD059784
      FGLJENHL0  IF   E           K DISK    COMMIT                                           MD059784
-      * Journal Entry Header                                                                MD059784
+      * Journal Entry Header
       *
      F****GLJEAUL0  O    E           K DISK                                                 MD059784
      FGLJEAUL0  O    E           K DISK    COMMIT                                           MD059784

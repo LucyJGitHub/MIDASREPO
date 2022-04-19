@@ -43,25 +43,10 @@
       /EJECT
       *****************************************************************
 
-      *
-      *
-      /EJECT
-      *****************************************************************
-
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
-     DPSDS            SDS
-     D PSExcpType             40     42
-      *  Exception number.
-     D PSExcpNo               43     46
-      * Job name.
-     D PSJobName             244    253
-      * User name.
-     D PSUser                254    263
-      *
 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
@@ -70,9 +55,6 @@
       *
       * Action codes.
      D Insert          C                   CONST('A')
-     D Modify          C                   CONST('M')
-     D Reset           C                   CONST('R')
-     D Delete          C                   CONST('D')
      D Find            C                   CONST('F')
       *
       *
@@ -86,16 +68,6 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
-
-      ** Default ID / password / description length.
-
-     D ID_LEN          C                   100
-     D PWD_LEN         C                   100
-     D DSC_LEN         C                    50
-
-      ** Default column text.
-
-     D ID_TX           C                   'Validation List ID'
       *
      D WRun            S              1A
 

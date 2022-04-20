@@ -1,0 +1,76 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Utility migration for CLE138')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00510 - Midas SM Utility migration for CLE138 (UPGB)    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CLE138 *CREATE   Date 02Nov21                */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*        CLE138 - Class Code for Facilities                         */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&OPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2022')
+
+/** Global monitor message.  */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ERROR))
+
+             SNDPGMMSG  MSG('SMUC00510 - Utility for CLE138 migration program') +
+                          TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Setup system prefixes from UPJSVALJ0  */
+
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE 'BrgOldZonePrefix' &SVAL1 +
+                          'BrgMidasSystemPrefix' &SVAL2 ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ')
+             IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE *NE ' ') +
+                          THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             IF         COND(%SST(&SVAL2 1 4) *EQ '*NRF' *OR &RTNCDE *NE ' ') +
+                          THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             CHGVAR     VAR(&OPFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&NPFX) VALUE(%SST(&SVAL2 1 2))
+
+             CHGVAR     VAR(%SUBSTRING(&OLDLIB 1 2)) VALUE(&OPFX)
+             CHGVAR     VAR(%SUBSTRING(&NEWLIB 1 2)) VALUE(&NPFX)
+
+             CALL       PGM(SMU00510) PARM(&OLDLIB &NEWLIB)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ERROR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program SMUC00510 +
+                          ended abnormally - see joblog ') TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+
+ END:
+             ENDPGM
+
+

@@ -37,6 +37,13 @@
       ** ¦ Program Prototypes                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
+     D Main            pr                  extpgm('SMU00510')
+     D  OldLibrary                    7a
+     D  NewLibrary                    7a
+     D Main            pi
+     D  OldLibrary                    7a
+     D  NewLibrary                    7a
+      *
      D  ACCESS_SDBANK  pr                  extpgm('AOBANKR0')
      D    pReturnCode                 7A
      D    pOption                     7A
@@ -76,6 +83,7 @@
 
      D NO_ERROR        c                   const(0)
      D NO_RECORD       c                   const(100)
+     D NO_COLUMN       c                   const(-205)
      D QUO             c                   const('''')
 
       ** +--------------------------------------+
@@ -169,14 +177,17 @@
        begsr migrateLEFCLTQD;
 
                    // Execute SQL Statement to update LEFCLTQD
-                   wSQLStr = 'update LEFCLTQD A' +
+                   wSQLStr = 'update ' + NewLibrary +
+                                  '/LEFCLTQD A' +
                                   ' set  FCXCLS = ' +
-                                  ' (select FCLS from FCLTYFN B' +
+                                  ' (select FCLS from ' +
+                                    OldLibrary + '/FCLTYFN B' +
                                   ' where A.FCXFCU = DIGITS(B.CNUM)' +
                                   ' and A.FCXFNO = DIGITS(B.FCNO)' +
                                   ' and A.FCXFTP = DIGITS(B.FACT))' +
                                   ' where exists (' +
-                                  ' select 1 from FCLTYFN B' +
+                                  ' select 1 from ' + OldLibrary +
+                                  '/FCLTYFN B' +
                                   ' where A.FCXFCU = DIGITS(B.CNUM)' +
                                   ' and A.FCXFNO = DIGITS(B.FCNO)' +
                                   ' and A.FCXFTP = DIGITS(B.FACT))';
@@ -186,7 +197,8 @@
                    execute immediate :wSqlStr;
                    Count3 = SQLER3;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                     and sqlCod  <> NO_COLUMN;
                       dBase    = 001;
                       dBfile   = 'LEFCLTQD';
                       dBkey    = *blanks;
@@ -194,23 +206,29 @@
                       exsr *pssr;
                    endif;
 
+                   if sqlCod = NO_COLUMN;
+                      leavesr;
+                   endif;
+
                    //Get total count in FCLTYFN
-                   wSQLStr = 'select count(*) from FCLTYFN';
+                   wSQLStr = 'select count(*) from ' + OldLibrary +
+                   '/FCLTYFN';
                    exec sql prepare P1 from :wSQLStr;
                    exec sql declare P1 cursor for P1;
                    exec sql open P1;
                    exec sql fetch P1 into :Count1;
                    exec sql close P1;
-                   File1 = 'FCLTYFN';
+                   File1 = OldLibrary + '/FCLTYFN';
 
                    //Get total count in LEFCLTQD
-                   wSQLStr = 'select count(*) from LEFCLTQD';
+                   wSQLStr = 'select count(*) from ' + NewLibrary +
+                   '/LEFCLTQD';
                    exec sql prepare P2 from :wSQLStr;
                    exec sql declare P2 cursor for P2;
                    exec sql open P2;
                    exec sql fetch P2 into :Count2;
                    exec sql close P2;
-                   File2 = 'LEFCLTQD';
+                   File2 = NewLibrary + '/LEFCLTQD';
 
                    //Print Audit Report
                    exsr PrintReport;
@@ -232,16 +250,19 @@
        begsr migrateLEFCAMQD;
 
                    // Execute SQL Statement to update LEFCAMQD
-                   wSQLStr = 'update LEFCAMQD A' +
+                   wSQLStr = 'update ' + NewLibrary +
+                                  '/LEFCAMQD A' +
                                   ' set  FACLAS   = ' +
-                                  ' (select FCLS  from LEFCAMPD B' +
+                                  ' (select FCLS  from ' + OldLibrary +
+                                  '/LEFCAMPD B' +
                                   ' where A.FACNUM = DIGITS(B.CNUM)' +
                                   ' and A.FAFCNO = B.FCNO' +
                                   ' and A.FAFTYP = B.FACT' +
                                   ' and A.FAFATP = B.FATP' +
                                   ' and A.FASQNO = B.SQNO)' +
                                   ' where exists (' +
-                                  ' select 1 from LEFCAMPD B' +
+                                  ' select 1 from ' + OldLibrary +
+                                  '/LEFCAMPD B' +
                                   ' where A.FACNUM = DIGITS(B.CNUM)' +
                                   ' and A.FAFCNO = B.FCNO' +
                                   ' and A.FAFTYP = B.FACT' +
@@ -252,7 +273,8 @@
                    execute immediate :wSqlStr;
                    Count3 = SQLER3;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                      and sqlCod  <> NO_COLUMN;
                       dBase    = 002;
                       dBfile   = 'LEFCAMQD';
                       dBkey    = *blanks;
@@ -260,23 +282,29 @@
                       exsr *pssr;
                    endif;
 
+                   if sqlCod = NO_COLUMN;
+                      leavesr;
+                   endif;
+
                    //Get total count in LEFCAMPD
-                   wSQLStr = 'select count(*) from LEFCAMPD';
+                   wSQLStr = 'select count(*) from ' + NewLibrary +
+                   '/LEFCAMPD';
                    exec sql prepare P3 from :wSQLStr;
                    exec sql declare P3 cursor for P3;
                    exec sql open P3;
                    exec sql fetch P3 into :Count1;
                    exec sql close P3;
-                   File1 = 'LEFCAMPD';
+                   File1 = OldLibrary + '/LEFCAMPD';
 
                    //Get total count in LEFCAMQD
-                   wSQLStr = 'select count(*) from LEFCAMQD';
+                   wSQLStr = 'select count(*) from ' + OldLibrary +
+                   '/LEFCAMQD';
                    exec sql prepare P4 from :wSQLStr;
                    exec sql declare P4 cursor for P4;
                    exec sql open P4;
                    exec sql fetch P4 into :Count2;
                    exec sql close P4;
-                   File2 = 'LEFCAMQD';
+                   File2 = NewLibrary + '/LEFCAMQD';
 
                    //Print Audit Report
                    exsr PrintReport;
@@ -300,18 +328,24 @@
                    Ctr = 0;
 
                    // Read all records from SDFACTX0
-                   wSQLStr = 'select * from SDFACTX0';
+                   wSQLStr = 'select * from ' + OldLibrary +
+                   '/SDFACTX0';
                    exec sql prepare P5 from :wSQLStr;
                    exec sql declare P5 cursor for P5;
                    exec sql open P5;
                    exec sql fetch next from P5 into :dsSDFACT;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                      and sqlCod <> NO_COLUMN;
                       dBkey = *Blanks;
                       dBFile = 'SDFACTX0';
                       dBase = 003;
                       dBPgm  = 'SMU00510';
                       exsr *pssr;
+                   endif;
+
+                   if sqlCod = NO_COLUMN;
+                      leavesr;
                    endif;
 
                    Ctr = Ctr + 1;
@@ -337,7 +371,8 @@
 
                       exec sql fetch next from P5 into :dsSDFACT;
 
-                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                        and sqlCod <> NO_COLUMN;
                          dBkey = *Blanks;
                          dBFile = 'SDFACTX0';
                          dBase = 004;
@@ -366,7 +401,7 @@
 
                    enddo;
                    LastRecord = Ctr;
-                   File1 = 'SDFACTX0';
+                   File1 = OldLibrary + '/SDFACTX0';
                    Count1 = Ctr;
                    exec sql close P5;
 
@@ -375,7 +410,7 @@
 
                    //Insert records into SDFACTPD;
                    exsr insertSDFACTPD;
-                   File2 = 'SDFACTPD';
+                   File2 = NewLibrary + '/SDFACTPD';
                    Count2 = LastRecord;
                    Count3 = LastRecord;
 
@@ -400,7 +435,8 @@
 
                   PrevSQLCod = SQLCOD;
                   clear   rtvSDFACT;
-                  wSQLStr = 'select * from SDFACTPD' +
+                  wSQLStr = 'select * from ' + NewLibrary +
+                    '/SDFACTPD' +
                             ' where AMFCTY= ' + QUO +
                             dsSDFACT.X0AMFCTY + QUO;
 
@@ -409,12 +445,17 @@
                    exec sql open P6;
                    exec sql fetch next from P6 into :rtvSDFACT;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                      and sqlCod <> NO_COLUMN;
                       dBkey = *Blanks;
                       dBFile = 'SDFACTPD';
                       dBase = 005;
                       dBPgm  = 'SMU00510';
                       exsr *pssr;
+                   endif;
+
+                   if sqlCod = NO_COLUMN;
+                      leavesr;
                    endif;
 
                    exec sql close P6;
@@ -436,19 +477,26 @@
        begsr deleteSDFACTPD;
 
                   for i = 1 to LastRecord;
-                      wSqlStr = 'delete from SDFACTPD ' +
+                      wSqlStr = 'delete from ' + NewLibrary +
+                        '/SDFACTPD ' +
                                 'where AMFCTY = ' + QUO +
                                 dsNewFile(i).AMFCTY + QUO;
                       exec sql
                       execute immediate :wSqlStr;
 
-                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                         and sqlCod <> NO_COLUMN;
                         dBase    = 006;
                         dBfile   = 'SDFACTPD';
                          dBkey    = *BLANKS;
                         dBpgm    = 'SMU00510';
                         exsr *pssr;
                      endif;
+
+                     if sqlCod = NO_COLUMN;
+                         leavesr;
+                     endif;
+
                   endfor;
        endsr;
 
@@ -467,16 +515,23 @@
        begsr insertSDFACTPD;
 
                   for i = 1 to LastRecord;
+
                       insSDFACT   =   dsNewFile(i);
                       exec sql insert into SDFACTPD
                           values (:insSDFACT);
-                       if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                       if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                          and sqlCod <> NO_COLUMN;
                           dBase    = 007;
                           dBfile   = 'SDFACTPD';
                           dBkey    = *BLANKS;
                           dBpgm    = 'SMU00510';
                           exsr *pssr;
                        endif;
+
+                       if sqlCod = NO_COLUMN;
+                         leavesr;
+                     endif;
+
                   endfor;
 
        endsr;
@@ -525,6 +580,7 @@
 
        begsr *inzsr;
 
+
                    pOption = '*FIRST';
                    pReturnCode = *Blanks;
 
@@ -542,6 +598,10 @@
                       dBpgm    = 'SMU00510';
                       exsr *pssr;
                    endif;
+
+                   Count1 = 0;
+                   Count2 = 0;
+                   Count3 = 0;
 
        endsr;
 

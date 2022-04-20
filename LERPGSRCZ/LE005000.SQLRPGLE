@@ -77,6 +77,7 @@
      D NO_ERROR        c                   const(0)
      D NO_RECORD       c                   const(100)
      D NOT_FOUND       c                   const(-204)
+     D NO_COLUMN       c                   const(-205)
      D QUO             c                   const('''')
      D CONST_CLASS     c                   const('XXXX')
 
@@ -203,12 +204,19 @@
                    exec sql open P0;
                    exec sql fetch next From P0 into :dsSDTCLD;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                      and sqlCod  <> NO_COLUMN;
                       dBase    = 001;
                       dBfile   = 'SDTCLDPD';
                       dBkey    = *blanks;
                       dBpgm    = 'LE005000';
                       exsr *pssr;
+                   endif;
+
+                   if sqlCod = NO_COLUMN;
+                      COL1 = 'LECLAS';
+                      ERRMSG1 = 'COLUMN DOES NOT EXIST';
+                      leavesr;
                    endif;
 
                    if sqlCod = NO_RECORD;
@@ -253,6 +261,7 @@
                       endif;
                    endif;
                    exec sql close P0;
+                   DFTCLAS = DefaultClass;
        endsr;
 
        //*************************************************************
@@ -278,12 +287,19 @@
                    exec sql open P1;
                    exec sql fetch next From P1 into :dsSDTCLS;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                      and sqlCod <> NO_COLUMN;
                       dBase    = 004;
                       dBfile   = 'SDTCLSPD';
                       dBkey    = *blanks;
                       dBpgm    = 'LE005000';
                       exsr *pssr;
+                   endif;
+
+                   if sqlCod = NO_COLUMN;
+                      COL2 = 'TCCLAS';
+                      ERRMSG2 = 'COLUMN DOES NOT EXIST';
+                      leavesr;
                    endif;
 
                    if sqlCod = NO_RECORD;
@@ -330,12 +346,19 @@
                          exec sql
                          execute immediate :wSqlStr;
                          Count1 = SQLER3;
-                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and sqlCod <>  NO_COLUMN;
                             dBase    = 006;
                             dBfile   = 'LEFEED';
                             dBkey    = *blanks;
                             dBpgm    = 'LE005000';
                             exsr *pssr;
+                         endif;
+
+                         if sqlCod = NO_COLUMN;
+                            COL9 = 'FECLAS';
+                            ERRMSG9 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
                          endif;
 
        endsr;
@@ -360,12 +383,19 @@
                          exec sql
                          execute immediate :wSqlStr;
                          Count2 = SQLER3;
-                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and sqlCod <> NO_COLUMN;
                             dBase    = 007;
                             dBfile   = 'SDFACTPD';
                             dBkey    = *blanks;
                             dBpgm    = 'LE005000';
                             exsr *pssr;
+                         endif;
+
+                          if sqlCod = NO_COLUMN;
+                            COL3 = 'AMCLAS';
+                            ERRMSG3 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
                          endif;
 
        endsr;
@@ -391,12 +421,19 @@
                          exec sql
                          execute immediate :wSqlStr;
                          Count3 = SQLER3;
-                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                           and sqlCod <> NO_COLUMN;
                             dBase    = 008;
                             dBfile   = 'LEFCLTQD';
                             dBkey    = *blanks;
                             dBpgm    = 'LE005000';
                             exsr *pssr;
+                         endif;
+
+                         if sqlCod = NO_COLUMN;
+                            COL4 = 'FCXCLS';
+                            ERRMSG4 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
                          endif;
 
        endsr;
@@ -421,12 +458,19 @@
                          exec sql
                          execute immediate :wSqlStr;
                          Count4 = SQLER3;
-                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and SqlCod <> NO_COLUMN;
                             dBase    = 009;
                             dBfile   = 'LEAGFTQD';
                             dBkey    = *blanks;
                             dBpgm    = 'LE005000';
                             exsr *pssr;
+                         endif;
+
+                         if sqlCod = NO_COLUMN;
+                            COL5 = 'FCXSLC';
+                            ERRMSG5 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
                          endif;
 
        endsr;
@@ -451,7 +495,8 @@
                          exec sql
                          execute immediate :wSqlStr;
                          Count5 = SQLER3;
-                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and sqlCod <> NO_COLUMN;
                             dBase    = 010;
                             dBfile   = 'LEFCAMQD';
                             dBkey    = *blanks;
@@ -459,6 +504,11 @@
                             exsr *pssr;
                          endif;
 
+                         if sqlCod = NO_COLUMN;
+                            COL6 = 'FACLAS';
+                            ERRMSG6 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
+                         endif;
        endsr;
 
        //*************************************************************
@@ -481,12 +531,19 @@
                          exec sql
                          execute immediate :wSqlStr;
                          Count9 = SQLER3;
-                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and sqlCod <>  NO_COLUMN;
                             dBase    = 011;
                             dBfile   = 'LEAGAMQD';
                             dBkey    = *blanks;
                             dBpgm    = 'LE005000';
                             exsr *pssr;
+                         endif;
+
+                         if sqlCod = NO_COLUMN;
+                            COL7 = 'FACLAS';
+                            ERRMSG7 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
                          endif;
 
        endsr;
@@ -512,12 +569,19 @@
                    exec sql open P2;
                    exec sql fetch next from P2 into :dsACKEYAL;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                      and SqlCod <> NO_COLUMN;
                       dBkey = *Blanks;
                       dBFile = 'ACKEYAL';
                       dBase = 012;
                       dBPgm  = 'LE005000';
                       exsr *pssr;
+                   endif;
+
+                   if sqlCod = NO_COLUMN;
+                      COL8 = 'AKEY';
+                      ERRMSG8 = 'COLUMN DOES NOT EXIST';
+                      leavesr;
                    endif;
 
                    processRecord = *Off;
@@ -533,7 +597,8 @@
 
                       exec sql fetch next from P2 into :dsACKEYAL;
 
-                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                         and sqlCod <> NO_COLUMN;
                          dBkey = *Blanks;
                          dBFile = 'ACKEYAL';
                          dBase = 013;
@@ -541,17 +606,20 @@
                          exsr *pssr;
                        endif;
 
+                       if sqlCod = NO_COLUMN;
+                          COL8 = 'AKEY';
+                          ERRMSG8 = 'COLUMN DOES NOT EXIST';
+                          leavesr;
+                       endif;
+
                        processRecord = *Off;
 
-                      exsr checkIfProcess;
-                      if ProcessRecord;
-                         currentAKEY = dsACKEYAL.AKEY;
-                         exsr updateRecord;
-                      endif;
-
+                       exsr checkIfProcess;
+                       if ProcessRecord;
+                          currentAKEY = dsACKEYAL.AKEY;
+                          exsr updateRecord;
+                       endif;
                    enddo;
-
-
        endsr;
 
        //*************************************************************

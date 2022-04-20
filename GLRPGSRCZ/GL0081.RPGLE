@@ -20,6 +20,7 @@
       *                                                               *
       *  MD059784 - Record inserted during cancellation of amendment  *
       *             for journal entry.                                *
+      *           - Add COMMIT to GLJEAUL0                            *
       *  CGL082 - Journal Entry User Audit                            *
       *                                                               *
       *****************************************************************

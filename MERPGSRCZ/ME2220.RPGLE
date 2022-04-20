@@ -535,27 +535,27 @@
 
       ** Get time limit for purge processing from MxPurgeTime system value
 
-     C                   call      'AOSVALR0'                                               AR996631
-     C                   parm      *BLANKS       PRetCode                                   AR996631
-     C                   parm      PSysVal1      P@OP01                                     AR996631
-     C                   parm      *BLANKS       P@VL01                                     AR996631
-     C                   parm      *BLANKS       P@OP02                                     AR996631
-     C                   parm      *BLANKS       P@VL02                                     AR996631
-     C                   parm      *BLANKS       P@OP03                                     AR996631
-     C                   parm      *BLANKS       P@VL03                                     AR996631
-     C                   parm      *BLANKS       P@OP04                                     AR996631
-     C                   parm      *BLANKS       P@VL04                                     AR996631
-     C                   parm      *BLANKS       P@OP05                                     AR996631
-     C                   parm      *BLANKS       P@VL05                                     AR996631
-     C                   parm      *BLANKS       P@OP06                                     AR996631
-     C                   parm      *BLANKS       P@VL06                                     AR996631
-     C                   parm      *BLANKS       P@OP07                                     AR996631
-     C                   parm      *BLANKS       P@VL07                                     AR996631
-     C                   parm      *BLANKS       P@OP08                                     AR996631
-     C                   parm      *BLANKS       P@VL08                                     AR996631
-     C                   parm      *BLANKS       P@OP09                                     AR996631
-     C                   parm      *BLANKS       P@VL09                                     AR996631
-     C                   parm      *BLANKS       P@OP10                                     AR996631
+     C                   call      'AOSVALR0'
+     C                   parm      *BLANKS       PRetCode
+     C                   parm      PSysVal1      P@OP01
+     C                   parm      *BLANKS       P@VL01
+     C                   parm      *BLANKS       P@OP02
+     C                   parm      *BLANKS       P@VL02
+     C                   parm      *BLANKS       P@OP03
+     C                   parm      *BLANKS       P@VL03
+     C                   parm      *BLANKS       P@OP04
+     C                   parm      *BLANKS       P@VL04
+     C                   parm      *BLANKS       P@OP05
+     C                   parm      *BLANKS       P@VL05
+     C                   parm      *BLANKS       P@OP06
+     C                   parm      *BLANKS       P@VL06
+     C                   parm      *BLANKS       P@OP07
+     C                   parm      *BLANKS       P@VL07
+     C                   parm      *BLANKS       P@OP08
+     C                   parm      *BLANKS       P@VL08
+     C                   parm      *BLANKS       P@OP09
+     C                   parm      *BLANKS       P@VL09
+     C                   parm      *BLANKS       P@OP10
      C                   parm      *BLANKS       P@VL10
       *
      C                   if        PRetCode <> *BLANKS

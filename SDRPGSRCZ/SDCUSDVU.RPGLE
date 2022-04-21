@@ -1351,14 +1351,10 @@
      C     LLN007        IFEQ      'Y'                                                      AR316373
       *                                                                                     AR316373
      C                   MOVE      DDCUSN        LVCUST                                     AR316373
-     C**********         MOVE      DDCUSN        BYCUST            6               AR665308 MD059830
-     C**********         MOVE      DDLINC        BYLINC            2               AR665308 MD059830
-     C**********         MOVE      DDLICD        BYLICD            2               AR665308 MD059830
-     C**********         MOVE      DDCOLC        BYCOLC            2               AR665308 MD059830
-     C                   MOVE      DDCUSN        BYCUST                                     MD059830
-     C                   MOVE      DDLINC        BYLINC                                     MD059830
-     C                   MOVE      DDLICD        BYLICD                                     MD059830
-     C                   MOVE      DDCOLC        BYCOLC                                     MD059830
+     C                   MOVE      DDCUSN        BYCUST                                     AR665308
+     C                   MOVE      DDLINC        BYLINC                                     AR665308
+     C                   MOVE      DDLICD        BYLICD                                     AR665308
+     C                   MOVE      DDCOLC        BYCOLC                                     AR665308
      C                   CALLB     'BYCUSDW0VL'                                             AR316373
      C                   PARM                    DDACTN                                     AR316373
      C                   PARM                    DATA                                       AR316373

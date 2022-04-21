@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. EMP108             Date 09Feb21              */
-/*       Prev Amend No. MD046248           DATE 27Oct17              */
+/*       Last Amend No. MD057766           Date 17Mar21              */
+/*       Prev Amend No. EMP108             Date 09Feb21              */
+/*                      MD046248           DATE 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057766 - REC376A on MSGW when EMP108 is OFF               */
 /*       EMP108 - Retail Interest Capitalisation Statement via CM    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01413 - Retail 3 Incorporation                             */
@@ -152,7 +154,8 @@
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
     GOTO       CMDLBL(ENDCL)                                                  /*EMP108*/
-             ENDDO                                                            /*EMP108*/
+       ENDDO       /*EMP108*/
+    GOTO       CMDLBL(ENDCL)                                                  /*MD057766*/
 /*---------------------------------------------------------------*/           /*EMP108*/
 /* Abnormal termination                                          */           /*EMP108*/
 /*---------------------------------------------------------------*/           /*EMP108*/

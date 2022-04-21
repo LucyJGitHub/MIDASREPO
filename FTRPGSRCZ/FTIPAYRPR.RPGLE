@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD047369A          Date 24Jan18               *
+      *  Last Amend No. CSW122             Date 04Oct21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
       *                 MD025111           Date 24Feb14               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122 - SWIFT ISO 20022                                     *
       *  CSD102 - Password Length Extension                           *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *      
@@ -2392,6 +2394,9 @@
       ** Enable Detail Fields Indicator
      C                   PARM                    PEDTFLD           1
       *
+      ** Message Unique Ref to be used in MX Element display                                  CSW122
+     C                   PARM                    INMSGR                                       CSW122
+      *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
       ** KE = Command Key 05 = Refresh
@@ -2411,6 +2416,7 @@
      C                   PARM                    PEINKQ            1
      C                   PARM      'N'           PEINKS            1
      C                   PARM                    PEINKV            1
+     C                   PARM                    PEINKW            1                          CSW122
       *
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    FTEIPY1
@@ -2490,6 +2496,7 @@
      C                   PARM                    PINKQ             1
      C                   PARM                    PINKS             1
      C                   PARM                    PINKV             1
+     C                   PARM                    PINKW             1                          CSW122
       *
       ** Cursor position
      C                   PARM                    PRowCol
@@ -5241,6 +5248,10 @@
       *
       ** Enable Detail Fields Indicator
      C                   PARM                    PEDTFLD
+      *                                                                                       CSW122
+      ** Message Unique Ref to be used in MX Element display                                  CSW122
+     C                   PARM                    INMSGR                                       CSW122
+      *                                                                                       CSW122
       *
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
@@ -5261,6 +5272,7 @@
      C                   PARM                    PEINKQ
      C                   PARM                    PEINKS
      C                   PARM                    PEINKV
+     C                   PARM                    PEINKW                                       CSW122
       *
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    FTEIPY1
@@ -5340,6 +5352,7 @@
      C                   PARM                    PINKQ
      C                   PARM                    PINKS
      C                   PARM                    PINKV
+     C                   PARM                    PINKW                                        CSW122
       *
       ** Cursor position
      C                   PARM                    PRowCol
@@ -5468,6 +5481,9 @@
       ** Enable Detail Fields Indicator
      C                   PARM      'N'           PEDTFLD
       *
+      ** Message Unique Ref to be used in MX Element display                                  CSW122
+     C                   PARM                    INMSGR                                       CSW122
+      *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
       ** KE = Command Key 05 = Refresh
@@ -5487,6 +5503,7 @@
      C                   PARM      'N'           PEINKQ
      C                   PARM      'N'           PEINKS
      C                   PARM      'N'           PEINKV
+     C                   PARM      'N'           PEINKW                                       CSW122
       *
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    FTEIPY1
@@ -5566,6 +5583,7 @@
      C                   PARM                    PINKQ
      C                   PARM                    PINKS
      C                   PARM                    PINKV
+     C                   PARM                    PINKW                                        CSW122
       *
       ** Cursor position
      C                   PARM                    PRowCol
@@ -5678,6 +5696,9 @@
       ** Enable Detail Fields Indicator
      C                   PARM                    PEDTFLD
       *
+      ** Message Unique Ref to be used in MX Element display                                  CSW122
+     C                   PARM                    INMSGR                                       CSW122
+      *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
       ** KE = Command Key 05 = Refresh
@@ -5697,6 +5718,7 @@
      C                   PARM                    PEINKQ
      C                   PARM                    PEINKS
      C                   PARM                    PEINKV
+     C                   PARM                    PEINKW                                       CSW122
       *
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    FTEIPY1
@@ -5776,6 +5798,7 @@
      C                   PARM                    PINKQ
      C                   PARM                    PINKS
      C                   PARM                    PINKV
+     C                   PARM                    PINKW                                        CSW122
       *
       ** Cursor position
      C                   PARM                    PRowCol

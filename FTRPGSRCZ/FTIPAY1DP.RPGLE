@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW122             Date 04Oct21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD033641           Date 08Apr15               *
       *                 MD027047           Date 19Aug14               *
       *                 CFT120             Date 28Sep12               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122 - SWIFT ISO 20022                                     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033641 - Remove unsupported keywords of HATS. (Recompile)  *
@@ -234,6 +236,8 @@
       *
       ** Cursor position
      D  PRowCol        S              4B 0
+      *                                                                                       CSW122
+     D  WPMsgR         S              8S 0                                                    CSW122
      D/COPY WNCPYSRC,FTIPA1XD02
       *
       ** +--------------------------------------+
@@ -378,6 +382,14 @@
      C                   EVAL      *IN79 = *OFF
      C                   ENDIF
       *
+      ** Enable F22 - MX Element                                                              CSW122
+      *                                                                                       CSW122
+     C                   IF        PEINKW = 'Y'                                               CSW122
+     C                   EVAL      *IN55 = *ON                                                CSW122
+     C                   ELSE                                                                 CSW122
+     C                   EVAL      *IN55 = *OFF                                               CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
       ** If process mode is repair, enable Booking Branch and do not
       ** display SWIFT Reference and Sequence No.
       *
@@ -426,6 +438,13 @@
      C                   EXFMT     FTIPAYD2
      C                   ENDIF
       *
+      ** If F22 taken, display MX Element window                                              CSW122
+      *                                                                                       CSW122
+     C                   EVAL      PINKW = *BLANKS                                            CSW122
+     C                   IF        *INKW = *ON                                                CSW122
+     C                   EXSR      SrMXElement                                                CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
       ** Clear message subfile.
       *
      C                   CALL      'ZA0250'
@@ -450,6 +469,29 @@
       *
      C                   ENDSR
       *
+      /EJECT                                                                                  CSW122
+      *****************************************************************                       CSW122
+      *                                                               *                       CSW122
+      *  SrMXElement - Display MX Element Window                      *                       CSW122
+      *                                                               *                       CSW122
+      *****************************************************************                       CSW122
+      *                                                                                       CSW122
+     C     SrMXElement   BEGSR                                                                CSW122
+      *                                                                                       CSW122
+     C                   CALL      'FT020023DP'                                               CSW122
+     C                   PARM                    WPMsgR                                       CSW122
+     C                   PARM                    DDPREF                                       CSW122
+     C                   PARM      *BLANKS       PINKC                                        CSW122
+     C                   PARM      *BLANKS       PINKL                                        CSW122
+      *                                                                                       CSW122
+     C                   IF        PINKL = 'Y'                                                CSW122
+     C                   EVAL      PINKW = 'Y'                                                CSW122
+     C                   EVAL      *INKL = *ON                                                CSW122
+     C                   ELSEIF    PINKC = 'Y'                                                CSW122
+     C                   EVAL      *INKC = *ON                                                CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
+     C                   ENDSR                                                                CSW122
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -514,6 +556,9 @@
       ** Enable Detail Fields Indicator
      C                   PARM                    PEDTFLD           1
       *
+      ** Message Unique Ref to be used in MX Element display                                  CSW122
+     C                   PARM                    WPMsgR                                       CSW122
+      *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
       ** KE = Command Key 05 = Refresh
@@ -533,6 +578,7 @@
      C                   PARM                    PEINKQ            1
      C                   PARM                    PEINKS            1
      C                   PARM                    PEINKV            1
+     C                   PARM                    PEINKW            1                          CSW122
       *
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    FTEIPY1
@@ -612,6 +658,7 @@
      C                   PARM                    PINKQ             1
      C                   PARM                    PINKS             1
      C                   PARM                    PINKV             1
+     C                   PARM                    PINKW             1                          CSW122
       *
       ** Cursor position
      C                   PARM                    PRowCol

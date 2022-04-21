@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055503           Date 03Apr20               *
-      *  Prev Amend No. MD042042           Date 22Mar19               *
+      *  Last Amend No. CSW122             Date 04Oct21               *
+      *  Prev Amend No. MD055503           Date 03Apr20               *
+      *                 MD042042           Date 22Mar19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
       *                 CFT151             Date 21Mar14               *
@@ -103,6 +104,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122 - SWIFT ISO 20022                                     *
       *  MD055503 - Not able to do webfacing authorisation for invalid*
       *             outgoing payment that had been repaired.          *
       *           - Added the missing parameter (InputUser) introduced*
@@ -1288,6 +1290,7 @@
      C                   PARM                    @EINKQ            1            CFT007
      C                   PARM      'N'           @EINKS            1
      C                   PARM      'N'           @EINKV            1
+     C                   PARM      'N'           @EINKW            1                          CSW122
       * Successful insert Payment
      C                   PARM                    @SITR            15
       *
@@ -1313,6 +1316,7 @@
      C                   PARM      '0'           @INKQ             1            CFT007
      C                   PARM      '0'           @INKS             1
      C                   PARM      '0'           @INKV             1
+     C                   PARM      '0'           @INKW             1                          CSW122
       * Write screen with no read indicator
      C                   PARM      'N'           WriteOnly         1
       * Cursor location on screen                                               CFT007
@@ -3207,6 +3211,7 @@
      C                   PARM                    @EINKQ                         CFT007
      C                   PARM                    @EINKS
      C                   PARM                    @EINKV
+     C                   PARM                    @EINKW                                       CSW122
       *
       * SUCCESFUL INSERT TRANSACTION
      C                   PARM                    @SITR
@@ -3234,6 +3239,7 @@
      C                   PARM      '0'           @INKQ             1            CFT007
      C                   PARM      '0'           @INKS             1
      C                   PARM      '0'           @INKV             1
+     C                   PARM      '0'           @INKW                                        CSW122
      C                   PARM      'Y'           WriteOnly         1
      C                   PARM      0             CursorLoc         5 0          CFT007
      C                   PARM      *BLANKS       SSIMode                                     BUG7319
@@ -4190,6 +4196,7 @@
      C                   PARM      'N'           @EINKQ            1            CFT007
      C                   PARM      'N'           @EINKS
      C                   PARM      'N'           @EINKV
+     C                   PARM      'N'           @EINKW                                       CSW122
       *
       * SUCCESFUL INSERT
      C                   PARM                    @SITR
@@ -4217,6 +4224,7 @@
      C                   PARM      '0'           @INKQ             1            CFT007
      C                   PARM      '0'           @INKS             1
      C                   PARM      '0'           @INKV             1
+     C                   PARM      '0'           @INKW                                        CSW122
      C                   PARM      'N'           WriteOnly         1
      C                   PARM      0             CursorLoc         5 0          CFT007
      C                   PARM      *BLANKS       SSIMode                                     BUG7319

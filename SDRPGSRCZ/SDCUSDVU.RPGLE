@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059520           Date 21Feb22               *
-      *  Prev Amend No. MD058090           Date 12May21               *
+      *  Last Amend No. MD059830           Date 21Apr22               *
+      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *                 MD058090           Date 12May21               *
       *                 MD053345           Date 01Jun20               *
       *                 MD057294           Date 03Dec20               *
       *                 MD050526           Date 27Oct20               *
@@ -161,6 +162,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059830 - Revert field length changes made to LLN007        *
+      *             Compilation Error due to /COPY SDCUSDDTA          *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records.                  *
       *  MD058090 - Reinstate /COPY SDCUSDVU03 with correct starting  *
@@ -1348,10 +1351,10 @@
      C     LLN007        IFEQ      'Y'                                                      AR316373
       *                                                                                     AR316373
      C                   MOVE      DDCUSN        LVCUST                                     AR316373
-     C                   MOVE      DDCUSN        BYCUST            6                        AR665308
-     C                   MOVE      DDLINC        BYLINC            2                        AR665308
-     C                   MOVE      DDLICD        BYLICD            2                        AR665308
-     C                   MOVE      DDCOLC        BYCOLC            2                        AR665308
+     C                   MOVE      DDCUSN        BYCUST                                     AR665308
+     C                   MOVE      DDLINC        BYLINC                                     AR665308
+     C                   MOVE      DDLICD        BYLICD                                     AR665308
+     C                   MOVE      DDCOLC        BYCOLC                                     AR665308
      C                   CALLB     'BYCUSDW0VL'                                             AR316373
      C                   PARM                    DDACTN                                     AR316373
      C                   PARM                    DATA                                       AR316373

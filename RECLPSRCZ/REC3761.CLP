@@ -23,7 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD057766 - REC376A on MSGW when EMP108 is OFF.              */
+/*       MD057766 - REC376A on MSGW when EMP108 is OFF               */
 /*       EMP108 - Retail Interest Capitalisation Statement via CM    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01413 - Retail 3 Incorporation                             */

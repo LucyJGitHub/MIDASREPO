@@ -1,0 +1,232 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas xx Re-organize I/O Account Data')                *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - I/O RECONCILE                                        *
+     F*                                                               *
+     F*  XX1420 - RE-ORGANIZE I/O ACCOUNT DATA                        *
+     F*           To run at installation time to setup XXACNTPP with  *
+     F*             up to date balances (based on XX1414)             *
+     F*                                                               *
+     F*  (C) FINASTRA INTERNATIONAL LIMITED 2021                      *
+     F*                                                               *
+     F*  Last Amend No. MD059316           Date 17Nov21               *
+     F*  Prev Amend No. EML114   *CREATE   Date 23Sep21               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  MD059316 - Year to Date Balance update from MP to 2021B issue*
+     F*           +Remove line of code that compares LCD of static    *
+     F*           data file XXACODPP to PLCD (LCD from XXACNTPP)      *
+     F*           +Ensure date is set to Last Movement Date or        *
+     F*            beginning of Financial Year (whichever is the      *
+     F*            greatest)                                          *
+     F*           +Ensure update of account balance is correct        *
+     F*  EML114 - Upgrade TFJ004 to FM2.1                             *
+     F*  TFJ004 - Inter-office Reconcile                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FACCNTAB IP  E                    DISK
+     FXXACODPPIF  E                    DISK
+     FXXCUSTPPIF  E                    DISK
+     FSDACODL0IF  E           K        DISK                                                 MD059316
+      *
+     FXXACNTL1UF  E           K        DISK                      A
+     F*
+      *****************************************************************
+      *
+     E                    ACD      1000 10 0
+     E                    REC      1000  1
+     E                    ALT      1000 10
+     E                    HCS      1000  3
+     E                    IOC      1000  1
+     E                    CHTA     1000  1
+     E                    LCDA     1000  5 0
+      *
+     E                    CST      1000  6
+     E                    HCO      1000  3
+     E                    CHTC     1000  1
+      *
+      *****************************************************************
+     I*
+     IACCNTABF
+     I              RECI                            RECI1
+     I              CNUM                            CNUM1
+     I              CCY                             CCY1
+     I              ACOD                            ACOD1
+     I              ACSQ                            ACSQ1
+     I              BRCA                            BRCA1
+     I*
+     I@BANK     E DSSDBANKPD
+     I** DUMMY RECORD FORMAT FOR BANK DETAILS
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     C*****************************************************************
+     C*
+     C  N10                EXSR #INIT
+     C  N10                SETON                     10
+     C*
+     C           RECI1     CABNE'D'       #END
+     C*
+     C                     Z-ADD1         X
+     C           ACOD1     LOKUPACD,X                    80
+     C  N80                GOTO #END
+     C*
+     C                     SETOF                     86
+     C*
+     C           CHTA,X    IFNE 'D'
+     C***********LCDA,X****ANDGTPLCD                                                        MD059316
+     C           LCDA,X    ANDLEWKRD1
+     C*
+     C           IOC,X     IFEQ 'Y'
+     C                     Z-ADD1         Y       40
+     C           CNUM1     LOKUPCST,Y                    86
+     C           *IN86     IFEQ '0'
+     C                     GOTO #END
+     C                     ELSE
+     C           CHTC,Y    CABEQ'D'       #END
+     C                     END
+     C                     END
+     C*
+     C           #ACKEY    CHAINXXACNTL1             81
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE BRCA1     BRCA
+     C                     MOVELCNUM1     CNUM
+     C                     MOVE CCY1      CCY
+     C                     Z-ADDACOD1     ACOD
+     C                     Z-ADDACSQ1     ACSQ
+     C                     MOVE REC,X     RECTYP
+     C                     MOVE ALT,X     ALTAC
+     C  N86                MOVE HCS,X     HOCNUM
+     C   86                MOVE HCO,Y     HOCNUM
+     C*********************Z-ADDLCDA,X    LUPDD                                             MD059316
+     C* Ensure date is set to Beginning of Financial Year or Last Movement Date. Whichever  MD059316
+     C* is greatest                                                                         MD059316
+     C           BJPEYD    ADD  1         STRPR   50                                        MD059316
+     C           LMVD      IFGT STRPR                                                       MD059316
+     C                     MOVE LMVD      LUPDD                                             MD059316
+     C                     ELSE                                                             MD059316
+     C                     MOVE STRPR     LUPDD                                             MD059316
+     C                     ENDIF                                                            MD059316
+     C*
+     C* Is Account Income or Expense? If so, do not update with Balance as it is not        MD059316
+     C* accurate, simply set to zero so the balance can be calculated in the other programs MD059316
+     C* that are part of this utility                                                       MD059316
+     C                     MOVE ACOD      ACODA  10                                         MD059316
+     C           ACODA     CHAIN@A5UPA7              20                                     MD059316
+     C* Dump if Account Code not found                                                      MD059316
+     C   20                DUMP                                                             MD059316
+     C           A5ACSC    IFNE 'IN'                                                        MD059316
+     C           A5ACSC    ANDNE'EX'                                                        MD059316
+     C***81****************Z-ADDLDBL      YTDBAL                                            MD059316
+     C                     Z-ADDLDBL      YTDBAL                                            MD059316
+     C                     ELSE                                                             MD059316
+     C* Let programs XX1450, XX1451 calculate the balance for Income/Expense accounts       MD059316
+     C                     Z-ADD*ZERO     YTDBAL                                            MD059316
+     C*                                                                                     MD059316
+     C                     ENDIF                                                            MD059316
+     C*
+     C  N81                UPDATXXACNTP0
+     C   81                WRITEXXACNTP0
+     C*
+     C                     END
+     C*
+     C           #END      TAG
+     C*
+     C********************************************************************
+     C           #INIT     BEGSR
+     C**
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PLCD    50
+     C*
+     C           #ACKEY    KLIST
+     C                     KFLD           BRCA1
+     C                     KFLD           CNUM1
+     C                     KFLD           CCY1
+     C                     KFLD           ACOD1
+     C                     KFLD           ACSQ1
+     C*
+     C** CALL ACCESS PROGRAM FOR BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE 10         *************
+     C                     MOVEL'01'      DBASE   3         *DBERROR 001*
+     C                     MOVEL@OPTN     DBOPTN  7         *************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C           BJRDNB    SUB  1         WKRD1   50
+     C**
+     C**   SET OFF EOF INDICATOR
+     C                     SETOF                     79
+     C**
+     C**   SET ARRAY INDEX TO ZERO.
+     C                     Z-ADD0         X       40
+     C**
+     C**   LOOP TO READ CURRENCY DETAIL RECORDS.
+     C           LOOP1     TAG                             ** LOOP1 TAG **
+     C                     READ XXACODPP                 79
+     C**
+     C**   END IF ALL XXACODPP
+     C   79                GOTO NEXT
+     C**
+     C**   INCREMENT ARRAY INDEX.
+     C           X         ADD  1         X
+     C**
+     C**   MOVE DATA INTO ARRAYS.
+     C                     MOVE IOACOD    ACD,X
+     C                     MOVE RECTYP    REC,X
+     C                     MOVE ALTAC     ALT,X
+     C                     MOVE HCNUM1    HCS,X
+     C                     MOVE IOCUSF    IOC,X
+     C                     MOVE CHTP      CHTA,X
+     C                     MOVE LCD       LCDA,X
+     C**
+     C**   GO TO READ NEXT RECORD.
+     C                     GOTO LOOP1
+     C**
+     C           NEXT      TAG                             ** NEXT TAG  **
+     C*
+     C**   SET OFF EOF INDICATOR
+     C                     SETOF                     79
+     C**
+     C**   SET ARRAY INDEX TO ZERO.
+     C                     Z-ADD0         X       40
+     C**
+     C**   LOOP TO READ CURRENCY DETAIL RECORDS.
+     C           LOOP2     TAG                             ** LOOP2 TAG **
+     C                     READ XXCUSTPP                 79
+     C**
+     C**   END IF ALL XXACODPP
+     C   79                GOTO #IEND
+     C**
+     C**   INCREMENT ARRAY INDEX.
+     C           X         ADD  1         X
+     C**
+     C**   MOVE DATA INTO ARRAYS.
+     C                     MOVE IOCUST    CST,X
+     C                     MOVE HCNUM2    HCO,X
+     C                     MOVE CHTP      CHTC,X
+     C**
+     C**   GO TO READ NEXT RECORD.
+     C                     GOTO LOOP2
+     C**
+     C           #IEND     TAG                             ** #IEND TAG  **
+     C*
+     C                     ENDSR
+     C********************************************************************

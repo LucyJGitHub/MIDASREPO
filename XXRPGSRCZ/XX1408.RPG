@@ -1,0 +1,445 @@
+     H
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - I/O RECONCILE                                        *
+     F*                                                               *
+     F*  XX1408 - I/O CUSTOMER MAINTENANCE                            *
+     F*                                                               *
+     F*  (C) Finastra International Limited 2021                      *
+     F*                                                               *
+     F*  Last Amend No. EML114   *CREATE   Date 23Sep21               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  EML114 - Upgrade TFJ004 to FM2.1                             *
+     F*  TFJ004 - Inter-office Reconcile                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/*CRTF*: CRTRPGPGM                                                  : *
+/*CRTF*:  PGM(**********/**********) SRCFILE(**********/**********) : *
+/*CRTF*: SRCMBR(*PGM) GENLVL(9) PRTFILE(QSYSPRT      )    AUT(*USE ): *
+/*CRTF*: USRPRF(*USER) CODELIST(*NONE) IGNDECERR(*YES)              : *
+/*CRTF*: TEXT('I/O Customer Maintenance')                           : *
+     F*                                                               *
+     F*****************************************************************
+     FXX1408DFCF  E                    WORKSTN      KINFDS INF01
+     F                                        RRN   KSFILE XX1408S1
+     FSDCUSTL0IF  E           K        DISK
+     FXXCUSTL1UF  E           K        DISK                      A
+     F/SPACE 3
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F*       KC       SCREEN - EXIT PROGRAM                     (F3) *
+     F*       KE       SCREEN - REFRESH SCREEN                   (F5) *
+     F*       KI       SCREEN - CHANGE MODE  (AMEND<-->INSERT)   (F9) *
+     F*       14       SCREEN - FORWARD PAGE                 (ROLLUP) *
+     F*       16       SCREEN - ENTER KEY                     (ENTER) *
+     F*                                                               *
+     F*       20       ERROR INDICATOR FOR ACTION CODE                *
+     F*       21       ERROR INDICATOR FOR ACCOUNT CODE               *
+     F*       22       ERROR INDICATOR FOR RECORD TYPE                *
+     F*       23       ERROR INDICATOR FOR ALTERNATE A/C              *
+     F*       24       ERROR INDICATOR FOR H/O CUSTOMER               *
+     F*       25       ERROR INDICATOR FOR I/O CUSTOMER               *
+     F*                                                               *
+     F*       30       SCREEN CONTROL - INSERT MODE                   *
+     F*                                                               *
+     F*       35       SCREEN CONTROL - 'POSITION TO' SPECIFIED       *
+     F*       36       SCREEN CONTROL - REFRESH SCREEN                *
+     F*                                                               *
+     F*       40       CLEAR SUBFILE                                  *
+     F*       41       DISPLAY SUBFILE RECORDS                        *
+     F*       42       SET END PAGE FLAG ('+')                        *
+     F*       45       FORCE READ SUBFILE                             *
+     F*                                                               *
+     F*       70       PREPARE SCREEN FOR MODE PAGE CREATION          *
+     F*       71       UPDATE TO FILE FLAG                            *
+     F*                                                               *
+     F*       79       GENERAL ERROR INDICATOR                        *
+     F*                                                               *
+     F*       80-89    WORK INDICATORS                                *
+     F*       90-99    USED IN MIDAS STANDARD                         *
+     F*                                                               *
+     F*       U7       System Error, Wrong Status                     *
+     F*       U8       Database Error                                 *
+     F*                                                               *
+     F*       LR       Last Record                                    *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E                    CMD     1   2 78               CMD GUIDANCES
+     E                    MSG     1  10 80               MESSAGES
+     E*
+     E                    NUM         6  1               NUMERIC CHECK
+     E                    ID         15  6               CUSTOMER NO.
+     E*
+     E/SPACE 3
+     I*****************************************************************
+     I*
+     I* PROGRAM STATUS DATA STRUNCTURE
+     I           SDS
+     I                                     *PROGRAM WSPGM
+     I                                      244 253 WSID
+     I*
+     I* LOCAL DATA AREA STRUCTURE FOR DB ERROR
+     ILDA        UDS                            256
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 177 DBASE
+     I*
+     I* MIDAS ABS SD MODULE DATA AREA
+     IRUNDAT      DS                             13
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I*
+     I* I/O FEEDBACK AREA FOR DISPLAY FILE
+     IINF01       DS
+     I                                    B 378 3790RRNTOP
+     I*
+     I* REDEFINE COUNTRY CODE ARRAY FOR 'POSITION TO'
+     IWKCUST      DS
+     I                                        1   6 NUM
+     I*
+     I* REDEFINE SUBFILE LINE
+     IWSLINE      DS
+     I                                        1   1 WSACTN
+     I                                        2   7 WSCNUM
+     I                                        8  27 WSCRNM
+     I                                       28  30 WSHCST
+     I*
+     I/SPACE 3
+     C*****************************************************************
+     C*            MAIN CONTROL LINES                                 *
+     C*****************************************************************
+     C*
+     C**  INITIAL PROCESS
+     C*
+     C                     EXSR #SRINT                     *INIT
+     C*
+     C**  MAIN SCREEN PROCESS
+     C*
+     C           *INKC     DOWEQ'0'
+     C*ROLL UP TO FORWARD PAGE IF PRESS ROLLUP KEY
+     C   70                EXSR #SRCLR
+     C   14
+     COR 70                EXSR #SRFWD
+     C*DISPLAY
+     C  N41                MOVELMSG,1     WSMSG
+     C                     TIME           WSTIME
+     C                     WRITEXX1408F1                   *GUIDANCE
+     C                     EXFMTXX1408C1                   *LIST
+     C           RRNTOP    IFGT *ZERO
+     C                     Z-ADDRRNTOP    WSSFRC           DSP REC NO
+     C                     END
+     C                     SETOF                     36
+     C                     SETOF                     79
+     C                     MOVEL*BLANK    WSMSG
+     C*CHECK SCREEN AND UPDATE FILE IF PRESS ENTER KEY
+     C           *IN16     IFEQ '0'
+     C  N41 35             SETON                     70
+     C   41                EXSR #SRCHK
+     C   41 71             EXSR #SRUPD
+     C                     END
+     C*REFRESH SCREEN IF PRESS F5 KEY
+     C   KE                SETON                     36
+     C*CHANGE MODE IF PRESS F9 KEY
+     C   KI                SETON                     70
+     C   KI      *IN30     IFEQ '0'                        AMEND MODE ?
+     C                     SETON                     30     INSERT MODE
+     C                     MOVELCMD,2     WSCMD
+     C                     ELSE                            INSERT MODE?
+     C                     SETOF                     30     AMEND MODE
+     C                     MOVELCMD,1     WSCMD
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  END PROCESS
+     C*
+     C           @END      TAG
+     C*
+     C                     SETON                     LR
+     C*
+     C/SPACE 3
+     C*****************************************************************
+     C* #SRINT  -  INITIAL PROCESS                                    *
+     C*****************************************************************
+     C           #SRINT    BEGSR
+     C*
+     C* DEFINE CONSTANT FIELDS
+     C                     Z-ADD15        C@PAG   20       LINE NUMBER
+     C           C@PAG     SUB  1         C@PAG1  20         " - 1
+     C*
+     C* SETUP LOCAL DATA AREA
+     C                     MOVEL*BLANK    DBFILE
+     C                     MOVEL*BLANK    DBKEY
+     C                     MOVELWSPGM     DBPGM
+     C                     MOVEL*BLANK    DBASE
+     C*
+     C* GET RUN DATE
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVELRUNA      WSDMY
+     C*
+     C* SET SCREEN TO INITIAL AMEND MODE
+     C                     MOVELCMD,1     WSCMD
+     C                     SETON                     70
+     C*
+     C           #SINTE    ENDSR
+     C*
+     C/SPACE 3
+     C*****************************************************************
+     C* #SRCLR  -  CLEAR SUBFILE FOR NEW PAGE CREATION                *
+     C*****************************************************************
+     C           #SRCLR    BEGSR
+     C*
+     C* CLEAR SUBFILE
+     C                     SETON                     40
+     C                     WRITEXX1408C1
+     C                     SETOF                     40
+     C                     Z-ADD*ZERO     RRNMAX  40       MAX REC NO
+     C*
+     C                     MOVEAWSIND1    NUM
+     C                     DO   6         I       20
+     C                     TESTB'0123'    NUM,I          89*ON, NUMERIC
+     C  N89                MOVEL'0'       NUM,I
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/SPACE 3
+     C*****************************************************************
+     C* #SRFWD  -  ROLL UP TO FORWARD PAGE                            *
+     C*****************************************************************
+     C           #SRFWD    BEGSR
+     C*
+     C* CREATE SCREEN PAGE BY EXIST RECORD
+     C                     SETOF                     202124
+     C                     SETOF                     45
+     C                     MOVEL*BLANK    WSLINE           SFL LINE
+     C                     MOVELWSLINE    WSSAVE           LINE SAVE
+     C                     MOVEL*BLANK    ID
+     C                     Z-ADDRRNMAX    RRN     40
+     C                     MOVELWKCUST    IOCUST
+     C*PAGE OF AMEND MODE
+     C  N30N14   IOCUST    SETLLXXCUSTP0             80
+     C  N30 14   IOCUST    SETGTXXCUSTP0             80
+     C*
+     C  N30N80             DO   C@PAG     I
+     C                     READ XXCUSTP0                 80
+     C  N80      RECI      IFEQ 'D'
+     C                     MOVE IOCUST    WCUST   6
+     C           WCUST     CHAINSDCUSTL0             85
+     C           *IN85     IFEQ '0'
+     C           BBTYLC    ANDNE'D'
+     C                     MOVELIOCUST    WSCNUM
+     C                     MOVELBBCRNM    WSCRNM
+     C                     MOVELHCNUM2    WSHCST
+     C                     MOVELWSLINE    WSSAVE           LINE SAVE
+     C                     ADD  1         RRN
+     C                     WRITEXX1408S1
+     C                     END
+     C                     ELSE
+     C                     SUB  1         I
+     C                     END
+     C        N80          END
+     C*PAGE OF INSERT MODE
+     C   30                DO   C@PAG
+     C                     ADD  1         RRN
+     C                     WRITEXX1408S1
+     C                     END
+     C*SET CONTROLS FOR SUBFILE
+     C                     SETOF                     4142
+     C           RRN       IFGT *ZERO
+     C                     SETON                     41
+     C  N30N80   IOCUST    SETGTXXCUSTP0             80    CHEK,RELEASE
+     C  N30N80             SETON                     42
+     C           RRN       IFGT RRNMAX
+     C           RRNMAX    ADD  1         WSSFRC           DSP REC NO
+     C                     END
+     C                     END
+     C*RESET KEYS FOR NEXT PAGE CREATION
+     C                     Z-ADDRRN       RRNMAX           MAX REC NO
+     C                     MOVELIOCUST    WKCUST
+     C*
+     C                     SETOF                     70
+     C*
+     C                     ENDSR
+     C*
+     C/SPACE 3
+     C*****************************************************************
+     C* #SRCHK  -  VALIDATION CHECK OF LIST SCREEN                    *
+     C*****************************************************************
+     C           #SRCHK    BEGSR
+     C*
+     C* CHECK SCREEN LINES (ONLY CHANGED RECORD)
+     C*
+     C                     SETOF                     7180
+     C           *IN80     DOWEQ'0'
+     C                     READCXX1408S1                 80
+     C           *IN80     IFEQ '0'
+     C*
+     C                     SETOF                     202124
+     C                     SETOF                     45
+     C*
+     C* GET TYPED COUNTRY CODE FOR DUPULICATE CHECK (ONLY INSERT MODE)
+     C   30                MOVELWSCNUM    ID,RRN
+     C*
+     C* GET DISPLAY POSITION IF FIRST ERROR RECORD
+     C  N79                Z-ADDRRN       WSSFRC           DSP REC NO
+     C*
+     C* CHECK ACTION CODE
+     C           WSACTN    IFNE *BLANK
+     C           WSACTN    ANDNE'D'
+     C  N79                MOVELMSG,2     WSMSG
+     C                     SETON                     204579
+     C                     END
+     C*
+     C* CHECK ACCOUNT CODE
+     C           WSCNUM    IFEQ *BLANK
+     C           WSCNUM    OREQ *ALL'0'
+     C*MANDATORY CHECK
+     C           WSHCST    IFNE *BLANK
+     C  N79                MOVELMSG,3     WSMSG
+     C                     SETON                     214579
+     C                     END
+     C                     ELSE
+     C*NUMERIC CHECK
+     C******************** TESTN          WSCNUM     89     ON, NUMERIC EML114
+     C***89                MOVE WSCNUM    WK01CR  1                     EML114
+     C***89                TESTB'0123'    WK01CR         89 ON, NUMERIC EML114
+     C**N89N79             MOVELMSG,4     WSMSG                         EML114
+     C**N89                SETON                     214579             EML114
+     C*CUSTOMER CHECK
+     C           *IN30     IFEQ '1'
+     C           WSCNUM    CHAINSDCUSTL0             89    ON,NOT THERE
+     C  N89      BBTYLC    COMP 'D'                      89ON,IS DELETED
+     C           *IN89     IFEQ '1'
+     C  N79                MOVELMSG,10    WSMSG
+     C                     SETON                     214579
+     C                     END
+     C                     END
+     C*FILE CHECK
+     C           *IN21     IFEQ '0'
+     C                     MOVELWSCNUM    IOCUST
+     C           IOCUST    CHAINXXCUSTP0             89    ON,NOT THERE
+     C  N89      RECI      COMP 'D'                  8989  ON,IS DELETED
+     C           *IN89     IFEQ '1'
+     C     N30N79          MOVELMSG,5     WSMSG
+     C     N30             SETON                     214579
+     C                     ELSE
+     C*DUPULICATE CHECK (ONLY INSERT MODE)
+     C      30N79          MOVELMSG,6     WSMSG
+     C      30             SETON                     214579
+     C                     END
+     C                     END
+     C                     END
+     C*MANDATORY CHECK
+     C           WSHCST    IFEQ *BLANK
+     C  N79                MOVELMSG,3     WSMSG
+     C                     SETON                     244579
+     C                     END
+     C*
+     C*SET FLAG OF FILE UPDATION IF SPECIFIED FIELDS
+     C  N45      WSLINE    IFNE WSSAVE
+     C                     SETON                     4571
+     C                     END
+     C*
+     C* UPDATE SCREEN
+     C                     UPDATXX1408S1
+     C*
+     C                     END
+     C                     END
+     C*
+     C* CHECK DUPULICATE COUNTRY CODE BY ARRAY (ONLY INSERT MODE)
+     C   30      *IN79     IFEQ '0'
+     C*
+     C                     DO   C@PAG1    I
+     C           ID,I      IFNE *BLANK
+     C           I         ADD  1         RRN
+     C           ID,I      LOKUPID,RRN                   89ON,DUPLICATE
+     C      89   RRN       CHAINXX1408S1             80
+     C      89             SETON                     214579
+     C      89             UPDATXX1408S1
+     C                     END
+     C                     END
+     C*
+     C      79             MOVELMSG,7     WSMSG
+     C                     END
+     C*
+     C* PREPARE SCREEN IF SPECIFIED 'POSITION TO DISPLAY'
+     C* OR RESET FLAG OF FILE UPDATION IF SCREEN IS ERROR
+     C           *IN79     IFEQ '0'
+     C   35N71             SETON                     70
+     C                     ELSE
+     C                     SETOF                     71
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/SPACE 3
+     C*****************************************************************
+     C* #SRUPD  -  FILE UPDATION PROCESS                              *
+     C*****************************************************************
+     C           #SRUPD    BEGSR
+     C*
+     C* UPDATE FILE (ONLY CHANGED RECORD)
+     C*
+     C                     SETOF                     80
+     C           *IN80     DOWEQ'0'
+     C                     READCXX1408S1                 80
+     C           *IN80     IFEQ '0'
+     C*
+     C* READ UPDATE FILE (ALL MODE)
+     C                     MOVELWSCNUM    IOCUST
+     C           IOCUST    CHAINXXCUSTP0             89
+     C*
+     C* DELETE MODE
+     C           WSACTN    IFEQ 'D'
+     C                     MOVEL'*'       RECI
+     C                     MOVEL'D'       CHTP
+     C                     Z-ADDRUND      LCD
+     C                     ELSE
+     C*
+     C* INSERT OR AMEND MODE
+     C                     MOVEL'D'       RECI
+     C                     MOVELWSCNUM    IOCUST
+     C                     MOVELWSHCST    HCNUM2
+     C   89                MOVEL'I'       CHTP
+     C  N89                MOVEL'A'       CHTP
+     C                     Z-ADDRUND      LCD
+     C                     END
+     C*
+     C* WRITE OR UPDATE RECORD
+     C   89                WRITEXXCUSTP0
+     C  N89                UPDATXXCUSTP0
+     C*
+     C                     END
+     C                     END
+     C*
+     C* REFRESH SCREEN
+     C                     SETON                     70
+     C*
+     C                     ENDSR
+     C*
+     C/SPACE 3
+     C*****************************************************************
+**   CMD - COMMAND KEY GUIDANCES
+D=Delete  F3=End  F5=Refresh  F9=Go to 'Add' Mode
+F3=End  F5=Refresh  F9=Go to 'Change' Mode
+**   MSG - INFO./ERROR MESSAGES
+ No data to display.
+ Field must be either 'D' or blank.
+ Field must be entered.
+ Field must be numeric.
+ Customer No. does not exist on I/O Customer Table.
+ Customer No. already exists on I/O Customer Table.
+ Customer No. already exists on screen.
+ H/O Customer must be entered.
+ H/O Customer must be blank.
+ Customer No. does not exist on Midas Customer Table.

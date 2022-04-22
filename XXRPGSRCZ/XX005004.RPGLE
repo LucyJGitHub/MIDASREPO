@@ -15,12 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059406           Date 17Dec21               *
-      *  Prev Amend No. MD059134           Date 22Oct21               *
+      *  Last Amend No. MD059648           Date 02Mar22               *
+      *  Prev Amend No. MD059406           Date 17Dec21               *
+      *                 MD059134           Date 22Oct21               *
       *                 DRI005  *CREATE    Date 13Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059648 - GLM Proofing file missing last A/c Code Balance   *
       *  MD059406 - Extract issues with Feeder and Proofing files     *
       *              Add PSTA to LDBL if Include Balance is Y only    *
       *  MD059134 - Net Balance not correct in Proofing file          *
@@ -273,6 +275,7 @@ b3   C                   If        CCY = KCCY and ACOD = KACO2
      C                             and RECI = 'D'
       ** Calculate Total Ledger Balance
      C                   Add       LDBL          WKLDBL
+     C                   MOVEL     XXMACOD       WKLSAC           10            MD059648
      C                   READ      XXACBRC                                51
 x3   C                   Else
 b4   C*******            If        ACOD <> KACO2                                MD059134
@@ -320,6 +323,39 @@ e2   C                   Enddo
      C                   READ      XXACHOML0                              50
 e1   C                   EndDo
       *
+      ** Process Last Account Code Balance                                      MD059648
+b1   C     WKLSAC        IFNE      WKLSACP                                      MD059648
+      ***  Access the Feeder details for Total DR/CR                            MD059648
+     C                   Z-ADD     BJRDNB        K2RND                          MD059648
+     C                   MOVEL     KCCY          K2CCY                          MD059648
+     C                   MOVEL     WKLSAC        K2ACOD                         MD059648
+     C     Klist2        SETLL     XXFEEDDL1                                    MD059648
+     C     Klist2        READE     XXFEEDDL1                              52    MD059648
+      *                                                                         MD059648
+b2   C                   Dow       *In52 = '0'                                  MD059648
+      *                                                                         MD059648
+b3   C                   If        XXDCCYL = K2CCY and XXDACOD = K2ACOD         MD059648
+      *                                                                         MD059648
+      ** Add up Posting Amount only if Include Balance is 'Y'                   MD059648
+b4   C                   If        XXDINBL = 'Y'                                MD059648
+      ** Calculate Total Ledger Balance                                         MD059648
+b5   C                   If        XXDDRCR = 'D'                                MD059648
+     C                   Add       XXDPSTA       WKTOTDR          19 0          MD059648
+x5   C                   Else                                                   MD059648
+     C                   Add       XXDPSTA       WKTOTCR          19 0          MD059648
+e5   C                   Endif                                                  MD059648
+e4   C                   Endif                                                  MD059648
+     C     Klist2        READE     XXFEEDDL1                              52    MD059648
+x3   C                   Else                                                   MD059648
+     C                   MOVE      '1'           *IN52                          MD059648
+e3   C                   ENDIF                                                  MD059648
+e2   C                   EndDo                                                  MD059648
+      *                                                                         MD059648
+      ** Write Proofing Record                                                  MD059648
+     C                   EXSR      EXTPRF                                       MD059648
+      *                                                                         MD059648
+e1   C                   Endif                                                  MD059648
+      *
      C                   EndSR
       *
       *****************************************************************
@@ -364,6 +400,8 @@ e1   C                   EndDo
       *
      C                   Z-ADD     0             WKTOTCR
      C                   Z-ADD     0             WKTOTDR
+      *
+     C                   MOVEL     XXPACC        WKLSACP          10            MD059648
       *
      C                   ENDSR
       *

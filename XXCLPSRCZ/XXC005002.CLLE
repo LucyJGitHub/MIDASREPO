@@ -9,11 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. MD059439           Date 12Jan22              */
-/*       Prev Amend No. DRI005  *CREATE    Date 13Apr21              */
+/*       Last Amend No. MD059611           Date 22Feb22              */
+/*       Prev Amend No. MD059439           Date 12Jan22              */
+/*                      DRI005  *CREATE    Date 13Apr21              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059611 -  Added clear of XXEDWETD                         */
 /*       MD059439 - GLM Feeder Files Extracts issues                 */
 /*       DRI005 - HO and EDW Extracts                                */
 /*                                                                   */
@@ -77,7 +79,7 @@
 
 /* Retrieve Zone prefix                                                            */
              RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
-
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
              CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
              CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
 
@@ -108,11 +110,6 @@
                              &SVAL10)
 
 /**/
-                CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
-                CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
-/**/
-
-/**/
 /*    Call program CB0160 to get value of restart indicator.         */
 /**/
                 CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
@@ -137,6 +134,9 @@
                 CLRPFM     FILE(&DPLIB/XXPRFETD)
                 MONMSG     MSGID(CPF0000)
 
+                CLRPFM     FILE(&DMLIB/XXEDWETD)                                        /*MD059611*/
+                MONMSG     MSGID(CPF0000)                                               /*MD059611*/
+
 /*    GL:M Feeder Files Generation  */
                 CALL       PGM(XX005003)
 
@@ -151,18 +151,18 @@
                 CHGVAR     VAR(&PFPRFE) VALUE('BL' *TCAT &PDayDate)
 
 /************   CPYF       FROMFILE(XXGLMETD) TOFILE(&SVAL1/&PFGLME) MBROPT(*REPLACE) +
-                             CRTFILE(*YES) FMTOPT(*NOCHK) ***/                          /*MD059439*/
+                             CRTFILE(*YES) FMTOPT(*NOCHK) ***/ /*MD059439*/
 
 /************   CPYF       FROMFILE(XXPRFETD) TOFILE(&SVAL1/&PFPRFE) MBROPT(*REPLACE) +
-                             CRTFILE(*YES) FMTOPT(*NOCHK) ***/                          /*MD059439*/
+                             CRTFILE(*YES) FMTOPT(*NOCHK) ***/ /*MD059439*/
 
                 CPYF       FROMFILE(XXGLMETD) TOFILE(&SVAL1/&PFGLME) +
                              TOMBR(&PFGLME) MBROPT(*REPLACE) +
-                             CRTFILE(*YES) FMTOPT(*NOCHK)                               /*MD059439*/
+                             CRTFILE(*YES) FMTOPT(*NOCHK)   /*MD059439*/
 
                 CPYF       FROMFILE(XXPRFETD) TOFILE(&SVAL1/&PFPRFE) +
                              TOMBR(&PFPRFE) MBROPT(*REPLACE) +
-                             CRTFILE(*YES) FMTOPT(*NOCHK)                               /*MD059439*/
+                             CRTFILE(*YES) FMTOPT(*NOCHK)   /*MD059439*/
 /**/
 /*    If no error occured in the program                             */
 /**/

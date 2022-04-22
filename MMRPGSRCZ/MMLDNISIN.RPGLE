@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058540           Date 24Aug21               *
+      *  Last Amend No. MD059745           Date 02Apr22               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058540           Date 24Aug21               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -99,6 +100,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059745 - Funding Deal Input - Error message prevents       *
+      *             authorisation. (Recompile)                        *
+      *           - No recompile in MD058379.                         *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD058540 - Added missing parameters when calling MMLDNIVAL   *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *

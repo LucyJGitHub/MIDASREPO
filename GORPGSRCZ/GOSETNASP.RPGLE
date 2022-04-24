@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059767           Date 18Apr22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG11830           Date 11Aug06               *
+      *                 BUG11830           Date 11Aug06               *
       *                 CDL049             Date 07Jul06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
@@ -26,6 +27,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059767 - Some GOC0040 task-split jobs fail during COB with *
+      *             with error message unable to allocate a record on *
+      *             file GPTRAPPD.                                    *
+      *           - Recompile due to changes in GPUTXTPD.             *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11830- branch of settlement account not defaulted         *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *
@@ -36,31 +41,31 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPUTXTL0  IF A E           K DISK    INFSR(*PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D MMDENB        E DS                  EXTNAME(MMDENBPP)
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
- 
+
+
       ** DEFINE FIELDS FOR ZDATE10
      D                 DS
      D ZWDTIN                  1      8S 0
      D  ZWYYYY                 1      4S 0
      D  ZWMTH                  5      6S 0
      D  ZWDAY                  7      8S 0
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG11830
      D DSSDY         E DS                  EXTNAME(DSSDY)                                   BUG11830
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
@@ -68,28 +73,28 @@
      C                   PARM                    MMDENB
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    DealDate          5 0            Midas day no.
      C                   PARM                    ValueDate         5 0            Midas day no.
      C                   PARM                    MaturityDate      5 0            Midas day no.
- 
+
       * CONVERT DATES
- 
+
      C                   EXSR      CONVT_DATES
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
       * CONVERT DATES
       *****************************************************************
      C     CONVT_DATES   BEGSR
- 
+
       * deal date
      C                   Z-ADD     HLDDYY        ZWYYYY                         ¦
      C                   Z-ADD     HLDDMM        ZWMTH                          ¦ value date
@@ -108,7 +113,7 @@
      C                   Z-ADD     HLMDDD        ZWDAY                          ¦
      C                   EXSR      ZDATE10
      C                   Z-ADD     ZZMDNO        MaturityDate                     Midas day no.
- 
+
       * Customer branch                                                                     BUG11830
      C                   MOVEL     T_CNUM        @KEY1                                      BUG11830
      C                   EXSR      ACS_CUST                                                 BUG11830
@@ -125,11 +130,11 @@
       * SETUP TRANSACTION INDEX RECORD
       *****************************************************************
      C     SETUP_TRAP    BEGSR
- 
+
       * Clear Transaction Index
- 
+
      C                   CLEAR                   T_TRAP
- 
+
       * Zone
      C                   MOVEL     O#ZONE        T_ZONE
       * Module
@@ -223,14 +228,14 @@
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
- 
- 
+
+
       * key list
- 
+
      C     GPUTXTK       KLIST
      C                   KFLD                    T_ZONE
      C                   KFLD                    T_MOD

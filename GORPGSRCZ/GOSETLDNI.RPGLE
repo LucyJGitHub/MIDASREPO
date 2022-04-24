@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD059767           Date 18Apr22               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -40,6 +41,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059767 - Some GOC0040 task-split jobs fail during COB with *
+      *             with error message unable to allocate a record on *
+      *             file GPTRAPPD.                                    *
+      *           - Recompile due to changes in GPUTXTPD.             *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054870           Date 17Jan20               *
+      *  Last Amend No. MD059767           Date 18Apr22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054870           Date 17Jan20               *
       *                 MD052663           Date 04Feb19               *
       *                 MD051197           Date 05Jun18               *
       *                 MD046248           Date 27Oct17               *
@@ -41,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059767 - Some GOC0040 task-split jobs fail during COB with *
+      *             with error message unable to allocate a record on *
+      *             file GPTRAPPD.                                    *
+      *           - Recompile due to changes in GPUTXTPD.             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054870 - Management Limit Exposure for contingent account  *

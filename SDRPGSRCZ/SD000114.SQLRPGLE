@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059375           Date 20Dec21               *
-      *  Prev Amend No. MD059270           Date 16Dec21               *
+      *  Last Amend No. MD059424           Date 29Mar22               *
+      *  Prev Amend No. MD059375           Date 20Dec21               *
+      *                 MD059270           Date 16Dec21               *
       *                 MD059253           Date 19Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD059190           Date 08Nov21               *
@@ -37,6 +38,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059424 - Calculator returned rates for previous period of  *
+      *             deal defined with forward rate prior to amending  *
+      *             the rate into backward-looking. Pass the new      *
+      *             interest period start and end date for amended    *
+      *             backward-looking deal with rate change and last   *
+      *             change date equal to rundate.                     *
       *  MD059375 - Rate change date should mark the start of the new *
       *             interest period and not the Interest Payment Date.*
       *             If UIACD/TIACD <> URCHG/TRCHG, use URCHG/TRCHG    *
@@ -811,6 +818,41 @@
      C                   ENDIF                                                              MD059137
      C                   ENDIF                                                              MD059137
      C                   EVAL      NoOfRecs = 0                                             MD059137
+                                                                                            MD059424
+      ** If IRS deal and start date is within value date then check if                      MD059424
+      ** deal is being migrated to backward looking on rundate                              MD059424
+      ** which is also the deal's rate change date                                          MD059424
+                                                                                            MD059424
+     C                   IF        WrkDate >= TrVDAT                                        MD059424
+     C                             and TrMODI = 'RU'                                        MD059424
+     C                   EVAL      WrkMigrate = 'N'                                         MD059424
+     C/exec SQL                                                                             MD059424
+     C+ select count(*) into :NoOfRecs                                                      MD059424
+     C+ from DEALSDG                                                                        MD059424
+     C+ where DLNO = :TrTRAN and UNICD = :BJRDNB                                            MD059424
+     C+   and LCD = :BJRDNB  and UBLRT = 'Y'                                                MD059424
+     C/end-exec                                                                             MD059424
+     C                   IF        NoOfRecs <> 0                                            MD059424
+     C                   EVAL      WrkMigrate = 'Y'                                         MD059424
+     C                   ENDIF                                                              MD059424
+     C                   ENDIF                                                              MD059424
+                                                                                            MD059424
+     C                   IF        WrkDate >= TrVDAT                                        MD059424
+     C                             and TrMODI = 'RT'                                        MD059424
+     C                   EVAL      WrkMigrate = 'N'                                         MD059424
+     C/exec SQL                                                                             MD059424
+     C+ select count(*) into :NoOfRecs                                                      MD059424
+     C+ from DEALSDG                                                                        MD059424
+     C+ where DLNO = :TrTRAN and TNICD = :BJRDNB                                            MD059424
+     C+   and LCD = :BJRDNB  and TBLRT = 'Y'                                                MD059424
+     C/end-exec                                                                             MD059424
+     C                   IF        NoOfRecs <> 0                                            MD059424
+     C                   EVAL      WrkMigrate = 'Y'                                         MD059424
+     C                   ENDIF                                                              MD059424
+     C                   ENDIF                                                              MD059424
+                                                                                            MD059424
+     C                   EVAL      NoOfRecs = 0                                             MD059424
+                                                                                            MD059424
 
       ** Determine Interest Period Start Date
      C                   EVAL      IntPerSDATE = 0
@@ -858,12 +900,17 @@
      C                   ENDIF                                                                CDL102
 
       ** If IRS deal and 2nd call to ARR Calculator is needed,                              MD059253
+      ** OR deal is being migrated into backward-looking,                                   MD059424
       ** determine next Interest Period Start Date                                          MD059253
      C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
-     C                             and Wrk2ndCall = 'Y'                                     MD059253
+     C**********                   and Wrk2ndCall = 'Y'                            MD059253 MD059424
+     C                   IF        WrkMigrate = 'Y' and WrkDATE <> TrMDAT                   MD059424
+     C                             or Wrk2ndCall = 'Y'                                      MD059424
      C                   EVAL      IntPerSDATE = WrkDATE                                    MD059253
      C                   ENDIF                                                              MD059253
                                                                                             MD059253
+     C                   ENDIF                                                              MD059424
+                                                                                            MD059424
       ** Save the actual interest payment date to a work variable                           MD058106
      C                   EVAL      IntPayDate = WrkDATE                                     MD058106
                                                                                             MD058106
@@ -894,14 +941,18 @@
      C                   ENDIF                                                                CDL102
                                                                                             MD059253
       ** If IRS deal and 2nd call to ARR Calculator is needed,                              MD059253
+      ** OR deal is being migrated into backward-looking,                                   MD059424
       ** determine next Interest Period End Date                                            MD059253
      C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
-     C                             and Wrk2ndCall = 'Y'                                     MD059253
+    C**********                   and Wrk2ndCall = 'Y'                            MD059253 MD059424
+     C                   IF        WrkMigrate = 'Y'                                         MD059424
+     C                             or Wrk2ndCall = 'Y'                                      MD059424
      C                   EXSR      SRIRSNxtEDATE                                            MD059253
      C**********         EVAL      IntPerEDATE = WrkEndDate                        MD059253 MD059270
      C                   EVAL      IntPerEDATE = WrkEndDate - 1                             MD059270
      C                   EVAL      WZeroMDATFlag = 'Y'                                      MD059253
      C                   ENDIF                                                              MD059253
+     C                   ENDIF                                                              MD059424
 
      C                   IF        IntPerEDATE <= 0
      C                   EVAL      WZeroMDATFlag = 'Y'

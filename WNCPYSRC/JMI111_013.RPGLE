@@ -22,6 +22,10 @@
      C                   EVAL      UPSEQ = '00001'                                            JMI111
      C                   EVAL      D#FRNT =  %SUBST(PFRNT:1:5)                                JMI111
      C                   EVAL      D#BTNB =  WBTNB                                            JMI111
+     C     XBTNB         IFEQ      999                                                      MD058332
+     C     WBTNB         ANDEQ     *ZERO                                                    MD058332
+     C                   EVAL      D#BTNB =  XBTNB                                          MD058332
+     C                   ENDIF                                                              MD058332
                                                                                               JMI111
      C                   CALL      'XXGENBTCHN'                                               JMI111
      C                   PARM      'I'           @ACTN             1                          JMI111
@@ -33,7 +37,10 @@
      C                   PARM                    DATAF4                                       JMI111
      C                   PARM      *BLANKS       @RETRN            7                          JMI111
                                                                                               JMI111
+     C     D#BTNB        IFNE      XBTNB                                                    MD058332
+     C     WBTNB         ANDEQ     *ZERO                                                    MD058332
      C                   EVAL      WBTNB  =  D#BTNB                                           JMI111
+     C                   ENDIF                                                              MD058332
      C                   EVAL      PERRORFLAG = @RETRN                                      MD058332
       *                                                                                       JMI111
       ** End of /COPY JMI111_013                                       *                      JMI111

@@ -322,11 +322,11 @@
       *
      C     WBRBT         IFEQ      WOPX
      C                   ADD       1             WOPX
-     C**********         READ      GLBTNOL0                               01                MD058332
+     C                   READ      GLBTNOL0                               01
      C                   ELSE
      C                   Z-ADD     WOPX          WBTNB
+     C                   LEAVE                                                              MD058332
      C                   ENDIF
-     C                   READ      GLBTNOL0                               01                MD058332
       *
      C                   ENDDO
       *

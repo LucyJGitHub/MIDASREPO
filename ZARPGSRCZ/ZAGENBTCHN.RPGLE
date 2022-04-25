@@ -140,6 +140,7 @@
        /COPY WNCPYSRC,JMI111_012                                                              JMI111
       *                                                                                       JMI111
      D WBTNB           S              3  0
+     D XBTNB           S              3  0                                                  MD058332
      D WBRBT           S              3  0
      D WIDX            S              3  0
       *
@@ -197,9 +198,9 @@
      C                   MOVE      B3BTNB        WBTNB                          186206
      C                   ENDIF
       *
-     C     WBTNB         IFNE      999                                                      MD058332
+      ** Save the value of WBTNB                                                            MD058332
+     C                   MOVE      WBTNB         XBTNB                                      MD058332
      C                   ADD       1             WBTNB
-     C                   ENDIF                                                              MD058332
       * Consider TI batch no.                                                                 212636
      C*****BGN3ST        IFGE      'Y'                                                 212636 216612
      C     BGN3ST        IFEQ      'Y'                                                        216612

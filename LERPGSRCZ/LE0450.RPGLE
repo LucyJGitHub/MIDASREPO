@@ -18,7 +18,7 @@
       *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
-      *                 AR923246           Date 15Mar12               *      
+      *                 AR923246           Date 15Mar12               *
       *                 MD034915           Date 26Aug20               *
       *                 MD055322           Date 15May20               *
       *                 MD055733           Date 03Jul20               *
@@ -451,7 +451,7 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR923246 - Job CALCMGR_xx failing due to data mapping error. *
       *             Prevent data corruption for MLNR field on MCLONCL *
-      *             when written. (Child: AR923248)                   *      
+      *             when written. (Child: AR923248)                   *
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
       *             Allow negative input in Funding rate/spread.      *
       *           - Applied for MD054876                              *
@@ -10171,7 +10171,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ELSE                                                                 FCM101
      C                   EXSR      NEWSRT
      C                   ENDIF                                                                FCM101
-     *                                                                   116330
+      *                                                                   116330
       **Get*latest*'br'*'bc'*'ro'*from*history.********************116330 CLE004
       * Get latest 'br' 'bc' 'ro' 'mc' from history.                      CLE004
      C     CLE003        IFEQ      'Y'                                                         11633

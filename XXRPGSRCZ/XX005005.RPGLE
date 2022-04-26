@@ -15,12 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059406           Date 17Dec21               *
-      *  Prev Amend No. MD059075           Date 13Oct21               *
+      *  Last Amend No. MD059773           Date 05Apr22               *
+      *  Prev Amend No. MD059406           Date 17Dec21               *
+      *                 MD059075           Date 13Oct21               *
       *                 DRI005  *CREATE    Date 13Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059773 - EDW Layout file changes                           *
       *  MD059406 - Extract issues with Feeder and Proofing files     *
       *              Remove Product Code from Proofing file           *
       *              Recompile for changes in XXFEEDDTD               *
@@ -167,6 +169,9 @@
      D  DSDSRCE               97    106
      D  DSDJRND              107    181
      D  DSDDLNO              164    171
+     D  DSDDLTP              164    165                                         MD059773
+     D  DSDDLNS              166    171                                         MD059773
+     D  DSDDLFL              170    171                                         MD059773
      D  DSDCUST              174    179
      D  DSDCSTCY             182    183
      D  DSDCSTCP             184    185
@@ -367,7 +372,11 @@
       *
      C                   CLEAR                   XXEDWED0
      C                   MOVEL     DSDETAIL      XXGLMD
+     C     DSDDLFL       IFEQ      '  '                                         MD059773
      C                   MOVEL     DSDDLNO       XXDLNO
+     C                   ELSE                                                   MD059773
+     C                   MOVEL     DSDDLNS       XXDLNO                         MD059773
+     C                   ENDIF                                                  MD059773
      C                   MOVEL     DSDCUST       XXCUST
      C                   MOVEL     DSDHOAC       XXHOAC
      C                   MOVEL     DSDHOPC       XXHOPC

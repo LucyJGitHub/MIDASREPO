@@ -9,12 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD054336           Date 27Sep19              */
-/*       Prev Amend No. CUP042             Date 26May15              */
+/*       Last Amend No. MD059593           Date 25Apr22              */
+/*       Prev Amend No. MD054336           Date 27Sep19              */
+/*                      CUP042             Date 26May15              */
 /*                      CUP041   *CREATE   Date 27May14              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059593 - Missing password for mandatory features          */
+/*                - Applied for MD-59850                             */  
 /*       MD054336 - Bridge ends in error after GPST option when two  */
 /*                  different sessions were used                     */
 /*       CUP042 - New option to run Upgrade Programs after           */
@@ -94,6 +97,33 @@
 /* Set up library list. */
              CALLSUBR   SUBR(SETUPLIBL)
 
+/* Make sure all mandatory features have their password set */                          /*MD059593*/
+/* Check that VLDL does exist in &BRGBRGLIB */                                          /*MD059593*/
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                               /*MD059593*/
+             CHKOBJ     OBJ(&BRGBRGLIB/UPVLDZVL) OBJTYPE(*VLDL)                         /*MD059593*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD059593*/
+                GOTO       CMDLBL(RUNUPGPGM)                                            /*MD059593*/
+             ENDDO                                                                      /*MD059593*/
+             CALL       PGM(UP000712) PARM(&BRGBRGLIB &PFX &RTNCODE)                    /*MD059593*/
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)                                 /*MD059593*/
+                CHGVAR     VAR(&ERRPGM) VALUE('UP000712')                               /*MD059593*/
+                GOTO       CMDLBL(ERROR)                                                /*MD059593*/
+             ENDDO                                                                      /*MD059593*/
+             ENDDO                                                                      /*MD059593*/
+                                                                                        /*MD059593*/
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                             /*MD059593*/
+             CHKOBJ     OBJ(&BRGBRGLIB/UPVLDGVL) OBJTYPE(*VLDL)                         /*MD059593*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD059593*/
+                GOTO       CMDLBL(RUNUPGPGM)                                            /*MD059593*/
+             ENDDO                                                                      /*MD059593*/
+             CALL       PGM(UP000713) PARM(&BRGBRGLIB &PFX &RTNCODE)                    /*MD059593*/
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)                                 /*MD059593*/
+                CHGVAR     VAR(&ERRPGM) VALUE('UP000713')                               /*MD059593*/
+                GOTO       CMDLBL(ERROR)                                                /*MD059593*/
+             ENDDO                                                                      /*MD059593*/
+             ENDDO                                                                      /*MD059593*/
+                                                                                        /*MD059593*/
+                                                                                        /*MD059593*/
 /* Run Upgrade Programs after deliverable data changes. */                                /*CUP042*/
 RUNUPGPGM:                                                                                /*CUP042*/
              CHGVAR     VAR(&SUBOPT) VALUE('RunUpgradePgmsPostDD')                        /*CUP042*/

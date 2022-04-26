@@ -24,8 +24,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 248485             Date 22Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059754           Date 19Apr22               *
+      *  Prev Amend No. 248485             Date 22Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -72,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059754 - Replication job RPTRGSRV01 dumps with signature   *
+      *             violation. (Recompile)                            *
       *  248485 - job RPTRGSRV01 in Repmidasxx is dumping.            *
       *           Apply fix 236420.                                   *
       *  236420 - RPTRGSRV01 job loops when getting a database.       *
@@ -142,19 +145,19 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **  Midas SD API Customer Private Banking Details file.
      FSDPBDSL0  IF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  Midas DL All Loans and Deposits records
      FDEALSC    IF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  Midas MM Deals File
      FMMDEALLL  IF   E           K Disk    IGNORE(MMDENSP0:MMDENBP0)
      F                                     Infsr(*Pssr)
- 
+
       **  Midas GL Accounts Master
      FACCNT     IF   E           K Disk    Ignore(ACCNTAAF:ACCNTACF) Prefix(A_)
      F                                     Infsr(*Pssr)
@@ -203,60 +206,60 @@
       *  *Inzsr   - Program Initialization routine.                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** The following /COPY contains various standard declares
      C**********/COPY RPCPYSRC,Std_Dcl                                                      AR858264
      C/COPY RPCPYSRC,STD_DCL                                                                AR858264
- 
+
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
      C**********/COPY RPCPYSRC,Mdn_Hd_DS                                                    AR858264
      C/COPY RPCPYSRC,MDN_HD_DS                                                              AR858264
- 
+
       ** Following /COPY is the declares for fields passed to the formatting
       **  routines
      C/COPY RPCPYSRC,RPFMTDCL
- 
+
       ** Following /COPY is the procedure prototype for the Packed routine
      C/COPY RPCPYSRC,RPFMTPPP
- 
+
       ** Following /COPY is the procedure prototype for the Signed routine
      C/COPY RPCPYSRC,RPFMTPPS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /Eject
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Array containing Copyright statement.
      D Cpy@            S             80    Dim(1) Ctdata Perrcd(1)
- 
+
       ** Midas Local Data Area for database error reporting; based on
       ** external file
      D Lda           E DS           256    Extname(LDA) Dtaara
@@ -267,22 +270,22 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       **  Arrays used to store Position and Length of each fields
      D ArrFld          S              6    Dim(100)
      D ArrPos          S              7  0 Dim(100)
      D ArrLen          S              4  0 Dim(100)
- 
+
       ** Replication Defaults Data Area; based on external file.
      D RPDftsDa      E DS           256    Extname(RPDFTSDA) DTAARA(RPDFTSDA)
- 
+
       ** API DUMP Information Data Area for database error reporting;
       ** based on external file
      D Apdump        E DS                  Extname(APDUMP) Dtaara
- 
+
       **  External Data structure for Run Date Informations.
      D Rundat        E DS                  Extname(RUNDAT) Dtaara
- 
+
       **  Data structure used to group settlement account details.
      D*W_FullSettlAcc  DS            18                                                       CGL029
      D W_FullSettlAcc  DS            24                                                       CGL029
@@ -293,45 +296,45 @@
      D   W_AccSeq             23     24                                                       CGL029
      D***W_AccCode            13     16                                                       CGL029
      D***W_AccSeq             17     18                                                       CGL029
- 
+
       **  Data Structure for access to Feature Details.
      D Scsard        E DS                  Extname(SCSARDPD)
- 
+
       **  Data Structure for access to Customer Details.
      D Sdcust        E DS                  Extname(SDCUSTPD)
- 
+
       **  Data Structure for access to Currency Details.
      D Sdcurr        E DS                  Extname(SDCURRPD)
- 
+
       **  Data Structure for access to Bank Details.
      D Sdbank        E DS                  Extname(SDBANKPD)
- 
+
       **  Data structure for access programs, long data structure.
      D Dssdy         E DS                  Extname(DSSDY)
- 
+
       **  First Data Structure for Access Programs, short Data Structure.
      D Dsfdy         E DS                  Extname(DSFDY)
- 
+
      D Dsldy         E DS                  Extname(DSLDY)
       ** DS for Access Programs, Extend Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **  Work Field used for EMU feature CEU003.
      D CEU003          S              1A
- 
+
       **-------------------- Start of parameters --------------------**
- 
+
       **  Output queue name.
      D OutQueue        S                   Like(MQSQueue)
- 
+
       **--------------------- End of parameters ---------------------**
- 
+
       **-------------- Start of parameters for RPC1305 --------------**
- 
+
       **  Script Name.
      D ScriptName      S             10A
       **  Image Name.
@@ -346,7 +349,7 @@
      D FieldPosition   S              7S 0
       **  Field Length
      D FieldLength     S              4S 0
- 
+
       **--------------- End of parameters for RPC1305 ---------------**
       **---------------- start of Parameters for CPB010 --------------**        CPB010
      D MessageInd      S              1A                                        CPB010
@@ -362,7 +365,7 @@
       **   Meridian header Layout of associated transaction                     CPB010
      D MdHdAssoc       S                   LIKE(MdnHeadDs)                      CPB010
       **----------------  End of Parameters for CPB010  --------------**        CPB010
- 
+
       **------------ Start of parameters for ZAGETSETAC -------------**
       **  -------
       **  Outputs
@@ -392,9 +395,9 @@
       **  Settlement account.
      D*SettleAcc       S             12A                                                      CGL029
      D SettleAcc       S             18A                                                      CGL029
- 
+
       **------------- End of parameters for ZAGETSETAC --------------**
- 
+
       ** --------- Start of fields used by access programs ----------**
       **  Return code.
      D P_RtCd          S              7A
@@ -407,23 +410,23 @@
       **  Switchable feature number.
      D P_Sard          S              6A
       ** ---------- End of fields used by access programs -----------**
- 
+
       **  Work Field used as position for each numeric fields
      D W_PosDebut      S              2S 0
      D fmDpLen         S              1A
- 
+
      D W_SettCcy       S              3A
- 
+
       **  End Position.
      D EndPosition     S              7S 0
- 
+
       **  Work Field used as key to access to Customer PB Details.
      D*K_CustNum       S              6  0                                                    CSD027
      D K_CustNum       S              6A                                                      CSD027
- 
+
       **  Work Field used to produce only one dump.
      D W_RunBefore     S              1A
- 
+
       **  Work Field used to retrive the record type from HISTSAA.              196146
      D W_RTYP          S              2A                                        196146
                                                                                 196146
@@ -436,7 +439,7 @@
                                                                                               257661
       **  Composite Data.
      D CompData        S                   LIKE(TransData)
- 
+
       **----------------  Start of additional fields ----------------**
      D W_Portfolio     S              4A                                                      210478
      D W_CcyNbdp       S              1A
@@ -452,27 +455,27 @@
      D W_WitholdingT   S             17A
      D W_NextIntDate   S              7A                                                      CPB007
       **-----------------  End of additional fields -----------------**
- 
+
       ** True and False can be used for indicators being on or off.
      D True            C                   *On
      D False           C                   *Off
- 
+
       **  Work field used to set up return code when no record found.
      D W_NoRcdFnd      C                   CONST('*NoRcdFnd')
- 
+
       **  Work field used for change message type
      D W_PosFin        S              3S 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
      C     Start         Tag
- 
+
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       *****************************************************************
       *                                                               *
       *                  M A I N  P R O C E S S I N G                 *
@@ -484,7 +487,7 @@
       **   +------------------------------------------------------+   *
       *                                                               *
       *****************************************************************
- 
+
      C                   Eval      MessageInd = 'Y'                             CPB010
      C                   Eval      RAMSGOLD = RAMSGTYPE                         CPB010
                                                                                               257661
@@ -529,7 +532,7 @@
      C                             or W_REPI_After  <> 'C'                                    257661
      C                   Return                                                               257661
      C                   Endif                                                                257661
- 
+
       **  Enter the processing to read the additional files and produce a
       **  composite message here.
                                                                                 196146
@@ -540,7 +543,7 @@
      C                             ArrPos(X):ArrLen(X))                         196146
                                                                                 196146
      C                   If        W_RTYP      <> 'OB'                          196146 Begin W_RTYP
- 
+
       **  Extract custoner number from HISTSAA message data.
      C                   Z-add     1             X
      C     'CNUM  '      Lookup    Arrfld(X)                              89
@@ -548,7 +551,7 @@
      C**********                   ArrPos(X)+W_PosDebut:ArrLen(X))                          AR970292
      C                   EVAL      P_Cust = %Subst(TransData:+                              AR970292
      C                             ArrPos(X):ArrLen(X))                                     AR970292
- 
+
       **  Access Customer Details by using Access Object,
       **  to retrieve Private Banking Customer Indicator.
      C                   Callb     'AOCUSTR1'
@@ -557,7 +560,7 @@
      C                   Parm                    P_Cust
      C                   Parm                    P_Kyst
      C     Sdcust        Parm      Sdcust        Dsldy
- 
+
       **  If Customer Details do not exist, handle Database Error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     BBCLST        ANDNE     'Y'                                          223644
@@ -570,22 +573,22 @@
      C                   Eval      ReturnCode = P_Rtcd
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
- 
+
      C                   Endif                                                  End P_Rtcd
- 
+
       **  If Customer is not a Private Banking customer, check
       **  Requested PB Customer flag in case it would have been
       **  set to 'Y'.
      C                   If        BBPRBA      <> 'Y'                           Begin BBPRBA
- 
+
       **  Define key list to access to Customer PB Details file.
      C     K_SDPbds      Klist
      C                   Kfld                    K_CustNum
      C                   Move      BBCUST        K_CustNum
- 
+
       **  Access to Customer PB Details file.
      C     K_CustNum     Chain     SDPBDSL0                           81
- 
+
       **  If Customer PB Details do not exist, handle database error.
      C     *in81         Ifeq      True                                         Begin *in81
      C     *lock         In        Lda
@@ -597,32 +600,32 @@
      C                   Eval      ReturnCode  = W_NoRcdFnd
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
- 
+
      C                   Endif                                                  End  *in81
- 
+
      C                   Endif                                                  End  BBPRBA
- 
+
       **  Only send the message if Customer is a Private
       **  Banking Customer or flagged as requested to become
       **  a Private Banking Customer.
      C                   If            BBPRBA = 'Y'                             Begin BBPRBA
      C                             Or  PBREPB = 'Y'
- 
+
       **----------------- Start of Additionnal fields ---------------**
- 
+
       **  Extract Deal Number
      C                   Z-add     1             X
      C     'DLNO  '      Lookup    Arrfld(X)                              89
      C                   Eval      FieldValue = %Subst(TransData:+
      C                             ArrPos(X)+W_PosDebut:ArrLen(X))
      C                   Movel     FieldValue    P_Deal
- 
+
      C     K_Deal        Klist
      C                   Kfld                    P_Deal            6 0
- 
+
       **  Retrieve Deal details
      C     K_Deal        Chain     DEALSC                             82
- 
+
       **  If Deal do not exist, handle database error.
      C     *in82         Ifeq      True                                         Begin *in82
      C     *lock         In        Lda
@@ -635,7 +638,7 @@
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
      C                   Endif                                                  End  *in82
- 
+
       **--------------- Start of Portfolio Reference ----------------**                       210478
                                                                                               210478
      C                   Eval      W_Portfolio = PTFR                                         210478
@@ -660,29 +663,29 @@
       **--------- End of Next Interest Payment Date --------**                                CPB007
                                                                                               CPB007
       **--------- Start of Currency Number of Decimal Places --------**
- 
+
       **  Retrieve first (purchase) currency number of decimal places.
      C                   Eval      P_Curr = CCY
      C                   Exsr      GetDecPl
      C                   Move      A6NBDP        W_CcyNbdp
- 
+
       **---------- End of Currency Number of Decimal Places ---------**
- 
+
       **--------- Start of Receipt Settlement Full Account ----------**
- 
+
       **  Initialize Receipt Settlement Full Account
      C                   Eval      W_RecSettlAcc = *blanks
      C                   Eval      W_RecSettlPor = *blanks
- 
+
       **  Extract Customer Number.
      C                   Movel     P_Cust        CustNo
- 
+
       **  Extract Transaction Currency Code.
      C                   Eval      W_Currency = CCY
- 
+
       **  Extract Settlement Currency Code.
      C                   Eval      W_SettCcy = STCY
- 
+
       **  If feature CEU003 (EMU Dealing Settlement Currency Conversion)
       **  and Settlement Currency is filled, settlement will take
       **  place in Settlement Currency.
@@ -690,21 +693,21 @@
      C     W_SettCcy     Andne     *blanks
      C                   Eval      W_Currency = W_SettCcy
      C                   Endif                                                  End CEU003
- 
+
       **  Extract Branch Code.
      C                   Eval      Branch = ROBR
- 
+
       **  Extract Settlement Method.
      C                   Movel     RSTM          SettleType
      C                   Movel     RSTM          W_RecSettlType
- 
+
       **  Extract Settlement Account.
      C                   Eval      SettleAcc = RONS
- 
+
       **  Get Settlement Details.
      C                   Eval      Dbase  = 41                                                244086
      C                   Exsr      GetSetAc
- 
+
       **  Set up full account only if account details are available.
      C*****CustNo        Ifne      *zeros                                       Begin CustNo  CSD027
      C     CustNo        Ifne      *blanks                                      Begin CustNo  CSD027
@@ -713,7 +716,7 @@
      C                   Move      AccCode       W_AccCode
      C                   Move      AccSeq        W_AccSeq
      C                   Eval      W_RecSettlAcc = W_FullSettlAcc
- 
+
       **  Define key list to access to Account Master Details file.
      C     K_Accnt       Klist
      C                   Kfld                    CustNo
@@ -721,10 +724,10 @@
      C                   Kfld                    AccCode
      C                   Kfld                    AccSeq
      C                   Kfld                    Branch
- 
+
       **  Retrieve Account details (Portfolio Reference)
      C     K_Accnt       Chain     ACCNT                              81
- 
+
       **  If Account does not exist, handle database error.
      C     *in81         Ifeq      True                                         Begin *in81
      C     *lock         In        Lda
@@ -737,13 +740,13 @@
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
      C                   Endif                                                  End  *in81
- 
+
      C                   Eval      W_RecSettlPor = A_PTFR
- 
+
      C                   Endif                                                  End CustNo
- 
+
       **---------- End of Receipt Settlement Full Account ------------**
- 
+
       **--------- Start of Payment Settlement Full Account  ----------**
                                                                                               CPB007
       **  Interest Paid separately                                                            CPB007
@@ -808,28 +811,28 @@
      C                   Endif                                                                CPB007
                                                                                               CPB007
      C                   Else                                                                 CPB007
- 
+
       **  Initialize Receipt Settlement Full Account
      C                   Eval      W_PaySettlAcc = *blanks
      C                   Eval      W_PaySettlPor = *blanks
- 
+
       **  Extract Customer Number.
      C                   Movel     P_Cust        CustNo
- 
+
       **  Extract Branch Code.
      C                   Eval      Branch = POBR
- 
+
       **  Extract Settlement Method.
      C                   Movel     PSTM          SettleType
      C                   Movel     PSTM          W_PaySettlType
- 
+
       **  Extract Settlement Account.
      C                   Eval      SettleAcc = PONS
- 
+
       **  Get Settlement Details.
      C                   Eval      Dbase  = 43                                                244086
      C                   Exsr      GetSetAc
- 
+
       **  Set up full account only if account details are available.
      C*****CustNo        Ifne      *zeros                                       Begin CustNo  CSD027
      C     CustNo        Ifne      *blanks                                      Begin CustNo  CSD027
@@ -838,10 +841,10 @@
      C                   Move      AccCode       W_AccCode
      C                   Move      AccSeq        W_AccSeq
      C                   Eval      W_PaySettlAcc = W_FullSettlAcc
- 
+
       **  Retrieve Account details (Portfolio Reference)
      C     K_Accnt       Chain     ACCNT                              81
- 
+
       **  If Account does not exist, handle database error.
      C     *in81         Ifeq      True                                         Begin *in81
      C     *lock         In        Lda
@@ -854,19 +857,19 @@
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
      C                   Endif                                                  End  *in81
- 
+
      C                   Eval      W_PaySettlPor = A_PTFR
- 
+
      C                   Endif                                                  End CustNo
      C                   Endif                                                                CPB007
- 
+
       **--------- End of Payment Settlement Full Account -----------**
- 
+
       **--------- Start of Front Office Id --------------------------**
- 
+
       **  Retrieve Front Office Id of the Deal
      C     K_Deal        Chain     MMDEALLL                           83
- 
+
       **  If Deal do not exist, handle database error.
      C     *in83         Ifeq      True                                         Begin *in83
      C     *lock         In        Lda
@@ -879,30 +882,30 @@
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
      C                   Endif                                                  End  *in83
- 
+
      C                   Eval      W_FrontOffId = HKFRNT
- 
+
       ****If*no*Front*Office*ID,*do*not*send*message.******************                CPB007 213159
      C*****HKFRNT********Ifeq      *Blanks                                             CPB007 213159
      C*******************Return                                                        CPB007 213159
      C*******************Endif                                                         CPB007 213159
- 
+
       **---------- End of Front Office Id ---------------------------**
- 
- 
+
+
       **  WithHolding Tax details - ONLY for Belgium system
- 
+
       **  Access Bank details by using access program.
      C                   Callb     'AOBANKR0'
      C                   Parm      *blanks       P_Rtcd
      C                   Parm      '*FIRST '     P_optn
      C     Sdbank        Parm      Sdbank        Dssdy
- 
+
       **  WithHolding Tax details
- 
+
      C                   Z-add     0             W_Withold        15 0
      C/COPY WNCPYSRC,RP1520C001
- 
+
      C                   EVAL      fmSign3010 = W_Withold
      C                   EVAL      fmLength = 15
      C                   EVAL      fmDecPos = 0
@@ -911,11 +914,11 @@
      C                                           fmDecPos : fmDecSep :
      C                                           fmShwPsSgn)
      C                   EVAL      W_WitholdingT  = %subst(fmAlpNum32 : 1 : 17)
- 
+
       **  Change message Type from _After to _A
       **  Determine Image Type.
      C                   Eval      W_PosFin    = %Scan('_After':RAMSGTYPE)
- 
+
       **  If it is impossible to determine the image type, handle error.
      C     W_PosFin      Ifeq      0                                            Begin W_PosFin
      C     *Lock         In        Lda
@@ -931,12 +934,12 @@
      C                   Exsr      Repair                                       CPB010
      C                   Eval      MessageInd = 'Y'                             CPB010
      C                   Endif                                                  End W_PosFin
- 
+
      C                   Eval      RAMSGTYPE =
      C                             %Subst(RAMSGTYPE:1:W_PosFin + 1)
- 
+
       **  Place the result in field CompData.
- 
+
      C                   Eval      CompData = %subst(TransData:1:EndPosition)
      C                                      + W_Portfolio                       Portf. Ref.   210478
      C                                      + W_CcyNbdp                         Ccy Dec. Places
@@ -949,9 +952,9 @@
      C                                      + W_FrontOffId                      Front Office Id
      C                                      + W_WitholdingT                     Witholding Tax
      C                                      + W_NextIntDate                     Next Int Date CPB007
- 
+
       **------------------ End of Additionnal fields ----------------**
- 
+
       **  Call a standard routine to actually send the message.
      C                   CallB     'RPSNDMSG'
      C                   Parm                    OutQueue
@@ -959,7 +962,7 @@
      C                   Parm                    CompData
      C                   Parm                    CommitCtl
      C                   Parm                    ReturnCode
- 
+
       ** If error then perform any special processing and exit
      C                   If        ReturnCode <> *blank                         Begin ReturnCode
      C     *Lock         In        Lda
@@ -967,7 +970,7 @@
      C                   Out       Lda
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
- 
+
       **  If no error, commit the unit of work so that messages that have
       **  been got from a queue would be permanently deleted and put
       **  operations would be made permanent.
@@ -975,15 +978,15 @@
                                                                                 CPB010
      C                   Exsr      WrtTrace                                     CPB010
      C                   Commit
- 
+
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Endif                                                  End BBPRBA
                                                                                 196146
      C                   Endif                                                  196146 End W_RTYP
- 
+
      C                   Return
- 
+
       /Eject
       *****************************************************************
       *                                                               *
@@ -994,9 +997,9 @@
       *  Calls     : None.                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     RtvPos        Begsr
- 
+
      C                   Callb     'RPC1305'
      C                   Parm                    ScriptName
      C                   Parm      RAMSGTYPE     ImageName
@@ -1007,7 +1010,7 @@
      C                   Parm      0             FieldLength
      C                   Parm      *blank        FieldValue
      C                   Parm      *blank        ReturnCode
- 
+
       **  If any error occurred while retrieving position, handle it.
      C     ReturnCode    Ifne      *blanks                                      Begin ReturnCode
      C     *lock         In        Lda
@@ -1022,7 +1025,7 @@
      C                   Exsr      Repair                                       CPB010
      C                   Eval      MessageInd = 'Y'                             CPB010
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Eval      X = X + 1
       **  If any error occurred while retrieving position, handle it.
      C                   If        X > 100
@@ -1035,11 +1038,11 @@
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Eval      ArrFld(X) = FieldName
      C                   Eval      ArrPos(X) = FieldPosition
      C                   Eval      ArrLen(X) = FieldLength
- 
+
      C                   Endsr
       /Eject                                                                    CPB010
       *****************************************************************         CPB010
@@ -1136,9 +1139,9 @@
       *  Calls     : None.                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     GetSetAc      Begsr
- 
+
      C                   Reset                   ReturnCode
      C                   Movel     'PB213b'      ReturnCode                                   236420
      C                   Callb     'ZAGETSETAC'
@@ -1170,12 +1173,12 @@
       ****Settlement*account*(12A)*************************************                       CGL029
       **  Settlement account (18A)                                                            CGL029
      C                   Parm                    SettleAcc
- 
+
       **  Retrieve data area QTEMP/APDUMP to check if any error
       **  occurred while getting Settlement Details without
       **  return code being set up.
      C                   In        Apdump
- 
+
       **  If any error occurred while getting Settlement Details, handle it.
      C     ReturnCode    Ifne      *blanks                                      Begin ReturnCode
      C     ARErrMod      Orne      *blanks
@@ -1188,10 +1191,10 @@
      C                   Eval      ReturnCode = 'Error'
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
- 
- 
+
+
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Endsr
       /Eject
       *****************************************************************
@@ -1203,16 +1206,16 @@
       *  Calls     : None.                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     GetDecPl      Begsr
- 
+
       **  Access to Currency Details, by using access object.
      C                   Callb     'AOCURRR0'
      C                   Parm      *blank        P_Rtcd                         B:Return code
      C                   Parm      '*KEY   '     P_Optn                         I:Option
      C                   Parm                    P_Curr            3            I:Key field
      C     Sdcurr        Parm      Sdcurr        Dssdy                          O:Format
- 
+
       **  If currency does not exist, handle database error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     *lock         In        Lda
@@ -1224,11 +1227,11 @@
      C                   Eval      ReturnCode  = P_RTCD
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
- 
+
      C                   Endif                                                  End  P_Rtcd
- 
+
      C                   Endsr
- 
+
       /Eject
       *****************************************************************
       *                                                               *
@@ -1243,37 +1246,37 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *Pssr         Begsr
- 
+
      C     W_RunBefore   Ifeq      *blank                                       Begin W_RunBefore
- 
+
       **  If commitment control required, back out the unit of work so
       **  that current message could be available again.
      C                   If        CommitCtl = 'Y'                              Begin CommiCtl
      C                   Rolbk
- 
+
      C                   Endif                                                  End CommitCtl
- 
+
      C     *Lock         In        Lda
      C     DBpgm         Ifeq      *blanks                                      Begin DBpgm
      C                   Move      PSProcName    DBpgm
      C                   Out       Lda
- 
+
      C                   Endif                                                  End DBpgm
- 
+
      C                   Move      'Y'           W_RunBefore
      C                   Dump
- 
+
      C                   Endif                                                  End W_RunBefore
- 
+
      C     ReturnCode    Ifeq      *blank                                       Begin ReturnCode
      C                   Eval      ReturnCode = '*PSSR'
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Seton                                        U7U8LR
      C                   Return
- 
+
      C                   Endsr
       /Eject
       *****************************************************************
@@ -1281,9 +1284,9 @@
       * *Inzsr - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *Inzsr        Begsr
- 
+
      C     *Entry        Plist
       ** MQSeries queue to write to - this parameter IS used in this module
      C                   Parm                    OutQueue
@@ -1295,9 +1298,9 @@
      C                   Parm                    CommitCtl
       ** Return Code
      C                   Parm                    ReturnCode
- 
+
      C                   Eval      MessageInd = 'Y'                             CPB010
- 
+
       **  Set up work fields for formatting that will not change if
       **  Replication formatting is required.
       **     - signs are not shown for Positive numbers.
@@ -1307,11 +1310,11 @@
      C                   Eval      fmDpLen  = %Subst(RCZEROFLD:2:1)
      C                   Move      fmDpLen       W_PosDebut
      C                   Eval      fmShwPsSgn = 'N'
- 
+
       **  Set up work fields that will not change if retrieve
       **  function is to be used.
      C                   Eval      ScriptName = 'RP' + RATGTSYS
- 
+
       **  Check if CEU003 (EMU Dealing Settlement Currency
       **  conversion) is installed.
      C                   Eval      CEU003 = 'N'
@@ -1320,7 +1323,7 @@
      C                   Parm      '*VERIFY'     P_Optn
      C                   Parm      'CEU003'      P_Sard
      C     Scsard        Parm      Scsard        Dsfdy
- 
+
       **  If any error occurred when checking feature.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     P_Rtcd        andne     '*NRF   '
@@ -1334,20 +1337,20 @@
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
      C                   Endif                                                  End P_Rtcd
- 
+
       **  If feature is installed.
      C     P_Rtcd        Ifeq      *blanks                                      Begin P_Rtcd
      C                   Eval      CEU003 = 'Y'
      C                   Endif                                                  End P_Rtcd
- 
+
      C                   Z-add     0             X                 3 0
- 
+
       **  Retrieve position and length of customer number from HISTSAA message data.
      C                   Eval      FieldName = 'CNUM'
      C**********         Eval      FieldType = 'N'                                          AR970292
      C                   EVAL      FieldType = 'A'                                          AR970292
      C                   Exsr      RtvPos
- 
+
       **  Retrieve position and length of record type from HISTSAA message data.196146
      C                   Eval      FieldName = 'RTYP'                           196146
      C                   Eval      FieldType = 'A'                              196146
@@ -1363,16 +1366,16 @@
      C                   Eval      FieldName = 'REPI'                                         257661
      C                   Eval      FieldType = 'A'                                            257661
      C                   Exsr      RtvPos                                                     257661
- 
+
       **  Retrieve begin position of additionnal fields in Meridian message.
      C                   Eval      FieldName   = '*END_IMAGE'
      C                   Eval      FieldType   = *blank
      C                   Exsr      RtvPos
      C                   Eval      EndPosition = FieldPosition - 1
- 
+
      C                   Endsr
       /Eject
       *****************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2001

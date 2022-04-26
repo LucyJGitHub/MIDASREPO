@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR858264A          Date 16Jul12               *
+      *  Last Amend No. MD059754           Date 19Apr22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR858264A          Date 16Jul12               *
       *                 AR970292           Date 14May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059754 - Replication job RPTRGSRV01 dumps with signature   *
+      *             violation. (Recompile)                            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR858264A - Compilation Issues on various RP programs        *
       *  AR970292 - PBS Compatibility with BankFusion Midas 2.00      *
@@ -104,18 +107,18 @@
       *  *INZSR   - Program Initialization routine.                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas SD API Customer Private Banking Details file.
      FSDPBDSL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas FF Transaction details - detail.
      FTRANS2    IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas FF Close Out Transacts details - detail.
      FCLOST10   IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(CLOSTTF:CLOSTTF10)
@@ -124,12 +127,12 @@
      F                                     Infsr(*Pssr)                                       CPB008
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** External Data structure for Local data area (db error details).
       ** The following fields are defined in the external file:
@@ -139,63 +142,63 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** The following /COPY line includes all the defined fields in
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Contains various standard declares
      D**********/COPY RPCPYSRC,Std_Dcl                                                     AR858264A
      D/COPY RPCPYSRC,STD_DCL                                                               AR858264A
- 
+
       ** Contains the layout of the Meridian header as a data structure
      D**********/COPY RPCPYSRC,Mdn_Hd_DS                                                   AR858264A
      D/COPY RPCPYSRC,MDN_HD_DS                                                             AR858264A
- 
+
       ** Declaration of fields passed to formatting routines
      D/COPY RPCPYSRC,RPFMTDCL
- 
+
       ** Procedure prototype for the Packed routine
      D/COPY RPCPYSRC,RPFMTPPP
- 
+
       ** Procedure prototype for the Signed routine
      D/COPY RPCPYSRC,RPFMTPPS
- 
+
       ** Procedure prototype for the Format routine that is used to
       ** process an entire record
      D/COPY RPCPYSRC,RPFMTPPF
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Arrays used to store Position and Length of each fields
      D WArFld          S              6    Dim(100)
      D WArPos          S              7  0 Dim(100)
      D WArLen          S              4  0 Dim(100)
- 
+
       ** Replication Defaults Data Area; based on external file.
      D RPDftsDa      E DS           256    Extname(RPDFTSDA) DTAARA(RPDFTSDA)
- 
+
       ** First Data Structure for Access Programs, short Data Structure
      D Dsfdy         E DS                  Extname(DSFDY)
- 
+
       ** Second Data Structure for Access Programs, long Data Structure
      D Dssdy         E DS                  Extname(DSSDY)
- 
+
       ** Third Data structure for Access Programs
      D Dsldy         E DS                  Extname(DSLDY)
- 
+
       ** Data Structure for access to Customer Details.
      D SdCust        E DS                  Extname(SDCUSTPD)
- 
+
       **  Data structure used to group settlement account details.                            CPB008
      D*W_FullSettlAcc  DS            18                                                CPB008 CAS010
      D W_FullSettlAcc  DS            24                                                       CAS010
@@ -215,11 +218,11 @@
                                                                                               CPB008
       ** External data structure for Bank Details.
      D SdBank        E DS                  Extname(SDBANKPD)
- 
+
       ** Structure based on Close out Transaction file used to
       ** pass data to procedure ProcFormat.
      D ClosttDs      E DS                  Extname(CLOSTT)
- 
+
       ** Structure to receive a formatted Close out Transaction
       ** record from procedure ProcFormat.
       ** ClosttPosA (and ClosttPosN) contain the position of the first unused
@@ -229,17 +232,17 @@
      D  ClosttRec                          Like(TransData)
      D  ClosttPosA                    4
      D  ClosttPosN                    4S 0 Overlay(ClosttPosA)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **-------------------- Start of parameters --------------------**
       ** Output queue name.
      D OutQueue        S                   LIKE(MQSQueue)
       **--------------------- End of parameters ---------------------**
- 
+
       **-------------- Start of parameters for RPC1305 --------------**
      D PScriptName     S             10A
      D PImageName      S             32A
@@ -266,7 +269,7 @@
       **   Image Type - Amend Before, Amend After or Insert                                   CPB010
      D ImageType       S             20A                                                      CPB010
       **----------------  End of Parameters for CPB010  --------------**                      CPB010
- 
+
       ** --------- Start of fields used by access programs ----------**
       ** Return code
      D P_RtCd          S              7A
@@ -277,29 +280,29 @@
       ** Key status
      D P_Kyst          S              7A
       ** ---------- End of fields used by access programs -----------**
- 
+
       ** Work Field used as position for each numeric fields
      D W_PosDebut      S              2S 0
      D fmDpLen         S              1A
- 
+
       ** End Position
      D WEndPos         S              7S 0
- 
+
       ** ----------- Start of parameters for ProcFormat -------------**
      D InData          S                   LIKE(TransData) INZ(*BLANKS)
      D InDBFile        S             10A   INZ(*BLANKS)
       **------------- End of Parameters for ProcFormat --------------**
- 
+
       ** Work Field used as key to access to Customer PB Details.
      D*K_CustNum       S              6  0                                                    CSD027
      D K_CustNum       S              6                                                       CSD027
- 
+
       ** Work Field used as key to access to Transaction Details.
      D K_Trans         S              6  0
- 
+
       ** Work Field used as key to access to Close Out Transacts.
      D K_Close         S              6  0
- 
+
       **----------------  Start of additional fields ----------------**
      D W_Broker        S              8A
      D W_Instrument    S              5A
@@ -315,44 +318,44 @@
      D W_Portfolio     S              4A                                        196084
      D W_CloseOutDate  S              5A                                        220430
       **-----------------  End of additional fields -----------------**
- 
+
       ** Composite Data
      D CompData        S                   LIKE(TransData)
- 
+
       ** Work Field used to produce only one dump.
      D W_RunBefore     S              1A
- 
+
       ** Work field used to set up return code when no record found.
      D W_NoRcdFnd      C                   CONST('*NoRcdFnd')
- 
+
       ** Work field used for change message type
      D W_PosFin        S              3S 0
- 
+
       ** Work Field used to retrieve CORI of the message (Close Out
       **    Reversal Ind.)
      D W_CORI          S              1A
      D W_CORI_After    S              1A                                        195907
- 
+
       ** Work Field used to process replication
      D W_Process       S              1A
- 
+
       ** Work Field used to check type of message (A: After; B: Before)
      D W_Type          S              1A
- 
+
       ** Work Field used to retrieve the Operation
      D W_Operation     S              2A
- 
+
       ** Work Field used to retrieve the Table
      D W_Table         S             18A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       *****************************************************************
       *                                                               *
       *                  M A I N  P R O C E S S I N G                 *
@@ -366,7 +369,7 @@
       *****************************************************************
      C                   Eval      MessageInd = 'Y'                                           CPB010
      C                   Eval      RAMSGOLD = RAMSGTYPE                                       CPB010
- 
+
      C                   EVAL      X = 1                                                      203729
      C     'CORI  '      LOOKUP    WArFld(X)                              89                  203729
       ** Check image (Before or After) of the message
@@ -395,7 +398,7 @@
      C                   Eval      W_CORI_After = %Subst(TransData:+            195907
      C                             WArPos(X):WArLen(X))                         195907
      C                   ENDIF
- 
+
       ** After Image Type: Process if CORI has be changed from 'N' to 'Y'
      C*****W_PosFin      Ifeq      0                                            195907
      C*****W_Type        Ifeq      'B'                                          195907
@@ -405,7 +408,7 @@
      C**********         Endif                                                  195907
      C**********         Eval      W_Type = 'A'                                 195907
      C**********         Endif                                                  195907
- 
+
       **  After Image Type: Process if CORI has be changed from 'N' to 'Y'      195907
      C     W_Type        Ifeq      'A'                                          195907
      C     W_CORI        Oreq      'N'                                          195907
@@ -422,9 +425,9 @@
       ** was already to 'Y' before,  Update should be bypassed
      C     W_Process     IFEQ      'Y'
      C                   EVAL      W_Process = *BLANKS
- 
+
       ** Send first the message for CLOSTD
- 
+
       ** Extract customer number from CLOSTD message data.
      C                   Z-ADD     1             X
      C     'CUSC  '      LOOKUP    WArFld(X)                              89
@@ -432,7 +435,7 @@
      C**********                   WArPos(X)+W_PosDebut:WArLen(X))                          AR970292
      C                   EVAL      P_Cust = %Subst(TransData:+                              AR970292
      C                             WArPos(X):WArLen(X))                                     AR970292
- 
+
      C                   EVAL      BBPRBA = *BLANKS
      C     P_Cust        IFNE      '000000    '
      C     P_Cust        ANDNE     *BLANKS
@@ -444,7 +447,7 @@
      C                   PARM                    P_Cust
      C                   PARM                    P_Kyst
      C     Sdcust        PARM      Sdcust        Dsldy
- 
+
       ** If Customer Details do not exist, handle Database Error.
      C     P_Rtcd        IFNE      *BLANKS
      C     BBCLST        ANDNE     'Y'                                          223644
@@ -457,17 +460,17 @@
      C**********         Exsr      *Pssr                                                      CPB010
      C                   Exsr      Repair                                                     CPB010
      C                   ENDIF
- 
+
       ** If Customer is not a Private Banking customer, check
       ** Requested PB Customer flag in case it would have been
       ** set to 'Y'.
      C                   IF        BBPRBA      <> 'Y'
- 
+
       ** Define key list to access to Customer PB Details file.
      C     K_SDPbds      KLIST
      C                   KFLD                    K_CustNum
      C                   MOVE      BBCUST        K_CustNum
- 
+
       ** Access to Customer PB Details file.
      C     K_CustNum     CHAIN     SDPBDSL0                           81
       ** If Customer PB Details do not exist, handle database error.
@@ -481,11 +484,11 @@
      C**********         Exsr      *Pssr                                                      CPB010
      C                   Exsr      Repair                                                     CPB010
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Only send the message if Customer is a Private
       ** Banking Customer or flagged as requested to become
       ** a Private Banking Customer.
@@ -544,11 +547,11 @@
      C                   Endif                                                  End  *in82    CPB008
                                                                                               CPB008
       **---------- End of Access account ------------**                                       CPB008
- 
+
       ** Change message Type from _After to _A
       ** Determine Image Type.
      C                   EVAL      W_PosFin    = %Scan('_After':RAMSGTYPE)
- 
+
       ** If it is impossible to determine the image type, handle error.
      C     W_PosFin      IFEQ      0
      C     *LOCK         IN        LDA
@@ -563,17 +566,17 @@
      C                   Exsr      Repair                                                     CPB010
      C                   Eval      MessageInd = 'Y'                                           CPB010
      C                   ENDIF
- 
+
      C                   EVAL      RAMSGTYPE =
      C                             %Subst(RAMSGTYPE:1:W_PosFin + 1)
- 
+
       ** Retrieve operation in message.
      C                   EVAL      W_Operation = %subst(TransData:1:2)
- 
+
       ** Place the result in field CompData.
      C                   EVAL      CompData  = %subst(TransData:1:WEndPos)
      C                                       + A_PTFR                           Portfolio ref CPB008
- 
+
       ** Call a standard routine to actually send the message.
      C                   CallB     'RPSNDMSG'
      C                   PARM                    OutQueue
@@ -581,7 +584,7 @@
      C                   PARM                    CompData
      C                   PARM                    CommitCtl
      C                   PARM                    ReturnCode
- 
+
       ** If error then perform any special processing and exit
      C                   IF        ReturnCode <> *BLANK
      C     *LOCK         IN        LDA
@@ -599,7 +602,7 @@
      C                   Exsr      WrtTrace                                                   CPB010
      C                   COMMIT
      C                   ENDIF
- 
+
       **----------------- Start of Additionnal Messages ---------------**
                                                                                 196240
       **  Do not send CLOSTT messages when delete (Amend with field CORI = 'Y') 196240
@@ -610,25 +613,25 @@
      C     'CLOD  '      LOOKUP    WArFld(X)                              89    220430
      C                   EVAL      W_CloseOutDate = %Subst(TransData:+          220430
      C                             WArPos(X)+W_PosDebut:WArLen(X))              220430
- 
+
       ** Extract Close Out Number from CLOSTD message data.
      C                   Z-ADD     1             X
      C     'CLON  '      LOOKUP    WArFld(X)                              89
      C                   EVAL      PFldVal = %Subst(TransData:+
      C                             WArPos(X)+W_Posdebut:WArLen(X))
      C                   MOVEL     PFldVal       K_Close
- 
+
       ** Define key list to access to FF Close Out Transacts.
      C     K_Clostt      KLIST
      C                   KFLD                    K_Close
- 
+
       ** Position to first Close Out Transacts from CLOSTT.
      C     K_Clostt      SETLL     CLOST10
      C     K_Clostt      READE     CLOST10                                01
- 
+
       ** Do while Close out to be processed.
      C     *in01         DOWEQ     *OFF
- 
+
       ** Reformat entire CLOSTT record (CLOSTTF).
       ** The relevant member in file RPMSGFPD contains details of
       ** fields in the file to be processed (it is a DSPFFD outfile).
@@ -638,19 +641,19 @@
      C                   EVAL      InDBFile = 'CLOSTT    '
      C                   EVAL      ClosttData = ProcFormat(InData:InDBFile:
      C                                        fmDecSep:fmShwPsSgn)
- 
+
       ** The ClosettData data structure has two sub-fields:
       **    - ClosttRec which now contains the formatted data, left aligned.
       **    - ClosttPosA/ClosettPosN which now contains the position of
       **      the first unused byte in ClosttRec.
- 
+
       **------------------ Start of Additionnal fields ----------------**
       ** Define key list to access to FF Transaction Details.
      C     K_Transd      KLIST
      C                   KFLD                    K_Trans
- 
+
      C                   MOVEL     TNBR          K_Trans
- 
+
       ** Access to Transaction details to retrieve value of BOCO
      C     K_Trans       CHAIN     TRANS2                             81
       ** If Transaction Details do not exist, handle database error.
@@ -664,7 +667,7 @@
      C**********         EXSR      *PSSR                                                      CPB010
      C                   Exsr      Repair                                                     CPB010
      C                   ENDIF
- 
+
      C                   EVAL      W_Broker = *BLANKS
      C                   EVAL      W_Instrument = *BLANKS
      C                   EVAL      W_Year = *BLANKS
@@ -674,7 +677,7 @@
      C                   EVAL      W_InstCcy = *BLANKS
      C                   Eval      W_Cusc = *Blanks                             196084
      C                   Eval      W_Portfolio = *Blanks                        196084
- 
+
      C                   EVAL      fmLength = 6
      C                   EVAL      fmDecPos = 0
      C*****              EVAL      fmSign3010 = BOCO                                          CSD027
@@ -684,9 +687,9 @@
      C*****                                      fmShwPsSgn)                                  CSD027
      C*****              EVAL      W_Broker  = %subst(fmAlpNum32 : 1 : 8)                     CSD027
      C                   EVAL      W_Broker  = BOCO                                           CSD027
- 
+
      C                   MOVEL     ISTT          W_Instrument
- 
+
      C                   EVAL      fmLength = 2
      C                   EVAL      fmDecPos = 0
      C                   EVAL      fmSign3010 = YRNO
@@ -695,7 +698,7 @@
      C                                           fmDecPos : fmDecSep :
      C                                           fmShwPsSgn)
      C                   EVAL      W_Year  = %subst(fmAlpNum32 : 1 : 4)
- 
+
      C                   EVAL      fmLength = 2
      C                   EVAL      fmDecPos = 0
      C                   EVAL      fmSign3010 = MTHN
@@ -704,9 +707,9 @@
      C                                           fmDecPos : fmDecSep :
      C                                           fmShwPsSgn)
      C                   EVAL      W_Month = %subst(fmAlpNum32 : 1 : 4)
- 
+
      C                   MOVEL     PCAL          W_PutCall
- 
+
      C                   EVAL      fmLength = 15
      C                   EVAL      fmDecPos =  8
      C                   EVAL      fmPack3010 = STRP
@@ -715,7 +718,7 @@
      C                                           fmDecPos : fmDecSep :
      C                                           fmShwPsSgn)
      C                   EVAL      W_Price = %subst(fmAlpNum32 : 1 : 17)
- 
+
      C                   MOVEL     ISCY          W_InstCcy
                                                                                 196084
      C                   EVAL      fmLength = 6                                 196084
@@ -730,10 +733,10 @@
                                                                                 196084
      C                   Movel     PTFR          W_Portfolio                    196084
       **------------------ End of Additionnal fields ----------------**
- 
+
       ** Change message Type for CLOSTT
      C                   EVAL      RAMSGTYPE = 'CLOSTT_A'
- 
+
      C                   EVAL      CompData  = *BLANKS
      C                   EVAL      W_Table = 'CLOSTT'
       ** Place the result in field CompData.
@@ -751,7 +754,7 @@
      C                                       + W_Cusc                           196084
      C                                       + W_Portfolio                      196084
      C                                       + W_CloseOutDate                   220430
- 
+
       ** Call a standard routine to actually send the message.
      C                   CallB     'RPSNDMSG'
      C                   PARM                    OutQueue
@@ -759,7 +762,7 @@
      C                   PARM                    CompData
      C                   PARM                    CommitCtl
      C                   PARM                    ReturnCode
- 
+
       ** If error then perform any special processing and exit
      C                   IF        ReturnCode <> *BLANK
      C     *LOCK         IN        LDA
@@ -777,20 +780,20 @@
      C                   Exsr      WrtTrace                                                   CPB010
      C                   COMMIT
      C                   ENDIF
- 
+
      C     K_Clostt      READE     CLOST10                                01
- 
+
      C                   ENDDO
                                                                                 196240
      C                   Endif                                                  196240
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C**********         MOVE      *ON           *INLR                                        203729
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -803,7 +806,7 @@
       *                                                               *
       *****************************************************************
      C     SRRtvPos      BEGSR
- 
+
      C                   CALLB     'RPC1305'
      C                   PARM                    PScriptName
      C                   PARM      RAMSGTYPE     PImageName
@@ -827,7 +830,7 @@
      C                   Exsr      Repair                                                     CPB010
      C                   Eval      MessageInd = 'Y'                                           CPB010
      C                   ENDIF
- 
+
      C                   EVAL      X = X + 1
       ** If any error occurred while retrieving position, handle it.
      C                   IF        X > 100
@@ -839,11 +842,11 @@
      C**********         EXSR      *PSSR                                                      CPB010
      C                   Exsr      Repair                                                     CPB010
      C                   ENDIF
- 
+
      C                   EVAL      WArFld(X) = PFldName
      C                   EVAL      WArPos(X) = PFldPos
      C                   EVAL      WArLen(X) = PFldLen
- 
+
      C                   ENDSR
       /Eject                                                                                  CPB010
       *****************************************************************                       CPB010
@@ -946,29 +949,29 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W_RunBefore   IFEQ      *BLANK
- 
+
       ** If commitment control required, back out the unit of work so
       ** that current message could be available again.
      C                   IF        CommitCtl = 'Y'
      C                   ROLBK
      C                   ENDIF
- 
+
      C                   MOVE      'Y'           W_RunBefore
      C                   DUMP
- 
+
      C                   ENDIF
- 
+
      C     ReturnCode    IFEQ      *BLANK
      C                   EVAL      ReturnCode = '*PSSR'
      C                   ENDIF
- 
+
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -982,7 +985,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       ** MQSeries queue to write to - this parm is used in this module
      C                   PARM                    OutQueue
@@ -994,11 +997,11 @@
      C                   PARM                    CommitCtl
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
      C                   Eval      MessageInd = 'Y'                                           CPB010
- 
+
      C                   EVAL      DBpgm  = PSProcName
- 
+
       ** Access Bank details by using access program.
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       P_Rtcd
@@ -1013,7 +1016,7 @@
      C**********         EXSR      *PSSR                                                      CPB010
      C                   Exsr      Repair                                                     CPB010
      C                   ENDIF
- 
+
       ** Set up work fields for formatting that will not change if
       ** Replication formatting is required.
       **    - signs are not shown for Positive numbers.
@@ -1023,31 +1026,31 @@
      C                   EVAL      fmDpLen  = %Subst(RCZEROFLD:2:1)
      C                   MOVE      fmDpLen       W_PosDebut
      C                   EVAL      fmShwPsSgn = 'N'
- 
+
       ** Set up work fields that will not change if retrieve
       ** function is to be used.
      C                   EVAL      PScriptName = 'RP' + RATGTSYS
- 
+
      C                   Z-ADD     0             X                 3 0
- 
+
       ** Retrieve position and length of cust. no. from CLOSTD msg data
      C                   EVAL      PFldName    = 'CUSC'
      C**********         EVAL      PFldType    = 'N'                                        AR970292
      C                   EVAL      PFldType    = 'A'                                        AR970292
      C                   EXSR      SRRtvPos
- 
+
       ** Retrieve position and length of Close Out Number from
       **    CLOSTD message data
      C                   EVAL      PFldName    = 'CLON'
      C                   EVAL      PFldType    = 'N'
      C                   EXSR      SRRtvPos
- 
+
       ** Retrieve position and length of Close Out Reversal Ind. from
       **    CLOSTD message data
      C                   EVAL      PFldName    = 'CORI'
      C                   EVAL      PFldType    = 'A'
      C                   EXSR      SRRtvPos
- 
+
       ** Retrieve position and length of Close Out Settlement account                         CPB008
       **    CLOSTD message data                                                               CPB008
      C                   EVAL      PFldName    = 'STTA'                                       CPB008
@@ -1071,9 +1074,9 @@
      C                   EVAL      PFldType    = *BLANK
      C                   EXSR      SRRtvPos
      C                   EVAL      WEndPos     = PFldPos - 1
- 
+
      C                   EVAL      W_CORI = *BLANKS
      C                   Eval      W_Type = 'A'                                 195907
- 
+
      C                   ENDSR
       *****************************************************************

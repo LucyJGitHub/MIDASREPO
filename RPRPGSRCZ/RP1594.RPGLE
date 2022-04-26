@@ -17,10 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. AR981194  *CREATE  Date 29May12               *
+      *  Last Amend No. MD059754           Date 19Apr22               *
+      *  Prev Amend No. AR981194  *CREATE  Date 29May12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059754 - Replication job RPTRGSRV01 dumps with signature   *
+      *             violation. (Recompile)                            *
       *  AR981194 - PBS Compatibility with BankFusion Midas 2.00      *
       *             (Child:AR981196)                                  *
       *                                                               *

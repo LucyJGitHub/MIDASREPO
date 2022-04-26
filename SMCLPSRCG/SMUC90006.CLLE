@@ -1,0 +1,56 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CL Program to update SMBFMGTD')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC90006 - CL program to updae SMBFMGTD                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD059073  *CREATE  Date 06Apr22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058802 - FBM - UXP Reference users are removed from user  */
+/*                  configuration after the upgrade from SP23 to     */
+/*                  2021.B                                           */
+/*                - Applied for MD059722                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra International +
+                          Limited 2021')
+/**/
+/* Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR1))
+/**/
+/* Start of program */
+/**/
+/* Create LDA if it doesn't exist */
+/**/
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+                CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+
+             CALL       PGM(SMU90006)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(END)
+
+/**/
+/* Abnormal Termination of the program or */
+/* Restore backup if an error occurred in update mode */
+/**/
+ ABNOR:
+
+ ABNOR1:     SNDPGMMSG  MSG('Error occurred in SMUC90006 program') TOPGMQ(*EXT) TOMSGQ(MOPERQ +
+                          MRUNQ)
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited 2021')
+             ENDPGM

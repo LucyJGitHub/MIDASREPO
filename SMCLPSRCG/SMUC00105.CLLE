@@ -10,10 +10,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CSD103    *CREATE  Date 10Aug20              */
+/*       Last Amend No. MD059758           Date 18Apr22              */
+/*       Prev Amend No. CSD103    *CREATE  Date 10Aug20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059758 - SMU01051 error handling issue                    */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*                                                                   */
 /*********************************************************************/
@@ -32,6 +34,9 @@
              DCL        VAR(&ZVAL) TYPE(*CHAR) LEN(200)
              DCL        VAR(&AORTN) TYPE(*CHAR) LEN(7)
 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                               /*MD059758*/
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)                                /*MD059758*/
+                                                                                        /*MD059758*/
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
 
@@ -64,9 +69,31 @@
 
              CALL       PGM(SMU01051) PARM(&LAYER)
 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                /*MD059758*/
+                                                                                        /*MD059758*/
+             SNDPGMMSG  MSG('SMUC00105 completed normally.') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD059758*/
+                                                                                        /*MD059758*/
              GOTO       CMDLBL(END)
 
  ABNOR:
+                                                                                        /*MD059758*/
+             CHGVAR     VAR(&ERRPGM) VALUE('SMUC00105')                                 /*MD059758*/
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA(&ERRPGM) MSG(&MESSAGE)                                 /*MD059758*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059758*/
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                       /*MD059758*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059758*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')                                          /*MD059758*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059758*/
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'JOBLOG' 'Y')                         /*MD059758*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD059758*/
+                                                                                        /*MD059758*/
+             SNDPGMMSG  MSG('Error occurred in SMUC00105 program') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD059758*/
+                                                                                        /*MD059758*/
              CHGJOB     SWS(XXXXXX11)
 
  END:

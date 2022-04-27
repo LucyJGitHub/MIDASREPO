@@ -14,10 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. BA1008   *CREATE   Date 03Jun21               *
+      *  Last Amend No. MD059806           Date 24Apr22               *
+      *  Prev Amend No. BA1008   *CREATE   Date 03Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059806 - Trade UDF fields not replicating onto T_GZTRADEX. *
+      *             Change DDTRDF to DDTDRF field.                    *
       *  BA1008 - Replication of Trades to consolidated Branches      *
       *                                                               *
       *****************************************************************
@@ -174,7 +177,8 @@
      C                   Eval      WSTRSQL = 'update T_GZTRADEX set ' +
      C                                        ' UDFTRAD13  = ' + '''' +
      C                                        %trim(FRNTref) + '''' +
-     C                                        ' where DDTRDF = ' + '''' +
+     C**********                              ' where DDTRDF = ' + '''' +                   MD059806
+     C                                        ' where DDTDRF = ' + '''' +                   MD059806
      C                                        %trim(Traderef) + '''' +
      C                                        ' and ZONE = ' +  '''' +
      C                                        %trim(ZoneName) + ''''

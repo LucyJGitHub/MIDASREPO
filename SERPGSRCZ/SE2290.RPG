@@ -33,8 +33,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046998A          Date 15Apr21               *
+      *  Last Amend No. MD056221           Date 20Apr22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046998A          Date 15Apr21               *
       *                 258975             Date 22May20               *
       *                 243841             Date 22May20               *
       *                 MD057247           Date 01Feb21               *
@@ -186,6 +187,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD056221 - ICD - Drop Transactions Securities                *
+      *           - Flag incomplete trades as deleted (RECI = '*')    *
+      *             when value date is outside back-valuation period. *
+      *             Applied for MD059078.                             *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046998A - Recompiled due to changes in /COPY ZDYYRZ3       *
       *            - Applied fix for MD057480                         *
@@ -989,10 +994,30 @@
      C*                                                                   165636
      C                     MOVE ' '       @SUBR   1                       165636
      C*                                                                   165636
+      *                                                                                     MD056221
+      ** Check Bank ICD and determine back-valuation date.                                  MD056221
+      *                                                                                     MD056221
+     C           WRTVBK    IFNE 'Y'                                                         MD056221
+     C                     EXSR TITLE                                                       MD056221
+     C           BJRDNB    SUB  BJBVPD    WWBKVD  50                                        MD056221
+     C                     MOVE 'Y'       WRTVBK  1                                         MD056221
+     C                     ENDIF                                                            MD056221
+      *                                                                                     MD056221
      C* If trade is incomplete, add to audit count and skip all further
      C* processing
      C*
      C           TINC      IFEQ 'I'
+      *                                                                                     MD056221
+      ** Flag trade as deleted when value date is ouside back-                              MD056221
+      ** valuation period.                                                                  MD056221
+      *                                                                                     MD056221
+     C           TDVD      IFLE WWBKVD                                                      MD056221
+     C           RECI      ANDNE'*'                                                         MD056221
+     C                     MOVE '*'       RECI                                              MD056221
+     C                     ADD  1         DAUCNT                                            MD056221
+     C                     MOVE 'Y'       WINTRA  1                                         MD056221
+     C                     UPDATTRADSDF                                                     MD056221
+     C                     ELSE                                                             MD056221
      C           RECI      IFEQ 'D'
      C                     ADD  1         DICNT
      C                     ELSE
@@ -1007,6 +1032,7 @@
      C                     END                                            E17179
      C                     END
      C                     END
+     C                     ENDIF                                                            MD056221
      C                     ADD  1         LAUCNT
      C                     GOTO MEND
      C                     ELSE
@@ -5094,6 +5120,29 @@
      C                     WRITECDPMVAF
      C                     WRITEUDPMVAF
      C***********          WRITESETLXAF                            S01176 S01271
+      *                                                                                     MD056221
+      ** Perform update of Trades audit file when incomplete trades                         MD056221
+      ** outside back-valuation period exists.                                              MD056221
+      *                                                                                     MD056221
+     C           WINTRA    IFEQ 'Y'                                                         MD056221
+     C                     READ TRADSAF                  12                                 MD056221
+      *                                                                                     MD056221
+     C           *IN12     IFEQ '1'                                                         MD056221
+     C                     SETON                     U7U8LR                                 MD056221
+     C           *LOCK     IN   LDA                                                         MD056221
+     C                     MOVE 'TRADS'   DBFILE                                            MD056221
+     C                     MOVEL'AUDIT'   DBKEY                                             MD056221
+     C                     Z-ADD28        DBASE                                             MD056221
+     C                     OUT  LDA                                                         MD056221
+     C                     DUMP                                                             MD056221
+     C                     ELSE                                                             MD056221
+     C           NORE      SUB  DAUCNT    NORE                                              MD056221
+     C           SLRB      SUB  DAUCNT    SLRB                                              MD056221
+     C                     UPDATTRADSAF                                                     MD056221
+     C                     ENDIF                                                            MD056221
+      *                                                                                     MD056221
+     C                     ENDIF                                                            MD056221
+      *                                                                                     MD056221
      C                     GOTO WRTAU
      C                     END
      C*

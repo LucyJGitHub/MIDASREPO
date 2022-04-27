@@ -367,7 +367,7 @@ als  C                   MOVEL     'USR4762'     MsgIDXAr(Idx)
      C                   EVAL      DBFILE = 'SDSVALPD'                                      MD058873
      C                   EVAL      DBKEY = SValK1                                           MD058873
      C                   EVAL      DBASE = 002                                              MD058873
-     C                   EVAL      DBPGM = 'SDVCLASS'                                       MD058873
+     C                   EVAL      DBPGM = 'SDVIDTP01'                                      MD058873
      C                   EXSR      *PSSR                                                    MD058873
      C                   ENDIF                                                              MD058873
      C                   EVAL      SValue1 = SVal1                                          MD058873

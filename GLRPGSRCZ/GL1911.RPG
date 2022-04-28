@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD024448           Date 31May21               *
-      *  Prev Amend No. AR1063714          Date 18Dec12               *
+      *  Last Amend No. AR1063714          Date 28Apr22               *
+      *  Prev Amend No. MD024448           Date 31May21               *
+      *                 AR1063714          Date 18Dec12               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1073660 - Incorrect Management Fee posting                 *
+      *              Applied for MD-59805                             *
       *  MD024448 - VAT linked to a Management Fee not posted. Post   *
       *             with the tax amount if necessary.                 *
       *  AR1063714 - Retail projected balance not updated with        *
@@ -1361,6 +1364,24 @@
      C                     ELSE                                                             MD024448
      C                     MOVE 'N'       WSTAIN                                            MD024448
      C                     ENDIF                                                            MD024448
+      *                                                                                    AR1073660
+      ** Check/retrieve settlement account                                                 AR1073660
+      *                                                                                    AR1073660
+     C                     CALL 'AOACCTR0'                                                 AR1073660
+     C                     PARM *BLANKS   PRTCD                                            AR1073660
+     C                     PARM '*KEY'    POPTN                                            AR1073660
+     C                     PARM *BLANKS   PKRET  10                                        AR1073660
+     C                     PARM           WWSTCN                                           AR1073660
+     C                     PARM           WWSTCU                                           AR1073660
+     C                     PARM           WWSTAC                                           AR1073660
+     C                     PARM           WWSTSQ                                           AR1073660
+     C                     PARM           WWSTBR                                           AR1073660
+     C           ACCNT     PARM ACCNT     DSSDY                                            AR1073660
+      *                                                                                    AR1073660
+      ** Generate projections for retail accounts                                          AR1073660
+      *                                                                                    AR1073660
+     C           ATYP      IFEQ 'R'                                                        AR1073660
+     C           PRTCD     ANDEQ*BLANKS                                                    AR1073660
       *                                                                                    AR1063714
       ** Clear arrays in AOSPOSU0                                                          AR1063714
       *                                                                                    AR1063714
@@ -1384,7 +1405,8 @@
       *                                                                                    AR1063714
      C                     MOVE ACNO      C#ACNO                                           AR1063714
      C                     MOVELATYP      C#ATYP                                           AR1063714
-     C                     Z-ADDWSTVD     C#VDAT                                           AR1063714
+     C**********           Z-ADDWSTVD     C#VDAT                                 AR1063714 AR1073660
+     C                     Z-ADDF7STVD    C#VDAT                                           AR1073660
      C                     Z-ADDBJRDNB    C#PSTD                                           AR1063714
      C                     MOVEL'I'       C#IO                                             AR1063714
      C                     MOVELF7STCY    C#CCY                                            AR1063714
@@ -1406,35 +1428,37 @@
      C                     ENDIF                                                            MD024448
       *                                                                                     MD024448
      C           WREVE     IFEQ 'N'                                                        AR1063714
-     C           F7OTSG    IFEQ '+'                                                        AR1063714
+     C********** F7OTSG    IFEQ '+'                                              AR1063714 AR1073660
      C                     Z-ADDZAMTT     C#AMT                                            AR1063714
+     C                     MOVEL'D'       C#RTYP                                           AR1073660
      C                     ELSE                                                            AR1063714
      C                     Z-SUBZAMTT     C#AMT                                            AR1063714
+     C                     MOVEL'C'       C#RTYP                                           AR1073660
      C                     ENDIF                                                           AR1063714
-     C                     ELSE                                                            AR1063714
-     C           F7OTSG    IFEQ '-'                                                        AR1063714
-     C                     Z-ADDZAMTT     C#AMT                                            AR1063714
-     C                     ELSE                                                            AR1063714
-     C                     Z-SUBZAMTT     C#AMT                                            AR1063714
-     C                     ENDIF                                                           AR1063714
-     C                     ENDIF                                                           AR1063714
+     C**********           ELSE                                                  AR1063714 AR1073660
+     C********** F7OTSG    IFEQ '-'                                              AR1063714 AR1073660
+     C**********           Z-ADDZAMTT     C#AMT                                  AR1063714 AR1073660
+     C**********           ELSE                                                  AR1063714 AR1073660
+     C**********           Z-SUBZAMTT     C#AMT                                  AR1063714 AR1073660
+     C**********           ENDIF                                                 AR1063714 AR1073660
+     C**********           ENDIF                                                 AR1063714 AR1073660
      C                     MOVEL'GL'      C#MOD                                            AR1063714
      C                     MOVEL'01'      C#OLRC                                           AR1063714
      C                     MOVEL'Y'       C#RPST                                           AR1063714
      C                     Z-ADD10        C#RPNB                                           AR1063714
-     C           WREVE     IFEQ 'N'                                                        AR1063714
-     C           F7OTSG    IFEQ '+'                                                        AR1063714
-     C                     MOVEL'D'       C#RTYP                                           AR1063714
-     C                     ELSE                                                            AR1063714
-     C                     MOVEL'C'       C#RTYP                                           AR1063714
-     C                     ENDIF                                                           AR1063714
-     C                     ELSE                                                            AR1063714
-     C           F7OTSG    IFEQ '+'                                                        AR1063714
-     C                     MOVEL'C'       C#RTYP                                           AR1063714
-     C                     ELSE                                                            AR1063714
-     C                     MOVEL'D'       C#RTYP                                           AR1063714
-     C                     ENDIF                                                           AR1063714
-     C                     ENDIF                                                           AR1063714
+     C********** WREVE     IFEQ 'N'                                              AR1063714 AR1073660
+     C********** F7OTSG    IFEQ '+'                                              AR1063714 AR1073660
+     C**********           MOVEL'D'       C#RTYP                                 AR1063714 AR1073660
+     C**********           ELSE                                                  AR1063714 AR1073660
+     C**********           MOVEL'C'       C#RTYP                                 AR1063714 AR1073660
+     C**********           ENDIF                                                 AR1063714 AR1073660
+     C**********           ELSE                                                  AR1063714 AR1073660
+     C********** F7OTSG    IFEQ '+'                                              AR1063714 AR1073660
+     C**********           MOVEL'C'       C#RTYP                                 AR1063714 AR1073660
+     C**********           ELSE                                                  AR1063714 AR1073660
+     C**********           MOVEL'D'       C#RTYP                                 AR1063714 AR1073660
+     C**********           ENDIF                                                 AR1063714 AR1073660
+     C**********           ENDIF                                                 AR1063714 AR1073660
      C           CAP205    IFEQ 'Y'                                                        AR1063714
      C                     MOVEL'S'       C#MTYP                                           AR1063714
      C                     ENDIF                                                           AR1063714
@@ -1474,6 +1498,7 @@
      C                     OUT  LDA                                                        AR1063714
      C                     EXSR *PSSR                                                      AR1063714
      C                     ENDIF                                                           AR1063714
+     C                     ENDIF                                                           AR1073660
      C                     ENDIF                                                           AR1063714
      C                     ENDIF
      C                     MOVE *BLANKS   #0SELE

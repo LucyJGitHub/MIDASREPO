@@ -37,7 +37,7 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD046248 - Finastra Rebranding.                              *
       *  CGL178 - Generate MT942 based on MT950.                      *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

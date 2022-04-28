@@ -1,0 +1,235 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX MCAVBLV0 maintenance based on SDACRCPD')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  XXF690 - MCAVBLV0 maintenance based on SDACRCPD              *
+      *                                                               *
+      *  Called by: XXCF690                                           *
+      *                                                               *
+      *  Calls: XXCF691 - Currency Conversion                         *
+      *                                                               *
+      *  (C) Copyright Finastra Systems Technology, Inc. 2020         *
+      *                                                               *
+      *  Last Amend No. EML108             Date 20Jan20               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  EML108 - Upgrade FMD003 and fixes to FBM2.1SP21              *
+      *  UMD001 - Upgrade FMD003 to Midas Plus 1.2.1 SP19             *
+      *  230735 - Delete records in MCAVBLX0 (and to be rebuild in    *
+      *           XXF691 if necessary) whose SDACRCPD records have    *
+      *           been amended/deleted.                               *
+      *                                                               *
+      *****************************************************************
+     FSDACRCL0IF  E           K        DISK
+      * Report Codes
+     FSDDELRL0IF  E           K        DISK
+      * Deleted records
+     FMCAVBLV1UF  E           K        DISK
+      * Average Balance
+     FMCWORKV0UF  E           K        DISK
+      * Daily Balance
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10  -  End of file read on SDDELRL0/SDACRCL0                 *
+      *  20  -  End of file read on MCAVBLV1                          *
+      *  30  -  CHAIN failure on MCWORKV0                             *
+      *  40 -   CHAIN failure on SDACRCL0                             *
+      *                                                               *
+      *****************************************************************
+      *  Local data area
+     ILDA        UDS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *  Data Structure for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      *  Data structure for compilation
+     IDSFDY     E DSDSFDY
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I            DS
+     I                                        1  50 GFLKEY
+     I                                        1   1 KRSNO
+     I*****                                   2   5 KRSCD                                     UMD001
+     I                                        2  11 KRSCD                                     UMD001
+     I*****                                   6   9 KACOD                                     UMD001
+     I                                       12  21 KACOD                                     UMD001
+     I*****                                  10  10 ADRCR                                     UMD001
+     I                                       22  22 ADRCR                                     UMD001
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           CGCD    2
+     C                     PARM           PBAS    1
+     C                     PARM           SECS    8
+     C                     PARM           RTCD    1
+      *
+     C           ACRCKY    KLIST
+     C                     KFLD           KRSNO
+     C                     KFLD           KACOD
+     C                     KFLD           KRSCD
+     C                     KFLD           KDRCR   1
+      *
+     C           DELRKY    KLIST
+     C                     KFLD           FKEY
+     C                     KFLD           KRSNO
+     C                     KFLD           KACOD
+     C                     KFLD           KRSCD
+     C                     KFLD           KDRCR
+      *
+     C           AVKEY     KLIST
+     C                     KFLD           KRSNO
+     C                     KFLD           KACOD
+     C                     KFLD           KRSCD
+      *
+     C           WKKEY     KLIST
+     C                     KFLD           M1CGCD
+     C                     KFLD           M1RSNO
+     C                     KFLD           M1RSCD
+     C                     KFLD           M1BRCA
+     C                     KFLD           M1CNUM
+     C                     KFLD           M1CCY
+     C                     KFLD           M1ACOD
+     C                     KFLD           M1ACSQ
+      *
+     C                     MOVEL*BLANKS   RTCD
+     C                     MOVEL*BLANKS   KCGCD   2
+     C                     MOVEL*BLANKS   KBRCA   3
+     C                     MOVEL*BLANKS   KCCY    3
+     C                     MOVEL*BLANKS   KCNUM   6
+     C                     MOVEL*BLANKS   KACSQ   2
+      *
+      *   Call access programm for Bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST'  ##OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database error
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVE '*CALL   'DBKEY
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVEL'SDACRCPD'FKEY   10
+     C           FKEY      SETLLSDDELRL0
+     C           FKEY      READESDDELRL0                 10
+     C           *IN10     DOWEQ'0'
+     C                     EXSR SRDELS
+      *
+      ** Since all records for A/C code / Report Code combination is deleted, they need to
+      ** be re-written to the file if the opposite of DRCR A/C code / Report combination still
+      ** exists.
+      *
+     C           ADRCR     IFEQ '1'
+     C                     MOVEL'0'       KDRCR
+     C                     ELSE
+     C                     MOVEL'1'       KDRCR
+     C                     ENDIF
+     C           ACRCKY    CHAINSDACRCL0             40
+     C           *IN40     IFEQ '0'
+     C           G6LCD     ANDNEBJRDNB
+     C                     EXSR SRADD
+     C                     ENDIF
+      *
+     C           FKEY      READESDDELRL0                 10
+     C                     ENDDO
+      *
+     C           *LOVAL    SETLLSDACRCL0
+     C                     READ SDACRCL0                 10
+     C           *IN10     DOWEQ'0'
+     C           G6LCD     IFEQ BJRDNB
+     C           G6ACCD    ANDNE*BLANKS
+     C           G6TYLC    IFEQ 'I'
+     C           G6TYLC    OREQ 'A'
+     C                     MOVELG6RSNO    KRSNO
+     C                     MOVELG6ACCD    KACOD
+     C                     MOVE *BLANKS   KRSCD
+     C                     EXSR SRDELA
+     C                     EXSR SRADD
+     C                     ENDIF
+     C                     ENDIF
+     C                     READ SDACRCL0                 10
+     C                     ENDDO
+      *
+     C                     MOVE '1'       *INLR
+      *****************************************************************
+     C           SRDELS    BEGSR
+      *
+     C           *LOVAL    SETLLMCAVBLV1
+     C           AVKEY     SETLLMCAVBLV1
+      *
+     C           AVKEY     READEMCAVBLV1                 20
+     C           *IN20     DOWEQ'0'
+     C                     DELETMCAVBLV1
+     C           WKKEY     CHAINMCWORKV0             30
+     C           *IN30     IFEQ '0'
+     C                     DELETMCWORKV0
+     C                     ENDIF
+     C           AVKEY     READEMCAVBLV1                 20
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           SRDELA    BEGSR
+      *
+     C           *LOVAL    SETLLMCAVBLV1
+     C           AVKEY     SETLLMCAVBLV1
+      *
+     C                     READ MCAVBLV1                 20
+     C           KRSNO     DOWEQM1RSNO
+     C           KACOD     ANDEQM1ACOD
+     C           *IN20     ANDEQ'0'
+     C                     DELETMCAVBLV1
+     C           WKKEY     CHAINMCWORKV0             30
+     C           *IN30     IFEQ '0'
+     C                     DELETMCWORKV0
+     C                     ENDIF
+     C                     READ MCAVBLV1                 20
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           SRADD     BEGSR
+      *
+     C                     CALL 'XXCF691'
+     C                     PARM           CGCD
+     C                     PARM           PBAS
+     C                     PARM           SECS
+     C                     PARM           BJRDNB
+     C                     PARM           G6RSNO
+     C                     PARM           G6RSCD
+     C                     PARM           G6ACCD
+     C                     PARM           RTCD
+     C           RTCD      IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  *PSSR  Program error subroutine
+      *----------------------------------------------------------------
+     C           *PSSR     BEGSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     MOVE 'Y'       RTCD
+     C                     RETRN
+     C                     ENDSR
+      /EJECT
+      *****************************************************************

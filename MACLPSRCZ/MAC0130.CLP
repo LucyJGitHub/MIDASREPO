@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 251701             Date 08Apr13              */
+/*       Last Amend No. MD058407           Date 16Feb22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      251701             Date 08Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058407 - Fusion Midas does not archive the contents of    */
+/*                  the OPTIC directory.                             */
 /*       MD046248 - Finastra Rebranding                              */
 /*  251701 - Emergency workaround to stop ORF download failure       */
 /*           at monthend - don't use QDLS                            */
@@ -33,7 +36,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SUBFLR) TYPE(*CHAR) LEN(11)
              DCL        VAR(&FOLDER) TYPE(*CHAR) LEN(17)
@@ -66,15 +69,15 @@
              DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                  /*251701*/
              DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                  /*251701*/
              DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                                 /*251701*/
- 
+
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /*/COPY WNCPYSRC,MAC0130002                                          */
- 
+
              CALL       PGM(AOSVALR0) PARM(&RTNCDE 'StopORFFailure' +
                           &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
                           &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
@@ -90,40 +93,40 @@
                                                                                           /*251701*/
              IF         COND(&IFSFIX *NE 'Y') THEN(DO)                                    /*251701*/
 /* Create folders if not already there */
- 
+
              CRTFLR     FLR(OPTIC) TEXT('Midas Optical disk +
                           download folder') AUT(*ALL)
              MONMSG     MSGID(CPF8A85 CPF8A18)
- 
+
 /* Get Midas system prefix from DTAARA/SDSTAT */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSTEM)
- 
+
 /* Build sub-folder name */
- 
+
              CHGVAR     VAR(&SUBFLR) VALUE('DOWNLOAD.' *CAT +
                           &SYSTEM)
- 
+
              CRTFLR     FLR(&SUBFLR) INFLR(OPTIC) +
                           TEXT('Midas data for PC folder') +
                           AUT(*ALL)
              MONMSG     MSGID(CPF8A85 CPF8A18)
- 
+
 /* Build folder/subfolder string */
- 
+
              CHGVAR     VAR(&FOLDER) VALUE('OPTIC/DOWNLOAD.' *CAT +
                           &SYSTEM)
 /*/COPY WNCPYSRC,MAC0130003                                          */
- 
+
 /* Set flag to allow extraction by PC */
- 
+
              CPYTOPCD   FROMFILE(MAORDYPD) TOFLR(&FOLDER) +
                           TODOC(READY.GO) REPLACE(*YES) TRNFMT(*TEXT)
- 
+
              CHGDOCD    DOC(READY.GO) FLR(&FOLDER) +
                           DOCD('Data ready for download to PC flag')
              ENDDO                                                                        /*251701*/
- 
+
              IF         COND(&IFSFIX *EQ 'Y') THEN(DO)                                    /*251701*/
              CRTDIR     DIR('OPTIC')                                                      /*251701*/
              MONMSG     MSGID(CPFA0A0)                                                    /*251701*/
@@ -149,17 +152,19 @@
              CRTPF      FILE(&DPLIB/MAORDSTMF) RCDLEN(1) +
                           MAXMBRS(*NOMAX) SIZE(*NOMAX)                                    /*251701*/
              MONMSG     MSGID(CPF5813 CPF7302)                                            /*251701*/
+/**********  CPYTOSTMF  FROMMBR(&FROMPATH) TOSTMF(&TOPATH) +      *********/            /*MD058407*/
+/**********               STMFOPT(*REPLACE) STMFCODPAG(*PCASCII)  *********/ /*251701*/ /*MD058407*/
              CPYTOSTMF  FROMMBR(&FROMPATH) TOSTMF(&TOPATH) +
-                          STMFOPT(*REPLACE) STMFCODPAG(*PCASCII)                          /*251701*/
+                          STMFOPT(*REPLACE) AUT(*INDIR) STMFCODPAG(*PCASCII)            /*MD058407*/
              ENDDO                                                                        /*251701*/
                                                                                           /*251701*/
 /*/COPY WNCPYSRC,MAC0130004                                          */
              GOTO       CMDLBL(END)
- 
+
  ABNOR:      CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000)
              SNDMSG     MSG('MAC0130 - Set download flag for PC +
                           ended abnormally') TOMSGQ(MOPERQ)
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000)
- 
+
  END:        ENDPGM

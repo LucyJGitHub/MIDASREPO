@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD059520           Date 21Feb22               *
+      *  Prev Amend No. 260405             Date 04Apr20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
@@ -60,6 +61,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
+      *             netting tab not showing records. (Recompile)      *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *

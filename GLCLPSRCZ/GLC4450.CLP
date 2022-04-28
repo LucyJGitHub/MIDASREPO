@@ -43,6 +43,17 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*  EML102B - Changes required due to TS processing                  */
+/*            (EML102 changes not required in CLP)                   */
+/*            Amendment of core hook GLC4450INT                      */
+/*            Amendment of core hook GLC4450MPS                      */
+/*            Amendment of core hook GLC4450MP1                      */
+/*            Amendment of core hook GLC4450MP2                      */
+/*            Amendment of core hook GLC4450MP3                      */
+/*  EML102 - Upgrade of UNL007 to FB2.1 SP23                         */
+/*  UNL007 - Extended Narratives                                     */
+/*           Use /COPY GLC4450INT, GLC4450MPS, GLC4450MP1,           */
+/*           GLC4450MP2, GLC4450MP3)                                 */
 /*       MD059147 - GLC4450 task split jobs timeout                  */
 /*                - Increase time wait from 900 to 1200.             */
 /*       MD046248 - Finastra Rebranding                              */

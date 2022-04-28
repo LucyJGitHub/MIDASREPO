@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. EML102             Date 28Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CER073A            Date 05Sep17               *
       *                 CER073             Date 10Jul17               *
@@ -51,6 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML102 - Upgrade of UNL007 to FB2.1 SP23                     *
+      *           UNL007 - Extended Narratives                        *
+      *           use Core hooks GPGLJENHPD  (call of UNL007UPD)      *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *

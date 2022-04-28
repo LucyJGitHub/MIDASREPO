@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CGL057             Date 02Nov21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG7549            Date 11May05              */
+/*                      BUG7549            Date 11May05              */
 /*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
@@ -24,6 +25,10 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*      CGL057 - Posting of Profit and Loss to Multiple Retained     */
+/*               Earnings Accounts. Generate extract for new Spot    */
+/*               Trade and Spot Trade Equivalent Accounts in the     */
+/*               Mapping Matrix file                                 */
 /*      MD046248 - Finastra Rebranding                               */
 /*      BUG7549- Spt revals not created when PCA is on               */
 /*      CGL029 - Increase Account Code to 10 digits                  */
@@ -72,6 +77,10 @@
                           Return string */
              DCL        VAR(&BCCY) TYPE(*CHAR) LEN(3) VALUE('   ') +
                           /* Base ccy */
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CGL057*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CGL057*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CGL057*/
+             DCL        VAR(&CGL057) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CGL057*/
              DCLF       FILE(SDBANKPD) /* Bank ICD */
 /**/
 /* Global monitor message */
@@ -83,6 +92,14 @@
 /**/                                                                  /*ER9201*/
              CHGJOB     SWS(XXXXXX00)
              CLRPFM     FILE(MCBLEXPD)
+/**/                                                                                      /*CGL057*/
+/* Check if CGL057 is installed */                                                        /*CGL057*/
+/**/                                                                                      /*CGL057*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CGL057*/
+             CHGVAR     VAR(&SARD) VALUE('CGL057')                                        /*CGL057*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CGL057*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CGL057) +
+                          VALUE('Y'))                                                     /*CGL057*/
 /**/
 /* Access Last Diary Event to check for Transfer Date */
 /**/
@@ -276,6 +293,8 @@
                           MBROPT(*ADD) FMTOPT(*MAP *DROP)
              ENDDO
 /**/
+             IF         COND(&CGL057 *EQ 'Y') THEN(CALL PGM(MCCN0360) PARM(&PSTD))        /*CGL057*/
+/**/                                                                                      /*CGL057*/
              GOTO       CMDLBL(END)
 /**/
 /* Abnormal Termination Processing */

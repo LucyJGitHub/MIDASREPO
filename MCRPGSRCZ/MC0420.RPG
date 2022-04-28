@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 224412             Date 07Feb20               *
-      *  Prev Amend No. MD052960           Date 07Mar19               *
+      *  Last Amend No. CGL057             Date 02Nov21               *
+      *  Prev Amend No. 224412             Date 07Feb20               *
+      *                 MD052960           Date 07Mar19               *
       *                 251252             Date 07Mar19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
+      *           Earnings Accounts.                                  *
       *  224412 - Gap accrual detail was incorrectly updated for the  *
       *           batch item posted to an IN/EX account. Only Gap     *
       *           requirements should create the gap balance and      *
@@ -73,12 +76,19 @@
       /SPACE
      FMCPCACPDO   E                    DISK         KINFSR *PSSR
       **  Profit Centre Accounting File
+     FSDINEXL1IF  E           K        DISK                                                   CGL057
+      ** SD Income and Expense mapping file - Retrieval Index                                 CGL057
+      **                                                                                      CGL057
+     FSDINEXL3IF  E           K        DISK                                                   CGL057
+     F            SDINEXD0                          KRENAME@SDINL3                            CGL057
+      ** SD Income and Expense mapping file by Spot Reval Account                             CGL057
       /SPACE
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
       *                                                               *
       *  01  -  First Cycle                                           *
+      *  55  -  SDINEXL1 End-of-file                                  *                       CGL057
       *  U7  -  Database error                                        *
       *  U8  -  Database error                                        *
       *                                                               *
@@ -100,6 +110,9 @@
       *  PRW04  -  Write to Profit Centre Accounting file for each    *
       *            Prime GAP P&L Profit Centre when GAP Funding       *
       *            Entries are Required for an IN/EX Account.         *
+      *  GETACD -  Get the alternate P&L Account to post to.          *                       CGL057
+      *  ANALYS -  Access PCA 'Management A/c Analysis fields' for    *                       CGL057
+      *            the alternate Profit and Loss Accounts.            *                       CGL057
       *  DBERR  -  Error handling                                     *
       *  *PSSR  -  Subroutine to Handle Abnormal Error Conditions     *
       *                                                               *
@@ -124,6 +137,9 @@
      I/COPY WNCPYSRC,MC0420I001
       *
      IDSMOVE    E DSMCMOVEPD
+      *                                                                                       CGL057
+     ISCSARD    E DSSCSARDPD                                                                  CGL057
+      * SAR File Details Accessed via Access Program AOSARDR0                                 CGL057
       *
      IDSFDY     E DSDSFDY
       **  First DS for access programs, Short Data Structure
@@ -271,6 +287,20 @@
      C           BKPLAC    IFEQ *BLANKS
      C                     MOVE BKACCD    BKPLAC
      C                     ENDIF
+      *                                                                                       CGL057
+      **  Check if feature CGL057 is present.                                                 CGL057
+      *                                                                                       CGL057
+     C                     MOVE 'N'       CGL057  1                                           CGL057
+     C                     CALL 'AOSARDR0'                                                    CGL057
+     C                     PARM '       ' @RTCD   7                                           CGL057
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL057
+     C                     PARM 'CGL057'  @SARD   6                                           CGL057
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL057
+     C*                                                                                       CGL057
+     C           @RTCD     IFEQ *BLANKS                                                       CGL057
+     C                     MOVE 'Y'       CGL057                                              CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
      C/COPY WNCPYSRC,MC0420C001
       *
       **  End First Cycle
@@ -292,6 +322,10 @@
      C                     MOVE XPRFC     FTEYPC
      C                     ENDIF
       *
+      **  Get alternate profit and loss account code to post to                               CGL057
+      *                                                                                       CGL057
+     C                     EXSR GETACD                                                        CGL057
+      *                                                                                       CGL057
       **  Write to the Profit Centre Accounting file, for the IN/EX
       **  Account, with its profit centre
       *
@@ -342,6 +376,145 @@
       *================================================================
       *  P R O G R A M     E N D                                      *
       *================================================================
+      /EJECT                                                                                  CGL057
+      *****************************************************************                       CGL057
+      *  GETACD -  Get the alternate P&L Account to post to.          *                       CGL057
+      *                                                               *                       CGL057
+      *            The new account code will be moved to ##ACOD that  *                       CGL057
+      *            will be used in SR/PRW01 to build the posting      *                       CGL057
+      *            narrative field 'to transfer to...'.               *                       CGL057
+      *            It will be used in SR/PRW02 as the Alternate       *                       CGL057
+      *            Profit and Loss account code, if it exists, to     *                       CGL057
+      *            post to.                                           *                       CGL057
+      *                                                               *                       CGL057
+      *  Called By:  Main Processing                                  *                       CGL057
+      *                                                               *                       CGL057
+      *  Calls    :  Nothing                                          *                       CGL057
+      *****************************************************************                       CGL057
+     C           GETACD    BEGSR                                                              CGL057
+      *                                                                                       CGL057
+      **  If CGL057 is present:                                                               CGL057
+      **  Read new Income/Expense mapping file and check whether the                          CGL057
+      **  account code being processed should be posted to a                                  CGL057
+      **  new P&L account or the default GL ICD P&L account.                                  CGL057
+      **  It will check for an exact match; then check within a range.                        CGL057
+      *                                                                                       CGL057
+     C                     MOVE *BLANKS   ##ACOD 10                                           CGL057
+     C           CGL057    IFEQ 'Y'                                                           CGL057
+     C                     MOVELXACOD     #WKACD 100                                          CGL057
+      **                                                                                      CGL057
+      ** Check if this is a Posting Income/Expense Account                                    CGL057
+     C           #WKACD    SETLLSDINEXL1                                                      CGL057
+     C           #WKACD    READESDINEXL1                 55                                   CGL057
+      *                                                                                       CGL057
+      * If exact match found in mapping file, use that P&L account                            CGL057
+      *                                                                                       CGL057
+     C           *IN55     IFEQ '0'                                                           CGL057
+     C                     MOVE MAPLA1    ##ACOD                                              CGL057
+     C                     ELSE                                                               CGL057
+      *                                                                                       CGL057
+      * If no exact match, check most suitable range for P&L account                          CGL057
+      *                                                                                       CGL057
+     C           #WKACD    SETLLSDINEXL1                                                      CGL057
+     C                     READPSDINEXL1                 55                                   CGL057
+      *                                                                                       CGL057
+     C           *IN55     IFEQ '0'                                                           CGL057
+     C           #WKACD    IFGT MAINC1                                                        CGL057
+     C           #WKACD    ANDLEMAINC2                                                        CGL057
+     C                     MOVE MAPLA1    ##ACOD                                              CGL057
+     C                     END                                                                CGL057
+     C                     END                                                                CGL057
+      *                                                                                       CGL057
+     C                     END                                                                CGL057
+      *                                                                                       CGL057
+      ** IF ##ACOD is blanks, check if this Account Code may be a                             CGL057
+      ** Spot Revaluation Account; use LF/SDINEXL3. There is no range.                        CGL057
+      **                                                                                      CGL057
+     C           ##ACOD    IFEQ *BLANKS                                                       CGL057
+      *                                                                                       CGL057
+     C********** XACOD     SETLLSDINEXL3                                                      CGL057
+     C********** XACOD     READESDINEXL3                 55                            CGL057 GATEMP
+     C           #WKACD    SETLLSDINEXL3                                               CGL057 GATEMP
+     C           #WKACD    READESDINEXL3                 55                                   GATEMP
+      *                                                                                       GATEMP
+      * If found in mapping file, use that P&L account                                        CGL057
+     C           *IN55     IFEQ '0'                                                           CGL057
+     C                     MOVE MAPLA1    ##ACOD                                              CGL057
+     C                     END                                                                CGL057
+      *                                                                                       CGL057
+      * If ##ACOD = Blanks                                                                    CGL057
+     C                     END                                                                CGL057
+      *                                                                                       CGL057
+      * If feature CGL057 is switched off                                                     CGL057
+     C                     END                                                                CGL057
+      *                                                                                       CGL057
+      ** Setup default P&L Account Code in case CGL057 = 'N' OR                               CGL057
+      ** IN/EX Account does not exist in mapping file                                         CGL057
+      *                                                                                       CGL057
+     C           ##ACOD    IFEQ *BLANKS                                                       CGL057
+     C                     MOVE BKPLAC    ##ACOD                                              CGL057
+     C                     END                                                                CGL057
+      **                                                                                      CGL057
+     C                     ENDSR                                                              CGL057
+      *****************************************************************                       CGL057
+      /EJECT                                                                                  CGL057
+      *****************************************************************                       CGL057
+      *  ANALYS -  Access PCA 'Management A/c Analysis fields' for    *                       CGL057
+      *            the alternate Profit and Loss Accounts.            *                       CGL057
+      *                                                               *                       CGL057
+      *  Called By:   PRW02  -  Write to PCA file for each            *                       CGL057
+      *                         P&L account posting.                  *                       CGL057
+      *                                                               *                       CGL057
+      *  Calls    :                                                   *                       CGL057
+      *****************************************************************                       CGL057
+      *                                                                                       CGL057
+     C           ANALYS    BEGSR                                                              CGL057
+      *                                                                                       CGL057
+      **  Get 'Management A/c Analysis fields' using 'P&L A/c Code',                          CGL057
+      *                                                                                       CGL057
+     C                     CALL 'AOACODR0'                                                    CGL057
+     C                     PARM *BLANKS   PRTCD                                               CGL057
+     C                     PARM '*KEY   ' POPTN                                               CGL057
+     C                     PARM A#ACOD    PACCD  10                                           CGL057
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL057
+      *                                                                                       CGL057
+      **  If not found, set 'Management A/c Analysis fields' to 'N'                           CGL057
+      *                                                                                       CGL057
+     C           PRTCD     IFEQ '*NRF   '                                                     CGL057
+     C                     MOVE 'N'       A5MABK                                              CGL057
+     C                     MOVE 'N'       A5MAPR                                              CGL057
+     C                     MOVE 'N'       A5MAAC                                              CGL057
+     C                     ELSE                                                               CGL057
+     C           PRTCD     IFNE *BLANKS                                                       CGL057
+     C                     MOVEL'SDACODPD'WFILE   8        ************                       CGL057
+     C                     Z-ADD4         WBASE   30       * DBERR 04 *                       CGL057
+     C                     MOVELA#ACOD    WKEY   29        ************                       CGL057
+     C                     EXSR DBERR                                                         CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+      **  Blank Book if P&L A/c Analysis is not required                                      CGL057
+      *                                                                                       CGL057
+     C           A5MABK    IFNE 'Y'                                                           CGL057
+     C                     MOVE *BLANK    BOKC                                                CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+      **  Blank Product if P&L A/c Analysis is not required                                   CGL057
+      *                                                                                       CGL057
+     C           A5MAPR    IFNE 'Y'                                                           CGL057
+     C                     MOVE *BLANKS   OTST                                                CGL057
+     C                     MOVE *BLANKS   OTTP                                                CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+      **  Blank Assoc. Cust if P&L A/c Analysis is not required                               CGL057
+      *                                                                                       CGL057
+     C           A5MAAC    IFNE 'Y'                                                           CGL057
+     C                     MOVE *BLANKS   ASOC                                                CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+     C                     ENDSR                                                              CGL057
+      *****************************************************************                       CGL057
       /EJECT
       *****************************************************************
       *                                                               *
@@ -406,7 +579,17 @@
      C                     Z-ADDXPDTM     PDTM             Posting Date/Tm
      C                     MOVE XATYP     ATYP             Account Type
      C           PNAR      IFEQ *BLANK
+      *                                                                                       CGL057
+      * If CGL057 is on, posting narrative should contain the new P&L                         CGL057
+      * account code obtained in SR/GETACD as this where the I&E                              CGL057
+      * balance will be transferred to.                                                       CGL057
+      *                                                                                       CGL057
+     C           CGL057    IFEQ 'Y'                                                           CGL057
+     C           NTRF1     CAT  ##ACOD:1  PNAR             Posting Narrtve                    CGL057
+     C                     ELSE                                                               CGL057
      C           NTRF1     CAT  BKPLAC:1  PNAR             Posting Narrtve
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
      C                     ELSE
      C                     MOVE XPNAR     PNAR             Posting Narrtve
      C                     ENDIF
@@ -423,13 +606,22 @@
       *                                                               *
       *  Called By:  Main Processing                                  *
       *                                                               *
-      *  Calls    :  None                                             *
+      *  Calls:      ANALYS  Access PCA 'Management A/c Analysis      *                       CGL057
+      *                      fields' for the alternate P&L Accts.     *                       CGL057
       *                                                               *
       *****************************************************************
      C           PRW02     BEGSR
       *
       **  Set up DSMOVE
+      *                                                                                       CGL057
+      * If feature is on, use the new P&L a/c code obtained in SR/GETACD.                     CGL057
+      *                                                                                       CGL057
+     C           CGL057    IFEQ 'Y'                                                           CGL057
+     C                     MOVE ##ACOD    ACOD             P&L A/c                            CGL057
+     C                     ELSE                                                               CGL057
      C                     MOVE BKPLAC    ACOD             P&L A/c
+     C                     END                                                                CGL057
+      *                                                                                       CGL057
      C**********           Z-ADDXBCUS     CNUM             Brc Intern. Cus                    CSD027
      C                     MOVE XBCUS     CNUM             Brc Intern. Cus                    CSD027
      C                     MOVE '01'      ACSQ             A/c Sequence No
@@ -441,6 +633,16 @@
      C           NTRF2     CAT  XACOD:1   PNAR             Posting Narr
      C                     MOVE 'Y'       GETP             Gen. Entry type
       *
+      ** If feature CGL057 is on, use the PCA Management a/c fields for                       CGL057
+      ** alternate P&L account code.                                                          CGL057
+      *                                                                                       CGL057
+     C           CGL057    IFEQ 'Y'                                                           CGL057
+     C**                   MOVE ACOD      A#ACOD 10        P&L A/c                            CGL057
+     C                     MOVE ##ACOD    A#ACOD 10        P&L A/c                            CGL057
+     C                     EXSR ANALYS                                                        CGL057
+      *                                                                                       CGL057
+     C                     ELSE                                                               CGL057
+      *                                                                                       CGL057
       **  Blank Book if P&L A/c Analysis is not required
       *
      C           PLACBB    IFNE 'Y'
@@ -460,6 +662,8 @@
      C**********           Z-ADD*ZERO     ASOC                                                CSD027
      C                     MOVE *BLANKS   ASOC                                                CSD027
      C                     ENDIF
+      *                                                                                       CGL057
+     C                     ENDIF                                                              CGL057
       *
      C                     WRITEMCPCACD0
       *

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR574541           Date 25Apr22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 207964             Date 23Aug02               *
       *                 MD031292           Date 06Nov19               *
       *                 MD025836           Date 06Nov19               *
@@ -166,6 +167,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR574541 - Error Automatic Pay at Maturity Field on Loans.   *
+      *             Reset TLXI bit to '0' when the Maturity Date was  *
+      *             amended.                                          *
+      *           - Applied for AR858623A                             *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  207964 - Incorrect exposure if loan is in base currency. Do  *
@@ -4020,16 +4025,19 @@
      C                   BITOFF    '3'           TLXI
      C                   ENDIF
       *
-      ***  If maturity is amended and is less than the prior maturity date
-      ***  (early mature), reset bit 1 (Maturity) of field TLXI to
-      ***  generate new message.
+      *****If*maturity*is*amended*and*is*less*than*the*prior*maturity*date                  AR574541
+      *****(early mature),*reset*bit*1*(Maturity)*of*field*TLXI*to*****                     AR574541
+      *****generate*new*message.***************************************                     AR574541
+      ** If maturity date is amended, reset bit 1 of TLXI to '0' to                         AR574541
+      ** generate new message.                                                              AR574541
       *
      C     L_CLMDAT      IFNE      *ZERO
      C*****L_CLAUTO      ANDEQ     'Y'                                                        CLE134
      C     WAUTOC        ANDEQ     'Y'                                                        CLE134
      C     L_CLAUTO      ANDEQ     AUTO
-     C     L_CLMDAT      ANDLT     MDAT
-     C     BJRDNB        ANDGT     ORED
+     C*****L_CLMDAT      ANDLT     MDAT                                                     AR574541
+     C*****BJRDNB        ANDGT     ORED                                                     AR574541
+     C     L_CLMDAT      ANDNE     MDAT                                                     AR574541
      C                   BITOFF    '1'           TLXI
      C                   ENDIF
       *

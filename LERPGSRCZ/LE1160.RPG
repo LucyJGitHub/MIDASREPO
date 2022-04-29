@@ -18,8 +18,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD021112           Date 27Apr22               *
+      *  Prev Amend No. AR929296           Date 25Apr22               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055146           Date 04Feb20               *
       *                 252771             Date 04Sep19               *
       *                 CLE071             Date 18Jul18               *
@@ -82,6 +84,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD021112 - LE1160P1 is being generated even if there are no  *
+      *             PI events. Correct the usage of indicators to     *
+      *             avoid incorrect generation of LE1160P1.           *
+      *  AR929296 - Only footer message written on report if no con-  *
+      *             firmation to report. No more footer message will  *
+      *             written if no confirmation to report. SKIPB will  *
+      *             not be use for 'END OF REPORT' message to prevent *
+      *             printing extra page. Add applied fix 246860       *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -269,6 +279,7 @@
      F*     74        PARTICIPATION PURCHASED TYPE OF A LOAN
      F*     75        INPUT FILE HAS AT LEAST ONE RECORD
       *     76        Cache hit for Nostro array                                            CLE075BO
+     F*     77        No Confirmations to be reported                                         246860
      F*     88        MBIN = 'Y'
      F*     96        "DO NOT SEND" TEXT
      F*     U4        CUSTOMER LENDING SWIFT EXISTS
@@ -1050,7 +1061,11 @@
      C                     MOVE *BLANK    WOPN1   1                       119889
      C                     MOVE *BLANK    WOPN2   1                       119889
      C*
+     C           AMTP      IFEQ 'MR'                                                          246860
+     C                     MOVE '1'       *IN77                                               246860
+     C                     ELSE                                                               246860
      C                     SETON                       75  ALLOW OUTPUT
+     C                     ENDIF                                                              246860
      C***********          OPEN LE1160P1                                  119889
      C                     Z-ADD0         PAGE
      C                     Z-ADD0         PAGE1
@@ -1185,6 +1200,10 @@
      C                     END                                            119889
      C                     ENDIF                                                            CLE075BO
      C   U7                GOTO END                                       119889
+     C                     ELSE                                                               246860
+     C           AMTP      IFEQ 'MR'                                                          246860
+     C                     MOVE '1'       *IN77                                               246860
+     C                     ENDIF                                                              246860
      C                     ENDIF                                          119889
       *                                                                   119889
      C*
@@ -1193,7 +1212,12 @@
      C** Not multibranching
      C*
      C                     ELSE
+      *                                                                                       246860
+     C           AMTP      IFEQ 'MR'                                                          246860
+     C                     MOVE '1'       *IN77                                               246860
+     C                     ELSE                                                               246860
      C                     SETON                     75
+     C                     ENDIF                                                              246860
      C*
      C** First cycle
      C*
@@ -1210,14 +1234,16 @@
      C                     Z-ADDSFNUM2    ZSNUM   60                      119889
      C                     MOVELSFILE2    SFILE  10                       119889
      C                     MOVE 'Y'       WOPN2                           119889
-     C                     MOVE '1'       *IN62                           119889
+     C**********           MOVE '1'       *IN62                                      119889 MD021112
+     C                     MOVE '1'       *IN63                                             MD021112
      C                     ELSE                                           119889
      C                     OPEN LE1160P1                                  119889
      C*
      C                     Z-ADDSFNUM1    ZSNUM
      C                     MOVELSFILE1    SFILE  10                       119889
      C                     MOVE 'Y'       WOPN1                           119889
-     C                     MOVE '1'       *IN61                           119889
+     C**********           MOVE '1'       *IN61                                      119889 MD021112
+     C                     MOVE '1'       *IN62                                             MD021112
      C                     ENDIF                                          119889
       *                                                                   119889
      C*
@@ -1257,13 +1283,15 @@
      C                     Z-ADDSFNUM2    ZSNUM   60                      119889
      C                     MOVELSFILE2    SFILE  10                       119889
      C                     MOVE 'Y'       WOPN2                           119889
-     C                     MOVE '1'       *IN62                           119889
+     C**********           MOVE '1'       *IN62                                      119889 MD021112
+     C                     MOVE '1'       *IN63                                             MD021112
      C                     ELSE                                           119889
      C                     OPEN LE1160P1                                  119889
      C                     Z-ADDSFNUM1    ZSNUM                           119889
      C                     MOVELSFILE1    SFILE  10                       119889
      C                     MOVE 'Y'       WOPN1                           119889
-     C                     MOVE '1'       *IN61                           119889
+     C**********           MOVE '1'       *IN61                                      119889 MD021112
+     C                     MOVE '1'       *IN62                                             MD021112
      C                     ENDIF                                          119889
       *                                                                   119889
      C                     OUT  LDA                                       119889
@@ -3675,7 +3703,8 @@
      O*
      O** Output this line only if there are recors on file (*IN75 on)
      O*
-     O        T 3 12   L1 88 75
+     O********T*3 12   L1 88 75                                                             AR929296
+     O        T 3      L1 88 75                                                             AR929296
      O       AND          62                                              119889
      O                                   64 '*** END OF REPORT'
      O                                   75 'FOR BRANCH'
@@ -3684,7 +3713,8 @@
      O*
      O** Output this line only if there are records on file (*IN75 ON)
      O*
-     O        T 3 12   LRN88 75
+     O********T 3 12   LRN88 75                                                             AR929296
+     O        T 3      LRN88 75                                                             AR929296
      O       AND          62                                              119889
      O                                   76 '*** END OF REPORT ***'
      O*
@@ -3972,14 +4002,16 @@
      O                    U4 96          85 'DO NOT SEND **'              119889
      O**                                                                  119889
      O**  OUTPUT THIS LINE ONLY IF THERE ARE RECORDS ON FILE (*IN75 ON)   119889
-     O        T 3 12   L1 88 75                                           119889
+     O********T*3 12   L1 88 75                                                      119889 AR929296
+     O        T 3      L1 88 75                                                             AR929296
      O       AND          63                                              119889
      O                                   64 '*** END OF REPORT'           119889
      O                                   75 'FOR BRANCH'                  119889
      O                         BRCA      79                               119889
      O                                   83 '***'                         119889
      O**  OUTPUT THIS LINE ONLY IF THERE ARE RECORDS ON FILE (*IN75 ON)   119889
-     O        T 3 12   LRN88 75                                           119889
+     O********T*3 12   LRN88 75                                                      119889 AR929296
+     O        T 3      LRN88 75                                                             AR929296
      O       AND          63                                              119889
      O                                   76 '*** END OF REPORT ***'       119889
       *                                                                   119889

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058914           Date 06Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059420           Date 28Apr22               *
+      *  Prev Amend No. MD058914           Date 06Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD048586           Date 11Jan21               *
       *                 AR1088819          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
@@ -99,6 +100,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059420 - Input user is not set on insertion through        *
+      *             the API with AUTH='N'                             *
       *  MD058914 - FT payments customer information on listviews     *
       *             is blank. Amend to add routine to retrieve        *
       *             Customer and Branch for INPAYDQD/OTPAYDQD.        *
@@ -1175,6 +1178,12 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
      C                   EVAL      INLVL1 = 'Y'                                             BUG14585
+                                                                                            MD059420
+      * Ensure input user is set on insertion                                               MD059420
+                                                                                            MD059420
+     C                   IF        INUSR1 = *Blanks                                         MD059420
+     C                   EVAL      INUSR1 = PUser                                           MD059420
+     C                   ENDIF                                                              MD059420
       *
       ** Move valid file details to update file details.
       *

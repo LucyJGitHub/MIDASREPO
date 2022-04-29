@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 1997                      *
       *                                                               *
-      *  Last Amend No. MD058068           Date 11May21               *
-      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *  Last Amend No. 251453             Date 26Apr22               *
+      *  Prev Amend No. MD058068           Date 11May21               *
+      *                 MD055733           Date 03Jul20               *
       *                 MD055652           Date 13Jul20               *
       *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -50,6 +51,9 @@
       *  Amendment History                                            *
       *  -----------------                                            *
       *                                                               *
+      *  251453 - Divide by zero problem. Extract details of loans    *
+      *           with new processing types 70, 71 and 72.            *
+      *         - Applied for MD059499                                *
       *  MD058068 - Deliverable Data Split for Bank of England        *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components                                        *
@@ -368,14 +372,17 @@
      C     PTYP          WHENEQ    61
      C     PTYP          OREQ      62
      C     PTYP          OREQ      63
+     C     PTYP          OREQ      70                                                         251453
      C                   EXSR      #LFIXL                                       Call/Fixed Loan
      C     PTYP          WHENEQ    64
      C     PTYP          OREQ      65
      C     PTYP          OREQ      68                                                          21376
+     C     PTYP          OREQ      71                                                         251453
      C                   EXSR      #LPPUR                                       Participation pur.
      C     PTYP          WHENEQ    66
      C     PTYP          OREQ      67
      C     PTYP          OREQ      69                                                          21376
+     C     PTYP          OREQ      72                                                         251453
      C                   EXSR      #LPSLD                                       Particiaption sold
      C                   ENDSL
       *

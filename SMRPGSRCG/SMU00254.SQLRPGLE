@@ -17,10 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1067493 *CREATE  Date 12Dec12               *
+      *  Last Amend No. MD059814           Date 28Apr22               *
+      *  Prev Amend No. AR1067493 *CREATE  Date 12Dec12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059814 - Comment out label changes as already delivered    *
       *  AR1067493 - COBOP Upgrade programs amendment                 *
       *                                                               *
       *****************************************************************
@@ -28,21 +30,21 @@
      D Recursive       S              1
       /free
 
-       Exec SQL
-        label on column GPMENUPD
-        ( MIACOB text is 'Phase ''G'' Restricted?');
+      //xec SQL                                                                             MD059814
+      //label on column GPMENUPD                                                            MD059814
+      //( MIACOB text is 'Phase ''G'' Restricted?');                                        MD059814
 
-       Exec SQL
-        label on column GPMENUPD
-        ( MIACOB is 'Phs ''G'' Rstrct?');
+      //xec SQL                                                                             MD059814
+      //label on column GPMENUPD                                                            MD059814
+      //( MIACOB is 'Phs ''G'' Rstrct?');                                                   MD059814
 
-       Exec SQL
-        label on column GZSFMENUPD
-        ( MIACOB text is 'Phase ''G'' Restricted?');
+      //xec SQL                                                                             MD059814
+      //label on column GZSFMENUPD                                                          MD059814
+      //( MIACOB text is 'Phase ''G'' Restricted?');                                        MD059814
 
-       EXEC SQL
-        label on column GZSFMENUPD
-        ( MIACOB is 'Phs ''G'' Rstrct?');
+      //XEC SQL                                                                             MD059814
+      //label on column GZSFMENUPD                                                          MD059814
+      //( MIACOB is 'Phs ''G'' Rstrct?');                                                   MD059814
 
        // Removal of menu item 0000000659 permission data
 

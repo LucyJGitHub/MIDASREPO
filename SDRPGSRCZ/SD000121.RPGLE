@@ -15,10 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CGL057  *Create     Date 02Nov21              *
+      *  Last Amend No. MD059853            Date 30Apr22              *
+      *  Prev Amend No. CGL057  *Create     Date 02Nov21              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059853 - Validation issues on Income and Expense Mapping   *
+      *             Maintenance                                       *
       *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
       *           Earnings Accounts.                                  *
       *                                                               *

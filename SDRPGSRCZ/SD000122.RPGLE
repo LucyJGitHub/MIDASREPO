@@ -16,10 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CGL057  *CREATE     Date 02Nov21              *
+      *  Last Amend No. MD059855            Date 02May22              *
+      *  Prev Amend No. CGL057  *CREATE     Date 02Nov21              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059855 - Validation Issues on Spot Revaluation Mapping     *
+      *             Table.                                            *
+      *           - Added validation to BLSLAC and BLSPTA against     *
+      *             BSRVL.                                            *
       *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
       *           Earnings Accounts.                                  *
       *                                                               *

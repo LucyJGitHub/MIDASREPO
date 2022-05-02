@@ -298,6 +298,7 @@
       *
      C     *IN03         CASEQ     '1'           SREnd
      C     *IN05         CASEQ     '1'           SRReload
+     C     *IN09         CASEQ     '1'           SRMode                                     MD059853
      C     *IN27         CASEQ     '1'           SRLoad
      C                   CAS                     SRProcess
      C                   ENDCS
@@ -494,8 +495,7 @@
       ** "No Data to Display".
       *
      C                   IF        *IN82   and   RRN = 0
-     C*****              EVAL      PZMsgID   =   'SDX0020'                                     jhas
-     C                   EVAL      PZMsgID   =   'USR7590'                                     jhas
+     C                   EVAL      PZMsgID   =   'SDX0020'
      C                   EXSR      SRZasnms
      C                   ENDIF
       *
@@ -1142,6 +1142,16 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     MD059853
+      ** Profit and Loss account should not be the same with                                MD059853
+      ** Income & Expense Account (From)                                                    MD059853
+      *                                                                                     MD059853
+     C     #AINC1        IFEQ      #APLA1                                                   MD059853
+     C                   EVAL      *IN35 = *ON                                              MD059853
+     C                   EVAL      *IN83 = *ON                                              MD059853
+     C                   EVAL      PZMsgID = 'SDX0075'                                      MD059853
+     C                   EXSR      SRZasnms                                                 MD059853
+     C                   ENDIF                                                              MD059853
       *
       ** Validate Spot Revaluation Account
       ** =================================

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 257860             Date 22Apr22               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  257860 - Overflow Checking                                   *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. (Child: AR674227)                       *
@@ -222,6 +224,7 @@
      C                   IF        WkDtlFlag = 'N'
      C                   OPEN      LE0465P1
      C                   EVAL      BRCA = *BLANKS
+     C                   EVAL      WkToPrint = 'P1'                                           257860
      C                   EXSR      SrWrtHeader
      C                   EVAL      *IN80 = *ON
      C                   EVAL      WkPrintFlag = 'Y'
@@ -229,10 +232,12 @@
  
       ** Footer 1
  
+     C                   EVAL      WkToPrint = 'P1'                                           257860
      C                   EXSR      SrWp1End
  
       ** Footer 1
  
+     C                   EVAL      WkToPrint = 'P2'                                           257860
      C                   EXSR      SrWp2End
  
       ** Program wrap up
@@ -534,7 +539,8 @@
      C                   IF        WkPrintFlag2 = 'Y'
  
      C     OFLLN2        SUB       PRTLN2        WDIFLN1
-     C                   IF        WDIFLN1 <= 4
+     C**********         IF        WDIFLN1 <= 4                                               257860
+     C                   IF        WDIFLN1 <= 9                                               257860
      C                   EXSR      SrWrtHeader
      C                   ENDIF
  
@@ -559,6 +565,7 @@
      C     SrDelDrop     BEGSR
  
      C** TEDDY           DELETE    LETREFD0
+     C                   DELETE    LETREFD0                                                   257860
  
      C                   ENDSR
       *****************************************************************

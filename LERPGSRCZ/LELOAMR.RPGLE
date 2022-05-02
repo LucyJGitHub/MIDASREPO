@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057739           Date 28Apr22               *
+      *  Prev Amend No. 259120             Date 28Apr22               *
+      *                 MD026384           Date 16Sep14               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR878735           Date 13Dec11               *
@@ -53,6 +56,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers.                                    *
+      *  259120 - Adjust buffer to include DDXRLT, DDXRLS, DDXRLC     *
+      *         - Applied for MD-28282.                               *
+      *  MD026384 - Added generation by assignment processing.        *
+      *             Recompiled due to changes in LELOA2PD.            *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -273,6 +282,12 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSF011
       **--------------------------------------------------------------------------------------------
 
+     DFiller           DS             9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
 
@@ -381,6 +396,7 @@
      C                                  Loa2ScnFmt +                                         CSF011A
      C                                  S_REC + S_PAY +                                       CSF011
      C                                  InfData + ExtData                                     247171
+     C                                  + Filler                                              259120
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************

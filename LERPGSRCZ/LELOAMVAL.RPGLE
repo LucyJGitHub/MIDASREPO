@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058307           Date 06Aug21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD057739           Date 28Apr22               *
+      *  Prev Amend No. MD026384           Date 28Apr22               *
+      *                 MD058307           Date 06Aug21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD054876           Date 26Aug20               *
@@ -104,6 +106,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers.                                    *
+      *  MD026384 - Added generation by assignment processing.        *
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to use larger workfield for FA_FAMT and     *
       *             CAF_FAMT.                                         *
@@ -638,6 +643,11 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
+     DLOAMBuffer       DS             9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
       ** +--------------------------------------+
       ** | End of D-specs                       |
       ** | ==============                       |
@@ -5501,7 +5511,14 @@
      C                   MOVE      'M'           LAMNSG
       *
      C**********         MOVE      'N'           LAGASS                                       CLE106
+      *                                                                                     MD026384
+      ** GASS should be 'A' if generated from assignment else 'P'                           MD026384
+      *                                                                                     MD026384
+     C     DDGASS        IFEQ      'A'                                                      MD026384
+     C                   MOVE      DDGASS        LAGASS                                     MD026384
+     C                   ELSE                                                               MD026384
      C                   MOVE      'P'           LAGASS                                       CLE106
+     C                   ENDIF                                                              MD026384
       *
      C     DDATYP        IFEQ      'BC'
      C                   Z-ADD     BRTE          LABRTE
@@ -6069,6 +6086,10 @@
 
       ** Transaction information (DS) from source system  (screen format)
      C                   PARM                    LoamScnFmt
+      *                                                                                     MD026384
+      ** Transaction information 2                                                          MD026384
+      *                                                                                     MD026384
+     C                   PARM                    LOAMBuffer                                 MD057739
 
       ** Current loan amendment in file format from caller
      C                   PARM                    CurFilLoam

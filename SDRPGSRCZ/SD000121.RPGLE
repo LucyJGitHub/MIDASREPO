@@ -935,7 +935,8 @@
      C                   IF        #AINC2    =  *BLANKS
       *
      C                   CALL      'AOACODR0'
-     C                   PARM      '*MSG   '     @RTCD             7
+     C**********         PARM      '*MSG   '     @RTCD             7                        MD059853
+     C                   PARM      '*BLANKS'     @RTCD             7                        MD059853
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      #AINC1        @ACCD            10
      C     SDACOD        PARM      SDACOD        DSFDY
@@ -945,6 +946,17 @@
      C                   EVAL      *IN83    =  *ON
      C                   EVAL      PZMsgID  =  'SDX0044'
      C                   EXSR      SRZasnms
+     C                   ELSE                                                               MD059853
+      *                                                                                     MD059853
+      ** Income and Expense Account from cannot be a Title Only Account                     MD059853
+      *                                                                                     MD059853
+     C     A5TOIN        IFEQ      'Y'                                                      MD059853
+     C                   EVAL      *IN33 = *ON                                              MD059853
+     C                   EVAL      *IN83 = *ON                                              MD059853
+     C                   EVAL      PZMsgID = 'SDX0073'                                      MD059853
+     C                   EXSR      SRZasnms                                                 MD059853
+     C                   ENDIF                                                              MD059853
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -977,6 +989,33 @@
       *
      C                   EVAL      #AINC2 = WKACCD
      C                   ENDIF
+      *                                                                                     MD059853
+      ** Validate 'To' Income and Expense Account if the entered value is not equal to '?'  MD059853
+      *                                                                                     MD059853
+     C                   ELSE                                                               MD059853
+     C                   CALL      'AOACODR0'                                               MD059853
+     C                   PARM      '*BLANKS'     @RTCD             7                        MD059853
+     C                   PARM      '*KEY   '     @OPTN             7                        MD059853
+     C                   PARM      #AINC2        @ACCD            10                        MD059853
+     C     SDACOD        PARM      SDACOD        DSFDY                                      MD059853
+      *                                                                                     MD059853
+     C     @RTCD         IFNE      *BLANK                                                   MD059853
+     C                   EVAL      *IN34    =  *ON                                          MD059853
+     C                   EVAL      *IN83    =  *ON                                          MD059853
+     C                   EVAL      PZMsgID  =  'SDX0026'                                    MD059853
+     C                   EXSR      SRZasnms                                                 MD059853
+     C                   ELSE                                                               MD059853
+      *                                                                                     MD059853
+      ** Income and Expense Account from cannot be a Title Only Account                     MD059853
+      *                                                                                     MD059853
+     C     A5TOIN        IFEQ      'Y'                                                      MD059853
+     C                   EVAL      *IN34 = *ON                                              MD059853
+     C                   EVAL      *IN83 = *ON                                              MD059853
+     C                   EVAL      PZMsgID = 'SDX0074'                                      MD059853
+     C                   EXSR      SRZasnms                                                 MD059853
+     C                   ENDIF                                                              MD059853
+     C                   ENDIF                                                              MD059853
+
      C                   ENDIF
       *
       ** If entered, the 'To' Income and Expense Account
@@ -1065,7 +1104,8 @@
      C                   ELSE
       *
      C                   CALL      'AOACODR0'
-     C                   PARM      '*MSG   '     @RTCD             7
+     C**********         PARM      '*MSG   '     @RTCD             7                        MD059853
+     C                   PARM      '*BLANKS'     @RTCD             7                        MD059853
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      #APLA1        @ACCD            10
      C     SDACOD        PARM      SDACOD        DSFDY
@@ -1142,7 +1182,8 @@
      C                   ELSE
       *
      C                   CALL      'AOACODR0'
-     C                   PARM      '*MSG   '     @RTCD             7
+     C**********         PARM      '*MSG   '     @RTCD             7                        MD059853
+     C                   PARM      '*BLANKS'     @RTCD             7                        MD059853
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      #ASRVL        @ACCD            10
      C     SDACOD        PARM      SDACOD        DSFDY
@@ -1173,6 +1214,16 @@
      C                   EVAL      PZMsgID = 'SDX0043'
      C                   EXSR      SRZasnms
      C                   ENDIF
+      *                                                                                     MD059853
+      ** Spot Revaluation account cannot be equal to the                                    MD059853
+      ** system level Spot Revaluation Loss account code from the Trading ICD.              MD059853
+      *                                                                                     MD059853
+     C     #ASRVL        IFEQ      BLSLAC                                                   MD059853
+     C                   EVAL      *IN36 = *ON                                              MD059853
+     C                   EVAL      *IN83 = *ON                                              MD059853
+     C                   EVAL      PZMsgID = 'SDX0043'                                      MD059853
+     C                   EXSR      SRZasnms                                                 MD059853
+     C                   ENDIF                                                              MD059853
       *
      C                   ENDIF
      C                   ENDIF

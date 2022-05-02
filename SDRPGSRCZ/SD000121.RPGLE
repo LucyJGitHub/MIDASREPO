@@ -1142,16 +1142,6 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-      *                                                                                     MD059853
-      ** Profit and Loss account should not be the same with                                MD059853
-      ** Income & Expense Account (From)                                                    MD059853
-      *                                                                                     MD059853
-     C     #AINC1        IFEQ      #APLA1                                                   MD059853
-     C                   EVAL      *IN35 = *ON                                              MD059853
-     C                   EVAL      *IN83 = *ON                                              MD059853
-     C                   EVAL      PZMsgID = 'SDX0075'                                      MD059853
-     C                   EXSR      SRZasnms                                                 MD059853
-     C                   ENDIF                                                              MD059853
       *
       ** Validate Spot Revaluation Account
       ** =================================

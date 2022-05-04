@@ -975,13 +975,19 @@
       *
      C     #BSRVL        IFEQ      BLSRAC
      C     #BSRVL        OREQ      BLSLAC                                                   MD059855
-     C     #BSRVL        OREQ      BLSPTA                                                   MD059855
      C                   EVAL      *IN33 = *ON
      C                   EVAL      *IN83 = *ON
      C                   EVAL      PZMsgID = 'SDX0043'
      C                   EXSR      SRZasnms
      C                   ENDIF
-      *
+      *                                                                                     MD059855
+     C     #BSRVL        IFEQ      BLSPTA                                                   MD059855
+     C                   EVAL      *IN33 = *ON                                              MD059855
+     C                   EVAL      *IN83 = *ON                                              MD059855
+     C                   EVAL      PZMsgID = 'SDX0075'                                      MD059855
+     C                   EXSR      SRZasnms                                                 MD059855
+     C                   ENDIF                                                              MD059855
+      *                                                                                     MD059855
      C                   ENDIF
      C                   ENDIF
       *

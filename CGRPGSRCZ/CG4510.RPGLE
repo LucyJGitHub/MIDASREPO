@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL193             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CCG025             Date 04Apr22               *
+      *  Prev Amend No. CGL193             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
       *                 MD056576           Date 21Sep20               *
       *                 MD055869           Date 03Jun20               *
@@ -102,6 +103,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CCG025 - Tiered and Threshold Interest Details on Statements *
       *  CGL193 - Transaction Type and GL Additional Info in CM GL    *
       *           statements                                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -276,6 +278,12 @@
       *                                                                                     BUG26680
      FGLJEHXL2  IF   E           K DISK                                                     BUG26680
      FGLACBTL0  IF   E           K DISK                                                       239823
+      ** Midas RET.HIST.-CREDIT RATE CHG RECORDS                                              CCG025
+     FREHRCJ    IF   E           K DISK    INFSR(SRFILE)                                      CCG025
+      *                                                                                       CCG025
+      ** Midas RET.HIST.-DEBIT RATE CHG RECORDS                                               CCG025
+     FREHRDJ    IF   E           K DISK    INFSR(SRFILE)                                      CCG025
+      *                                                                                       CCG025
      F/COPY WNCPYSRC,CG4510F003
      F/SPACE 5
      F/COPY WNCPYSRC,CG4510F005
@@ -304,8 +312,10 @@
      D**********          ##GRP   1  97 10   ##RDEA 22                               BUG24460 CRE073
      D*##GRP****       S             10    DIM(106) CTDATA PERRCD(1)                   CRE073 CGL193
      D*##RDEA***       S             22    DIM(106) ALT(##GRP)                         CRE073 CGL193
-     D ##GRP           S             10    DIM(114) CTDATA PERRCD(1)                          CGL193
-     D ##RDEA          S             22    DIM(114) ALT(##GRP)                                CGL193
+     D*##GRP****       S             10    DIM(114) CTDATA PERRCD(1)                   CGL193 CCG025
+     D*##RDEA***       S             22    DIM(114) ALT(##GRP)                         CGL193 CCG025
+     D ##GRP           S             10    DIM(170) CTDATA PERRCD(1)                          CCG025
+     D ##RDEA          S             22    DIM(170) ALT(##GRP)                                CCG025
      D/COPY WNCPYSRC,CG4510E002
      D*
      D**  Array of Currencies accessed by program
@@ -463,7 +473,8 @@
      D  ##BANO                 1      3                                         N/Used
      D  ##BITM                 4      6                                         N/Used
       *
-     D ##SRDT          DS                  OCCURS(20)
+     D*##SRDT***       DS                  OCCURS(20)                                         CCG025
+     D ##SRDT          DS                  OCCURS(25)                                         CCG025
       **  DS to store subroutine specific data.
       **  - Previous Bind
       **  - This Bind
@@ -482,7 +493,44 @@
      D C#NORM          C                   CONST('NORMAL    ')
      D C#TURN          C                   CONST('TURNOVER  ')
      D/COPY WNCPYSRC,CG4510I004
-      *
+                                                                                              CCG025
+     D                 DS                                                                     CCG025
+     D  RAT2                   1     36                                                       CCG025
+     D  RAT21                  1      6P 7                                                    CCG025
+     D  RAT22                  7     12P 7                                                    CCG025
+     D  RAT23                 13     18P 7                                                    CCG025
+     D  RAT24                 19     24P 7                                                    CCG025
+     D  RAT25                 25     30P 7                                                    CCG025
+     D  RAT26                 31     36P 7                                                    CCG025
+                                                                                              CCG025
+     D                 DS                                                                     CCG025
+     D  RAT3                   1     36                                                       CCG025
+     D  RAT31                  1      6P 7                                                    CCG025
+     D  RAT32                  7     12P 7                                                    CCG025
+     D  RAT33                 13     18P 7                                                    CCG025
+     D  RAT34                 19     24P 7                                                    CCG025
+     D  RAT35                 25     30P 7                                                    CCG025
+     D  RAT36                 31     36P 7                                                    CCG025
+                                                                                              CCG025
+     D                 DS                                                                     CCG025
+     D  BAL2                   1     48                                                       CCG025
+     D  BAL21                  1      8P 0                                                    CCG025
+     D  BAL22                  9     16P 0                                                    CCG025
+     D  BAL23                 17     24P 0                                                    CCG025
+     D  BAL24                 25     32P 0                                                    CCG025
+     D  BAL25                 33     40P 0                                                    CCG025
+     D  BAL26                 41     48P 0                                                    CCG025
+                                                                                              CCG025
+     D                 DS                                                                     CCG025
+     D  BAL3                   1     48                                                       CCG025
+     D  BAL31                  1      8P 0                                                    CCG025
+     D  BAL32                  9     16P 0                                                    CCG025
+     D  BAL33                 17     24P 0                                                    CCG025
+     D  BAL34                 25     32P 0                                                    CCG025
+     D  BAL35                 33     40P 0                                                    CCG025
+     D  BAL36                 41     48P 0                                                    CCG025
+                                                                                              CCG025
+     D TESTC           S             11                                                       CCG025
      D CPYR            DS
       **  Data Structure for Compilation - Copyright Insertion
      D  ##CPY                  1     80
@@ -776,6 +824,25 @@
      C                   Z-ADD     ##TBIN        S#TBIN
      C/COPY WNCPYSRC,CG4510C034
       *
+     C     CCG025        IFEQ      'Y'                                                        CCG025
+                                                                                              CCG025
+      **  Tiered and Threshold Credit Rate Change (complex)                                   CCG025
+                                                                                              CCG025
+     C                   EXSR      G#TTC1                                                     CCG025
+     C     1             OCCUR     ##SRDT                                                     CCG025
+     C                   MOVEL     ##SPAT        S#PATH                                       CCG025
+     C                   Z-ADD     ##PBIN        S#PBIN                                       CCG025
+     C                   Z-ADD     ##TBIN        S#TBIN                                       CCG025
+                                                                                              CCG025
+      **  Tiered and Threshold Debit Rate Change (complex)                                    CCG025
+                                                                                              CCG025
+     C                   EXSR      G#TTD1                                                     CCG025
+     C     1             OCCUR     ##SRDT                                                     CCG025
+     C                   MOVEL     ##SPAT        S#PATH                                       CCG025
+     C                   Z-ADD     ##PBIN        S#PBIN                                       CCG025
+     C                   Z-ADD     ##TBIN        S#TBIN                                       CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
       **  Footer (simple)
      C                   EXSR      G#SFTR
      C     1             OCCUR     ##SRDT
@@ -1991,6 +2058,502 @@
       *
      C                   ENDSR
       *****************************************************************
+     C/SPACE 5                                                                                CCG025
+      *****************************************************************                       CCG025
+      * Subroutine  :  G#TTC1                                         *                       CCG025
+      * Function    :  Credit Rate change group set 1 (complex)       *                       CCG025
+      *                                                               *                       CCG025
+      * Called by   :  G#STMT - Top level group set                   *                       CCG025
+      * Calls       :  G#TTC2 - Credit Rate Change Grp Set 2 (simple) *                       CCG025
+      *****************************************************************                       CCG025
+     C     G#TTC1        BEGSR                                                                CCG025
+      *                                                                                       CCG025
+      **  Set up subroutine stack name                                                        CCG025
+     C                   ADD       1             Q                                            CCG025
+     C                   MOVEL     'g_TTC1'      @STK(Q)                                      CCG025
+      *                                                                                       CCG025
+      **  Retrieve subroutine specific data.                                                  CCG025
+     C     21            OCCUR     ##SRDT                                                     CCG025
+      *                                                                                       CCG025
+      **  Set up Path.                                                                        CCG025
+     C                   MOVEL     '\g_TTC1'     ##PNAM                                       CCG025
+     C     S#PATH        CAT       ##PNAM:0      S#PATH                                       CCG025
+     C                   EXSR      PSHGRS                                                     CCG025
+     C                   MOVEL     S#PATH        ##SPAT                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Binds from passed in values.                                                 CCG025
+     C                   Z-ADD     S#PBIN        ##PBIN                                       CCG025
+     C                   Z-ADD     S#TBIN        ##TBIN                                       CCG025
+      *                                                                                       CCG025
+      *................................................................                       CCG025
+      *                                                                                       CCG025
+      **  Initialise the First/Last/Subsequent Flag.                                          CCG025
+     C                   MOVE      'FR'          ##FSLI                                       CCG025
+      *                                                                                       CCG025
+      **  Position the rate change file after the first posting for this                      CCG025
+      **  Account, starting on the Last Statement Date, and find the                          CCG025
+      **  previous one with matching key.                                                     CCG025
+      **  (NOTE: not Account Postings)                                                        CCG025
+     C                   Z-ADD     SDLSTD        ##PSTD                                       CCG025
+     C                   MOVEL     'Y'           FIRST             1                          CCG025
+     C     ##ACDK        SETGT     REHRCJ                                                     CCG025
+     C     ##ACKY        READPE    REHRCJ                                 55                  CCG025
+      *                                                                                       CCG025
+      **  For each rate change ...                                                            CCG025
+     C     *IN55         DOWEQ     *OFF                                                       CCG025
+      *                                                                                       CCG025
+      **  If the rate change date is between the Last Statement Date and                      CCG025
+      **  the Current Statement Date and is a Credit Change ...                               CCG025
+      *                                                                                       CCG025
+      **  Or if the Posting Date is on the Last Statement Date and the                        CCG025
+      **  Last Statement Date matches the Date Account Opened and the                         CCG025
+      **  Last Page Number is zero (ie Posting not processed) and is                          CCG025
+      **  a Credit Change ...                                                                 CCG025
+      *                                                                                       CCG025
+      **  ... process the posting further.                                                    CCG025
+     C     PSTD          IFGT      SDLSTD                                                     CCG025
+     C     PSTD          ANDLE     BJRDNB                                                     CCG025
+      *                                                                                       CCG025
+     C     PSTD          OREQ      SDLSTD                                                     CCG025
+     C     DACO          ANDEQ     SDLSTD                                                     CCG025
+     C     SDLSTP        ANDEQ     *ZEROS                                                     CCG025
+      *                                                                                       CCG025
+      **  or if rate change is the first one to be  printed                                   CCG025
+     C     FIRST         OREQ      'Y'                                                        CCG025
+      *                                                                                       CCG025
+     C     FIRST         IFEQ      'Y'                                                        CCG025
+     C                   MOVEL     'N'           FIRST                                        CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
+      **  If the Credit Interest Calculation Type is '01' or '02'                             CCG025
+      *                                                                                       CCG025
+      **  ... Process Posting Group Set 3 (simple)                                            CCG025
+     C     INTP          IFEQ      1                                                          CCG025
+     C     INTP          OREQ      2                                                          CCG025
+      *                                                                                       CCG025
+      **  If data has been formatted but not written, process it.                             CCG025
+      **  (Note that this will not execute on first pass through SR and                       CCG025
+      **   that data relates to previous record to be extracted read.)                        CCG025
+     C     ##RFMT        IFEQ      'Y'                                                        CCG025
+      *                                                                                       CCG025
+      **  Output the Data.                                                                    CCG025
+     C                   EXSR      SRODTA                                                     CCG025
+      *                                                                                       CCG025
+      **  Set the First/Last/Subsequent Flag for Subsequent runs.                             CCG025
+     C                   MOVE      'SU'          ##FSLI                                       CCG025
+      *                                                                                       CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
+      **  Increment Bind Levels.                                                              CCG025
+     C                   Z-ADD     ##TBIN        S#PBIN                                       CCG025
+     C                   ADD       1             ##BNDC                                       CCG025
+     C                   Z-ADD     ##BNDC        S#TBIN                                       CCG025
+      *                                                                                       CCG025
+     C                   EXSR      G#TTC2                                                     CCG025
+      *                                                                                       CCG025
+     C     21            OCCUR     ##SRDT                                                     CCG025
+     C                   MOVEL     ##SPAT        S#PATH                                       CCG025
+     C                   Z-ADD     ##PBIN        S#PBIN                                       CCG025
+     C                   Z-ADD     ##TBIN        S#TBIN                                       CCG025
+      *                                                                                       CCG025
+     C                   ENDIF                                                                CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
+      **  Read next posting for account                                                       CCG025
+     C     ##ACKY        READE     REHRCJ                                 55                  CCG025
+      *                                                                                       CCG025
+     C                   ENDDO                                                                CCG025
+      *                                                                                       CCG025
+      **  If data has been formatted but not written, process it.                             CCG025
+      **  (Note that data relates to previous read.)                                          CCG025
+     C     ##RFMT        IFEQ      'Y'                                                        CCG025
+      *                                                                                       CCG025
+      **  The last record has been processed - set the First/Last/Subs                        CCG025
+      **  Flag accordingly.                                                                   CCG025
+     C                   MOVE      'LA'          DEFSLI                                       CCG025
+      *                                                                                       CCG025
+      **  Output the Data.                                                                    CCG025
+     C                   EXSR      SRODTA                                                     CCG025
+      *                                                                                       CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
+      *................................................................                       CCG025
+      *                                                                                       CCG025
+     C     EXTTC1        TAG                                                                  CCG025
+      *                                                                                       CCG025
+      **  Unwind subroutine stack name                                                        CCG025
+     C                   EXSR      POPGRS                                                     CCG025
+     C                   MOVEA     *BLANKS       @STK(Q)                                      CCG025
+     C                   SUB       1             Q                                            CCG025
+      *                                                                                       CCG025
+     C                   ENDSR                                                                CCG025
+      *****************************************************************                       CCG025
+     C/SPACE 5                                                                                CCG025
+      *****************************************************************                       CCG025
+      * Subroutine  :  G#TTC2                                         *                       CCG025
+      * Function    :  Credit Rate change group set 2 (simple)        *                       CCG025
+      *                                                               *                       CCG025
+      * Called by   :  G#TTC1 - Credit Rate change group set 1        *                       CCG025
+      * Calls       :  SRRRDE - Retrieve RDE Information              *                       CCG025
+      *                SRADTA - Format Extract Data                   *                       CCG025
+      *                SRODTA - Output Extract Data                   *                       CCG025
+      *                SRERR  - Database Error                        *                       CCG025
+      *****************************************************************                       CCG025
+     C     G#TTC2        BEGSR                                                                CCG025
+      *                                                                                       CCG025
+      **  Set up subroutine stack name                                                        CCG025
+     C                   ADD       1             Q                                            CCG025
+     C                   MOVEL     'g_TTC2'      @STK(Q)                                      CCG025
+      *                                                                                       CCG025
+      **  Retrieve subroutine specific data.                                                  CCG025
+     C     23            OCCUR     ##SRDT                                                     CCG025
+      *                                                                                       CCG025
+      **  Set up Path.                                                                        CCG025
+     C                   MOVEL     '\g_TTC2'     ##PNAM                                       CCG025
+     C     S#PATH        CAT       ##PNAM:0      S#PATH                                       CCG025
+     C                   EXSR      PSHGRS                                                     CCG025
+     C                   MOVEL     S#PATH        ##SPAT                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Binds from passed in values.                                                 CCG025
+     C                   Z-ADD     S#PBIN        ##PBIN                                       CCG025
+     C                   Z-ADD     S#TBIN        ##TBIN                                       CCG025
+      *                                                                                       CCG025
+      *................................................................                       CCG025
+      *                                                                                       CCG025
+      **  Retrieve RDE information for RDE's in Group Set                                     CCG025
+     C                   MOVEL     'g_TTC2'      ##GRPS                                       CCG025
+     C                   Z-ADD     1             ##RDEN                                       CCG025
+     C                   EXSR      SRRRDE                                                     CCG025
+      *                                                                                       CCG025
+     C                   MOVE      ##CCY         CCYDS                                        CCG025
+     C                   EXSR      SRDCDT                                                     CCG025
+      **  Set up Value Date                                                                   CCG025
+     C                   MOVEL     VALD          ##D(1)                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Interest Type                                                                CCG025
+     C                   MOVEL     INTP          ##D(2)                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Interest Sub Type                                                            CCG025
+     C                   MOVEL     INST          ##D(3)                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Rates                                                                        CCG025
+     C                   MOVEL     RAT21         ##D(4)                                       CCG025
+     C                   MOVEL     RAT22         ##D(5)                                       CCG025
+     C                   MOVEL     RAT23         ##D(6)                                       CCG025
+     C                   MOVEL     RAT24         ##D(7)                                       CCG025
+     C                   MOVEL     RAT25         ##D(8)                                       CCG025
+     C                   MOVEL     RAT26         ##D(9)                                       CCG025
+     C                   If        RAT3 =   *BLANKS                                           CCG025
+     C                   else                                                                 CCG025
+     C                   MOVEL     RAT31         ##D(10)                                      CCG025
+     C                   MOVEL     RAT32         ##D(11)                                      CCG025
+     C                   MOVEL     RAT33         ##D(12)                                      CCG025
+     C                   MOVEL     RAT34         ##D(13)                                      CCG025
+     C                   MOVEL     RAT35         ##D(14)                                      CCG025
+     C                   Endif                                                                CCG025
+      **  Set up Balances                                                                     CCG025
+     C                   MOVEL     BAL21         ##D(16)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(16)                                      CCG025
+     C                   MOVEL     BAL22         ##D(17)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(17)                                      CCG025
+     C                   MOVEL     BAL23         ##D(18)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(18)                                      CCG025
+     C                   MOVEL     BAL24         ##D(19)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(19)                                      CCG025
+     C                   MOVEL     BAL25         ##D(20)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(20)                                      CCG025
+      * Pull out data                                                                         CCG025
+     C                   EXSR      SRADTA                                                     CCG025
+      *                                                                                       CCG025
+      **  Retrieve RDE information for RDEs in group set                                      CCG025
+      *                                                                                       CCG025
+     C                   MOVEL     @STK(Q)       ##GRPS                                       CCG025
+     C                   Z-ADD     21            ##RDEN                                       CCG025
+     C                   EXSR      SRRRDE                                                     CCG025
+      *                                                                                       CCG025
+     C                   MOVEL     BAL26         ##D(1)                                       CCG025
+     C                   If        BAL3 =   *BLANKS                                           CCG025
+     C                   else                                                                 CCG025
+     C                   MOVE      A6NBDP        ##D(1)                                       CCG025
+     C                   MOVEL     BAL31         ##D(2)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(2)                                       CCG025
+     C                   MOVEL     BAL32         ##D(3)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(3)                                       CCG025
+     C                   MOVEL     BAL33         ##D(4)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(4)                                       CCG025
+     C                   MOVEL     BAL34         ##D(5)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(5)                                       CCG025
+     C                   MOVEL     BAL35         ##D(6)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(6)                                       CCG025
+     C                   endif                                                                CCG025
+      *                                                                                       CCG025
+      **  Set up Intial Threshold                                                             CCG025
+     C                   MOVEL     INTH          ##D(8)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(8)                                       CCG025
+      *                                                                                       CCG025
+      **  Accumulate RDE's and associated data and output to                                  CCG025
+      **  PF/CGUDTAPD.                                                                        CCG025
+     C                   EXSR      SRADTA                                                     CCG025
+      *                                                                                       CCG025
+      *................................................................                       CCG025
+      *                                                                                       CCG025
+     C     EXTTC2        TAG                                                                  CCG025
+      *                                                                                       CCG025
+      **  Unwind subroutine stack name                                                        CCG025
+     C                   EXSR      POPGRS                                                     CCG025
+     C                   MOVEA     *BLANKS       @STK(Q)                                      CCG025
+     C                   SUB       1             Q                                            CCG025
+      *                                                                                       CCG025
+     C                   ENDSR                                                                CCG025
+      *****************************************************************                       CCG025
+     C/SPACE 5                                                                                CCG025
+      *****************************************************************                       CCG025
+      * Subroutine  :  G#TTD1                                         *                       CCG025
+      * Function    :  Debit Rate change group set 1 (complex)        *                       CCG025
+      *                                                               *                       CCG025
+      * Called by   :  G#STMT - Top level group set                   *                       CCG025
+      * Calls       :  G#TTD2 - Debit Rate Change Grp Set 2 (simple)  *                       CCG025
+      *****************************************************************                       CCG025
+     C     G#TTD1        BEGSR                                                                CCG025
+      *                                                                                       CCG025
+      **  Set up subroutine stack name                                                        CCG025
+     C                   ADD       1             Q                                            CCG025
+     C                   MOVEL     'g_TTD1'      @STK(Q)                                      CCG025
+      *                                                                                       CCG025
+      **  Retrieve subroutine specific data.                                                  CCG025
+     C     22            OCCUR     ##SRDT                                                     CCG025
+      *                                                                                       CCG025
+      **  Set up Path.                                                                        CCG025
+     C                   MOVEL     '\g_TTD1'     ##PNAM                                       CCG025
+     C     S#PATH        CAT       ##PNAM:0      S#PATH                                       CCG025
+     C                   EXSR      PSHGRS                                                     CCG025
+     C                   MOVEL     S#PATH        ##SPAT                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Binds from passed in values.                                                 CCG025
+     C                   Z-ADD     S#PBIN        ##PBIN                                       CCG025
+     C                   Z-ADD     S#TBIN        ##TBIN                                       CCG025
+      *                                                                                       CCG025
+      *................................................................                       CCG025
+      *                                                                                       CCG025
+      **  Initialise the First/Last/Subsequent Flag.                                          CCG025
+     C                   MOVE      'FR'          ##FSLI                                       CCG025
+      *                                                                                       CCG025
+      **  Position the rate change file before the first posting for this                     CCG025
+      **  Account, starting on the Last Statement Date, and find the                          CCG025
+      **  first record with matching key.                                                     CCG025
+      **  (NOTE: not Account Postings)                                                        CCG025
+     C                   Z-ADD     SDLSTD        ##PSTD                                       CCG025
+     C                   MOVEL     'Y'           FIRST                                        CCG025
+     C     ##ACDK        SETGT     REHRDJ                                                     CCG025
+     C     ##ACKY        READE     REHRDJ                                 55                  CCG025
+      *                                                                                       CCG025
+      **  For each rate change ...                                                            CCG025
+     C     *IN55         DOWEQ     *OFF                                                       CCG025
+      *                                                                                       CCG025
+      **  If the rate change date is between the Last Statement Date and                      CCG025
+      **  the Current Statement Date and is a Credit Change ...                               CCG025
+      *                                                                                       CCG025
+      **  Or if the Posting Date is on the Last Statement Date and the                        CCG025
+      **  Last Statement Date matches the Date Account Opened and the                         CCG025
+      **  Last Page Number is zero (ie Posting not processed) and is                          CCG025
+      **  a Credit Change ...                                                                 CCG025
+      *                                                                                       CCG025
+      **  ... process the posting further.                                                    CCG025
+     C     PSTD          IFGT      SDLSTD                                                     CCG025
+     C     PSTD          ANDLE     BJRDNB                                                     CCG025
+      *                                                                                       CCG025
+     C     PSTD          OREQ      SDLSTD                                                     CCG025
+     C     DACO          ANDEQ     SDLSTD                                                     CCG025
+     C     SDLSTP        ANDEQ     *ZEROS                                                     CCG025
+      *                                                                                       CCG025
+      **  or if rate change is the first one to be  printed                                   CCG025
+     C     FIRST         OREQ      'Y'                                                        CCG025
+      *                                                                                       CCG025
+     C     FIRST         IFEQ      'Y'                                                        CCG025
+     C                   MOVEL     'N'           FIRST                                        CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
+      **  If the Debit Interest Calculation Type is '01' or '02'                              CCG025
+      *                                                                                       CCG025
+      **  ... Process Posting Group Set 3 (simple)                                            CCG025
+     C     INTP          IFEQ      1                                                          CCG025
+     C     INTP          OREQ      2                                                          CCG025
+      *                                                                                       CCG025
+      **  If data has been formatted but not written, process it.                             CCG025
+      **  (Note that this will not execute on first pass through SR and                       CCG025
+      **   that data relates to previous record to be extracted read.)                        CCG025
+     C     ##RFMT        IFEQ      'Y'                                                        CCG025
+      *                                                                                       CCG025
+      **  Output the Data.                                                                    CCG025
+     C                   EXSR      SRODTA                                                     CCG025
+      *                                                                                       CCG025
+      **  Set the First/Last/Subsequent Flag for Subsequent runs.                             CCG025
+     C                   MOVE      'SU'          ##FSLI                                       CCG025
+      *                                                                                       CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
+      **  Increment Bind Levels.                                                              CCG025
+     C                   Z-ADD     ##TBIN        S#PBIN                                       CCG025
+     C                   ADD       1             ##BNDC                                       CCG025
+     C                   Z-ADD     ##BNDC        S#TBIN                                       CCG025
+      *                                                                                       CCG025
+     C                   EXSR      G#TTD2                                                     CCG025
+      *                                                                                       CCG025
+     C     22            OCCUR     ##SRDT                                                     CCG025
+     C                   MOVEL     ##SPAT        S#PATH                                       CCG025
+     C                   Z-ADD     ##PBIN        S#PBIN                                       CCG025
+     C                   Z-ADD     ##TBIN        S#TBIN                                       CCG025
+      *                                                                                       CCG025
+     C                   ENDIF                                                                CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
+      **  Read next rate change for that account                                              CCG025
+     C     ##ACKY        READE     REHRDJ                                 55                  CCG025
+      *                                                                                       CCG025
+     C                   ENDDO                                                                CCG025
+      *                                                                                       CCG025
+      **  If data has been formatted but not written, process it.                             CCG025
+      **  (Note that data relates to previous read.)                                          CCG025
+     C     ##RFMT        IFEQ      'Y'                                                        CCG025
+      *                                                                                       CCG025
+      **  The last record has been processed - set the First/Last/Subs                        CCG025
+      **  Flag accordingly.                                                                   CCG025
+     C                   MOVE      'LA'          DEFSLI                                       CCG025
+      *                                                                                       CCG025
+      **  Output the Data.                                                                    CCG025
+     C                   EXSR      SRODTA                                                     CCG025
+      *                                                                                       CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
+      *................................................................                       CCG025
+      *                                                                                       CCG025
+     C     EXTTD1        TAG                                                                  CCG025
+      *                                                                                       CCG025
+      **  Unwind subroutine stack name                                                        CCG025
+     C                   EXSR      POPGRS                                                     CCG025
+     C                   MOVEA     *BLANKS       @STK(Q)                                      CCG025
+     C                   SUB       1             Q                                            CCG025
+      *                                                                                       CCG025
+     C                   ENDSR                                                                CCG025
+      *****************************************************************                       CCG025
+     C/SPACE 5                                                                                CCG025
+      *****************************************************************                       CCG025
+      * Subroutine  :  G#TTD2                                         *                       CCG025
+      * Function    :  Debit Rate change group set 2 (simple)         *                       CCG025
+      *                                                               *                       CCG025
+      * Called by   :  G#TTD1 - Credit Rate change group set 1        *                       CCG025
+      * Calls       :  SRRRDE - Retrieve RDE Information              *                       CCG025
+      *                SRADTA - Format Extract Data                   *                       CCG025
+      *                SRODTA - Output Extract Data                   *                       CCG025
+      *                SRERR  - Database Error                        *                       CCG025
+      *****************************************************************                       CCG025
+     C     G#TTD2        BEGSR                                                                CCG025
+      *                                                                                       CCG025
+      **  Set up subroutine stack name                                                        CCG025
+     C                   ADD       1             Q                                            CCG025
+     C                   MOVEL     'g_TTD2'      @STK(Q)                                      CCG025
+      *                                                                                       CCG025
+      **  Retrieve subroutine specific data.                                                  CCG025
+     C     24            OCCUR     ##SRDT                                                     CCG025
+      *                                                                                       CCG025
+      **  Set up Path.                                                                        CCG025
+     C                   MOVEL     '\g_TTD2'     ##PNAM                                       CCG025
+     C     S#PATH        CAT       ##PNAM:0      S#PATH                                       CCG025
+     C                   EXSR      PSHGRS                                                     CCG025
+     C                   MOVEL     S#PATH        ##SPAT                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Binds from passed in values.                                                 CCG025
+     C                   Z-ADD     S#PBIN        ##PBIN                                       CCG025
+     C                   Z-ADD     S#TBIN        ##TBIN                                       CCG025
+      *                                                                                       CCG025
+      *................................................................                       CCG025
+      *                                                                                       CCG025
+      **  Retrieve RDE information for RDE's in Group Set                                     CCG025
+     C                   MOVEL     'g_TTD2'      ##GRPS                                       CCG025
+     C                   Z-ADD     1             ##RDEN                                       CCG025
+     C                   EXSR      SRRRDE                                                     CCG025
+      *                                                                                       CCG025
+     C                   MOVE      ##CCY         CCYDS                                        CCG025
+     C                   EXSR      SRDCDT                                                     CCG025
+      **  Set up Value Date                                                                   CCG025
+     C                   MOVEL     VALD          ##D(1)                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Interest Type                                                                CCG025
+     C                   MOVEL     INTP          ##D(2)                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Interest Sub Type                                                            CCG025
+     C                   MOVEL     INST          ##D(3)                                       CCG025
+      *                                                                                       CCG025
+      **  Set up Rates                                                                        CCG025
+     C                   MOVEL     RAT21         ##D(4)                                       CCG025
+     C                   MOVEL     RAT22         ##D(5)                                       CCG025
+     C                   MOVEL     RAT23         ##D(6)                                       CCG025
+     C                   MOVEL     RAT24         ##D(7)                                       CCG025
+     C                   MOVEL     RAT25         ##D(8)                                       CCG025
+     C                   MOVEL     RAT26         ##D(9)                                       CCG025
+     C                   If        RAT3 =   *BLANKS                                           CCG025
+     C                   else                                                                 CCG025
+     C                   MOVEL     RAT31         ##D(10)                                      CCG025
+     C                   MOVEL     RAT32         ##D(11)                                      CCG025
+     C                   MOVEL     RAT33         ##D(12)                                      CCG025
+     C                   MOVEL     RAT34         ##D(13)                                      CCG025
+     C                   MOVEL     RAT35         ##D(14)                                      CCG025
+     C                   Endif                                                                CCG025
+      **  Set up Balances                                                                     CCG025
+     C                   MOVEL     BAL21         ##D(16)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(16)                                      CCG025
+     C                   MOVEL     BAL22         ##D(17)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(17)                                      CCG025
+     C                   MOVEL     BAL23         ##D(18)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(18)                                      CCG025
+     C                   MOVEL     BAL24         ##D(19)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(19)                                      CCG025
+     C                   MOVEL     BAL25         ##D(20)                                      CCG025
+     C                   MOVE      A6NBDP        ##D(20)                                      CCG025
+      * Pull out data                                                                         CCG025
+     C                   EXSR      SRADTA                                                     CCG025
+      *                                                                                       CCG025
+      **  Retrieve RDE information for RDEs in group set                                      CCG025
+      *                                                                                       CCG025
+     C                   MOVEL     @STK(Q)       ##GRPS                                       CCG025
+     C                   Z-ADD     21            ##RDEN                                       CCG025
+     C                   EXSR      SRRRDE                                                     CCG025
+      *                                                                                       CCG025
+     C                   MOVEL     BAL26         ##D(1)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(1)                                       CCG025
+     C                   If        BAL3 =   *BLANKS                                           CCG025
+     C                   else                                                                 CCG025
+     C                   MOVEL     BAL31         ##D(2)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(2)                                       CCG025
+     C                   MOVEL     BAL32         ##D(3)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(3)                                       CCG025
+     C                   MOVEL     BAL33         ##D(4)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(4)                                       CCG025
+     C                   MOVEL     BAL34         ##D(5)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(5)                                       CCG025
+     C                   MOVEL     BAL35         ##D(6)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(6)                                       CCG025
+     C                   endif                                                                CCG025
+      *                                                                                       CCG025
+      **  Set up Intial Threshold                                                             CCG025
+     C                   MOVEL     INTH          ##D(8)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(8)                                       CCG025
+      *                                                                                       CCG025
+      **  Accumulate RDE's and associated data and output to                                  CCG025
+      **  PF/CGUDTAPD.                                                                        CCG025
+     C                   EXSR      SRADTA                                                     CCG025
+      *                                                                                       CCG025
+      *................................................................                       CCG025
+      *                                                                                       CCG025
+     C     EXTTD2        TAG                                                                  CCG025
+      *                                                                                       CCG025
+      **  Unwind subroutine stack name                                                        CCG025
+     C                   EXSR      POPGRS                                                     CCG025
+     C                   MOVEA     *BLANKS       @STK(Q)                                      CCG025
+     C                   SUB       1             Q                                            CCG025
+      *                                                                                       CCG025
+     C                   ENDSR                                                                CCG025
+      *****************************************************************                       CCG025
      C/SPACE 5
       *****************************************************************
       * Subroutine  :  G#SCC1                                         *
@@ -3648,7 +4211,7 @@
       *                                                                                       CGL193
      C                   ENDIF                                                                CGL193
      C                   ENDIF                                                                CGL193
-      *                                                                                       CGL193  
+      *                                                                                       CGL193
       **  Accumulate RDE's and associated data and output to                               BUG23277A
       **  PF/CGUDTAPD.                                                                     BUG23277A
      C                   EXSR      SRADTA                                                  BUG23277A
@@ -4652,6 +5215,28 @@
      C                   KFLD                    K#BITM            3 0                        CGL193
      C/COPY WNCPYSRC,CG4510C008
       *
+      ** Access Switchable Features file and check if CCG025 is                               CCG025
+      ** installed                                                                            CCG025
+      *                                                                                       CCG025
+     C                   CALL      'AOSARDR0'                                                 CCG025
+     C                   PARM      *BLANKS       PRTCD                                        CCG025
+     C                   PARM      '*VERIFY'     POPTN                                        CCG025
+     C                   PARM      'CCG025'      PSARD                                        CCG025
+      *                                                                                       CCG025
+     C     PRTCD         IFEQ      *BLANK                                                     CCG025
+     C                   MOVE      'Y'           CCG025            1                          CCG025
+     C                   ELSE                                                                 CCG025
+     C                   MOVE      'N'           CCG025                                       CCG025
+     C     PRTCD         IFNE      '*NRF   '                                                  CCG025
+     C                   MOVEL     'SCSARDPD'    W0FILE                                       CCG025
+     C                   MOVEL     '*CALL'       W0KEY                                        CCG025
+     C                   Z-ADD     37            W0ERNB                                       CCG025
+     C                   MOVEL     'MEM5003'     W0MSGD                                       CCG025
+     C                   MOVEL     'MIDAS  '     W0MSGF                                       CCG025
+     C                   EXSR      SRERR                                                      CCG025
+     C                   ENDIF                                                                CCG025
+     C                   ENDIF                                                                CCG025
+      *                                                                                       CCG025
       **  Copyright
      C                   MOVEA     ##CPY         ##BIS            80
      C/COPY WNCPYSRC,CG4510C006
@@ -4972,6 +5557,62 @@ g_ADDI0003 ADDINFO3                                                             
 g_ADDI0004 ADDINFO4                                                                           CGL193
 g_ADDI0005 ADDINFO5                                                                           CGL193
 g_ADDI0006 ADDINFO6                                                                           CGL193
+g_TTC20001 VALUE DATE Date                                                                    CCG025
+g_TTC20002 INT TYPE                                                                           CCG025
+g_TTC20003 INT STYPE                                                                          CCG025
+g_TTC20004 RATE_1     Rate  L7                                                                CCG025
+g_TTC20005 RATE_2     Rate  L7                                                                CCG025
+g_TTC20006 RATE_3     Rate  L7                                                                CCG025
+g_TTC20007 RATE_4     Rate  L7                                                                CCG025
+g_TTC20008 RATE_5     Rate  L7                                                                CCG025
+g_TTC20009 RATE_6     Rate  L7                                                                CCG025
+g_TTC20010 RATE_7     Rate  L7                                                                CCG025
+g_TTC20011 RATE_8     Rate  L7                                                                CCG025
+g_TTC20012 RATE_9     Rate  L7                                                                CCG025
+g_TTC20013 RATE_10    Rate  L7                                                                CCG025
+g_TTC20014 RATE_11    Rate  L7                                                                CCG025
+g_TTC20015 RATE_12    Rate  L7                                                                CCG025
+g_TTC20016 BALANCE_1  AmountL                                                                 CCG025
+g_TTC20017 BALANCE_2  AmountL                                                                 CCG025
+g_TTC20018 BALANCE_3  AmountL                                                                 CCG025
+g_TTC20019 BALANCE_4  AmountL                                                                 CCG025
+g_TTC20020 BALANCE_5  AmountL                                                                 CCG025
+g_TTC20021 BALANCE_6  AmountL                                                                 CCG025
+g_TTC20022 BALANCE_7  AmountL                                                                 CCG025
+g_TTC20023 BALANCE_8  AmountL                                                                 CCG025
+g_TTC20024 BALANCE_9  AmountL                                                                 CCG025
+g_TTC20025 BALANCE_10 AmountL                                                                 CCG025
+g_TTC20026 BALANCE_11 AmountL                                                                 CCG025
+g_TTC20027 BALANCE_12 AmountL                                                                 CCG025
+g_TTC20028 INITTHRS   AmountL                                                                 CCG025
+g_TTD20001 VALUE DATE Date                                                                    CCG025
+g_TTD20002 INT TYPE                                                                           CCG025
+g_TTD20003 INT STYPE                                                                          CCG025
+g_TTD20004 RATE_1     Rate  L7                                                                CCG025
+g_TTD20005 RATE_2     Rate  L7                                                                CCG025
+g_TTD20006 RATE_3     Rate  L7                                                                CCG025
+g_TTD20007 RATE_4     Rate  L7                                                                CCG025
+g_TTD20008 RATE_5     Rate  L7                                                                CCG025
+g_TTD20009 RATE_6     Rate  L7                                                                CCG025
+g_TTD20010 RATE_7     Rate  L7                                                                CCG025
+g_TTD20011 RATE_8     Rate  L7                                                                CCG025
+g_TTD20012 RATE_9     Rate  L7                                                                CCG025
+g_TTD20013 RATE_10    Rate  L7                                                                CCG025
+g_TTD20014 RATE_11    Rate  L7                                                                CCG025
+g_TTD20015 RATE_12    Rate  L7                                                                CCG025
+g_TTD20016 BALANCE_1  AmountL                                                                 CCG025
+g_TTD20017 BALANCE_2  AmountL                                                                 CCG025
+g_TTD20018 BALANCE_3  AmountL                                                                 CCG025
+g_TTD20019 BALANCE_4  AmountL                                                                 CCG025
+g_TTD20020 BALANCE_5  AmountL                                                                 CCG025
+g_TTD20021 BALANCE_6  AmountL                                                                 CCG025
+g_TTD20022 BALANCE_7  AmountL                                                                 CCG025
+g_TTD20023 BALANCE_8  AmountL                                                                 CCG025
+g_TTD20024 BALANCE_9  AmountL                                                                 CCG025
+g_TTD20025 BALANCE_10 AmountL                                                                 CCG025
+g_TTD20026 BALANCE_11 AmountL                                                                 CCG025
+g_TTD20027 BALANCE_12 AmountL                                                                 CCG025
+g_TTD20028 INITTHRS   AmountL                                                                 CCG025
 **CTDATA ##GE
 AGL
 CRE

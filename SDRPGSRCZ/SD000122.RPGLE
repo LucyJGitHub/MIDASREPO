@@ -16,10 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CGL057  *CREATE     Date 02Nov21              *
+      *  Last Amend No. MD059855            Date 02May22              *
+      *  Prev Amend No. CGL057  *CREATE     Date 02Nov21              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059855 - Validation Issues on Spot Revaluation Mapping     *
+      *             Table.                                            *
+      *           - Added validation to BLSLAC and BLSPTA against     *
+      *             BSRVL.                                            *
       *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
       *           Earnings Accounts.                                  *
       *                                                               *
@@ -324,6 +329,7 @@
       *
      C     *IN03         CASEQ     '1'           SREnd
      C     *IN05         CASEQ     '1'           SRReload
+     C     *IN09         CASEQ     '1'           SRMode                                     MD059855
      C     *IN27         CASEQ     '1'           SRLoad
      C                   CAS                     SRProcess
      C                   ENDCS
@@ -941,7 +947,8 @@
      C                   ELSE
       *
      C                   CALL      'AOACODR0'
-     C                   PARM      '*MSG   '     @RTCD             7
+     C*********          PARM      '*MSG   '     @RTCD             7                        MD059855
+     C                   PARM      *BLANKS       @RTCD             7                        MD059855
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      #BSRVL        @ACCD            10
      C     SDACOD        PARM      SDACOD        DSFDY
@@ -967,6 +974,8 @@
       ** system level Spot Revaluation account code from the Trading ICD.
       *
      C     #BSRVL        IFEQ      BLSRAC
+     C     #BSRVL        OREQ      BLSLAC                                                   MD059855
+     C     #BSRVL        OREQ      BLSPTA                                                   MD059855
      C                   EVAL      *IN33 = *ON
      C                   EVAL      *IN83 = *ON
      C                   EVAL      PZMsgID = 'SDX0043'
@@ -1083,7 +1092,8 @@
      C                   ELSE
       *
      C                   CALL      'AOACODR0'
-     C                   PARM      '*MSG   '     @RTCD             7
+     C*********          PARM      '*MSG   '     @RTCD             7                        MD059855
+     C                   PARM      *BLANKS       @RTCD             7                        MD059855
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      #BSPAE        @ACCD            10
      C     SDACOD        PARM      SDACOD        DSFDY
@@ -1166,7 +1176,8 @@
      C                   ELSE
       *
      C                   CALL      'AOACODR0'
-     C                   PARM      '*MSG   '     @RTCD             7
+     C*********          PARM      '*MSG   '     @RTCD             7                        MD059855
+     C                   PARM      *BLANKS       @RTCD             7                        MD059855
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      #BSPTA        @ACCD            10
      C     SDACOD        PARM      SDACOD        DSFDY

@@ -298,6 +298,7 @@
       *
      C     *IN03         CASEQ     '1'           SREnd
      C     *IN05         CASEQ     '1'           SRReload
+     C     *IN09         CASEQ     '1'           SRMode                                     MD059853
      C     *IN27         CASEQ     '1'           SRLoad
      C                   CAS                     SRProcess
      C                   ENDCS
@@ -494,8 +495,7 @@
       ** "No Data to Display".
       *
      C                   IF        *IN82   and   RRN = 0
-     C*****              EVAL      PZMsgID   =   'SDX0020'                                     jhas
-     C                   EVAL      PZMsgID   =   'USR7590'                                     jhas
+     C                   EVAL      PZMsgID   =   'SDX0020'
      C                   EXSR      SRZasnms
      C                   ENDIF
       *

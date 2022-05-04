@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. JMI111A            Date 08Jan20               *
-      *  Prev Amend No. JMI111             Date 18May18               *      
+      *  Last Amend No. MD058332           Date 19Apr22               *
+      *  Prev Amend No. JMI111A            Date 08Jan20               *
+      *                 JMI111             Date 18May18               *      
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058332 - OPICS transactions could not be inserted in       *
+      *             FBM as the batch number reached # 999.            *
+      *             Amend to prevent looping and pass return code     * 
       *  JMI111A - Midas-OPICS Interface. Upgrade to FBM 2.1          *
       *            Added hook JMI111_015                              *
       *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
@@ -136,6 +140,7 @@
        /COPY WNCPYSRC,JMI111_012                                                              JMI111
       *                                                                                       JMI111
      D WBTNB           S              3  0
+     D XBTNB           S              3  0                                                  MD058332
      D WBRBT           S              3  0
      D WIDX            S              3  0
       *
@@ -193,6 +198,8 @@
      C                   MOVE      B3BTNB        WBTNB                          186206
      C                   ENDIF
       *
+      ** Save the value of WBTNB                                                            MD058332
+     C                   MOVE      WBTNB         XBTNB                                      MD058332
      C                   ADD       1             WBTNB
       * Consider TI batch no.                                                                 212636
      C*****BGN3ST        IFGE      'Y'                                                 212636 216612

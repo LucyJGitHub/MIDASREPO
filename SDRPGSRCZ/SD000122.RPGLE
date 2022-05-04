@@ -1020,6 +1020,7 @@
       *
       ** Access currency details
       *
+     C     #BFCCY        IFNE      '?'                                                      MD059855
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -1033,6 +1034,7 @@
      C                   EVAL      PZMsgID = 'SDX0052'
      C                   EXSR      SRZasnms
      C                   ENDIF
+     C                   ENDIF                                                              MD059855
       *
      C                   ENDIF
       *

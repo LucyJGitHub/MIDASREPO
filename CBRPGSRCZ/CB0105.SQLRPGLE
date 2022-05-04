@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056555           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059464           Date 26Apr22               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1096560          Date 18Mar13               *
       *                 AR888771           Date 24Jan12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059464 - New component GLC0804 is not selected for COB run *
+      *             even when requested via Periodic Report Request   *
+      *             Maintenance                                       *
+      *           - Applied for MD-59779.                             *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1096560 - Report SE0915 was not generated (Child:AR1096561)*
@@ -156,7 +161,8 @@
      C+ SELECT *                                                                            MD056555
      C+ into :SCSARC                                                                        MD056555
      C+ from SCSRCJW0                                                                       MD056555
-     C+ where ACCOTT = :D5COTT and ACCSEQ = D5CSEQ                                          MD056555
+     C*+*where*ACCOTT*=*:D5COTT*and*ACCSEQ*=*D5CSEQ*******************             MD056555 MD059464
+     C+ where ACCOTT = :D5COTT and ACCSEQ = :D5CSEQ                                         MD059464
      C/END-EXEC                                                                             MD056555
      C******IN79         IFEQ      '0'                                                      MD056555
      C                   IF        SQLCODE = 0                                              MD056555
@@ -229,7 +235,8 @@
      C+ SELECT *                                                                            MD056555
      C+ into :SCSARC                                                                        MD056555
      C+ from SCSRCJW0                                                                       MD056555
-     C+ where ACCOTT = :CRCOTT and ACCSEQ = CRCSEQ                                          MD056555
+     C*+*where*ACCOTT*=*:CRCOTT*and*ACCSEQ*=*CRCSEQ*******************             MD056555 MD059464
+     C+ where ACCOTT = :CRCOTT and ACCSEQ = :CRCSEQ                                         MD059464
      C/END-EXEC                                                                             MD056555
      C******IN78         IFEQ      '0'                                                      MD056555
      C                   IF        SQLCODE = 0                                              MD056555

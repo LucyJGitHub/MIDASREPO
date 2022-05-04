@@ -1,0 +1,117 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CL Program to call SMU90008')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC90008 - CL program to call SMU90008                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD059767  *CREATE  Date 29Apr22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD059767-  Some GOC0040 task-split jobs fail during COB    */
+/*                  with error message unable to allocate a record  */
+/*                  on file GPTRAPPD.                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2022')
+
+             DCL        VAR(&GPREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
+
+/*/COPY GPCPYSRCG,GPSVALDCL */
+
+/**/
+/* Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+/* Start of program */
+
+
+             CHGJOB     SWS(XXXXXX00)
+
+/* Create backup */
+             CHGVAR     VAR(&SVALK1) VALUE('BrgMidasGlobalPrefix')
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC &SVALK1 +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
+                          &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
+                          &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+
+             IF         COND(&RSVALRTNC *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             CHGVAR     VAR(&GPREF) VALUE(%SST(&SVAL1 1 2))
+
+
+             CHGVAR     VAR(&GMLIB) VALUE(&GPREF *TCAT 'GMLIB')
+             CHGVAR     VAR(&GPLIB) VALUE(&GPREF *TCAT 'GPLIB')
+
+             CHKOBJ     OBJ(&GPLIB/YYGPUTXTPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BACKUP))
+             DLTF       FILE(YYGPUTXTPD)
+
+BACKUP:
+             CPYF       FROMFILE(&GMLIB/GPUTXTPD) TOFILE(&GPLIB/YYGPUTXTPD) +
+                        MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             CLRPFM     FILE(YYGPUTXTPD)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in copying PF/GPUTXTPD to +
+                PF/GPUTXTPD. Process terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+             CHGVAR     VAR(&RUNP) VALUE('YES')
+             CALL       PGM(SMU90008)
+
+/**/
+/* If errror occurred*/
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('SMUC90008 completed normally.')
+
+             GOTO       CMDLBL(END)
+
+/**/
+/* Abnormal Termination of the program or */
+/* Restore backup if an error occurred in update mode */
+/**/
+ABNOR:
+             IF         COND(&RUNP *EQ 'YES') THEN(DO)
+
+                CPYF FROMFILE(&GPLIB/YYGPUTXTPD) TOFILE(&GMLIB/GPUTXTPD) +
+                     MBROPT(*REPLACE) FMTOPT(*NONE)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error occurred in restoring PF/GPUTXTPD +
+                        from  PF/GPUTXTPD. Process terminated.  Please restore +
+                        PF/GPUTXTPD manually from PF/YYGPUTXTPD.') +
+                        MSGTYPE(*INFO)
+                ENDDO
+
+             ENDDO
+
+/**/
+/* Abnormal Termination of the program */
+/**/
+ABNOR1:     SNDPGMMSG  MSG('Error occurred in SMUC90008 program')
+
+END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2022')
+             SNDPGMMSG  MSG('End of SMUC90008')
+             ENDPGM

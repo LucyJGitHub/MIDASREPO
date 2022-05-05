@@ -9914,7 +9914,8 @@
      C/COPY WNCPYSRC,DL0280C714
      C*
      C     NRBRTT        IFEQ      '  '                                                     MD031017
-     C                   MOVE      '00'          BRTT                                       MD031017
+     C**********         MOVE      '00'          BRTT                              MD031017 MD059879
+     C                   MOVE      '  '          BRTT                                       MD059879
      C                   ENDIF                                                              MD031017
 2150 C                   EXCEPT
      C                   SETOFF                                       OF                       S0111

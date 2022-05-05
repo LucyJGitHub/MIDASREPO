@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 245911             Date 05May22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR887295           Date 15Aug12               *
       *                 CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
@@ -88,6 +89,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  245911 - Do not update current exposure with internal parts. *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -2915,8 +2917,10 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   ENDIF                                                               BUG3112
       *                                                                                      BUG3112
       ** Update current exposure for Lending Enhancement CLE023                              BUG3112
+
       *                                                                                      BUG3112
      C     CLE023        IFEQ      'Y'                                                       BUG3112
+     C     LPFI          ANDNE     'I'                                                        245911
      C     CEXP          SUB       WCEXP         CEXP                                        BUG3112
      C                   ENDIF                                                               BUG3112
       *                                                                                      BUG3112

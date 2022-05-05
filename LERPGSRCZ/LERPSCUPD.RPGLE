@@ -2917,7 +2917,6 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   ENDIF                                                               BUG3112
       *                                                                                      BUG3112
       ** Update current exposure for Lending Enhancement CLE023                              BUG3112
-
       *                                                                                      BUG3112
      C     CLE023        IFEQ      'Y'                                                       BUG3112
      C     LPFI          ANDNE     'I'                                                        245911

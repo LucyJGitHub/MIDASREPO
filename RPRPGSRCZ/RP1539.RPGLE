@@ -17,12 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR970292           Date 14May12               *
+      *  Last Amend No. MD059754           Date 19Apr22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR970292           Date 14May12               *
       *                 AR688913           Date 16Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059754 - Replication job RPTRGSRV01 dumps with signature   *
+      *             violation. (Recompile)                            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR970292 - PBS Compatibility with BankFusion Midas 2.00      *
       *             Complete CSD027 to process correctly cust. number *
@@ -34,20 +37,20 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **  Midas SD API Customer Private Banking Details file.
      FSDPBDSL0  IF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       ** Midas SE Securities file
      FSECTY     IF   E           K DISK
      F                                     Infsr(*Pssr)
      F                                     Prefix(SEC_)
- 
+
       ** Midas SE Early Redemptions - References
      FSEERRFL0  IF   E           K DISK
      F                                     Infsr(*Pssr)
- 
+
       /Eject
       *****************************************************************
       *                                                               *
@@ -90,60 +93,60 @@
       *  *Inzsr   - Program Initialization routine.                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY contains various standard declares
      C/COPY RPCPYSRC,STD_DCL
- 
+
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
      C/COPY RPCPYSRC,MDN_HD_DS
- 
+
       ** Following /COPY is the declares for fields passed to the formatting
       **  routines
      C/COPY RPCPYSRC,RPFMTDCL
- 
+
       ** Following /COPY is the procedure prototype for the Packed routine
      C/COPY RPCPYSRC,RPFMTPPP
- 
+
       ** Following /COPY is the procedure prototype for the Signed routine
      C/COPY RPCPYSRC,RPFMTPPS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /Eject
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Array containing Copyright statement.
      D Cpy@            S             80    Dim(1) Ctdata Perrcd(1)
- 
+
      D W_Dec_Places    S              1A
      D W_RedeemDate    S              5A
- 
+
       ** Midas Local Data Area for database error reporting; based on
       ** external file
      D Lda           E DS           256    Extname(LDA) Dtaara
@@ -154,51 +157,51 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       **  Arrays used to store Position and Length of each fields
      D ArrFld          S              6    Dim(100)
      D ArrPos          S              7  0 Dim(100)
      D ArrLen          S              4  0 Dim(100)
- 
+
       ** Replication Defaults Data Area; based on external file.
      D RPDftsDa      E DS           256    Extname(RPDFTSDA) DTAARA(RPDFTSDA)
- 
+
       ** API DUMP Information Data Area for database error reporting;
       ** based on external file
      D Apdump        E DS                  Extname(APDUMP) Dtaara
- 
+
       **  External Data structure for Run Date Informations.
      D Rundat        E DS                  Extname(RUNDAT) Dtaara
- 
+
       **  Data Structure for access to Customer Details.
      D Sdcust        E DS                  Extname(SDCUSTPD)
- 
+
       **  Data Structure for access to Bank Details.
      D Sdbank        E DS                  Extname(SDBANKPD)
- 
+
       **  Data structure for access programs, long data structure.
      D Dssdy         E DS                  Extname(DSSDY)
- 
+
       **  First Data Structure for Access Programs, short Data Structure.
      D Dsfdy         E DS                  Extname(DSFDY)
- 
+
      D Dsldy         E DS                  Extname(DSLDY)
       ** DS for Access Programs, Extend Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Start of parameters
- 
+
       **  Output queue name.
      D OutQueue        S                   Like(MQSQueue)
- 
+
       ** End of parameters
- 
+
       ** Start of parameters for RPC1305
- 
+
       **  Script Name.
      D ScriptName      S             10A
       **  Image Name.
@@ -213,29 +216,29 @@
      D FieldPosition   S              7S 0
       **  Field Length
      D FieldLength     S              4S 0
- 
+
       ** End of parameters for RPC1305
       ** Start of Parameters for CPB010
      D MessageInd      S              1A
- 
+
      D RAMSGOLD        S                   LIKE(RAMSGTYPE)
- 
+
       **   Database Error Messsage Text
      D DBErrText       S            256A
- 
+
       **   Transaction Data of associated transaction
      D AssocData       S                   LIKE(TransData)
- 
+
       **   Meridian header Layout of associated transaction
      D MdHdAssoc       S                   LIKE(MdnHeadDs)
       ** End of Parameters for CPB010
- 
+
       **  Work Field used as key to access to Security Details.
      D K_SecShortName  S             10
- 
+
       **  Work Field used as key to access to Early Redemptions file?
      D K_ERReference   S              6
- 
+
       ** Start of fields used by access programs
       **  Return code.
      D P_RtCd          S              7A
@@ -246,50 +249,50 @@
       **  Key status.
      D P_Kyst          S              7A
       ** End of fields used by access programs
- 
+
       **  Work Field used as position for each numeric fields
      D W_PosDebut      S              2S 0
      D fmDpLen         S              1A
- 
+
       **  End Position.
      D EndPosition     S              7S 0
- 
+
       **  Work Field used as key to access to Customer PB Details.
      D***K_CustNum       S              6  0
      D K_CustNum       S              6A
- 
+
       **  Work Field used to produce only one dump.
      D W_RunBefore     S              1A
- 
+
       **  Composite Data.
      D CompData        S                   LIKE(TransData)
- 
+
       ** Start of additional fields
      D W_RedemPType    S              1A
      D W_EarlNominal   S             13  0
      D W_BlockEndDate  S              5  0
       **  End of additional fields
- 
+
       ** True and False can be used for indicators being on or off.
      D True            C                   *On
      D False           C                   *Off
- 
+
       **  Work field used to set up return code when no record found.
      D W_NoRcdFnd      C                   CONST('*NoRcdFnd')
- 
+
       **  Work field used for change message type
      D W_PosFin        S              3S 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
      C     Start         Tag
- 
+
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       *****************************************************************
       *                                                               *
       *                  M A I N  P R O C E S S I N G                 *
@@ -305,30 +308,30 @@
      C                   EVAL      RAMSGOLD = RAMSGTYPE
      C                   EVAL      AssocData = *Blanks
      C                   EVAL      MdHdAssoc = *Blanks
- 
+
       **  Enter the processing to read the additional files and produce a
       **  composite message here.
- 
+
       ** Extract Early Redemption Type from SEERALPD message data.
      C                   Z-ADD     1             X
      C     'VCERTP'      LOOKUP    Arrfld(X)                              89
      C                   EVAL      FieldValue = %Subst(TransData:+
      C                             ArrPos(X):ArrLen(X))
      C                   MOVEL     FieldValue    W_RedemPType
- 
+
       **  Extract nominal from SEERALPD message data.
      C                   Z-ADD     1             X
      C     'VCNOMA'      LOOKUP    Arrfld(X)                              89
      C                   EVAL      FieldValue = %Subst(TransData:+
      C                             ArrPos(X)+W_PosDebut:ArrLen(X))
      C                   MOVEL     FieldValue    W_EarlNominal
- 
+
       **  Select only Redemption Type 'P' and nominal greater than zero
      C     W_RedemPType  IFNE      'P'
      C     W_EarlNominal ORLE      0
      C                   RETURN
      C                   ENDIF
- 
+
       **  Extract customer number from SEERALPD message data.
      C                   Z-ADD     1             X
      C     'VCCNUM'      LOOKUP    Arrfld(X)                              89
@@ -336,7 +339,7 @@
      C**********                   ArrPos(X)+W_PosDebut:ArrLen(X))                          AR970292
      C                   EVAL      P_Cust = %Subst(TransData:+                              AR970292
      C                             ArrPos(X):ArrLen(X))                                     AR970292
- 
+
       **  Access Customer Details by using Access Object,
       **  to retrieve Private Banking Customer Indicator.
      C                   CALLB     'AOCUSTR1'
@@ -345,7 +348,7 @@
      C                   PARM                    P_Cust
      C                   PARM                    P_Kyst
      C     Sdcust        PARM      Sdcust        Dsldy
- 
+
       **  If Customer Details do not exist, handle Database Error.
      C     P_Rtcd        IFNE      *blanks
      C     BBCLST        ANDNE     'Y'
@@ -357,22 +360,22 @@
      C                   OUT       Lda
      C                   EVAL      ReturnCode = P_Rtcd
      C                   EXSR      Repair
- 
+
      C                   ENDIF
- 
+
       **  If Customer is not a Private Banking customer, check
       **  Requested PB Customer flag in case it would have been
       **  set to 'Y'.
      C                   IF        BBPRBA      <> 'Y'
- 
+
       **  Define key list to access to Customer PB Details file.
      C     K_SDPbds      KLIST
      C                   KFLD                    K_CustNum
      C                   MOVE      BBCUST        K_CustNum
- 
+
       **  Access to Customer PB Details file.
      C     K_CustNum     CHAIN     SDPBDSL0                           81
- 
+
       **  If Customer PB Details do not exist, handle database error.
      C     *in81         IFEQ      True
      C     *lock         IN        Lda
@@ -383,29 +386,29 @@
      C                   OUT       LDA
      C                   EVAL      ReturnCode  = W_NoRcdFnd
      C                   EXSR      Repair
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Only send the message if Customer is a Private
       **  Banking Customer or flagged as requested to become
       **  a Private Banking Customer.
      C                   IF            BBPRBA = 'Y'
      C                             Or  PBREPB = 'Y'
- 
+
       ** Start of Additionnal fields
- 
+
       ** Extract Security Shortname from SEERALPD message data.
      C                   Z-ADD     1             X
      C     'VCSESN'      LOOKUP    Arrfld(X)                              89
      C                   EVAL      FieldValue = %Subst(TransData:+
      C                             ArrPos(X):ArrLen(X))
      C                   MOVEL     FieldValue    K_SecShortName
- 
+
       ** Access Security details to retrieve the trade basis indicator.
      C     K_SecShortNameCHAIN     SECTYDF                            82
- 
+
       ** If Security details do not exist, handle database error.
      C     *in82         IFEQ      True
      C     *lock         IN        Lda
@@ -417,28 +420,28 @@
      C                   EVAL      ReturnCode  = W_NoRcdFnd
      C                   EXSR      Repair
      C                   ENDIF
- 
+
      C                   MOVE      SEC_NMDP      W_Dec_Places
- 
+
       **  Extract Blocked end date from SEERALPD message data.
      C                   Z-ADD     1             X
      C     'VCBEDT'      LOOKUP    Arrfld(X)                              89
      C                   EVAL      FieldValue = %Subst(TransData:+
      C                             ArrPos(X)+W_PosDebut:ArrLen(X))
      C                   MOVEL     FieldValue    W_BlockEndDate
- 
+
      C     W_BlockEndDateIFEQ      99999
- 
+
       ** Extract ER Reference number from SEERALPD message data.
      C                   Z-ADD     1             X
      C     'VCERRF'      LOOKUP    Arrfld(X)                              89
      C                   EVAL      FieldValue = %Subst(TransData:+
      C                             ArrPos(X):ArrLen(X))
      C                   MOVEL     FieldValue    K_ERReference
- 
+
       ** Access Security details to retrieve the ER Redemption date.
      C     K_ERReference CHAIN     SEERRFL0                           82
- 
+
       ** If ER Redemption do not exist, handle database error.
      C     *in82         IFEQ      True
      C     *lock         IN        Lda
@@ -450,20 +453,20 @@
      C                   EVAL      ReturnCode  = W_NoRcdFnd
      C                   EXSR      Repair
      C                   ENDIF
- 
+
      C                   MOVE      VAERRD        W_RedeemDate
- 
+
      C                   Z-ADD     1             X
      C     'VCBEDT'      LOOKUP    Arrfld(X)                              89
      C                   EVAL      %Subst(TransData:ArrPos(X)+
      C                             +W_PosDebut:ArrLen(X)) = W_RedeemDate
      C                   ENDIF
       ** End of Additionnal fields
- 
+
       **  Change message Type from _After to _A
       **  Determine Image Type.
      C                   EVAL      W_PosFin    = %Scan('_After':RAMSGTYPE)
- 
+
       **  If it is impossible to determine the image type, handle error.
      C     W_PosFin      IFEQ      0
      C     *Lock         IN        Lda
@@ -473,22 +476,22 @@
      C                   EVAL      DBkey  = RAMSGTYPE
      C                   OUT       Lda
      C                   EVAL      ReturnCode = 'Image_Type'
- 
+
      C                   EVAL      MessageInd = 'N'
      C                   EXSR      Repair
      C                   EVAL      MessageInd = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      RAMSGTYPE =
      C                             %Subst(RAMSGTYPE:1:W_PosFin + 1)
- 
+
       **  Place the result in field CompData.
- 
+
      C                   EVAL      CompData = %subst(TransData:1:EndPosition)
      C                                      + W_Dec_Places
- 
+
       ** End of Additionnal fields
- 
+
       **  Call a standard routine to actually send the message.
      C                   CALLB     'RPSNDMSG'
      C                   PARM                    OutQueue
@@ -496,28 +499,28 @@
      C                   PARM                    CompData
      C                   PARM                    CommitCtl
      C                   PARM                    ReturnCode
- 
+
       ** If error then perform any special processing and exit
      C                   IF        ReturnCode <> *blank
      C     *Lock         IN        Lda
      C                   MOVE      'RPSNDMSG  '  DBpgm
      C                   OUT       Lda
      C                   EXSR      Repair
- 
+
       **  If no error, commit the unit of work so that messages that have
       **  been got from a queue would be permanently deleted and put
       **  operations would be made permanent.
      C                   ELSE
- 
+
      C                   EXSR      WrtTrace
      C                   COMMIT
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       /Eject
       *****************************************************************
       *                                                               *
@@ -528,9 +531,9 @@
       *  Calls     : None.                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     RtvPos        BEGSR
- 
+
      C                   CALLB     'RPC1305'
      C                   PARM                    ScriptName
      C                   PARM      RAMSGTYPE     ImageName
@@ -541,7 +544,7 @@
      C                   PARM      0             FieldLength
      C                   PARM      *blank        FieldValue
      C                   PARM      *Blank        ReturnCode
- 
+
       **  If any error occurred while retrieving position, handle it.
      C     ReturnCode    IFNE      *blanks
      C     *lock         IN        LDA
@@ -550,12 +553,12 @@
      C                   EVAL      DBase  = 06
      C                   EVAL      DBkey  = 'RPC1305'
      C                   OUT       LDA
- 
+
      C                   EVAL      MessageInd = 'N'
      C                   EXSR      Repair
      C                   EVAL      MessageInd = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      X = X + 1
       **  If any error occurred while retrieving position, handle it.
      C                   IF        X > 100
@@ -567,11 +570,11 @@
      C                   OUT       LDA
      C                   EXSR      Repair
      C                   ENDIF
- 
+
      C                   EVAL      ArrFld(X) = FieldName
      C                   EVAL      ArrPos(X) = FieldPosition
      C                   EVAL      ArrLen(X) = FieldLength
- 
+
      C                   ENDSR
       /Eject
       *****************************************************************
@@ -583,16 +586,16 @@
       *  Calls     : None.                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     WrtTrace      BEGSR
- 
+
      C                   CALLB     'RP1590'
      C                   PARM                    OutQueue
      C                   PARM                    MdnHeadDS
      C                   PARM                    CompData
      C                   PARM                    CommitCtl
      C                   PARM                    ReturnCode
- 
+
       **  If any error occurred while retrieving position, handle it.
      C     ReturnCode    IFNE      *Blanks
      C     *Lock         IN        LDA
@@ -601,10 +604,10 @@
      C                   EVAL      DBase  = 08
      C                   EVAL      DBkey  = 'RP1590'
      C                   OUT       LDA
- 
+
      C                   ENDIF
      C                   ENDSR
- 
+
       /Eject
       *****************************************************************
       *                                                               *
@@ -615,20 +618,20 @@
       *  Calls     : None.                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     Repair        BEGSR
- 
+
      C                   MOVE      Dbase         dbasea            3
- 
+
      C                   EVAL      DBErrText = 'DBError' +
      C                             ' in : ' + DBpgm +
      C                             ' at: ' + DBasea +
      C                             ' file : ' + DBfile +
      C                             ' Key : ' + DBKey +
      C                             ' Return :' + ReturnCode
- 
+
      C                   EVAL      RAMSGTYPE = RAMSGOLD
- 
+
      C                   CALLB     'RP1592'
      C                   PARM                    OutQueue
      C                   PARM                    MdnHeadDS
@@ -639,7 +642,7 @@
      C                   PARM                    DBErrText
      C                   PARM                    MessageInd
      C                   PARM      *Blanks       ReturnCode
- 
+
       **  If any error occurred while retrieving position, handle it.
      C     ReturnCode    IFNE      *Blanks
      C     *Lock         IN        LDA
@@ -648,14 +651,14 @@
      C                   EVAL      DBase  = 50
      C                   EVAL      DBkey  = 'RP1592'
      C                   OUT       LDA
- 
+
      C                   EXSR      *PSSR
      C                   ELSE
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /Eject
       *****************************************************************
       *                                                               *
@@ -670,37 +673,37 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C     W_RunBefore   IFEQ      *Blank
- 
+
       **  If commitment control required, back out the unit of work so
       **  that current message could be available again.
      C                   IF        CommitCtl = 'Y'
      C                   ROLBK
- 
+
      C                   ENDIF
- 
+
      C     *Lock         IN        LDa
      C     DBpgm         IFEQ      *Blanks
      C                   MOVE      PSProcName    DBpgm
      C                   OUT       LDA
- 
+
      C                   ENDIF
- 
+
      C                   MOVE      'Y'           W_RunBefore
      C                   DUMP
- 
+
      C                   ENDIF
- 
+
      C     ReturnCode    IFEQ      *Blank
      C                   EVAL      ReturnCode = '*PSSR'
      C                   ENDIF
- 
+
      C                   SETON                                        U7U8LR
      C                   RETURN
- 
+
      C                   ENDSR
       /Eject
       *****************************************************************
@@ -708,9 +711,9 @@
       * *Inzsr - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *Inzsr        BEGSR
- 
+
      C     *Entry        PLIST
       ** MQSeries queue to write to - this parameter IS used in this module
      C                   PARM                    OutQueue
@@ -722,9 +725,9 @@
      C                   PARM                    CommitCtl
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
      C                   EVAL      MessageInd = 'Y'
- 
+
       **  Set up work fields for formatting that will not change if
       **  Replication formatting is required.
       **     - signs are not shown for Positive numbers.
@@ -734,53 +737,53 @@
      C                   EVAL      fmDpLen  = %Subst(RCZEROFLD:2:1)
      C                   MOVE      fmDpLen       W_PosDebut
      C                   EVAL      fmShwPsSgn = 'N'
- 
+
       **  Set up work fields that will not change if retrieve
       **  function is to be used.
      C                   EVAL      ScriptName = 'RP' + RATGTSYS
- 
+
      C                   Z-ADD     0             X                 3 0
- 
+
       **  Retrieve position and length of customer number from SEERALPD message data.
      C                   EVAL      FieldName = 'VCCNUM'
      C**********         EVAL      FieldType = 'N'                                          AR970292
      C                   EVAL      FieldType = 'A'                                          AR970292
      C                   EXSR      RtvPos
- 
+
       ** Retrieve position and length of Security Shortname from SEERALPD message data.
      C                   EVAL      FieldName   = 'VCSESN'
      C                   EVAL      FieldType   = 'A'
      C                   EXSR      RtvPos
- 
+
       ** Retrieve position and length of Early Redemtion Type from SEERALPD message data.
      C                   EVAL      FieldName   = 'VCERTP'
      C                   EVAL      FieldType   = 'A'
      C                   EXSR      RtvPos
- 
+
       ** Retrieve position and length of nominal amount from SEERALPD message data.
      C                   EVAL      FieldName   = 'VCNOMA'
      C                   EVAL      FieldType   = 'N'
      C                   EXSR      RtvPos
- 
+
       ** Retrieve position and length of ER Reference number from SEERALPD message data.
      C                   EVAL      FieldName   = 'VCERRF'
      C                   EVAL      FieldType   = 'A'
      C                   EXSR      RtvPos
- 
+
       ** Retrieve position and length of blocked end date from SEERALPD message data.
      C                   EVAL      FieldName   = 'VCBEDT'
      C                   EVAL      FieldType   = 'N'
      C                   EXSR      RtvPos
- 
+
       **  Retrieve begin position of additionnal fields in Meridian message.
      C                   EVAL      FieldName   = '*END_IMAGE'
      C                   EVAL      FieldType   = *blank
      C                   EXSR      RtvPos
      C                   EVAL      EndPosition = FieldPosition - 1
- 
+
      C                   ENDSR
       /Eject
       *****************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2010

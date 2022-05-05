@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR858264A          Date 16Jul12               *
+      *  Last Amend No. MD059754           Date 19Apr22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR858264A          Date 16Jul12               *
       *                 AR970292           Date 14May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059754 - Replication job RPTRGSRV01 dumps with signature   *
+      *             violation. (Recompile)                            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR858264A - Compilation Issues on various RP programs        *
       *  AR970292 - PBS Compatibility with BankFusion Midas 2.00      *
@@ -56,7 +59,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **  Midas GL Accounts Master
      FACCNT     IF   E           K Disk    Ignore(ACCNTAAF:ACCNTACF) Prefix(A_)
      F                                     Infsr(*Pssr)
@@ -101,60 +104,60 @@
       *  *inzsr   - Program Initialization routine.                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** The following /COPY contains various standard declares
      C**********/COPY RPCPYSRC,Std_Dcl                                                     AR858264A
      C/COPY RPCPYSRC,STD_DCL                                                               AR858264A
- 
+
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
      C**********/COPY RPCPYSRC,Mdn_Hd_DS                                                   AR858264A
      C/COPY RPCPYSRC,MDN_HD_DS                                                             AR858264A
- 
+
       ** Following /COPY is the declares for fields passed to the formatting
       ** routines
      C/COPY RPCPYSRC,RPFMTDCL
- 
+
       ** Following /COPY is the procedure prototype for the Packed routine
      C/COPY RPCPYSRC,RPFMTPPP
- 
+
       ** Following /COPY is the procedure prototype for the Signed routine
      C/COPY RPCPYSRC,RPFMTPPS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /Eject
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D Cpy@            S             80    Dim(1) Ctdata Perrcd(1)
- 
+
       ** Midas Local Data Area for database error reporting; based on
       ** external file
      D Lda           E DS           256    Extname(LDA) DTAARA(LDA)
@@ -165,15 +168,15 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       **  Arrays used to store Position and Length of each fields
      D ArrFld          S              6    Dim(100)
      D ArrPos          S              7  0 Dim(100)
      D ArrLen          S              4  0 Dim(100)
- 
+
       ** Replication Defaults Data Area; based on external file.
      D RPDftsDa      E DS           256    Extname(RPDFTSDA) DTAARA(RPDFTSDA)
- 
+
       **  Data structure used to group settlement account details.
      D*W_FullSettlAcc  DS            18                                                       CAS010
      D W_FullSettlAcc  DS            24                                                       CAS010
@@ -185,26 +188,26 @@
      D***AccSeq*              17     18S 0                                                    CAS010
      D   AccCode              13     22S 0                                                    CAS010
      D   AccSeq               23     24S 0                                                    CAS010
- 
+
       **  First Data Structure for Access Programs, short Data Structure.
      D Dsfdy         E DS                  Extname(DSFDY)
- 
+
       **  Second Data Structure foR Access Programs, long Data Structure.
      D Dssdy         E DS                  Extname(DSSDY)
- 
+
      D Dsldy         E DS                  Extname(DSLDY)
       ** DS for Access Programs, Extend Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **-------------------- Start of parameters --------------------**
       **  Output queue name.
      D OutQueue        S                   LIKE(MQSQueue)
       **--------------------- End of parameters ---------------------**
- 
+
       **-------------- Start of parameters for RPC1305 --------------**
       **  Script Name.
      D ScriptName      S             10A
@@ -235,7 +238,7 @@
       **   Meridian header Layout of associated transaction                     CPB010
      D MdHdAssoc       S                   LIKE(MdnHeadDs)                      CPB010
       **----------------  End of Parameters for CPB010  --------------**        CPB010
- 
+
       ** --------- Start of fields used by access programs ----------**
       **  Return code.
      D P_RtCd          S              7A
@@ -251,45 +254,45 @@
       **  Switchable feature number.
      D P_Sard          S              6A
       ** ---------- End of fields used by access programs -----------**
- 
+
       **----------------  Start of additional fields ----------------**
       **-----------------  End of additional fields -----------------**
- 
+
       **  Work Field used as position for each numeric fields
      D W_PosDebut      S              2S 0
      D fmDpLen         S              1A
- 
+
       **  End Position.
      D EndPosition     S              7S 0
- 
+
       **   Composite Data
      D CompData        S                   LIKE(TransData)
- 
+
       ** True and False can be used for indicators being on or off.
      D True            C                   *On
      D False           C                   *Off
- 
+
       **  Work Field used to produce only one dump.
      D W_RunBefore     S              1A
- 
+
       **  Work field used to set up return code when no record found.
      D W_NoRcdFnd      C                   CONST('*NoRcdFnd')
- 
+
       **  Work field used for change message type
      D W_PosFin        S              3S 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /Eject
       *****************************************************************
      C     Start         Tag
- 
+
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       *****************************************************************
       *                                                               *
       *                  M A I N  P R O C E S S I N G                 *
@@ -305,14 +308,14 @@
      C                   Eval      RAMSGOLD = RAMSGTYPE                         CPB010
      C                   Eval      AssocData = *Blanks                          CPB010
      C                   Eval      MdHdAssoc = *Blanks                          CPB010
- 
+
       **  Enter the processing to read the additional files and produce a
       **  composite message here.
- 
- 
+
+
       **----------------- Start of Additionnal fields ---------------**
- 
- 
+
+
       **  Extract custoner number from RPEODPPD message data.
      C                   Z-add     1             X
      C     'CNUM  '      Lookup    Arrfld(X)                              89
@@ -320,31 +323,31 @@
      C**********                   ArrPos(X)+W_PosDebut:ArrLen(X))                          AR970292
      C                   EVAL      P_Cust = %Subst(TransData:+                              AR970292
      C                             ArrPos(X):ArrLen(X))                                     AR970292
- 
+
       **  Extract Branch code from RPEODPPD message data.
      C                   Z-add     1             X
      C     'BRCA  '      Lookup    Arrfld(X)                              89
      C                   Eval      Branch = %Subst(TransData:+
      C                             ArrPos(X):ArrLen(X))
- 
+
       **  Extract CCY code from RPEODPPD message data.
      C                   Z-add     1             X
      C     'CCY   '      Lookup    Arrfld(X)                              89
      C                   Eval      Currency = %Subst(TransData:+
      C                             ArrPos(X):ArrLen(X))
- 
+
       **  Extract Account Code    from RPEODPPD message data.
      C                   Z-add     1             X
      C     'ACOD  '      Lookup    Arrfld(X)                              89
      C                   Eval      P_Acod = %Subst(TransData:+
      C                             ArrPos(X)+W_PosDebut:ArrLen(X))
- 
+
       **  Extract Account Sequence from RPEODPPD message data.
      C                   Z-add     1             X
      C     'ACSQ  '      Lookup    Arrfld(X)                              89
      C                   Eval      P_Acsq = %Subst(TransData:+
      C                             ArrPos(X)+W_PosDebut:ArrLen(X))
- 
+
      C                   Move      P_Cust        CustNo
      C                   Move      P_Acod        AccCode
      C                   Move      P_Acsq        Accseq
@@ -356,10 +359,10 @@
      C                   Kfld                    AccCode
      C                   Kfld                    AccSeq
      C                   Kfld                    Branch
- 
+
       **  Retrieve Account details (Portfolio Reference)
      C     K_Accnt       Chain     ACCNT                              82
- 
+
       **  If Account does not exist, handle database error.
      C     *in82         Ifeq      True                                         Begin *in82
      C     *lock         In        Lda
@@ -372,18 +375,18 @@
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
      C                   Endif                                                  End  *in82
- 
- 
+
+
       **---------- End of Access account ------------**
- 
- 
+
+
       **------------------ End of Additionnal fields ----------------**
- 
+
       **  Change message Type from _A to _After (To activate later when repository is ready)
       ** Note this is oposite to standard to avoid MDBASCRIPOT extract.)
       **  Determine Image Type.
      C                   Eval      W_PosFin    = %Scan('_After':RAMSGTYPE)
- 
+
       **  If it is impossible to determine the image type, handle error.
      C     W_PosFin      Ifeq      0                                            Begin W_PosFin
      C     *Lock         In        Lda
@@ -399,17 +402,17 @@
      C                   Exsr      Repair                                       CPB010
      C                   Eval      MessageInd = 'Y'                             CPB010
      C                   Endif                                                  End W_PosFin
- 
+
       **  Change  Image Type.
- 
+
      C                   Eval      RAMSGTYPE =
      C                             %Subst(RAMSGTYPE:1:W_PosFin + 1)
- 
+
       **  Place the result in field CompData.
- 
+
      C                   Eval      CompData  = %subst(TransData:1:EndPosition)
      C                                       + A_PTFR                           Portfolio reference
- 
+
       **  Call a standard routine to actually send the message.
      C                   Callb     'RPSNDMSG'
      C                   Parm                    OutQueue
@@ -417,7 +420,7 @@
      C                   Parm                    CompData
      C                   Parm                    CommitCtl
      C                   Parm                    ReturnCode
- 
+
       ** If error then perform any special processing and exit
      C                   If        ReturnCode <> *blank                         Begin ReturnCode
      C     *Lock         In        Lda
@@ -425,7 +428,7 @@
      C                   Out       Lda
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
- 
+
       **  If no error, commit the unit of work so that messages that have
       **  been got from a queue would be permanently deleted and put
       **  operations would be made permanent.
@@ -433,11 +436,11 @@
                                                                                 CPB010
      C                   Exsr      WrtTrace                                     CPB010
      C                   Commit
- 
+
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Return
- 
+
       /Eject
       *****************************************************************
       *                                                               *
@@ -448,9 +451,9 @@
       *  Calls     : None.                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     RtvPos        Begsr
- 
+
      C                   Callb     'RPC1305'
      C                   Parm                    ScriptName
      C                   Parm      RAMSGTYPE     ImageName
@@ -461,7 +464,7 @@
      C                   Parm      0             FieldLength
      C                   Parm      *blank        FieldValue
      C                   Parm      *blank        ReturnCode
- 
+
       **  If any error occurred while retrieving position, handle it.
      C     ReturnCode    Ifne      *blanks                                      Begin ReturnCode
      C     *Lock         In        Lda
@@ -475,9 +478,9 @@
      C                   Eval      MessageInd = 'N'                             CPB010
      C                   Exsr      Repair                                       CPB010
      C                   Eval      MessageInd = 'Y'                             CPB010
- 
+
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Eval      X = X + 1
       **  If any error occurred while retrieving position, handle it.
      C                   If        X > 100
@@ -490,11 +493,11 @@
      C**********         Exsr      *Pssr                                        CPB010
      C                   Exsr      Repair                                       CPB010
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Eval      ArrFld(X) = FieldName
      C                   Eval      ArrPos(X) = FieldPosition
      C                   Eval      ArrLen(X) = FieldLength
- 
+
      C                   Endsr
       /Eject                                                                    CPB010
       *****************************************************************         CPB010
@@ -594,37 +597,37 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *Pssr         Begsr
- 
+
      C     W_RunBefore   Ifeq      *blank                                       Begin W_RunBefore
- 
+
       **  If commitment control required, back out the unit of work so
       **  that current message could be available again.
      C                   If        CommitCtl = 'Y'                              Begin CommiCtl
      C                   Rolbk
- 
+
      C                   Endif                                                  End CommitCtl
- 
+
      C     *Lock         In        Lda
      C     DBpgm         Ifeq      *blanks                                      Begin DBpgm
      C                   Eval      DBpgm  = PSProcName
      C                   Out       Lda
- 
+
      C                   Endif                                                  End DBpgm
- 
+
      C                   Move      'Y'           W_RunBefore
      C                   Dump
- 
+
      C                   Endif                                                  End W_RunBefore
- 
+
      C     ReturnCode    Ifeq      *blank                                       Begin ReturnCode
      C                   Eval      ReturnCode = '*PSSR'
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Seton                                        U7U8LR
      C                   Return
- 
+
      C                   Endsr
       /Eject
       *****************************************************************
@@ -634,9 +637,9 @@
       * Called at : program initialization time.                      *
       *                                                               *
       *****************************************************************
- 
+
      C     *Inzsr        Begsr
- 
+
      C     *Entry        Plist
       **  MQSeries queue to write to - this parameter IS used in this module
      C                   Parm                    OutQueue
@@ -648,9 +651,9 @@
      C                   Parm                    CommitCtl
       **  Return Code
      C                   Parm                    ReturnCode
- 
+
      C                   Eval      MessageInd = 'Y'                             CPB010
- 
+
       **  Set up work fields for formatting that will not change if
       **  Replication formatting is required.
       **     - signs are not shown for Positive numbers.
@@ -660,46 +663,46 @@
      C                   Eval      fmDpLen  = %Subst(RCZEROFLD:2:1)
      C                   Move      fmDpLen       W_PosDebut
      C                   Eval      fmShwPsSgn = 'N'
- 
+
       **  Set up work fields that will not change if retrieve
       **  function is to be used.
      C                   Eval      ScriptName = 'RP' + RATGTSYS
- 
+
      C                   Z-add     0             X                 3 0
- 
- 
+
+
       **  Retrieve position and length of customer number from RPEODPPD message data.
      C                   Eval      FieldName   = 'CNUM'
      C**********         Eval      FieldType   = 'N'                                        AR970292
      C                   EVAL      FieldType   = 'A'                                        AR970292
      C                   Exsr      RtvPos
- 
+
       **  Retrieve position and length of Purchase Ccy from RPEODPPD message data.
      C                   Eval      FieldName   = 'CCY'
      C                   Eval      FieldType   = 'A'
      C                   Exsr      RtvPos
- 
+
       **  Retrieve position and length of  Branch from RPEODPPD message data.
      C                   Eval      FieldName   = 'BRCA'
      C                   Eval      FieldType   = 'A'
      C                   Exsr      RtvPos
- 
+
       **  Retrieve position and length of Account Code from RPEODPPD message data.
      C                   Eval      FieldName   = 'ACOD'
      C                   Eval      FieldType   = 'N'
      C                   Exsr      RtvPos
- 
+
       **  Retrieve position and length of Account sequence  from RPEODPPD.
      C                   Eval      FieldName   = 'ACSQ'
      C                   Eval      FieldType   = 'N'
      C                   Exsr      RtvPos
- 
+
       **  Retrieve begin position of additionnal fields in Meridian message.
      C                   Eval      FieldName   = '*END_IMAGE'
      C                   Eval      FieldType   = *blank
      C                   Exsr      RtvPos
      C                   Eval      EndPosition = FieldPosition - 1
- 
+
      C                   Endsr
       /Eject
       *****************************************************************

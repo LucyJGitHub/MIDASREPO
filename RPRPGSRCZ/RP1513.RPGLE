@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 263381             Date 20Jan10               *
-      *  Prev Amend No. AR1068513          Date 31May21               *
+      *  Last Amend No. MD059754           Date 19Apr22               *
+      *  Prev Amend No. 263381             Date 20Jan10               *
+      *                 AR1068513          Date 31May21               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1095876          Date 30Sep13               *
       *                 CLE134             Date 01Aug12               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059754 - Replication job RPTRGSRV01 dumps with signature   *
+      *             violation. (Recompile)                            *
       *  263381 - If Account,  PM customer and PM portfolios are      *
       *           closed in the same COB it is essential to keep the  *
       *           Portfolio reference in AFRT field before remove it. *

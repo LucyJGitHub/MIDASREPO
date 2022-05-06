@@ -148,7 +148,8 @@
      FLELOANL1IF  E           K        DISK
       ** Loans requiring authorisations details file
       *
-     FLELOAML1IF  E           K        DISK
+     F***LELOAML1IF  E           K        DISK                                                244279
+     FLELOAMLDIF  E           K        DISK                                                   244279
       ** Loans amendments requiring authorisation
       *
      FLELOANL3IF  E           K        DISK
@@ -250,7 +251,8 @@
       ** Copyright statement
       *
      E********************WLDSC   1   3 20                                121742
-     E                    WLDSC   1   3 18                                121742
+     E**********          WACDE   1   9  2                                             128149 244279
+     E                    WACDE   1  11  2                                                    244279
       ** Loan description
       *
      E********************WACDE   1   9  2   WADSC  20                    128149
@@ -871,8 +873,10 @@
      C                     READ LELOANL1                 79
      C           WFMT      WHEQ 'S2'
      C********** WLFRM     SETLLLELOAML1                                                      CSD027
-     C           WLFRMN    SETLLLELOAML1                                                      CSD027
-     C                     READ LELOAML1                 79
+     C********** WLFRMN    SETLLLELOAML1                                  CSD027              244279
+     C**********           READ LELOAML1                 79                                   244279
+     C           WLFRM     SETLLLELOAMLD                                                      244279
+     C                     READ LELOAMLD                 79                                   244279
      C           WFMT      WHEQ 'S3'
      C********** WLFRM     SETLLLELOANL3                                                      CSD027
      C           WLFRMN    SETLLLELOANL3                                                      CSD027
@@ -933,7 +937,8 @@
      C                     EXSR SRSU22
      C                     WRITELE2310S2
      C                     ENDIF                                          126627
-     C                     READ LELOAML1                 79
+     C**********           READ LELOAML1                 79                                   244279
+     C                     READ LELOAMLD                 79                                   244279
      C           WFMT      WHEQ 'S3'
      C                     EXSR SRSU32
      C                     WRITELE2310S3
@@ -1271,6 +1276,10 @@
       *
      C                     MOVE LNRF      SALON
      C                     MOVE LASN      SASEQ
+     C           AMTP      IFEQ 'MM'                                                          244279
+     C           AMTP      OREQ 'MI'                                                          244279
+     C                     MOVE *BLANKS   SASEQ                                               244279
+     C                     ENDIF                                                              244279
      C**********           MOVE CNUM      SACST                                               202531
       *                                                                   128150
       ** Access the Customer Details file                                 128150
@@ -1322,7 +1331,8 @@
       *
       ** Check amendment type.
       *
-     C                     DO   9         I
+     C**********           DO   9         I                                                   244279
+     C                     DO   11        I                                                   244279
      C           AMTP      IFEQ WACDE,I
      C***********          MOVE WADSC,I   SAAMT                           128149
      C                     MOVELWACDE,I   SAAMT                           128149
@@ -1340,6 +1350,11 @@
      C                     EXSR ZDATE2
      C                     MOVE ZDATE     SAVDT
      C                     ENDIF
+      *                                                                                       244279
+     C           AMTP      IFEQ 'MM'                                                          244279
+     C           AMTP      OREQ 'MI'                                                          244279
+     C                     MOVE *BLANKS   SAVDT                                               244279
+     C                     ENDIF                                                              244279
       *
       ***  Format Amount/Rate
       *
@@ -1361,11 +1376,35 @@
      C                     EXSR SRCURR
       *
      C                     Z-ADDA6NBDP    ZDECS
+      *                                                                                       244279
+     C           AMTP      IFEQ 'MI'                                                          244279
+     C           AMTP      OREQ 'MM'                                                          244279
+      *                                                                                       244279
+     C                     SELEC                                                              244279
+     C           AMTP      WHEQ 'MI'                                                          244279
+     C           ADJS      IFEQ '-'                                                           244279
+     C                     Z-SUBADJA      ZFLD15                                              244279
+     C                     ELSE                                                               244279
+     C                     Z-ADDADJA      ZFLD15                                              244279
+     C                     ENDIF                                                              244279
+     C           AMTP      WHEQ 'MM'                                                          244279
+     C           SIGN      IFEQ '-'                                                           244279
+     C                     Z-SUBMAAM      ZFLD15                                              244279
+     C                     ELSE                                                               244279
+     C                     Z-ADDMAAM      ZFLD15                                              244279
+     C                     ENDIF                                                              244279
+     C                     ENDSL                                                              244279
+      *                                                                                       244279
+     C                     ELSE                                                               244279
+      *                                                                                       244279
      C           REPT      IFNE 3                                                             194662
      C                     Z-ADDPRAM      ZFLD15
      C                     ELSE                                                               194662
      C                     Z-ADDTAMT      ZFLD15                                              194662
      C                     ENDIF                                                              194662
+      *                                                                                       244279
+     C                     ENDIF                                                              244279
+      *                                                                                       244279
      C                     EXSR ZFRPED
      C***********          MOVELZOUT17    SAART                           158798
      C                     MOVELZOUT18    SAART                           158798
@@ -1383,6 +1422,8 @@
      C                     ENDIF
       *                                                                   126627
      C           AMTP      IFEQ 'PF'                                      126627
+     C           AMTP      OREQ 'MM'                                                          244279
+     C           AMTP      OREQ 'MI'                                                          244279
      C                     MOVE *BLANKS   SASAC                           126627
      C                     ENDIF                                          126627
       *
@@ -2999,6 +3040,8 @@ SAStop/Start Accrual
 LSLoan Sub-type
 PFTransfer From
 PTTransfer To
+MIAdjustment to Accrued Interest                                                              244279
+MMAdjustment to Accrued Margin                                                                244279
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

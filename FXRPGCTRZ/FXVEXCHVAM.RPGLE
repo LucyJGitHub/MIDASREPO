@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. 251863             Date 22May20               *
-      *  Prev Amend No. 248024             Date 22May20               *
+      *  Last Amend No. MD059426           Date 02May22               *
+      *  Prev Amend No. 251863             Date 22May20               *
+      *                 248024             Date 22May20               *
       *                 MD057657           Date 09Mar21               *
       *                 MD046248           Date 27Oct17               *
       *                 AR703547           Date 25May16               *
@@ -72,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059426 - Exchange rate and amounts do not agree.           *
+      *           - Applied for MD-59865.                             *
       *  248024 - Change in processing to determine 'Normally Quoted  *
       *           Decimal Places' for Forward Points. Applied fix     *
       *           242105.                                             *
@@ -3168,7 +3171,7 @@
      C* Add exchange rate to margin + forward points
      C* to get the outright rate
      C*
-     C                   ADD       W@INRT        @RRATE           13 8          Outright Rate
+     C**********         ADD       W@INRT        @RRATE           13 8        Outright Rate MD059426
      C*
      C**********         IF        CER043 = 'Y' AND DDREIN = 'Y'                   BUG23668 BUG25418
      C**********         EVAL(H)   @RRATE = 1/@RRATE                               BUG23668 BUG25418

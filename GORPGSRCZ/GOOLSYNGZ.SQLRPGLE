@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056557           Date 31Aug20               *
-      *  Prev Amend No. MD056556           Date 31Aug20               *
+      *  Last Amend No. EML102             Date 13Aug20               *
+      *  Prev Amend No. CER073D            Date 13Aug20               *
+      *                 MD056557           Date 31Aug20               *
+      *                 MD056556           Date 31Aug20               *
       *                 MD055681           Date 31Jul20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD055147           Date 24Jan20               *
@@ -115,6 +117,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      * EML102 - Upgrade of UNL007 to FB2.1 SP23                      *
+      *          UNL007 - Extended Narratives                         *
+      *  CER073D - Upgrade of EML014 to FB2.1 SP23                    *
+      *      EML014 - AnaCredit Reporting Enhancement (Recompile)     *
       *  MD056557 - Deliverable Data Split for Pulldown               *
       *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
       *  MD055681 - Deliverable Data Split for SAR                    *

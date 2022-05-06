@@ -19,13 +19,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. 263078             Date 21Jul21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 262095             Date 14Oct09               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263078 - Folder was renamed due to a blank record in ERSPOOL.*
+      *           Fix is to prevent processing of blank records.      *
+      *         - Applied for MD058462.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  262095 - Change BankName to ServiceProvider.                 *
@@ -211,6 +215,8 @@
       *
      C                   READ      ERSPOOL
      C                   DOW       NOT(%EOF)
+      *                                                                                       263078
+     C     WFnm          IFNE      *BLANKS                                                    263078
       *
       ** Copy file to database workfile via C-Program
       *
@@ -267,6 +273,8 @@
      C                   CLOSE     ERTRCVPD
       *
      C                   ENDIF
+      *                                                                                       263078
+     C                   ENDIF                                                                263078
       *
       ** Read next record
       *

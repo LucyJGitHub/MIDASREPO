@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 254109             Date 01Jun20               *
-      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *  Last Amend No. MD059520           Date 21Feb22               *
+      *  Prev Amend No. 254109             Date 01Jun20               *
+      *                 AR1088819          Date 03Jun20               *
       *                 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
@@ -153,6 +154,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
+      *             netting tab not showing records. (Recompile)      *
       *  254109 - Introduce new err msgs; one for the 'D' action code *
       *           and another one for 'C' and 'R' action codes ( when *
       *           CSD007 feauture is switched on) just to indicate the*

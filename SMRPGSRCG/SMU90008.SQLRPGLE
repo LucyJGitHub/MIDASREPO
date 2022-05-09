@@ -33,7 +33,6 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-     FGPUTNIPD  UF   E             DISK    INFSR(*PSSR)
      FSMU90008P1O    E             PRINTER OFLIND(*IN25)
 
       *****************************************************************
@@ -54,14 +53,22 @@
      D/COPY ZACPYSRC,STD_D_SPEC
 
 
-      ** Data Structure for Global Branch
-     D GZSDBRCH      E DS                  EXTNAME(GZSDBRCHPD)
-      ** Data Structure for Global Zone
-     D GPZONE        E DS                  EXTNAME(GPZONEPD)
+      ** Data Structure for Bank Details File
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
+      ** Data Structure for Midas GP Universal Transaction Extn Data - TR
      D GPUTXT        E DS                  EXTNAME(GPUTXTPD)
 
+      ** Data Structure for Midas GP Global transactions, accounts and positns
      D GPTRAP        E DS                  EXTNAME(GPTRAPPD)
+
+      ** Data Structure for Midas GP Universal transaction next identifier
+     D GPUTNI        E DS                  EXTNAME(GPUTNIPD)
+
+      ** Data Structure for Midas GP Universal Transaction Extn Data - TR
+     D GPUTXT0       E DS                  EXTNAME(GPUTXTL0)
+     D                                     PREFIX(L0_)
+
       *
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
@@ -77,14 +84,14 @@
      D  ZONE_DS                      10
      D  TMOD_DS                       2
      D  TSMOD_DS                      4
-     D  TID_DS                       15S 0
+     D  TID_DS                       15  0
      D  GPUTXT_DS              1     31
 
      D  GPUTXT_DS2     DS
      D   ZONE_DS2                    10
      D   TMOD_DS2                     2
      D   TSMOD_DS2                    4
-     D   TID_DS2                     15S 0
+     D   TID_DS2                     15  0
 
      D A_TREF          S             20    DIM(5)
 
@@ -143,9 +150,10 @@
      C                   DOW       SQLCOD <> 100
 
      C                   IF        SQLCOD <> 0 and SQLCOD <> 100
+     C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GPUTXT'
      C                   EVAL      DBKEY  = 'WTREF'
-     C                   EVAL      DBASE  = 001
+     C                   EVAL      DBASE  = 002
      C                   EXSR      *PSSR
      C                   ENDIF
 
@@ -212,14 +220,14 @@
      C                   EVAL      GPUTXT_DS2 = WGPUTXT
      C                   DOW       WCTR1 <= WCTR
 
-     C*                  EVAL      SQLStmt  TREF(WCTR1)
+     C                   EVAL      SQLStmt = *Blanks
      C                   EVAL      WTREF = A_TREF(WCTR1)
       *
       ** Check if GPTRAPPD is existing
       *
      C/exec SQL
-     C+ declare GPTRAP_C cursor for
      C+ select *
+     C+ into :GPTRAP
      C+ from GPTRAPPD
      C+ where T_ZONE = :ZONE_DS2
      C+ and T_MOD = :TMOD_DS2
@@ -228,19 +236,9 @@
      C+ and T_TREF = :WTREF
      C/end-exec
 
-     C/exec SQL
-     C+ open GPTRAP_C
-     C/end-exec
-
-     C/exec SQL
-     C+ fetch next
-     C+ from GPTRAP_C
-     C+ into :GPTRAP
-     C/end-exec
-
      C                   IF        SQLCOD <> 0
      C                   EXSR      GETNEXT_ID
-     C*                  EXSR      UPD_GPUTXTL0
+     C                   EXSR      UPD_GPUTXTL0
      C                   EXSR      PrintDetail1
      C                   EVAL      PCTR += 1
      C                   ENDIF
@@ -257,43 +255,63 @@
       *****************************************************************
 
      C     GETNEXT_ID    BEGSR
-
       *
-      ** Access the single record in GPUTNIPD
+      ** Check if GPUTNIPD is existing
       *
+     C/exec SQL
+     C+ select *
+     C+ into :GPUTNI
+     C+ from GPUTNIPD
+     C/end-exec
 
-     C     1             CHAIN     GPUTNID0                           99
-     C     *IN99         IFEQ      *ON
+     C                   IF        SQLCOD <> 0
+     C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GPUTNIPD'
      C                   EVAL      DBKEY  = 'IDNTID'
-     C                   EVAL      DBASE  = 002
+     C                   EVAL      DBASE  = 003
      C                   EXSR      *PSSR
      C                   ENDIF
       *
       ** Update
       *
-     C                   ADD       1             IDNTID
-     C                   EVAL      WIDNTID +=1
-     C*                  UPDATE    GPUTNID0
+     C                   EVAL      WIDNTID = IDNTID + 1
+     C/exec SQL
+     C+ update GPUTNIPD set IDNTID = :WIDNTID
+     C/end-exec
 
+     C                   IF        SQLCOD <> 0
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'GPUTNIPD'
+     C                   EVAL      DBKEY  = 'WIDNTID'
+     C                   EVAL      DBASE  = 004
+     C                   EXSR      *PSSR
+     C                   ENDIF
      C                   ENDSR
 
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  UPD_GPUTXTL0 - Update GPTRAPL0                               *
+      *  UPD_GPUTXTL0 - Update GPUTXTL0                               *
       *****************************************************************
 
      C     UPD_GPUTXTL0  BEGSR
 
      C/Exec SQL
-     C+ UPDATE GPUTXTL0 SET XTID = IDNTID
+     C+ update GPUTXTL0 SET XTID = :WIDNTID
      C+ where XTZONE = :ZONE_DS2
      C+ and XTMOD = :TMOD_DS2
      C+ and XTSMOD = :TSMOD_DS2
      C+ and XTID = :TID_DS2
      C+ and XTTREF = :WTREF
      C/End-Exec
+
+     C                   IF        SQLCOD <> 0
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'GPUTXTL0'
+     C                   EVAL      DBKEY  = 'WIDNTID'
+     C                   EVAL      DBASE  = 005
+     C                   EXSR      *PSSR
+     C                   ENDIF
 
      C                   ENDSR
 
@@ -351,6 +369,25 @@
       *****************************************************************
 
      C     *INZSR        BEGSR
+
+      *
+      ** Read Bank details via Access program
+      *
+     C                   CALL      'AOBANKR0'
+     C                   PARM      '*MSG   '     PRTCD
+     C                   PARM      '*KEY   '     POPTN
+     C     SDBANK        PARM                    SDBANK
+      *
+      ** If record not found, exit via DBERR subroutine
+      *
+     C                   IF        PRTCD <> *Blanks
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBPGM = 'SMU90008'
+     C                   EVAL      DBFILE = 'SDBANKPD'
+     C                   EVAL      DBASE = 001
+     C                   EVAL      DBKEY = POPTN
+     C                   EXSR      *PSSR
+     C                   ENDIF
 
      C                   ENDSR
 

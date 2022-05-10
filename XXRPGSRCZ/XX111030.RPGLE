@@ -22,12 +22,17 @@
       ***(c)*Misys*International*Banking*Systems*Ltd.*2016*************                  HUT111
       *  (c) Finastra International Systems Ltd. 2020                 *                  HUT111
       *                                                               *
-      *  Last Amend No. MD058450           Date 10Aug21               *
-      *  Prev Amend No. HUT111             Date 08Apr20               *
+      *  Last Amend No. MD058450A          Date 28Apr22               *
+      *  Prev Amend No. MD058450           Date 10Aug21               *
+      *                 HUT111             Date 08Apr20               *
       *                 HUT024  *CREATE    Date 17Oct16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058450A - Component XXC111030 failed due to I/O error      *
+      *              CPF5004 file XX111030P1. Check overflow line no. *
+      *              first if already reached (for header printing)   *
+      *              before write of record format XX111030D4.        *
       *  MD058450 - Component XXC111030 failed due to I/O error       *
       *             CPF5004 file XX111030P1. Change printerfile       *
       *             overflow to 66. (Recompile)                       *
@@ -113,6 +118,8 @@
      D WOpenP1         S              1A
      D Rqdln1          S              3  0
      D Difln1          S              3  0
+      ** Required line no. work variable for record format XX111030D4.                     MD058450A
+     D Rqdln2          S              3  0                                                 MD058450A
 
      D PRtcd           S              7A
      D POptn           S              7A
@@ -164,6 +171,16 @@
      C                   IF        WOpenP1 = 'Y'
      C**********         WRITE     SEH030D4                                              HUT111
      C**********         CLOSE     SEH030P1                                              HUT111
+      *                                                                                    MD058450A
+      ** If no more record read from file and overflow line no. is less                    MD058450A
+      ** than or equal to the next lines (Prtln1 + Rqdln2) to be printed,                  MD058450A
+      ** then print the header (record format XX11030D1) to avoid printer                  MD058450A
+      ** overflow.                                                                         MD058450A
+      *                                                                                    MD058450A
+     C                   IF        Oflln1 <= (Prtln1 + Rqdln2)                             MD058450A
+     C                   WRITE     XX111030D1                                              MD058450A
+     C                   ENDIF                                                             MD058450A
+      *                                                                                    MD058450A
      C                   WRITE     XX111030D4                                            HUT111
      C                   CLOSE     XX111030P1                                            HUT111
      C                   ELSE
@@ -402,6 +419,7 @@
      C                   EVAL      Prtln1 = *ZERO
      C                   EVAL      WOpenP1 = 'N'
      C                   EVAL      RPTOT = *ZERO
+     C                   EVAL      Rqdln2 = 7                                              MD058450A
 
      C                   ENDSR
       *****************************************************************

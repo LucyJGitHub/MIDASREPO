@@ -13,7 +13,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CER073D            Date 13Aug20               *
-      *  Prev Amend No. MD058109           Date 08Sep21               *      
+      *  Prev Amend No. MD058109           Date 08Sep21               *
       *                 MD057871           Date 30Apr21               *
       *                 MD058050           Date 10May21               *
       *                 CLE172             Date 01Oct20               *
@@ -4889,7 +4889,7 @@ STOP  *                                                                   CLE004
 1140 O                                           23 'CAPITALISATION IND'
 1141 O                       INTC                33
      O**********                         63 'ACCRUE'                                 S01392 MD058109
-     O                                   45 'ACCRUE'                                        MD058109
+     O                                           45 'ACCRUE'                                MD058109
      O                       ADDI                73                             S01392
      O***********      69                94 'PORTFOLIO REFERENCE'  S01486 186808
      O***********      69      OPTFR     96                        S01486 186808

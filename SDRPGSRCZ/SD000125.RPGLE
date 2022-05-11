@@ -17,10 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CGL057  *CREATE     Date 02Nov21              *
+      *  Last Amend No. MD059856            Date 11May22              *
+      *  Prev Amend No. CGL057  *CREATE     Date 02Nov21              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059856 - Issues encountered on mapping tables.             *
+      *             Added No Details to Report record format.         *
       *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
       *           Earnings Accounts.                                  *
       *                                                               *
@@ -205,6 +208,11 @@
       ** if eof then goto end
 
      C                   IF        *IN14 = *ON
+     C                   IF        WCALC = 0                                                MD059856
+     C                   OPEN      SD000125P1                                               MD059856
+     C                   WRITE     SD0125R0                                                 MD059856
+     C                   WRITE     SD0125R3                                                 MD059856
+     C                   ENDIF                                                              MD059856
      C                   EVAL      *INLR = *ON
      C                   GOTO      MEND
      C                   ENDIF

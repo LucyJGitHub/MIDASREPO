@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CCG025             Date 04Apr22               *
-      *  Prev Amend No. CGL193             Date 02Nov21               *
+      *  Last Amend No. MD059908           Date 06May22               *
+      *  Prev Amend No. CCG025             Date 04Apr22               *
+      *                 CGL193             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
       *                 MD056576           Date 21Sep20               *
@@ -103,6 +104,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059908 - Decimal data error in job GLC0064. Also correct   *
+      *             extract of debit rate change.                     *
       *  CCG025 - Tiered and Threshold Interest Details on Statements *
       *  CGL193 - Transaction Type and GL Additional Info in CM GL    *
       *           statements                                          *
@@ -2272,9 +2275,10 @@
      C                   EXSR      SRRRDE                                                     CCG025
       *                                                                                       CCG025
      C                   MOVEL     BAL26         ##D(1)                                       CCG025
+     C                   MOVE      A6NBDP        ##D(1)                                     MD059908
      C                   If        BAL3 =   *BLANKS                                           CCG025
      C                   else                                                                 CCG025
-     C                   MOVE      A6NBDP        ##D(1)                                       CCG025
+     C**********         MOVE      A6NBDP        ##D(1)                              CCG025 MD059908
      C                   MOVEL     BAL31         ##D(2)                                       CCG025
      C                   MOVE      A6NBDP        ##D(2)                                       CCG025
      C                   MOVEL     BAL32         ##D(3)                                       CCG025
@@ -2345,7 +2349,8 @@
      C                   Z-ADD     SDLSTD        ##PSTD                                       CCG025
      C                   MOVEL     'Y'           FIRST                                        CCG025
      C     ##ACDK        SETGT     REHRDJ                                                     CCG025
-     C     ##ACKY        READE     REHRDJ                                 55                  CCG025
+     C*****##ACKY        READE     REHRDJ                                 55         CCG025 MD059908
+     C     ##ACKY        READPE    REHRDJ                                 55                MD059908
       *                                                                                       CCG025
       **  For each rate change ...                                                            CCG025
      C     *IN55         DOWEQ     *OFF                                                       CCG025

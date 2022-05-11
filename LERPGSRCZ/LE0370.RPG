@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD059137           Date 29Oct21               *
-      *  Prev Amend No. MD058182           Date 25May21               *
+      *  Last Amend No. MD059808           Date 29Apr22               *
+      *  Prev Amend No. MD059137           Date 29Oct21               *
+      *                 MD058182           Date 25May21               *
       *                 MD058108           Date 18May21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -166,6 +167,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD059808 - BR event for forward-looking rate loans appeared  *
+      *             on exception report due to empty dates on array.  *
+      *             Save AB2 array and restore contents after every   *
+      *             processing of CLE172 backward-looking rate loan   *
       *  MD059137 - Consider migrating loans to backward looking rate *
       *             that are not yet attached to a base rate code.    *
       *             Valid only for loans with rollover date and       *
@@ -700,6 +705,7 @@
      E                    AB1       998  5               CURR/BASE RATE CD                  MD036156
      E                    AB2       998  5 0             NEW BASE RT.DATE                   MD036156
      E                    AB3       998 11 0             NEW BASE RT.                       MD036156
+     E                    AB2P      998  5 0             HOLDING ARRAY FOR AB2              MD059808
       *                                                                                     MD036156
      E                    ACI       150  1               CCY IND          CLE031
      E/COPY ZSRSRC,ZDATE2Z1                                               S01392
@@ -1854,6 +1860,7 @@
 0718 C           BRTT      COMP *BLANKS              30                                       CSD103
 0719 C  N30                GOTO BYE2
      C           LIBR      TAG                                                              MD059137
+     C                     MOVEAAB2       AB2P                                              MD059808
      C                     MOVE ' '       WLIBE   1                                           CLE172
      C           CLE172    IFEQ 'Y'                                                           CLE172
      C           WPNAM     ANDEQ*BLANKS                                                     MD058182
@@ -1881,6 +1888,7 @@
      C                     MOVE '     '   AB2,D                                               CLE172
      C                     READ LELIBEL0                 88                                   CLE172
      C                     ENDDO                                                              CLE172
+     C                     MOVEAAB2P      AB2                                               MD059808
      C                     ENDIF                                                              CLE172
      C                     ENDIF                                                              CLE172
 0720 C* CHECK IF THERE IS BR CHANGE PENDING.

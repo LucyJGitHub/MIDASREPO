@@ -8,7 +8,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSW122             Date 04May22              */
+/*       Last Amend No. CSW122A            Date 04May22              */
 /*       Prev Amend No. CSW220             Date 09Mar20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD037198           Date 26Apr16              */
@@ -50,7 +50,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       CSW122 - SWIFT ISO 20022 Format Changes                     */
+/*       CSW122A - SWIFT ISO 20022 CCR1 Generation of MTn99          */
 /*       CSW220 - SWIFT Changes 2020                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD037198 - Add OVRDBF for TABFP since FT0640 fails with     */
@@ -163,7 +163,6 @@
              DCL        VAR(&W0CMT) TYPE(*CHAR) LEN(3) VALUE('YES')   /*S01522*/
              DCL        VAR(&FMT)  TYPE(*CHAR) LEN(200)               /*S01522*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*S01522*/
-             DCL        VAR(&RTCD2) TYPE(*CHAR) LEN(7)                /*CSW122*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                 /*S01522*/
              DCL        VAR(&W0UPF) TYPE(*CHAR) LEN(3) VALUE('YES')   /*S01522*/
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) +
@@ -194,7 +193,7 @@
              DCL        VAR(&CMTJOB10) TYPE(*CHAR) LEN(10)                                /*CSC022*/
              DCL        VAR(&CRSKIP) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
              DCL        VAR(&PSWIFT) TYPE(*CHAR) LEN(6)                                   /*CSW220*/
-             DCL        VAR(&PSWIFT2) TYPE(*CHAR) LEN(6)                                  /*CSW122*/
+             DCL        VAR(&CSW122) TYPE(*CHAR) LEN(1)                                  /*CSW122A*/
              DCL        VAR(&PCOB) TYPE(*CHAR) LEN(1) VALUE('N')                          /*CSW220*/
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(4)                                    /*CSW220*/
              DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CSW220*/
@@ -556,19 +555,27 @@
 /**  Check for Database Errors Trapped by Program  **/
 /**/
         IF COND(%SWITCH(XXXXXX11)) THEN(GOTO DBERR)
+
+        CHGVAR     VAR(&CSW122) VALUE('N')                                               /*CSW122A*/
+        CHGVAR     VAR(&RTCD) VALUE('       ')                                           /*CSW122A*/
+        CHGVAR     VAR(&SARD) VALUE('CSW122')                                            /*CSW122A*/
+        CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                           /*CSW122A*/
+                                                                                         /*CSW122A*/
+        CALL   PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD)                                     /*CSW122A*/
+        IF     COND(&RTCD *EQ '       ') THEN(DO)                                        /*CSW122A*/
+        IF         COND(&RTNCDE *EQ '       ') THEN(DO)                                  /*CSW122A*/
+        CHGVAR     VAR(&CSW122) VALUE('Y')                                               /*CSW122A*/
+        ENDDO                                                                            /*CSW122A*/
 /**/                                                                                      /*CSW220*/
 /**  Call FT000199  **/                                                                   /*CSW220*/
 /**/                                                                                      /*CSW220*/
         CHGJOB     SWS(XXXXXX00)                                                          /*CSW220*/
         CHGVAR     VAR(&RTCD) VALUE('       ')                                            /*CSW220*/
-        CHGVAR     VAR(&RTCD2) VALUE('       ')                                           /*CSW220*/
         CHGVAR     VAR(&PSWIFT) VALUE('CSW220')                                           /*CSW220*/
-        CHGVAR     VAR(&PSWIFT2) VALUE('CSW122')                                          /*CSW122*/
         CALL   PGM(SWIFTACTV) PARM(&PSWIFT &RTCD)                                         /*CSW220*/
-        CALL   PGM(SWIFTACTV) PARM(&PSWIFT2 &RTCD2)                                       /*CSW122*/
-/*******IF     COND(&RTCD *EQ 'CSWACTV') THEN(DO)                                  /*CSW220 CSW122*/
-        IF     COND((&RTCD *EQ 'CSWACTV') *OR +
-                   (&RTCD2 *EQ 'CSWACTV')) THEN(DO)                                       /*CSW122*/
+/*******IF     COND(&RTCD *EQ 'CSWACTV') THEN(DO)                                 /*CSW220 CSW122A*/
+        IF     COND((&RTCD *EQ 'CSWACTV') *OR +                                          /*CSW122A*/
+                   (&CSW122 *EQ 'Y')) THEN(DO)                                           /*CSW122A*/
 /*  Check that ZMUSER dataarea has been set up in QTEMP, if not   */                      /*CSW220*/
 /*  create it here.                                               */                      /*CSW220*/
                                                                                           /*CSW220*/

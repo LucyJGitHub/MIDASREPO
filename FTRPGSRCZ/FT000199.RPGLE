@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSW122             Date 04May22               *
+      *  Last Amend No. CSW122A            Date 04May22               *
       *  Prev Amend No. MD057056           Date 19May21               *
       *                 MD056683           Date 14Sep20               *
       *                 MD056303           Date 18Jul20               *
@@ -24,7 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSW122   - SWIFT ISO 20022 Format                            *
+      *  CSW122A  - SWIFT ISO 20022 CCR1 Generation of MTn99          *
       *  MD057056 - SWIFT: F21 in MT199 is truncated                  *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
       *             the credit goes to the Account with Bank          *
@@ -152,7 +152,7 @@
       ** +--------------------------------------+
 
      D SValK1          C                   CONST('MT199Destination')
-     D SValK2          C                   CONST('GenMTn99OnIgnore')                          CSW122
+     D SValK2          C                   CONST('GenMTn99OnIgnore')                         CSW122A
      D StsACCC         C                   CONST('//ACCC')
      D StsRJCT         C                   CONST('//RJCT/MS03')
      D StsACSPH        C                   CONST('//ACSP/G002')
@@ -369,7 +369,7 @@
      D S01499          S              1A                                                    MD055939
      D CFT009          S              1A                                                    MD055939
      D CFT014          S              1A                                                    MD055939
-     D CSW122          S              1A                                                      CSW122
+     D CSW122          S              1A                                                     CSW122A
 
       ** Variable for accessing TABFP
      D ZTABKY          S             12A
@@ -444,8 +444,8 @@
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      SValK1        PSValK1
      C                   PARM                    PSVal1
-     C*********          PARM      *BLANKS       PSValK2                                      CSW122
-     C                   PARM      SValK2        PSValK2                                      CSW122
+     C*********          PARM      *BLANKS       PSValK2                                     CSW122A
+     C                   PARM      SValK2        PSValK2                                     CSW122A
      C                   PARM                    PSVal2
      C                   PARM      *BLANKS       PSValK3
      C                   PARM                    PSVal3
@@ -473,11 +473,11 @@
      C                   MOVE      '001'         DBASE
      C                   MOVEL     SValK1        DBKEY
      C                   ENDIF
-                                                                                              CSW122
-     C                   IF        PSVal2 = '*NRF  '                                          CSW122
-     C                   MOVE      '001'         DBASE                                        CSW122
-     C                   MOVEL     SValK2        DBKEY                                        CSW122
-     C                   ENDIF                                                                CSW122
+                                                                                             CSW122A
+     C                   IF        PSVal2 = '*NRF  '                                         CSW122A
+     C                   MOVE      '001'         DBASE                                       CSW122A
+     C                   MOVEL     SValK2        DBKEY                                       CSW122A
+     C                   ENDIF                                                               CSW122A
 
 
      C                   OUT       LDA
@@ -698,29 +698,29 @@
      C                   MOVEL     'N'           CFT014                                     MD055939
      C                   ENDIF                                                              MD055939
       *                                                                                     MD055939
-      ** Access Switchable Features file for CSW122                                           CSW122
-      *                                                                                       CSW122
-     C                   CALL      'AOSARDR0'                                                 CSW122
-     C                   PARM      *BLANKS       @RTCD                                        CSW122
-     C                   PARM      '*VERIFY'     @OPTN                                        CSW122
-     C                   PARM      'CSW122'      @SARD                                        CSW122
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW122
-                                                                                              CSW122
-     C     @RTCD         IFNE      *BLANKS                                                    CSW122
-     C     @RTCD         ANDNE     '*NRF   '                                                  CSW122
-     C     *LOCK         IN        LDA                                                        CSW122
-     C                   MOVE      '024'         DBASE                                        CSW122
-     C                   MOVEL     @SARD         DBKEY                                        CSW122
-     C                   MOVEL     'SCSARDPD'    DBFILE                                       CSW122
-     C                   OUT       LDA                                                        CSW122
-     C                   EXSR      *PSSR                                                      CSW122
-     C                   ENDIF                                                                CSW122
-                                                                                              CSW122
-     C     @RTCD         IFEQ      *BLANKS                                                    CSW122
-     C                   MOVEL     'Y'           CSW122                                       CSW122
-     C                   ELSE                                                                 CSW122
-     C                   MOVEL     'N'           CSW122                                       CSW122
-     C                   ENDIF                                                                CSW122
+      ** Access Switchable Features file for CSW122                                          CSW122A
+      *                                                                                      CSW122A
+     C                   CALL      'AOSARDR0'                                                CSW122A
+     C                   PARM      *BLANKS       @RTCD                                       CSW122A
+     C                   PARM      '*VERIFY'     @OPTN                                       CSW122A
+     C                   PARM      'CSW122'      @SARD                                       CSW122A
+     C     SCSARD        PARM      SCSARD        DSFDY                                       CSW122A
+                                                                                             CSW122A
+     C     @RTCD         IFNE      *BLANKS                                                   CSW122A
+     C     @RTCD         ANDNE     '*NRF   '                                                 CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '024'         DBASE                                       CSW122A
+     C                   MOVEL     @SARD         DBKEY                                       CSW122A
+     C                   MOVEL     'SCSARDPD'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C     @RTCD         IFEQ      *BLANKS                                                   CSW122A
+     C                   MOVEL     'Y'           CSW122                                      CSW122A
+     C                   ELSE                                                                CSW122A
+     C                   MOVEL     'N'           CSW122                                      CSW122A
+     C                   ENDIF                                                               CSW122A
 
      C                   ENDSR
       /EJECT
@@ -746,12 +746,14 @@
      C                   DOW       *IN99 = '0'
 
      C                   EVAL      KFMsgR = FTMSGR
-      *                                                                                       CSW122
-      ** If CSW122 is switched on, do processing for MT199UC.                                 CSW122
-      *                                                                                       CSW122
-     C                   IF        CSW122 = 'Y'                                               CSW122
-     C                   EXSR      MTn99REJT                                                  CSW122
-     C                   ENDIF                                                                CSW122
+      *                                                                                      CSW122A
+      ** If CSW122 is switched on, do processing for MT199UC.                                CSW122A
+      *                                                                                      CSW122A
+     C                   IF        CSW122 = 'Y'                                              CSW122A
+     C                   EXSR      MTn99REJT                                                 CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   IF        CSW220 = 'Y'                                              CSW122A
 
       *
       ** MT199 Status is ACCC
@@ -919,6 +921,8 @@
      C                   ENDIF
 
      C                   ENDIF
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
 
       *
       ** Writes to MGOMSGPD
@@ -1810,53 +1814,57 @@
      C                   ENDIF
 
      C                   ENDSR
-      *****************************************************************                       CSW122
-      /EJECT                                                                                  CSW122
-      *****************************************************************                       CSW122
-      *                                                               *                       CSW122
-      * MTn99REJT   - Processing for MTn99 on Ignore                  *                       CSW122
-      *                                                               *                       CSW122
-      * Called by: SrRdIncMsg                                         *                       CSW122
-      *                                                               *                       CSW122
-      * Calls: None                                                   *                       CSW122
-      *                                                               *                       CSW122
-      *****************************************************************                       CSW122
-     C     MTn99REJT     BEGSR                                                                CSW122
-      *                                                                                       CSW122
-      ** Check for system value GenMTn99OnIgnore for                                          CSW122
-      ** status REJT.                                                                         CSW122
-      *                                                                                       CSW122
-     C                   IF        PSVal2  = 'Y' AND CSW122 = 'Y'                             CSW122
-      *                                                                                       CSW122
-      ** MT199 Status is RJCT                                                                 CSW122
-      *                                                                                       CSW122
-     C                   IF        FTM199 = 'R'                                               CSW122
-      *                                                                                       CSW122
-     C                   EVAL      WTag79L2Val = StsRJCT                                      CSW122
-     C                   EXSR      SrSvCmFld                                                  CSW122
-     C                   EXSR      SRExtract                                                  CSW122
-     C                   EVAL      WGenFlg = 'Y'                                              CSW122
-      *                                                                                       CSW122
-     C                   ENDIF                                                                CSW122
-      *                                                                                       CSW122
-     C                   IF        CSW122 = 'Y' AND CSW220 = 'N'                              CSW122
-     C                   EVAL      FTM199 = 'Z'                                               CSW122
-     C                   UPDATE    @INFTL6                              98                    CSW122
-      *                                                                                       CSW122
-     C                   IF        *IN98 = *ON                                                CSW122
-     C     *LOCK         IN        LDA                                                        CSW122
-     C                   MOVE      '010'         DBASE                                        CSW122
-     C                   MOVEL     'FTM199'      DBKEY                                        CSW122
-     C                   MOVEL     'MEINFTL6'    DBFILE                                       CSW122
-     C                   OUT       LDA                                                        CSW122
-     C                   EXSR      *PSSR                                                      CSW122
-     C                   ENDIF                                                                CSW122
-      *                                                                                       CSW122
-     C                   ENDIF                                                                CSW122
-      *                                                                                       CSW122
-     C                   ENDIF                                                                CSW122
-      *                                                                                       CSW122
-     C                   ENDSR                                                                CSW122
+      *****************************************************************                      CSW122A
+      /EJECT                                                                                 CSW122A
+      *****************************************************************                      CSW122A
+      *                                                               *                      CSW122A
+      * MTn99REJT   - Processing for MTn99 on Ignore                  *                      CSW122A
+      *                                                               *                      CSW122A
+      * Called by: SrRdIncMsg                                         *                      CSW122A
+      *                                                               *                      CSW122A
+      * Calls: None                                                   *                      CSW122A
+      *                                                               *                      CSW122A
+      *****************************************************************                      CSW122A
+     C     MTn99REJT     BEGSR                                                               CSW122A
+      *                                                                                      CSW122A
+      ** Check for system value GenMTn99OnIgnore for                                         CSW122A
+      ** status REJT.                                                                        CSW122A
+      *                                                                                      CSW122A
+     C                   IF        PSVal2  = 'Y'                                             CSW122A
+      *                                                                                      CSW122A
+      ** MT199 Status is RJCT                                                                CSW122A
+      *                                                                                      CSW122A
+     C                   IF        FTM199 = 'R'                                              CSW122A
+      *                                                                                      CSW122A
+      ** Call MTn99 REJT Message Generation and Formatting                                   CSW122A
+      *                                                                                      CSW122A
+     C                   CALL      'FT000201'                                                CSW122A
+     C                   PARM      KFMsgR        PMsgR                                       CSW122A
+      *                                                                                      CSW122A
+     C                   EXSR      SrSvCmFld                                                 CSW122A
+     C                   EXSR      SRExtract                                                 CSW122A
+     C                   EVAL      WGenFlg = 'Y'                                             CSW122A
+      *                                                                                      CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   IF        CSW122 = 'Y' AND CSW220 = 'N'                             CSW122A
+     C                   EVAL      FTM199 = 'Z'                                              CSW122A
+     C                   UPDATE    @INFTL6                              98                   CSW122A
+      *                                                                                      CSW122A
+     C                   IF        *IN98 = *ON                                               CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '010'         DBASE                                       CSW122A
+     C                   MOVEL     'FTM199'      DBKEY                                       CSW122A
+     C                   MOVEL     'MEINFTL6'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   ENDSR                                                               CSW122A
       *****************************************************************
      C/EJECT
       *****************************************************************

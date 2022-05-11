@@ -21,8 +21,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. MD059906           Date 06May22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056543           Date 15Sep20               *
       *                 MD055928           Date 02Jun20               *
       *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
@@ -63,6 +64,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD059906 - Correct CGPTYJW0 access as field GARECI does      *
+      *             not exist                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
@@ -3430,7 +3433,8 @@
      C+ SELECT *                                                                            MD054955
      C+ into :CGPTYP                                                                        MD054955
      C+ from CGPTYJW0                                                                       MD054955
-     C+ where ITPTYP = :ITPTYP and ITPSTP = :ITPSTP and GARECI = 'D'                        MD054955
+     C**where*ITPTYP = :ITPTYP and ITPSTP = :ITPSTP and GARECI = 'D'               MD054955 MD059906
+     C+ where ITPTYP = :ITPTYP and ITPSTP = :ITPSTP and ITRECI = 'D'                        MD059906
      C/END-EXEC                                                                             MD054955
      C                   SETOFF                                       90                    MD054955
      C                   If        SQLCODE = 100                                            MD054955
@@ -3449,7 +3453,8 @@
      C+ SELECT *                                                                            MD054955
      C+ into :CGPTYP                                                                        MD054955
      C+ from CGPTYJW0                                                                       MD054955
-     C+ where ITPTYP = :ITPTYP  and GARECI = 'D'                                            MD054955
+     C**where*ITPTYP = :ITPTYP  and GARECI = 'D'                                   MD054955 MD059906
+     C+ where ITPTYP = :ITPTYP  and ITRECI = 'D'                                            MD059906
      C/END-EXEC                                                                             MD054955
      C                   SETOFF                                       90                    MD054955
      C                   If        SQLCODE = 100                                            MD054955

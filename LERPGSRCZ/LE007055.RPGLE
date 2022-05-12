@@ -15,12 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR700107 *CREATE   Date 01Aug12               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR700107 - List PDCLs MR/RE events that will not be generated*

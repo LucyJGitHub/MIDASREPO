@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CER049             Date 06Dec10               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -195,7 +197,7 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -204,17 +206,17 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1A
      D PDATA           S           4000A
      D PRETCODE        S              7A   INZ('       ')
@@ -248,10 +250,10 @@
      D ZZLCD           S              5  0
      D ZZEACC          S              5  0
      D KCyCd           S                   LIKE(A6CYCD)                                     BUG12604
- 
+
      ISDBRCHD0
      I              QQDFAC                      ZQDFAC
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -262,7 +264,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -431,7 +433,7 @@
       *
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -969,17 +971,17 @@
       *                                                               *
       *****************************************************************
      C     SRACOD        BEGSR
- 
+
      C     *LOVAL        SETLL     SDAACDL2
      C                   READ      SDAACDL2                               40
- 
+
      C                   DOW       *IN40 = *OFF
      C                   IF        A5TYLC <> 'D'
      C                   IF        A5EACC < BJDNWD
      C                   EXSR      SRAACD2Z
      C                   EVAL      PDATA = @SDAACD
      C                   CALL      'SDACODACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDAACDL2
      C                   ELSE
@@ -992,7 +994,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDAACDL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1011,7 +1013,7 @@
      C                   IF        EACC < BJDNWD
      C                   EVAL      PDATA = @SDAAKY
      C                   CALL      'SDAKEYACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    ACKEYALF
      C                   ELSE
@@ -1025,7 +1027,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDAAKYL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1082,7 +1084,7 @@
      C                   EVAL      F_GPDT = GPDT
      C                   EVAL      PDATA = @SDAFAK
      C                   CALL      'SDFAKYACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDAFAKL2
      C                   ELSE
@@ -1095,7 +1097,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDAFAKL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1150,7 +1152,7 @@
      C                   EVAL      K_GPDT = GPDT
      C                   EVAL      PDATA = @SDASAK
      C                   CALL      'SDSAKYACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDASAKL2
      C                   ELSE
@@ -1163,7 +1165,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDASAKL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1183,7 +1185,7 @@
      C                   EXSR      SRACST2Z
      C                   EVAL      PDATA = @SDACST
      C                   CALL      'SDCUSTACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDACSTL2
      C                   ELSE
@@ -1196,7 +1198,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDACSTL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1215,7 +1217,7 @@
      C                   IF        ASEACC < BJDNWD
      C                   EVAL      PDATA = @SDADST
      C                   CALL      'SDDLSTACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDADSTL2
      C                   ELSE
@@ -1228,7 +1230,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDADSTL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1247,7 +1249,7 @@
      C                   IF        EACC11 < BJDNWD
      C                   EVAL      PDATA = @SDADTS
      C                   CALL      'SDDTSTACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDADTSL2
      C                   ELSE
@@ -1260,7 +1262,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDADTSL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1279,7 +1281,7 @@
      C                   IF        AMEACC < BJDNWD
      C                   EVAL      PDATA = @SDAFCT
      C                   CALL      'SDFACTACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDAFCTL2
      C                   ELSE
@@ -1292,7 +1294,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDAFCTL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1311,7 +1313,7 @@
      C                   IF        DGEACC < BJDNWD
      C                   EVAL      PDATA = @SDAHDY
      C                   CALL      'SDHOLIACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDAHDYL2
      C                   ELSE
@@ -1325,7 +1327,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDAHDYL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1347,7 +1349,7 @@
      C                   EVAL      L_PLCRED = PLCRED
      C                   EVAL      PDATA = @SDALTS
      C                   CALL      'SDLOANACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDALTSL2
      C                   ELSE
@@ -1361,7 +1363,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDALTSL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1381,7 +1383,7 @@
      C                   EXSR      SRACUR2Z
      C                   EVAL      PDATA = @SDACUR
      C                   CALL      'SDCURRACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      KCyCd = A6CYCD                                           BUG12604
      C     KCyCd         CHAIN     SDACURL4                                                 BUG12604
@@ -1399,7 +1401,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDACURL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1418,7 +1420,7 @@
      C                   IF        ALEACC < BJDNWD
      C                   EVAL      PDATA = @SDANAR
      C                   CALL      'SDNARRACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDANARL2
      C                   ELSE
@@ -1431,7 +1433,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDANARL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1445,15 +1447,15 @@
      C     SRACOF        BEGSR
      C     *LOVAL        SETLL     SDAACOL2
      C                   READ      SDAACOL2                               40
- 
+
      C                   DOW       *IN40 = *OFF
- 
+
      C                   IF        AZTYLC <> 'D'
      C                   IF        AZEACC < BJDNWD
      C                   EXSR      SRAACO2Z
      C                   EVAL      PDATA = @SDAACO
      C                   CALL      'SDACOFACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDAACOL2
      C                   ELSE
@@ -1466,7 +1468,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDAACOL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1485,7 +1487,7 @@
      C                   IF        A4EACC < BJDNWD
      C                   EVAL      PDATA = @SDACTY
      C                   CALL      'SDCTRYACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDACTYL2
      C                   ELSE
@@ -1498,7 +1500,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDACTYL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1517,7 +1519,7 @@
      C                   IF        DVEACC < BJDNWD
      C                   EVAL      PDATA = @SDALCN
      C                   CALL      'SDLOCNACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDALCNL2
      C                   ELSE
@@ -1530,7 +1532,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDALCNL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1549,7 +1551,7 @@
      C                   IF        A3EACC < BJDNWD
      C                   EVAL      PDATA = @SDARGN
      C                   CALL      'SDREGNACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDARGNL2
      C                   ELSE
@@ -1562,7 +1564,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDARGNL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1582,7 +1584,7 @@
      C                   EXSR      SRABRC2Z
      C                   EVAL      PDATA = @SDABRC
      C                   CALL      'SDBRCHACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDABRCL2
      C                   ELSE
@@ -1595,7 +1597,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDABRCL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1625,7 +1627,7 @@
      C                   EVAL      R_GPDT = GPDT
      C                   EVAL      PDATA = @SDARCG
      C                   CALL      'SDRECGACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDARCGL2
      C                   ELSE
@@ -1638,7 +1640,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDARCGL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1657,7 +1659,7 @@
      C                   IF        F9EACC < BJDNWD
      C                   EVAL      PDATA = @SDALEN
      C                   CALL      'SDLENOACP'   @PLIST
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   DELETE    SDALENL2
      C                   ELSE
@@ -1670,7 +1672,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDALENL2                               40
      C                   ENDDO
      C                   ENDSR
@@ -1696,7 +1698,7 @@
       *                                                               *
       *****************************************************************
      C     SRAACD2Z      BEGSR
- 
+
      C                   MOVE      A5LCD         ACLCD1
      C                   MOVE      A5TYLC        ACCHTP
      C                   MOVE      A5ACTY        ACACTY
@@ -1750,7 +1752,7 @@
      C                   MOVE      A5AACC        ACAACC
      C                   MOVE      A5EACC        ACEACC1
      C                   MOVE      A5GPDT        ACGPDT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1760,11 +1762,11 @@
       *                                                               *
       *****************************************************************
      C     SRAACO2Z      BEGSR
- 
+
      C                   MOVE      AZLCD         A_ZZLCD
      C                   MOVE      AZACOT        ZZACOT
      C                   MOVE      AZEACC        A_ZZEACC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1774,7 +1776,7 @@
       *                                                               *
       *****************************************************************
      C     SRABRC2Z      BEGSR
- 
+
      C                   MOVE      A8LCD         Z8LCD
      C                   MOVE      A8STCD        Z8STCD
      C                   MOVE      A8SUOP        Z8SUOP
@@ -1798,7 +1800,7 @@
      C                   MOVE      A8TMOF        Z8TMOF
      C                   MOVE      A8STOF        Z8STOF
      C                   MOVE      A8EACC        Z8EACC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1808,7 +1810,7 @@
       *                                                               *
       *****************************************************************
      C     SRACUR2Z      BEGSR
- 
+
      C                   MOVEL     A6CYNM        ZZDESC
      C                   MOVE      A6NBDP        Z6NBDP
      C                   MOVE      A6SPRT        ZZSPRT
@@ -1859,7 +1861,7 @@
      C                   MOVE      A6IRDP        Z6IRDP
      C                   MOVE      A6FXDY        Z6FXDY
      C                   MOVE      A6EACC        Z6EACC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1869,7 +1871,7 @@
       *                                                               *
       *****************************************************************
      C     SRACST2Z      BEGSR
- 
+
      C                   MOVEL     BBCUST        CUGCUS
      C                   MOVEL     BBACOC        CUGACO
      C                   MOVE      BBCHID        CUCHID
@@ -1884,7 +1886,7 @@
      C                   MOVE      BBDEDT        CUDEDT
      C                   MOVE      BBMGTP        CUMGTP
      C                   MOVE      BBEACC        CUEACC
- 
+
      C                   ENDSR
       *****************************************************************
       *

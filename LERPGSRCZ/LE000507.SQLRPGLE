@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD038258           Date 13Apr16               *
@@ -54,7 +55,8 @@
      F                                     COMMIT
      FLE000507AUO    E             PRINTER
       **------------------------------------------------------------------
-      ** The following /COPY line includes all the defined fields in the
+      *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)            *
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS

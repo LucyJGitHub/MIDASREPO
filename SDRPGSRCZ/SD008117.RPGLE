@@ -10,13 +10,15 @@
       *                                                               *
       *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR837609A          Date 15Nov11               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR837609A          Date 15Nov11               *
       *                 AR837609           Date 09Nov11               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR837609A - Update current fields during COB only.           *
       *  AR837609 - Update current fields during COB only.            *
@@ -41,52 +43,52 @@
      FSDSTPDL1  IF   E           K DISK
      FSDSTPDL0  UF A E           K DISK
       ** Stamp Tax Tax Installation control
- 
+
      F                                     COMMIT
      FSD008117DFCF   E             WORKSTN
       ** Display file
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      D/COPY ZSRSRC,ZALIGNZ1LE
       ** ZALIGN Subroutine Array
- 
+
      D/COPY ZSRSRC,ZDATE9Z1LE
       ** ZDATE9 Subroutine Array
- 
+
      D/COPY ZSRSRC,ZDATE2Z1LE
       ** ZDATE2 Subroutine Array
- 
+
       *****************************************************************
       /SPACE 3
       *****************************************************************
      D A@CPY           DS
       ** Copyright array
- 
+
      D  CPY@                   1     80
      D                                     DIM(1) CTDATA PERRCD(1)
      D  ErrorMsg                     60    DIM(6) CTDATA PERRCD(1)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
      D  W24          E                     EXTFLD(SPARE)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
- 
+
      D PSDS           SDS
       ** Program Status Data Structure - gives Job/Workstation name and
       ** User ID
- 
+
      D  ##PGM            *PROC
      D  JOB                  244    253
      D  WSID                 244    246
      D  USER                 254    263
- 
+
      D                 DS                  INZ
      D  U#EDTE                 1      6
      D  U#EMM                  1      2
@@ -130,13 +132,13 @@
      D  I#LFTP                43     44
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank Details
- 
+
      I/COPY ZSRSRC,ZDATE9Z2LE
       ** ZDATE9 Subroutine Array
- 
+
      I/COPY ZSRSRC,ZDAT10Z1LE
       ** ZDAT10 Subroutine Array
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -144,72 +146,72 @@
       *                M A I N  P R O C E S S I N G
       *
       *****************************************************************
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    #RTRN             7
      C                   PARM                    MODE              1
      C                   PARM                    I#PARM
- 
+
       ** Initialise data
- 
+
      C                   EXSR      INIT
- 
+
       ** Continue to redisplay the screen if *IN40 remains off
- 
+
      C     *IN40         DOUEQ     '1'
- 
+
       ** If error write messages
- 
+
      C     *IN50         IFEQ      '1'
      C                   WRITE     #MSGCTL
      C                   ENDIF
- 
+
       ** If MODE is Enquire then protect fields.
- 
+
      C     MODE          IFEQ      'E'
      C                   SETON                                        202164
      C                   ENDIF
- 
+
       ** If MODE is Amend and not in ADD then protect only current fields
       ** Otherwise allow all to be input capable
- 
+
      C     MODE          IFEQ      'A'
      C                   SETON                                        20
      C                   ENDIF
- 
+
      C                   EXFMT     FORMAT1
- 
+
       ** Clear message subfile
- 
+
      C                   EXSR      CLEAR
- 
+
      C     *IN03         CASEQ     '1'           END
      C     *IN05         CASEQ     '1'           RESET
      C     *IN12         CASEQ     '1'           PREV
      C                   CAS                     VALID
      C                   ENDCS
      C                   ENDDO
- 
+
       ** Exit from program
- 
+
      C                   EXSR      PREV
       *****************************************************************
       * Initial Processing
       *****************************************************************
- 
+
      C     INIT          BEGSR
- 
+
       ** Define the LDA for error handling
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       ** Call Access Program to obtain Banks details from PF/SDBANKPD
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '       '     ULRTCD            7
      C                   PARM      '*FIRST '     ULOPTN            7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C     ULRTCD        IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     'SD008117'    DBPGM
@@ -218,18 +220,18 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Obtain Midas Run Date
- 
+
      C                   MOVEL     BJMRDT        U#MRDT
- 
+
      C                   SETOFF                                       202164
- 
+
       ** If in Amend or Enquire mode.
- 
+
      C     MODE          IFEQ      'A'
      C     MODE          OREQ      'E'
- 
+
      C     KLIST1        KLIST
      C                   KFLD                    I#KEY
      C                   KFLD                    I#BRCA
@@ -241,15 +243,15 @@
      C                   KFLD                    I#LTYP
      C                   KFLD                    I#LSTP
      C                   KFLD                    I#FTYP
- 
+
      C     KLIST1        CHAIN     SDSTPDL1                           80
      C     *IN80         IFEQ      *OFF
- 
+
      C                   MOVEL     A3FTYP        U#FTYP
- 
+
       ** Convert Midas Day number of Current and New Effective Dates to
       ** MMCCYY format on screen.
- 
+
      C     A3EDTE        IFEQ      *ZEROS
      C                   MOVE      *BLANKS       U#EDTE
      C                   ELSE
@@ -261,7 +263,7 @@
      C                   MOVE      U#6EYY        U#EYY
      C                   MOVE      U#6EMM        U#EMM
      C                   ENDIF
- 
+
      C     A3EDTN        IFEQ      *ZEROS
      C                   MOVE      *BLANKS       U#EDTN
      C                   ELSE
@@ -273,9 +275,9 @@
      C                   MOVE      U#6NYY        U#EYYN
      C                   MOVE      U#6NMM        U#EMMN
      C                   ENDIF
- 
+
       ** Format under 1 Year rate
- 
+
      C     A3F01Y        IFEQ      *ZEROS
      C                   MOVE      *BLANKS       U#F01Y
      C                   ELSE
@@ -284,7 +286,7 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        U#F01Y
      C                   ENDIF
- 
+
      C     A3N01Y        IFEQ      *ZEROS
      C                   MOVE      *BLANKS       U#N01Y
      C                   ELSE
@@ -293,9 +295,9 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        U#N01Y
      C                   ENDIF
- 
+
       ** Format over 1 year under 5 years
- 
+
      C     A3F05Y        IFEQ      *ZEROS
      C                   MOVE      *BLANKS       U#F05Y
      C                   ELSE
@@ -304,7 +306,7 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        U#F05Y
      C                   ENDIF
- 
+
      C     A3N05Y        IFEQ      *ZEROS
      C                   MOVE      *BLANKS       U#N05Y
      C                   ELSE
@@ -313,9 +315,9 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        U#N05Y
      C                   ENDIF
- 
+
       ** Format over 5 years
- 
+
      C     A3F99Y        IFEQ      *ZEROS
      C                   MOVE      *BLANKS       U#F99Y
      C                   ELSE
@@ -324,7 +326,7 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        U#F99Y
      C                   ENDIF
- 
+
      C     A3N99Y        IFEQ      *ZEROS
      C                   MOVE      *BLANKS       U#N99Y
      C                   ELSE
@@ -333,10 +335,10 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        U#N99Y
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        MODE = 'I'
      C                   MOVEL     *BLANKS       U#FTYP
      C                   MOVEL     *BLANKS       U#EDTE
@@ -348,84 +350,84 @@
      C                   MOVEL     *BLANKS       U#F99Y
      C                   MOVEL     *BLANKS       U#N99Y
      C                   ENDIF
- 
+
      C                   EXSR      RESETERR
      C                   EXSR      CLEAR
      C                   WRITE     #MSGCTL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       * Validation subroutine
       *****************************************************************
- 
+
      C     VALID         BEGSR
- 
+
       ** If in Enquire mode then exit program
- 
+
      C     MODE          IFEQ      'E'
      C                   RETURN
      C                   ENDIF
- 
+
       ** Initialise error indicators
- 
+
      C                   EXSR      RESETERR
- 
+
      C     MODE          IFEQ      'A'
- 
+
       ** Validate Effective Date
- 
+
      C                   EXSR      VEDTN
- 
+
       ** Validate Stamp Tax Rate on Principal under 1 year
- 
+
      C                   EXSR      VN01Y
- 
+
       ** Validate Stamp Tax Rate on Principal over 1 year under 5
- 
+
      C                   EXSR      VN05Y
- 
+
       ** Validate Stamp Tax Rate on Principal over 5 years
- 
+
      C                   EXSR      VN99Y
- 
+
       ** If there are any errors *IN40 must be set off, otherwise
       ** set *IN40 on.
- 
+
      C     *IN50         IFEQ      *ON
      C                   SETOFF                                       40
      C                   ELSE
      C                   SETON                                        40
      C                   ENDIF
- 
+
       ** If there is and error in any of the screen fields then need to
       ** redisplay the screen and send all error messages.
- 
+
      C     *IN40         IFEQ      '1'
- 
+
       ** If no errors update file
- 
+
      C                   EXSR      UPDAT
- 
+
       ** Switch off IN40 as hitting Enter should only update the file,
       ** not take the user out of the screen. Need F3 to do this.
       ** Comit changes
- 
+
      C                   COMMIT
      C                   EXSR      RESET
      C                   SETOFF                                       40
      C                   ENDIF
      C                   ENDIF
- 
+
      C     MODE          IFEQ      'I'
- 
+
       ** Facility Type is new and all details are to be entered.
       **  Facility Type must not already exist on the Stamp Tax
       **  Defaults by business Types file but must exist on Facility
       **  Type file.
- 
+
      C     U#FTYP        IFNE      *BLANKS
- 
+
      C     U#FTYP        CHAIN     SDFACTL0                           81
      C     *IN81         IFEQ      *ON
      C                   SETON                                        5055
@@ -435,10 +437,10 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVEL     'FACILITY'    I#KEY
      C                   MOVE      U#FTYP        I#FTYP
- 
+
      C     KLIST1        CHAIN     SDSTPDL1                           80
      C     *IN80         IFEQ      *OFF
      C                   SETON                                        5055
@@ -447,10 +449,10 @@
      C                   MOVEL     'Facility'    ZAMSDA
      C                   EXSR      ZASNMS
      C                   ENDIF
- 
+
       ** Validate CURRENT fields
       ** Validate Effective Date
- 
+
      C**********         IF        U#EDTE = *BLANKS                                         AR837609
      C**********         SETON                                        5053                  AR837609
      C**********         MOVEL     'USR9963'     ZAMSID                                     AR837609
@@ -590,67 +592,67 @@
      C**********         ENDIF                                                              AR837609
       **********                                                                            AR837609
      C**********         ENDIF                                                              AR837609
- 
+
       ** Validate New fields
       ** Validate Effective Date
- 
+
      C                   EXSR      VEDTN
- 
+
       ** Validate Stamp Tax Rate on Principal under 1 year
- 
+
      C                   EXSR      VN01Y
- 
+
       ** Validate Stamp Tax Rate on Principal over 1 year under 5
- 
+
      C                   EXSR      VN05Y
- 
+
       ** Validate Stamp Tax Rate on Principal over 5 years
- 
+
      C                   EXSR      VN99Y
- 
- 
+
+
       ** If there are any errors *IN40 must be set off, otherwise
       ** set *IN40 on.
- 
+
      C     *IN50         IFEQ      *ON
      C                   SETOFF                                       40
      C                   ELSE
      C                   SETON                                        40
      C                   ENDIF
- 
+
       ** If there is and error in any of the screen fields then need to
       ** redisplay the screen and send all error messages.
- 
+
      C     *IN40         IFEQ      '1'
- 
+
       ** If no errors update file
- 
+
      C                   EXSR      UPDAT
- 
+
       ** Switch off IN40 as hitting Enter should only update the file,
       ** not take the user out of the screen. Need F3 to do this.
       ** Comit changes
- 
+
      C                   COMMIT
      C                   EXSR      RESET
      C                   SETOFF                                       40
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       * Validate New Effective Date
       *****************************************************************
- 
+
      C     VEDTN         BEGSR
      C                   IF        U#EDTN = *BLANKS
      C                   SETON                                        5054
      C                   MOVEL     'USR9950'     ZAMSID
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
- 
+
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      U#EDTN        ZFIELD
      C                   MOVE      0             ZADEC
@@ -665,21 +667,21 @@
      C     ##EMMN        ORGT      12
      C     ##ECCN        ORGT      20
      C     ##ECCN        ORLT      19
- 
+
      C                   SETON                                        5054
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If error send message 'Invalid Date - must be in MMYYYY format'
- 
+
      C     *IN54         IFEQ      *ON
      C                   MOVEL     'USR9948'     ZAMSID
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   ENDIF
- 
+
       ** If error send message 'Date must be later than current month'
- 
+
      C     *IN54         IFEQ      *OFF
      C**********         MOVE      BJRDNB        ZDAYNO                                    AR837609A
      C                   MOVE      *OFF          *IN98
@@ -691,7 +693,7 @@
      C                   MOVE      U#EMMN        U#6NMM
      C                   MOVE      U#ECCN        U#6NCC
      C                   MOVE      U#EYYN        U#6NYY
- 
+
      C     U#6DTN        IFLE      U#6DTE
      C                   SETON                                        5054
      C                   MOVEL     'USR9949'     ZAMSID
@@ -708,7 +710,7 @@
       *****************************************************************
       * Validate Stamp Tax RAte Principal - Under 1 year
       *****************************************************************
- 
+
      C     VN01Y         BEGSR
      C     U#N01Y        IFEQ      *BLANKS
      C                   SETON                                        5059
@@ -717,7 +719,7 @@
      C                   EVAL      ZAMSDA = ErrorMsg(4)
      C                   EXSR      ZASNMS
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      U#N01Y        ZFIELD
      C                   MOVE      6             ZADEC
@@ -732,13 +734,13 @@
      C                   ELSE
      C                   MOVE      ZFIELD        ##N01Y           13 8
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
       * Validate Stanp tax Rate on Principal - over 1 under 5 years
       *****************************************************************
- 
+
      C     VN05Y         BEGSR
      C     U#N05Y        IFEQ      *BLANKS
      C                   SETON                                        5061
@@ -747,7 +749,7 @@
      C                   EVAL      ZAMSDA = ErrorMsg(5)
      C                   EXSR      ZASNMS
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      U#N05Y        ZFIELD
      C                   MOVE      6             ZADEC
@@ -762,13 +764,13 @@
      C                   ELSE
      C                   MOVE      ZFIELD        ##N05Y           13 8
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
       * Validate Stanp tax Rate on Principal -  over 5 years
       *****************************************************************
- 
+
      C     VN99Y         BEGSR
      C     U#N99Y        IFEQ      *BLANKS
      C                   SETON                                        5063
@@ -777,7 +779,7 @@
      C                   EVAL      ZAMSDA = ErrorMsg(6)
      C                   EXSR      ZASNMS
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      U#N99Y        ZFIELD
      C                   MOVE      6             ZADEC
@@ -792,61 +794,61 @@
      C                   ELSE
      C                   MOVE      ZFIELD        ##N99Y           13 8
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
       * Update subroutine
       *****************************************************************
- 
+
      C     UPDAT         BEGSR
- 
+
       ** Chain to SDSTPDPD
- 
+
      C     KLIST1        CHAIN     SDSTPDL0                           80
- 
+
       ** If record found then update otherwise insert
- 
+
      C     *IN80         IFEQ      *OFF
- 
+
       ** Set up type of last change and last change date
- 
+
      C                   MOVE      BJRDNB        A3LCD
      C                   MOVE      'A'           A3TYLC
- 
+
       ** Move display file fields to file fields
       ** Set new fields
- 
+
      C                   Z-ADD     ##N01Y        A3N01Y
      C                   Z-ADD     ##N05Y        A3N05Y
      C                   Z-ADD     ##N99Y        A3N99Y
      C                   MOVEL     'M'           A3N01F
      C                   Z-ADD     0             A3NDTN
- 
+
       ** Convert New Effective Date in CCYYMM format to Midas Day No.
- 
+
      C                   MOVEL     U#6DTN        ##6DTN            8
      C                   MOVE      '01'          ##6DTN
      C                   MOVE      ##6DTN        ZZDTIN
      C                   EXSR      ZDAT10
      C                   MOVE      ZZMDNO        A3EDTN
- 
+
      C                   UPDATE    @STPDV0
- 
+
      C                   ELSE
- 
+
       ** Set up type of last change and last change date
- 
+
      C                   MOVE      BJRDNB        A3LCD
      C                   MOVE      'I'           A3TYLC
- 
+
       ** Move display file fields to file fields
- 
+
      C                   MOVEL     'FACILITY'    A3KEY
      C                   MOVE      U#FTYP        A3FTYP
- 
+
       ** Set new fields
- 
+
      C**********         Z-ADD     ##F01Y        A3F01Y                                     AR837609
      C**********         Z-ADD     ##F05Y        A3F05Y                                     AR837609
      C**********         Z-ADD     ##F99Y        A3F99Y                                     AR837609
@@ -860,38 +862,38 @@
      C                   Z-ADD     0             A3FDTE
      C                   MOVEL     'M'           A3N01F
      C                   Z-ADD     0             A3NDTN
- 
+
       * Convert Effective Date in CCYYMM format to Midas Day No.
- 
+
      C                   MOVEL     U#6DTN        ##6DTN            8
      C                   MOVE      '01'          ##6DTN
      C                   MOVE      ##6DTN        ZZDTIN
      C                   EXSR      ZDAT10
      C                   MOVE      ZZMDNO        A3EDTN
- 
+
      C**********         MOVEL     U#6DTE        ##6DTE            8                        AR837609
      C**********         MOVE      '01'          ##6DTE                                     AR837609
      C**********         MOVE      ##6DTE        ZZDTIN                                     AR837609
      C**********         EXSR      ZDAT10                                                   AR837609
      C**********         MOVE      ZZMDNO        A3EDTE                                     AR837609
      C                   MOVE      *ZEROS        A3EDTE                                     AR837609
- 
+
      C                   WRITE     @STPDV0
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       * RESET/REFRESH THE SCREEN IF F5 IS PRESSED
       *****************************************************************
      C     RESET         BEGSR
- 
+
       ** Clear the program message queue and call SR/INIT to retrieve
       ** the last committed data from the extension file.
- 
+
      C                   EXSR      CLEAR
      C                   WRITE     #MSGCTL
      C                   EXSR      INIT
- 
+
      C                   ENDSR
       *****************************************************************
       * Reset Error Indicator
@@ -907,11 +909,11 @@
       * Error message subroutine
       *****************************************************************
      C     ZASNMS        BEGSR
- 
+
      C     ZAPGMQ        IFEQ      *BLANK
      C                   MOVEL     ##PGM         ZAPGMQ
      C                   ENDIF
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGMQ           10
      C                   PARM                    ZAPGRL            5
@@ -919,9 +921,9 @@
      C                   PARM                    ZAMSGF           10
      C                   PARM                    ZAMSDA          132
      C                   PARM                    ZAMSTP            7
- 
+
      C     ZAEXIT        ENDSR
- 
+
       *****************************************************************
       * CLEAR MESSAGE FILE
       *****************************************************************
@@ -956,20 +958,20 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C     @RUN          IFEQ      *BLANK
      C                   MOVE      'Y'           @RUN              1
      C                   SETON                                        U7U8LR
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
      C/COPY ZSRSRC,ZALIGNZ2LE
      C/COPY ZSRSRC,ZEDITZ2LE
      C/COPY ZSRSRC,ZDATE9Z3LE

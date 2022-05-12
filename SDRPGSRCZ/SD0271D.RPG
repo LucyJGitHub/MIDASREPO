@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 MD031074           Date 23Oct14               *
       *                 MD024140           Date 05May14               *
       *                 CLE134             Date 01Aug12               *
@@ -40,6 +41,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD031074 - Make sure that the pre-check order shows zero     *
@@ -715,6 +717,45 @@
      C                     MOVEL'Y'       W0RSF            *Reload subfile
      C                     END                             *FI
      C/COPY WNCPYSRC,SDH00054
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           #1SEL     ANDEQ'C'                                                           CLE138
+      *                                                                                       CLE138
+     C                     CALL 'SD0273M'              90                                     CLE138
+     C                     PARM           #1FCTY           Facility Type                      CLE138
+     C                     PARM           W0RTN   7        Return Code                        CLE138
+      *                                                                                       CLE138
+     C           *IN90     IFEQ '1'                                                           CLE138
+     C* Call to program ended in error                                                        CLE138
+     C                     MOVEL'Y2U0032' W0RTN                                               CLE138
+     C                     MOVEL*BLANKS   W0CLPG 10                                           CLE138
+     C                     MOVEL'SD0273M' W0CLPG                                              CLE138
+     C* Send message '*Error occured on CALL...'                                              CLE138
+     C                     MOVEL'Y2U0032' ZAMSID                                              CLE138
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CLE138
+     C                     MOVELW0CLPG    ZAMSDA           Message data                       CLE138
+     C                     EXSR ZASNMS                                                        CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+      * Error detected?                                                                       CLE138
+     C           W0RTN     IFNE *BLANK                                                        CLE138
+     C                     SETON                     98    *                                  CLE138
+     C                     END                                                                CLE138
+     C                     MOVEL'Y'       W0RSF            *Reload subfile                    CLE138
+      *                                                                                       CLE138
+     C                     ELSE                                                               CLE138
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'N'                                                           CLE138
+     C           #1SEL     ANDEQ'C'                                                           CLE138
+      ** Setup message data for message                                                       CLE138
+     C                     MOVEL#1SEL     ZA0001                                              CLE138
+      ** Send message 'Invalid action code'                                                   CLE138
+     C                     MOVEL'CLE1380' ZAMSID                                              CLE138
+     C                     EXSR ZASNMS                                                        CLE138
+     C                     SETON                     9833                                     CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
       * CASE: RCD.*SFLSEL is *Delete
      C           #1SEL     IFEQ 'D'                        *IF
       * CASE: WRK.Set Up Complete is No
@@ -788,6 +829,33 @@
      C**********           MOVEL'Y'       W0DCF            *Defer confirm                   MD024140
      C**********           GOTO DCEXIT                     *QUIT                            MD024140
      C/COPY WNCPYSRC,SDH00055
+      *                                                                                       CLE138
+     C           #1SEL     IFEQ 'C'                                                           CLE138
+      *                                                                                       CLE138
+     C                     CALL 'SD0273E'              90                                     CLE138
+     C                     PARM           #1FCTY           Facility Type                      CLE138
+     C                     PARM           W0RTN   7        Return Code                        CLE138
+      *                                                                                       CLE138
+     C           *IN90     IFEQ '1'                                                           CLE138
+     C* Call to program ended in error                                                        CLE138
+     C                     MOVEL'Y2U0032' W0RTN                                               CLE138
+     C                     MOVEL*BLANKS   W0CLPG 10                                           CLE138
+     C                     MOVEL'SD0273E' W0CLPG                                              CLE138
+     C* Send message '*Error occured on CALL...'                                              CLE138
+     C                     MOVEL'Y2U0032' ZAMSID                                              CLE138
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CLE138
+     C                     MOVELW0CLPG    ZAMSDA           Message data                       CLE138
+     C                     EXSR ZASNMS                                                        CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+      * Error detected?                                                                       CLE138
+     C           W0RTN     IFNE *BLANK                                                        CLE138
+     C                     SETON                     98    *                                  CLE138
+     C                     END                                                                CLE138
+     C                     MOVEL'Y'       W0RSF            *Reload subfile                    CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C**********           END                             *FI                              MD024140
      C**********           END                             *FI                              MD024140
      C                     END                             *FI
@@ -1469,6 +1537,18 @@
      C                     MOVE DFF       WUDFF            DTE FMT FLAG
      C                     MOVE MBIN      WUMBIN           MULTI BR. IND
      C/COPY WNCPYSRC,SDH00056
+      *                                                                                       CLE138
+     C                     MOVE 'N'       CLE138  1                                           CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM '       ' @RTCD   7                                           CLE138
+     C                     PARM '*VERIFY' @OPTN   7                                           CLE138
+     C                     PARM 'CLE138'  @SARD   6                                           CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
       * Copyright Statement 1988 - Standard Functions  * copyright
       * Start of Fix S01117
       * DSPF Delete Footer - Standard Functions  *
@@ -1486,8 +1566,14 @@
      C* Setup footer text:
      C* E=Enquire   F3=Main Menu   F5=Refresh
      C/COPY WNCPYSRC,SDH00077
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVEL'CLE1388' WUMSID           Message Identifier                 CLE138
+     C                     ELSE                                                               CLE138
+      *                                                                                       CLE138
      C                     MOVEL'USR3341' WUMSID  7        Message Identifier
      C/COPY WNCPYSRC,SDH00078
+     C                     ENDIF                                                              CLE138
      C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
      C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
      C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
@@ -1512,8 +1598,15 @@
      C* A=Amend  D=Delete  E=Enquire  F3=Main Menu  F5=Refresh
      C* F9=Go to 'Add'
      C/COPY WNCPYSRC,SDH00057
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVEL'CLE1382' WUMSID           Message Identifier                 CLE138
+     C                     ELSE                                                               CLE138
+      *                                                                                       CLE138
      C                     MOVEL'USR3334' WUMSID           Message Identifier
      C/COPY WNCPYSRC,SDH00058
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
      C           *INU1     IFEQ *OFF                                                          CSD031
      C           CSD040    ANDEQ'Y'                                                           CSD031
      C                     MOVEL'CSD0003' WUMSID                                              CSD031
@@ -1540,8 +1633,15 @@
      C* A=Amend   E=Enquire   F3=Main Menu   F5=Refresh
      C* F9=Go to 'Add'
      C/COPY WNCPYSRC,SDH00059
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVEL'CLE1383' WUMSID           Message Identifier                 CLE138
+     C                     ELSE                                                               CLE138
+      *                                                                                       CLE138
      C                     MOVEL'USR3335' WUMSID           Message Identifier
      C/COPY WNCPYSRC,SDH00060
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
      C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
      C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
      C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
@@ -1688,10 +1788,12 @@
       *****************************************************************                     MD024140
      C           SRVALM    BEGSR                                                            MD024140
       *                                                                                     MD024140
-      ** Action code must be A or D or E                                                    MD024140
+      ***Action*code*must*be*A*or*D*or*E                                             MD024140 CLE138
+      ** Action code must be A or D or E or C                                                 CLE138
       *                                                                                     MD024140
      C           #1SEL     IFNE ' '                                                         MD024140
      C           #1SEL     ANDNE'A'                                                         MD024140
+     C           #1SEL     ANDNE'C'                                                           CLE138
      C           #1SEL     ANDNE'D'                                                         MD024140
      C           #1SEL     ANDNE'E'                                                         MD024140
      C                     MOVEL#1SEL     ZA0002                                            MD024140

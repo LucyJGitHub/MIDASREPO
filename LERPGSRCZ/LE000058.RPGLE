@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CLE071             Date 18Jul18               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *

@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2005                      *
      F*                                                                  *
-      *  Last Amend No. MD058079           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD058079           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -43,6 +44,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *

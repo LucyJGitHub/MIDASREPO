@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR950498           Date 13Apr12               * 
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR950498           Date 13Apr12               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
@@ -116,6 +117,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR950498 - Facility availability should be zero if           *
       *             availability date passed.                         *
@@ -392,6 +394,7 @@
      F*  85   - Syndication Indicator SYIN = 'Y'.                     *                       242384
      F*  86   - New Frequencies                                       *                       CLE064
      F*  87   - Previous Expiry Date and Penultimate Expiry           *                     AR796118
+     F*  88   - SAR CLE008 is present                                 *                       CLE138
      F*                                                               *
 0074 F*       99      SETON BY ZSYSTM                                 *
      F*                                                               *
@@ -986,6 +989,10 @@
      I                                       13  14 KEFCNO                                    CLE106
      I              'SetFcltyAvailToZero' C         #SVALK                                  AR950498
      I*                                                                   S01311
+      *                                                                                       CLE138
+     ISDTCLS    E DSSDTCLSPD                                                                  CLE138
+      **  SD Class details                                                                    CLE138
+      *                                                                                       CLE138
      I/COPY WNCPYSRC,LE0170I003
      C/EJECT
       *****************************************************************
@@ -1699,6 +1706,36 @@
      C                     EXSR *PSSR                                                         CLE106
      C                     ENDIF                                                              CLE106
      C                     ENDIF                                                              CLE106
+      *                                                                                       CLE138
+      **  Check if CLE138 (Class Code for Facility Type) is switched on                       CLE138
+      *                                                                                       CLE138
+     C                     MOVE *OFF      *IN88                                               CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANK    PRTCD                                               CLE138
+     C                     PARM '*VERIFY' POPTN                                               CLE138
+     C                     PARM 'CLE138'  PSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFEQ *BLANK                                                        CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE *ON       *IN88                                               CLE138
+     C                     ELSE                                                               CLE138
+      *                                                                                       CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+      **  Data base error in file SCSARDPD                                                    CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFNE '*NRF    '                                                    CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     SETON                       U7U8                                   CLE138
+     C                     Z-ADD16        DBASE                                               CLE138
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     MOVEL'LE0170'  DBPGM                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C/COPY WNCPYSRC,LEH00053
       *                                                                                       CLE106
       ** Key list to access Facility Extension file                                           CLE106
@@ -2193,6 +2230,20 @@
 0555 C*
 0556 C*    CHECK FACILITY INDICATOR
 0557 C           FCTI      COMP 'F'                  525051
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOTCLSR0'                                                    CLE138
+     C                     PARM *BLANK    PRTCD                                               CLE138
+     C                     PARM '*KEY'    POPTN                                               CLE138
+     C                     PARM FCXCLS    PCLAS   4                                           CLE138
+     C           SDTCLS    PARM SDTCLS    DSFDY                                               CLE138
+     C           PRTCD     IFNE *BLANKS                                                       CLE138
+     C                     MOVE *BLANKS   TCCDSC                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C/COPY WNCPYSRC,LEH00416
 0558 C*
 0559 C*    CHECK REVOLVING CREDIT,SECURED,MULTI-CCY,MULTI-CUST.
@@ -2496,6 +2547,7 @@
      C                     MOVELFCNO      KFSEQ                                               CLE168
       *                                                                                       CLE168
      C           CLE168    IFEQ 'Y'                                                           CLE168
+     C           CLE138    OREQ 'Y'                                                           CLE138
      C           KBNKRT    CHAINLEFCLTDX             96                                       CLE168
      C           *IN96     IFEQ '0'                                                           CLE168
      C                     MOVE FCBKPT    BNKRT                                               CLE168
@@ -3807,6 +3859,10 @@
      O                 87      DAT,13   640                                                 AR796118
      O/COPY WNCPYSRC,LE0170O002
      O                         BNKRT    641                                                   CLE168
+      *                                                                                       CLE138
+     O                         FCXCLS   645                                                   CLE138
+     O                         TCCDSC   675                                                   CLE138
+      *                                                                                       CLE138
      OLE0170FMD        03N82N40                                           CLE004
      O       AND      NLR                                                 CLE004
      O       OR        06 40NLR                                           CLE004
@@ -4019,6 +4075,9 @@
      O                         DFCL     367                                                   CLE064
      O/COPY WNCPYSRC,LEH00054
      O                 28 71   FCXRLC   371                                                   CLE064
+     O                         FCXCLS   375                                                   CLE138
+     O                         TCCDSC   405                                                   CLE138
+      *                                                                                       CLE138
      O/COPY WNCPYSRC,LE0170O001
       /EJECT
       ***

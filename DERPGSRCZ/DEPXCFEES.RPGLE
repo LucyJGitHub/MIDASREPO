@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE139             Date 06Dec10               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -68,7 +70,7 @@
      FFACHSAL1  IF   E           K DISK
      F                                     INCLUDE(FACHISAF)
      F                                     PREFIX(FH_)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -87,13 +89,13 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXCPERDD
- 
- 
+
+
      D LEFEEX        E DS                  EXTNAME(LEFEED) PREFIX(FE_)
      D FACHISX       E DS                  EXTNAME(FACHISA) PREFIX(FH_)
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SF_)                      CDE005
@@ -238,9 +240,9 @@
      C                   PARM                    FACHISX
      C                   PARM                    Dataarea                                     208221
      C                   PARM                    I#RSRV           10                          CDE005
- 
+
       * If data error encountered, log error
- 
+
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = I#PH + 'FEES' + I#EXTT + I#TREF                   CDE005
@@ -273,15 +275,15 @@
      C**********         PARM                    I#TREF           20                          CGL029
      C                   PARM                    I#TREF           26                          CGL029
      C                   PARM                    I#RSRV           10                          CDE005
- 
+
       * This is a projections extract
- 
+
      C                   MOVE      'P'           I#PH
- 
+
       * Get Extract control information
- 
+
       /COPY DECPYSRC,DEXTGTCT
- 
+
       ** Determine if Data Export - Reservation ID is active                                  CDE005
      C                   CALL      'AOSARDR0'                                                 CDE005
      C                   PARM      *BLANKS       @RTCD             7                          CDE005
@@ -306,7 +308,7 @@
      C     @RTCD         IFEQ      *BLANK                                                     CLE134
      C                   MOVEL     'Y'           CLE134                                       CLE134
      C                   ENDIF                                                                CLE134
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27112           Date 01Mar10               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -48,33 +50,33 @@
       *  CLE041 - Collateralised Lending Phase 2B                     *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas LE Aggregated Facility History Header
      FLEAGFHPD  IF   E           K DISK
- 
+
       ** Midas LE Aggregate Facility File
      FLEAGFCL0  IF   E           K DISK    PREFIX(AG)
      F                                     IGNORE(FCLTYHHF:FCLTYFNF:FCLTYZZF)
- 
+
       ** Midas LE Aggregated Facility History
      FLEAGHSL0  IF   E           K DISK
- 
+
       ** Midas LE New Agg. Facility History Header
      FLENAFHPD  O    E             DISK    RENAME(LEAGFHD0:LENAFHD0)
- 
+
       ** Midas LE New Agg. Facility History Header
      FLENAHSPD  O    E             DISK    RENAME(LEAGHSD0:LENAHSD0)
- 
+
       ** Midas LE Archive Agg Facility History Header
      FLEAAFHPD  O    E             DISK    RENAME(LEAGFHD0:LEAAFHD0)
- 
+
       ** Midas LE Archive Agg Facility History
      FLEAAHSPD  O    E             DISK    RENAME(LEAGHSD0:LEAAHSD0)
- 
+
       ** Reorgranise & Archive of Aggregated Facility Audit
      FLE000057AUO    E             PRINTER
      F                                     INFDS(SPOOLU)
- 
+
       ** Reorgranise & Archive of Aggregated Facility Report
      FLE000057P1O    E             PRINTER USROPN
      F                                     INFDS(SPOOL1)
@@ -596,7 +598,7 @@
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   WRITE     SUBHD2
       *
      C                   ENDSR

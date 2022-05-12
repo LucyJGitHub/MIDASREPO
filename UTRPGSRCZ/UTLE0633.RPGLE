@@ -24,14 +24,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. MD054782           Date 04Dec19               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 MD054782           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR806351 *CREATE   Date 03Oct16               *
       *                 XXXXXXXX           Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  MD054782 - Manual transaction reached 999. Increase the size *
       *             of SQNO to accomodate 9999 transactions.          *

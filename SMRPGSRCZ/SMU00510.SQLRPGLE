@@ -15,7 +15,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CLE138 - Class Codes for Facilities                          *
+      *  CLE138 - Class Codes for Facilities.                         *
       *                                                               *
       *****************************************************************
       *
@@ -287,7 +287,7 @@
                    endif;
 
                    //Get total count in LEFCAMPD
-                   wSQLStr = 'select count(*) from ' + NewLibrary +
+                   wSQLStr = 'select count(*) from ' + OldLibrary +
                    '/LEFCAMPD';
                    exec sql prepare P3 from :wSQLStr;
                    exec sql declare P3 cursor for P3;
@@ -297,7 +297,7 @@
                    File1 = OldLibrary + '/LEFCAMPD';
 
                    //Get total count in LEFCAMQD
-                   wSQLStr = 'select count(*) from ' + OldLibrary +
+                   wSQLStr = 'select count(*) from ' + NewLibrary +
                    '/LEFCAMQD';
                    exec sql prepare P4 from :wSQLStr;
                    exec sql declare P4 cursor for P4;

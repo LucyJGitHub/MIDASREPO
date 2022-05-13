@@ -91,7 +91,7 @@
       *                                                               *
       *  203070 - Repayments for Internal Parts Purchased should not  *
       *           update the drawn amount (CAMD) of the primary       *
-      *           facility.                                           *
+      *           facility                                           *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

@@ -12,10 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059476 *CREATE   Date 01Dec21               *
+      *  Last Amend No. MD059918           Date 11May22               *
+      *  Prev Amend No. MD059476 *CREATE   Date 01Dec21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059918 - Save and restore more than 300 tables             *
       *  MD059476 - Bridge improvement for refresh                    *
       *                                                               *
       *****************************************************************
@@ -60,6 +62,11 @@
      D Ix              S              5  0
      D IxA             S              5  0
      D SavInKK         S              1
+     D ArrFLADS        DS                                                                   MD059918
+     D ArrFLADS1               1   3000                                                     MD059918
+     D ArrFLADS2            3001   6000                                                     MD059918
+     D ArrFLADS3            6001   9000                                                     MD059918
+     D ArrFLADS4            9001   9999                                                     MD059918
       ** ZASNMS Variables
      D ZAPGMQ          S             10
      D ZAPGRL          S              5
@@ -182,7 +189,8 @@
      C                             '/SAVF_RFR_G)'
      C                   Else
      C                   EVAL      Cmd_String = 'DLTF FILE(' +%trimr(SVAL1) +
-     C                             '/SAVF_RFR_Z)'
+     C**********                   '/SAVF_RFR_Z)'                                           MD059918
+     C                             '/SAVF_RFR1Z)'                                           MD059918
      C                   Endif
      C                   CALL      'QCMDEXC'                            20
      C                   PARM                    Cmd_String
@@ -194,6 +202,22 @@
      C                   EXSR      Sr_Error
      C                   Endif
 
+      ** If *ZONE, delete the second SAVF                                                   MD059918
+     C                   If        Layer = '*ZONE  '                                        MD059918
+     C                   eval      PSExcpNo = '    '                                        MD059918
+     C                   EVAL      Cmd_String = 'DLTF FILE(' +%trimr(SVAL1) +               MD059918
+     C                             '/SAVF_RFR2Z)'                                           MD059918
+     C                   CALL      'QCMDEXC'                            20                  MD059918
+     C                   PARM                    Cmd_String                                 MD059918
+     C                   PARM                    Cmd_Len                                    MD059918
+                                                                                            MD059918
+      ** if error other than 'SAVF not found'                                               MD059918
+     C                   If        PSExcpNo <> '    '                                       MD059918
+     C                             and PSExcpNo <> '2105'                                   MD059918
+     C                   EXSR      Sr_Error                                                 MD059918
+     C                   Endif                                                              MD059918
+     C                   Endif                                                              MD059918
+                                                                                            MD059918
       ** create save file
      C                   EVAL      Cmd_Len = 100
      C                   eval      PSExcpNo = '    '
@@ -202,7 +226,8 @@
      C                             '/SAVF_RFR_G)'
      C                   Else
      C                   EVAL      Cmd_String = 'CRTSAVF FILE(' +%trimr(SVAL1) +
-     C                             '/SAVF_RFR_Z)'
+     C**********                   '/SAVF_RFR_Z)'                                           MD059918
+     C                             '/SAVF_RFR1Z)'                                           MD059918
      C                   Endif
      C                   eval      PSExcpNo = '    '
      C                   CALL      'QCMDEXC'                            20
@@ -214,12 +239,31 @@
      C                   EXSR      Sr_Error
      C                   Endif
 
+      ** If *ZONE, create second SAVF                                                       MD059918
+     C                   If        Layer = '*ZONE  '                                        MD059918
+     C                             and ArrFl(1) = *blanks                                   MD059918
+     C                   EVAL      Cmd_Len = 100                                            MD059918
+     C                   EVAL      Cmd_String = 'CRTSAVF FILE(' +%trimr(SVAL1) +            MD059918
+     C                             '/SAVF_RFR2Z)'                                           MD059918
+     C                   eval      PSExcpNo = '    '                                        MD059918
+     C                   CALL      'QCMDEXC'                            20                  MD059918
+     C                   PARM                    Cmd_String                                 MD059918
+     C                   PARM                    Cmd_Len                                    MD059918
+                                                                                            MD059918
+      ** if error                                                                           MD059918
+     C                   If        PSExcpNo <> '    '                                       MD059918
+     C                   EXSR      Sr_Error                                                 MD059918
+     C                   Endif                                                              MD059918
+     C                   Endif                                                              MD059918
+                                                                                            MD059918
       ** save all files selected
      C                   EVAL      Cmd_Len = 10300
      C                   if        ArrFl(1) <> *blanks
      C                   MOVEA     ArrFl         SAVOBJ
      C                   else
-     C                   MOVEA     ArrFlA        SAVOBJ
+     C**********         MOVEA     ArrFlA        SAVOBJ                                     MD059918
+     C                   MOVEA     ArrFlA        ArrFLADS                                   MD059918
+     C                   MOVEL     ArrFLADS1     SAVOBJ                                     MD059918
      C                   endif
      C                   If        Layer = '*GLOBAL'
      C                   EVAL      Cmd_String = 'SAVOBJ (' +
@@ -230,7 +274,8 @@
      C                   EVAL      Cmd_String = 'SAVOBJ (' +
      C                             %trimr(SAVOBJ) + ') LIB(' + %trimr(SAVLIB) +
      C                             ') DEV(*SAVF) SAVF(' + %trimr(SVAL1) +
-     C                             '/SAVF_RFR_Z)'
+     C**********                   '/SAVF_RFR_Z)'                                           MD059918
+     C                             '/SAVF_RFR1Z)'                                           MD059918
      C                   Endif
      C                   CALL      'QCMDEXC'                            20
      C                   PARM                    Cmd_String
@@ -240,6 +285,24 @@
      C                   If        PSExcpNo <> '    '
      C                   EXSR      Sr_Error
      C                   Endif
+
+      ** If *ZONE, save files in second SAVF if any                                         MD059918
+     C                   If        Layer = '*ZONE  '                                        MD059918
+     C                             and ArrFLADS2 <> *blanks                                 MD059918
+     C                   MOVEL     ArrFLADS2     SAVOBJ                                     MD059918
+     C                   EVAL      Cmd_String = 'SAVOBJ (' +                                MD059918
+     C                             %trimr(SAVOBJ) + ') LIB(' + %trimr(SAVLIB) +             MD059918
+     C                             ') DEV(*SAVF) SAVF(' + %trimr(SVAL1) +                   MD059918
+     C                             '/SAVF_RFR2Z)'                                           MD059918
+     C                   CALL      'QCMDEXC'                            20                  MD059918
+     C                   PARM                    Cmd_String                                 MD059918
+     C                   PARM                    Cmd_Len                                    MD059918
+                                                                                            MD059918
+      ** if error                                                                           MD059918
+     C                   If        PSExcpNo <> '    '                                       MD059918
+     C                   EXSR      Sr_Error                                                 MD059918
+     C                   Endif                                                              MD059918
+     C                   Endif                                                              MD059918
 
      C     Sr_SaveE      ENDSR
 
@@ -264,6 +327,9 @@
      C                   IF        *INKE = *ON
      C                   clear                   ArrFl
      C                   clear                   ArrDs
+     C                   clear                   ArrFlA                                     MD059918
+     C                   clear                   ArrDsA                                     MD059918
+     C                   clear                   ArrFLADS                                   MD059918
      C                   ENDIF
       ** Set on control.
      C                   EVAL      *IN40 = *ON
@@ -278,7 +344,11 @@
      C                   eval      IxA = 1
      C                   else
       ** Prepare statement
+     C                   clear                   ArrFl                                      MD059918
+     C                   clear                   ArrDs                                      MD059918
      C                   clear                   ArrFlA
+     C                   clear                   ArrDsA                                     MD059918
+     C                   clear                   ArrFLADS                                   MD059918
      C                   eval      IxA = 0
      C                   eval      sqlStat = *BLANKS
      C                   eval      sqlStat = 'select ' +

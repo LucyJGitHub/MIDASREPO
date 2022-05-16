@@ -1,0 +1,305 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP DDS Sanity report and syncrhonization')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC4032 - Midas UP DDS Sanity report and syncrhonization    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD059732 *CREATE   Date 05May22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD059732 - DDS improvements, report conflict only           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &MODE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TLIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&SAVLIBL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CHECKSVAL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+
+
+             DCL        VAR(&RSVALRTNC) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USERSPACE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&OBJECTS) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OBJENT) TYPE(*CHAR) LEN(508)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(10) VALUE('*FILE     ')
+             DCL        VAR(&STARTLIST) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&STARTLISTN) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&NOOFENT) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&ENTRYLEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ENTRYLENN) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&GENHDR) TYPE(*CHAR) LEN(140)
+             DCL        VAR(&QUO) TYPE(*CHAR) LEN(1) VALUE('''')
+
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+
+/* Prepare temporary files, job, etc. */
+             CALLSUBR   SUBR(PREPARE)
+
+/* Retrieve required System Values. */
+             CALLSUBR   SUBR(RTVSVAL)
+/* For a general error just report. */
+             IF         COND(&ERRORFLAG *EQ 'E') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If a System Value is blank then send specific error message. */
+             IF         COND(&ERRORFLAG *EQ 'B') THEN(DO)
+                CALLSUBR   SUBR(BLANKSVAL)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/* Set library name for deliverable data */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             SAVLIBL    SAVDTL(UPC4032)
+             CHGVAR     VAR(&SAVLIBL) VALUE('Y')
+             CHGVAR     VAR(&TLIB) VALUE(&PFX *CAT 'GTALIB')
+             CALL       PGM(GPC000016) PARM(&PFX)
+             ENDDO
+             ELSE CMD(DO)
+             CHGVAR     VAR(&TLIB) VALUE(&PFX *CAT 'DTALIB')
+             CALL       PGM(UPC0014) PARM(&PFX)
+             ENDDO
+
+/* Create file to be used to drive journaling process. */
+             DLTF       FILE(QTEMP/UPOBJCTPD)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPDBRLPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UPOBJCTPD)
+
+ LST_LIB:
+/* Create user space for list of objects. */
+             CRTUSRSPC  USRSPC(QTEMP/&TLIB) DELETE(*YES) +
+                          TEXT('Temporary user space for  +
+                          listing CTD tables')
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC4032')
+/* Create list of objects in library. */
+             CHGVAR     VAR(&USERSPACE) VALUE(&TLIB *CAT 'QTEMP     ')
+             CHGVAR     VAR(&FORMAT) VALUE('OBJL0100')
+             CHGVAR     VAR(&OBJECTS) VALUE('*ALL      ' *CAT &TLIB)
+             CALL       PGM(QUSLOBJ) PARM(&USERSPACE &FORMAT +
+                          &OBJECTS &OBJTYPE)
+
+/* Get generic header from user space using standard retrieval API. */
+             CALL       PGM(QUSRTVUS) PARM(&USERSPACE X'00000001' +
+                          X'0000008C' &GENHDR)
+             MONMSG     MSGID(CPF0000)
+
+/* Get the data from the header.  The start position of the actual data, */
+/* the number of entries and the length of each entry.                   */
+             RTVUSRSPCI USRSPC(QTEMP/&TLIB) STRPOS(&STARTLIST) +
+                          NBRENT(&NOOFENT) ENTLEN(&ENTRYLEN)
+             CHGVAR     VAR(&STARTLISTN) VALUE(%BIN(&STARTLIST))
+             CHGVAR     VAR(&ENTRYLENN) VALUE(%BIN(&ENTRYLEN))
+
+/* Loop until all objects have been processed. */
+ LST_OBJ:
+             IF         COND(&NOOFENT *EQ 0) THEN(DO)
+                GOTO       CMDLBL(END_OF_LST)
+             ENDDO
+             CALL       PGM(QUSRTVUS) PARM(&USERSPACE &STARTLIST +
+                          &ENTRYLEN &OBJENT)
+
+/* Get name of object and attribute and jorunal it. */
+             CHGVAR     VAR(&OBJ) VALUE(%SST(&OBJENT 1 10))
+
+             IF         COND(%SUBSTRING(&OBJ 6 3) *EQ 'CTD') +
+                          THEN(DO)
+             RUNSQL     SQL('insert into +
+                          UPOBJCTPD(WHACTC,WHRFI,WHREFI)  VALUES(' +
+                          *CAT &QUO *CAT &QUO *CAT ',' *CAT &QUO +
+                          *TCAT &OBJ *CAT &QUO *CAT ' , ' *CAT &QUO +
+                          *TCAT &OBJ *CAT &QUO *CAT ')') +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDDO
+
+/* Increase the start position of the list by the length of a list */
+/* entry, and convert the new value to binary.                     */
+             CHGVAR     VAR(&STARTLISTN) VALUE(&STARTLISTN + &ENTRYLENN)
+             CHGVAR     VAR(%BIN(&STARTLIST)) VALUE(&STARTLISTN)
+/* Decrease the number of list entries. */
+             CHGVAR     VAR(&NOOFENT) VALUE(&NOOFENT - 1)
+
+             GOTO       CMDLBL(LST_OBJ)
+
+END_OF_LST:
+
+/* If audit, generate the audit report */
+             IF         COND(&MODE *EQ '*AUD') THEN(DO)
+             CALL       PGM(UP4035)  PARM(&PFX &LAYER  &MODE &RTNFLAG)
+             IF         COND(&RTNFLAG *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             ENDDO
+
+/* If update, run the synchronization */
+             IF         COND(&MODE *EQ '*UPD') THEN(DO)
+             CALL       PGM(UP4035)  PARM(&PFX &LAYER  &MODE &RTNFLAG)
+             IF         COND(&RTNFLAG *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             ENDDO
+
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA(&ERRPGM) MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ENDPGM:
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                IF         COND(&SAVLIBL *EQ 'Y') THEN(DO)
+                   RSTLIBL    SAVEDLIBL(UPC4032)
+                   MONMSG     MSGID(CPF0000 MCH0000)
+                ENDDO
+             ENDDO
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to prepare for run.                                             */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(PREPARE)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/* Create data area for screen message handling. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800)
+
+/* Create error handling file in QTEMP. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF0000)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100)
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to retrieve System Values.                                      */
+/* Note: even if the job is being run for a zone it still needs to retrieve   */
+/*  some global values.                                                       */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(RTVSVAL)
+
+/* Retrieve the appropriate System Values and perform other layer specific */
+/*  code.                                                                  */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&SVALK3) VALUE('BrgMidasSystemPrefix')
+                CHGVAR     VAR(&ERRPGM) VALUE('AOSVALR0')
+                CALL       PGM(AOSVALR0) PARM(&RTNCODE &SVALK1 &SVAL1 +
+                             &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                             &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                             &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                             &SVAL9 &SVALK0 &SVAL10)
+                CHGVAR     VAR(&CHECKSVAL) VALUE('Z')
+                CALLSUBR   SUBR(CHECKSVAL)
+                CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL3 1 2))
+
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&SVALK3) VALUE('BrgMidasGlobalPrefix')
+                CHGVAR     VAR(&ERRPGM) VALUE('GPAOSVALR0')
+                CALL       PGM(GPAOSVALR0) PARM(&RTNCODE &SVALK1 &SVAL1 +
+                             &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                             &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                             &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                             &SVAL9 &SVALK0 &SVAL10)
+                CALLSUBR   SUBR(CHECKSVAL)
+                CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL3 1 2))
+             ENDDO
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine for checking the call to System Values.                         */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CHECKSVAL)
+
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL3 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine for reporting blank System Values.                              */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(BLANKSVAL)
+
+             RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+             CALL       PGM(SCC0010) PARM('UPC4032' 'ENTER' ' ')
+
+             ENDSUBR
+
+
+             ENDPGM
+
+

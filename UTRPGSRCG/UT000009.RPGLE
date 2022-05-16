@@ -13,14 +13,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUT017             Date 17Mar20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *  Last Amend No. MD059732           Date 05May22               *
+      *  Prev Amend No. CUT017             Date 17Mar20               *
+      *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 BUG27790 *CREATE   Date 23Jun10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059732 - DDS improvements, report conflict only            *
       *  CUT017 - Adaptive Database Upgrade                           *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
@@ -38,6 +40,7 @@
      D PFile2          S             10
      D PTFile          S             10
      D PIgnMtch        S              4
+     D PRptCft         S              4                                                     MD059732
      D Xx              S              4  0
      D X1x             S              4  0
      D X2x             S              4  0
@@ -77,7 +80,12 @@
      C   02              EVAL      CFFIL2 = PFile2
      C   02              EVAL      CFRRN2 = rrn2
      C   02              EVAL      CFDATA = FileDt2
+     C                   If        CFTYPE = 'EX'                                            MD059732
+     C                             and PRptCft = '*YES'                                     MD059732
+      * do not report extraneous                                                            MD059732
+     C                   else                                                               MD059732
      C                   WRITE     UTCMPFD0
+     C                   endif                                                              MD059732
      C                   ENDDO
       *
      C   MR              DO
@@ -168,7 +176,12 @@
      C                   EVAL      CFFIL1 = PFile1
      C                   EVAL      CFRRN1 = rrnA1(X1x)
      C                   EVAL      CFDATA = FileDt1
+     C                   If        CFTYPE = 'EX'                                            MD059732
+     C                             and PRptCft = '*YES'                                     MD059732
+      * do not report extraneous                                                            MD059732
+     C                   else                                                               MD059732
      C                   WRITE     UTCMPFD0
+     C                   endif                                                              MD059732
      C                   ENDIF
      C                   EVAL      X1x = X1x + 1
      C                   ENDDO
@@ -181,7 +194,12 @@
      C                   MOVEL     PFile2        CFFIL2
      C                   EVAL      CFRRN2 = rrnA2(X2x)
      C                   EVAL      CFDATA = FileDt2
+     C                   If        CFTYPE = 'EX'                                            MD059732
+     C                             and PRptCft = '*YES'                                     MD059732
+      * do not report extraneous                                                            MD059732
+     C                   else                                                               MD059732
      C                   WRITE     UTCMPFD0
+     C                   endif                                                              MD059732
      C                   ENDIF
      C                   EVAL      X2x = X2x + 1
      C                   ENDDO
@@ -251,6 +269,7 @@
      C                   PARM                    PFile2
      C                   PARM                    PTFile
      C                   PARM                    PIgnMtch
+     C                   PARM                    PRptCft                                    MD059732
       *
      C                   EVAL      CFCODE = 'R'
      C                   EVAL      CFSEQN = 0

@@ -39,8 +39,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 200416             Date 05Dec01               *
-      *  Prev Amend No. 262647             Date 16Oct19               *
+      *  Last Amend No. CGL057             Date 02Nov21               *
+      *  Prev Amend No. 200416             Date 05Dec01               *
+      *                 262647             Date 16Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 263441             Date 19Jan10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -68,6 +69,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
+      *           Earnings Accounts.                                  *
+      *           Calling programs MC0410 and MC0320 will be amended  *
+      *           as follows if CGL057 is present:                    *
+      *            - Parameter XBCAC will contain the alternate       *
+      *              Spot Trade Equivalent account code.              *
+      *            - Parameter XBSRVL has been added to pass the      *
+      *              alternate Spot Revaluation account code.         *
       *  200416 - Do not dump if *NRF as this a legitimate possability*
       *           Only dump if return code is *ERROR.                 *
       *  262647 - Unknown figure posted on FX PL Spot Revaluation.    *
@@ -271,6 +280,7 @@
      C                     PARM           XBCEQ  190       Base ccy eq. amt
      C**********           PARM           XBCAC   4        Base ccy eq. A/c                   CGL029
      C                     PARM           XBCAC  10                                           CGL029
+     C                     PARM           XBSRVL 10        Alt. Spot Reval a/c                CGL057
      C           DSMOVE    PARM           DSFDY            MCMOVEPD fmt
       *
       **  Save DSMOVE parameters
@@ -322,6 +332,15 @@
      C                     EXSR DBERR
      C                     ENDIF
       *
+      * If feature CGL057 is on and the alternate Spot Reval a/c was                          CGL057
+      * passed from MC0410 or MC0320, use this a/c code.                                      CGL057
+      *                                                                                       CGL057
+     C           XBSRVL    IFNE *BLANKS                                                       CGL057
+     C                     MOVE XBSRVL    A#SRAC 10        Alt. Spot Reval A/c                CGL057
+     C                     ELSE                                                               CGL057
+     C                     MOVE BLSRAC    A#SRAC           Spot Reval A/c from ICD            CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
       **  Get 'Spot Reval A/c Section' and 'Spot Revaluation A/c Type'
       **  using Spot Revaluation Account Code, error if not found
       *
@@ -330,12 +349,14 @@
      C                     PARM '*KEY   ' POPTN   7
      C**********           PARM BLSRAC    PACOD   4                                           CGL029
      C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
-     C                     PARM BLSRAC    PACOD  10                                           CGL029
+     C**********           PARM BLSRAC    PACOD  10                                    CGL029 CGL057
+     C                     PARM A#SRAC    PACOD  10                                           CGL057
      C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
      C           PRTCD     IFNE *BLANKS
      C                     MOVEL'SDACODPD'WFILE            ************
      C                     Z-ADD2         WBASE            * DBERR 02 *
-     C                     MOVELBLSRAC    WKEY             ************
+     C**********           MOVELBLSRAC    WKEY             ************                       CGL057
+     C                     MOVELA#SRAC    WKEY             ************                       CGL057
      C                     EXSR DBERR
      C                     ENDIF
       *
@@ -530,7 +551,8 @@
       **  Set up DSMOVE
       *
      C                     Z-ADDBT,X      EVDT
-     C                     MOVE BLSRAC    ACOD             Spot Reval. A/c
+     C**********           MOVE BLSRAC    ACOD             Spot Reval. A/c                    CGL057
+     C                     MOVE A#SRAC    ACOD             Spot Reval. A/c                    CGL057
      C                     Z-SUBPLTFR     PAMT             P&L to Post
      C                     MOVE XGETP     GETP             Generated Entry Type
      C                     MOVE A5ACSC    ACSC             Spot Reval. A/c Sect.
@@ -677,7 +699,8 @@
       *
      C                     MOVE XBRCA     BRCA             Branch
      C                     MOVE XBCCY     CCY              Base Currency
-     C                     MOVE BLSRAC    ACOD             Spot Reval A/c
+     C**********           MOVE BLSRAC    ACOD             Spot Reval A/c                     CGL057
+     C                     MOVE A#SRAC    ACOD             Spot Reval. A/c                    CGL057
      C**********           Z-ADDXBCUS     CNUM             Branch Internal Cust.              CSD027
      C                     MOVE XBCUS     CNUM             Branch Internal Cust.              CSD027
      C                     MOVE '01'      ACSQ             A/c Sequence Nbr

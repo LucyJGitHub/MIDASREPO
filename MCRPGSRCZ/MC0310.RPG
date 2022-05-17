@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. 245318             Date 02Nov21               *
+      *  Prev Amend No. CGL057             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +44,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  245318 - Array Index error. (CGL057)                         *
+      *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
+      *           Earnings Accounts.                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -71,6 +76,9 @@
      FMCFMVMPDO   E                    DISK         KINFSR *PSSR
       **  Filtered movements
      F            MCPCACD0                          KRENAMEMCMOVE
+      *                                                                                       CGL057
+     FSDSRVLL2IF  E           K        DISK                                                   CGL057
+      ** SD Spot Revaluation mapping file   - Retrieval Index                                 CGL057
       *
      FMC0310AUO   E                    PRINTER                        UC
       **  Filter Generated Entries Audit Report
@@ -112,6 +120,8 @@
      E                    CCYC      999  3               Currency Codes
      E**********          SPAE      999  4               Spot Trd Eqv A/cs                    CGL029
      E                    SPAE      999 10                                                    CGL029
+     E                    ASPT      999 10               Alt.Spot Trade a/cs                  CGL057
+     E                    ASPE      999 10               Alt.Spot Trd Eqv A/cs                CGL057
       /SPACE 3
      IGLMOVE
      I                                              ACOD  L3
@@ -168,6 +178,9 @@
       *
      ISDPRFC    E DSSDPRFCPD
       **  Profit centre details
+      *                                                                                       CGL057
+     ISCSARD    E DSSCSARDPD                                                                  CGL057
+      * SAR File Details Accessed via Access Program AOSARDR0                                 CGL057
       *
      IDSFDY     E DSDSFDY
       **  First DS for Access Programs, Short Data Structure
@@ -218,6 +231,8 @@
       **  If Spot Trade or Base CCy Equivalent posting, ensure
       **  Posting's profit centre is allowed for FX, else modify.
       *
+     C           CGL057    IFEQ 'N'                                                           CGL057
+      *                                                                                       CGL057
      C           *IN20     IFEQ *ON
      C           ACODA     OREQ BLSPTA
       *
@@ -232,6 +247,70 @@
       *
      C                     ENDIF
       *
+     C                     ELSE                             End CGL057 *OFF                   CGL057
+      *                                                                                       CGL057
+      **  If CGL057 in *ON, read through the Mapped Spot Reval file                           CGL057
+      **  for all records for this Foreign Currency.                                          CGL057
+      *                                                                                       CGL057
+     C           *INL3     IFEQ *ON                                                           CGL057
+      *                                                                                       CGL057
+      **  Key List to Spot Revaluation Mapping file.                                          CGL057
+      *                                                                                       CGL057
+     C           KLIST2    KLIST                                                              CGL057
+     C                     KFLD           CCY                 Foreign Currency                CGL057
+      *                                                                                       CGL057
+     C           KLIST2    SETLLSDSRVLL2                                                      CGL057
+     C           KLIST2    READESDSRVLL2                 22                                   CGL057
+      *                                                                                       CGL057
+      **  If exact match found in mapping file, create temporary arrays                       CGL057
+      **  of the Spot Trading accts and Spot Trade Equiv accts for this                       CGL057
+      **  Foreign Currency.                                                                   CGL057
+      *                                                                                       CGL057
+     C                     Z-ADD1         Z       30                                          245318
+     C                     MOVEA*BLANKS   ASPT,Z                                              CGL057
+     C                     MOVEA*BLANKS   ASPE,Z                                              CGL057
+     C                     MOVE 'N'       FOUND   1                                           CGL057
+     C**********           Z-ADD1         Z       30                                   CGL057 245318
+     C           *IN22     DOWEQ*OFF                                                          CGL057
+     C                     MOVE MBSPTA    ASPT,Z                                              CGL057
+     C                     MOVE MBSPAE    ASPE,Z                                              CGL057
+     C                     MOVE 'Y'       FOUND                                               CGL057
+     C                     ADD  1         Z                                                   CGL057
+     C           KLIST2    READESDSRVLL2                 22                                   CGL057
+     C                     ENDDO                            End *IN22                         CGL057
+      *                                                                                       CGL057
+     C                     ENDIF                            End *INL3                         CGL057
+      *                                                                                       CGL057
+      **  If at least one record for this Currency was found on the                           CGL057
+      **  Mapped Spot Reval file, then check if the posting a/c code                          CGL057
+      **  matches either the Spot Trade or Spot Trade Equiv acct.                             CGL057
+      *                                                                                       CGL057
+     C           FOUND     IFEQ 'Y'                                                           CGL057
+      *                                                                                       CGL057
+      **  Check for Mapped Spot Trade acct or Mapped Spot Trade Equivalent                    CGL057
+      *                                                                                       CGL057
+     C           ACODA     LOKUPASPT                     23 Spot Trade                        CGL057
+     C           ACODA     LOKUPASPE                     24 Spot Equiv.                       CGL057
+      *                                                                                       CGL057
+      **  If Spot Trade or Spot Trade Equivalent posting, ensure                              CGL057
+      **  Posting's profit centre is allowed for FX, else modify.                             CGL057
+      *                                                                                       CGL057
+     C           *IN23     IFEQ *ON                                                           CGL057
+     C           *IN24     OREQ *ON                                                           CGL057
+      *                                                                                       CGL057
+     C           PRFC      IFNE SPRFC                                                         CGL057
+     C                     MOVE PRFC      SPRFC   4                                           CGL057
+     C                     EXSR SRPRFC                                                        CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+     C           DSFPPC    IFNE *BLANK                                                        CGL057
+     C                     MOVE DSFPPC    PRFC                                                CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+     C                     ENDIF                            End *IN23,24                      CGL057
+     C                     ENDIF                            End FOUND                         CGL057
+     C                     ENDIF                            End CGL057 *ON                    CGL057
+      *                                                                                       CGL057
       **  Write Record to MCFMVMPD for Management Accounts
       *
      C                     EXSR SRWRTM
@@ -349,6 +428,20 @@
      C                     OUT  LDA
      C                     EXSR DBERR
      C                     ENDIF
+      *                                                                                       CGL057
+      **  Check if feature CGL057 is present.                                                 CGL057
+      *                                                                                       CGL057
+     C                     MOVE 'N'       CGL057  1                                           CGL057
+     C                     CALL 'AOSARDR0'                                                    CGL057
+     C                     PARM '       ' @RTCD   7                                           CGL057
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL057
+     C                     PARM 'CGL057'  @SARD   6                                           CGL057
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL057
+     C*                                                                                       CGL057
+     C           @RTCD     IFEQ *BLANKS                                                       CGL057
+     C                     MOVE 'Y'       CGL057                                              CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
       *
       **  Build Currency array of Spot Trade Equivalent A/cs
       *

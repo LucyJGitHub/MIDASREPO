@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD059572             Date 14Feb22             *
-      *  Prev Amend No. MD058986             Date 11Oct21             *
+      *  Last Amend No. MD059942             Date 16May22             *
+      *  Prev Amend No. MD059572             Date 14Feb22             *
+      *                 MD058986             Date 11Oct21             *
       *                 MD058933A            Date 20Oct21             *
       *                 MD056891             Date 21Aug21             *
       *                 MD058593             Date 20Aug21             *
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059942 - Ignore column DJLOGD                              *
+      *           - Applied for MD-59950                              *
       *  MD059572 - Add qualified library name as tables may already  *
       *             exist in the back up library                      *
       *  MD058986 - Add Logical Delete for components and dependencies*
@@ -245,6 +248,7 @@
      C                             and %SUBST(WHFLDI:1:6) = 'FLMODE'                        MD056565
      C                             and  %SUBST(XINDEX:2:4) = 'PDFL'                         MD056565
      C                   IF        First = 'Y'
+     C                             and WHFLDI <> 'DJLOGD'                                   MD059942
       ** Get until the fieldadd to the end of the table.
      C                   eval      PINSERT = %trimr(PINSERT) + 'B.' + WHFLDI
      C                   if        XINDEX = 'RPTRQCTD'                                      MD058177

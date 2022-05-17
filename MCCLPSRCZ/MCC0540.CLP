@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CGL057             Date 02Nov21              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD059935           Date 12May22              */
+/*       Prev Amend No. CGL057             Date 02Nov21              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059935 - Include Spot trade equivalent in the report      */
+/*                  filter selection.                                */
 /*       CGL057 - Posting of Profit and Loss to Multiple Retained    */
 /*                Earnings Accounts.                                 */
 /*       MD046248 - Finastra Rebranding                              */
@@ -227,11 +230,19 @@
 /**  Select only records for the current period; only spot trade accounts */              /*CGL057*/
 /**  for the first GLHIBLPD and only foreign currency accounts for the second */          /*CGL057*/
 /**/                                                                                      /*CGL057*/
+/**********     CHGVAR     VAR(&QRYSLT) VALUE('1/HBPDCT *EQ ''''' *CAT &PDCT *CAT + */  /*MD059935*/
+/**********                  ''''' *AND 1/HBPDYR *EQ ''''' *CAT &PDYR *CAT ''''' +  */  /*MD059935*/
+/**********                  *AND 1/HBPDNY *EQ ''''' *CAT &PDNY *CAT ''''' *AND +   */  /*MD059935*/
+/**********                  1/HBACCD *EQ ''''' *CAT &MB_SPTA *CAT ''''' *AND +     */  /*MD059935*/
+/**********                  2/HBCYCD *EQ ''''' *CAT &BCCY *CAT '''''')          /*CGL057 MD059935*/
                 CHGVAR     VAR(&QRYSLT) VALUE('1/HBPDCT *EQ ''''' *CAT &PDCT *CAT +
                              ''''' *AND 1/HBPDYR *EQ ''''' *CAT &PDYR *CAT ''''' +
                              *AND 1/HBPDNY *EQ ''''' *CAT &PDNY *CAT ''''' *AND +
                              1/HBACCD *EQ ''''' *CAT &MB_SPTA *CAT ''''' *AND +
-                             2/HBCYCD *EQ ''''' *CAT &BCCY *CAT '''''')                   /*CGL057*/
+                             2/HBACCD *EQ ''''' *CAT &MB_SPAE *CAT ''''' *AND +
+                             2/HBCYCD *EQ ''''' *CAT &BCCY *CAT '''''')                 /*MD059935*/
+                             
+
 /**/                                                                                      /*CGL057*/
 /**  If entity not blank & not 'ALL', select particular branch requested */               /*CGL057*/
 /**/                                                                                      /*CGL057*/

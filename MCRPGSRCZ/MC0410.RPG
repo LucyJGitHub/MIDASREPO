@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL057             Date 02Nov21               *
-      *  Prev Amend No. AR548538           Date 10Mar20               *
+      *  Last Amend No. MD059936           Date 14May22               *
+      *  Prev Amend No. CGL057             Date 02Nov21               *
+      *                 AR548538           Date 10Mar20               *
       *                 215711             Date 10Mar20               *
       *                 224411             Date 05Feb20               *
       *                 MD046248           Date 27Oct17               *
@@ -55,6 +56,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059936 - Balance not transferred for the end range of IE   *
+      *             defined on Mapping Table                          *
+      *           - added SDINEXL2 for additional validation of       *
+      *             i/e account code                                  *
       *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
       *           Earnings Accounts.                                  *
       *  AR548538 - Wrong narrative for IN/EX postings. Need to       *
@@ -62,7 +67,7 @@
       *           - Applied for MD-55379.                             *
       *  215711 - The system accrued the B/CCY transferred from F/CCY *
       *           IN/EX. PRP05 should not be executed for this entry. *
-      *         - Applied for MD-55379.  
+      *         - Applied for MD-55379.
       *  224411 - Gap accrual detail was incorrectly updated for the  *
       *           batch item posted to an IN/EX account. Only Gap     *
       *           requirements should create the gap balance and      *
@@ -94,6 +99,10 @@
      FSDSRVLL1IF  E           K        DISK                                                   CGL057
       ** SD Spot Revaluation mapping file   - Retrieval Index                                 CGL057
       *
+     FSDINEXL2IF  E           K        DISK                                                 MD059936
+     F            SDINEXD0                          KRENAME@INEXL2                          MD059936
+      ** SD Income and Expense mapping file - Retrieval Index                               MD059936
+      *                                                                                     MD059936
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
@@ -559,6 +568,10 @@
       * If no exact match, check most suitable range for the                                  CGL057
       * alternate Spot Reval a/c code.                                                        CGL057
       *                                                                                       CGL057
+     C           #WKACD    IFGT MAINC1                                                      MD059936
+     C           #WKACD    ANDLEMAINC2                                                      MD059936
+     C                     MOVE MASRVL    ACOD#R                                            MD059936
+     C                     ELSE                                                             MD059936
      C           #WKACD    SETLLSDINEXL1                                                      CGL057
      C                     READPSDINEXL1                 55                                   CGL057
       *                                                                                       CGL057
@@ -566,6 +579,23 @@
      C           #WKACD    ANDGTMAINC1                                                        CGL057
      C           #WKACD    ANDLEMAINC2                                                        CGL057
      C                     MOVE MASRVL    ACOD#R                                              CGL057
+     C                     ELSE                                                             MD059936
+      *                                                                                     MD059936
+      ** If account code is with in the range of another range of account codes             MD059936
+      ** alternate Spot Reval a/c code.                                                     MD059936
+      *                                                                                     MD059936
+     C           #WKACD    SETLLSDINEXL2                                                    MD059936
+     C                     READ SDINEXL2                 55                                 MD059936
+     C           *IN55     DOWEQ'0'                                                         MD059936
+     C           #WKACD    IFGT MAINC1                                                      MD059936
+     C           #WKACD    ANDLEMAINC2                                                      MD059936
+     C                     MOVE MASRVL    ACOD#R                                            MD059936
+     C                     SETON                     55                                     MD059936
+     C                     ITER                                                             MD059936
+     C                     ENDIF                                                            MD059936
+     C                     READ SDINEXL2                 55                                 MD059936
+     C                     ENDDO                                                            MD059936
+     C                     ENDIF                                                            MD059936
      C                     ENDIF                                                              CGL057
      C                     ENDIF                                                              CGL057
       *                                                                                       CGL057

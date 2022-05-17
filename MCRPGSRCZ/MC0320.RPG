@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL057             Date 02Nov21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059936           Date 14May22               *
+      *  Prev Amend No. CGL057             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -49,6 +50,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059936 - Balance not transferred for the end range of IE   *
+      *             defined on Mapping Table                          *
+      *           - added SDINEXL2 for additional validation of       *
+      *             i/e account code                                  *
       *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
       *           Earnings Accounts.                                  *
       *  MD046248 - Finastra Rebranding                               *
@@ -113,6 +118,10 @@
      F            SDSRVLD0                          KRENAME@SRVLL6                            CGL057
       ** SD Spot Revaluation mapping file by CCY/Spot Trade Equivalent Account                CGL057
       *                                                                                       CGL057
+     FSDINEXL2IF  E           K        DISK                                                 MD059936
+     F            SDINEXD0                          KRENAME@INEXL2                          MD059936
+      ** SD Income and Expense mapping file - Retrieval Index                               MD059936
+      *                                                                                     MD059936
      FMC0320AUO   E                    PRINTER      KINFSR *PSSR      UC
       **  Value Date Adjustment Entry Generation Audit Report
       *
@@ -928,13 +937,34 @@
       * If no exact match, check most suitable range for the                                  CGL057
       * alternate Spot Reval a/c code.                                                        CGL057
       *                                                                                       CGL057
+     C           #WKACD    IFGT MAINC1                                                      MD059936
+     C           #WKACD    ANDLEMAINC2                                                      MD059936
+     C                     MOVE MASRVL    ACOD#R                                            MD059936
+     C                     ELSE                                                             MD059936
      C           #WKACD    SETLLSDINEXL1                                                      CGL057
      C                     READPSDINEXL1                 55                                   CGL057
      C           *IN55     IFEQ '0'                                                           CGL057
      C           #WKACD    ANDGTMAINC1                                                        CGL057
      C           #WKACD    ANDLEMAINC2                                                        CGL057
      C                     MOVE MASRVL    ACOD#R                                              CGL057
-     C                     ENDIF                                                              CGL057
+     C                     ELSE                                                             MD059936
+      *                                                                                     MD059936
+      ** If account code is with in the range of another range of account codes             MD059936
+      ** alternate Spot Reval a/c code.                                                     MD059936
+      *                                                                                     MD059936
+     C           #WKACD    SETLLSDINEXL2                                                    MD059936
+     C                     READ SDINEXL2                 55                                 MD059936
+     C           *IN55     DOWEQ'0'                                                         MD059936
+     C           #WKACD    IFGT MAINC1                                                      MD059936
+     C           #WKACD    ANDLEMAINC2                                                      MD059936
+     C                     MOVE MASRVL    ACOD#R                                            MD059936
+     C                     SETON                     55                                     MD059936
+     C                     ITER                                                             MD059936
+     C                     ENDIF                                                            MD059936
+     C                     READ SDINEXL2                 55                                 MD059936
+     C                     ENDDO                                                            MD059936
+     C                     ENDIF                                                            MD059936
+     C                     ENDIF                                                            MD059936
       *                                                                                       CGL057
      C                     ENDIF                                                              CGL057
       *                                                                                       CGL057

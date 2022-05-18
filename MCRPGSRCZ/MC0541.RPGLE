@@ -503,7 +503,6 @@
       *
      C     SRHEAD        BEGSR                                                  *** SRHEAD ***
       *
-     C**                   MOVEL$FCCY     RFCCY
      C                   MOVEL     $FCCY         RCYCD
      C                   MOVEL     $SPTA         RACCD
       *

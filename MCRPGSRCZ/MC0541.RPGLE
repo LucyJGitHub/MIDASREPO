@@ -20,10 +20,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CGL057  *Create    Date 02Nov21               *
+      *  Last Amend No. MD059964           Date 18May22               *
+      *  Prev Amend No. CGL057  *Create    Date 02Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059964 - Multiple audit reports are being generated.       *
+      *           - include the Spot Trade A/C code in the audit      *
+      *             header even if no details to report               *
       *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
       *           Earnings Accounts.                                  *
       *           Print a separate MC0541P1/AU report for each        *
@@ -169,6 +173,7 @@
       **  Records); Otherwise, process spot revaluations
       *
      C     *IN89         IFEQ      *ON
+     C                   MOVEL     $SPTA         RACCD                          MD059964
      C                   EXSR      SRAUDT
      C                   ELSE
      C                   EXSR      SRPROC

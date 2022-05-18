@@ -11,12 +11,22 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058103           Date 19May21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059190           Date 12May22               *
+      *  Prev Amend No. MD059137           Date 12May22               *
+      *                 MD058103           Date 19May21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059190 - Use rollover ARR parameters if loan exists in     *
+      *             RO extract file and rollover is authorised.       *
+      *             Applied for MD059766                              *
+      *  MD059137 - Include in the report loans with interest due date*
+      *             and rollover date on rundate that changed flag    *
+      *             from forward to backward looking rate.            *
+      *           - output end date based on the latest interest date *
+      *             Applied for MD059766                              *
       *  MD058103 - ARR Daily Rates History content for NCCR SARR     *
       *             and SAVG are not correct                          *
       *  CLE172 - LIBOR Deregulation - Lending                        *
@@ -87,6 +97,9 @@
       ** +--------------------------------------+
      D pReturnCode     S              7A
      D pOption         S              7A
+     D WrkRollChk      S              1A                                                    MD059137
+     D NoOfRecs        S              3S 0                                                  MD059137
+     D WrkEDATE        S              5P 0                                                  MD059137
 
       ** Temporary DS for SDHSDRTD
 
@@ -142,11 +155,14 @@
       ** Start loop
       *
      C                   DOW       EndOfFile = False
+      *                                                                                     MD059137
+     C                   EXSR      SRRollChk                                                MD059137
       *
       ** Process Report Lines
       *
      C     BLRT          IFEQ      'Y'
      C     RECI          ANDEQ     'D'                                                      MD058103
+     C     WrkRollChk    OREQ      'Y'                                                      MD059137
      C                   EXSR      SRPrint
      C                   ENDIF
       *
@@ -270,6 +286,19 @@
      C                   PARM                    ZOUT21                                     MD058103
      C                   MOVE      ZOUT21        P1FLOR                                     MD058103
      C                   ENDIF                                                              MD058103
+      *                                                                                     MD059137
+     C                   EVAL      WrkEDATE = 0                                             MD059137
+     C/exec SQL                                                                             MD059137
+     C+ select CINPED into :WrkEDATE                                                        MD059137
+     C+ from SDHSDRTD                                                                       MD059137
+     C+ where                                                                               MD059137
+     C+     CMODID = 'LE'                                                                   MD059137
+     C+ and CTRNID = :P1LNRF                                                                MD059137
+     C+ and CINFLG = 'Y'                                                                    MD059137
+     C+ order by                                                                            MD059137
+     C+     CINPDT desc                                                                     MD059137
+     C+ fetch first row only                                                                MD059137
+     C/end-exec                                                                             MD059137
       *
       ** Daily Details
       *
@@ -330,7 +359,11 @@
      C                   EVAL      P1CALM = Dcalm                                           MD058103
      C                   EVAL      P1INFR = IPFR                                            MD058103
       *
+     C                   IF        DintEnd = WrkEDATE                                       MD059137
      C                   EVAL      ZDayNo = DintEnd
+     C                   ELSE                                                               MD059137
+     C                   EVAL      ZDayNo = WrkEDATE                                        MD059137
+     C                   ENDIF                                                              MD059137
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDayNo
      C                   PARM                    BJDFIN
@@ -407,6 +440,47 @@
      C                   EVAL      P1AVCM = 0
       *
      C                   ENDSR
+      *****************************************************************                     MD059137
+      /EJECT                                                                                MD059137
+      *****************************************************************                     MD059137
+      *                                                               *                     MD059137
+      * SRRollChk - Check if loan exists on LEROBLPD                  *                     MD059137
+      *                                                               *                     MD059137
+      * Called by: Main processing                                    *                     MD059137
+      *                                                               *                     MD059137
+      * Calls: None                                                   *                     MD059137
+      *                                                               *                     MD059137
+      *****************************************************************                     MD059137
+     C     SRRollChk     BEGSR                                                              MD059137
+     C                   EVAL      WrkRollChk = 'N'                                         MD059137
+     C                   IF        (RLDT > 0 AND BLRT = 'N' AND NBLRT = 'Y')                MD059137
+     C                             OR (RLDT > 0 AND RLDT < BJDNWD                           MD059190
+     C                                 AND BLRT = 'Y' AND NBLRT = 'Y')                      MD059190
+     C/exec SQL                                                                             MD059137
+     C+ select count(*) into :NoOfRecs                                                      MD059137
+     C+ from LEROBLPD                                                                       MD059137
+     C+ where ROLNRF = :LNRF                                                                MD059137
+     C+ and :LNRF not in (select * from LEWIPROLL)                                          MD059190
+     C/end-exec                                                                             MD059137
+     C                   IF        NoOfRecs <> 0                                            MD059137
+     C                   EVAL      WrkRollChk = 'Y'                                         MD059137
+     C                   EVAL      RFRR = NRFRR                                             MD059137
+     C                   EVAL      CALM = NCALM                                             MD059137
+     C                   EVAL      BADJ = NBADJ                                             MD059137
+     C                   EVAL      FLOR = NFLOR                                             MD059137
+     C                   EVAL      LBDY = NLBDY                                             MD059137
+     C                   EVAL      LODY = NLODY                                             MD059137
+     C                   EVAL      OPSH = NOPSH                                             MD059137
+     C                   EVAL      RRDP = NRRDP                                             MD059137
+     C                   EVAL      DBAV = NDBAV                                             MD059137
+     C                   EVAL      RTKN = 'N'                                               MD059137
+     C                   EVAL      BRTT = NBRA                                              MD059137
+     C                   EVAL      RTSP = NRTS                                              MD059190
+     C                   EVAL      SPIN = NSIN                                              MD059190
+     C                   ENDIF                                                              MD059137
+     C                   ENDIF                                                              MD059137
+     C                   EVAL      NoOfRecs = 0                                             MD059137
+     C                   ENDSR                                                              MD059137
       *****************************************************************
       /EJECT
       *****************************************************************

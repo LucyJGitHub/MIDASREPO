@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. A1076141           Date 11Jan13              */
+/*       Last Amend No. MD059732           Date 05May22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      A1076141           Date 11Jan13              */
 /*                      BUG27790 *CREATE   Date 17Jun10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059732 - DDS improvements, report conflict only           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       A1076141 - Parameters rearranged to make entry mandatory.   */
 /*       BUG27790 - New utility                                      */
@@ -23,10 +25,13 @@
 /**********  PGM        PARM(&FILE1 &FILE2 &TFILE &MBROVR &KEYFLD +                  */ /*A1076141*/
 /**********               &MBR1 &MBR2 &IGNMTCH &DSPNODIF &OUTPUT +                   */ /*A1076141*/
 /**********               &RPTFLDNO &KEYF &FLD &OFILE &OMBR)                         */ /*A1076141*/
+/**********  PGM        PARM(&FILE1 &FILE2 &TFILE &KEYFLD &MBROVR +
+                          &MBR1 &MBR2 &IGNMTCH &DSPNODIF &OUTPUT +
+                          &RPTFLDNO &KEYF &FLD &OFILE &OMBR) */               /*A1076141**MD059732*/
              PGM        PARM(&FILE1 &FILE2 &TFILE &KEYFLD &MBROVR +
                           &MBR1 &MBR2 &IGNMTCH &DSPNODIF &OUTPUT +
-                          &RPTFLDNO &KEYF &FLD &OFILE &OMBR)                            /*A1076141*/
- 
+                          &RPTFLDNO &KEYF &FLD &OFILE &OMBR &RPTCFT)                    /*MD059732*/
+
              DCL        VAR(&FILE1) TYPE(*CHAR) LEN(20)
              DCL        VAR(&FILE2) TYPE(*CHAR) LEN(20)
              DCL        VAR(&TFILE) TYPE(*CHAR) LEN(20)
@@ -42,7 +47,8 @@
              DCL        VAR(&FLD) TYPE(*CHAR) LEN(122)
              DCL        VAR(&OFILE) TYPE(*CHAR) LEN(20)
              DCL        VAR(&OMBR) TYPE(*CHAR) LEN(10)
- 
+             DCL        VAR(&RPTCFT) TYPE(*CHAR) LEN(4)                                 /*MD059732*/
+
              DCL        VAR(&F1) TYPE(*CHAR) LEN(10)
              DCL        VAR(&L1) TYPE(*CHAR) LEN(10)
              DCL        VAR(&F2) TYPE(*CHAR) LEN(10)
@@ -63,22 +69,22 @@
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Check that first file / library / member combination exists. */
              CHGVAR     VAR(&F1) VALUE(%SST(&FILE1 1 10))
              CHGVAR     VAR(&L1) VALUE(%SST(&FILE1 11 10))
@@ -101,7 +107,7 @@
                 CHGVAR     VAR(&ERROR) VALUE('Y')
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Check that second file / library / member combination exists. */
              CHGVAR     VAR(&F2) VALUE(%SST(&FILE2 1 10))
              CHGVAR     VAR(&L2) VALUE(%SST(&FILE2 11 10))
@@ -124,7 +130,7 @@
                 CHGVAR     VAR(&ERROR) VALUE('Y')
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Check that share file / library combination exists. */
              CHGVAR     VAR(&TF) VALUE(%SST(&TFILE 1 10))
              CHGVAR     VAR(&TL) VALUE(%SST(&TFILE 11 10))
@@ -144,7 +150,7 @@
                 CHGVAR     VAR(&ERROR) VALUE('Y')
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* If *FILE or *FIELD is selected then perform DSPFFD of the template file. */
              IF         COND(&KEYFLD *EQ '*FILE' *OR &KEYFLD *EQ +
                           '*FLD') THEN(DO)
@@ -181,7 +187,7 @@
                    ENDDO
                 ENDDO
              ENDDO
- 
+
 /* If a keyed file is selected then ensure a value is put into the KEYF */
 /*  parameter . . .                                                     */
              IF         COND(&KEYFLD *EQ '*FILE') THEN(DO)
@@ -238,7 +244,7 @@
                    ENDDO
                 ENDDO
              ENDDO
- 
+
 /* If key field(s) is selected then ensure a value is put into the FLD */
 /*  parameter . . .                                                    */
              IF         COND(&KEYFLD *EQ '*FLD') THEN(DO)
@@ -280,7 +286,7 @@ FIELDLOOP:
                 ENDDO
                 DLTOVR     FILE(UPFFDSTPD)
              ENDDO
- 
+
 /* If 'outfile' requested then check if a file has been entered ... */
              IF         COND(&OUTPUT *EQ '*OUTFILE') THEN(DO)
                 CHGVAR     VAR(&OF) VALUE(%SST(&OFILE 1 10))
@@ -322,9 +328,9 @@ FIELDLOOP:
                    GOTO       CMDLBL(ERROR)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
 /* If validity error then send message back to command . . . */
              IF         COND(&ERROR *EQ 'Y') THEN(DO)
@@ -348,6 +354,6 @@ RCVMSG:
                                 MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
                 ENDDO
              ENDDO
- 
+
 ENDPGM:
              ENDPGM

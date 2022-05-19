@@ -223,11 +223,12 @@
       ** Variables for storing the final value of tags
       *
      D WTag121Val      S             36A
+     D WTag70Val       S             35A
      D WTag20Val       S             16A
-     D WTag79L1Val     S             17A
-     D WTag79L2Val     S             11A
-     D WTag79L3Val     S             22A
-     D WTag79L4Val     S             22A
+     D WTag79L1Val     S             35A
+     D WTag79L2Val     S             35A
+     D WTag79L3Val     S             35A
+     D WTag79L4Val     S             35A
 
       ** Work Variables
      D WReceiver       S             12A
@@ -775,7 +776,7 @@
       ** Get tag 79 Line 3
       *
      C                   EVAL      WTag79L3a = '/MREF/'
-     C                   EVAL      WTag79L3b = ''
+     C                   EVAL      WTag79L3b = WTRNo
      C                   EVAL      WTag79L3Val = WTag79L3a + WTag79L3b
 
      C                   ADD       1             Q
@@ -783,17 +784,32 @@
      C                   MOVEL     WTag79L3Val   MFLD
 
       *
-      ** Get tag 79 Line 4
-      ** Amount comes from either incoming message or FT transaction
+      ** Get tag 70
       *
-     C                   IF        WOAmnt = *BLANKS
-     C                   EXSR      SrFAMT
-     C                   ENDIF
-     C                   IF        WOCcy = *BLANKS
-     C                   EVAL      WOCcy = WIMCcy
-     C                   ENDIF
-     C                   EVAL      WTag79L4Val = '//' + WOCcy + WOAmnt
+     C                   EVAL      KFMtag = ':70:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag70Val = DTMFLD
 
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':70:'        MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 79 Line 4
+      *
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag70Val
      C                   ADD       1             Q
      C     Q             OCCUR     MULT
      C                   MOVEL     WTag79L4Val   MFLD

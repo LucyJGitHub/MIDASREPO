@@ -52,10 +52,6 @@
 
      D/COPY ZACPYSRC,STD_D_SPEC
 
-
-      ** Data Structure for Bank Details File
-     D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
       ** Data Structure for Midas GP Universal Transaction Extn Data - TR
      D GPUTXT        E DS                  EXTNAME(GPUTXTPD)
 
@@ -369,25 +365,6 @@
       *****************************************************************
 
      C     *INZSR        BEGSR
-
-      *
-      ** Read Bank details via Access program
-      *
-     C                   CALL      'AOBANKR0'
-     C                   PARM      '*MSG   '     PRTCD
-     C                   PARM      '*KEY   '     POPTN
-     C     SDBANK        PARM                    SDBANK
-      *
-      ** If record not found, exit via DBERR subroutine
-      *
-     C                   IF        PRTCD <> *Blanks
-     C     *LOCK         IN        LDA
-     C                   EVAL      DBPGM = 'SMU90008'
-     C                   EVAL      DBFILE = 'SDBANKPD'
-     C                   EVAL      DBASE = 001
-     C                   EVAL      DBKEY = POPTN
-     C                   EXSR      *PSSR
-     C                   ENDIF
 
      C                   ENDSR
 

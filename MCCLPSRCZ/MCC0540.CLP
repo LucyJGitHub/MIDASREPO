@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD059935           Date 12May22              */
+/*       Prev Amend No. CGL057             Date 02Nov21              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG7058            Date 11May05              */
+/*                      BUG7058            Date 11May05              */
 /*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -22,6 +24,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059935 - Include Spot trade equivalent in the report      */
+/*                  filter selection.                                */
+/*       CGL057 - Posting of Profit and Loss to Multiple Retained    */
+/*                Earnings Accounts.                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG7058 - Spot revals not created when PCA is on            */
 /*       CGL029 - Increase Account Code to 10 digits                 */
@@ -51,6 +57,16 @@
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
              DCL        VAR(&OPNQRYF) TYPE(*CHAR) LEN(2000)
              DCL        VAR(&QRYSLT) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CGL057*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CGL057*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CGL057*/
+             DCL        VAR(&CGL057) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CGL057*/
+             DCL        VAR(&MB_FCCY) TYPE(*CHAR) LEN(3)                                  /*CGL057*/
+             DCL        VAR(&MB_SPTA) TYPE(*CHAR) LEN(10)                                 /*CGL057*/
+             DCL        VAR(&MB_SPAE) TYPE(*CHAR) LEN(10)                                 /*CGL057*/
+/**/                                                                                      /*CGL057*/
+/** Declare file. */                                                                      /*CGL057*/
+             DCLF       FILE(SDSRVLL5)                                                    /*CGL057*/
 /**/
 /**  Global monitor message */
 /**/
@@ -64,6 +80,14 @@
                           TEXT('Midas SD Local Data Area')
              MONMSG     MSGID(CPF0000)
              CHGJOB     SWS(XXXXXX00)
+/**/                                                                                      /*CGL057*/
+/** Check if CGL057 is installed */                                                       /*CGL057*/
+/**/                                                                                      /*CGL057*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CGL057*/
+             CHGVAR     VAR(&SARD) VALUE('CGL057')                                        /*CGL057*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CGL057*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CGL057) +
+                          VALUE('Y'))                                                     /*CGL057*/
 /**/
 /**  Access Bank ICD for Base Currency */
 /**/
@@ -98,6 +122,11 @@
              CHGVAR     VAR(&PDCT) VALUE(%SST(&DSFDY 2 2))
              CHGVAR     VAR(&PDYR) VALUE(%SST(&DSFDY 4 2))
              CHGVAR     VAR(&PDNY) VALUE(%SST(&DSFDY 6 2))
+/**/                                                                                      /*CGL057*/
+/**  The existing MC0540 report selects records using:                                    /*CGL057*/
+/**     (1) the Spot Trading a/c code &SPTA from the Trading ICD record SDTRADPD.         /*CGL057*/
+/**     (2) the Base Currency &BCCY from the Bank ICD record SDBANKPD.                    /*CGL057*/
+/**     (3) the Spot Trade Equiv a/c code (A6SPAE) from SDCURRPD for base ccy.            /*CGL057*/
 /**/
 /**  Select only records for the current period; only spot trade accounts */
 /**  for the first GLHIBLPD and only base currency accounts for the second */
@@ -171,8 +200,105 @@
                              TOMSGQ(MOPERQ MRUNQ)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
-             GOTO       CMDLBL(END)
+/**********  GOTO       CMDLBL(END) */                                                    /*CGL057*/
+
+/**  If CGL057 is *ON, then loop and read through the Mapped Spot Reval file (SDSRVLL5)   /*CGL057*/
+/**  keyed by Foreign Currency and Spot Trade a/c code and select records using:          /*CGL057*/
+/**     (1) the Spot Trading a/c code MBSPTA from the Mapped Spot Reval file.             /*CGL057*/
+/**     (2) the Base Currency                                                             /*CGL057*/
+/**     (3) the Spot Trade Equiv a/c code (MBSPAE) from the Mapped Spot Reval file.       /*CGL057*/
+/**  Produce a separate MC0541 report for each Spot Trade a/c code & Foreign Currency.    /*CGL057*/
+                                                                                          /*CGL057*/
+             IF         COND(&CGL057 *EQ 'Y') THEN(DO)                                    /*CGL057*/
+                                                                                          /*CGL057*/
+                OVRDBF     FILE(SDSRVLL5) SHARE(*NO)                                      /*CGL057*/
+                                                                                          /*CGL057*/
+/** Receive record from SDSRVLL5. */                                                      /*CGL057*/
+ LOOP:          RCVF                                                                      /*CGL057*/
+                MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(END))                          /*CGL057*/
+                                                                                          /*CGL057*/
+/**  Convert numeric account codes from SDSRVLPD to alpha fpr OPNQRYF.                    /*CGL057*/
+/**  To prevent blank currency/account code if "no details to report",                    /*CGL057*/
+/**  pass values to LDA for reporting.                                                    /*CGL057*/
+                                                                                          /*CGL057*/
+                CHGVAR     VAR(&MB_FCCY) VALUE(&MBFCCY)                                   /*CGL057*/
+                CHGVAR     VAR(&MB_SPTA) VALUE(&MBSPTA)                                   /*CGL057*/
+                CHGVAR     VAR(&MB_SPAE) VALUE(&MBSPAE)                                   /*CGL057*/
+                CHGDTAARA  DTAARA(LDA (204 3))  VALUE(&MB_FCCY)                           /*CGL057*/
+                CHGDTAARA  DTAARA(LDA (207 10)) VALUE(&MB_SPTA)                           /*CGL057*/
+/**/                                                                                      /*CGL057*/
+/**  Select only records for the current period; only spot trade accounts */              /*CGL057*/
+/**  for the first GLHIBLPD and only foreign currency accounts for the second */          /*CGL057*/
+/**/                                                                                      /*CGL057*/
+/**********     CHGVAR     VAR(&QRYSLT) VALUE('1/HBPDCT *EQ ''''' *CAT &PDCT *CAT + */  /*MD059935*/
+/**********                  ''''' *AND 1/HBPDYR *EQ ''''' *CAT &PDYR *CAT ''''' +  */  /*MD059935*/
+/**********                  *AND 1/HBPDNY *EQ ''''' *CAT &PDNY *CAT ''''' *AND +   */  /*MD059935*/
+/**********                  1/HBACCD *EQ ''''' *CAT &MB_SPTA *CAT ''''' *AND +     */  /*MD059935*/
+/**********                  2/HBCYCD *EQ ''''' *CAT &BCCY *CAT '''''')          /*CGL057 MD059935*/
+                CHGVAR     VAR(&QRYSLT) VALUE('1/HBPDCT *EQ ''''' *CAT &PDCT *CAT +
+                             ''''' *AND 1/HBPDYR *EQ ''''' *CAT &PDYR *CAT ''''' +
+                             *AND 1/HBPDNY *EQ ''''' *CAT &PDNY *CAT ''''' *AND +
+                             1/HBACCD *EQ ''''' *CAT &MB_SPTA *CAT ''''' *AND +
+                             2/HBACCD *EQ ''''' *CAT &MB_SPAE *CAT ''''' *AND +
+                             2/HBCYCD *EQ ''''' *CAT &BCCY *CAT '''''')                 /*MD059935*/
+                             
+
+/**/                                                                                      /*CGL057*/
+/**  If entity not blank & not 'ALL', select particular branch requested */               /*CGL057*/
+/**/                                                                                      /*CGL057*/
+                IF         COND(&RENT *NE '   ' *AND &RENT *NE 'ALL') THEN(DO)            /*CGL057*/
+                   CHGVAR     VAR(&QRYSLT) VALUE(&QRYSLT *BCAT  '*AND 1/HBBRCD *EQ +
+                                ''''' *CAT &RENT *CAT '''''')                             /*CGL057*/
+                ENDDO                                                                     /*CGL057*/
+/**/                                                                                      /*CGL057*/
+                CHGVAR     VAR(&OPNQRYF) VALUE('OPNQRYF FILE((GLHIBLPD' *BCAT +
+                             &PRCG *TCAT ') (GLHIBLPD' *BCAT &PRCG *TCAT ') +
+                             (SDCURRPD) (SDSRVLPD)) FORMAT(MCSRRPOQ) QRYSLT(''' +
+                             *CAT &QRYSLT *TCAT ''') KEYFLD( (SRBRCD) (SRCYCD) +
+                             (SRPCCD))')                                                  /*CGL057*/
 /**/
+                CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT 'JFLD( (1/HBPDCT +
+                             2/HBPDCT) (1/HBPDYR 2/HBPDYR) (1/HBPDNY 2/HBPDNY) +
+                             (1/HBBRCD 2/HBBRCD) (1/HBCUST 2/HBCUST) (1/HBACSN +
+                             2/HBACSN) (1/HBPCCD 2/HBPCCD) (1/HBBKCD 2/HBBKCD) +
+                             (1/HBOTTP 2/HBOTTP) (1/HBTSTY 2/HBTSTY) (1/HBACNB +
+                             2/HBACNB) (1/HBCGCD 2/HBCGCD) (1/HBCYCD 3/A6CYCD) +
+                             (2/HBACCD 4/MBSPAE))')                                       /*CGL057*/
+/**/
+                CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT 'MAPFLD( (SRBRCD +
+                             ''1/HBBRCD'') (SRCYCD ''1/HBCYCD'') (SRACCD +
+                             ''2/HBACCD'') (SRCUST ''1/HBCUST'') (SRACSN +
+                             ''1/HBACSN'') (SRPCCD ''1/HBPCCD'') (SRBKCD +
+                             ''1/HBBKCD'') (SROTTP ''1/HBOTTP'') (SRTSTY +
+                             ''1/HBTSTY'') (SRASNB ''1/HBACNB'') (SREPCB +
+                             ''1/HBPDCB'') (SRBCEQ ''2/HBPDCB * -1'') (SRSPRT +
+                             A6SPRT) (SRMDIN A6MDIN) (QQACCD ''1/QQACCD'') (SRNBDP +
+                             A6NBDP) (SRCYNM A6CYNM))')                                   /*CGL057*/
+/**/                                                                                      /*CGL057*/
+/**  Execute OPNQRYF  */                                                                  /*CGL057*/
+/**/                                                                                      /*CGL057*/
+                CLOF       OPNID(GLHIBLPD)                                                /*CGL057*/
+                MONMSG     MSGID(CPF4520)                                                 /*CGL057*/
+                CALL       PGM(QCMDEXC) PARM(&OPNQRYF 2000)                               /*CGL057*/
+/**/                                                                                      /*CGL057*/
+/**  Perform override on file MCSRRPOQ before calling report program */                   /*CGL057*/
+/**  and then check for any database errors                          */                   /*CGL057*/
+/**/                                                                                      /*CGL057*/
+                OVRDBF     FILE(MCSRRPOQ) TOFILE(GLHIBLPD) SHARE(*YES)                    /*CGL057*/
+                CALL       PGM(MC0541) PARM(&RSEQ &RLEV &RENT)                            /*CGL057*/
+                CLOF       OPNID(GLHIBLPD)                                                /*CGL057*/
+                MONMSG     MSGID(CPF4520)                                                 /*CGL057*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CGL057*/
+                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)                           /*CGL057*/
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                                TOMSGQ(MOPERQ MRUNQ)                                      /*CGL057*/
+                   GOTO       CMDLBL(ABNOR)                                               /*CGL057*/
+                ENDDO                                                                     /*CGL057*/
+                                                                                          /*CGL057*/
+                GOTO       CMDLBL(LOOP)                                                   /*CGL057*/
+             ENDDO      /*CGL057*/
+             GOTO       CMDLBL(END)                                                       /*CGL057*/
+/**/                                                                                      /*CGL057*/
 /**  Abnormal error processing */
 /**/
  ABNOR:

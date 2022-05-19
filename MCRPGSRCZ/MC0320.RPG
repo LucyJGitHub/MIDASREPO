@@ -23,8 +23,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD059936           Date 14May22               *
+      *  Prev Amend No. CGL057             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,6 +50,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059936 - Balance not transferred for the end range of IE   *
+      *             defined on Mapping Table                          *
+      *           - added SDINEXL2 for additional validation of       *
+      *             i/e account code                                  *
+      *  CGL057 - Posting of Profit and Loss to Multiple Retained     *
+      *           Earnings Accounts.                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -95,6 +103,25 @@
       **  Events Diary (B/Ccy Transfer dates)
      F            MCDIRYD0                          KRENAMEMCDIRYBC
       *
+     FSDINEXL1IF  E           K        DISK                                                   CGL057
+      ** SD Income and Expense mapping file - Retrieval Index                                 CGL057
+      *                                                                                       CGL057
+     FSDSRVLL1IF  E           K        DISK                                                   CGL057
+      ** SD Spot Revaluation mapping file   - Retrieval Index                                 CGL057
+      **    keyed by Foreign Currency and Spot Reval a/c code                                 CGL057
+      *                                                                                       CGL057
+     FSDSRVLL5IF  E           K        DISK                                                   CGL057
+     F            SDSRVLD0                          KRENAME@SRVLL5                            CGL057
+      ** SD Spot Revaluation mapping file by CCY/Spot Trade Account                           CGL057
+      *                                                                                       CGL057
+     FSDSRVLL6IF  E           K        DISK                                                   CGL057
+     F            SDSRVLD0                          KRENAME@SRVLL6                            CGL057
+      ** SD Spot Revaluation mapping file by CCY/Spot Trade Equivalent Account                CGL057
+      *                                                                                       CGL057
+     FSDINEXL2IF  E           K        DISK                                                 MD059936
+     F            SDINEXD0                          KRENAME@INEXL2                          MD059936
+      ** SD Income and Expense mapping file - Retrieval Index                               MD059936
+      *                                                                                     MD059936
      FMC0320AUO   E                    PRINTER      KINFSR *PSSR      UC
       **  Value Date Adjustment Entry Generation Audit Report
       *
@@ -106,6 +133,8 @@
       *   12  - Read fail on MCDIRYL1                                 *
       *   13  - Read fail on MCDIRYL2                                 *
       *   15  - Account code is in Spot Trade Equivalent Array        *
+      *   55 -  SDINEXL1 End-of-file                                  *                       CGL057
+      *   56 -  SDSRVLL1 Chain fail                                   *                       CGL057
       *   20  - Currency code found in Currency Array                 *
       *   89  - EOF in MCPOSTL0                                       *
       *                                                               *
@@ -126,6 +155,9 @@
       *  #B03   - Process Spot Trade A/C postings                     *
       *  #B04   - Process Funding Gap A/C postings                    *
       *                                                               *
+      *  GETRVL - Get the Alternate Spot Reval Account Code.          *                       CGL057
+      *  GETSTA - Get the Alternate Spot Trading and Spot Trade       *                       CGL057
+      *           Equivalent Account Codes                            *                       CGL057
       *  INFSR  - File error handling                                 *
       *  DBERR  - Database Error Handling                             *
       *  *PSSR  - Subroutine to Handle Abnormal Error Conditions      *
@@ -176,6 +208,9 @@
       ************                                                 124860 155581
      IMCMOVE    E DSMCMOVEPD
       **  Management Account Movements
+      *                                                                                       CGL057
+     ISCSARD    E DSSCSARDPD                                                                  CGL057
+      * SAR File Details Accessed via Access Program AOSARDR0                                 CGL057
       *
      IDSFDY     E DSDSFDY
       **  First DS for access programs, Short Data Structure
@@ -357,6 +392,25 @@
      C************         OUT  LDA                                124860 155581
      C************         EXSR DBERR                              124860 155581
      C************         ENDIF                                   124860 155581
+      *                                                                                       CGL057
+      **  Check if feature CGL057 is present.                                                 CGL057
+      *                                                                                       CGL057
+     C                     MOVE 'N'       CGL057  1                                           CGL057
+     C                     CALL 'AOSARDR0'                                                    CGL057
+     C                     PARM '       ' @RTCD   7                                           CGL057
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL057
+     C                     PARM 'CGL057'  @SARD   6                                           CGL057
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL057
+     C*                                                                                       CGL057
+     C           @RTCD     IFEQ *BLANKS                                                       CGL057
+     C                     MOVE 'Y'       CGL057                                              CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+      **  Key List to Spot Revaluation Mapping file.                                          CGL057
+      *                                                                                       CGL057
+     C           KLIST1    KLIST                                                              CGL057
+     C                     KFLD           CCY                                                 CGL057
+     C                     KFLD           ACODKY                                              CGL057
       *
       **  Build Currency array of Spot Trade Equivalent A/cs
       *
@@ -394,6 +448,8 @@
       *             #B03 - Process Spot Trade A/C postings            *
       *             #B04 - Process Funding Gap A/C postings           *
       *             DBERR - Database error handling.                  *
+      *             GETSTA- Get Alternate Spot Trading and Spot       *                       CGL057
+      *                     Trade Equivalent Accounts                 *                       CGL057
       *                                                               *
       *****************************************************************
       *
@@ -488,8 +544,32 @@
       **  Account Code
       ****For*Foreign*Currencies***********************************155581 186136
       *
+      **  If CGL057 is ON and this is not an IN/EX account                                    CGL057
+      **  (postings with Spot Trade or Spot Trade Equivalent Accounts                         CGL057
+      **   are in MCBLEXPD by MCC0360)                                                        CGL057
+      **  check if account code is an Alternate Spot Trade or                                 CGL057
+      **  Spot Trade Equivalent Account                                                       CGL057
+      *                                                                                       CGL057
+     C           ACSC      IFNE 'IN'                                                          CGL057
+     C           ACSC      ANDNE'EX'                                                          CGL057
+     C                     EXSR GETSTA                                                        CGL057
+     C                     END                                                                CGL057
+      *                                                                                       CGL057
      C           ACODA     IFEQ BLSPTA
      C********** CCY       ANDNEBJCYCD                             155581 186136
+      *                                                                                       CGL057
+      **   ACOD#T =  Blanks if CGL057 is Off or Account                                       CGL057
+      **   Code/CCY not defined on Mapped Spot Reval file,                                    CGL057
+      **   in which case SD Spot Trade Account is used                                        CGL057
+      *                                                                                       CGL057
+     C           ACOD#T    ANDEQ*BLANKS                                                       CGL057
+      *                                                                                       CGL057
+      **  If the account code & currency of the movement                                      CGL057
+      **  = the Alternate Spot Trading account code in the mapping table                      CGL057
+      *                                                                                       CGL057
+     C           ACODA     OREQ ACOD#T                                                        CGL057
+     C           ACOD#T    ANDNE*BLANKS                                                       CGL057
+      *                                                                                       CGL057
      C                     EXSR #B03
      C                     ENDIF
       *
@@ -513,17 +593,31 @@
       *  Calls    : MC0410 - Transfer of Foreign Ccy Income/Expense   *
       *             MC0420 - Transfer of Base Ccy In/Ex to P&L        *
       *             DBERR - Database error handling.                  *
+      *             GETRVL- Get alternate Spot Revaluation a/c code   *                       CGL057
       *                                                               *
       *****************************************************************
       *
      C           #B01      BEGSR
       *
+      **  Get Alternate Spot Revaluation Account Code.                                        CGL057
+      *                                                                                       CGL057
+     C                     EXSR GETRVL                                                        CGL057
+      *                                                                                       CGL057
       **  If 'Currency' from MCPOSTL0 NE 'Base Currency'...
       **  and not Spot Revaluation Account Code as this balance is        186136
       **  already included in original currency.                          186136
       *
      C           CCY       IFNE BJCYCD
      C           ACODA     ANDNEBLSRAC                                    186136
+     C           ACOD#R    ANDEQ*BLANKS                                                       CGL057
+      *                                                                                       CGL057
+      **  or If 'Currency' from MCPOSTL0 NE 'Base Currency'...                                CGL057
+      **  and not the Alternate Spot Revaluation Account Code                                 CGL057
+      **  as defined by feature CGL057.                                                       CGL057
+      *                                                                                       CGL057
+     C           CCY       ORNE BJCYCD                                                        CGL057
+     C           ACODA     ANDNEACOD#R                                                        CGL057
+     C           ACOD#R    ANDNE*BLANKS                                                       CGL057
       *
      C/COPY WNCPYSRC,MC0320C002
       **  Read 'Transfer F/CCY' EQ 'Y' from MCDIRYL1
@@ -730,6 +824,19 @@
       **  Call MC0400 - Spot Revaluation of foreign Currency
       *
      C                     MOVE SPAE,Y    POACC
+      *                                                                                       CGL057
+      **  Use the Alternate Spot Reval Equivalent Account if exists                           CGL057
+      **  Send Alternate Spot Revaluation Account. MC0400                                     CGL057
+      **  called from this SR will only process non IN/EX account                             CGL057
+      **  Note: ACOD#E and ACOD#V = Blanks if CGL057 is *OFF OR                               CGL057
+      **   Acct code/currency of movement not in Mapped Spot Reval file                       CGL057
+      *                                                                                       CGL057
+     C           CGL057    IFEQ 'Y'                                                           CGL057
+     C           ACOD#E    IFNE *BLANKS                                                       CGL057
+     C                     MOVE ACOD#E    POACC                                               CGL057
+     C                     ENDIF                                                              CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
      C                     MOVE A8BICN    PONUM
      C                     Z-ADD*ZERO     POAMT
       *
@@ -741,6 +848,7 @@
      C                     PARM           POAMT  190       Base Ccy Amount
      C**********           PARM           POACC   4        Base Ccy A/C Code                  CGL029
      C                     PARM           POACC  10                                           CGL029
+     C                     PARM ACOD#V    PSRVL  10        Spot Reval A/c                     CGL057
      C                     PARM MCMOVE    DSFDY
      C/COPY WNCPYSRC,MC0320C008
       *
@@ -788,6 +896,145 @@
       *
      C           E#B04     ENDSR
       *****************************************************************
+      /EJECT                                                                                  CGL057
+      *****************************************************************                       CGL057
+      *  GETRVL -  Get Alternate Spot Revaluation account code        *                       CGL057
+      *                                                               *                       CGL057
+      *  Called By:  #B01 - Process IN/EX Postings                    *                       CGL057
+      *  Calls    :  None                                             *                       CGL057
+      *****************************************************************                       CGL057
+     C           GETRVL    BEGSR                                                              CGL057
+      *                                                                                       CGL057
+      **  Read Income/Expense Mapping file to check if account code                           CGL057
+      **  has an alternate Spot Reval Account. Check for range also                           CGL057
+      *                                                                                       CGL057
+      **  If Alternate Spot Revaluation Account exists, verify                                CGL057
+      **  that Alternate Spot Trade and Spot Trade Equivalent Account                         CGL057
+      **  codes have been defined.                                                            CGL057
+      **  The default Spot Reval, Spot Trade & Spot Equiv accounts will be used if:           CGL057
+      **  a) IN/EX account code (individual or range) not on mapping file OR                  CGL057
+      **  b) Spot Reval a/c not specified on IN/EX mapping file   OR                          CGL057
+      **  c) Spot Reval a/c not found on Spot Reval mapping file  OR                          CGL057
+      **  d) CGL057 is switched off                                                           CGL057
+      *                                                                                       CGL057
+     C                     MOVE *BLANKS   ACOD#R 10        Alt Spot Reval - IN/EX Mapping     CGL057
+     C                     MOVE *BLANKS   ACOD#T 10        Alt Spot Trade                     CGL057
+     C                     MOVE *BLANKS   ACOD#E 10        Alt Spot Equiv                     CGL057
+     C                     MOVE *BLANKS   ACOD#V 10        Alt Spot Reval - SR Mapping        CGL057
+      *                                                                                       CGL057
+     C           CGL057    IFEQ 'Y'                                                           CGL057
+     C                     MOVELACODA     #WKACD 100                                          CGL057
+     C           #WKACD    SETLLSDINEXL1                                                      CGL057
+     C           #WKACD    READESDINEXL1                 55                                   CGL057
+      *                                                                                       CGL057
+      * If exact match found in mapping file, use the                                         CGL057
+      * alternate Spot Reval a/c code.                                                        CGL057
+      *                                                                                       CGL057
+     C           *IN55     IFEQ '0'                                                           CGL057
+     C                     MOVE MASRVL    ACOD#R                                              CGL057
+     C                     ELSE                                                               CGL057
+      *                                                                                       CGL057
+      * If no exact match, check most suitable range for the                                  CGL057
+      * alternate Spot Reval a/c code.                                                        CGL057
+      *                                                                                       CGL057
+     C           #WKACD    IFGT MAINC1                                                      MD059936
+     C           #WKACD    ANDLEMAINC2                                                      MD059936
+     C                     MOVE MASRVL    ACOD#R                                            MD059936
+     C                     ELSE                                                             MD059936
+     C           #WKACD    SETLLSDINEXL1                                                      CGL057
+     C                     READPSDINEXL1                 55                                   CGL057
+     C           *IN55     IFEQ '0'                                                           CGL057
+     C           #WKACD    ANDGTMAINC1                                                        CGL057
+     C           #WKACD    ANDLEMAINC2                                                        CGL057
+     C                     MOVE MASRVL    ACOD#R                                              CGL057
+     C                     ELSE                                                             MD059936
+      *                                                                                     MD059936
+      ** If account code is with in the range of another range of account codes             MD059936
+      ** alternate Spot Reval a/c code.                                                     MD059936
+      *                                                                                     MD059936
+     C           #WKACD    SETLLSDINEXL2                                                    MD059936
+     C                     READ SDINEXL2                 55                                 MD059936
+     C           *IN55     DOWEQ'0'                                                         MD059936
+     C           #WKACD    IFGT MAINC1                                                      MD059936
+     C           #WKACD    ANDLEMAINC2                                                      MD059936
+     C                     MOVE MASRVL    ACOD#R                                            MD059936
+     C                     SETON                     55                                     MD059936
+     C                     ITER                                                             MD059936
+     C                     ENDIF                                                            MD059936
+     C                     READ SDINEXL2                 55                                 MD059936
+     C                     ENDDO                                                            MD059936
+     C                     ENDIF                                                            MD059936
+     C                     ENDIF                                                            MD059936
+      *                                                                                       CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+      **  Check against Spot Reval mapping file.                                              CGL057
+      *                                                                                       CGL057
+     C           ACOD#R    IFNE *BLANKS                                                       CGL057
+     C                     MOVE ACOD#R    ACODKY 10                                           CGL057
+     C           KLIST1    CHAINSDSRVLL1             56                                       CGL057
+     C           *IN56     IFEQ *ON                                                           CGL057
+      *                                                                                       CGL057
+      **  If the alternate Spot Reval a/c code was not specified on the                       CGL057
+      **  Mapped Spot Reval account file (meaning that no alternate                           CGL057
+      **  Spot Trade Equiv or Spot Trading Account has been defined),                         CGL057
+      **  then do NOT use this alternate Spot Reval account.                                  CGL057
+      *                                                                                       CGL057
+     C                     MOVE *BLANKS   ACOD#R           Alt Spot Reval                     CGL057
+     C                     ELSE                                                               CGL057
+     C                     MOVE MBSPTA    ACOD#T           Alt Spot Trade                     CGL057
+     C                     MOVE MBSPAE    ACOD#E           Alt Spot Equiv                     CGL057
+     C                     MOVE MBSRVL    ACOD#V           Alt Spot Reval                     CGL057
+     C                     ENDIF                                                              CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+     C                     ENDSR                                                              CGL057
+      *****************************************************************                       CGL057
+      /EJECT                                                                                  CGL057
+      *****************************************************************                       CGL057
+      *  GETSTA -  Get alternate Spot Trading account code.           *                       CGL057
+      *                                                               *                       CGL057
+      *  Called By:  #B - Detail processing                           *                       CGL057
+      *                                                               *                       CGL057
+      *  Calls    :  None                                             *                       CGL057
+      *****************************************************************                       CGL057
+     C           GETSTA    BEGSR                                                              CGL057
+      *                                                                                       CGL057
+      **  Chain to mapping file using the Account Code/CCY to check                           CGL057
+      **  if account code is an Alternate Spot Trade or Spot Trade                            CGL057
+      **  Equivalent Account.  If not, the ICD Spot Trade and Equivalent                      CGL057
+      **  accounts are used.                                                                  CGL057
+      *                                                                                       CGL057
+     C                     MOVE *BLANKS   ACOD#T           Alt Spot Trade                     CGL057
+     C                     MOVE *BLANKS   ACOD#E           Alt Spot Equiv                     CGL057
+     C                     MOVE *BLANKS   ACOD#V           Alt Spot Reval                     CGL057
+      *                                                                                       CGL057
+     C           CGL057    IFEQ 'Y'                                                           CGL057
+     C                     MOVE ACODA     ACODKY                                              CGL057
+      *                                                                                       CGL057
+      * Check if account code = Alternate Spot Trade Account                                  CGL057
+     C           KLIST1    CHAINSDSRVLL5             56                                       CGL057
+     C           *IN56     IFEQ *OFF                                                          CGL057
+     C                     MOVE MBSPTA    ACOD#T           Alt Spot Trade                     CGL057
+     C                     MOVE MBSPAE    ACOD#E           Alt Spot Equiv                     CGL057
+     C                     MOVE MBSRVL    ACOD#V           Alt Spot Reval                     CGL057
+     C                     ELSE                                                               CGL057
+      *                                                                                       CGL057
+      * Check if account code = Alternate Spot Trade Equivalent Account                       CGL057
+     C           KLIST1    CHAINSDSRVLL6             56                                       CGL057
+     C           *IN56     IFEQ *OFF                                                          CGL057
+     C                     MOVE MBSPTA    ACOD#T                                              CGL057
+     C                     MOVE MBSPAE    ACOD#E                                              CGL057
+     C                     MOVE MBSRVL    ACOD#V                                              CGL057
+     C                     ENDIF                                                              CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+     C                     ENDIF                                                              CGL057
+      *                                                                                       CGL057
+     C                     ENDSR                                                              CGL057
+      *****************************************************************                       CGL057
      C/EJECT
       *****************************************************************
       *                                                               *

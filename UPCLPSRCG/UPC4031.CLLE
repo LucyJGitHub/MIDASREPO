@@ -15,10 +15,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. MD059476 *CREATE   Date 01Aug21              */
+/*       Last Amend No. MD059918           Date 11May22              */
+/*       Prev Amend No. MD059476 *CREATE   Date 01Aug21              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059918 - Save and restore more than 300 tables            */
 /*       MD059476 - Bridge improvement for refresh                   */
 /*                                                                   */
 /*********************************************************************/
@@ -116,7 +118,8 @@
              ELSE CMD(DO)
              CHGVAR     VAR(&TLIB) VALUE(&PFX *CAT 'DTALIB')
              CHGVAR     VAR(&MLIB) VALUE(&PFX *CAT 'DMLIB')
-             CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR_Z')
+/**********  CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR_Z') */                               /*MD059918*/
+             CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR1Z')                                  /*MD059918*/
              CALL       PGM(UPC0014) PARM(&PFX)
              ENDDO
 
@@ -144,6 +147,18 @@
              RSTOBJ     OBJ(*ALL) SAVLIB(&MLIB) DEV(*SAVF) +
                           SAVF(&BLIB/&SAVF) OUTPUT(*PRINT)
 
+/* If *ZONE, restore from thesecond SAVF as well provided that it exists */             /*MD059918*/
+             IF         COND(&LAYER *EQ '*ZONE  ') THEN(DO)                             /*MD059918*/
+             CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR2Z')                                  /*MD059918*/
+             CHKOBJ     OBJ(&BLIB/&SAVF) OBJTYPE(*FILE)                                 /*MD059918*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD059918*/
+             GOTO       CMDLBL(SYNCH)                                                   /*MD059918*/
+             ENDDO                                                                      /*MD059918*/
+             RSTOBJ     OBJ(*ALL) SAVLIB(&MLIB) DEV(*SAVF) +
+                          SAVF(&BLIB/&SAVF) OUTPUT(*PRINT)                              /*MD059918*/
+             MONMSG     MSGID(CPF3707)                                                  /*MD059918*/
+             ENDDO                                                                      /*MD059918*/
+                                                                                        /*MD059918*/
 SYNCH:
 /* Create file to be used to drive retrieve process. */
              DLTF       FILE(QTEMP/UPOBJCTPD)

@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054335           Date 11Sep19               *
+      *  Last Amend No. MD009526           Date 13May22               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054335           Date 11Sep19               *
       *                 MD054132           Date 16Aug19               *
       *                 MD053943           Date 17Jul19               *
       *                 MD053872           Date 10Jul19               *
@@ -84,6 +85,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD009526 - Missing PCA account keys for Syndications:        *
+      *             xxRyyT.SIA, xxRyyF.SIA, xxVyyF.SDA and xxVyyF.SDA *
+      *             and other errors.                                 *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD054335 - GLC0340 currency imbalance issue                  *
       *  MD054132 - Risk Loans COB account key generation for value   *
@@ -7482,10 +7486,11 @@
      C           IPTYP     ANDNE'72'                                      CLE031
      C           *IN35     OREQ '1'                                       CLE031
      C           IPTYP     ANDNE'72'                                      CLE031
-     C           *IN30     OREQ '1'                                       CLE031
-     C           IPTYP     ANDNE'72'                                      CLE031
+     C********** *IN30     OREQ '1'                                                  CLE031 MD009526
+     C********** IPTYP     ANDNE'72'                                                 CLE031 MD009526
      C                     ELSE                                           CLE031
      C           CLE031    IFEQ 'Y'                                       CLE031
+     C           IPTYP     ANDEQ'72'                                                        MD009526
      C           CLE031    OREQ 'N'                                                         MD053849
      C           IPTYP     ANDNE'72'                                                        MD053849
      C*
@@ -7494,8 +7499,11 @@
      C                     MOVE '  B'     LEKEY
      C** Fields CR
      C                     MOVE *BLANK    DETLS
+     C           IPTYP     IFNE '70'                                                        MD009526
      C                     MOVE '01'      PN4
      C                     MOVE '2'       PR4
+     C                     ENDIF                                                            MD009526
+      *                                                                                     MD009526
      C** Update file
      C                     EXSR ACUP
       *                                                                                       CLE134
@@ -7517,7 +7525,7 @@
      C           *IN33     OREQ '1'                                       CLE031
      C           *IN34     OREQ '1'                                       CLE031
      C           *IN35     OREQ '1'                                       CLE031
-     C           *IN30     OREQ '1'                                       CLE031
+     C********** *IN30     OREQ '1'                                                  CLE031 MD009526
      C                     ELSE                                           CLE031
      C           IPTYP     IFNE '72'                                      CLE031
       *                                                                                     MD028080
@@ -7567,6 +7575,8 @@
      C*                                                                   146525
      C                     ENDIF                                          146525
      C*
+     C           *IN30     IFNE '1'                                                         MD009526
+      *                                                                                     MD009526
      C/COPY WNCPYSRC,AK0040CCP2                                           S01408
      C           *IN37     IFEQ '0'                        37 BEG
      C*                                                                   100788
@@ -7891,6 +7901,7 @@
      C*
      C                     ENDIF                                          146525
      C*
+     C                     ENDIF                                                            MD009526
      C                     END                             31,32,33,34,35 END
      C*                                                                   146525
      C*******  Withholding Tax keys  ********                             146525
@@ -11733,6 +11744,74 @@
      C                     EXSR ACUP                                                        MD027475
      C                     MOVE 'R'       EVENTL                                            MD027475
      C                     ENDIF                                                            MD027475
+      *                                                                                     MD009526
+      **  Key:  XXRYYT..IA  (Transaction Profit Centre; Principal Inc.)                     MD009526
+      *                                                                                     MD009526
+     C           *IN20     IFEQ *OFF                                                        MD009526
+     C                     MOVE *BLANKS   DETLS                                             MD009526
+     C                     MOVE 'T'       WTXT                                              MD009526
+     C                     MOVE 'I'       TAXL                                              MD009526
+      *                                                                                     MD009526
+      **  If Funding Account Codes are not blank, set up DR/CR details                      MD009526
+      *                                                                                     MD009526
+     C           WBLANK    IFNE 'Y'                                                         MD009526
+      *                                                                                     MD009526
+      **  Debit Entry:  For Parts Sold (type 66), use Internal Loan A/c                     MD009526
+      *                                                                                     MD009526
+     C           *IN36     IFEQ *ON                                                         MD009526
+     C                     MOVE SILAC     AC1                                               MD009526
+     C                     MOVE '65'      PN1                                               MD009526
+     C                     MOVE '1'       PR1                                               MD009526
+     C                     ELSE                                                             MD009526
+      *                                                                                     MD009526
+      **  Credit Entry: For Loans (types 61,62,64), use Internal Deposit                    MD009526
+     C                     MOVE SIDAC     AC4                                               MD009526
+     C                     MOVE '65'      PN4                                               MD009526
+     C                     MOVE '1'       PR4                                               MD009526
+     C                     ENDIF                                                            MD009526
+      *                                                                                     MD009526
+     C                     ENDIF                                                            MD009526
+      ** Update file                                                                        MD009526
+     C                     EXSR ACUP                                                        MD009526
+     C                     MOVE 'S'       @RCVR                                             MD009526
+      **  Key:  XXRYYT.SIA  (Transaction Profit Centre; Principal Inc.)                     MD009526
+     C                     EXSR ACUP                                                        MD009526
+     C                     MOVE *BLANK    @RCVR                                             MD009526
+      *                                                                                     MD009526
+      **  Key:  XXRYYF..IA  (Funding Profit Centre; Principal Inc. Amt)                     MD009526
+      *                                                                                     MD009526
+     C                     MOVE *BLANKS   DETLS                                             MD009526
+     C                     MOVE 'F'       WTXT                                              MD009526
+      *                                                                                     MD009526
+      **  If Funding Account Codes are not blank, set up DR/CR details                      MD009526
+      *                                                                                     MD009526
+     C           WBLANK    IFNE 'Y'                                                         MD009526
+      *                                                                                     MD009526
+      **  Credit Entry: For Parts Sold (type 66), use Internal Deposit Ac                   MD009526
+      *                                                                                     MD009526
+     C           *IN36     IFEQ *ON                                                         MD009526
+     C                     MOVE SIDAC     AC4                                               MD009526
+     C                     MOVE '60'      PN1                                               MD009526
+     C                     MOVE '1'       PR4                                               MD009526
+     C                     ELSE                                                             MD009526
+      *                                                                                     MD009526
+      **  Debit Entry:  For Loans (types 61,62,64), use Internal Loan a/c                   MD009526
+     C                     MOVE SILAC     AC1                                               MD009526
+     C                     MOVE '60'      PN1                                               MD009526
+     C                     MOVE '1'       PR1                                               MD009526
+     C                     ENDIF                                                            MD009526
+      *                                                                                     MD009526
+     C                     ENDIF                                                            MD009526
+      ** Update file                                                                        MD009526
+     C                     EXSR ACUP                                                        MD009526
+      **  Key:  XXRYYF.SIA  (Funding Profit Centre; Principal Inc. Amt)                     MD009526
+     C                     MOVE 'S'       @RCVR                                             MD009526
+     C                     EXSR ACUP                                                        MD009526
+     C                     MOVE *BLANK    @RCVR                                             MD009526
+      *                                                                                     MD009526
+     C                     MOVE *BLANKS   TAXL                                              MD009526
+     C                     ENDIF                                                            MD009526
+      *                                                                                     MD009526
      C*                                                                   CAC001
      C****Key:**XXRYYT..WA**(Transaction*Profit*Centre;*Principal***CAC001146525
      C**  Key:  XXRYYT..WI  (Transaction Profit Centre; Principal         146525
@@ -12447,7 +12526,8 @@
       *                                                                   146525
      C*                                                                   146525
      C** Account key for syndicated loans                                 146525
-     C** XXRYY..SDA                                                       146525
+     C***XXRYY..SDA***************************************************               146525 MD009526
+      ** XXVYY..SDA                                                                         MD009526
      C*                                                                   146525
      C           *IN20     IFEQ *OFF                                                          CLE028
      C                     MOVE 'S'       @RCVR                           146525
@@ -12489,6 +12569,77 @@
      C                     MOVE *BLANK    RECL                            146525
      C                     ENDIF                                                              CLE028
      C                     END                                            146525
+      *                                                                                     MD009526
+      **  Key:  XXVYYT..DA  (Transaction Profit Centre; Principal Dec.)                     MD009526
+      *                                                                                     MD009526
+     C           *IN20     IFEQ *OFF                                                        MD009526
+     C                     MOVE *BLANKS   DETLS                                             MD009526
+     C                     MOVE 'T'       WTXT                                              MD009526
+     C                     MOVE 'D'       TAXL                                              MD009526
+      *                                                                                     MD009526
+      **  If Funding Account Codes are not blank, set up DR/CR details                      MD009526
+      *                                                                                     MD009526
+     C           WBLANK    IFNE 'Y'                                                         MD009526
+      *                                                                                     MD009526
+      **  Credit Entry:  For Parts Sold (type 66), use Internal Loan A/c                    MD009526
+      *                                                                                     MD009526
+     C           *IN36     IFEQ *ON                                                         MD009526
+     C                     MOVE SILAC     AC4                                               MD009526
+     C                     MOVE '65'      PN4                                               MD009526
+     C                     MOVE '1'       PR4                                               MD009526
+     C                     ELSE                                                             MD009526
+      *                                                                                     MD009526
+      **  Debit Entry: For Loans (types 61,62,64), use Internal Deposit                     MD009526
+      *                                                                                     MD009526
+     C                     MOVE SIDAC     AC1                                               MD009526
+     C                     MOVE '65'      PN1                                               MD009526
+     C                     MOVE '1'       PR1                                               MD009526
+     C                     ENDIF                                                            MD009526
+      *                                                                                     MD009526
+     C                     ENDIF                                                            MD009526
+      ** Update file                                                                        MD009526
+     C                     EXSR ACUP                                                        MD009526
+      *                                                                                     MD009526
+      ** Key:   XXVYYT.SDA                                                                  MD009526
+      *                                                                                     MD009526
+     C                     MOVE 'S'       @RCVR                                             MD009526
+     C                     EXSR ACUP                                                        MD009526
+     C                     MOVE *BLANK    @RCVR                                             MD009526
+      *                                                                                     MD009526
+      **  Key:  XXVYYF..DA  (Funding Profit Centre; Principal Dec. Amt)                     MD009526
+      *                                                                                     MD009526
+     C                     MOVE *BLANKS   DETLS                                             MD009526
+     C                     MOVE 'F'       WTXT                                              MD009526
+      *                                                                                     MD009526
+      **  If Funding Account Codes are not blank, set up DR/CR details                      MD009526
+      *                                                                                     MD009526
+     C           WBLANK    IFNE 'Y'                                                         MD009526
+      *                                                                                     MD009526
+      **  Debit Entry: For Parts Sold (type 66), use Internal Deposit Ac                    MD009526
+      *                                                                                     MD009526
+     C           *IN36     IFEQ *ON                                                         MD009526
+     C                     MOVE SIDAC     AC1                                               MD009526
+     C                     MOVE '60'      PN1                                               MD009526
+     C                     MOVE '1'       PR1                                               MD009526
+     C                     ELSE                                                             MD009526
+      *                                                                                     MD009526
+      **  Credit Entry: For Loans (types 61,62,64), use Internal Loan a/c                   MD009526
+      *                                                                                     MD009526
+     C                     MOVE SILAC     AC4                                               MD009526
+     C                     MOVE '60'      PN4                                               MD009526
+     C                     MOVE '1'       PR4                                               MD009526
+     C                     ENDIF                                                            MD009526
+      *                                                                                     MD009526
+     C                     ENDIF                                                            MD009526
+      ** Update file                                                                        MD009526
+     C                     EXSR ACUP                                                        MD009526
+      **  Key:  XXVYYF.SDA (Funding Profit Centre; Principal Dec. Amt)                      MD009526
+     C                     MOVE 'S'       @RCVR                                             MD009526
+     C                     EXSR ACUP                                                        MD009526
+     C                     MOVE *BLANK    @RCVR                                             MD009526
+      *                                                                                     MD009526
+     C                     MOVE *BLANKS   TAXL                                              MD009526
+     C                     ENDIF                                                            MD009526
      C*                                                                   146525
      C**********           END                                     146525 191495
      C*                                                                   146525

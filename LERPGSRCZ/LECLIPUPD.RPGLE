@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 246192             Date 13May22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 207964             Date 23Aug02               *
       *                 MD031292           Date 06Nov19               *
       *                 MD025836           Date 06Nov19               *
@@ -166,6 +167,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  246192 - Insert validation for auto-generated loan.          *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  207964 - Incorrect exposure if loan is in base currency. Do  *
@@ -3718,6 +3720,13 @@
      C     CLE134        OREQ      'Y'                                                      MD020605
      C     PTREF         ANDNE     *BLANK                                                   MD020605
      C                   MOVEL     PTREF         PCRFL
+      *                                                                                       246192
+      ** System Generated                                                                     246192
+      *                                                                                       246192
+     C                   IF        (%SUBST(PCRFL:12:4)) <> '0001'                             246192
+     C                   MOVE      'S'           MNSG                                         246192
+     C                   ENDIF                                                                246192
+      *                                                                                       246192
      C                   ELSE
      C                   MOVE      L_CLBRCA      @BRCD
      C                   EXSR      ACS_BRCA
@@ -4780,7 +4789,11 @@
      C                   Z-ADD     BJRDNB        LCD
       *
       *** Manual/system generated
+     C                   IF        (%SUBST(PCRFL:12:4)) <> '0001'                             246192
+     C                   MOVE      'S'           MNSG                                         246192
+     C                   ELSE                                                                 246192
      C                   MOVE      'M'           MNSG
+     C                   ENDIF                                                                246192
       *
       *** PC orig. branch
      C                   MOVE      L_CLPCOB      PCOBL

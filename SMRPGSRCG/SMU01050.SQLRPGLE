@@ -12,11 +12,16 @@
       *                                                               *
       *  (c)Finastra International Limited 2020                       *
       *                                                               *
-      *  Last Amend No. MD058089           Date 01Sep21               *
-      *  Prev Amend No. CSD103    *CREATE  Date 10Aug20               *
+      *  Last Amend No. MD059958           Date 17May22               *
+      *  Prev Amend No. MD058089           Date 01Sep21               *
+      *                 CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059958 - GPST and ZPST successfully run but produced dump. *
+      *             Error in SQL insert in GZDEALSDG and DEALSDG      *
+      *             due to added fields by CIR020.                    *
+      *           - Applied for MD-59973                              *  
       *  MD058089 - Deliverable Data Split for SM and UP              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
@@ -120,6 +125,7 @@
       *
      C**********         IF        ErrorOnFl = True                                         MD058089
      C                   IF        SQLCODE <> 0                                             MD058089
+     C                             AND SQLCODE <> 100                                       MD059958
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = '*NEXT'
      C                   EVAL      DBFile = 'SMFLITD0'
@@ -148,8 +154,24 @@
      C                   EVAL      UFILE = PFILE
      C                   EVAL      LIB1  = LIB
       *
+     C                   IF        UFILE = 'DEALSDG'                                        MD059958
+     C                             OR UFILE = 'DLGHISPD'                                    MD059958
+     C                             OR UFILE = 'DLUPDDG'                                     MD059958
+     C                             OR UFILE = 'IRVCACFPD'                                   MD059958
+     C                             OR UFILE = 'IRVCIRSPD'                                   MD059958
+     C                             OR UFILE = 'IRVECACFPD'                                  MD059958
+     C                             OR UFILE = 'IRVECIRSPD'                                  MD059958
+     C                             OR UFILE = 'IRVESIRSPD'                                  MD059958
+     C                             OR UFILE = 'IRVEXSRPD'                                   MD059958
+     C                             OR UFILE = 'IRVSIRSPD'                                   MD059958
+     C                             OR UFILE = 'MXSDLDGPD'                                   MD059958
+     C                             OR UFILE = 'TSMDDGPD'                                    MD059958
+     C                   EVAL      thisSQL = 'INSERT INTO ' +UFILE+ ' SELECT * '
+     C                                     +'FROM QTEMP/' +UFILE                            MD059958
+     C                   ELSE                                                               MD059958
      C                   EVAL      thisSQL = 'INSERT INTO ' +UFILE+ ' SELECT * '
      C                                     +'FROM "#.' +Zprf +LIB1+ '"/' +UFILE
+     C                   ENDIF                                                              MD059958
       *
       * Delete corrupted records
       *
@@ -183,8 +205,14 @@
      C                   EVAL      UFILE = PFILE
      C                   EVAL      LIB1  = LIB
 
+     C                   IF        UFILE = 'GZDEALSDG'                                      MD059958
+     C                             OR UFILE = 'GZDLGHISPD'                                  MD059958
+     C                   EVAL      thisSQL = 'INSERT INTO ' +UFILE+ ' SELECT * '
+     C                                     +'FROM QTEMP/' +UFILE                            MD059958
+     C                   ELSE                                                               MD059958
      C                   EVAL      thisSQL = 'INSERT INTO ' +UFILE+ ' SELECT * '
      C                                     +'FROM "#.' +Gprf +LIB1+ '"/' +UFILE
+     C                   ENDIF                                                              MD059958
       *
       * Delete corrupted records
       *

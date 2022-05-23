@@ -1551,10 +1551,10 @@
       ** Expiry date cannot be earlier than the start date of the fee                       MD021652
       *                                                                                     MD021652
      C     ZDAYNO        IFLT      FEPSTD                                                   MD021652
-     C                   Move      'N'           DDDTEXOK                                   MD021652
-     C                   Add       1             Idx                                        MD021652
-     C                   Movel     'DDDTEX'      FldNamXAr(Idx)                             MD021652
-     C                   Movel     'LEF0238'     MsgIDXAr(Idx)                              MD021652
+     C                   MOVE      'N'           DDDTEXOK                                   MD021652
+     C                   ADD       1             Idx                                        MD021652
+     C                   MOVEL     'DDDTEX'      FldNamXAr(Idx)                             MD021652
+     C                   MOVEL     'LEF0238'     MsgIDXAr(Idx)                              MD021652
      C                   LEAVE                                                              MD021652
      C                   ENDIF                                                              MD021652
       *                                                                                     MD021652

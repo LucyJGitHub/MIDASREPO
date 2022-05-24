@@ -1,4 +1,4 @@
-     H DEBUG
+121     H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *

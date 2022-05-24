@@ -58,6 +58,9 @@
       ** Logical File for retrieving MT199 sender
      FMEINCRL1  IF   E           K DISK    INFSR(*PSSR)
 
+      ** Logical File for Message Incoming Details by Message Tag
+     FMEIN35L0  IF   E           K DISK    INFSR(*PSSR)
+
       ** Logical File for retrieving Incoming Message Transaction Number
      FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)
 
@@ -146,8 +149,14 @@
       * For exclusive use of Mult DS
      D Q               S              2P 0
 
+      ** External data structure for bank file
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+
       **  Data structure for SAR - Switchable features file
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
+
+      **  Data structure for message management data.
+     D SDMGME        E DS                  EXTNAME(SDMGMEPD)
 
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -195,11 +204,17 @@
      D WTag20b         S              6A
      D WTag79L3a       S              6A
      D WTag79L3b       S             16A
+     D WTag202COV      S              1A
+     D WTag205COV      S              1A
 
       ** Variables for writing MGOREFPD
       * Transaction Ref. Number
      D WTRNo           S             16A
      D WTrnId          S             15A
+
+      ** Parameters for converting Midas rundate YYMMDD format .
+     D ZMDAY           S              5P 0
+     D ZMDATE          S              6A
 
       ** Parameters for calling Standing Data
      D @BRCD           S              3A
@@ -209,6 +224,9 @@
 
       ** Variables for Switchable Features
      D CSW122          S              1A
+
+      ** Temporary Variables
+     D @HRDT           S              6A
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -284,15 +302,82 @@
      C                   MOVEL     'N'           CSW122
      C                   ENDIF
 
+      ** Access SDMGMEPD for message management data.
+
+     C                   CALL      'AOMGMER0'
+     C                   PARM      '*MSG   '     @RTCD
+     C                   PARM      '*FIRST '     @OPTN
+     C     SDMGME        PARM      SDMGME        DSFDY
+
+     C     @RTCD         IFNE      *BLANKS
+     C     *LOCK         IN        LDA
+     C                   MOVE      '002'         DBASE
+     C                   MOVEL     'FIRST'       DBKEY
+     C                   MOVEL     'SDMGMEPD'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+      *
+      ** Access Bank details via access program (Includes Run Date)
+      *  (database error handling done in access program)
+     C                   CALL      'AOBANKR0'
+     C                   PARM      '*DBERR '     @RTCD
+     C                   PARM      '*FIRST '     @OPTN
+     C     SDBANK        PARM      SDBANK        DSFDY
+
+     C     @RTCD         IFNE      *BLANKS
+     C     *LOCK         IN        LDA
+     C                   MOVE      '004'         DBASE
+     C                   MOVEL     'FIRST'       DBKEY
+     C                   MOVEL     'SDBANKPD'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+      *
+      ** Convert run date to YYMMDD, for Message Generation Date
+      *
+     C                   CALL      'ZM0060'                             15
+     C                   PARM      BJRDNB        ZMDAY
+     C                   PARM                    ZMDATE
+
+     C     *IN15         IFEQ      '1'
+     C     *LOCK         IN        LDA
+     C                   MOVE      '004'         DBASE
+     C                   MOVEL     '       '     DBKEY
+     C                   MOVEL     'ZM0060'      DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   MOVE      ZMDATE        WTag20b
+
+      ** Convert history retention date to YYMMDD
+
+     C     BJRDNB        ADD       ENDSMN        ZMDAY
+     C                   CALL      'ZM0060'                             15
+     C                   PARM                    ZMDAY
+     C                   PARM                    ZMDATE
+
+     C     *IN15         IFEQ      '1'
+     C     *LOCK         IN        LDA
+     C                   MOVE      '005'         DBASE
+     C                   MOVEL     '       '     DBKEY
+     C                   MOVEL     'ZM0060'      DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   MOVE      ZMDATE        @HRDT
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       *                                                               *
-      * SrRdIncMsg - Read Incoming Messages for MT199                 *
+      * SrRdIncMsg - Read Incoming Messages for MT199, MT299          *
       *                                                               *
       * Called by: Main Procedure                                     *
       *                                                               *
-      * Calls: SrSvPyFld, SRExtract, SrOMSG, SrInitFld                *
+      * Calls: SrExtract103, SRExtract202, SRExtract205               *
       *                                                               *
       *****************************************************************
 
@@ -304,10 +389,17 @@
       *
      C                   IF        CSW122 = 'Y'
       *
-      ** If Message Type is equal to 103
+      ** Enter subroutine for different Message Type.
       *
      C                   IF        PMtpy = '103'
      C                   EXSR      SRExtract103
+     C                   ELSEIF    PMTpy = '202'
+     C                   EXSR      SRExtract202
+     C                   ELSEIF    PMTpy = '205'
+     C                   EXSR      SRExtract205
+      *
+     C                   ELSE
+     C                   LEAVE
      C                   ENDIF
       *
      C                   ENDIF
@@ -335,7 +427,7 @@
      C     *LOCK         IN        LDA
      C                   MOVE      *BLANKS       DBFILE
      C                   MOVE      *BLANKS       DBKEY
-     C                   MOVEL     'FT000199'    DBPGM
+     C                   MOVEL     'FT000201'    DBPGM
      C                   MOVE      *BLANKS       DBASE
      C                   OUT       LDA
 
@@ -465,9 +557,9 @@
       ** Get tag 70
       *
      C                   EVAL      KFMtag = ':70:'
-     C     KLIncMsg      CHAIN     MEINDTL0
+     C     KLIncMsg      CHAIN     MEIN35L0
      C                   IF        %FOUND
-     C                   EVAL      WTag70Val = DTMFLD
+     C                   EVAL      WTag70Val = DSMF35
 
      C                   ADD       1             Q
      C     Q             OCCUR     MULT
@@ -476,9 +568,9 @@
 
      C                   ELSE
      C     *LOCK         IN        LDA
-     C                   MOVE      '011'         DBASE
+     C                   MOVE      '012'         DBASE
      C                   MOVEL     'KLIncMsg'    DBKEY
-     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   MOVEL     'MEIN35L0'    DBFILE
      C                   OUT       LDA
      C                   EXSR      *PSSR
 
@@ -491,6 +583,524 @@
      C                   ADD       1             Q
      C     Q             OCCUR     MULT
      C                   MOVEL     WTag79L4Val   MFLD
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SrExtract202- Extract details for MT202                       *
+      *                                                               *
+      * Called by: SrRdIncMsg                                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SrExtract202  BEGSR
+      *
+      ** Check if 202 is COV.
+      *
+     C                   EVAL      KFMtag = '119:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag202COV = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':119:'       MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEIN35L0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+      *
+      ** Mapping for MT202COV
+      *
+     C                   IF        WTag202COV = 'COV'
+      *
+      ** Get tag 121
+      *
+     C                   EVAL      KFMtag = '121:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag121Val = DTMFLD
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':121:'       MTAG
+     C                   MOVEL     WTag121Val    MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 20
+      *
+     C                   EVAL      Wtag20a = %CHAR(KFMsgR)
+     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)
+     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b
+     C                   EVAL      WTRNo = WTag20Val
+
+      *
+      ** If the transaction has no Payment Reference, default tag 20 to MTRN
+      *
+     C                   IF        WTrnId = *BLANKS
+     C                   EVAL      WTrnId = WTRNo
+     C                   ENDIF
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':20:'        MTAG
+     C                   MOVEL     WTag20Val     MFLD
+
+      *
+      ** Get tag 79 Line 1
+      *
+     C                   EVAL      WTag79L1Val = RsnCode + FldNumber
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':79:'        MTAG
+     C                   MOVEL     WTag79L1Val   MFLD
+
+      *
+      ** Get tag 79 Line 2
+      *
+     C                   EVAL      WTag79L2Val = '/XT99/' + 'MS03/'
+
+      *
+      ** Store tag 79 Line 2; Identified before entering this subroutine
+      *
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L2Val   MFLD
+
+      *
+      ** Get tag 79 Line 3
+      *
+     C                   EVAL      WTag79L3a = '/MREF/'
+     C                   EVAL      WTag79L3b = WTRNo
+     C                   EVAL      WTag79L3Val = WTag79L3a + WTag79L3b
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L3Val   MFLD
+
+      *
+      ** Get tag 70
+      *
+     C                   EVAL      KFMtag = ':70:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag70Val = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':70:'        MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEIN35L0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 79 Line 4
+      *
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag70Val
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L4Val   MFLD
+      *
+      ** Mapping for MT202
+      *
+     C                   ELSE
+      *
+      ** Get tag 121
+      *
+     C                   EVAL      KFMtag = '121:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag121Val = DTMFLD
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':121:'       MTAG
+     C                   MOVEL     WTag121Val    MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 20
+      *
+     C                   EVAL      Wtag20a = %CHAR(KFMsgR)
+     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)
+     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b
+     C                   EVAL      WTRNo = WTag20Val
+
+      *
+      ** If the transaction has no Payment Reference, default tag 20 to MTRN
+      *
+     C                   IF        WTrnId = *BLANKS
+     C                   EVAL      WTrnId = WTRNo
+     C                   ENDIF
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':20:'        MTAG
+     C                   MOVEL     WTag20Val     MFLD
+
+      *
+      ** Get tag 79 Line 1
+      *
+     C                   EVAL      WTag79L1Val = RsnCode + FldNumber
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':79:'        MTAG
+     C                   MOVEL     WTag79L1Val   MFLD
+
+      *
+      ** Get tag 79 Line 2
+      *
+     C                   EVAL      WTag79L2Val = '/XT99/' + 'MS03/'
+
+      *
+      ** Store tag 79 Line 2; Identified before entering this subroutine
+      *
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L2Val   MFLD
+
+      *
+      ** Get tag 79 Line 3
+      *
+     C                   EVAL      WTag79L3a = '/MREF/'
+     C                   EVAL      WTag79L3b = WTRNo
+     C                   EVAL      WTag79L3Val = WTag79L3a + WTag79L3b
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L3Val   MFLD
+
+      *
+      ** Get tag 70
+      *
+     C                   EVAL      KFMtag = ':70:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag70Val = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':70:'        MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEIN35L0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 79 Line 4
+      *
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag70Val
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L4Val   MFLD
+      *
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SrExtract205- Extract details for MT205                       *
+      *                                                               *
+      * Called by: SrRdIncMsg                                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SrExtract205  BEGSR
+      *
+      ** Check if 205 is COV.
+      *
+     C                   EVAL      KFMtag = '119:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag202COV = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':119:'       MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEIN35L0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+      *
+      ** Mapping for MT202COV
+      *
+     C                   IF        WTag202COV = 'COV'
+      *
+      ** Get tag 121
+      *
+     C                   EVAL      KFMtag = '121:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag121Val = DTMFLD
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':121:'       MTAG
+     C                   MOVEL     WTag121Val    MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 20
+      *
+     C                   EVAL      Wtag20a = %CHAR(KFMsgR)
+     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)
+     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b
+     C                   EVAL      WTRNo = WTag20Val
+
+      *
+      ** If the transaction has no Payment Reference, default tag 20 to MTRN
+      *
+     C                   IF        WTrnId = *BLANKS
+     C                   EVAL      WTrnId = WTRNo
+     C                   ENDIF
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':20:'        MTAG
+     C                   MOVEL     WTag20Val     MFLD
+
+      *
+      ** Get tag 79 Line 1
+      *
+     C                   EVAL      WTag79L1Val = RsnCode + FldNumber
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':79:'        MTAG
+     C                   MOVEL     WTag79L1Val   MFLD
+
+      *
+      ** Get tag 79 Line 2
+      *
+     C                   EVAL      WTag79L2Val = '/XT99/' + 'MS03/'
+
+      *
+      ** Store tag 79 Line 2; Identified before entering this subroutine
+      *
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L2Val   MFLD
+
+      *
+      ** Get tag 79 Line 3
+      *
+     C                   EVAL      WTag79L3a = '/MREF/'
+     C                   EVAL      WTag79L3b = WTRNo
+     C                   EVAL      WTag79L3Val = WTag79L3a + WTag79L3b
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L3Val   MFLD
+
+      *
+      ** Get tag 70
+      *
+     C                   EVAL      KFMtag = ':70:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag70Val = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':70:'        MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEIN35L0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 79 Line 4
+      *
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag70Val
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L4Val   MFLD
+      *
+      ** Mapping for MT202
+      *
+     C                   ELSE
+      *
+      ** Get tag 121
+      *
+     C                   EVAL      KFMtag = '121:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag121Val = DTMFLD
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':121:'       MTAG
+     C                   MOVEL     WTag121Val    MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 20
+      *
+     C                   EVAL      Wtag20a = %CHAR(KFMsgR)
+     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)
+     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b
+     C                   EVAL      WTRNo = WTag20Val
+
+      *
+      ** If the transaction has no Payment Reference, default tag 20 to MTRN
+      *
+     C                   IF        WTrnId = *BLANKS
+     C                   EVAL      WTrnId = WTRNo
+     C                   ENDIF
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':20:'        MTAG
+     C                   MOVEL     WTag20Val     MFLD
+
+      *
+      ** Get tag 79 Line 1
+      *
+     C                   EVAL      WTag79L1Val = RsnCode + FldNumber
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':79:'        MTAG
+     C                   MOVEL     WTag79L1Val   MFLD
+
+      *
+      ** Get tag 79 Line 2
+      *
+     C                   EVAL      WTag79L2Val = '/XT99/' + 'MS03/'
+
+      *
+      ** Store tag 79 Line 2; Identified before entering this subroutine
+      *
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L2Val   MFLD
+
+      *
+      ** Get tag 79 Line 3
+      *
+     C                   EVAL      WTag79L3a = '/MREF/'
+     C                   EVAL      WTag79L3b = WTRNo
+     C                   EVAL      WTag79L3Val = WTag79L3a + WTag79L3b
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L3Val   MFLD
+
+      *
+      ** Get tag 70
+      *
+     C                   EVAL      KFMtag = ':70:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag70Val = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':70:'        MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEIN35L0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 79 Line 4
+      *
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag70Val
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L4Val   MFLD
+      *
+     C                   ENDIF
 
      C                   ENDSR
       *****************************************************************

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058443             Date 12Jul21             *
-      *  Prev Amend No. MD058177             Date 27May21             *
+      *  Last Amend No. MD059978             Date 19May22             *
+      *  Prev Amend No. MD058443             Date 12Jul21             *
+      *                 MD058177             Date 27May21             *
       *                 MD056565             Date 21Jan21             *
       *                 MD056751             Date 20Sep20             *
       *                 MD056613             Date 20Sep20             *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059978 - For UCI only as APIFMODPD is missing fields       *
       *  MD058443 - Remove record from SDSCOBTD as it was made        *
       *             redundant                                         *
       *  MD058177 - Error for RPTRAQPD take-on. Use DISTINCT          *
@@ -112,7 +114,12 @@
      C                   Endif                                                              MD056565
 
       * Add Bespoke record if not found in core file
+      * This is for UCI only as SP08 file is missing fields                                 MD059978
+     C                   If        XINDEX <> 'APDFLCTD'                                     MD059978
      C                   exsr      SR_AddBsp
+     C                   else                                                               MD059978
+     C                   exsr      SR_AddAPDFL                                              MD059978
+     C                   endif                                                              MD059978
 
      C                   ENDSL                                                              MD055681
                                                                                             MD055681
@@ -989,3 +996,55 @@
                                                                                             MD056613
       /EJECT                                                                                MD056613
       *****************************************************************                     MD056613
+      *****************************************************************                     MD059978
+                                                                                            MD059978
+      * SR_AddAPDFL - Add records in Bespoke APDFLBTD                                       MD059978
+                                                                                            MD059978
+      *****************************************************************                     MD059978
+     C     SR_AddAPDFL   BEGSR                                                              MD059978
+                                                                                            MD059978
+                                                                                            MD059978
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD059978
+     C                   eval      EXTINDEX = %SUBST(XINDEX:1:5) + 'BTD'                    MD059978
+                                                                                            MD059978
+     C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD059978
+     C                             ' (select A.NDAPDT,A.NDDFLD,A.NDTYPE,' +                 MD059978
+     C                             'A.FILNAM,A.FLDNAM,A.FLMODE,A.FILNMX,' +                 MD059978
+     C                             'A.FLDNMX,A.FLMODX,'''','''', ''''' +                    MD059978
+     C                             ',' + '''B''' +                                          MD059978
+     C                             ' from APIFMODPD  A where not exists ' +                 MD059978
+     C                             '(select * from APDFLCTD   B  WHERE ' +                  MD059978
+     C                             'A.NDAPDT = B.NDAPDT and A.NDDFLD = ' +                  MD059978
+     C                             'B.NDDFLD and A.FILNAM = B.FILNAM and ' +                MD059978
+     C                             'A.FLDNAM = B.FLDNAM and A.FILNMX = ' +                  MD059978
+     C                             'B.FILNMX and A.FLDNMX = B.FLDNMX))'                     MD059978
+                                                                                            MD059978
+     C/EXEC SQL                                                                             MD059978
+     C+ prepare DynSQLStmnt                                                                 MD059978
+     C+ from :SQLDynStmt                                                                    MD059978
+     C/END-EXEC                                                                             MD059978
+                                                                                            MD059978
+     C/exec SQL                                                                             MD059978
+     C+ execute DynSQLStmnt                                                                 MD059978
+     C/end-exec                                                                             MD059978
+                                                                                            MD059978
+     C                   If        SQLCode <> 0                                             MD059978
+     C                             and SQLCode <> 100                                       MD059978
+     C                   eval      ERROR = '*Error'                                         MD059978
+     C                   Endif                                                              MD059978
+                                                                                            MD059978
+     C/EXEC SQL                                                                             MD059978
+     C+ get diagnostics :TotRow  = ROW_COUNT                                                MD059978
+     C/END-EXEC                                                                             MD059978
+                                                                                            MD059978
+      ** If records were added in Bespoke, records must be added in Extension file too      MD059978
+     C                   If        TotRow > 0                                               MD059978
+     C                   exsr      SR_AddExt                                                MD059978
+     C                   ENDIF                                                              MD059978
+     C                                                                                      MD059978
+                                                                                            MD059978
+     C                   ENDSR                                                              MD059978
+                                                                                            MD059978
+      /EJECT                                                                                MD059978
+      *****************************************************************                     MD059978
+                                                                                            MD059978

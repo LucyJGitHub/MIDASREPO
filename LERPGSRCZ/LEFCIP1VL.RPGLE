@@ -89,7 +89,7 @@
       *                                                               *
       *  MD021652 - Facility expiry date should be not be earlier than*
       *             any attached fee against it.                      *
-      *             Introduced new error message LEF0238.             *
+      *             Introduced new error message LEF0239.             *
       *  CLE123 - Commitment and Outstanding Report by Account Officer*
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to add validation when overline % will      *
@@ -1554,7 +1554,7 @@
      C                   MOVE      'N'           DDDTEXOK                                   MD021652
      C                   ADD       1             Idx                                        MD021652
      C                   MOVEL     'DDDTEX'      FldNamXAr(Idx)                             MD021652
-     C                   MOVEL     'LEF0238'     MsgIDXAr(Idx)                              MD021652
+     C                   MOVEL     'LEF0239'     MsgIDXAr(Idx)                              MD021652
      C                   LEAVE                                                              MD021652
      C                   ENDIF                                                              MD021652
       *                                                                                     MD021652

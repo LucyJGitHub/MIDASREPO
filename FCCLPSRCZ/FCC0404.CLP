@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CFC007             Date 29Aug18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058421           Date 23May22              */
+/*       Prev Amend No. CFC007             Date 29Aug18              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -28,6 +29,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058421 - RCFMONITOR job flooding MSGQs with multiple      */
+/*                  error (CPF3322).                                 */
 /*       CFC007 - Release spool file via system value                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG5019 - Routing of reports involving big volume of pages  */
@@ -304,7 +307,8 @@ RETRY:                                                                          
 
              RLSSPLF    FILE(&FLNAM) JOB(&JBNUM/&JBUSR/&JBNAM) +
                           SPLNBR(&SFNUM)                                                  /*CFC007*/
-             MONMSG     MSGID(CPF3337 CPF3344)                                            /*CFC007*/
+/**********  MONMSG     MSGID(CPF3337 CPF3344)                       */      /*CFC007*/ /*MD058421*/
+             MONMSG     MSGID(CPF3322 CPF3337 CPF3344)                                  /*MD058421*/
              MONMSG     MSGID(CPF3303 CPF3309 CPF3342 CPF34A4) +
                           EXEC(DO)                                                        /*CFC007*/
                 CHGVAR     VAR(&FLNFF) VALUE('P')                                         /*CFC007*/
@@ -489,7 +493,8 @@ RETRY:                                                                          
 
                 RLSSPLF    FILE(&FLNAM) JOB(&JBNUM/&JBUSR/&JBNAM) +
                           SPLNBR(&SFNUM)                                                  /*CFC007*/
-                MONMSG     MSGID(CPF3337 CPF3344)                                         /*CFC007*/
+/**********     MONMSG     MSGID(CPF3337 CPF3344)                    */      /*CFC007*/ /*MD058421*/
+                MONMSG     MSGID(CPF3322 CPF3337 CPF3344)                               /*MD058421*/
                 MONMSG     MSGID(CPF3303 CPF3309 CPF3342 CPF34A4) +
                           EXEC(DO)                                                        /*CFC007*/
                    CHGVAR     VAR(&FLNFF) VALUE('P')                                      /*CFC007*/

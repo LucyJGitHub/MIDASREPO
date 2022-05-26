@@ -15,12 +15,15 @@
      F*                                                               *
      F*  (c) Finastra International Limited 2021                      *
      F*                                                               *
-      *  Last Amend No. MD058206           Date 27May21               *
-      *  Prev Amend No. EMP108  *Create    Date 09Feb21               *
+      *  Last Amend No. MD059851           Date 13May22               *
+      *  Prev Amend No. MD058206           Date 27May21               *
+      *                 EMP108  *Create    Date 09Feb21               *
       *                 xxxxxx             Date ddmmmyy               *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD059851 - Retail Interest Tiered structures not shown       *
+      *             entirely on the Interest Capitalisation Statement *
       *  MD058206 - Negative credit interest shown as positive on      *
       *            extract.                                           *
      F*  EMP108 - Retail Interest Capitalisation Statement via CM     *
@@ -617,6 +620,9 @@ RS   I                                        1   3 CBRCA2
      I              'INTEREST  '          C         #TEXT2
      I              'Tiered'              C         #TEXT4
      I              'Threshold'           C         #TEXT5
+     I              'Initial Threshold'   C         #TEXT6                                  MD059851
+      *                                                                                     MD059851
+     I              'DspZeroIntRate'      C         WSYSVL                                  MD059851
       *
      I**- - - - - - - - - - - - - - - - - - - - - - - - - - -
      I##SRDT      DS                         20
@@ -6645,6 +6651,11 @@ RS   C****************     WRITERAT1DC                                    EMP007
      C                     Z-ADDINTH      HISB0                           040447
      C                     END                             - E2           094337
      C*
+     C                     EXSR CLMSG                                                       MD059851
+     C                     EXSR RATIDC                                                      MD059851
+     C                     EXSR DETAIL                                                      MD059851
+     C                     MOVEL'Y'       SRIBAL                                            MD059851
+     C*                                                                                     MD059851
      C                     EXSR CLMSG
      C                     MOVELNAR,14    BNARR
      C*
@@ -6657,6 +6668,11 @@ RS   C**************       WRITERAT2DC                                    EMP007
      C                     Z-ADDRTA,1     ORAT1                           086087
      C                     Z-ADDBLA,1     OBAL01                          086087
      C*
+     C           WZERAT    IFEQ 'Y'                                                         MD059851
+     C           INTH      ANDGTOBAL01                                                      MD059851
+     C                     Z-ADD*ZEROS    ORAT1                                             MD059851
+     C                     ENDIF                                                            MD059851
+     C*                                                                                     MD059851
 RS   C***************      EXSR OVERCR
 RS   C***************      WRITERAT3DC                                    EMP007
      C                     EXSR RAT3DC                                    EMP007
@@ -7385,6 +7401,15 @@ RS   C*                    EXSR PRN2CH                     chargesDetails2085713
      C   85                MOVEL#TEXT5    ##NAR3           threshold
       *
      C                     ENDSR
+      *****************************************************************                     MD059851
+     C           RATIDC    BEGSR                                                            MD059851
+     C*  formatting routine for former line Initial Threshold                               MD059851
+     C*****************************************************************                     MD059851
+      *                                                                                     MD059851
+     C                     MOVEL#TEXT6    ##NARR                                            MD059851
+     C                     MOVEL'Y'       SRIBAL                                            MD059851
+      *                                                                                     MD059851
+     C                     ENDSR                                                            MD059851
       *****************************************************************
      C           RAT2DC    BEGSR
      C*  formatting routine for former line RAT2DC
@@ -7401,6 +7426,8 @@ RS   C*                    EXSR PRN2CH                     chargesDetails2085713
      C                     Z-ADDORAT1     ##RATE
      C                     MOVEL'Y'       SRRATE                          CCG015
      C****                 Z-ADDOBAL01    ##OBAL                          currently not used
+     C                     Z-ADDOBAL01    ##OBAL                                            MD059851
+     C                     MOVEL'Y'       SRCORR                                            MD059851
      C                     ENDSR
       *****************************************************************
      C           STOTDC    BEGSR
@@ -7928,10 +7955,12 @@ RS   C*                    EXSR PRN2CH                     chargesDetails2085713
      C                     EXSR SRRRDE
       *-------------------------------------------------------------
       ** Posting Date
+     C           SRIBAL    IFNE 'Y'                                                         MD059851
      C                     MOVEL##POST    ##D,1
       *
       ** Value Date
      C                     MOVEL##VDAT    ##D,2
+     C                     ENDIF                                                            MD059851
       *
       ** Narrative
      C                     MOVEL##NARR    ##D,3
@@ -7984,6 +8013,14 @@ RS   C*                    EXSR PRN2CH                     chargesDetails2085713
       *
       ** Alternate Account to post interest
      C                     MOVEL##ALTA    ##D,12
+      *                                                                                     MD059851
+      ** Corresponding Balance                                                              MD059851
+      ** Output zero Corresponding Balance                                                  MD059851
+     C           ##OBAL    IFNE 0                                                           MD059851
+     C           SRCORR    OREQ 'Y'                                                         MD059851
+     C                     MOVEL##OBAL    ##D,13                                            MD059851
+     C                     MOVE A6NBDP    ##D,13                                            MD059851
+     C                     ENDIF                                                            MD059851
       *
       *----------------------------------------------------
       ** Reset container fields
@@ -8000,6 +8037,9 @@ RS   C*                    EXSR PRN2CH                     chargesDetails2085713
      C                     MOVEL*BLANKS   ##NAR3 35
      C                     MOVEL*BLANKS   ##ALTA 18
      C                     MOVEL'N'       SRRATE  1
+     C                     Z-ADD0         ##OBAL 150                                        MD059851
+     C                     MOVEL'N'       SRCORR  1                                         MD059851
+     C                     MOVEL'N'       SRIBAL  1                                         MD059851
       *------------------------------------------------------
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
@@ -9546,6 +9586,40 @@ RS   C                     Z-ADD*ZEROS    DAYS    40
      C           PRTCD     IFEQ *BLANKS                                   CCG015
      C                     MOVE 'Y'       CCG015                          CCG015
      C                     ENDIF                                          CCG015
+      *                                                                                     MD059851
+      ** Call AOSVALR0 to check system value to zeroised interest rate if                   MD059851
+      ** initial threshold is greater than the level balance.                               MD059851
+      *                                                                                     MD059851
+     C                     CALL 'AOSVALR0'                                                  MD059851
+     C                     PARM *BLANKS   PRTCD                                             MD059851
+     C                     PARM WSYSVL    WSVLK1 20                                         MD059851
+     C                     PARM           WSVL1 200                                         MD059851
+     C                     PARM *BLANKS   WSVLK2 20                                         MD059851
+     C                     PARM           WSVL2 200                                         MD059851
+     C                     PARM *BLANKS   WSVLK3 20                                         MD059851
+     C                     PARM           WSVL3 200                                         MD059851
+     C                     PARM *BLANKS   WSVLK4 20                                         MD059851
+     C                     PARM           WSVL4 200                                         MD059851
+     C                     PARM *BLANKS   WSVLK5 20                                         MD059851
+     C                     PARM           WSVL5 200                                         MD059851
+     C                     PARM *BLANKS   WSVLK6 20                                         MD059851
+     C                     PARM           WSVL6 200                                         MD059851
+     C                     PARM *BLANKS   WSVLK7 20                                         MD059851
+     C                     PARM           WSVL7 200                                         MD059851
+     C                     PARM *BLANKS   WSVLK8 20                                         MD059851
+     C                     PARM           WSVL8 200                                         MD059851
+     C                     PARM *BLANKS   WSVLK9 20                                         MD059851
+     C                     PARM           WSVL9 200                                         MD059851
+     C                     PARM *BLANKS   WSVLK0 20                                         MD059851
+     C                     PARM           WSVL0 200                                         MD059851
+      *                                                                                     MD059851
+     C           PRTCD     IFNE *BLANKS                                                     MD059851
+     C           WSVL1     ANDEQ'*NRF   '                                                   MD059851
+     C                     EXSR *PSSR                                                       MD059851
+     C                     ELSE                                                             MD059851
+     C                     MOVELWSVL1     WZERAT  1                                         MD059851
+     C                     ENDIF                                                            MD059851
+      *                                                                                     MD059851
       *................................................................
      C           EXFST     TAG
       *
@@ -10461,6 +10535,7 @@ TOTALR0005 MAX DEBIT  AmountL       HighestDebitBalance
 TOTALR0006 DEBINT     AmountL       DebitInterestAccrued
 TOTALR0007 CREDINT    AmountL       CreditInterestAccrued
 SUMMAR0001 PRINTIND                 PrintIndicator
+DETAIL0013 CORRBAL    AmountL       CorrespondingBalances                                   MD059851
 **   CMD - COMMAND TO OVERIDE MESSAGE FILE
 OVRMSGF MSGF(  QUSERMSG) TOMSGF(GBREPTMSGF)
 OVRMSGF MSGF( CGUSERMSG) TOMSGF(GBCGUSRMSG)

@@ -173,6 +173,16 @@
 /**********               (SREPCB ''1/HBPDCB'') (SRBCEQ ''2/HBPDCB + */                   /*CGL029*/
 /**********               * -1'') (SRSPRT A6SPRT) (SRMDIN A6MDIN) +  */                   /*CGL029*/
 /**********               (SRNBDP A6NBDP) (SRCYNM A6CYNM))')         */                   /*CGL029*/
+/**********  CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT 'MAPFLD( +                   /*MD059975*/
+/**********               (SRBRCD ''1/HBBRCD'') (SRCYCD ''1/HBCYCD'') +                 /*MD059975*/
+/**********               (SRACCD ''2/HBACCD'') (SRCUST ''1/HBCUST'') +                 /*MD059975*/
+/**********               (SRACSN ''1/HBACSN'') (SRPCCD ''1/HBPCCD'') +                 /*MD059975*/
+/**********               (SRBKCD ''1/HBBKCD'') (SROTTP ''1/HBOTTP'') +                 /*MD059975*/
+/**********               (SRTSTY ''1/HBTSTY'') (SRASNB ''1/HBACNB'') +                 /*MD059975*/
+/**********               (SREPCB ''1/HBPDCB'') (SRBCEQ ''2/HBPDCB +                    /*MD059975*/
+/**********               * -1'') (SRSPRT A6SPRT) (SRMDIN A6MDIN) +                     /*MD059975*/
+/**********               (QQACCD ''1/QQACCD'') +                                       /*MD059975*/
+/**********               (SRNBDP A6NBDP) (SRCYNM A6CYNM))')                   /*CGL029 /*MD059975*/
              CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT 'MAPFLD( +
                           (SRBRCD ''1/HBBRCD'') (SRCYCD ''1/HBCYCD'') +
                           (SRACCD ''2/HBACCD'') (SRCUST ''1/HBCUST'') +
@@ -182,7 +192,7 @@
                           (SREPCB ''1/HBPDCB'') (SRBCEQ ''2/HBPDCB +
                           * -1'') (SRSPRT A6SPRT) (SRMDIN A6MDIN) +
                           (QQACCD ''1/QQACCD'') +
-                          (SRNBDP A6NBDP) (SRCYNM A6CYNM))')                              /*CGL029*/
+                          (SRNBDP A6NBDP) (SRCYNM A6CYNM) (SRLMDT ''1/HBLMDT''))')      /*MD059975*/
 /**/
 
 /**  Execute OPNQRYF  */

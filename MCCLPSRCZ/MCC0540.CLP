@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD059935           Date 12May22              */
-/*       Prev Amend No. CGL057             Date 02Nov21              */
+/*       Last Amend No. MD059975           Date 19May22              */
+/*       Prev Amend No. MD059935           Date 12May22              */
+/*                      CGL057             Date 02Nov21              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059975 - No Profit and Loss reported on MC0451P1          */
+/*                - pass the movement date in the parameter of MD0541*/
 /*       MD059935 - Include Spot trade equivalent in the report      */
 /*                  filter selection.                                */
 /*       CGL057 - Posting of Profit and Loss to Multiple Retained    */
@@ -181,6 +184,7 @@
                           (QQACCD ''1/QQACCD'') +
                           (SRNBDP A6NBDP) (SRCYNM A6CYNM))')                              /*CGL029*/
 /**/
+
 /**  Execute OPNQRYF  */
 /**/
              CLOF       OPNID(GLHIBLPD)
@@ -241,7 +245,7 @@
                              1/HBACCD *EQ ''''' *CAT &MB_SPTA *CAT ''''' *AND +
                              2/HBACCD *EQ ''''' *CAT &MB_SPAE *CAT ''''' *AND +
                              2/HBCYCD *EQ ''''' *CAT &BCCY *CAT '''''')                 /*MD059935*/
-                             
+
 
 /**/                                                                                      /*CGL057*/
 /**  If entity not blank & not 'ALL', select particular branch requested */               /*CGL057*/
@@ -265,15 +269,24 @@
                              2/HBACNB) (1/HBCGCD 2/HBCGCD) (1/HBCYCD 3/A6CYCD) +
                              (2/HBACCD 4/MBSPAE))')                                       /*CGL057*/
 /**/
+/**********     CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT 'MAPFLD( (SRBRCD +        /*MD059975*/
+/**********                  ''1/HBBRCD'') (SRCYCD ''1/HBCYCD'') (SRACCD +              /*MD059975*/
+/**********                  ''2/HBACCD'') (SRCUST ''1/HBCUST'') (SRACSN +              /*MD059975*/
+/**********                  ''1/HBACSN'') (SRPCCD ''1/HBPCCD'') (SRBKCD +              /*MD059975*/
+/**********                  ''1/HBBKCD'') (SROTTP ''1/HBOTTP'') (SRTSTY +              /*MD059975*/
+/**********                  ''1/HBTSTY'') (SRASNB ''1/HBACNB'') (SREPCB +              /*MD059975*/
+/**********                  ''1/HBPDCB'') (SRBCEQ ''2/HBPDCB * -1'') (SRSPRT +         /*MD059975*/
+/**********                  A6SPRT) (SRMDIN A6MDIN) (QQACCD ''1/QQACCD'') (SRNBDP +    /*MD059975*/
+/**********                  A6NBDP) (SRCYNM A6CYNM))')                          /*CGL057 MD059975*/
                 CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT 'MAPFLD( (SRBRCD +
                              ''1/HBBRCD'') (SRCYCD ''1/HBCYCD'') (SRACCD +
-                             ''2/HBACCD'') (SRCUST ''1/HBCUST'') (SRACSN +
+                             ''1/HBACCD'') (SRCUST ''1/HBCUST'') (SRACSN +
                              ''1/HBACSN'') (SRPCCD ''1/HBPCCD'') (SRBKCD +
                              ''1/HBBKCD'') (SROTTP ''1/HBOTTP'') (SRTSTY +
                              ''1/HBTSTY'') (SRASNB ''1/HBACNB'') (SREPCB +
                              ''1/HBPDCB'') (SRBCEQ ''2/HBPDCB * -1'') (SRSPRT +
                              A6SPRT) (SRMDIN A6MDIN) (QQACCD ''1/QQACCD'') (SRNBDP +
-                             A6NBDP) (SRCYNM A6CYNM))')                                   /*CGL057*/
+                             A6NBDP) (SRCYNM A6CYNM) (SRLMDT ''1/HBLMDT''))')           /*MD059975*/
 /**/                                                                                      /*CGL057*/
 /**  Execute OPNQRYF  */                                                                  /*CGL057*/
 /**/                                                                                      /*CGL057*/

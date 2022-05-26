@@ -1,4 +1,4 @@
-121     H DEBUG
+     H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
@@ -262,6 +262,7 @@
      D PMsgR           S              8P 0                                                   CSW122A
      D PGenFlg         S              1A                                                     CSW122A
      D PMtpy           S              3A                                                     CSW122A
+     D PBrCA           S              3A                                                     CSW122A
 
       *
       ** Key Fields
@@ -782,9 +783,21 @@
       ** If CSW122 is switched on, do processing for MT199UC.                                CSW122A
       *                                                                                      CSW122A
      C                   IF        CSW122 = 'Y'                                              CSW122A
+      *                                                                                      CSW122A
+      ** Check for system value GenMTn99OnIgnore for                                         CSW122A
+      ** status REJT.                                                                        CSW122A
+      *                                                                                      CSW122A
+     C                   IF        PSVal2  = 'Y'                                             CSW122A
+      *                                                                                      CSW122A
+      ** MT199 Status is RJCT                                                                CSW122A
+      *                                                                                      CSW122A
+     C                   IF        FTM199 = 'R'                                              CSW122A
      C                   EXSR      SrSvCmFld                                                 CSW122A
      C                   EXSR      MTn99REJT                                                 CSW122A
-     C                   EVAL      WGenFlg = 'Y'                                             CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
      C                   IF        CSW220 = 'Y'                                              CSW122A
@@ -955,8 +968,6 @@
      C                   ENDIF
 
      C                   ENDIF
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
 
       *
       ** Writes to MGOMSGPD
@@ -984,6 +995,8 @@
      C                   COMMIT
 
      C                   ENDIF
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
 
       *
       ** Reinitialise fields for the next record
@@ -1861,15 +1874,6 @@
       *****************************************************************                      CSW122A
      C     MTn99REJT     BEGSR                                                               CSW122A
       *                                                                                      CSW122A
-      ** Check for system value GenMTn99OnIgnore for                                         CSW122A
-      ** status REJT.                                                                        CSW122A
-      *                                                                                      CSW122A
-     C                   IF        PSVal2  = 'Y'                                             CSW122A
-      *                                                                                      CSW122A
-      ** MT199 Status is RJCT                                                                CSW122A
-      *                                                                                      CSW122A
-     C                   IF        FTM199 = 'R'                                              CSW122A
-      *                                                                                      CSW122A
       ** Get Message Type                                                                    CSW122A
       *                                                                                      CSW122A
      C     KFMsgR        CHAIN     MEINCRL1                                                  CSW122A
@@ -1883,6 +1887,7 @@
      C                   PARM      KFMsgR        PMsgR                                       CSW122A
      C                   PARM                    PGenFlg                                     CSW122A
      C                   PARM                    PMtpy                                       CSW122A
+     C                   PARM      WBrCA         PBrCA                                       CSW122A
       *                                                                                      CSW122A
       ** Error on CALL                                                                       CSW122A
       *                                                                                      CSW122A
@@ -1891,25 +1896,6 @@
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
      C                   EVAL      WGenFlg = PGenFlg                                         CSW122A
-      *                                                                                      CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-     C                   IF        CSW122 = 'Y' AND CSW220 = 'N'                             CSW122A
-     C                   EVAL      FTM199 = 'Z'                                              CSW122A
-     C                   UPDATE    @INFTL6                              98                   CSW122A
-      *                                                                                      CSW122A
-     C                   IF        *IN98 = *ON                                               CSW122A
-     C     *LOCK         IN        LDA                                                       CSW122A
-     C                   MOVE      '010'         DBASE                                       CSW122A
-     C                   MOVEL     'FTM199'      DBKEY                                       CSW122A
-     C                   MOVEL     'MEINFTL6'    DBFILE                                      CSW122A
-     C                   OUT       LDA                                                       CSW122A
-     C                   EXSR      *PSSR                                                     CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-     C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
      C                   ENDSR                                                               CSW122A
       *****************************************************************

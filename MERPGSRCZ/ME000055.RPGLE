@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. AR567938           Date 24May22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26815           Date 04Dec09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR567938 - GLC001400 job not active after a Holiday. Allow   *
+      *             user to set the next schedule wait time.          *
+      *           - Applied for MD-58475.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26815 - No user friendly labelling                        *
@@ -128,6 +132,7 @@
  
      D WMRPD           S              2S 0                                      Minimum Run. Period.
      D WPERQ           S              4S 0                                      Period of Expirity
+     D WWATM           S              4S 0                                                  AR567938
  
      D WRun            S              1                                         Already run
      D PZADFMF         S             10                                         Default message file
@@ -258,6 +263,7 @@
  
      C                   IF        NOT *IN27                                    Error on Min. Period
      C                             AND NOT *IN28                                Error on Expirity
+     C                             AND NOT *IN60                                            AR567938
  
  
      ** Read GLPRMOPD to retrieve Minimum Running Periodicity and Period
@@ -299,6 +305,23 @@
  
      C                   ENDIF
  
+      ** Default Wait Time to 60 if field in file is blank                                  AR567938
+      *                                                                                     AR567938
+     C                   IF        *IN89                                                    AR567938
+     C                             OR MDWATM = *ZEROS                                       AR567938
+      *                                                                                     AR567938
+     C                   EVALR     #0WATM = '60'                                            AR567938
+      *                                                                                     AR567938
+     C                   ELSE                                                               AR567938
+      *                                                                                     AR567938
+     C                   MOVE(P)   MDWATM        ZFIELD                                     AR567938
+     C                   CALLB     'ZEDIT'                                                  AR567938
+     C                   PARM                    ZFIELD                                     AR567938
+     C                   PARM      0             ZADEC                                      AR567938
+     C                   MOVE      ZFIELD        #0WATM                                     AR567938
+      *                                                                                     AR567938
+     C                   ENDIF                                                              AR567938
+      *                                                                                     AR567938
      C                   ENDIF
  
      ** Generate MT941 by Schedule Active?
@@ -347,6 +370,7 @@
      C                   EXSR      SRClear                                      Clear Pgm Msgq
  
      C                   MOVEA     '000000'      *IN(27)                        Reset Error Ind.
+     C                   EVAL      *IN60 = *OFF                                             AR567938
  
      C                   ENDSR
  
@@ -434,6 +458,8 @@
      C                   MOVEA     '000000'      *IN(27)                        Reset Error Ind.
      C                   EVAL      WMRPD = *ZEROS                               Minimum Run. Period.
      C                   EVAL      WPERQ = *ZEROS                               Period of Expirity
+     C                   EVAL      WWATM = *ZEROS                                           AR567938
+     C                   EVAL      *IN60 = *OFF                                             AR567938
  
       ** Validate Minimum Running Periodicity
  
@@ -495,6 +521,33 @@
      C                   EVAL      PMsgId = 'ME00076'
      C                   EXSR      SRZasnms
      C                   ENDIF
+      *                                                                                     AR567938
+      ** Validate the Wait Time                                                             AR567938
+      *                                                                                     AR567938
+     C                   EVAL      ZFIELD = *BLANKS                                         AR567938
+      *                                                                                     AR567938
+     C                   IF        #0WATM = *Blanks                                         AR567938
+     C                   EVALR     #0WATM = '60'                                            AR567938
+     C                   ENDIF                                                              AR567938
+                                                                                            AR567938
+     C                   CALLB     'ZALIGN'                                                 AR567938
+     C                   PARM                    ZALIGNok                                   AR567938
+     C                   PARM      #0WATM        ZFIELD                                     AR567938
+     C                   PARM      0             ZADEC                                      AR567938
+     C                   PARM      4             ZADIG                                      AR567938
+                                                                                            AR567938
+     C                   IF        ZALIGNok = 'N'                                           AR567938
+     C                   EVAL      WError = 'Y'                                             AR567938
+     C                   EVAL      *IN60 = *ON                                              AR567938
+     C                   EVAL      PMsgId = 'ME00280'                                       AR567938
+     C                   EXSR      SRZasnms                                                 AR567938
+     C                   ELSE                                                               AR567938
+     C                   MOVE      ZFIELD        WWATM                                      AR567938
+     C                   CALLB     'ZEDIT'                                                  AR567938
+     C                   PARM                    ZFIELD                                     AR567938
+     C                   PARM      0             ZADEC                                      AR567938
+     C                   MOVE      ZFIELD        #0WATM                                     AR567938
+     C                   ENDIF                                                              AR567938
  
       ** Validate the Action on: MT941 on Schedule,
       **                         MT942 on Schedule,
@@ -660,10 +713,12 @@
  
      C                   IF        MDMRPD <> WMRPD
      C                             OR MDPERQ <> WPERQ
+     C                             OR MDWATM <> WWATM                                       AR567938
  
      C     1             CHAIN     GLPRMOD0                           89
      C                   EVAL      MDMRPD = WMRPD                               Minimum Running Peri
      C                   EVAL      MDPERQ = WPERQ                               Period of Expiring R
+     C                   EVAL      MDWATM = WWATM                                           AR567938
      C  N89              UPDATE    GLPRMOD0
      C   89              WRITE     GLPRMOD0
  

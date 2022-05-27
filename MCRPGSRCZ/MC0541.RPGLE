@@ -104,6 +104,7 @@
      D ZS2             S              1    DIM(22)
       *
       /SPACE 3
+     D PLMDT           S              5S 0                                                  MD059975
       *
      D*/COPY ZSRSRC,ZFRPEDZ2
      D                 DS

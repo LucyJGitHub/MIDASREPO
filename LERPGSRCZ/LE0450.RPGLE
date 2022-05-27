@@ -12,10 +12,11 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. 257879             Date 12May22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
-      *                 AR923246           Date 15Mar12               *      
+      *                 AR923246           Date 15Mar12               *
       *                 MD034915           Date 26Aug20               *
       *                 MD055322           Date 15May20               *
       *                 MD055733           Date 03Jul20               *
@@ -431,6 +432,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  257879 - Use profit centre account keys with 'S' in position *
+      *           8 for syndicated loans.                             *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -439,7 +442,7 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR923246 - Job CALCMGR_xx failing due to data mapping error. *
       *             Prevent data corruption for MLNR field on MCLONCL *
-      *             when written. (Child: AR923248)                   *      
+      *             when written. (Child: AR923248)                   *
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
       *             Allow negative input in Funding rate/spread.      *
       *           - Applied for MD054876                              *
@@ -7546,6 +7549,10 @@ L118 I                             P   72   77 7RTSPL
       ** Transaction Profit Centre                                        CAC001
       *                                                                   CAC001
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -7553,6 +7560,10 @@ L118 I                             P   72   77 7RTSPL
       ** Funding Profit Centre                                            CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC             4                           CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -8017,6 +8028,10 @@ L118 I                             P   72   77 7RTSPL
       ** Transaction Profit Centre                                        CAC001
       *                                                                   CAC001
      C                   MOVE      'T'           AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -8024,6 +8039,10 @@ L118 I                             P   72   77 7RTSPL
       ** Funding Profit Centre                                            CAC001
       *                                                                   CAC001
      C                   MOVE      'F'           AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC             4                           CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -8389,6 +8408,10 @@ L118 I                             P   72   77 7RTSPL
       **  -- Transaction Profit Centre                                    CAC001
       *                                                                   CAC001
      C                   MOVEA     'T '          AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C   85              MOVE      'W'           AKY(9)                                        CLE00
      C                   MOVE      'A'           AKY(10)                                       CLE00
       *                                                                                       CLE134
@@ -8431,6 +8454,10 @@ L118 I                             P   72   77 7RTSPL
       **  -- Funding Profit Centre                                        CAC001
       *                                                                   CAC001
      C                   MOVEA     'F '          AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C   85              MOVE      'W'           AKY(9)                                        CLE00
      C                   MOVE      'A'           AKY(10)                                       CLE00
       *                                                                                       CLE134
@@ -8816,8 +8843,16 @@ L118 I                             P   72   77 7RTSPL
      C     BGN0ST        IFEQ      'Y'                                                         CLE00
      C     FPRCL         ANDNE     *BLANKS                                                     CLE00
      C                   MOVE      'T'           AKY(6)                                        CLE00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   EXSR      AKYOUT                                                      CLE00
      C                   MOVE      'F'           AKY(6)                                        CLE00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CLE00
      C                   MOVEL     FPRCL         PRFC                                          CLE00
      C                   EXSR      AKYOUT                                                      CLE00
@@ -9334,6 +9369,10 @@ L118 I                             P   72   77 7RTSPL
       **  Principal Repayment - Transaction Profit Centre                 CAC001
       *                                                                   CAC001
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -9341,6 +9380,10 @@ L118 I                             P   72   77 7RTSPL
       **  Principal Repayment - Funding Profit Centre                     CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -10808,6 +10851,10 @@ L118 I                             P   72   77 7RTSPL
       **  Principal - Transaction Profit Centre                           CAC001
       *                                                                   CAC001
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C********** *IN89     IFEQ '0'                                                  CAC001 AR317587
      C                   EXSR      AKYOUT                                                      CAC00
      C**********           ENDIF                                                     CAC001 AR317587
@@ -10815,6 +10862,10 @@ L118 I                             P   72   77 7RTSPL
       **  Principal - Funding Profit Centre                               CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C********** *IN89     IFEQ '0'                                                  CAC001 AR317587
@@ -11149,12 +11200,20 @@ L118 I                             P   72   77 7RTSPL
       *                                                                   CLE004
       ** Transaction Profit Centre                                        CLE004
      C                   MOVE      'T'           AKY(6)                                        CLE00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CLE00
      C                   EXSR      AKYOUT                                                      CLE00
      C                   ENDIF                                                                 CLE00
       *                                                                   CLE004
       ** Funding Profit Centre                                            CLE004
      C                   MOVE      'F'           AKY(6)                                        CLE00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC             4                           CLE00
      C                   MOVEL     FPRCL         PRFC                                          CLE00
      C     *IN89         IFEQ      '0'                                                         CLE00
@@ -11223,12 +11282,20 @@ L118 I                             P   72   77 7RTSPL
       *                                                                   CLE004
       **  -- Transaction Profit Centre                                    CLE004
      C                   MOVEA     'T '          AKY(6)                                        CLE00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CLE00
      C                   EXSR      AKYOUT                                                      CLE00
      C                   ENDIF                                                                 CLE00
       *                                                                   CLE004
       **  -- Funding Profit Centre                                        CLE004
      C                   MOVEA     'F '          AKY(6)                                        CLE00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CLE00
      C                   MOVEL     FPRCL         PRFC                                          CLE00
      C     *IN89         IFEQ      '0'                                                         CLE00
@@ -11454,12 +11521,20 @@ L118 I                             P   72   77 7RTSPL
       *                                                                   CLE004
       **  - Transaction Profit Centre                                     CLE004
      C                   MOVE      'T'           AKY(6)                                        CLE00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     ACAMNT        IFNE      *ZERO                                                       CLE00
      C                   EXSR      AKYOUT                                                      CLE00
      C                   ENDIF                                                                 CLE00
       *                                                                   CLE004
       ** Funding Profit Centre                                            CLE004
      C                   MOVE      'F'           AKY(6)                                        CLE00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC             4                           CLE00
      C                   MOVEL     FPRCL         PRFC                                          CLE00
      C     ACAMNT        IFNE      *ZERO                                                       CLE00
@@ -12197,6 +12272,10 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVEA     SUTP          AKY(4)                                        CAC00
 0781 C                   MOVEA     CLAS          AKY(11)
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     CLE028        IFEQ      'Y'
      C     PTYP          ANDEQ     80
      C     ADIF          ANDEQ     'Y'
@@ -12212,6 +12291,10 @@ L118 I                             P   72   77 7RTSPL
       **  Funding Profit Centre                                           CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -12227,6 +12310,10 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVEA     SUTPA         AKY(4)                                        CAC00
 0781 C                   MOVEA     CLASA         AKY(11)
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   SETOFF                                       53                       CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
@@ -12235,6 +12322,10 @@ L118 I                             P   72   77 7RTSPL
       **  Funding Profit Centre                                           CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -12391,12 +12482,20 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVEA     SUTP          AKY(4)                                        CAC00
 0781 C                   MOVEA     CLAS          AKY(11)
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   SETOFF                                       53                       CAC00
      C                   EXSR      AKYOUT                                                      CAC00
       *                                                                   CAC001
       **  Funding Profit Centre                                           CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C                   EXSR      AKYOUT                                                      CAC00
@@ -12410,12 +12509,20 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVEA     SUTPA         AKY(4)                                        CAC00
 0781 C                   MOVEA     CLASA         AKY(11)
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   SETON                                        53                       CAC00
      C                   EXSR      AKYOUT                                                      CAC00
       *                                                                   CAC001
       **  Funding Profit Centre                                           CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C                   EXSR      AKYOUT                                                      CAC00
@@ -13913,6 +14020,10 @@ L118 I                             P   72   77 7RTSPL
       ** Transaction Profit Centre                                        CAC001
       *                                                                   CAC001
      C                   MOVEA     'T '          AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -13920,6 +14031,10 @@ L118 I                             P   72   77 7RTSPL
       ** Funding Profit Centre                                            CAC001
       *                                                                   CAC001
      C                   MOVEA     'F '          AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     AMTP          IFEQ      'MA'
@@ -14154,6 +14269,10 @@ L118 I                             P   72   77 7RTSPL
       **  COF Accrued not yet posted - Transation profit centre           CAC001
       *                                                                   CAC001
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVE      'I'           AKY(10)                                       CAC00
      C     AMTP          IFEQ      'MA'
      C                   EXSR      AKYOUT
@@ -14166,6 +14285,10 @@ L118 I                             P   72   77 7RTSPL
       **  COF Accrued not yet posted - Funding Profit Centre              CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     AMTP          IFEQ      'MA'
@@ -15373,6 +15496,10 @@ C    C                   ENDIF                                                  
       **  Principal - Transaction Profit Centre                           CAC001
       *                                                                   CAC001
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -15380,6 +15507,10 @@ C    C                   ENDIF                                                  
       **  Principal - Funding Profit Centre                               CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -15575,6 +15706,10 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
      C                   Z-ADD     COFD          ACAMNT                   89                   CAC00
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -15582,6 +15717,10 @@ C    C                   ENDIF                                                  
       **  COF Paid/Received to Date -  Funding Profit Centre              CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -15604,6 +15743,10 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
      C                   Z-ADD     CFCD          ACAMNT                   89                   CAC00
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -15611,6 +15754,10 @@ C    C                   ENDIF                                                  
       **  COF Capitalised to Date -  Funding Profit Centre                CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -15695,6 +15842,10 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
      C                   Z-ADD     ACPD          ACAMNT                   89                   CAC00
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -15702,6 +15853,10 @@ C    C                   ENDIF                                                  
       **  Accrued COF Posted to Date -  Funding Profit Centre             CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -15758,6 +15913,10 @@ C    C                   ENDIF                                                  
       **  Generate Principal Written-Off -  Transaction Profit Centre     CAC001
       *                                                                   CAC001
      C                   MOVE      'T'           AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -15765,6 +15924,10 @@ C    C                   ENDIF                                                  
       **  Generate Principal Wrriten-Off -  Funding Profit Centre         CAC001
       *                                                                   CAC001
      C                   MOVE      'F'           AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -15804,6 +15967,10 @@ C    C                   ENDIF                                                  
       **  Generate COF Amount Written-Off -  Transaction Profit Centre    CAC001
       *                                                                   CAC001
      C                   MOVE      'T'           AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -15811,6 +15978,10 @@ C    C                   ENDIF                                                  
       **  Generate COF Amount Written-Off -  Funding Profit Centre        CAC001
       *                                                                   CAC001
      C                   MOVE      'F'           AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -15915,6 +16086,10 @@ C    C                   ENDIF                                                  
      C                   SUB       CPAM          ACAMNT                   89                   CAC00
       *                                                                   CAC001
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -15922,6 +16097,10 @@ C    C                   ENDIF                                                  
       **  Accrued COF Posted to Date -  Funding Profit Centre             CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -16409,6 +16588,10 @@ C    C                   ENDIF                                                  
       ** Transaction Profit Centre                                        CAC001
       *                                                                   CAC001
      C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C     *IN89         IFEQ      '0'                                                         CAC00
      C                   EXSR      AKYOUT                                                      CAC00
      C                   ENDIF                                                                 CAC00
@@ -16416,6 +16599,10 @@ C    C                   ENDIF                                                  
       ** Funding Profit Centre                                            CAC001
       *                                                                   CAC001
      C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVEL     PRFC          WPRFC                                         CAC00
      C                   MOVEL     FPRCL         PRFC                                          CAC00
      C     *IN89         IFEQ      '0'                                                         CAC00
@@ -19283,12 +19470,20 @@ C    C                   ENDIF                                                  
       ** Transaction Profit Centre                                                            CLE031
       *                                                                                       CLE031
      C                   MOVEA     'T  '         AKY(6)
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   EXSR      AKYOUT
       *                                                                                       CLE031
       ** Format xxVyyFbbIA key for principal increase amount -                                CLE031
       ** Funding Profit Centre                                                                CLE031
       *                                                                                       CLE031
      C                   MOVE      'F'           AKY(6)
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVE      PRFC          WPRFC
      C                   MOVE      FPRCL         PRFC
      C                   EXSR      AKYOUT
@@ -19378,12 +19573,20 @@ C    C                   ENDIF                                                  
       ** Transaction Profit Centre                                                            CLE031
       *                                                                                       CLE031
      C                   MOVEA     'T  '         AKY(6)
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   EXSR      AKYOUT
       *                                                                                       CLE031
       ** Format xxRyyFbbbA key for principal repayment amount -                               CLE031
       ** Funding Profit Centre                                                                CLE031
       *                                                                                       CLE031
      C                   MOVE      'F'           AKY(6)
+     C     CLE106        IFEQ      'Y'                                                        257879
+     C     SYIN          ANDEQ     'Y'                                                        257879
+     C                   MOVE      'S'           AKY(8)                                       257879
+     C                   ENDIF                                                                257879
      C                   MOVE      PRFC          WPRFC
      C                   MOVE      FPRCL         PRFC
      C                   EXSR      AKYOUT

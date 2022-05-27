@@ -25,8 +25,6 @@
       *    06 - Indicator for writing in MGOMSGPD                     *
       *    10 - Indicator for chaining FT Standing Data               *
       *    15 - Indicator for determining success of ZM0060           *
-      *    98 - Indicator for updating MEINFTPD                       *
-      *    99 - Indicator for reading MEINFTL6                        *
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
@@ -34,48 +32,14 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
 
-      ** Outgoing payments details
-     FOTPAY     IF   E           K DISK    INFSR(*PSSR)
-
-      ** Outgoing Payments Details Extension File
-     FOTPAYXL0  IF   E           K DISK    INFSR(*PSSR)
-
-      ** Incoming payments details
-     FINPAY     IF   E           K DISK    INFSR(*PSSR)
-
-      ** Incoming Payments Details Extension File
-     FINPAYXL0  IF   E           K DISK    INFSR(*PSSR)
-
       ** Incoming Message Control by Message Tag
      FMEINDTL0  IF   E           K DISK    INFSR(*PSSR)
-
-      ** Incoming Message FT Data
-     FMEINFTPD  IF   E           K DISK    INFSR(*PSSR)
-
-      ** Joint File for retrieving records in FTMG
-     FMEINMPJ1  IF   E           K DISK    INFSR(*PSSR)
 
       ** Logical File for retrieving MT199 sender
      FMEINCRL1  IF   E           K DISK    INFSR(*PSSR)
 
       ** Logical File for Message Incoming Details by Message Tag
      FMEIN35L0  IF   E           K DISK    INFSR(*PSSR)
-
-      ** Logical File for retrieving Incoming Message Transaction Number
-     FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)
-
-      ** Logical file for retrieving FT Standing Data
-     FTABFP     IF   E           K DISK    IGNORE(TABTB20F:TABTG20F)
-     F                                     IGNORE(TABLETHF:TABLETPF)
-     F                                     IGNORE(TABLET5F:TABTE10F)
-     F                                     INFSR(*PSSR)
-
-      ** Retail Accounts file
-     FACNUMA    IF   E           K DISK    RENAME(ACCNTABF:ACNUMAF)
-
-      ** New Logical file that will filter MT199
-     FMEINFTL6  UF   E             DISK    INFSR(*PSSR)
-     F                                     COMMIT
 
       ** Outgoing Message Reference File
      FMGOREFPD  O    E           K DISK    INFSR(*PSSR)
@@ -149,12 +113,6 @@
       * For exclusive use of Mult DS
      D Q               S              2P 0
 
-      *  User / Branch data area
-     D ZMUSER          DS            17
-     D  WUSRID                 1     10
-     D  WDFBR                 11     13
-     D  WDPPT                 14     16
-
       ** External data structure for bank file
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
@@ -194,6 +152,8 @@
      D PMsgr           S              8P 0
      D PMtpy           S              3A
      D PBrCA           S              3A
+     D PFTMsgR         S              8P 0
+     D PFTKPRT         S              3P 0
 
       ** Parameter Variables to call 'AOSVALR0'
      D PRtcd           S              7A
@@ -223,6 +183,8 @@
       *
      D KFMsgR          S              8P 0
      D KFMtag          S              5A
+     D KFTMsgR         S              8P 0
+     D KFTKPRT         S              3P 0
 
       *
       ** Variables for storing the final value of tags
@@ -319,6 +281,9 @@
      C                   PARM                    PMsgR
      C                   PARM                    PGenFlg
      C                   PARM                    PMtpy
+     C                   PARM                    PBrCA
+     C                   PARM                    PFTMsgR
+     C                   PARM                    PFTKPRT
 
       *
       ** Retrieve ZMUSER details.
@@ -333,6 +298,13 @@
      C     KLIncMsg      KLIST
      C                   KFLD                    KFMsgR
      C                   KFLD                    KFMtag
+
+      *
+      ** Key List for MEINFTL0
+      *
+     C     KLMEFTL6      KLIST
+     C                   KFLD                    KFTMsgR
+     C                   KFLD                    KFTKPRT
 
       *
       ** Retrieve Swift Universal Tracker Address from System Values
@@ -489,6 +461,9 @@
      C     SrRdIncMsg    BEGSR
 
      C                   EVAL      KFMsgR = PMsgR
+     C                   EVAL      KFTMsgR = PFTMsgR
+     C                   EVAL      KFTKPRT = PFTKPRT
+     C                   EVAL      WBrCA = PBrCA
 
       ** If CSW122 is switched on, do processing for MT199UC.
 
@@ -512,29 +487,13 @@
      C                   IF        WGenFlg = 'Y'
      C                   EXSR      SrOMSG
 
-      ** If generation is successful, turn MT199 to 'Z'
-
-     C                   EVAL      FTM199 = 'Z'
-     C                   UPDATE    @INFTL6                              98
-
-     C                   IF        *IN98 = *ON
-     C     *LOCK         IN        LDA
-     C                   MOVE      '010'         DBASE
-     C                   MOVEL     'FTM199'      DBKEY
-     C                   MOVEL     'MEINFTL6'    DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-
-      ** COMMIT all changes since no error on writing the message
-
-     C                   COMMIT
       *
      C                   EVAL      PGenFlg = 'Y'
       *
      C                   ENDIF
       *
      C                   ENDIF
+
       *
      C                   ENDSR
       *****************************************************************
@@ -646,7 +605,7 @@
       *
      C                   EVAL      Wtag20a = %CHAR(KFMsgR)
      C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)
-     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b
+     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b + 'A'
      C                   EVAL      WTRNo = WTag20Val
 
       *

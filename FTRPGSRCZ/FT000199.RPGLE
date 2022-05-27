@@ -263,6 +263,8 @@
      D PGenFlg         S              1A                                                     CSW122A
      D PMtpy           S              3A                                                     CSW122A
      D PBrCA           S              3A                                                     CSW122A
+     D PFTMsgR         S              8P 0                                                   CSW122A
+     D PFTKPRT         S              3P 0                                                   CSW122A
 
       *
       ** Key Fields
@@ -974,7 +976,10 @@
       *
      C                   IF        WGenFlg = 'Y'
      C                   EXSR      SrOMSG
-
+     C                   ENDIF                                                               CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   IF        WGenFlg = 'Y'                                             CSW122A
       *
       ** If generation is successful, turn MT199 to 'Z'
       *
@@ -995,8 +1000,6 @@
      C                   COMMIT
 
      C                   ENDIF
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
 
       *
       ** Reinitialise fields for the next record
@@ -1888,14 +1891,16 @@
      C                   PARM                    PGenFlg                                     CSW122A
      C                   PARM                    PMtpy                                       CSW122A
      C                   PARM      WBrCA         PBrCA                                       CSW122A
+     C                   PARM      FTMsgR        PFTMsgR                                     CSW122A
+     C                   PARM      FTKPRT        PFTKPRT                                     CSW122A
       *                                                                                      CSW122A
       ** Error on CALL                                                                       CSW122A
       *                                                                                      CSW122A
      C                   IF        PGenFlg <> 'Y'                                            CSW122A
      C                   EXSR      *PSSR                                                     CSW122A
+     C                   ELSE                                                                CSW122A
+     C                   EVAL      WGenFlg = 'Y'                                             CSW122A
      C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WGenFlg = PGenFlg                                         CSW122A
       *                                                                                      CSW122A
      C                   ENDSR                                                               CSW122A
       *****************************************************************

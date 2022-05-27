@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260909             Date 04Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD035436           Date 26May22               *
+      *  Prev Amend No. 260909             Date 04Apr19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD045514           Date 07Jun17               *
       *                 229720             Date 29Nov05               *
       *                 215959             Date 21Mar16               *
@@ -291,6 +292,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035436 - Failed component - SEC0605. Do not write a new    *
+      *             Historic Book Position Header record and only     *
+      *             update it if already existing on file.            *
+      *           - Applied for MD059919.                             *
       *  260909 - Security Trade calculates wrong consideration on MBS*
       *         - Applied for MD-51447                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -1007,7 +1012,8 @@
      F            BPACCDF                           KRENAMEBPACCH3F       S01129
      F            BPACBDF                           KRENAMEBPACBH3F       S01129
      F            BPACHDF                           KRENAMEBPACHH3F       S01129
-     FBKPHH   O   E           K        DISK         KINFDS HHDDS
+     F***BKPHH** O   E           K        DISK         KINFDS HHDDS                         MD035436
+     FBKPHH   UF  E           K        DISK         KINFDS HHDDS A                          MD035436
      F                                              KINFSR HHDSR
      F            BKPHDDF                           KRENAMEBKPHHDF
      FBKPHHA  UF  E           K        DISK         KINFDS HHADS
@@ -1983,6 +1989,14 @@
      C                     KFLD           KBCMK
      C                     KFLD           KBCTV
      C*
+     C           BHHKEY    KLIST                                                            MD035436
+     C                     KFLD           BHSC                                              MD035436
+     C                     KFLD           BHBA                                              MD035436
+     C                     KFLD           BHBK                                              MD035436
+     C                     KFLD           BHMK                                              MD035436
+     C                     KFLD           BHTV                                              MD035436
+     C                     KFLD           LPSD                                              MD035436
+     C*                                                                                     MD035436
      C*  - BOOK POSITION
      C           BKPKEY    KLIST
      C                     KFLD           KBCSS
@@ -14583,15 +14597,21 @@
      C*
      C                     MOVE SSITP     INVT
      C                     MOVE SNMCY     NCRY
+     C           BHHKEY    CHAINBKPHH                78                                     MD035436
      C*
      C************INU1     IFEQ '0'                                E18651 E20087
       *                                                                   E21574
       ***  Restore this part of E18651: Don't write out a BKPHH record    E21574
       ***  in Reversal mode.                                              E21574
+      *    Or if already existing.                                                          MD035436
      C           *INU1     IFEQ '0'                                       E21574
+     C           *IN78     IFEQ '1'                                                         MD035436
      C                     WRITEBKPHHDF
      C*
      C                     ADD  1         HHAREC
+     C                     ELSE                                                             MD035436
+     C                     UPDATBKPHHDF                                                     MD035436
+     C                     ENDIF                                                            MD035436
      C***********          END                                     E18651 E20087
      C                     END                                            E21574
      C*

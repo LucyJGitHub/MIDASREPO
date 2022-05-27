@@ -13560,6 +13560,7 @@
 2770 C     AIPD          ADD       WORKTP        AIPD                                          08060
      C/COPY WNCPYSRC,DL0280C183                                           S01408
 2781 C                   Z-ADD     NIPAR         SLID                                          08060
+     C                   Z-ADD     PAMT          PAMTO            13 0                        230275
 2781 C*                                                                   080603
 2781 C** Capitalise Net Interest to Principal                             080603
 2781 C*                                                                   080603
@@ -13696,7 +13697,17 @@
       *                                                                   CAC001
      C                   Z-ADD     FCTD          ZIBEG                                         CAC00
      C                   Z-ADD     NIPAR         ZIEND                                         CAC00
+      *                                                                                       230275
+      ** If it is the interest capitalied date, use the principal without                     230275
+      ** capitalized interest for funding accrual calculation.                                230275
+      *                                                                                       230275
+     C     INTC          IFEQ      'Y'                                                        230275
+     C     NIDT          ANDGE     BJRDNB                                                     230275
+     C     NIDT          ANDLT     BJDNWD                                                     230275
+     C                   Z-ADD     PAMTO         ZIAMT                                        230275
+     C                   ELSE                                                                 230275
      C                   Z-ADD     PAMT          ZIAMT                                         CAC00
+     C                   ENDIF                                                                230275
      C                   Z-ADD     ICBS          ZICALC                                        CAC00
      C                   Z-ADD     WEFFR         ZIRATE                                        CAC00
       *                                                                   CAC001

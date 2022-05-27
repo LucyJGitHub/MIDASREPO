@@ -42,7 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -417,6 +417,7 @@
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM                    S#FACT
+     C                   PARM                    S#FCLS                                       CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
       ** Record not found.

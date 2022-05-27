@@ -78,7 +78,9 @@
      D NO_RECORD       c                   const(100)
      D NOT_FOUND       c                   const(-204)
      D NO_COLUMN       c                   const(-205)
+     D DUPLICATE       c                   const(-803)
      D QUO             c                   const('''')
+     D BLK_CLASS       c                   const('    ')
      D CONST_CLASS     c                   const('XXXX')
 
       ** +--------------------------------------+
@@ -158,9 +160,6 @@
                    //Call subroutine to initialise Midas LE Fees master detail
                    exsr initialiseLEFEED;
 
-                   //Call subroutine to initialise Midas SD Facility Type Class
-                   exsr initialiseSDFACTPD;
-
                    //Call subroutine to initialise Midas LE Facilities Extension File
                    exsr initialiseLEFCLTQD;
 
@@ -173,6 +172,12 @@
                    //Call subroutine to initialise Midas LE Agg. Facility
                    //Amendment Trans Ext extension file
                    exsr initialiseLEAGAMQD;
+
+                   //Call subroutine to initialise Midas LE Facility history header
+                   exsr initialiseFACHISH;
+
+                   //Call subroutine to initialise Midas LE Facility amounts
+                   exsr initialiseFACHISA;
 
                    //Call subroutine to initialise account keys
                    exsr initialiseACKEYAL;
@@ -367,44 +372,6 @@
        /EJECT
        //*************************************************************
        //                                                            *
-       // initialiseSDFACTPD                                         *
-       //                                                            *
-       // Called by: startInitialisation                             *
-       //                                                            *
-       //  Calls: none                                               *
-       //                                                            *
-       //*************************************************************
-
-       begsr initialiseSDFACTPD;
-
-                         //Update SDFACTPD
-                         wSqlStr = 'update SDFACTPD A SET ' +
-                                   'A.AMCLAS = ' + QUO + DefaultClass + QUO;
-                         exec sql
-                         execute immediate :wSqlStr;
-                         Count2 = SQLER3;
-                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
-                            and sqlCod <> NO_COLUMN;
-                            dBase    = 007;
-                            dBfile   = 'SDFACTPD';
-                            dBkey    = *blanks;
-                            dBpgm    = 'LE005000';
-                            exsr *pssr;
-                         endif;
-
-                          if sqlCod = NO_COLUMN;
-                            COL3 = 'AMCLAS';
-                            ERRMSG3 = 'COLUMN DOES NOT EXIST';
-                            leavesr;
-                         endif;
-
-       endsr;
-
-
-       //*************************************************************
-       /EJECT
-       //*************************************************************
-       //                                                            *
        // initialiseLEFCLTQD                                         *
        //                                                            *
        // Called by: startInitialisation                             *
@@ -417,7 +384,9 @@
 
                          //Update LEFCLTQD
                          wSqlStr = 'update LEFCLTQD A SET ' +
-                                     'A.FCXCLS = ' + QUO + DefaultClass + QUO;
+                                     'A.FCXCLS = ' + QUO + DefaultClass + QUO +
+                                     ' where A.FCXCLS =  ' + QUO + BLK_CLASS
+                                     +  QUO;
                          exec sql
                          execute immediate :wSqlStr;
                          Count3 = SQLER3;
@@ -454,7 +423,9 @@
 
                          //Update LEAGFTQD
                          wSqlStr = 'update LEAGFTQD A SET ' +
-                                   'A.FCXSLC = ' + QUO + DefaultClass + QUO;
+                                   'A.FCXCLS = ' + QUO + DefaultClass + QUO +
+                                   ' where A.FCXCLS =  ' + QUO + BLK_CLASS
+                                     +  QUO;
                          exec sql
                          execute immediate :wSqlStr;
                          Count4 = SQLER3;
@@ -491,7 +462,9 @@
 
                          //Update LEFCAMQD
                          wSqlStr = 'update LEFCAMQD A SET ' +
-                                   'A.FACLAS = ' + QUO + DefaultClass + QUO;
+                                   'A.FACLAS = ' + QUO + DefaultClass + QUO +
+                                    ' where A.FACLAS =  ' + QUO + BLK_CLASS
+                                     +  QUO;
                          exec sql
                          execute immediate :wSqlStr;
                          Count5 = SQLER3;
@@ -527,7 +500,9 @@
 
                          //Update LEAGAMQD
                          wSqlStr = 'update LEAGAMQD A SET ' +
-                                   'A.FACLAS = ' + QUO + DefaultClass + QUO;
+                                   'A.FACLAS = ' + QUO + DefaultClass + QUO +
+                                    ' where A.FACLAS =  ' + QUO + BLK_CLASS
+                                     +  QUO;
                          exec sql
                          execute immediate :wSqlStr;
                          Count9 = SQLER3;
@@ -543,6 +518,88 @@
                          if sqlCod = NO_COLUMN;
                             COL7 = 'FACLAS';
                             ERRMSG7 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
+                         endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // initialiseFACHISH                                          *
+       //                                                            *
+       // Called by: startInitialisation                             *
+       //                                                            *
+       //  Calls: none                                               *
+       //                                                            *
+       //*************************************************************
+
+       begsr initialiseFACHISH;
+
+                         //Update FACHISH
+                         wSqlStr = 'update FACHISH A SET ' +
+                                   'A.FHFCLS = ' + QUO + DefaultClass + QUO +
+                                   ',' +
+                                   'A.FHPCLS = ' + QUO + DefaultClass + QUO +
+                                   ' where A.FHFCLS =  ' + QUO + BLK_CLASS
+                                     +  QUO + ' and ' +
+                                   ' A.FHPCLS =  ' + QUO + BLK_CLASS
+                                     +  QUO;
+                         exec sql
+                         execute immediate :wSqlStr;
+                         Count10 = SQLER3;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and sqlCod <>  NO_COLUMN;
+                            dBase    = 007;
+                            dBfile   = 'FACHISH';
+                            dBkey    = *blanks;
+                            dBpgm    = 'LE005000';
+                            exsr *pssr;
+                         endif;
+
+                         if sqlCod = NO_COLUMN;
+                            COL10 = 'FACHISH';
+                            ERRMSG10 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
+                         endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // initialiseFACHISA                                          *
+       //                                                            *
+       // Called by: startInitialisation                             *
+       //                                                            *
+       //  Calls: none                                               *
+       //                                                            *
+       //*************************************************************
+
+       begsr initialiseFACHISA;
+
+                         //Update FACHISH
+                         wSqlStr = 'update FACHISA A SET ' +
+                                   'A.FAFCLS = ' + QUO + DefaultClass + QUO +
+                                   ' where FAACTN = ' + QUO + 'FS' + QUO +
+                                   ' and A.FAFCLS =  ' + QUO + BLK_CLASS + QUO;
+                         exec sql
+                         execute immediate :wSqlStr;
+                         Count11 = SQLER3;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and sqlCod <>  NO_COLUMN;
+                            dBase    = 008;
+                            dBfile   = 'FACHISA';
+                            dBkey    = *blanks;
+                            dBpgm    = 'LE005000';
+                            exsr *pssr;
+                         endif;
+
+                         if sqlCod = NO_COLUMN;
+                            COL11 = 'FACHISA';
+                            ERRMSG11 = 'COLUMN DOES NOT EXIST';
                             leavesr;
                          endif;
 
@@ -686,7 +743,8 @@
                    exec sql
                    execute immediate :wSqlStr;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                      and sqlCod <> DUPLICATE;
                       dBase    = 015;
                       dBfile   = 'ACKEYAL';
                       dBkey    = *blanks;
@@ -713,8 +771,6 @@
                    write headau;
 
                    if count1 <> 0
-                      or
-                      count2  <> 0
                       or
                       count3 <> 0
                       or

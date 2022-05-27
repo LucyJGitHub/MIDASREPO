@@ -167,7 +167,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  207964 - Incorrect exposure if loan is in base currency. Do  *
@@ -593,6 +593,8 @@
       ** API: Midas LE LOANS TRAILER (CLONE)                                                MD025467
       *                                                                                     MD025467
      FCLOANZI0  IF   E           K DISK                                                       CLE164
+      ** Midas LE Facilities Ext File by Facility                                             CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
      F/COPY WNCPYSRC,LECLIPPF01
       *****************************************************************
       ** +--------------------------------------+
@@ -10035,10 +10037,27 @@
                                                                                               CLE134
       ** Retrieve Record.                                                                     CLE134
                                                                                               CLE134
+      *                                                                                       CLE138
+      ** Access facility extension record to retrieve facility class                          CLE138
+      *                                                                                       CLE138
+     C     KFCLQ         KLIST                                                                CLE138
+     C                   KFLD                    @CUST                                        CLE138
+     C                   KFLD                    @FACT                                        CLE138
+     C                   KFLD                    @SEQN                                        CLE138
+     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C                   MOVEL     @RTCD         @@RTCD                                       CLE138
+     C                   EVAL      DBFILE      = 'SDFACTPD'                                   CLE138
+     C                   EVAL      DBKEY       = @FACT                                        CLE138
+     C                   EVAL      DBASE       = 207                                          CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+                                                                                              CLE138
      C                   CALLB     'AOFACTR0'                                                 CLE134
      C                   PARM      '*BLANKS'     @RTCD             7                          CLE134
      C                   PARM      '*KEY   '     @OPTN             7                          CLE134
      C                   PARM                    @FACT             3                          CLE134
+     C                   PARM                    FCXCLS                                       CLE138
      C     SDFACT        PARM      SDFACT        DSFDY                                        CLE134
                                                                                               CLE134
      C                   IF        @RTCD      <> *BLANKS                                      CLE134
@@ -10304,6 +10323,8 @@
                                                                                               CLE164
      C**********         EVAL      @FACT = %EDITC(FTYP:'3')                          CLE164 MD032052
      C                   MOVE      FTYP          @FACT                                      MD032052
+     C                   MOVE      FCUS          @CUST             6                          CLE138
+     C                   MOVE      FSEQ          @SEQN             2                          CLE138
      C                   EVAL      AMPGID = *BLANKS                                           CLE164
      C                   EXSR      XrFact                                                     CLE164
      C                   EVAL      wFTPDPGrpID = AMPGID                                       CLE164

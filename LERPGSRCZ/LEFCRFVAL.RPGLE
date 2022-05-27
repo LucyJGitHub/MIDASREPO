@@ -28,7 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
@@ -45,6 +45,8 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
+      ** Midas LE Facilities Ext File by Facility                                             CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
 
       *****************************************************************
       ** +--------------------------------------+
@@ -216,13 +218,33 @@
       ** Validate facility type
       ***********************************************************
      C     VLFACT        BEGSR
-
+      *                                                                                       CLE138
+      ** Access facility extension record to retrieve facility class                          CLE138
+      *                                                                                       CLE138
+     C     KFCLQ         KLIST                                                                CLE138
+     C                   KFLD                    @CUST             6                          CLE138
+     C                   KFLD                    @FACT             3                          CLE138
+     C                   KFLD                    @SEQN             2                          CLE138
+      *                                                                                       CLE138
+     C                   MOVEL     R#CSSN        @FACT                                        CLE138
+     C                   MOVEL     R#FACT        @CUST                                        CLE138
+     C                   MOVE      R#FCNO        @SEQN                                        CLE138
+      *                                                                                       CLE138
+     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C                   EVAL      DBFILE      = 'LEFCLTLH'                                   CLE138
+     C                   EVAL      DBKEY       = @FACT                                        CLE138
+     C                   EVAL      DBASE       = 209                                          CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+                                                                                              CLE138
       ** Facility type may refer to a valid facility type
 
      C                   CALL      'AOFACTR0'
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      R#FACT        @FKEY             3
+     C                   PARM                    FCXCLS            4                          CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
      C     @RTCD         IFEQ      *BLANKS

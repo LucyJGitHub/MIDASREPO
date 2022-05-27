@@ -2022,6 +2022,7 @@
      C                   PARM      '*BLANKS'     @RTCD             7                          CLE134
      C                   PARM      '*KEY   '     @OPTN             7                          CLE134
      C                   PARM                    @FACT             3                          CLE134
+     C                   PARM                    @FCLS             4                          CLE138
      C     SDFACT        PARM      SDFACT        DSFDY                                        CLE134
                                                                                               CLE134
      C                   IF        @RTCD      <> *BLANKS                                      CLE134
@@ -4727,6 +4728,7 @@
       ** Facility fees, retrieve SDFACTPD->PDP Group ID                                       CLE164
      C                   IF        FEFACL <> *ZEROS AND FELOAN = *BLANKS                      CLE164
      C                   MOVEL     FEFACL        @FACT                                        CLE164
+     C                   MOVEL     FECLAS        @FCLS                                        CLE138
      C                   EXSR      XrFact                                                     CLE164
      C                   EVAL      wFTPDPGrpID = AMPGID                                       CLE164
      C                   EVAL      wLSPDPGrpID = '***'                                        CLE164
@@ -4746,6 +4748,7 @@
                                                                                               CLE164
       ** Loan Fees, retrieve SDFACTPD->PDP Group ID                                           CLE164
      C                   MOVEL     FTYP          @FACT                                        CLE164
+     C                   MOVEL     FECLAS        @FCLS                                        CLE138
      C                   EXSR      XrFact                                                     CLE164
      C                   EVAL      wFTPDPGrpID = AMPGID                                       CLE164
                                                                                               CLE164

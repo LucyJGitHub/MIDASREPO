@@ -37,7 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -319,6 +319,26 @@
      C                   MOVEL     BBCUST        S#CNUM
       *
      C                   ENDIF
+      *                                                                                       CLE138
+      ** Access facility extension record to retrieve facility class                          CLE138
+      *                                                                                       CLE138
+     C     KFCLQ         KLIST                                                                CLE138
+     C                   KFLD                    @CUST             6                          CLE138
+     C                   KFLD                    @FACT             3                          CLE138
+     C                   KFLD                    @SEQN             2                          CLE138
+      *                                                                                       CLE138
+     C                   MOVEL     S#CNUM        @FACT                                        CLE138
+     C                   MOVEL     S#FACT        @CUST                                        CLE138
+     C                   MOVE      S#FCNO        @SEQN                                        CLE138
+      *                                                                                       CLE138
+     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C                   EVAL      DBFILE      = 'SDFACTPD'                                   CLE138
+     C                   EVAL      DBKEY       = @FACT                                        CLE138
+     C                   EVAL      DBASE       = 207                                          CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+                                                                                              CLE138
 
       ** Validate Facility type
 
@@ -326,6 +346,7 @@
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      S#FACT        FKEY              3
+     C                   PARM                    FCXCLS                                       CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
      C     @RTCD         IFNE      *BLANKS
@@ -601,6 +622,7 @@
      C                   PARM                    S#ACTN            1
      C                   PARM                    S#CSSN           10
      C                   PARM                    S#FACT            3
+     C                   PARM                    S#FCLS            4                          CLE138
      C                   PARM                    S#FCNO            2
 
       * Primary facility customer, type & number

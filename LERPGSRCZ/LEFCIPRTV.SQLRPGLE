@@ -73,7 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD039655 - Facility cannot be rejected.                      *
@@ -237,6 +237,8 @@
       *                                                                                     BUG4555
       ** Midas AP API Configuration                                                           CAP185
      FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
+      ** Midas LE Facilities Ext File by Facility                                             CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
      F/COPY WNCPYSRC,LEH00261
                                                                                               CAP185
       *****************************************************************
@@ -722,11 +724,24 @@
      C                   MOVEL     'LEF0004'     MsgIdArr(Ix)
 
      C                   ELSE
-
+     C     DDACTN        IFNE      'I'                                                        CLE138
+     C                   MOVEL     DDFACT        @FACT                                        CLE138
+     C                   MOVEL     DDCSSN        @CUST                                        CLE138
+     C                   MOVE      DDFCNO        @SEQN                                        CLE138
+     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C     *LOCK         IN        LDA                                                        CLE138
+     C                   EVAL      DBFILE = 'LEFCLTLH'                                        CLE138
+     C                   EVAL      DBASE = 59                                                 CLE138
+     C                   EVAL      DBKEY = @FACT                                              CLE138
+     C                   OUT       LDA                                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
      C                   CALLB     'AOFACTR0'
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    DDFACT
+     C                   PARM                    FCXCLS                                       CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
      C     @RTCD         IFNE      *BLANKS
@@ -736,6 +751,7 @@
      C                   MOVEL     'LEF0004'     MsgIdArr(Ix)
      C                   ENDIF
 
+     C                   ENDIF                                                                CLE138
      C                   ENDIF
 
       **  Validate Facility Seq No.
@@ -1889,6 +1905,10 @@
      C                   KFLD                    KFACT
      C                   KFLD                    KFCNO
      C                   KFLD                    KRCTP
+     C     KFCLQ         KLIST                                                                CLE138
+     C                   KFLD                    @CUST             6
+     C                   KFLD                    @FACT             3                          CLE138
+     C                   KFLD                    @SEQN             2                          CLE138
 
       **  Used for LEFCLTL1 and L7
      C     K#KY02        KLIST

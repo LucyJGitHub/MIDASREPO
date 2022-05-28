@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2022')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP WIP Configuration Updater')                   *

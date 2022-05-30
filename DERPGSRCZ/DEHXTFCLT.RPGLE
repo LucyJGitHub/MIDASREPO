@@ -51,7 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR674226 - Manual transaction reached 999. Increase the size *
@@ -89,6 +89,7 @@
       *  Use of indicators.                                           *
       *                                                               *
       *    01         End of file indicator                           *
+      *    80         Facility Extension File                         *                       CLE138
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -118,6 +119,9 @@
       *
       ** LE Facility history details by date
      FFACHSAL1  IF   E           K DISK    INFSR(*PsSR)
+      *                                                                                       CLE138
+      ** LE Facilities Extension File by branch                                               CLE138
+     FLEFCLTLG  IF   E           K DISK    INFSR(*PsSR)                                       CLE138
       *
       ** DE Historic transaction details
      FDEHTRANPD O    E             DISK    INFSR(*PsSR)
@@ -255,6 +259,13 @@
      D I#HCOD          S              5P 0
      D I#EVCD          S              5P 0
      D I#PCOD          S              5P 0
+      *                                                                                       CLE138
+      ** Key Fields                                                                           CLE138
+     D K_BRCA          S              3A                                                      CLE138
+     D K_CNUM          S              6A                                                      CLE138
+     D K_FACT          S              3A                                                      CLE138
+     D K_FCNO          S              2A                                                      CLE138
+     D PClas           S              4A                                                      CLE138
       *
       ** Work Variables
      D POSN_Exp        S              1A
@@ -384,6 +395,15 @@
       ** Set transaction type and sub-type
      C                   MOVEL     FC_FACT       T#TRTP
      C                   EVAL      T#TRST = *BLANKS
+      *                                                                                       CLE138
+      ** Get facility class from the extension file                                           CLE138
+      *                                                                                       CLE138
+     C                   MOVE      FC_BRCA       K_BRCA                                       CLE138
+     C                   MOVE      FC_CNUM       K_CNUM                                       CLE138
+     C                   MOVE      FC_FACT       K_FACT                                       CLE138
+     C                   MOVE      FC_FCNO       K_FCNO                                       CLE138
+     C     WKeyList3     CHAIN     LEFCLTLG                           80                      CLE138
+     C                   MOVE      FCXCLS        PClas                                        CLE138
       *
       ** Access facility type details to set transaction description
      C                   MOVE      FC_FACT       PKey
@@ -392,6 +412,7 @@
      C                   PARM      '*MSG   '     PRtCd
      C                   PARM      '*KEY'        POptn
      C                   PARM                    PKey
+     C                   PARM                    PClas                                        CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
 
      C                   IF        PRtCd <> *BLANKS
@@ -658,6 +679,14 @@
      C     WKeyList2     KLIST
      C                   KFLD                    FH_FACNUM
      C                   KFLD                    FH_FAFCTY
+      *                                                                                       CLE138
+      ** Key fields for LE Facility Extension File LEFCLTLG                                   CLE138
+      *                                                                                       CLE138
+     C     WKeyList3     KLIST                                                                CLE138
+     C                   KFLD                    K_BRCA                                       CLE138
+     C                   KFLD                    K_CNUM                                       CLE138
+     C                   KFLD                    K_FACT                                       CLE138
+     C                   KFLD                    K_FCNO                                       CLE138
 
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

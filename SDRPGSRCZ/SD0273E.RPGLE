@@ -38,7 +38,7 @@
 
       ** Table of field numbers and names
      FSDFACTL3  IF   E           K DISK    INFSR(*PSSR)
-     F                                     RENAME(@AMRECW:SDFACTFU)
+     F                                     RENAME(SDFACTD0:SDFACTFU)
 
       ** Facilities File by FACT and FCLS
      FLEFCLTLX  IF   E           K DISK    INFSR(*PSSR)

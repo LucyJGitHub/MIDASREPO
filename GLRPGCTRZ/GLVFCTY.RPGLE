@@ -40,7 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD032890 - Cannot amend Retail account with expired facility *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -81,6 +81,9 @@
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYFNF)
      F                                     IGNORE(FCLTYZZF)
+                                                                                              CLE138
+      ** LE Facilities Extension File by branch                                               CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PsSR)                                       CLE138
 
       ** LE Aggregate Facility File                                                          BUG5948
      FLEAGFCL0  IF   E           K DISK    INFSR(*PSSR)                                      BUG5948
@@ -217,6 +220,11 @@
      D*DDACOD***       S             10                                              BUG4067 BUG4481
      D PACOD           S             10                                                      BUG4067
      D DDACOD          S             10                                                      BUG4067
+      *                                                                                       CLE138
+      ** Key Fields                                                                           CLE138
+     D K_CNUM          S              6                                                       CLE138
+     D K_FACT          S              3                                                       CLE138
+     D K_FCNO          S              2                                                       CLE138
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -240,6 +248,19 @@
      C                   MoveL     *Blanks       MsgIDXAr
      C                   MoveL     *Blanks       MsgDtaXAr
      C                   Z-Add     0             Idx
+      *                                                                                       CLE138
+      ** Get facility class from the extension file                                           CLE138
+      *                                                                                       CLE138
+     C                   IF        DDFCCU <> *BLANKS                                          CLE138
+     C                   MOVE      DDFCCU        K_CNUM                                       CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      DDCUSN        K_CNUM                                       CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C                   MOVE      DDFACT        K_FACT                                       CLE138
+     C                   MOVE      DDFCNO        K_FCNO                                       CLE138
+     C     KFCLT         CHAIN     LEFCLTLH                           80                      CLE138
+     C                   MOVE      FCXCLS        @FCLS                                        CLE138
       *
       ** Facility Type
      C     DDFACT        IFNE      *BLANK
@@ -247,6 +268,7 @@
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      DDFACT        @FACT             3
+     C                   PARM                    @FCLS             4                          CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
      C     @RTCD         IFNE      *BLANKS
@@ -528,6 +550,13 @@
      C                   KFLD                    WFACT             3 0
      C                   KFLD                    WFCNO             2 0
      C                   KFLD                    WRCTP             1
+      *                                                                                       CLE138
+      ** Key fields for LE Facility Extension File LEFCLTLG                                   CLE138
+      *                                                                                       CLE138
+     C     KFCLT         KLIST                                                                CLE138
+     C                   KFLD                    K_CNUM                                       CLE138
+     C                   KFLD                    K_FACT                                       CLE138
+     C                   KFLD                    K_FCNO                                       CLE138
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================

@@ -69,7 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -144,6 +144,9 @@
       *
       ** Customer Positions File
      FCPOSN     IF   E           K DISK    INFSR(*PSSR)
+      *                                                                                       CLE138
+      ** Facilities Extension File by branch                                                  CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PsSR)                                       CLE138
       *
       *****************************************************************
       /EJECT
@@ -316,6 +319,12 @@
      D WWACCR          S                   LIKE(CDACCR)
      D WWIAMT          S                   LIKE(CDIAMT)
      D WWLNLM          S                   LIKE(CDLNLM)
+      *                                                                                       CLE138
+      ** Key Fields                                                                           CLE138
+     D K_CNUM          S              6A                                                      CLE138
+     D K_FACT          S              3A                                                      CLE138
+     D K_FCNO          S              2A                                                      CLE138
+     D PClas           S              4A                                                      CLE138
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -711,11 +720,20 @@
      C                   ELSE
      C                   MOVEL     BBCUST        DDFCUS
      C                   ENDIF
+      *                                                                                       CLE138
+      ** Get facility class from the extension file                                           CLE138
+      *                                                                                       CLE138
+     C                   MOVE      DDFCUS        K_CNUM                                       CLE138
+     C                   MOVE      DDFTYP        K_FACT                                       CLE138
+     C                   MOVE      DDFSEQ        K_FCNO                                       CLE138
+     C     KFCLTH        CHAIN     LEFCLTLH                           80                      CLE138
+     C                   MOVE      FCXCLS        PClas                                        CLE138
       *
      C                   CALL      'AOFACTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      DDFTYP        PFCTY             3
+     C                   PARM                    PClas                                        CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
      C     PRTCD         IFNE      *BLANKS
@@ -1541,6 +1559,13 @@
      C                   KFLD                    WCSBA
      C                   KFLD                    WCSSC
      C                   KFLD                    WCSCN#
+      *                                                                                       CLE138
+      ** Key fields for LE Facility Extension File LEFCLTLH                                   CLE138
+      *                                                                                       CLE138
+     C     KFCLTH        KLIST                                                                CLE138
+     C                   KFLD                    K_CNUM                                       CLE138
+     C                   KFLD                    K_FACT                                       CLE138
+     C                   KFLD                    K_FCNO                                       CLE138
       *
       ** Move program name into *LDA field.
       *

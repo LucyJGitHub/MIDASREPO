@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *  Last Amend No. AR845718 (CLE138)  Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 02Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -66,6 +67,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR845718 - Include class code in LE0691 report (CLE138)      *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *           (Amendable Payment Type)                            *
@@ -152,6 +154,7 @@
      F***LVEDS** IP  F     194 21AI     2 DISK                                         CLE042 244589
      F*LVEDS***IP  F     211 21AI     2 DISK                                           244589 CLE154
      FLVEDS   IP  F     212 21AI     2 DISK                                                   CLE154
+     FLEFCLTLHIF  E           K        DISK                                                   CLE138
      F/COPY WNCPYSRC,LE0691F002
      FLEFEED  IF  E           K        DISK                               BH3493
      F/COPY WNCPYSRC,LEH01268
@@ -635,6 +638,34 @@
      C                     MOVE 'Y'       CLE134                                              CLE134
      C                     ENDIF                                                              CLE134
       *
+     C                     CALL 'AOSARDR0'                                                  AR845718
+     C                     PARM *BLANKS   @RTCD                                             AR845718
+     C                     PARM '*VERIFY' @OPTN                                             AR845718
+     C                     PARM 'CLE138'  PSARD                                             AR845718
+     C           SCSARD    PARM SCSARD    DSFDY                                             AR845718
+      *                                                                                     AR845718
+     C           @RTCD     IFNE *BLANKS                                                     AR845718
+     C           @RTCD     ANDNE'*NRF   '                                                   AR845718
+     C           *LOCK     IN   LDA                                                         AR845718
+     C                     MOVEL'LE0691'  DBPGM                                             AR845718
+     C                     MOVEL'SCSARDPD'DBFILE                                            AR845718
+     C                     MOVEL'CLE138'  DBKEY                                             AR845718
+     C                     Z-ADD20        DBASE                                             AR845718
+     C                     OUT  LDA                                                         AR845718
+     C                     MOVE *ON       *INU7                                             AR845718
+     C                     MOVE *ON       *INU8                                             AR845718
+     C                     EXSR *PSSR                                                       AR845718
+     C                     GOTO ENDALL                                                      AR845718
+     C                     ENDIF                                                            AR845718
+      *                                                                                     AR845718
+     C           @RTCD     IFEQ *BLANKS                                                     AR845718
+     C                     MOVE 'Y'       CLE138  1                                         AR845718
+     C                     MOVE *ON       *IN22                                             AR845718
+     C                     ELSE                                                             AR845718
+     C                     MOVE 'N'       CLE138                                            AR845718
+     C                     MOVE *OFF      *IN22                                             AR845718
+     C                     ENDIF                                                            AR845718
+      *                                                                                     AR845718
      C/COPY WNCPYSRC,LE0691C009
 0221 C*
 0222 C**  SET-UP RECORD COUNT
@@ -1085,6 +1116,15 @@
      C                     ENDIF                                                              244589
      C                     ENDIF                                                              244589
      C                     ENDIF                                                              244589
+      *                                                                                     AR845718
+     C                     MOVE *BLANK    WFCLS   4                                         AR845718
+     C           CLE138    IFEQ 'Y'                                                         AR845718
+     C           FCTKEY    CHAINLEFCLTLH             33                                     AR845718
+     C           *IN33     IFEQ *OFF                                                        AR845718
+     C                     MOVE FCXCLS    WFCLS                                             AR845718
+     C                     ENDIF                                                            AR845718
+     C                     ENDIF                                                            AR845718
+      *                                                                                     AR845718
      C/COPY WNCPYSRC,LEH00847
       *                                                                   CLE004
 0313 C********************************************************************
@@ -1927,16 +1967,21 @@ A    O                N28                50 'EVENT'                       CLE004
      O                         FDETS     35 '0      /   /  '              100522
      O                         FCNO      28                                                   CSD027
      O/COPY WNCPYSRC,LEH00848
-     O                 30      DESC      66                                                   CGL014
+     O**********       30      DESC      66                                          CGL014 AR845718
+     O                 30      DESC      81                                                 AR845718
      O/COPY WNCPYSRC,LEH00849
      O                 30      LEVEL    117                                                   CGL014
      O                 30      WGNSP    132                                                   CGL014
 0635 O***************    N21   CFREF     28                               S01339
      O/COPY WNCPYSRC,LEH00850
-     O                 25                40 'SEQ '                        BH3493
-     O                 25      WOSEQ     43                               BH3493
-     O                 25                52 'FEE CODE'                    100373
-     O                 25      WOFEC     55                               100373
+     O**********       25                40 'SEQ '                                   BH3493 AR845718
+     O**********       25      WOSEQ     43                                          BH3493 AR845718
+     O**********       25                52 'FEE CODE'                               100373 AR845718
+     O**********       25      WOFEC     55                                          100373 AR845718
+     O                 25                45 'SEQ '                                          AR845718
+     O                 25      WOSEQ     48                                                 AR845718
+     O                 25                57 'FEE CODE'                                      AR845718
+     O                 25      WOFEC     60                                                 AR845718
      O/COPY WNCPYSRC,LEH00851
 0636 O        D 1      02 10
 0637 O                         CTWN      11

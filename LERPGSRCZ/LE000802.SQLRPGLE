@@ -20,7 +20,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -93,6 +93,7 @@
      D  pRTCD                         7A
      D  pOPTN                         7A
      D  pFACT                         3A
+     D  pFCLS                         4A                                                      CLE138
      D  pDSSDY                      800A
 
      D ACCESS_FEE      PR                  EXTPGM('AOFEER0')
@@ -141,6 +142,7 @@
      D  pSUTP          S              2A
      D  pCLAS          S              2A
      D  pFACT          S              3A
+     D  pFCLS          S              4A                                                      CLE138
      D  pFEE           S              2A
      D  pDSSDY         S            800A
      D  wREPR          S              8S 0
@@ -413,6 +415,7 @@
                       CallP ACCESS_FACT (  pRTCD
                                          : pOPTN
                                          : pFACT
+                                         : pFCLS
                                          : pDSSDY
                                            );
                       DSSDFACT = pDSSDY;
@@ -447,6 +450,7 @@
                          CallP ACCESS_FACT (  pRTCD
                                             : pOPTN
                                             : pFACT
+                                            : pFCLS
                                             : pDSSDY
                                               );
                          DSSDFACT = pDSSDY;
@@ -458,6 +462,7 @@
                          CallP ACCESS_FACT (  pRTCD
                                             : pOPTN
                                             : pFACT
+                                            : pFCLS
                                             : pDSSDY
                                               );
                          DSSDFACT = pDSSDY;

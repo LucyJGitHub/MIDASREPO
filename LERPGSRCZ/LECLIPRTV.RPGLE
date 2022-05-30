@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE125             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 260408             Date 06Oct17               *
@@ -81,6 +82,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE125 - Amendment to LE Authorization Rules                 *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -890,6 +892,23 @@
      C                             @AUTHO = 'Y' AND                                           CAP185
      C                             @TYPE = '1'                                                CAP185
       *                                                                                       CAP185
+     C     CLE125        IFEQ      'Y'                                                        CLE125
+      *                                                                                       CLE125
+      ** If transaction is being authorised by the same user that amended it,                 CLE125
+      ** disallow authorisation                                                               CLE125
+      *                                                                                       CLE125
+     C     PSUSER        IFEQ      AUSR                                                       CLE125
+     C                   MOVE      'N'           DDACTNOK                                     CLE125
+     C                   ADD       1             Ix                                           CLE125
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                               CLE125
+     C                   MOVEL     'LEL0404'     MsgIdArr(Ix)                                 CLE125
+     C                   GOTO      EVALAX                                                     CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
+      ** If feature is OFF, return to standard validation                                     CLE125
+      *                                                                                       CLE125
+     C                   ELSE                                                                 CLE125
+      *                                                                                       CLE125
       * If system value CLAuthORED = 'Y' and last amend date is later than                    240968
       * original entry date then allow authorise user to be same as original insert user      240968
       *                                                                                       244314
@@ -930,6 +949,7 @@
      C                   ENDIF                                                                CLE056
      C                   END
      C                   ENDIF                                                                240968
+     C                   ENDIF                                                                CLE125
      C                   ENDIF                                                                CAP185
       *
       *
@@ -2248,6 +2268,26 @@
      C                   UNLOCK    MPHAS                                                    MD031225
      C                   ENDIF                                                                CLE134
       *
+      ** Check if Amendment to LE Authorization Rules (CLE125) is ON                          CLE125
+      *                                                                                       CLE125
+     C                   MOVE      'N'           CLE125            1                          CLE125
+     C                   CALLB     'AOSARDR0'                                                 CLE125
+     C                   PARM      *BLANKS       @RTCD                                        CLE125
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE125
+     C                   PARM      'CLE125'      @SARD                                        CLE125
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE125
+      *                                                                                       CLE125
+     C                   IF        @RTCD <> *BLANKS  AND  @RTCD <> '*NRF   '                  CLE125
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CLE125
+     C                   EVAL      DBKey  = 'CLE125'                                          CLE125
+     C                   EVAL      DBase  = 14                                                CLE125
+     C                   EXSR      *PSSR                                                      CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
+     C                   IF        @RTCD = *BLANKS                                            CLE125
+     C                   EVAL      CLE125 = 'Y'                                               CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
       ***  Get ZMUSER to access default branch.
       *
      C******DTAARA       DEFINE                  ZMUSER                                      BUG8550

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046998A          Date 15Apr21               *
-      *  Prev Amend No. 248698             Date 01Jun20               *
+      *  Last Amend No. MD059546           Date 22Feb22               *
+      *  Prev Amend No. MD046998A          Date 15Apr21               *
+      *                 248698             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057247           Date 01Feb21               *
       *                 MD050604           Date 21Feb20               *
@@ -74,6 +75,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059546 - MT518 processing will pick up the coupon rate     *
+      *             from the User Defined Field.                      *
+      *           - Move UDF's coupon rate to field MGCPNR.           *
       *  MD046998A - Recompiled due to changes in /COPY ZDYYRZ3       *
       *            - Applied fix for MD057480                         *
       *  248698 - Rounding discrepancies on some SE reports. Applied  *
@@ -189,6 +193,8 @@
      F                                              KCOMIT
      FSE1875AUO   E                    PRINTER      KINFDS SPOOLU
      F                                              KINFSR *PSSR
+     FTRADUDF1IF  E           K        DISK         KINFSR *PSSR                            MD059546
+     F            T_GZTRADEX                        KRENAMETRADEXF                          MD059546
      F/COPY WNCPYSRC,SE1875F001
       /TITLE FUNCTION OF INCICATORS
       *****************************************************************
@@ -213,6 +219,7 @@
       *    56  - Control of chain to SECTY                            *
       *    58  - Chain to TRADS                                       *   CSE006
       *    59  - READE ON SECRTNL1                                    *   CSE006
+      *    60  - Chain to TRADUDF1                                    *                     MD059546
       *                                                               *
       *                                                               *
       *    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
@@ -507,6 +514,11 @@
      C                     KFLD           TNMC
      C                     KFLD           SITP
       *
+      ** KLIST for TRADUDF1                                                                 MD059546
+     C           KUDF1     KLIST                                                            MD059546
+     C                     KFLD           ZONE                                              MD059546
+     C                     KFLD           DDTDRF                                            MD059546
+      *                                                                                     MD059546
       *** Access Bank Details.
      C                     CALL 'AOBANKR0'
      C                     PARM '*MSG   ' WRTCD   7
@@ -2125,6 +2137,16 @@
       *
       *** Coupon Rate
      C                     Z-ADDCPNR      MGCPNR
+      *                                                                                     MD059546
+      ** Move UDF Coupon Rate                                                               MD059546
+      *                                                                                     MD059546
+     C                     MOVELA8ZONE    ZONE                                              MD059546
+     C                     MOVE TDRF      DDTDRF                                            MD059546
+     C           KUDF1     CHAINTRADEXF              60                                     MD059546
+     C           *IN60     IFEQ *OFF                                                        MD059546
+     C           COPRAT    ANDNE*ZERO                                                       MD059546
+     C                     Z-ADDCOPRAT    MGCPNR                                            MD059546
+     C                     ENDIF                                                            MD059546
       *
       ** Find whether DELF is a Cedel depot
       ** for Trade Type = TS only                                         140437

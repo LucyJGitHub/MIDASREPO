@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059275           Date 23May22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD024459           Date 07Feb14               *
       *                 MD046248           Date 27Oct17               *
       *                 MD038257           Date 13Apr16               *
@@ -50,6 +51,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059275 - Event code not found for RPSC value date warning  *
+      *             message. Replace LES0615 with event code 45045853 *
+      *             so warning that value date is equal to loan       *
+      *             maturity date is shown.                           *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -648,7 +653,8 @@
      C                   MOVE      'W'           DDVDATOK                                   AR740107
      C                   ADD       1             WId                                        AR740107
      C                   MOVEL     'DDVDAT'      WFldNmXAr(WId)                             AR740107
-     C                   MOVEL     'LES0615'     WMsgIDXAr(WId)                             AR740107
+     C**********         MOVEL     'LES0615'     WMsgIDXAr(WId)                    AR740107 MD059275
+     C                   MOVEL     '5045853'     WMsgIDXAr(WId)                             MD059275
      C                   ENDIF                                                              AR740107
       *
       ***  Extra validation for value date

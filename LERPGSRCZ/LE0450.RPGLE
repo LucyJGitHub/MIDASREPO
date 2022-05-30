@@ -12,10 +12,11 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059275           Date 23May22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
-      *                 AR923246           Date 15Mar12               *      
+      *                 AR923246           Date 15Mar12               *
       *                 MD034915           Date 26Aug20               *
       *                 MD055322           Date 15May20               *
       *                 MD055733           Date 03Jul20               *
@@ -431,6 +432,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059275 - Incorrect action type on LE0497P1. Populate F1FPCT*
+      *             to identify an MA account key needed for the      *
+      *             update for MA action in LER031.                   *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -439,7 +443,7 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR923246 - Job CALCMGR_xx failing due to data mapping error. *
       *             Prevent data corruption for MLNR field on MCLONCL *
-      *             when written. (Child: AR923248)                   *      
+      *             when written. (Child: AR923248)                   *
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
       *             Allow negative input in Funding rate/spread.      *
       *           - Applied for MD054876                              *
@@ -12994,6 +12998,9 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                              MD054869
      C                   Z-ADD     LASN          F1FPCT                                     MD055115
                                                                                             MD051695
+     C     AMTP          IFEQ      'MA'                                                     MD059275
+     C                   EVAL      F1FPCT = LASN + (PRSQ/100)                               MD059275
+     C                   ENDIF                                                              MD059275
       *                                                                                       CLE134
       ** set LEPK1DP fields                                                                   CLE134
       *                                                                                       CLE134

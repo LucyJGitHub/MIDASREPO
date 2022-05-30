@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD055115           Date 23Jan20               *
+      *  Last Amend No. MD059275           Date 23May22               *
+      *  Prev Amend No. MD036618           Date 23May22               *
+      *                 AR674226           Date 04Dec19               *
+      *                 MD055115           Date 23Jan20               *
       *                 MD054869           Date 21Nov19               *
       *                 MD053565           Date 01Oct19               *
       *                 MD052433           Date 11Feb19               *
@@ -106,6 +108,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059275 - Incorrect action type on LE0497P1. Reverse fix    *
+      *             AR1076850 and instead introduce a new condition   *
+      *             to determine a repayment or maturity if valuing   *
+      *             on same date i.e., if F1FPCT is less than or equal*
+      *             to 999 then set as Repayment else Maturity.       *
+      *  MD036618 - For auto-settle loans maturing on rundate, 'RE'   *
+      *             FACHISA events were generated instead of 'MT'.    *
+      *             Change to RECI from CLOANCL instead of LRECI.     *
+      *           - Applied for MD059275                              *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -1236,10 +1247,12 @@
       *
      C           EDAT      IFNE MDAT
      C           EDAT      OREQ MDAT                                                        AR317587
-     C           LRECI     ANDEQ'D'                                                         AR317587
+     C********** LRECI     ANDEQ'D'                                                AR317587 MD036618
+     C           RECI      ANDEQ'D'                                                         MD036618
      C********** *IN99     OREQ '0'                                                  225656 BUG23175
      C********** *IN99     ANDEQ'0'                                               BUG23175 AR1076850
-     C           *IN99     OREQ '0'                                                        AR1076850
+     C********** *IN99     OREQ '0'                                               AR1076850 MD059275
+     C           F1FPCT    ORLE 999                                                         MD059275
      C                     MOVE 'RE'      HAACTN
      C                     ELSE
      C                     MOVE 'MT'      HAACTN

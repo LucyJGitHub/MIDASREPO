@@ -25,8 +25,6 @@
       *    06 - Indicator for writing in MGOMSGPD                     *
       *    10 - Indicator for chaining FT Standing Data               *
       *    15 - Indicator for determining success of ZM0060           *
-      *    98 - Indicator for updating MEINFTPD                       *
-      *    99 - Indicator for reading MEINFTL6                        *
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
@@ -34,45 +32,14 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
 
-      ** Outgoing payments details
-     FOTPAY     IF   E           K DISK    INFSR(*PSSR)
-
-      ** Outgoing Payments Details Extension File
-     FOTPAYXL0  IF   E           K DISK    INFSR(*PSSR)
-
-      ** Incoming payments details
-     FINPAY     IF   E           K DISK    INFSR(*PSSR)
-
-      ** Incoming Payments Details Extension File
-     FINPAYXL0  IF   E           K DISK    INFSR(*PSSR)
-
       ** Incoming Message Control by Message Tag
      FMEINDTL0  IF   E           K DISK    INFSR(*PSSR)
-
-      ** Incoming Message FT Data
-     FMEINFTPD  IF   E           K DISK    INFSR(*PSSR)
-
-      ** Joint File for retrieving records in FTMG
-     FMEINMPJ1  IF   E           K DISK    INFSR(*PSSR)
 
       ** Logical File for retrieving MT199 sender
      FMEINCRL1  IF   E           K DISK    INFSR(*PSSR)
 
-      ** Logical File for retrieving Incoming Message Transaction Number
-     FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)
-
-      ** Logical file for retrieving FT Standing Data
-     FTABFP     IF   E           K DISK    IGNORE(TABTB20F:TABTG20F)
-     F                                     IGNORE(TABLETHF:TABLETPF)
-     F                                     IGNORE(TABLET5F:TABTE10F)
-     F                                     INFSR(*PSSR)
-
-      ** Retail Accounts file
-     FACNUMA    IF   E           K DISK    RENAME(ACCNTABF:ACNUMAF)
-
-      ** New Logical file that will filter MT199
-     FMEINFTL6  UF   E             DISK    INFSR(*PSSR)
-     F                                     COMMIT
+      ** Logical File for Message Incoming Details by Message Tag
+     FMEIN35L0  IF   E           K DISK    INFSR(*PSSR)
 
       ** Outgoing Message Reference File
      FMGOREFPD  O    E           K DISK    INFSR(*PSSR)
@@ -146,20 +113,14 @@
       * For exclusive use of Mult DS
      D Q               S              2P 0
 
-      *  User / Branch data area
-     D ZMUSER          DS            17
-     D  WDFBR                 11     13
-
       ** External data structure for bank file
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
-      **  Data structure for SAR - Switchable features file
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)
 
       ** External data structure for branch details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
 
-     D  QQDFA1       E                     EXTFLD(QQDFAC)
+      **  Data structure for SAR - Switchable features file
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)
 
       **  Data structure for message management data.
      D SDMGME        E DS                  EXTNAME(SDMGMEPD)
@@ -189,6 +150,10 @@
       ** Entry Parameter List
      D PGenFlg         S              1A
      D PMsgr           S              8P 0
+     D PMtpy           S              3A
+     D PBrCA           S              3A
+     D PFTMsgR         S              8P 0
+     D PFTKPRT         S              3P 0
 
       ** Parameter Variables to call 'AOSVALR0'
      D PRtcd           S              7A
@@ -218,6 +183,8 @@
       *
      D KFMsgR          S              8P 0
      D KFMtag          S              5A
+     D KFTMsgR         S              8P 0
+     D KFTKPRT         S              3P 0
 
       *
       ** Variables for storing the final value of tags
@@ -225,63 +192,41 @@
      D WTag121Val      S             36A
      D WTag70Val       S             35A
      D WTag20Val       S             16A
+     D WTag21Val       S             35A
      D WTag79L1Val     S             35A
      D WTag79L2Val     S             35A
      D WTag79L3Val     S             35A
      D WTag79L4Val     S             35A
 
       ** Work Variables
+     D WSender         S             11A
      D WReceiver       S             12A
+     D WBIC            S              8A
+     D WBranch         S              3A
      D WTag20a         S              8A
      D WTag20b         S              6A
      D WTag79L3a       S              6A
      D WTag79L3b       S             16A
-     D CR              S              1A
-     D LF              S              1A
-     D CRLF            S              2A
-
-      ** Variables for getting SWIFT BIC of destination
-     D WSWIFT          S             11A
-
-      ** Variables for getting formatted SWIFT date and time
-     D WCurDTFlg       S              1A   INZ('Y')
-     D WCurTmst        S              6S 0
-     D WCurTmstC       S              6A
-     D WCurTme         S              4A
-     D WTmSt           S             26A
-     D WDate           S              6A
-     D WTime           S              4A   INZ('0000')
-     D WUTCOffset      S              4A   INZ('0000')
-     D WUTCOffSgn      S              1A   INZ('+')
-
-      ** Parameters for converting Midas rundate YYMMDD format .
-     D ZMDAY           S              5P 0
-     D ZMDATE          S              6A
-
-      ** Variables for getting formatted SWIFT amount
-     D WICcy           S              3A
-     D WIAmnt          S             13P 0
-     D WOCcy           S              3A
-     D WOAmnt          S             17A
-     D WIMCcy          S              3A
-     D WChgs           S             13P 0
-     D WMChgs          S             13P 0
-     D WNChgs          S             13P 0
-     D WRChgs          S             13P 0
-
-      ** Result fields of Swift Format Currency
-     D ZAMNT           S             13P 0
-     D ZCCY            S              3A
-     D ZSAMNT          S             17A
-     D ZSCCY           S              3A
-     D ZERR            S              1A
+     D WTag202COV      S              1A
+     D WTag205COV      S              1A
+     D WGenFlg         S              1A
 
       ** Variables for writing MGOREFPD
       * Transaction Ref. Number
      D WTRNo           S             16A
      D WTrnId          S             15A
+     D WPyTp           S              2A
+     D WPySt           S              2A
+     D WBnCs           S             35A
      D WSeCN           S              6A
      D WBrCA           S              3A
+
+      ** Variables for getting formatted SWIFT amount
+     D WICcy           S              3A
+
+      ** Parameters for converting Midas rundate YYMMDD format .
+     D ZMDAY           S              5P 0
+     D ZMDATE          S              6A
 
       ** Parameters for calling Standing Data
      D @BRCD           S              3A
@@ -290,21 +235,11 @@
      D @SARD           S              6A
 
       ** Variables for Switchable Features
-     D S01494          S              1A
-     D S01499          S              1A
-     D CFT009          S              1A
-     D CFT014          S              1A
      D CSW122          S              1A
-
-      ** Variable for accessing TABFP
-     D ZTABKY          S             12A
 
       ** Temporary Variables
      D YY              S              2P 0
      D @HRDT           S              6A
-     D WMTPY           S              3A
-
-      * Note: Ask Jhen if the lengths are correct
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -346,6 +281,10 @@
      C     *ENTRY        PLIST
      C                   PARM                    PMsgR
      C                   PARM                    PGenFlg
+     C                   PARM                    PMtpy
+     C                   PARM                    PBrCA
+     C                   PARM                    PFTMsgR
+     C                   PARM                    PFTKPRT
 
       *
       ** Retrieve ZMUSER details.
@@ -362,6 +301,13 @@
      C                   KFLD                    KFMtag
 
       *
+      ** Key List for MEINFTL0
+      *
+     C     KLMEFTL6      KLIST
+     C                   KFLD                    KFTMsgR
+     C                   KFLD                    KFTKPRT
+
+      *
       ** Retrieve Swift Universal Tracker Address from System Values
       *
 
@@ -369,7 +315,7 @@
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      SValK1        PSValK1
      C                   PARM                    PSVal1
-     C                   PARM      SValK2        PSValK2
+     C                   PARM                    PSValK2
      C                   PARM                    PSVal2
      C                   PARM      *BLANKS       PSValK3
      C                   PARM                    PSVal3
@@ -398,12 +344,6 @@
      C                   MOVEL     SValK1        DBKEY
      C                   ENDIF
 
-     C                   IF        PSVal2 = '*NRF  '
-     C                   MOVE      '001'         DBASE
-     C                   MOVEL     SValK2        DBKEY
-     C                   ENDIF
-
-
      C                   OUT       LDA
      C                   EXSR      *PSSR
 
@@ -413,6 +353,31 @@
       ** Default Value: TRCKCHZZ
       *
      C                   EVAL      WReceiver = PSVal1
+     C                   ENDIF
+
+      *
+      ** Access Switchable Features file for CSW122
+      *
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*VERIFY'     @OPTN
+     C                   PARM      'CSW122'      @SARD
+     C     SCSARD        PARM      SCSARD        DSFDY
+
+     C     @RTCD         IFNE      *BLANKS
+     C     @RTCD         ANDNE     '*NRF   '
+     C     *LOCK         IN        LDA
+     C                   MOVE      '024'         DBASE
+     C                   MOVEL     @SARD         DBKEY
+     C                   MOVEL     'SCSARDPD'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C     @RTCD         IFEQ      *BLANKS
+     C                   MOVEL     'Y'           CSW122
+     C                   ELSE
+     C                   MOVEL     'N'           CSW122
      C                   ENDIF
 
       ** Access SDMGMEPD for message management data.
@@ -429,46 +394,6 @@
      C                   MOVEL     'SDMGMEPD'    DBFILE
      C                   OUT       LDA
      C                   EXSR      *PSSR
-     C                   ENDIF
-
-      *
-      ** Set up key and access installation control record (TABTB11F)
-      *
-     C                   MOVE      *BLANKS       ZTABKY
-     C                   MOVEL     '01'          ZTABKY
-     C                   MOVE      '11'          ZTABKY
-     C     ZTABKY        CHAIN     TABFP                              10
-      *
-     C                   IF        *IN10 or RECI <> 'D'
-     C     *LOCK         IN        LDA
-     C                   MOVE      '003'         DBASE
-     C                   MOVEL     'TABFP'       DBKEY
-     C                   MOVEL     'ZTABKY'      DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-
-      **  Initialise constant fields
-
-     C                   MOVE      *LOVAL        CR
-     C                   BITON     '457'         CR
-     C                   MOVE      *LOVAL        LF
-     C                   BITON     '257'         LF
-     C                   MOVEL     CR            CRLF
-     C                   MOVE      LF            CRLF
-
-      ** CRLF Control Character for message data records
-
-     C                   MOVE      CRLF          CTRC
-
-      ** Default the message status whith the ICD.
-
-     C                   IF        FTCS = 'R'
-     C                   EVAL      MGST = 'RSND'
-     C                   EVAL      MGSG = '2'
-     C                   ELSE
-     C                   EVAL      MGST = 'CRTD'
-     C                   EVAL      MGSG = '1'
      C                   ENDIF
 
       *
@@ -522,175 +447,120 @@
      C                   ENDIF
      C                   MOVE      ZMDATE        @HRDT
 
-      *
-      ** Access Switchable Features file for S01494
-      *
-     C                   CALL      'AOSARDR0'
-     C                   PARM      *BLANKS       @RTCD
-     C                   PARM      '*VERIFY'     @OPTN
-     C                   PARM      'S01494'      @SARD
-     C     SCSARD        PARM      SCSARD        DSFDY
-
-     C     @RTCD         IFNE      *BLANKS
-     C     @RTCD         ANDNE     '*NRF   '
-     C     *LOCK         IN        LDA
-     C                   MOVE      '021'         DBASE
-     C                   MOVEL     @SARD         DBKEY
-     C                   MOVEL     'SCSARDPD'    DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-
-     C     @RTCD         IFEQ      *BLANKS
-     C                   MOVEL     'Y'           S01494
-     C                   ELSE
-     C                   MOVEL     'N'           S01494
-     C                   ENDIF
-
-      *
-      ** Access Switchable Features file for S01499
-      *
-     C                   CALL      'AOSARDR0'
-     C                   PARM      *BLANKS       @RTCD
-     C                   PARM      '*VERIFY'     @OPTN
-     C                   PARM      'S01499'      @SARD
-     C     SCSARD        PARM      SCSARD        DSFDY
-
-     C     @RTCD         IFNE      *BLANKS
-     C     @RTCD         ANDNE     '*NRF   '
-     C     *LOCK         IN        LDA
-     C                   MOVE      '022'         DBASE
-     C                   MOVEL     @SARD         DBKEY
-     C                   MOVEL     'SCSARDPD'    DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-
-     C     @RTCD         IFEQ      *BLANKS
-     C                   MOVEL     'Y'           S01499
-     C                   ELSE
-     C                   MOVEL     'N'           S01499
-     C                   ENDIF
-
-      *
-      ** Access Switchable Features file for CFT009
-      *
-     C                   CALL      'AOSARDR0'
-     C                   PARM      *BLANKS       @RTCD
-     C                   PARM      '*VERIFY'     @OPTN
-     C                   PARM      'CFT009'      @SARD
-     C     SCSARD        PARM      SCSARD        DSFDY
-
-     C     @RTCD         IFNE      *BLANKS
-     C     @RTCD         ANDNE     '*NRF   '
-     C     *LOCK         IN        LDA
-     C                   MOVE      '023'         DBASE
-     C                   MOVEL     @SARD         DBKEY
-     C                   MOVEL     'SCSARDPD'    DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-
-     C     @RTCD         IFEQ      *BLANKS
-     C                   MOVEL     'Y'           CFT009
-     C                   ELSE
-     C                   MOVEL     'N'           CFT009
-     C                   ENDIF
-
-      *
-      ** Access Switchable Features file for CFT014
-      *
-     C                   CALL      'AOSARDR0'
-     C                   PARM      *BLANKS       @RTCD
-     C                   PARM      '*VERIFY'     @OPTN
-     C                   PARM      'CFT014'      @SARD
-     C     SCSARD        PARM      SCSARD        DSFDY
-
-     C     @RTCD         IFNE      *BLANKS
-     C     @RTCD         ANDNE     '*NRF   '
-     C     *LOCK         IN        LDA
-     C                   MOVE      '024'         DBASE
-     C                   MOVEL     @SARD         DBKEY
-     C                   MOVEL     'SCSARDPD'    DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-
-     C     @RTCD         IFEQ      *BLANKS
-     C                   MOVEL     'Y'           CFT014
-     C                   ELSE
-     C                   MOVEL     'N'           CFT014
-     C                   ENDIF
-      *
-      ** Access Switchable Features file for CSW122
-      *
-     C                   CALL      'AOSARDR0'
-     C                   PARM      *BLANKS       @RTCD
-     C                   PARM      '*VERIFY'     @OPTN
-     C                   PARM      'CSW122'      @SARD
-     C     SCSARD        PARM      SCSARD        DSFDY
-
-     C     @RTCD         IFNE      *BLANKS
-     C     @RTCD         ANDNE     '*NRF   '
-     C     *LOCK         IN        LDA
-     C                   MOVE      '024'         DBASE
-     C                   MOVEL     @SARD         DBKEY
-     C                   MOVEL     'SCSARDPD'    DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-
-     C     @RTCD         IFEQ      *BLANKS
-     C                   MOVEL     'Y'           CSW122
-     C                   ELSE
-     C                   MOVEL     'N'           CSW122
-     C                   ENDIF
-
      C                   ENDSR
       /EJECT
       *****************************************************************
       *                                                               *
-      * SrRdIncMsg - Read Incoming Messages for MT199                 *
+      * SrRdIncMsg - Read Incoming Messages for MT199, MT299          *
       *                                                               *
       * Called by: Main Procedure                                     *
       *                                                               *
-      * Calls: SrSvPyFld, SRExtract, SrOMSG, SrInitFld                *
+      * Calls: SrExtract103, SRExtract202, SRExtract205, SrOMSG       *
       *                                                               *
       *****************************************************************
 
      C     SrRdIncMsg    BEGSR
 
      C                   EVAL      KFMsgR = PMsgR
-      *
+     C                   EVAL      KFTMsgR = PFTMsgR
+     C                   EVAL      KFTKPRT = PFTKPRT
+     C                   EVAL      WBrCA = PBrCA
+
       ** If CSW122 is switched on, do processing for MT199UC.
-      *
+
      C                   IF        CSW122 = 'Y'
+
+      ** Enter subroutine for different Message Type.
+
+     C                   IF        PMtpy = '103'
      C                   EXSR      SRExtract103
+     C                   EVAL      WGenFlg = 'Y'
+     C                   ELSEIF    PMtpy = '202'
+     C                   EXSR      SRExtract202
+     C                   EVAL      WGenFlg = 'Y'
+     C                   ELSEIF    PMtpy = '205'
+     C                   EXSR      SRExtract205
+     C                   EVAL      WGenFlg = 'Y'
      C                   ENDIF
 
-     C                   EVAL      PGenFlg = 'Y'
+      ** Writes to MGOMSGPD
 
+     C                   IF        WGenFlg = 'Y'
+     C                   EXSR      SrOMSG
+
+      *
+     C                   EVAL      PGenFlg = 'Y'
+      *
+     C                   ENDIF
+      *
+     C                   ENDIF
+
+      *
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       *                                                               *
-      * SrSvCmFld   - Saves common fields from incoming message to    *
-      *               work variables                                  *
+      * SrInitFld   - Initalise non-constant fields                   *
       *                                                               *
       * Called by: SrRdIncMsg                                         *
       *                                                               *
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-     C     SrSvCmFld     BEGSR
+     C     SrInitFld     BEGSR
 
       *
-      ** Use default branch for user if branch not from Payment Transaction
+      ** Set up LDA
       *
-     C                   IF        WBRCA = *BLANKS
-     C                   EVAL      WBrCA = WDFBR
-     C                   ENDIF
+     C     *DTAARA       DEFINE                  LDA
+     C     *LOCK         IN        LDA
+     C                   MOVE      *BLANKS       DBFILE
+     C                   MOVE      *BLANKS       DBKEY
+     C                   MOVEL     'FT000201'    DBPGM
+     C                   MOVE      *BLANKS       DBASE
+     C                   OUT       LDA
+
+      *
+      ** Reset value of Key fields
+      *
+     C                   EVAL      KFMsgR = *ZEROS
+     C                   EVAL      KFMtag = *BLANKS
+
+      *
+      ** Reset variables for storing the final value of tags
+      *
+     C                   EVAL      WTag121Val = *BLANKS
+     C                   EVAL      WTag20Val = *BLANKS
+     C                   EVAL      WTag79L1Val = *BLANKS
+     C                   EVAL      WTag79L2Val = *BLANKS
+     C                   EVAL      WTag79L3Val = *BLANKS
+     C                   EVAL      WTag79L4Val = *BLANKS
+
+      *
+      ** Reset work Variables
+      *
+     C                   EVAL      WTag20a = *BLANKS
+      ** WTag20b not blanked since it is the rundate
+     C                   EVAL      WTag79L3a = *BLANKS
+     C                   EVAL      WTag79L3b = *BLANKS
+
+      *
+      ** Reset variables for writing MGOREFPD
+      *
+     C                   EVAL      WTRNo = *BLANKS
+     C                   EVAL      WTrnId = *BLANKS
+     C                   EVAL      WPyTp = *BLANKS
+     C                   EVAL      WPySt = *BLANKS
+     C                   EVAL      WBnCs = *BLANKS
+     C                   EVAL      WSeCN = *BLANKS
+     C                   EVAL      WBrCA = *BLANKS
+
+      *
+      ** Clear multiple occurrence data structure
+      *
+     C                   CLEAR     *ALL          MULT
+     C                   EVAL      Q = 0
 
      C                   ENDSR
       *****************************************************************
@@ -701,12 +571,419 @@
       *                                                               *
       * Called by: SrRdIncMsg                                         *
       *                                                               *
-      * Calls: SrFmDtTm, SrFAMT                                       *
+      * Calls: None                                                   *
       *                                                               *
       *****************************************************************
 
      C     SrExtract103  BEGSR
 
+     C
+      *
+      ** Get tag 121
+      *
+     C                   EVAL      KFMtag = '121:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag121Val = DTMFLD
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':121:'       MTAG
+     C                   MOVEL     WTag121Val    MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 20
+      *
+     C                   EVAL      Wtag20a = %CHAR(KFMsgR)
+     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)
+     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b + 'A'
+     C                   EVAL      WTRNo = WTag20Val
+
+      *
+      ** If the transaction has no Payment Reference, default tag 20 to MTRN
+      *
+     C                   IF        WTrnId = *BLANKS
+     C                   EVAL      WTrnId = WTRNo
+     C                   ENDIF
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':20:'        MTAG
+     C                   MOVEL     WTag20Val     MFLD
+
+      *
+      ** Get the value of Sender in MEINCRPD.CRMOR(Output)
+      *
+     C     KFMsgR        CHAIN     MEINCRL1
+     C                   IF        %FOUND
+
+     C                   EVAL      WBIC = %SUBST(CRMOR:7:8)
+     C                   EVAL      WBranch = %SUBST(CRMOR:16:3)
+     C                   EVAL      WSender = WBIC + WBranch
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '013'         DBASE
+     C                   MOVEL     'KFMsgR'      DBKEY
+     C                   MOVEL     'MEINCRL1'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 79 Line 1
+      *
+     C                   EXSR      SrGetSeCN
+     C                   EVAL      WTag79L1Val = RsnCode + FldNumber
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':79:'        MTAG
+     C                   MOVEL     WTag79L1Val   MFLD
+
+      *
+      ** Get tag 79 Line 2
+      *
+     C                   EVAL      WTag79L2Val = '/XT99/' + 'MS03/'
+
+      *
+      ** Store tag 79 Line 2; Identified before entering this subroutine
+      *
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L2Val   MFLD
+
+      *
+      ** Get tag 79 Line 3
+      *
+     C                   EVAL      WTag79L3a = '/MREF/'
+     C                   EVAL      WTag79L3b = WTRNo
+     C                   EVAL      WTag79L3Val = WTag79L3a + WTag79L3b
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L3Val   MFLD
+
+      *
+      ** Get tag 70
+      *
+     C                   EVAL      KFMtag = ':70:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag70Val = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':70:'        MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+      *
+      ** Get tag 79 Line 4
+      *
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag70Val
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L4Val   MFLD
+
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SrExtract202- Extract details for MT202                       *
+      *                                                               *
+      * Called by: SrRdIncMsg                                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SrExtract202  BEGSR
+      *
+      ** Check if 202 is COV.
+      *
+     C                   EVAL      KFMtag = '119:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag202COV = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':119:'       MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEIN35L0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+      *
+      ** Mapping for MT202COV
+      *
+     C                   IF        WTag202COV = 'COV'
+      *
+      ** Get tag 121
+      *
+     C                   EVAL      KFMtag = '121:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag121Val = DTMFLD
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':121:'       MTAG
+     C                   MOVEL     WTag121Val    MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 20
+      *
+     C                   EVAL      Wtag20a = %CHAR(KFMsgR)
+     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)
+     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b + 'A'
+     C                   EVAL      WTRNo = WTag20Val
+
+      *
+      ** If the transaction has no Payment Reference, default tag 20 to MTRN
+      *
+     C                   IF        WTrnId = *BLANKS
+     C                   EVAL      WTrnId = WTRNo
+     C                   ENDIF
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':20:'        MTAG
+     C                   MOVEL     WTag20Val     MFLD
+
+      *
+      ** Get tag 79 Line 1
+      *
+     C                   EXSR      SrGetSeCN
+     C                   EVAL      WTag79L1Val = RsnCode + FldNumber
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':79:'        MTAG
+     C                   MOVEL     WTag79L1Val   MFLD
+
+      *
+      ** Get tag 79 Line 2
+      *
+     C                   EVAL      WTag79L2Val = '/XT99/' + 'MS03/'
+
+      *
+      ** Store tag 79 Line 2; Identified before entering this subroutine
+      *
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L2Val   MFLD
+
+      *
+      ** Get tag 79 Line 3
+      *
+     C                   EVAL      WTag79L3a = '/MREF/'
+     C                   EVAL      WTag79L3b = WTRNo
+     C                   EVAL      WTag79L3Val = WTag79L3a + WTag79L3b
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L3Val   MFLD
+
+      *
+      ** Get tag 21
+      *
+     C                   EVAL      KFMtag = ':21:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag70Val = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':21:'        MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+      *
+      ** Get tag 79 Line 4
+      *
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag70Val
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L4Val   MFLD
+
+     C                   ENDIF
+
+      *
+      ** Mapping for MT202
+      *
+     C                   ELSE
+      *
+      ** Get tag 121
+      *
+     C                   EVAL      KFMtag = '121:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag121Val = DTMFLD
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':121:'       MTAG
+     C                   MOVEL     WTag121Val    MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
+      ** Get tag 20
+      *
+     C                   EVAL      Wtag20a = %CHAR(KFMsgR)
+     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)
+     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b + 'A'
+     C                   EVAL      WTRNo = WTag20Val
+
+      *
+      ** If the transaction has no Payment Reference, default tag 20 to MTRN
+      *
+     C                   IF        WTrnId = *BLANKS
+     C                   EVAL      WTrnId = WTRNo
+     C                   ENDIF
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':20:'        MTAG
+     C                   MOVEL     WTag20Val     MFLD
+
+      *
+      ** Get tag 79 Line 1
+      *
+     C                   EXSR      SrGetSeCN
+     C                   EVAL      WTag79L1Val = RsnCode + FldNumber
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':79:'        MTAG
+     C                   MOVEL     WTag79L1Val   MFLD
+
+      *
+      ** Get tag 79 Line 2
+      *
+     C                   EVAL      WTag79L2Val = '/XT99/' + 'MS03/'
+
+      *
+      ** Store tag 79 Line 2; Identified before entering this subroutine
+      *
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L2Val   MFLD
+
+      *
+      ** Get tag 79 Line 3
+      *
+     C                   EVAL      WTag79L3a = '/MREF/'
+     C                   EVAL      WTag79L3b = WTRNo
+     C                   EVAL      WTag79L3Val = WTag79L3a + WTag79L3b
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L3Val   MFLD
+
+      *
+      ** Get tag 21
+      *
+     C                   EVAL      KFMtag = ':21:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag21Val = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':21:'        MTAG
+     C                   MOVEL     WTag21Val     MFLD
+
+      *
+      ** Get tag 79 Line 4
+      *
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag21Val
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L4Val   MFLD
+
+     C                   ENDIF
+      *
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SrExtract205- Extract details for MT205                       *
+      *                                                               *
+      * Called by: SrRdIncMsg                                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     SrExtract205  BEGSR
+      *
+      ** Check if 205 is COV.
+      *
+     C                   EVAL      KFMtag = '119:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag205COV = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':119:'       MTAG
+     C                   MOVEL     WTag70Val     MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '011'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEIN35L0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+      *
+      ** Mapping for MT205COV
+      *
+     C                   IF        WTag205COV = 'COV'
       *
       ** Get tag 121
       *
@@ -784,17 +1061,44 @@
      C                   MOVEL     WTag79L3Val   MFLD
 
       *
-      ** Get tag 70
+      ** Get tag 21
       *
-     C                   EVAL      KFMtag = ':70:'
-     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   EVAL      KFMtag = ':21:'
+     C     KLIncMsg      CHAIN     MEIN35L0
      C                   IF        %FOUND
-     C                   EVAL      WTag70Val = DTMFLD
+     C                   EVAL      WTag21Val = DSMF35
 
      C                   ADD       1             Q
      C     Q             OCCUR     MULT
-     C                   MOVE      ':70:'        MTAG
+     C                   MOVE      ':21:'        MTAG
      C                   MOVEL     WTag70Val     MFLD
+
+      *
+      ** Get tag 79 Line 4
+      *
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag70Val
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L4Val   MFLD
+
+     C                   ENDIF
+
+      *
+      ** Mapping for MT205
+      *
+     C                   ELSE
+      *
+      ** Get tag 121
+      *
+     C                   EVAL      KFMtag = '121:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag121Val = DTMFLD
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':121:'       MTAG
+     C                   MOVEL     WTag121Val    MFLD
 
      C                   ELSE
      C     *LOCK         IN        LDA
@@ -807,30 +1111,382 @@
      C                   ENDIF
 
       *
+      ** Get tag 20
+      *
+     C                   EVAL      Wtag20a = %CHAR(KFMsgR)
+     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)
+     C                   EVAL      WTag20Val = 'P' + WTag20a + WTag20b + 'A'
+     C                   EVAL      WTRNo = WTag20Val
+
+      *
+      ** If the transaction has no Payment Reference, default tag 20 to MTRN
+      *
+     C                   IF        WTrnId = *BLANKS
+     C                   EVAL      WTrnId = WTRNo
+     C                   ENDIF
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':20:'        MTAG
+     C                   MOVEL     WTag20Val     MFLD
+
+      *
+      ** Get tag 79 Line 1
+      *
+     C                   EVAL      WTag79L1Val = RsnCode + FldNumber
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     ':79:'        MTAG
+     C                   MOVEL     WTag79L1Val   MFLD
+
+      *
+      ** Get tag 79 Line 2
+      *
+     C                   EVAL      WTag79L2Val = '/XT99/' + 'MS03/'
+
+      *
+      ** Store tag 79 Line 2; Identified before entering this subroutine
+      *
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L2Val   MFLD
+
+      *
+      ** Get tag 79 Line 3
+      *
+     C                   EVAL      WTag79L3a = '/MREF/'
+     C                   EVAL      WTag79L3b = WTRNo
+     C                   EVAL      WTag79L3Val = WTag79L3a + WTag79L3b
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVEL     WTag79L3Val   MFLD
+
+      *
+      ** Get tag 21
+      *
+     C                   EVAL      KFMtag = ':21:'
+     C     KLIncMsg      CHAIN     MEIN35L0
+     C                   IF        %FOUND
+     C                   EVAL      WTag21Val = DSMF35
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':21:'        MTAG
+     C                   MOVEL     WTag21Val     MFLD
+
+      *
       ** Get tag 79 Line 4
       *
-     C                   EVAL      WTag79L4Val = '/TREF/' + WTag70Val
+     C                   EVAL      WTag79L4Val = '/TREF/' + WTag21Val
      C                   ADD       1             Q
      C     Q             OCCUR     MULT
      C                   MOVEL     WTag79L4Val   MFLD
+
+     C                   ENDIF
+      *
+     C                   ENDIF
 
      C                   ENDSR
       *****************************************************************
      C/EJECT
       *****************************************************************
       *                                                               *
-      *  SrFmDtTm - Format Date and Time for Tag 79 Line 1            *
+      *   SrOMSG - output correctly generated messages                *
       *                                                               *
-      *  Called by: SrExtract103                                      *
+      *   Called by: SrRdIncMsg                                       *
+      *                                                               *
+      *   Calls    : SrWref199, SrWref299                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C     SrOMSG        BEGSR
+
+      ** Write reference record  (PF/MGOREFPD)
+     C                   IF        Pmtpy = '103'
+     C                   EXSR      SrWRef199
+     C                   ELSEIF    Pmtpy = '202' OR Pmtpy = '205'
+     C                   EXSR      SrWRef299
+     C                   ENDIF
+
+      ** Write multiple occurrence data structure to MGOMSGPD
+
+     C                   Z-ADD     1             Q
+     C     Q             OCCUR     MULT
+
+     C     Q             DOWLE     95
+     C     MULT          ANDNE     *BLANKS
+     C                   WRITE     MGOMSGD0                             06
+
+      **  Error on write to PF/MGOMSGPD (message data file)
+
+     C     *IN06         IFEQ      '1'
+     C     *LOCK         IN        LDA
+     C                   MOVE      '019'         DBASE
+     C                   MOVEL     '        '    DBKEY
+     C                   MOVEL     'MGOMSGPD'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   ENDDO
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   SrWREF199 - Write reference record to PF/MGOREFPD (MT199)   *
+      *                                                               *
+      *   Called by: SrOMSG                                           *
+      *                                                               *
+      *   Calls    : None                                             *
+      *                                                               *
+      *****************************************************************
+     C     SrWREF199     BEGSR
+
+     C                   MOVE      *BLANKS       SYTM
+     C                   MOVEL     'FT'          MODI
+     C                   MOVEL     WTRNo         TRNO
+     C                   MOVE      *BLANKS       TRNF
+     C                   MOVE      *BLANKS       TRNM
+     C                   MOVEL     WTrnId        MTRN
+     C                   MOVE      WPyTp         TNTP
+     C                   MOVE      WPySt         SBTP
+     C                   MOVE      *BLANKS       EVTP
+     C                   MOVEL     WSeCN         SECN
+     C                   MOVE      *BLANKS       DECN
+     C                   MOVEL     WReceiver     NWDS
+     C                   MOVEL     WSender       NWSN
+     C                   MOVEL     WBnCs         NWBN
+     C                   MOVEL     'SWIFT'       NWRK
+     C                   MOVE      '199'         MTPY
+     C                   MOVE      'N'           MPRY
+     C                   MOVEL     *BLANKS       LSCC
+     C                   MOVEL     *BLANKS       PTST
+     C                   MOVEL     *BLANKS       CARQ
+     C                   MOVEL     *BLANKS       MPDE
+     C                   MOVEL     @HRDT         HRDT
+     C                   MOVE      WTag20b       MGDE
+     C                   TIME                    MGTM
+     C                   MOVE      BJMRDT        LADT
+     C                   MOVE      MGTM          LATM
+      *
+      ** Set-up Message Generation  Century flag
+      *
+     C                   MOVEL     MGDE          YY
+     C                   IF        YY < 72
+     C                   EVAL      CIND = '2'
+     C                   ELSE
+     C                   EVAL      CIND = '1'
+     C                   ENDIF
+
+     C     MGST          IFEQ      'RSND'
+     C                   MOVE      BJMRDT        RELD
+     C                   MOVE      MGTM          RELT
+     C                   ENDIF
+
+     C                   MOVEL     WTag20b       SVDT
+     C                   MOVEL     WICcy         CCY
+
+     C                   IF        FTM199 = 'H' OR
+     C                             FTM199 = 'A' OR
+     C                             FTM199 = 'T'
+     C                   MOVE      'I'           AORR
+     C                   ELSE
+     C                   MOVE      'D'           AORR
+     C                   ENDIF
+
+      *
+      ** Setup century indicator CINDV for value date SVDT
+      *
+     C     SVDT          IFEQ      *BLANK
+     C                   MOVE      *BLANK        CINDV
+     C                   ELSE
+     C                   MOVEL     SVDT          YY
+     C     YY            IFLT      72
+     C                   MOVE      '2'           CINDV
+     C                   ELSE
+     C                   MOVE      '1'           CINDV
+     C                   ENDIF
+     C                   ENDIF
+
+     C                   MOVEL     *BLANKS       NSNO
+     C                   MOVEL     *BLANKS       SACN
+     C                   MOVEL     *BLANKS       DESI
+
+     C                   MOVEL     *BLANKS       RUSR
+     C                   MOVEL     *BLANKS       RWSN
+     C                   MOVEL     *BLANKS       AMTS
+     C                   MOVEL     *BLANKS       AMTX
+
+      ** Branch details
+
+     C                   MOVE      WBrCA         BRCA
+     C                   MOVE      *BLANKS       OTHB
+
+     C                   MOVE      *BLANKS       NETI
+     C                   MOVE      *BLANKS       DELC
+     C                   MOVE      *BLANKS       DYST
+     C                   MOVE      *BLANKS       RSID
+     C                   MOVE      *BLANKS       MSE1
+     C                   MOVE      *BLANKS       ELIN
+     C                   MOVE      *BLANKS       SSAC
+     C                   MOVE      *BLANKS       MIR
+     C                   MOVE      *BLANKS       TSKS
+     C                   MOVE      *BLANKS       TSKY
+
+     C                   WRITE     MGOREFD0                             05
+
+      ** Error on write to PF/MGOREFPD (message reference file)
+
+     C     *IN05         IFEQ      '1'
+     C     *LOCK         IN        LDA
+     C                   MOVE      '020'         DBASE
+     C                   MOVEL     '       '     DBKEY
+     C                   MOVEL     'MGOREFPD'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   SrWREF299 - Write reference record to PF/MGOREFPD (MT299)   *
+      *                                                               *
+      *   Called by: SrOMSG                                           *
+      *                                                               *
+      *   Calls    : None                                             *
+      *                                                               *
+      *****************************************************************
+     C     SrWREF299     BEGSR
+
+     C                   MOVE      *BLANKS       SYTM
+     C                   MOVEL     'FT'          MODI
+     C                   MOVEL     WTRNo         TRNO
+     C                   MOVE      *BLANKS       TRNF
+     C                   MOVE      *BLANKS       TRNM
+     C                   MOVEL     WTrnId        MTRN
+     C                   MOVE      WPyTp         TNTP
+     C                   MOVE      WPySt         SBTP
+     C                   MOVE      *BLANKS       EVTP
+     C                   MOVEL     WSeCN         SECN
+     C                   MOVE      *BLANKS       DECN
+     C                   MOVEL     WReceiver     NWDS
+     C                   MOVEL     WSender       NWSN
+     C                   MOVEL     WBnCs         NWBN
+     C                   MOVEL     'SWIFT'       NWRK
+     C                   MOVE      '299'         MTPY
+     C                   MOVE      'N'           MPRY
+     C                   MOVEL     *BLANKS       LSCC
+     C                   MOVEL     *BLANKS       PTST
+     C                   MOVEL     *BLANKS       CARQ
+     C                   MOVEL     *BLANKS       MPDE
+     C                   MOVEL     @HRDT         HRDT
+     C                   MOVE      WTag20b       MGDE
+     C                   TIME                    MGTM
+     C                   MOVE      BJMRDT        LADT
+     C                   MOVE      MGTM          LATM
+      *
+      ** Set-up Message Generation  Century flag
+      *
+     C                   MOVEL     MGDE          YY
+     C                   IF        YY < 72
+     C                   EVAL      CIND = '2'
+     C                   ELSE
+     C                   EVAL      CIND = '1'
+     C                   ENDIF
+
+     C     MGST          IFEQ      'RSND'
+     C                   MOVE      BJMRDT        RELD
+     C                   MOVE      MGTM          RELT
+     C                   ENDIF
+
+     C                   MOVEL     WTag20b       SVDT
+     C                   MOVEL     WICcy         CCY
+
+     C                   IF        FTM199 = 'H' OR
+     C                             FTM199 = 'A' OR
+     C                             FTM199 = 'T'
+     C                   MOVE      'I'           AORR
+     C                   ELSE
+     C                   MOVE      'D'           AORR
+     C                   ENDIF
+
+      *
+      ** Setup century indicator CINDV for value date SVDT
+      *
+     C     SVDT          IFEQ      *BLANK
+     C                   MOVE      *BLANK        CINDV
+     C                   ELSE
+     C                   MOVEL     SVDT          YY
+     C     YY            IFLT      72
+     C                   MOVE      '2'           CINDV
+     C                   ELSE
+     C                   MOVE      '1'           CINDV
+     C                   ENDIF
+     C                   ENDIF
+
+     C                   MOVEL     *BLANKS       NSNO
+     C                   MOVEL     *BLANKS       SACN
+     C                   MOVEL     *BLANKS       DESI
+
+     C                   MOVEL     *BLANKS       RUSR
+     C                   MOVEL     *BLANKS       RWSN
+     C                   MOVEL     *BLANKS       AMTS
+     C                   MOVEL     *BLANKS       AMTX
+
+      ** Branch details
+
+     C                   MOVE      WBrCA         BRCA
+     C                   MOVE      *BLANKS       OTHB
+
+     C                   MOVE      *BLANKS       NETI
+     C                   MOVE      *BLANKS       DELC
+     C                   MOVE      *BLANKS       DYST
+     C                   MOVE      *BLANKS       RSID
+     C                   MOVE      *BLANKS       MSE1
+     C                   MOVE      *BLANKS       ELIN
+     C                   MOVE      *BLANKS       SSAC
+     C                   MOVE      *BLANKS       MIR
+     C                   MOVE      *BLANKS       TSKS
+     C                   MOVE      *BLANKS       TSKY
+
+     C                   WRITE     MGOREFD0                             05
+
+      ** Error on write to PF/MGOREFPD (message reference file)
+
+     C     *IN05         IFEQ      '1'
+     C     *LOCK         IN        LDA
+     C                   MOVE      '020'         DBASE
+     C                   MOVEL     '       '     DBKEY
+     C                   MOVEL     'MGOREFPD'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SrGetSeCN - Save Branch Customer from SDBRANCHPD             *
+      *                                                               *
+      *  Called by: SrExtract                                         *
       *                                                               *
       *  Calls    : AOBRCHR0                                          *
       *                                                               *
       *****************************************************************
-     C     SrFmDtTm      BEGSR
+     C     SrGetSeCN     BEGSR
      C                   CALL      'AOBRCHR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
-     C                   PARM      WBrCA         @BRCD
+     C                   PARM      PBrCA         @BRCD
      C     SDBRCH        PARM      SDBRCH        DSSDY
 
       ** Branch record not found - DB Error
@@ -846,92 +1502,7 @@
 
       ** Save the Branch Customer
      C                   EVAL      WSeCN = A8BICN
-
-      ** Get current date from timestamp
-     C                   TIME                    WCurTmst
-     C                   EVALR     WCurTmstC = '000000' + %CHAR(WCurTmst)
-      ** If Tag 79 Line 1 doesn't use current time
-     C                   IF        WCurDTFlg = 'N'
-
-      ** Convert transaction settlement date to YYMMDD
-     C                   CALL      'ZM0060'                             15
-     C                   PARM      PVDT          ZMDAY
-     C                   PARM                    ZMDATE
-
-     C     *IN15         IFEQ      '1'
-     C     *LOCK         IN        LDA
-     C                   MOVE      '017'         DBASE
-     C                   MOVEL     '       '     DBKEY
-     C                   MOVEL     'ZM0060'      DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-     C                   MOVE      ZMDATE        WDate
-
-     C                   EVAL      WTmSt = %CHAR(TMST)
-
-      ** If message is sent on the same day as the transaction, use the transaction's timestamp
-      ** Else default to '0000+0000'
-     C                   IF        WDate = WTag20b
-     C                   EVAL      WTime = %SUBST(WTmSt:12:2) +
-     C                                     %SUBST(WTmSt:15:2)
-
-     C                   IF        A8SIGN <> *BLANKS
-     C                   EVAL      WUTCOffSgn = A8SIGN
-     C                   ENDIF
-     C                   EVALR     WUTCOffset = '0000' + %CHAR(A8TMOF)
-     C                   ENDIF
-      ** Else Tag 79 Line 1 uses current timestamp
-     C                   ELSE
-
-     C                   EVAL      WDate = WTag20b
-     C                   EVAL      WCurTme = %SUBST(WCurTmstC:1:4)
-     C                   EVAL      WTime = WCurTme
-     C                   IF        A8SIGN <> *BLANKS
-     C                   EVAL      WUTCOffSgn = A8SIGN
-     C                   ENDIF
-     C                   EVALR     WUTCOffset = '0000' + %CHAR(A8TMOF)
-
-     C                   ENDIF
-     C                   ENDSR
-      *****************************************************************
-     C/EJECT
-      *****************************************************************
-      *                                                               *
-      *  SrFAmt - Format amount to SWIFT amount format                *
-      *                                                               *
-      *  Called by: SrExtract103                                      *
-      *                                                               *
-      *  Calls    : AOCURRR0, ZM0040                                  *
-      *                                                               *
-      *****************************************************************
-     C     SrFAmt        BEGSR
-
-     C                   MOVE      WICcy         ZCCY
-     C                   MOVE      WIAmnt        ZAMNT
-
-     C                   CALL      'ZM0040'
-     C                   PARM                    ZAMNT
-     C                   PARM                    ZCCY
-     C                   PARM                    ZSAMNT
-     C                   PARM                    ZSCCY
-     C                   PARM      ' '           ZERR
-
-      ** Error - indicate erroneous fields
-
-     C     ZERR          IFEQ      '1'
-     C     *LOCK         IN        LDA
-     C                   MOVE      '018'         DBASE
-     C                   MOVEL     '       '     DBKEY
-     C                   MOVEL     'ZM0040  '    DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ELSE
-     C                   EVAL      WOCcy = ZSCCY
-     C                   EVAL      WOAmnt = ZSAMNT
-     C                   ENDIF
-
-
+      *
      C                   ENDSR
       *****************************************************************
      C/EJECT

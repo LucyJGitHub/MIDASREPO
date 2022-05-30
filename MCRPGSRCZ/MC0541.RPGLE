@@ -29,7 +29,7 @@
       *  MD059975 - No Profit and Loss reported on MC0451P1           *
       *           - include the last movement date in getting the     *
       *             Period End Balance                                *
-      *           - interchange the value of WTBCE and WTSPV          *
+      *           - interchange the value of WTBCE and WTSPV          *
       *           - compare the last movement date to PRUN if not     *
       *             equal use 99999                                   *
       *  MD059964 - Multiple audit reports are being generated.       *

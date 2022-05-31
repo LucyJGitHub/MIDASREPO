@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD054423           Date 11Nov19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD059866           Date 26May22              */
+/*       Prev Amend No. MD054423           Date 11Nov19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CSC058             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27089           Date 08Mar10              */
@@ -40,6 +41,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059866 - FWDRTFE triggers for PB6602 added but not removed*/
+/*                  during COB. Reverse CPB6602 that add triggers for*/
+/*                  FWDRTFE as this is already handled by SCTRIGGER. */
 /*       MD054423 - GOC011501 failed due to GPGDRPPD overflow.       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC058 - Change to CCB016 - Bypass of DBBOB Save            */
@@ -81,8 +85,8 @@
              DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)               /*CSC001*/
              DCL        VAR(&CRT003) TYPE(*LGL) VALUE('0')            /*118513*/
              DCL        VAR(&RTN1) TYPE(*CHAR) LEN(7)                 /*118513*/
-             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*CPB002*/
-             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')      /*CPB002*/
+/**********  DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                        */ /*CPB002 MD059866*/
+/**********  DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')              */ /*CPB002 MD059866*/
              DCL        VAR(&SEQNO) TYPE(*DEC) LEN(10 0)                                  /*CSC011*/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                                     /*CSC011*/
              DCL        VAR(&RCVR) TYPE(*CHAR) LEN(10)                                    /*CSC011*/
@@ -267,17 +271,17 @@ SKIP:                                                                           
 /* */                                                                 /*CSC001*/
 /*/COPY WNCPYSRC,ICIFINIS03                                          */
 
-/* Access PF/SDMMODPD to determine which modules are live */          /*CPB002*/
-             CALL       PGM(AOMMODR0) PARM(&RTCD '*FIRST' &FMT)       /*CPB002*/
-
-             IF         COND(%SST(&FMT 104 1) *EQ 'Y') THEN(DO)       /*CPB002*/
-               ADDPFTRG   FILE(FWDRTFE) TRGTIME(*AFTER) +
-                          TRGEVENT(*INSERT) PGM(PB6602)               /*CPB002*/
-                                                                      /*CPB002*/
-               ADDPFTRG   FILE(FWDRTFE) TRGTIME(*AFTER) +
-                          TRGEVENT(*UPDATE) PGM(PB6602) +
-                          TRGUPDCND(*CHANGE)                          /*CPB002*/
-             ENDDO                                                    /*CPB002*/
+/**Access*PF/SDMMODPD*to*determine*which*modules*are*live**/                     /*CPB002 MD059866*/
+/**********  CALL       PGM(AOMMODR0) PARM(&RTCD '*FIRST' &FMT)               */ /*CPB002 MD059866*/
+/***********/                                                                           /*MD059866*/
+/**********  IF         COND(%SST(&FMT 104 1) *EQ 'Y') THEN(DO)               */ /*CPB002 MD059866*/
+/**********    ADDPFTRG   FILE(FWDRTFE) TRGTIME(*AFTER) +                            */ /*MD059866*/
+/**********               TRGEVENT(*INSERT) PGM(PB6602)                       */ /*CPB002 MD059866*/
+/***********/                                                                    /*CPB002 MD059866*/
+/**********    ADDPFTRG   FILE(FWDRTFE) TRGTIME(*AFTER) +                            */ /*MD059866*/
+/**********               TRGEVENT(*UPDATE) PGM(PB6602) +                            */ /*MD059866*/
+/**********               TRGUPDCND(*CHANGE)                                  */ /*CPB002 MD059866*/
+/**********  ENDDO                                                            */ /*CPB002 MD059866*/
                                                                                         /*MD054423*/
 /** Housekeep physical file GPGDRPPD                               **/                  /*MD054423*/
                                                                                         /*MD054423*/

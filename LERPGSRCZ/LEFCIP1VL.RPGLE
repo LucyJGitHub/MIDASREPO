@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE123             Date 02Nov21               *
-      *  Prev Amend No. MD058307           Date 06Aug21               *
+      *  Last Amend No. MD021652           Date 13May22               *
+      *  Prev Amend No. CLE123             Date 02Nov21               *
+      *                 MD058307           Date 06Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD027065           Date 22Sep20               *
       *                 MD053093           Date 03Sep19               *
@@ -86,6 +87,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021652 - Facility expiry date should be not be earlier than*
+      *             any attached fee against it.                      *
+      *             Introduced new error message LEF0239.             *
       *  CLE123 - Commitment and Outstanding Report by Account Officer*
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to add validation when overline % will      *
@@ -1543,6 +1547,17 @@
      C                   Movel     'LEF0237'     MsgIDXAr(Idx)
      C                   LEAVE
      C                   ENDIF
+      *                                                                                     MD021652
+      ** Expiry date cannot be earlier than the start date of the fee                       MD021652
+      *                                                                                     MD021652
+     C     ZDAYNO        IFLT      FEPSTD                                                   MD021652
+     C                   MOVE      'N'           DDDTEXOK                                   MD021652
+     C                   ADD       1             Idx                                        MD021652
+     C                   MOVEL     'DDDTEX'      FldNamXAr(Idx)                             MD021652
+     C                   MOVEL     'LEF0239'     MsgIDXAr(Idx)                              MD021652
+     C                   LEAVE                                                              MD021652
+     C                   ENDIF                                                              MD021652
+      *                                                                                     MD021652
      C                   ENDIF
       *
      C     K#KY07        READE     LEFEEDL1                               80

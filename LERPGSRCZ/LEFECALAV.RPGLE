@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. 250758             Date 02May22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250758 - If calc method 6 then INT6DY contains the number    *
+      *           of days from ZINTDY.                                *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -271,7 +274,11 @@
      C                   Z-ADD     ENDATE        ZZEND
      C                   MOVE      FECALC        ZZCALC
      C                   EXSR      ZINTDY
+     C     FECALC        IFEQ      6                                                          250758
+     C                   Z-ADD     INT6DY        W#DAYS                                       250758
+     C                   ELSE                                                                 250758
      C                   Z-ADD     ZZINDY        W#DAYS            5 0
+     C                   END                                                                  250758
  
       * Get starting amount from facility history file
  
@@ -347,7 +354,11 @@
      C                   Z-ADD     FADATE        ZZEND
      C                   MOVE      FECALC        ZZCALC
      C                   EXSR      ZINTDY
+     C     FECALC        IFEQ      6                                                          250758
+     C                   Z-ADD     INT6DY        NDAYS                                        250758
+     C                   ELSE                                                                 250758
      C                   Z-ADD     ZZINDY        NDAYS             5 0
+     C                   END                                                                  250758
  
      C     NDAYS         IFGT      0
  

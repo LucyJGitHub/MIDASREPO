@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD049474           Date 02May22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD053295           Date 13Apr19               *
       *                 MD053458           Date 29May19               *
@@ -78,6 +79,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD049474 - Component LERC430 failed due to loan type/subtype *
+      *             not found. Update loan subtype & loan class in    *
+      *             LEPEMGD when subtype change is done for the loan. *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -203,6 +207,10 @@
      F            CLOANHHF                          KIGNORE
      F            CLOANCKF                          KIGNORE
      F            CLOANZ1F                          KIGNORE
+     FLEACT5L0IF  E           K        DISK                                                 MD049474
+     F            LOAMSDHF                          KIGNORE                                 MD049474
+     F            ACTN1DNF                          KIGNORE                                 MD049474
+     F            LOAMSZ1F                          KIGNORE                                 MD049474
      FMKEYHH  O   E                    DISK
      FMKEYDP  O   E                    DISK
      FMKEYZZ  O   E                    DISK
@@ -287,6 +295,10 @@
      I              SLID                            LNSLID
      I              CPAM                            LNCPAM
      I              INTR                            LNINTR                103177
+     ILOAMSDKF                                                                              MD049474
+     I              VDAT                            VDATL                                   MD049474
+     I              SUTP                            SUTPL                                   MD049474
+     I              CLAS                            CLASL                                   MD049474
      I*
      I            DS
      I* DATASTRUCTURE FOR A/C KEY
@@ -967,6 +979,17 @@
      C*
      C           MGN       CASEQ'Y'       MGNEXT
      C                     END
+      *                                                                                     MD049474
+     C           KEYACT    SETLLLOAMSDKF                                                    MD049474
+     C           KEYACT    READELOAMSDKF                 27                                 MD049474
+     C           *IN27     DOWEQ'0'                                                         MD049474
+     C           AMTP      IFEQ 'LS'                                                        MD049474
+     C                     MOVE SUTPL     MDSUTP                                            MD049474
+     C                     MOVE CLASL     MDCLAS                                            MD049474
+     C                     ENDIF                                                            MD049474
+     C           KEYACT    READELOAMSDKF                 27                                 MD049474
+     C                     ENDDO                                                            MD049474
+      *                                                                                     MD049474
      C           *IN25     IFEQ '0'
      C           *IN20     IFEQ '1'
      C                     UPDATLEPEMGDF
@@ -2110,6 +2133,12 @@
      C                     KFLD           BRCA
      C                     KFLD           CNUM
      C                     KFLD           LNRF
+      *                                                                                     MD049474
+      ** Define key list for LEACT5L0                                                       MD049474
+      *                                                                                     MD049474
+     C           KEYACT    KLIST                                                            MD049474
+     C                     KFLD           BRCA                                              MD049474
+     C                     KFLD           LNRF                                              MD049474
      C*
      C* DEFINE FIELDS FOR SAVE OF INTEREST PAYMENT A/C KEY.
      C*

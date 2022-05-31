@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059392           Date 18Jan22               *
-      *  Prev Amend No. MD054922           Date 04Feb20               *
+      *  Last Amend No. AR567938           Date 24May22               *
+      *  Prev Amend No. MD059392           Date 18Jan22               *
+      *                 MD054922           Date 04Feb20               *
       *                 MD055218           Date 11Mar20               *
       *                 MD054662           Date 30Oct19               *
       *                 MD051746           Date 03May19               *
@@ -36,6 +37,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR567938 - GLC001400 job not active after a Holiday. Allow   *
+      *             user to set the next schedule wait time.          *
+      *           - Applied for MD-58475.                             *
       *  MD059392 - Preformance issues. Duplcate messages is now      *
       *             processed here instead of GL001415                *
       *  MD054922 - MT942 messages are not generated.                 *
@@ -504,6 +508,11 @@
      C                   EVAL      PWaitTime = MDMRPD * 60
      C                   ENDSL
 
+     C                   ELSE                                                               AR567938
+      *                                                                                     AR567938
+      ** Use the Wait Time in Production Monitor file                                       AR567938
+     C                   EVAL      PWaitTime = MDWATM * 60                                  AR567938
+      *                                                                                     AR567938
      C                   ENDIF
 
      C                   UNLOCK    GLMR94L5

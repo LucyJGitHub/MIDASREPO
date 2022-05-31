@@ -64,7 +64,7 @@
       *  MD039972 - Incorrect has totalling when closing/reversing a  *
       *             facility where FAMT is negative. Fix is to take   *
       *             absolute value of FAMT field.                     *
-      *           - Applied for MD-59999                              *
+      *           - Applied for MD059999                              *
       *  MD059067 - LEC000058 00001 failed during COB. Introduce new  *
       *             trailer file for aggregate facilities.            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

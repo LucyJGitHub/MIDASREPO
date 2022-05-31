@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250595             Date 25Jan22               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. 241044             Date 17May22               *
+      *  Prev Amend No. 250595             Date 25Jan22               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  241044 - Applied fix 238333.  Removed BUG2493.               *
       *  250595 - No need to open file DL1640P1.                      *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
@@ -426,6 +428,7 @@
       *
       ** Base rate
       ** ---------
+     C                   MOVE      *BLANKS       PNU150                                       241044
      C                   MOVE      L1BSRT        PNU150
      C                   CALL      'ZSEDIT'
      C                   PARM                    PNU150

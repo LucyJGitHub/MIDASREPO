@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058307           Date 06Aug21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. CLE125             Date 02Nov21               *
+      *  Prev Amend No. MD058307           Date 06Aug21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD054876           Date 26Aug20               *
@@ -104,6 +105,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE125 - Amendment to LE Authorization Rules                 *
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to use larger workfield for FA_FAMT and     *
       *             CAF_FAMT.                                         *
@@ -1622,6 +1624,19 @@
       ** amend users
       ***  Unless CLE056 is enabled and not day of input and not last amender                 CLE056
 
+     C     CLE125        IFEQ      'Y'                                                        CLE125
+      *                                                                                       CLE125
+      ** If transaction is being authorised by the same user that amended it,                 CLE125
+      ** disallow authorisation                                                               CLE125
+      *                                                                                       CLE125
+     C     PSUSER        IFEQ      CAM_AUSR                                                   CLE125
+     C                   ADD       1             Idx                                          CLE125
+     C                   MOVEL     'LEA1023'     MsgIdArr(Idx)                                CLE125
+     C                   EVAL      FldNameArr(Idx) = 'DDACTN'                                 CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
+     C                   ELSE                                                                 CLE125
+      *                                                                                       CLE125
      C/COPY WNCPYSRC,LELOAMV023
       *
       * If system value CLAuthORED = 'Y' and last amend date is later than                    240968
@@ -1665,6 +1680,7 @@
      C                   ENDIF                                                                240968
 
      C/COPY WNCPYSRC,LELOAMV024
+     C                   ENDIF                                                                CLE125
       *
       ** Status of loan must be complete or requiring re-authorisation
      C     CAM_ASTS      IFNE      'C'
@@ -6489,6 +6505,26 @@
      C                   IF        PRTCD = *BLANKS                                            CLE158
      C                   EVAL      CLE158 = 'Y'                                               CLE158
      C                   ENDIF                                                                CLE158
+      *                                                                                       CLE125
+      ** Check if Amendment to LE Authorization Rules (CLE125) is ON                          CLE125
+      *                                                                                       CLE125
+     C                   MOVE      'N'           CLE125            1                          CLE125
+     C                   CALLB     'AOSARDR0'                                                 CLE125
+     C                   PARM      *BLANKS       @RTCD                                        CLE125
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE125
+     C                   PARM      'CLE125'      @SARD                                        CLE125
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE125
+      *                                                                                       CLE125
+     C                   IF        @RTCD <> *BLANKS  AND  @RTCD <> '*NRF   '                  CLE125
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CLE125
+     C                   EVAL      DBKey  = 'CLE125'                                          CLE125
+     C                   EVAL      DBase  = 911                                               CLE125
+     C                   EXSR      *PSSR                                                      CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
+     C                   IF        @RTCD = *BLANKS                                            CLE125
+     C                   EVAL      CLE125 = 'Y'                                               CLE125
+     C                   ENDIF                                                                CLE125
       *                                                                                       240968
       ***  Access bank details                                                                240968
       *                                                                                       240968

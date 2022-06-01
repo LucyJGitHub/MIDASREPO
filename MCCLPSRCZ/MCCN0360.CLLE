@@ -16,10 +16,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. CGL057 *Create     Date 02Nov21              */
+/*       Last Amend No. MD060002           Date 31May22              */
+/*       Prev Amend No. CGL057 *Create     Date 02Nov21              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060002 - Incorrect spot rate used for  the increased      */
+/*                  balance on I/E account                           */
+/*                - Make a back-up copy of MCBLEXPD before updating  */
+/*                  to the new balance                               */
 /*       CGL057 - Posting of Profit and Loss to Multiple Retained    */
 /*                Earnings Accounts                                  */
 /*                                                                   */
@@ -167,7 +172,13 @@
              GOTO       CMDLBL(READ)
 
 /* If EOF condition */
- EOF:        GOTO       CMDLBL(END)
+/***EOF:        GOTO       CMDLBL(END)                                               */ /*MD060002*/
+/** Make a backup of MCBLEXPD to be used in Spot Revaluation Report                  */ /*MD060002*/
+ EOF:        CPYF       FROMFILE(MCBLEXPD) TOFILE(MCBLE2PD) +
+                          MBROPT(*REPLACE)                                              /*MD060002*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                          EXEC(CLRPFM FILE(MCBLE2PD))                                   /*MD060002*/
+             GOTO       CMDLBL(END)
 /**/
 /* Abnormal Termination Processing */
 /**/

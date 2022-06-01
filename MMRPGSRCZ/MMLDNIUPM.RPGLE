@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. AR690814           Date 31May22               *
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
       *                 CER050             Date 16Jun19               *
@@ -115,6 +116,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR690814 - Unable to authorise Internal Funding Deals in WIP *
+      *             Set ID,IL deals as auto authorise                 *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -692,6 +695,10 @@
      C     IKMTYP        ANDEQ     'IL'                                                       CAP042
      C     CAP042        OREQ      'Y'                                                        CAP042
      C     IKMTYP        ANDEQ     'ID'                                                       CAP042
+     C     IKMTYP        OREQ      'IL'                                                     AR690814
+     C     IKAUTH        ANDEQ     'Y'                                                      AR690814
+     C     IKMTYP        OREQ      'ID'                                                     AR690814
+     C     IKAUTH        ANDEQ     'Y'                                                      AR690814
      C                   MOVE      'N'           BNMMAU                         CAP051
      C                   MOVE      'N'           BNMMRA                         CAP051
      C                   ELSE                                                   CAP051

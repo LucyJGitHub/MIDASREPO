@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD051713           Date 08Sep18               *
+      *  Last Amend No. 241044             Date 17May22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD051713           Date 08Sep18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -57,6 +58,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  241044 - Applied fix 217509.
+      *  217509 - Recalculate the number of applicable days when a    *
+      *           rate record is amended, inserted or deleted.  No    *
+      *           need to check for total number of applicable days   *
+      *           as the system calculates it.                        *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD051713 - Incorrect rates are displayed on OIS Compounding  *
       *             Interest Rate Enquiry screen.(Recompile)          *
@@ -1000,9 +1006,9 @@
       *
       ** Clear Error Message queue
       *
-     C     WAPPD         IFNE      'N'                                                        214440
+     C*****WAPPD*        IFNE      'N'                                                 214440 217509
      C                   EXSR      SRCLRM
-     C                   ENDIF                                                                214440
+     C**********         ENDIF                                                         214440 217509
       *
       ** Clear Subfile
       *
@@ -1104,9 +1110,9 @@
      C     *IN12         WHENEQ    '1'
      C                   MOVE      'N'           WVALD
       *
-     C     WAPPD         IFNE      'N'                                                        214440
+     C*****WAPPD*        IFNE      'N'                                                 214440 217509
      C                   MOVE      'Y'           WRELOD
-     C                   ENDIF                                                                214440
+     C**********         ENDIF                                                         214440 217509
       *
       ** If Rollup requested
       *
@@ -1120,11 +1126,11 @@
       *                                                                                       214440
       ***  Applicable Days do not match up, send error message.                               214440
       *                                                                                       214440
-     C     WAPPD         IFEQ      'N'                                                        214440
-     C                   MOVEL     'MMA1252'     ZAMSID                                       214440
-     C                   EXSR      SRMSGQ                                                     214440
-     C                   ENDIF                                                                214440
-      *                                                                                       214440
+     C*****WAPPD         IFEQ      'N'                                                 214440 217509
+     C**********         MOVEL     'MMA1252'     ZAMSID                                214440 217509
+     C**********         EXSR      SRMSGQ                                              214440 217509
+     C**********         ENDIF                                                         214440 217509
+      **********                                                                       214440 217509
      C                   ENDDO
       *
      C                   ELSE
@@ -1329,9 +1335,9 @@
      C**********         MOVE      '1'           *IN10                                 214440 224925
      C                   MOVE      '1'           *IN31
       *                                                                                       214440
-     C     WAPPD         IFEQ      'N'                                                        214440
+     C*****WAPPD         IFEQ      'N'                                                 214440 217509
      C                   MOVE      '1'           *IN35                                        214440
-     C                   ENDIF                                                                214440
+     C**********         ENDIF                                                         214440 217509
       *
      C                   EXFMT     DL1641C0
       *
@@ -1444,7 +1450,7 @@
      C                   PARM      'N'           PAMEND            1
      C                   PARM      A6FXDY        FXDY1             1 0                        204923
      C                   PARM      WDATE         PDATE             5 0                        204923
-     C                   PARM                    WAPPD             1                          214440
+     C**********         PARM                    WAPPD             1                   214440 217509
       *
      C     *IN60         IFEQ      '1'
       *
@@ -1460,9 +1466,9 @@
       *                                                                                       214440
       ***  Applicable Days do not match up.                                                   214440
       *                                                                                       214440
-     C     WAPPD         IFEQ      'N'                                                        214440
-     C                   MOVE      'Y'           WRELOD                                       214440
-     C                   ELSE                                                                 214440
+     C*****WAPPD         IFEQ      'N'                                                 214440 217509
+     C**********         MOVE      'Y'           WRELOD                                214440 217509
+     C**********         ELSE                                                          214440 217509
       *
       ** No Amendments, so redisplay the original screen.
       *
@@ -1481,7 +1487,7 @@
       *
      C                   ENDIF
       *                                                                                       214440
-     C                   ENDIF                                                                214440
+     C**********         ENDIF                                                         214440 217509
       *
      C                   ENDSR
       *
@@ -1508,7 +1514,7 @@
      C                   PARM      'I'           PAMEND                                       214440
      C                   PARM      A6FXDY        FXDY1                                        214440
      C                   PARM      WDATE         PDATE                                        214440
-     C                   PARM                    WAPPD                                        214440
+     C**********         PARM                    WAPPD                                 214440 217509
       *                                                                                       214440
      C     *IN60         IFEQ      '1'                                                        214440
       *                                                                                       214440
@@ -1524,9 +1530,9 @@
       *                                                                                       214440
       **  Applicable Days do not match up.                                                    214440
       *                                                                                       214440
-     C     WAPPD         IFEQ      'N'                                                        214440
-     C                   MOVE      'Y'           WRELOD                                       214440
-     C                   ELSE                                                                 214440
+     C*****WAPPD         IFEQ      'N'                                                 214440 217509
+     C**********         MOVE      'Y'           WRELOD                                214440 217509
+     C**********         ELSE                                                          214440 217509
       *                                                                                       214440
       **  No Amendments, so redisplay the original screen.                                    214440
       *                                                                                       214440
@@ -1545,7 +1551,7 @@
       *                                                                                       214440
      C                   ENDIF                                                                214440
       *                                                                                       214440
-     C                   ENDIF                                                                214440
+     C**********         ENDIF                                                         214440 217509
       *                                                                                       214440
      C                   ENDSR                                                                214440
       *                                                                                       214440
@@ -1572,7 +1578,7 @@
      C                   PARM      'D'           PAMEND                                       214440
      C                   PARM      A6FXDY        FXDY1                                        214440
      C                   PARM      WDATE         PDATE                                        214440
-     C                   PARM                    WAPPD                                        214440
+     C**********         PARM                    WAPPD                                 214440 217509
       *                                                                                       214440
      C     *IN60         IFEQ      '1'                                                        214440
       *                                                                                       214440
@@ -1588,9 +1594,9 @@
       *                                                                                       214440
       **  Applicable Days do not match up.                                                    214440
       *                                                                                       214440
-     C     WAPPD         IFEQ      'N'                                                        214440
-     C                   MOVE      'Y'           WRELOD                                       214440
-     C                   ELSE                                                                 214440
+     C*****WAPPD         IFEQ      'N'                                                 214440 217509
+     C**********         MOVE      'Y'           WRELOD                                214440 217509
+     C**********         ELSE                                                          214440 217509
       *                                                                                       214440
       **  No Amendments, so redisplay the original screen.                                    214440
       *                                                                                       214440
@@ -1609,7 +1615,7 @@
       *                                                                                       214440
      C                   ENDIF                                                                214440
       *                                                                                       214440
-     C                   ENDIF                                                                214440
+     C**********         ENDIF                                                         214440 217509
       *                                                                                       214440
      C                   ENDSR                                                                214440
       *                                                                                       214440

@@ -18,6 +18,7 @@
       *                                                               *
       *  Last Amend No. MD034146           Date 17May22               *
       *  Prev Amend No. AR928430           Date 17May22               *
+      *                 CLE125             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD039655           Date 03Sep19               *
@@ -74,6 +75,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE125 - Amendment to LE Authorization Rules                 *
       *  MD034146 - Include risk and sub partipant on list of facility*
       *             to check for existing loan.                       *
       *  AR928430 - Do not allow closure/reversal of facility when    *
@@ -922,6 +924,21 @@
      C     @AUTHO        ANDEQ     'Y'                                                        CAP185
      C     @TYPE         ANDEQ     '1'                                                        CAP185
       *                                                                                       CAP185
+     C     CLE125        IFEQ      'Y'                                                        CLE125
+      *                                                                                       CLE125
+      ** If transaction is being authorised by the same user that amended it,                 CLE125
+      ** disallow authorisation                                                               CLE125
+      *                                                                                       CLE125
+     C     PSUSER        IFEQ      FC_AUSR                                                    CLE125
+     C                   MOVEL     'N'           DDACTNOK                                     CLE125
+     C                   ADD       1             IX                                           CLE125
+     C                   MOVEL     'DDACTN'      FLDNAMEARR(IX)                               CLE125
+     C                   MOVEL     'LEF0112'     MSGIDARR(IX)                                 CLE125
+     C                   GOTO      EVALAX                                                     CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
+     C                   ELSE                                                                 CLE125
+      *                                                                                       CLE125
       * If system value CLAuthORED = 'Y' and last amend date is later than                    240968
       * original entry date then allow authorise user to be same as original insert user      240968
       *                                                                                       240968
@@ -963,6 +980,7 @@
      C                   ENDIF                                                                CLE056
      C                   ENDIF
      C                   ENDIF                                                                240968
+     C                   ENDIF                                                                CLE125
      C                   ENDIF                                                                CAP185
 
       **  Check if facility is a tranche.  If so, authorisation is not
@@ -2395,6 +2413,26 @@
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
       *                                                                                       CAP185
+      ** Check if Amendment to LE Authorization Rules (CLE125) is ON                          CLE125
+      *                                                                                       CLE125
+     C                   MOVE      'N'           CLE125            1                          CLE125
+     C                   CALLB     'AOSARDR0'                                                 CLE125
+     C                   PARM      *BLANKS       @RTCD                                        CLE125
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE125
+     C                   PARM      'CLE125'      @SARD                                        CLE125
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE125
+      *                                                                                       CLE125
+     C                   IF        @RTCD <> *BLANKS  AND  @RTCD <> '*NRF   '                  CLE125
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CLE125
+     C                   EVAL      DBKey  = 'CLE125'                                          CLE125
+     C                   EVAL      DBase  = 10                                                CLE125
+     C                   EXSR      *PSSR                                                      CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
+     C                   IF        @RTCD = *BLANKS                                            CLE125
+     C                   EVAL      CLE125 = 'Y'                                               CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
      C                   ENDSR
       *****************************************************************
       /EJECT

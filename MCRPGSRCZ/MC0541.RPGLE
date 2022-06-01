@@ -20,12 +20,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059975           Date 19May22               *
-      *  Prev Amend No. MD059964           Date 18May22               *
+      *  Last Amend No. MD060002           Date 31May22               *
+      *  Prev Amend No. MD059975           Date 19May22               *
+      *                 MD059964           Date 18May22               *
       *                 CGL057  *Create    Date 02Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060002 - Incorrect spot rate used for  the increased       *
+      *             balance on I/E account                            *
+      *           - use MCBLE2L1 file to get the posting amount to    *
+      *             be used in calculation of the increased bal       *
       *  MD059975 - No Profit and Loss reported on MC0451P1           *
       *           - include the last movement date in getting the     *
       *             Period End Balance                                *
@@ -44,6 +49,9 @@
      FMCSRRPOQ  IF   E           K DISK    INFSR(*PSSR)
       **  Management A/c Spot Trade Accounts
       *
+     FMCBLE2L1  IF   E           K DISK    INFSR(*PSSR)                                     MD060002
+      **  Midas MC FX & IN/EX A/c Balances                                                  MD060002
+      *                                                                                     MD060002
      FMC0541AU  O    E             PRINTER INFDS(SPOOLU)
      F                                     USROPN
       **  Spot Revaluation Audit Report
@@ -105,6 +113,13 @@
       *
       /SPACE 3
      D PLMDT           S              5S 0                                                  MD059975
+     D WEQUI           S             15  0                                                  MD060002
+     D WInbal          S             15  0                                                  MD060002
+     D WPrBal          S             15  0                                                  MD060002
+     D WACSQ           S              2S 0                                                  MD060002
+     D WACOD           S             10S 0                                                  MD060002
+
+
       *
      D*/COPY ZSRSRC,ZFRPEDZ2
      D                 DS
@@ -287,6 +302,17 @@
       *                                                                                     MD059975
      C     *DTAARA       DEFINE                  JNSTAT                                     MD059975
      C                   IN        JNSTAT                                                   MD059975
+      *                                                                                     MD060002
+      **   KList for FX & IN/EX A/c Balances                                                MD060002
+      *                                                                                     MD060002
+     C     KBLEX         KLIST                                                              MD060002
+     C                   KFLD                    SRBRCD                                     MD060002
+     C                   KFLD                    SRCUST                                     MD060002
+     C                   KFLD                    SRCYCD                                     MD060002
+     C                   KFLD                    WACSQ                                      MD060002
+     C                   KFLD                    WACOD                                      MD060002
+     C                   KFLD                    SRPCCD                                     MD060002
+     C                   KFLD                    SRLMDT                                     MD060002
       *
       **  System level requested.
       *
@@ -371,6 +397,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                     MD060002
+      **  Get the Spot Equivalent Amount                                                    MD060002
+      *                                                                                     MD060002
+     C                   EXSR      SREQUI                                                   MD060002
       *
       **  Compute for 'Revaluation P&L'
       *
@@ -1147,6 +1177,77 @@
      C*
       *****************************************************************
       * End of /COPY ZFRPEDZ3                                         *
-     C********************************************************************
+     C*****************************************************************
+      *****************************************************************                     MD060002
+      /TITLE SR/SREQUI                                                                      MD060002
+      *****************************************************************                     MD060002
+      *                                                               *                     MD060002
+      *  SREQUI - Subroutine to Calculate the Spot Equivalent         *                     MD060002
+      *                                                               *                     MD060002
+      *  Called By:  SRPROC - Subroutine to Process Spot Revaluations *                     MD060002
+      *  Calls    :  None                                             *                     MD060002
+      *                                                               *                     MD060002
+      *****************************************************************                     MD060002
+      *                                                                                     MD060002
+     C     SREQUI        BEGSR                                                              MD060002
+      *                                                                                     MD060002
+      ** Chain to MCBLE2L1 to get the Prev Closing Balances using the last movement date    MD060002
+      ** If record found it means there is account movement                                 MD060002
+      *                                                                                     MD060002
+     C                   MOVE      SRACSN        WACSQ                                      MD060002
+     C                   MOVE      SRACCD        WACOD                                      MD060002
+     C     KBLEX         CHAIN     MCBLE2L1                                                 MD060002
+     C                   IF        %FOUND(MCBLE2L1)                                         MD060002
+      *                                                                                     MD060002
+      ** Get Incoming balance (Position - Posting Amount)                                   MD060002
+      *                                                                                     MD060002
+     C                   EVAL      WInBal = SREPCB - PAMT                                   MD060002
+     C                   IF        WInBal <> 0                                              MD060002
+      *                                                                                     MD060002
+      **  Call GL0765 to convert the Preevious Balance into Base Ccy                        MD060002
+      *                                                                                     MD060002
+     C                   CALL      'GL0765'                                                 MD060002
+     C                   PARM      *BLANKS       PRTCD                                      MD060002
+     C                   PARM      SRCYCD        PCYCD                                      MD060002
+     C                   PARM      BJCYCD        PBCCY                                      MD060002
+     C                   PARM      PRUN          PDYNB                                      MD060002
+     C     WEQUI         PARM      PAMT          PAMNT                                      MD060002
+      *                                                                                     MD060002
+      **  Handle database error                                                             MD060002
+      *                                                                                     MD060002
+     C     PRTCD         IFNE      *BLANKS                                                  MD060002
+     C     *LOCK         IN        LDA                                                      MD060002
+     C                   MOVEL     'See Dump'    DBFILE                                     MD060002
+     C                   Z-ADD     5             DBASE                                      MD060002
+     C                   MOVEL     'GL0765'      DBKEY                                      MD060002
+     C                   OUT       LDA                                                      MD060002
+     C                   EXSR      *PSSR                                                    MD060002
+     C                   ENDIF                                                              MD060002
+      *                                                                                     MD060002
+      **  Call GL0765 to convert the Period End Balance into Base Ccy                       MD060002
+      *                                                                                     MD060002
+     C                   CALL      'GL0765'                                                 MD060002
+     C                   PARM      *BLANKS       PRTCD                                      MD060002
+     C                   PARM      SRCYCD        PCYCD                                      MD060002
+     C                   PARM      BJCYCD        PBCCY                                      MD060002
+     C                   PARM      SRLMDT        PDYNB                                      MD060002
+     C     WPRBAL        PARM      WINBAL        PAMNT                                      MD060002
+      *                                                                                     MD060002
+      **  Handle database error                                                             MD060002
+      *                                                                                     MD060002
+     C     PRTCD         IFNE      *BLANKS                                                  MD060002
+     C     *LOCK         IN        LDA                                                      MD060002
+     C                   MOVEL     'See Dump'    DBFILE                                     MD060002
+     C                   Z-ADD     5             DBASE                                      MD060002
+     C                   MOVEL     'GL0765'      DBKEY                                      MD060002
+     C                   OUT       LDA                                                      MD060002
+     C                   EXSR      *PSSR                                                    MD060002
+     C                   ENDIF                                                              MD060002
+      *                                                                                     MD060002
+     C                   EVAL      WEQUI += WPrBal                                          MD060002
+     C                   EVAL      WSPEQ = WEQUI                                            MD060002
+     C                   ENDIF                                                              MD060002
+     C                   ENDIF                                                              MD060002
+     C                   ENDSR                                                              MD060002
 **  CPY@
 (c) Finastra International Limited 2021

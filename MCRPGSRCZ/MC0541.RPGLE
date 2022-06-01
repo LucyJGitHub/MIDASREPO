@@ -20,11 +20,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059964           Date 18May22               *
-      *  Prev Amend No. CGL057  *Create    Date 02Nov21               *
+      *  Last Amend No. MD059975           Date 19May22               *
+      *  Prev Amend No. MD059964           Date 18May22               *
+      *                 CGL057  *Create    Date 02Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059975 - No Profit and Loss reported on MC0451P1           *
+      *           - include the last movement date in getting the     *
+      *             Period End Balance                                *
+      *           - interchange the value of WTBCE and WTSPV          *
+      *           - compare the last movement date to PRUN if not     *
+      *             equal use 99999                                   *
       *  MD059964 - Multiple audit reports are being generated.       *
       *           - include the Spot Trade A/C code in the audit      *
       *             header even if no details to report               *
@@ -97,6 +104,7 @@
      D ZS2             S              1    DIM(22)
       *
       /SPACE 3
+     D PLMDT           S              5S 0                                                  MD059975
       *
      D*/COPY ZSRSRC,ZFRPEDZ2
      D                 DS
@@ -128,6 +136,9 @@
       *
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
+      ** Retrieve Previous Run date                                                         MD059975
+     D JNSTAT        E DS                  EXTNAME(JNSTAT)                                  MD059975
+      *                                                                                     MD059975
       **  Data Area giving Installation Control Details
       *
      D SPOOL1          DS
@@ -271,6 +282,11 @@
      C                   ELSE
      C                   MOVE      *OFF          *IN37
      C                   ENDIF
+      *                                                                                     MD059975
+      **   Access JNSTAT for previous run date                                              MD059975
+      *                                                                                     MD059975
+     C     *DTAARA       DEFINE                  JNSTAT                                     MD059975
+     C                   IN        JNSTAT                                                   MD059975
       *
       **  System level requested.
       *
@@ -325,6 +341,15 @@
      C                   MOVE      SRCYNM        WSVNM            14
      C                   Z-ADD     SRNBDP        WNBDP             1 0
      C                   Z-ADD     SRSPRT        WSVRT            13 8
+      *                                                                                     MD059975
+      **  Compare the last movement date (SRLMDT) to previous run date in JNSTAT            MD059975
+      **  if PRUN is equal to last movement date use it else use 99999                      MD059975
+      *                                                                                     MD059975
+     C     SRLMDT        IFNE      PRUN                                                     MD059975
+     C                   EVAL      PLMDT = 99999                                            MD059975
+     C                   ELSE                                                               MD059975
+     C                   EVAL      PLMDT = SRLMDT                                           MD059975
+     C                   ENDIF                                                              MD059975
       *
       **  Call GL0765 to convert the Period End Balance into Base Ccy
       *
@@ -332,7 +357,8 @@
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      SRCYCD        PCYCD             3
      C                   PARM      BJCYCD        PBCCY             3
-     C                   PARM      99999         PDYNB             5 0
+     C**********         PARM      99999         PDYNB             5 0                      MD059975
+     C                   PARM      PLMDT         PDYNB             5 0                      MD059975
      C     WSPEQ         PARM      SREPCB        PAMNT            19 0
       *
       **  Handle database error
@@ -354,8 +380,10 @@
       **  equivalent, and revaluation P&L.
       *
      C                   ADD       SREPCB        WTSPT
-     C                   ADD       SRBCEQ        WTBCE
-     C                   ADD       WSPEQ         WTSPV
+     C**********         ADD       SRBCEQ        WTBCE                                      MD059975
+     C**********         ADD       WSPEQ         WTSPV                                      MD059975
+     C                   ADD       WSPEQ         WTBCE                                      MD059975
+     C                   ADD       SRBCEQ        WTSPV                                      MD059975
      C                   ADD       WRVPL         WTPLO
       *
       **  Setup report details
@@ -380,14 +408,16 @@
       *
       **  Format Base Currency Equivalent
       *
-     C                   Z-ADD     SRBCEQ        ZFLD15
+     C**********         Z-ADD     SRBCEQ        ZFLD15                                     MD059975
+     C                   Z-ADD     WSPEQ         ZFLD15                                     MD059975
      C                   Z-ADD     BCNBDP        ZDECS
      C                   EXSR      ZFRPED
      C                   MOVE      ZOUT22        RBCEQ
       *
       **  Format Spot Value/Spot Trade Equivalent
       *
-     C                   Z-ADD     WSPEQ         ZFLD15
+     C**********         Z-ADD     WSPEQ         ZFLD15                                     MD059975
+     C                   Z-ADD     SRBCEQ        ZFLD15                                     MD059975
      C                   EXSR      ZFRPED
      C                   MOVE      ZOUT22        RSPVL
       *

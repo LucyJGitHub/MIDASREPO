@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059067           Date 27Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD039972           Date 26May22               *
+      *  Prev Amend No. MD059067           Date 27Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031337           Date 25Feb15               *
@@ -60,6 +61,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039972 - Incorrect has totalling when closing/reversing a  *
+      *             facility where FAMT is negative. Fix is to take   *
+      *             absolute value of FAMT field.                     *
+      *           - Applied for MD059999                              *
       *  MD059067 - LEC000058 00001 failed during COB. Introduce new  *
       *             trailer file for aggregate facilities.            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1321,6 +1326,10 @@
      C                   SUB       2             NLRA
       *
       ** Set up amount fields
+      *                                                                                     MD039972
+     C     W#SFAMT       IFLT      0                                                        MD039972
+     C                   Z-SUB     W#SFAMT       W#SFAMT                                    MD039972
+     C                   ENDIF                                                              MD039972
      C     W#SFAMT       DIV       1000          ZZAMT            15 3
       *
      C                   Z-ADD     VRDF          ZZTOTI

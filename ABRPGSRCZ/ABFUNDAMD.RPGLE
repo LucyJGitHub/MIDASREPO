@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058567           Date 12Aug21               *
-      *  Prev Amend No. MD058419           Date 05Jul21               *
+      *  Last Amend No. MD059957           Date 26May22               *
+      *  Prev Amend No. MD058567           Date 12Aug21               *
+      *                 MD058419           Date 05Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1083027          Date 31Jan13               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059957 - SME when trying to amend FUND deal.               *
       *  MD058567 - Error message is displayed when user authorise    *
       *             a FUND Backward Looking rate                      *
       *  MD058419 - Error in the MM Maintenance Screen.               *
@@ -589,8 +591,16 @@
       *                                                                                       CDL102
       ** Lookback Days                                                                        CDL102
       *                                                                                       CDL102
+     C                   EVAL      Num1 = 0                                                 MD059957
+     C                   IF        DDLBDY <> *BLANKS                                        MD059957
      C                   EVAL      Num1 = %INT(DDLBDY)                                      MD058567
+     C                   ENDIF                                                              MD059957
+      *                                                                                     MD059957
+     C                   EVAL      Num2 = 0                                                 MD059957
+     C                   IF        @DDLBDY <> *BLANKS                                       MD059957
      C                   EVAL      Num2 = %INT(@DDLBDY)                                     MD058567
+     C                   ENDIF                                                              MD059957
+      *                                                                                     MD059957
      C     DDLBDY        IFNE      *BLANKS                                                    CDL102
      C*****DDLBDY        IFNE      @DDLBDY                                           CDL102 MD058567
      C     Num1          IFNE      Num2                                                     MD058567
@@ -605,8 +615,16 @@
       *                                                                                       CDL102
       ** Lockout Days                                                                         CDL102
       *                                                                                       CDL102
+     C                   EVAL      Num1 = 0                                                 MD059957
+     C                   IF        DDLODY <> *BLANKS                                        MD059957
      C                   EVAL      Num1 = %INT(DDLODY)                                      MD058567
+     C                   ENDIF                                                              MD059957
+      *                                                                                     MD059957
+     C                   EVAL      Num2 = 0                                                 MD059957
+     C                   IF        @DDLODY <> *BLANKS                                       MD059957
      C                   EVAL      Num2 = %INT(@DDLODY)                                     MD058567
+     C                   ENDIF                                                              MD059957
+      *                                                                                     MD059957
      C     DDLODY        IFNE      *BLANKS                                                    CDL102
      C*****DDLODY        IFNE      @DDLODY                                           CDL102 MD058567
      C     Num1          IFNE      Num2                                                     MD058567
@@ -632,8 +650,16 @@
       *                                                                                       CDL102
       ** Rate Rounding Decimal Places                                                         CDL102
       *                                                                                       CDL102
+     C                   EVAL      Num1 = 0                                                 MD059957
+     C                   IF        DDRRDP <> *BLANKS                                        MD059957
      C                   EVAL      Num1 = %INT(DDRRDP)                                      MD058567
+     C                   ENDIF                                                              MD059957
+      *                                                                                     MD059957
+     C                   EVAL      Num2 = 0                                                 MD059957
+     C                   IF        @DDRRDP <> *BLANKS                                       MD059957
      C                   EVAL      Num2 = %INT(@DDRRDP)                                     MD058567
+     C                   ENDIF                                                              MD059957
+      *                                                                                     MD059957
      C     DDRRDP        IFNE      *BLANKS                                                    CDL102
      C*****DDRRDP        IFNE      @DDRRDP                                           CDL102 MD058567
      C     Num1          IFNE      Num2                                                     MD058567

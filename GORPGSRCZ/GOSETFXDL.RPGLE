@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD059767           Date 18Apr22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSW212             Date 03May12               *
       *                 AR733855           Date 14Apr11               *
       *                 CER059             Date 19Jul10               *
@@ -37,6 +38,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059767 - Some GOC0040 task-split jobs fail during COB with *
+      *             with error message unable to allocate a record on *
+      *             file GPTRAPPD.                                    *
+      *           - Recompile due to changes in GPUTXTPD.             *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -66,41 +71,41 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPUTXTL0  IF A E           K DISK    INFSR(*PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D FXDEAL        E DS                  EXTNAME(FXDEALPP)
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
- 
+
+
       ** DEFINE FIELDS FOR ZDATE10
      D                 DS
      D ZWDTIN                  1      8S 0
      D  ZWYYYY                 1      4S 0
      D  ZWMTH                  5      6S 0
      D  ZWDAY                  7      8S 0
- 
+
       * Midas Phase data area                                                               BUG12116
      D MPHAS           DS                                                                   BUG12116
      D  @PHAS                  1      1                                                     BUG12116
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D SDCOCC        E DS                  EXTNAME(SDCOCCPD)                                  CLE025
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE025
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG11830
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
@@ -109,28 +114,28 @@
      C                   PARM                    OTDT              5 0
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    DealDate          5 0            Midas day no.
      C                   PARM                    ValueDate         5 0            Midas day no.
      C                   PARM                    OptnEndDate       5 0            Midas day no.
- 
+
       * CONVERT DATES
- 
+
      C                   EXSR      CONVT_DATES
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
       * CONVERT DATES
       *****************************************************************
      C     CONVT_DATES   BEGSR
- 
+
       * deal date
      C                   Z-ADD     FHDDYY        ZWYYYY                         ¦
      C                   Z-ADD     FHDDMM        ZWMTH                          ¦ value date
@@ -149,7 +154,7 @@
      C                   Z-ADD     FHDOED        ZWDAY                          ¦
      C                   EXSR      ZDATE10
      C                   Z-ADD     ZZMDNO        OptnEndDate       5 0            Midas day no.
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -157,11 +162,11 @@
       * SETUP TRANSACTION INDEX RECORD
       *****************************************************************
      C     SETUP_TRAP    BEGSR
- 
+
       * Clear Transaction Index
- 
+
      C                   CLEAR                   T_TRAP
- 
+
       * Zone
      C                   MOVEL     O#ZONE        T_ZONE
       * Module
@@ -205,7 +210,7 @@
       * Transaction Date
      C                   Z-ADD     DealDate      T_TDAT
       * Value Date
- 
+
       * Start Date and End Date
      C                   SELECT
       *
@@ -229,9 +234,9 @@
      C                   Z-ADD     ValueDate     T_SDAT                           Midas day no.
      C                   Z-ADD     ValueDate     T_EDAT                           Midas day no.
      C                   ENDSL
- 
+
       * If deal is not a swap, do revaluation
- 
+
      C     FHTYPE        IFNE      'SW'
                                                                                             BUG12116
       **If*FX*deal**s*newly*entered*today,*do*not*revalue*at*input cycle.          BUG12116 AR733855
@@ -245,7 +250,7 @@
      C**********         MOVEL     BJCYCD        T_VCCY                            BUG12116 AR733855
      C**********         Z-ADD     BaseCDP       T_VCDP                            BUG12116 AR733855
      C**********         ELSE                                                      BUG12116 AR733855
- 
+
       * Revalue the buy leg
      C                   EXSR      BUYCCY
      C                   MOVE      'B'           BUYSELL
@@ -254,7 +259,7 @@
      c                   ENDIF                                                                CLE025
      C                   EXSR      REVALUE
      C                   Z-ADD     PLAM          BUY_PLAM         13 0
- 
+
       * Revalue the sell leg
      C                   EXSR      SELLCCY
      C                   MOVE      'S'           BUYSELL
@@ -263,7 +268,7 @@
      c                   ENDIF                                                                CLE025
      C                   EXSR      REVALUE
      C                   Z-ADD     PLAM          SELL_PLAM        13 0
- 
+
       * Market value
      C     BUY_PLAM      ADD       SELL_PLAM     T_MKVL
      C                   MOVEL     BJCYCD        T_VCCY
@@ -343,7 +348,7 @@
       * Inputs
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           50
- 
+
      C                   PARM                    BUYSELL           1
      C                   PARM      W#CCY         ECCY              3
      C                   PARM      T_EDAT        EDAT              5 0
@@ -468,16 +473,16 @@
      C                   ELSE                                                                 CLE025
      C                   MOVE      'N'           CLE025                                       CLE025
      C                   ENDIF                                                                CLE025
- 
+
       **  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       **  Access Base Currency Decimal Places
- 
+
      C                   MOVEL     BJCYCD        @CYCD
      C                   EXSR      ACSCCY
      C                   MOVEL     A6NBDP        BaseCDP           1 0
@@ -499,18 +504,18 @@
                                                                                             BUG12116
      C     *DTAARA       DEFINE                  MPHAS                                      BUG12116
      C                   IN        MPHAS                                                    BUG12116
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
                                                                                               BG2266
       * Get Extract control information                                                       BG2266
                                                                                               BG2266
       /COPY GOCPYSRC,GOGETEXCT                                                                BG2266
- 
- 
+
+
       * key list
- 
+
      C     GPUTXTK       KLIST
      C                   KFLD                    T_ZONE
      C                   KFLD                    T_MOD

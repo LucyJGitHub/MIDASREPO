@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059767           Date 18Apr22               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059767 - Some GOC0040 task-split jobs fail during COB with *
+      *             with error message unable to allocate a record on *
+      *             file GPTRAPPD.                                    *
+      *           - Recompile due to changes in GPUTXTPD.             *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

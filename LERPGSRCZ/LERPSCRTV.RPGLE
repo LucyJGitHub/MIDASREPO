@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE125             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE125 - Amendment to LE Authorization Rules                 *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -1000,6 +1002,35 @@
       ***  Unless CLE056 is enabled and not day of input and not last amender                 CLE056
       *
      C     DDACTN        IFEQ      'X'
+      *                                                                                       CLE125
+     C     CLE125        IFEQ      'Y'                                                        CLE125
+      *                                                                                       CLE125
+      ** If transaction is being authorised by the same user that inserted                    CLE125
+      ** or amended it today, disallow authorisation                                          CLE125
+      *                                                                                       CLE125
+     C     BJRDNB        IFEQ      LO_ORED                                                    CLE125
+      *                                                                                       CLE125
+     C     PSUser        IFEQ      LO_IUSR                                                    CLE125
+     C     PSUser        OREQ      LO_AUSR                                                    CLE125
+     C                   MOVE      'N'           OKLNRF                                       CLE125
+     C                   ADD       1             Ix                                           CLE125
+     C                   MOVEL     'DDLNRF'      FldNameArr(Ix)                               CLE125
+     C                   MOVEL     'LES0023'     MsgIdArr(Ix)                                 CLE125
+     C                   GOTO      EVAL                                                       CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
+     C                   ELSE                                                                 CLE125
+     C     PSUser        IFEQ      LO_AUSR                                                    CLE125
+     C                   MOVE      'N'           OKLNRF                                       CLE125
+     C                   ADD       1             Ix                                           CLE125
+     C                   MOVEL     'DDLNRF'      FldNameArr(Ix)                               CLE125
+     C                   MOVEL     'LES0023'     MsgIdArr(Ix)                                 CLE125
+     C                   GOTO      EVAL                                                       CLE125
+     C                   ENDIF                                                                CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
+     C                   ELSE                                                                 CLE125
+      *                                                                                       CLE125
       * If system value CLAuthORED = 'Y' and last amend date is later than                    240968
       * original entry date then allow authorise user to be same as insert user               240968
       *                                                                                       240968
@@ -1032,6 +1063,7 @@
      C                   EndIf                                                                CLE056
      C                   ENDIF
      C                   ENDIF                                                                240968
+     C                   ENDIF                                                                CLE125
      C                   ENDIF
       *
       ***  If Reversed record found, display as enquiry
@@ -1672,6 +1704,27 @@
       *                                                                                       CLE148
      C                   PARM                    PChkDigit                                    CLE148
      C                   PARM                    PData                                        CLE148
+      *                                                                                       CLE125
+      ** Check if Amendment to LE Authorization Rules (CLE125) is ON                          CLE125
+      *                                                                                       CLE125
+     C                   MOVE      'N'           CLE125            1                          CLE125
+     C                   CALLB     'AOSARDR0'                                                 CLE125
+     C                   PARM      *BLANKS       @RTCD                                        CLE125
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE125
+     C                   PARM      'CLE125'      @SARD                                        CLE125
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE125
+      *                                                                                       CLE125
+     C                   IF        @RTCD <> *BLANKS  AND  @RTCD <> '*NRF   '                  CLE125
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CLE125
+     C                   EVAL      DBKey  = 'CLE125'                                          CLE125
+     C                   EVAL      DBase  = 10                                                CLE125
+     C                   EXSR      *PSSR                                                      CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
+     C                   IF        @RTCD = *BLANKS                                            CLE125
+     C                   EVAL      CLE125 = 'Y'                                               CLE125
+     C                   ENDIF                                                                CLE125
+      *                                                                                       CLE125
       *
       ***  Key list for LOAMS
       *

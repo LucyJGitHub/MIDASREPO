@@ -10,8 +10,9 @@
 0007  *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058764           Date 06Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059871           Date 18May22               *
+      *  Prev Amend No. MD058764           Date 06Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055528           Date 13Aug20               *
       *                 MD023916           Date 06Nov19               *
       *                 MD045515           Date 20Jun17               *
@@ -95,6 +96,11 @@
 0011  *                                                               *
 0012  *****************************************************************
       *                                                               *
+      *  MD059871 - Profit Center of the journal entry is different   *
+      *             from the profit center of the retail account.     *
+      *           - If posting to a retail or nostro account set      *
+      *             profit centre to that of the account. Reinstate   *
+      *             GEMS fix 238728 condition with system value.      *
       *  MD058764 - Corrective Batch processing should be conditioned *
       *             on CGL125.                                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -673,6 +679,8 @@
      ICBTASK    E DSCBTASKSP                                                                CGL127AM
      I/COPY WNCPYSRC,GL0260IIPG                                           S01408
      I*                                                                   S01408
+      *                                                                                     MD059871
+     I              'UseAcctProfitCtr'    C         WSYSVL                                  MD059871
       *                                                                   CCB003
       *****************************************************************   CCB003
       *                                                                   CCB003
@@ -968,6 +976,38 @@
 0090 C*    SET UP ZERO FIELD.
 0091 C                     Z-ADD0         ZERO   110
      C                     MOVE *BLANKS   SEQ     5                       BHF794
+      *                                                                                     MD059871
+      **  Call AOSVALR0 to check if system will use the a/c's profit center                 MD059871
+      *                                                                                     MD059871
+     C                     CALL 'AOSVALR0'                                                  MD059871
+     C                     PARM *BLANKS   PRTCD   7                                         MD059871
+     C                     PARM WSYSVL    WSVLK1 20                                         MD059871
+     C                     PARM           WSVL1 200                                         MD059871
+     C                     PARM *BLANKS   WSVLK2 20                                         MD059871
+     C                     PARM           WSVL2 200                                         MD059871
+     C                     PARM *BLANKS   WSVLK3 20                                         MD059871
+     C                     PARM           WSVL3 200                                         MD059871
+     C                     PARM *BLANKS   WSVLK4 20                                         MD059871
+     C                     PARM           WSVL4 200                                         MD059871
+     C                     PARM *BLANKS   WSVLK5 20                                         MD059871
+     C                     PARM           WSVL5 200                                         MD059871
+     C                     PARM *BLANKS   WSVLK6 20                                         MD059871
+     C                     PARM           WSVL6 200                                         MD059871
+     C                     PARM *BLANKS   WSVLK7 20                                         MD059871
+     C                     PARM           WSVL7 200                                         MD059871
+     C                     PARM *BLANKS   WSVLK8 20                                         MD059871
+     C                     PARM           WSVL8 200                                         MD059871
+     C                     PARM *BLANKS   WSVLK9 20                                         MD059871
+     C                     PARM           WSVL9 200                                         MD059871
+     C                     PARM *BLANKS   WSVLK0 20                                         MD059871
+     C                     PARM           WSVL0 200                                         MD059871
+      *                                                                                     MD059871
+     C           PRTCD     IFNE *BLANKS                                                     MD059871
+     C           WSVL1     ANDEQ'*NRF   '                                                   MD059871
+     C                     EXSR *PSSR                                                       MD059871
+     C                     ELSE                                                             MD059871
+     C                     MOVELWSVL1     ACCTPC  1                                         MD059871
+     C                     ENDIF                                                            MD059871
 0092 C*
 0093 C*    DETAIL CALCULATIONS.
 0094 C           FIRST     TAG                             ** FIRST TAG **
@@ -1445,6 +1485,17 @@
      C********** CATYP     ANDEQ'N'                                                  238728 MD023916
      C**********           MOVE CPRFC     PRFC                                       238728 MD023916
      C**********           ENDIF                                                     238728 MD023916
+      *                                                                                     MD059871
+      ** Set the profit centre to that of the account if nostro or retail                   MD059871
+      *                                                                                     MD059871
+     C           ACCTPC    IFEQ 'Y'                                                         MD059871
+     C           BGN0ST    IFEQ 'Y'                                                         MD059871
+     C           CATYP     ANDEQ'R'                                                         MD059871
+     C           BGN0ST    OREQ 'Y'                                                         MD059871
+     C           CATYP     ANDEQ'N'                                                         MD059871
+     C                     MOVE CPRFC     PRFC                                              MD059871
+     C                     ENDIF                                                            MD059871
+     C                     ENDIF                                                            MD059871
      C*                                                                   CEU013
      C* Generate extension record to file MANPOAPD if the Original        CEU013
      C*  currency and amount fields are non blank.                        CEU013

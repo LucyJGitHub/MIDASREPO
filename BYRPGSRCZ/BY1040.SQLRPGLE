@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 1997                      *
       *                                                               *
-      *  Last Amend No. MD058068           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD058068           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
       *                 LLN021             Date 03Oct97               *
       *                 122382             Date 03Oct97               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Code for Facilities                           *
       *  MD058068 - Deliverable Data Split for Bank of England        *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN021 - BoE Industry Type                                   *
@@ -299,6 +301,7 @@
      C                   PARM      '*BLANKS'     @RTCD             7            Return Code
      C                   PARM      '*KEY   '     @OPTN             7            Option
      C                   PARM                    L#FCTP                         Facility type
+     C                   PARM      '*BLANKS'     L#FCLS            4            Facility class
      C                   PARM                    DSFDY                          Format
       *
       ** If *NRF is passed back through the return code, that combination of

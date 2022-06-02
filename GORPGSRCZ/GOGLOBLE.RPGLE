@@ -50,6 +50,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE138 - Class Codes for Facilities                          *
+      *           Added LEFCAMQD and LEAGAMQD                         *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -200,6 +201,7 @@
      C     PFLNAME       CASEQ     'LEANACQD'    GLOB_LEANACQD                                CER073
      C     PFLNAME       CASEQ     'LEDIAMPD'    GLOB_LEDIAMPD                                CLE070
      C     PFLNAME       CASEQ     'LEDIAMQD'    GLOB_LEDIAMQD                                CLE070
+     C     PFLNAME       CASEQ     'LEFCAMQD'    GLOB_LEFCAMQD                                CLE138
      C     PFLNAME       CASEQ     'LEAGAMQD'    GLOB_LEAGAMQD                                CLE138
      C                   ENDCS
      C*****CLE025        IFEQ      'Y'                                                CLE025 BUG3286
@@ -556,6 +558,13 @@
       /COPY GPCPYSRCG,GPLEDIAMQD                                                              CLE070
      C                   EVAL      FILE = PFLNAME                                             CLE070
      C                   ENDSR                                                                CLE070
+     *****************************************************************                        CLE138
+      * Global Updates - Facility Amendment Extension File                                    CLE138
+      *****************************************************************                       CLE138
+     C     GLOB_LEFCAMQD BEGSR                                                                CLE138
+      /COPY GPCPYSRCG,GPLEFCAMQD                                                              CLE138
+     C                   EVAL      FILE = PFLNAME                                             CLE138
+     C                   ENDSR                                                                CLE138
      *****************************************************************                        CLE138
       * Global Updates - Agg Fclty Amendment Trans Ext File                                   CLE138
       *****************************************************************                       CLE138

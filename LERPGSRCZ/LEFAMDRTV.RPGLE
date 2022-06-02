@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD024809           Date 06Nov19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD024809           Date 06Nov19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CSC054             Date 23Feb12               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD024809 - Also execute holiday check during authorise.      *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -729,6 +731,7 @@
      C     S#FATP        ANDNE     'FD'
      C     S#FATP        ANDNE     'FR'
      C     S#FATP        ANDNE     'RC'
+     C     S#FATP        ANDNE     'CC'                                                       CLE138
      C/COPY WNCPYSRC,LEH00229
      C                   MOVE      'N'           S#FATPok
      C                   ADD       1             Ix

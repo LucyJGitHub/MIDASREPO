@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. 241044             Date 17May22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
@@ -67,6 +68,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  241044 - Applied fix 238333.                                 *
+      *  238333 - OIS Patch delivery - replaced old version with RPGLE*
+      *           version adding 236999, and 217509.                  *
+      *  217509 - Recalculate the number of applicable days automati- *
+      *           cally whenever an insertion, amendment or deletion  *
+      *           of rate records is done.                            *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -229,6 +236,8 @@
      C                   MOVE      PDLNM         #0DLNO
      C                   MOVE      PSIDE         #0SIDE
      C                   MOVE      *BLANKS       #0PDAT
+     C                   MOVE      'N'           W#CHGD            1                          217509
+     C                   MOVE      'N'           W#CHGR            1                          217509
       *                                                                                       214440
       ** Delete processing                                                                    214440
      C     AMEND         IFEQ      'D'                                                        214440
@@ -357,7 +366,15 @@
       *                                                                                       214440
       ** Update if F10                                                                        214440
      C     *INKJ         IFEQ      '1'                                                        214440
+      *                                                                                       217509
+      ** Save the applicable days of the record to be deleted.                                217509
+      *                                                                                       217509
+     C                   Z-ADD     L1APDY        A#APDY            3 0                        217509
      C                   DELETE    DLDOISD0                                                   214440
+      *                                                                                       217509
+      ** Check if next record's applicable days needs to be calculated                        217509
+      *                                                                                       217509
+     C                   EXSR      SRAFTR                                                     217509
       *                                                                                       214440
      C     KPRVK         SETLL     DLDOISL1                             51                    214440
      C                   READP     DLDOISL1                               51                  214440
@@ -455,6 +472,13 @@
      C                   MOVE      '1'           *IN60
      C                   MOVE      '0'           *IN71
       *
+      ** If the base/comp. rate was not changed and there is no error, display                217509
+      ** the value from file.                                                                 217509
+      *                                                                                       217509
+     C     W#CHGR        IFEQ      'N'                                                        217509
+     C     W#CHGR        OREQ      'Y'                                                        217509
+     C     *INKL         ANDEQ     '1'                                                        217509
+      *                                                                                       217509
      C     L1RTYP        IFEQ      'COMPOUND'
      C                   MOVE      WCOTX         #0RTYP
      C**********         MOVE      L1CPRT        LCEDRT           13 9                        220859
@@ -518,13 +542,23 @@
      C                   MOVE      '0'           *IN47                                        226723
      C                   MOVE      '1'           *IN48                                        226723
      C                   ENDIF
+      *                                                                                       217509
+     C                   ENDIF                                                                217509
       *                                                                                       214440
       ** Display Applicable Days                                                              214440
      C                   SETOFF                                       45                      214440
+      *                                                                                       217509
+      ** If the applicable days was not changed and there is no error, display                217509
+      ** the value from file.                                                                 217509
+      *                                                                                       217509
+     C     W#CHGD        IFEQ      'N'                                                        217509
+     C     W#CHGD        OREQ      'Y'                                                        217509
+     C     *INKL         ANDEQ     '1'                                                        217509
      C                   Z-ADD     0             ZADEC                                        214440
      C                   MOVE(P)   L1APDY        ZFIELD                                       214440
      C                   EXSR      ZEDIT                                                      214440
      C                   MOVE      ZFIELD        #0APDY                                       214440
+     C                   ENDIF                                                                217509
       *
       ** Call ZEDIT for fields where decimal places depend on deal
       ** currency
@@ -546,6 +580,41 @@
      C                   WRITE     DL1652C0
      C                   EXFMT     DL1652F0
       *
+      ** If F12 was pressed, bring back the file value of appl. days.                         217509
+      *                                                                                       217509
+     C     *INKL         IFEQ      '1'                                                        217509
+      *                                                                                       217509
+     C                   Z-ADD     0             ZADEC                                        217509
+     C                   MOVE(P)   L1APDY        ZFIELD                                       217509
+     C                   EXSR      ZEDIT                                                      217509
+     C                   MOVE      ZFIELD        #0APDY                                       217509
+      *                                                                                       217509
+     C     L1RTYP        IFEQ      'COMPOUND'                                                 217508
+     C                   MOVE      WCOTX         #0RTYP                                       217509
+     C                   MOVE      L1CPRT        LCEDRT                                       217509
+     C                   MOVE      LCEDRT        XFIELD                                       217509
+     C                   Z-ADD     3             XADIG                                        217509
+     C                   Z-ADD     14            XADEC                                        217508
+     C                   EXSR      XEDIT                                                      217509
+     C                   MOVE      XFIELD        #0CRAT                                       217509
+      *                                                                                       217509
+     C                   MOVE      '1'           *IN80                                        217509
+     C                   MOVE      '1'           *IN42                                        217509
+     C                   MOVE      '0'           *IN44                                        217509
+     C                   ELSE                                                                 217509
+     C                   MOVE      WSTTX         #0RTYP                                       217508
+     C                   MOVE      L1BSRT        LBEDRT           11 7                        217509
+     C                   MOVE      LBEDRT        ZFIELD                                       217509
+     C                   Z-ADD     7             ZADEC                                        217509
+     C                   EXSR      ZEDIT                                                      217509
+     C                   MOVE      ZFIELD        #0NRAT                                       217509
+     C                   MOVE      '0'           *IN80                                        217509
+     C                   MOVE      '0'           *IN42                                        217508
+     C                   MOVE      '1'           *IN44                                        217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
       **  Clear Message Subfile
       *
      C                   EXSR      SRCLRM
@@ -789,6 +858,17 @@
      C                   MOVE      '1'           *IN41
      C                   MOVE      'N'           WVAL1
      C                   ENDIF
+      *                                                                                       217509
+      ** If in Delete mode, and record to be deleted is a COMPOUND                            217509
+      ** record, issue an error message.                                                      217509
+      *                                                                                       217509
+     C     AMEND         IFEQ      'D'                                                        217509
+     C     L1RTYP        ANDEQ     'COMPOUND'                                                 217509
+     C                   MOVEL     'MMA1266'     ZAMSID                                       217509
+     C                   EXSR      ZASNMS                                                     217509
+     C                   MOVE      '1'           *IN41                                        217509
+     C                   MOVE      'N'           WVAL1                                        217509
+     C                   ENDIF                                                                217509
       *                                                                                       214440
       ** If Insert mode then read the previous record for details of                          214440
       ** new record to be inserted.                                                           214440
@@ -826,6 +906,8 @@
      C                   MOVEL     #0DLNO        WDLNO             6
      C                   MOVEL     #0SIDE        PSIDE             1
      C                   MOVEL     #0PDAT        WPDAT             6
+     C                   MOVE      'N'           W#CHGD                                       217509
+     C                   MOVE      'N'           W#CHGR                                       217509
       *
      C     L1RTYP        IFEQ      'COMPOUND'
      C**********         Z-ADD     9             ZADEC                                        220859
@@ -844,6 +926,7 @@
      C                   MOVE(P)   ZFIELD        WBSRT            11
      C                   ENDIF
       ** Applicable Days                                                                      214440
+     C                   MOVE      *BLANKS       WAPDY                                        217509
      C                   Z-ADD     0             ZADEC                                        214440
      C                   MOVE(P)   L1APDY        ZFIELD                                       214440
      C                   EXSR      ZEDIT                                                      214440
@@ -869,7 +952,19 @@
      C                   EXSR      XALIGN                                                     220859
      C                   Z-ADD     15            XADEC                                        220859
      C                   EXSR      XEDIT                                                      220859
+      *                                                                                       217509
+     C     *IN99         IFEQ      *ON                                                        217509
+     C********           MOVEL     'MMA1169'     ZAMSID                                217509 236999
+     C                   MOVEL     'MMA1207'     ZAMSID                                       236999
+     C                   MOVE      '0'           *IN99                                        217509
+     C                   EXSR      ZASNMS                                                     217509
+     C                   MOVE      '1'           *IN43                                        217509
+     C                   MOVE      'N'           WVAL2                                        217509
+     C                   MOVE      'Y'           W#CHGR                                       217509
+     C                   ELSE                                                                 217509
      C                   MOVE      XFIELD        #0CRAT                                       220859
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
      C                   ENDIF
       *
       ** Validate the sign field                                                              226723
@@ -894,7 +989,19 @@
      C                   EXSR      ZALIGN
      C                   Z-ADD     7             ZADEC
      C                   EXSR      ZEDIT
+      *                                                                                       217509
+     C     *IN99         IFEQ      *ON                                                        217509
+     C********           MOVEL     'MMA1169'     ZAMSID                                217509 236999
+     C                   MOVEL     'MMA1207'     ZAMSID                                       236999
+     C                   MOVE      '0'           *IN99                                        217509
+     C                   EXSR      ZASNMS                                                     217509
+     C                   MOVE      '1'           *IN43                                        217509
+     C                   MOVE      'N'           WVAL2                                        217509
+     C                   MOVE      'Y'           W#CHGR                                       217509
+     C                   ELSE                                                                 217509
      C                   MOVE      ZFIELD        #0NRAT
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
      C                   ENDIF
      C                   ENDIF
       *                                                                                       226723
@@ -912,13 +1019,34 @@
      C                   MOVE      'N'           WVAL2                                        226723
      C                   ENDIF                                                                226723
       *
-     C     *IN99         IFEQ      *ON
-     C                   MOVEL     'MMA1207'     ZAMSID
-     C                   MOVE      '0'           *IN99
-     C                   EXSR      ZASNMS
-     C                   MOVE      '1'           *IN43                                        214440
-     C                   MOVE      'N'           WVAL2
-     C                   ENDIF
+     C******IN99         IFEQ      *ON                                                        217509
+     C**********         MOVEL     'MMA1207'     ZAMSID                                       217509
+     C**********         MOVE      '0'           *IN99                                        217509
+     C**********         EXSR      ZASNMS                                                     217509
+     C**********         MOVE      '1'           *IN43                                 214440 217509
+     C**********         MOVE      'N'           WVAL2                                        217509
+     C**********         ENDIF                                                                217509
+      *                                                                                       214440
+      ** If the value in the App Days Field is different to that held                         214440
+      ** on the file DLDOISPD, then validate it else redisplay screen.                        214440
+     C     #0APDY        IFNE      WAPDY                                                      214440
+     C                   Z-ADD     3             ZADIG                                        214440
+     C                   Z-ADD     0             ZADEC                                        214440
+     C                   MOVE(P)   #0APDY        ZFIELD                                       214440
+     C                   EXSR      ZALIGN                                                     214440
+     C                   EXSR      ZEDIT                                                      214440
+     C**********         MOVE      ZFIELD        #0APDY                                214440 217509
+      *                                                                                       214440
+     C     *IN99         IFEQ      *ON                                                        214440
+     C     #0APDY        OREQ      '  0'                                                      214440
+     C                   MOVEL     'MMA1260'     ZAMSID                                       214440
+     C                   EXSR      ZASNMS                                                     214440
+     C                   MOVE      '1'           *IN46                                        214440
+     C                   MOVE      'N'           WVAL2                                        214440
+     C                   MOVE      'Y'           W#CHGD                                       217509
+     C                   ELSE                                                                 217509
+     C                   MOVE      ZFIELD        #0APDY                                       217509
+     C                   ENDIF                                                                214440
       *                                                                                       214440
       ** If the value in the App Days Field is different to that held                         214440
       ** on the file DLDOISPD, then validate it else redisplay screen.                        214440
@@ -938,6 +1066,73 @@
      C                   MOVE      'N'           WVAL2                                        214440
      C                   ENDIF                                                                214440
       *                                                                                       214440
+     C                   ENDIF                                                                214440
+      *
+      *                                                                                       217509
+      ** Separate the validation for 0 to avoid overriding the specified                      217509
+      ** value if it is invalid.                                                              217509
+      *                                                                                       217509
+     C     *IN46         IFEQ      '0'                                                        217509
+      *                                                                                       217509
+     C     #0APDY        IFEQ      '  0'                                                      217509
+     C                   MOVEL     'MMA1260'     ZAMSID                                       217509
+     C                   EXSR      ZASNMS                                                     217509
+     C                   MOVE      '1'           *IN46                                        217509
+     C                   MOVE      'N'           WVAL2                                        217509
+     C                   MOVE      'Y'           W#CHGD                                       217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
+      ***Check*if*the*specified*applicable*days*would*cause*the*subsequent****         217509 236999
+      ** Check if the specified applicable days would cause the previous                      236999
+      ** record's applicable days to become less than or equal to zero.                       217509
+      *                                                                                       217509
+     C     AMEND         IFNE      'D'                                                        217509
+     C     *IN46         ANDEQ     '0'                                                        217509
+      *                                                                                       217509
+      ** Save the details of the current record.                                              217509
+      *                                                                                       217509
+     C                   MOVE      L1DLNO        C#DLNO            6 0                        217509
+     C                   MOVE      L1OTCD        C#OTCD            1                          217509
+     C                   MOVE      L1BSDT        C#BSDT            5 0                        217509
+      *                                                                                       217509
+     C     KPRVK         SETLL     DLDOISL1                                                   217509
+     C********           READP     DLDOISL1                               51           217509 236999
+     C                   READ      DLDOISL1                               51                  217509
+      *                                                                                       217509
+     C     *IN51         IFEQ      '0'                                                        217509
+     C     L1RTYP        ANDNE     'GUESS  '                                                  217509
+     C     L1DLNO        ANDEQ     KDLNO                                                      217509
+     C     L1OTCD        ANDEQ     PSIDE                                                      217509
+      *                                                                                       217509
+     C                   Z-ADD     0             C#APDY                                       217509
+     C                   MOVE      #0APDY        C#APDY                                       217509
+     C                   Z-ADD     0             B#APDY                                       217509
+     C                   Z-ADD     0             W#BSDT                                       217509
+     C*****WDYNO         ADD       C#APDY        W#BSDT                                217509 236999
+     C*****W#BSDT        SUB       1             W#BSDT                                217509 236999
+     C*****L1BSDT        SUB       W#BSDT        W#ADAY            3 0                 217509 236999
+     C     WDYNO         SUB       C#APDY        W#BSDT                                       236999
+      *                                                                                       217509
+     C*****W#ADAY        IFLE      0                                                   217509 236999
+     C     W#BSDT        IFLT      L1BSDT                                                     236999
+     C                   MOVEL     'MMA1267'     ZAMSID                                       217509
+     C                   EXSR      ZASNMS                                                     217509
+     C                   MOVE      '1'           *IN46                                        217509
+     C                   MOVE      'N'           WVAL2                                        217509
+     C                   MOVE      'Y'           W#CHGD                                       217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
+      ** Reposition the file.                                                                 217509
+      *                                                                                       217509
+     C     *LOVAL        SETLL     DLDOISL1                                                   217509
+     C     C#DEAL        CHAIN     DLDOISL1                                                   217509
+      *                                                                                       217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
      C                   ENDIF                                                                214440
       *
      C                   ENDSR
@@ -1022,14 +1217,51 @@
      C                   ELSE
      C                   Z-ADD     LBNRAT        L1BSRT
      C                   ENDIF
+      *                                                                                       217509
+      ** Save the value of the applicable days prior to update                                217509
+      *                                                                                       217509
+     C                   Z-ADD     L1APDY        D#APDY            3 0                        217509
      C                   MOVE      #0APDY        L1APDY                                       214440
       *                                                                                       214440
      C     AMEND         IFEQ      'I'                                                        214440
      C                   Z-ADD     WDYNO         L1BSDT                                       214440
+     C                   MOVEL     'STANDARD'    L1RTYP                                       217509
+     C                   Z-ADD     0             L1AMNT                                       217509
+      *                                                                                       217509
+      ** Check if new record should be a SETTLE record.                                       217509
+      *                                                                                       217509
+     C     MDAT          IFLT      BJRDNB                                                     217509
+     C     L1BSDT        ANDEQ     MDAT                                                       217509
+     C     L1OTCD        OREQ      'O'                                                        217509
+     C     UNIPD         ANDLT     BJRDNB                                                     217509
+     C     L1BSDT        ANDEQ     UNIPD                                                      217509
+     C     L1OTCD        ORNE      'O'                                                        217509
+     C     TNIPD         ANDLT     BJRDNB                                                     217509
+     C     L1BSDT        ANDEQ     TNIPD                                                      217509
+     C                   MOVEL     'SETTLE  '    L1RTYP                                       217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
      C                   WRITE     DLDOISD0                                                   214440
+      *                                                                                       217509
+     C                   Z-ADD     0             C#APDY            3 0                        217509
+     C                   MOVE      #0APDY        C#APDY                                       217509
+      *                                                                                       217509
+      ** Check if next record needs to be amended                                             217509
+      *                                                                                       217509
+     C                   EXSR      SRAFTR                                                     217509
       *                                                                                       214440
      C                   ELSE                                                                 214440
      C                   UPDATE    DLDOISD0
+      *                                                                                       217509
+      ** If the applicable days was amended, need to recalculate the                          217509
+      ** next record's applicable days.                                                       217509
+      *                                                                                       217509
+     C                   Z-ADD     0             C#APDY                                       217509
+     C                   MOVE      #0APDY        C#APDY                                       217509
+     C     C#APDY        IFNE      D#APDY                                                     217509
+     C                   EXSR      SRAFTR                                                     217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
      C                   ENDIF                                                                214440
       *                                                                                       214440
      C                   ENDIF                                                                214440
@@ -1064,8 +1296,10 @@
       ** want to recalculate the interest rate field for it. We start
       ** changeing records from the one immediately after the COMPOUND
       ** record.
+      ** The same holds true for SETTLE records.                                              217509
       *
      C     L1RTYP        IFNE      'COMPOUND'
+     C     L1RTYP        ANDNE     'SETTLE  '                                                 217509
       *
       ** Calculate the new componding rate and interest rate for each
       ** of the following records for this deal.
@@ -1391,38 +1625,93 @@
      C                   UPDATE    DEALSDGF
      C                   COMMIT
       *
-      ** Count number of Applicable Days for Deal.                                            214440
-     C                   Z-ADD     0             WDYNO                                        214440
-     C                   Z-ADD     0             WTOTAL            5 0                        214440
-     C                   MOVE      'Y'           WPASS             1                          214440
-      *                                                                                       214440
-     C     KPRVK         SETLL     DLDOISD2                                                   214440
-     C     KKLNO         READE     DLDOISD2                               89                  214440
-     C                   Z-ADD     L1BSDT        WSTRDT            5 0                        214440
-     C     *IN89         DOWEQ     '0'                                                        214440
-      *                                                                                       214440
-      ** Don't count the Applicable Day of the first record.                                  214440
-     C     WPASS         IFEQ      'N'                                                        214440
-     C     L1APDY        ADD       WTOTAL        WTOTAL                                       214440
-     C                   ENDIF                                                                214440
-      *                                                                                       214440
-     C                   MOVE      'N'           WPASS                                        214440
-     C     KKLNO         READE     DLDOISD2                               89                  214440
-     C                   ENDDO                                                                214440
-      *                                                                                       214440
-     C                   Z-ADD     L1BSDT        WENDDT            5 0                        214440
-      *                                                                                       214440
-      ** Check if total matches number of days.                                               214440
-     C                   MOVE      'Y'           PAPPD                                        214440
-     C     WENDDT        SUB       WSTRDT        WDAYS             5 0                        214440
-      *                                                                                       214440
-     C     WTOTAL        IFNE      WDAYS                                                      214440
-     C                   MOVE      'N'           PAPPD                                        214440
-     C                   ENDIF                                                                214440
-      *                                                                                       214440
+      ***Count*number*of*Applicable*Days*for*Deal.*********************                214440 217509
+     C**********         Z-ADD     0             WDYNO                                 214440 217509
+     C**********         Z-ADD     0             WTOTAL            5 0                 214440 217509
+     C**********         MOVE      'Y'           WPASS             1                   214440 217509
+      **********                                                                       214440 217509
+     C*****KPRVK         SETLL     DLDOISD2                                            214440 217509
+     C*****KKLNO         READE     DLDOISD2                               89           214440 217509
+     C**********         Z-ADD     L1BSDT        WSTRDT            5 0                 214440 217509
+     C******IN89         DOWEQ     '0'                                                 214440 217509
+      **********                                                                       214440 217509
+      ***Don't*count*the*Applicable*Day*of*the*first*record.***********                214440 217509
+     C*****WPASS         IFEQ      'N'                                                 214440 217509
+     C*****L1APDY        ADD       WTOTAL        WTOTAL                                214440 217509
+     C**********         ENDIF                                                         214440 217509
+      **********                                                                       214440 217509
+     C**********         MOVE      'N'           WPASS                                 214440 217509
+     C*****KKLNO         READE     DLDOISD2                               89           214440 217509
+     C**********         ENDDO                                                         214440 217509
+      **********                                                                       214440 217509
+     C**********         Z-ADD     L1BSDT        WENDDT            5 0                 214440 217509
+      **********                                                                       214440 217509
+      ***Check*if*total*matches*number*of*days.************************                214440 217509
+     C*********          MOVE      'Y'           PAPPD                                 214440 217509
+     C*****WENDDT        SUB       WSTRDT        WDAYS             5 0                 214440 217509
+      *********                                                                        214440 217509
+     C*****WTOTAL        IFNE      WDAYS                                               214440 217509
+     C*********          MOVE      'N'           PAPPD                                 214440 217509
+     C*********          ENDIF                                                         214440 217509
+      *********                                                                        214440 217509
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                       217509
+      *                                                               *                       217509
+      *  SRAFTR - Check if the next record's applicable days needs to *                       217509
+      *           be recalculated.                                    *                       217509
+      *                                                               *                       217509
+      *  Called By: SRDELT                                            *                       217509
+      *                                                               *                       217509
+      *  Calls    : None                                              *                       217509
+      *                                                               *                       217509
+      *****************************************************************                       217509
+      *                                                                                       217509
+     C     SRAFTR        BEGSR                                                                217509
+      *                                                                                       217509
+      ** Position file to the next record                                                     217509
+      *                                                                                       217509
+     C     AMEND         IFEQ      'D'                                                        217509
+     C     KPRVK         SETLL     DLDOISL1                                                   217509
+     C                   ELSE                                                                 217509
+     C     KPRVK         CHAIN     DLDOISL1                           51                      217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
+     C                   READP     DLDOISL1                               51                  217509
+      *                                                                                       217509
+      ** If record was found, calculate the applicable days                                   217509
+      *                                                                                       217509
+     C     *IN51         IFEQ      '0'                                                        217509
+     C     L1RTYP        ANDNE     'GUESS  '                                                  217509
+     C     L1DLNO        ANDEQ     KDLNO                                                      217509
+     C     L1OTCD        ANDEQ     PSIDE                                                      217509
+      *                                                                                       217509
+      ** If deletion, add the deleted record's applicable days                                217509
+      *                                                                                       217509
+     C     AMEND         IFEQ      'D'                                                        217509
+      *                                                                                       217509
+     C     L1APDY        ADD       A#APDY        L1APDY                                       217509
+     C                   UPDATE    DLDOISD0                                                   217509
+      *                                                                                       217509
+     C                   ELSE                                                                 217509
+      *                                                                                       217509
+     C                   Z-ADD     0             B#APDY            3 0                        217509
+     C                   Z-ADD     0             W#BSDT            5 0                        217509
+     C*****WDYNO         ADD       C#APDY        W#BSDT                                217509 236999
+     C*****W#BSDT        SUB       1             W#BSDT                                217509 236999
+     C*****L1BSDT        SUB       W#BSDT        L1APDY                                217509 236999
+     C     L1BSDT        SUB       WDYNO         L1APDY                                217509 236999
+     C                   UPDATE    DLDOISD0                                                   217509
+      *                                                                                       217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
+     C                   ENDIF                                                                217509
+      *                                                                                       217509
+     C                   ENDSR                                                                217509
+      *                                                                                       217509
+      *****************************************************************                       217509
+      /EJECT                                                                                  217509
       *****************************************************************
       *                                                               *
       *  *INZSR - Initial Processing                                  *
@@ -1445,7 +1734,7 @@
      C                   PARM                    AMEND             1
      C                   PARM                    FXDY1             1 0                        204923
      C                   PARM                    PDATE             5 0                        204923
-     C                   PARM                    PAPPD             1                          214440
+     C**********         PARM                    PAPPD             1                   214440 217509
       *
      C                   MOVE      PDLNM         KDLNO             6 0
       *
@@ -1461,6 +1750,11 @@
      C                   KFLD                    KDLNO
      C                   KFLD                    PSIDE
      C                   KFLD                    WDYNO
+      *                                                                                       217509
+     C     C#DEAL        KLIST                                                                217509
+     C                   KFLD                    C#DLNO                                       217509
+     C                   KFLD                    C#OTCD                                       217509
+     C                   KFLD                    C#BSDT                                       217509
       *
       ** Set up copyright parameter
       *

@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE125             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD034146           Date 17May22               *
+      *  Prev Amend No. AR928430           Date 17May22 
+      *                 CLE125             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD039655           Date 03Sep19               *
       *                 MD036924           Date 06Nov19               *
@@ -73,6 +75,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034146 - Include risk and sub partipant on list of facility*
+      *             to check for existing loan.                       *
+      *  AR928430 - Do not allow closure/reversal of facility when    *
+      *             there is an existing loan. (Child: AR928431)      *      
       *  CLE125 - Amendment to LE Authorization Rules                 *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -208,6 +214,11 @@
      F                                     IGNORE(CLOANZ1F)
      F                                     IGNORE(CLOANCKF)
      F                                     PREFIX(CL_)
+      **  Use CLOANL6 to check o/s loans for syndicated facility                            AR928430
+      *                                                                                     AR928430
+     FCLOANL6   IF   E           K DISK    INFSR(*PSSR)                                     AR928430
+     F                                     RENAME(CLOANCLF:CLOANCL6)                        AR928430
+     F                                     PREFIX(C3)                                       AR928430
       **  Live Utilisation Retrieval Index
      FLEMNFUL6  IF   E           K DISK    INFSR(*PSSR)
      F**********                           PREFIX(L6_)                                      AR674226
@@ -1296,6 +1307,40 @@
       *
      C                   ENDDO
       *
+      ** Checking for syndicated facility.                                                  AR928430
+      *                                                                                     AR928430
+     C     FC_SYIN       IFEQ      'Y'                                                      AR928430
+     C     FC_PRTR       ANDEQ     'I'                                                      AR928430
+     C     FC_SYIN       OREQ      'Y'                                                      AR928430
+     C     FC_PRTR       ANDEQ     'P'                                                      AR928430
+     C     FC_SYIN       OREQ      'Y'                                                      MD034146
+     C     FC_PRTR       ANDEQ     'R'                                                      MD034146
+     C     FC_SYIN       OREQ      'Y'                                                      MD034146
+     C     FC_PRTR       ANDEQ     'S'                                                      MD034146
+      *                                                                                     AR928430
+     C     K#KY02        SETLL     CLOANL6                                                  AR928430
+     C     K#KY02        READE     CLOANL6                                80                AR928430
+      *                                                                                     AR928430
+     C     *IN80         DOWEQ     *OFF                                                     AR928430
+      *                                                                                     AR928430
+     C                   MOVEL     C3LNRF        JDLNRF            6                        AR928430
+     C     C3RECI        IFEQ      'D'                                                      AR928430
+      *                                                                                     AR928430
+     C     ZDAYNO        IFLT      C3MDAT                                                   AR928430
+     C     DDACTN        OREQ      'R'                                                      AR928430
+     C     DDACTN        OREQ      'C'                                                      AR928430
+     C                   MOVE      'Y'           W#ERR4                                     AR928430
+     C                   LEAVE                                                              AR928430
+     C                   ENDIF                                                              AR928430
+      *                                                                                     AR928430
+     C                   ENDIF                                                              AR928430
+      *                                                                                     AR928430
+     C     K#KY02        READE     CLOANL6                                80                AR928430
+      *                                                                                     AR928430
+     C                   ENDDO                                                              AR928430
+      *                                                                                     AR928430
+     C                   ENDIF                                                              AR928430
+      *                                                                                     AR928430
      C                   ENDSR
       ***********************************************************
       /EJECT

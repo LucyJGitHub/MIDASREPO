@@ -562,7 +562,6 @@
      C                   PARM                    S#ACTN
      C                   PARM                    S#CSSN
      C                   PARM                    S#FACT
-     C                   PARM                    S#FCLS                                       CLE138
      C                   PARM                    S#FCNO
 
       * Primary facility customer, type & number

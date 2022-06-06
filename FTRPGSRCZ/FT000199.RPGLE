@@ -84,7 +84,7 @@
      FMEINCRL1  IF   E           K DISK    INFSR(*PSSR)
                                                                                              CSW122A
       ** Logical File for Message Incoming Details by Message Tag                            CSW122A
-     FMEIN35L1  IF   E           K DISK    INFSR(*PSSR)                                      CSW122A
+     FMEIN35L0  IF   E           K DISK    INFSR(*PSSR)                                      CSW122A
 
       ** Logical File for retrieving Incoming Message Transaction Number
      FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)
@@ -2069,7 +2069,7 @@
       ** Populate tag 70: Remittance Information (Payment Reference) of the rejected MT103   CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = ':70:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L1                                                  CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
      C                   EVAL      WTag70ValA = DSMF35                                       CSW122A
                                                                                              CSW122A
@@ -2105,7 +2105,7 @@
       ** Check if 202 is COV.                                                                CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = '119:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L1                                                  CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
      C                   EVAL      WTag202COV = DSMF35                                       CSW122A
                                                                                              CSW122A
@@ -2118,7 +2118,7 @@
      C     *LOCK         IN        LDA                                                       CSW122A
      C                   MOVE      '031'         DBASE                                       CSW122A
      C                   MOVEL     'KLIncMsg'    DBKEY                                       CSW122A
-     C                   MOVEL     'MEIN35L1'    DBFILE                                      CSW122A
+     C                   MOVEL     'MEIN35L0'    DBFILE                                      CSW122A
      C                   OUT       LDA                                                       CSW122A
      C                   EXSR      *PSSR                                                     CSW122A
                                                                                              CSW122A
@@ -2205,7 +2205,7 @@
       ** Populate tag 21: Related Reference Number of the rejected MT202 COV                 CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = ':21:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L1                                                  CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
      C                   EVAL      WTag70ValA = DSMF35                                       CSW122A
                                                                                              CSW122A
@@ -2305,7 +2305,7 @@
       ** Populate tag 21: Related Reference Number of the rejected MT202                     CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = ':21:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L1                                                  CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
      C                   EVAL      WTag21ValA = DSMF35                                       CSW122A
                                                                                              CSW122A
@@ -2343,7 +2343,7 @@
       ** Check if 205 is COV.                                                                CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = '119:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L1                                                  CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
      C                   EVAL      WTag205COV = DSMF35                                       CSW122A
                                                                                              CSW122A
@@ -2356,7 +2356,7 @@
      C     *LOCK         IN        LDA                                                       CSW122A
      C                   MOVE      '034'         DBASE                                       CSW122A
      C                   MOVEL     'KLIncMsg'    DBKEY                                       CSW122A
-     C                   MOVEL     'MEIN35L1'    DBFILE                                      CSW122A
+     C                   MOVEL     'MEIN35L0'    DBFILE                                      CSW122A
      C                   OUT       LDA                                                       CSW122A
      C                   EXSR      *PSSR                                                     CSW122A
                                                                                              CSW122A
@@ -2441,7 +2441,7 @@
       ** Get tag 21                                                                          CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = ':21:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L1                                                  CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
      C                   EVAL      WTag21ValA = DSMF35                                       CSW122A
                                                                                              CSW122A
@@ -2542,7 +2542,7 @@
       ** Populate tag 21: Related Reference Number of the rejected MT205                     CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = ':21:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L1                                                  CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
      C                   EVAL      WTag21ValA = DSMF35                                       CSW122A
                                                                                              CSW122A

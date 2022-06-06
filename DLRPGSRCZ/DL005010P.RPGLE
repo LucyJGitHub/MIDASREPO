@@ -15,13 +15,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD056986           Date 27Oct20               *
-      *  Prev Amend No. MD056940           Date 19Oct20               *
+      *  Last Amend No. HUT107             Date 28May20               *      
+      *  Prev Amend No. MD056986           Date 27Oct20               *
+      *                 MD056940           Date 19Oct20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT107 - Additional 3rd Party Trust Indicator                *
+      *           (Upgrade HUT016 to FM2.1 SP22)                      *
+      *           Addition of hooks HUT107_004 and HUT107_011         *
+      *           Addition of hooks HUT107_014 to HUT107_015          *      
       *  MD056986 - Daily Withholding Tax Reports Not Separated by    *
       *             Branch                                            *      
       *  MD056940 - Incorrect Details Reflected in Secondary Tax      *
@@ -73,6 +78,7 @@
      F                                     OFLIND(*IN01)
      F                                     USROPN                                           MD056986
       ** Tax Rate Codes List
+     F/COPY WNCPYSRC,HUT107_014                                                               HUT107
       *
       /EJECT
       ****************************************************************
@@ -109,6 +115,7 @@
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
      D*
+     D/COPY WNCPYSRC,HUT107_015                                                               HUT107
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D**  MIDAS ABS Bank Details
      D*
@@ -338,6 +345,7 @@
      C     @KEY1         KLIST
      C                   KFLD                    CCY
      C                   KFLD                    @TXRC
+     C/COPY WNCPYSRC,HUT107_004                                                               HUT107
       *
      C                   ENDSR
       *****************************************************************
@@ -404,6 +412,7 @@
      C                   EXSR      *PSSR
      C                   END
      C                   MOVEL     BBCNA1        CNA1
+     C/COPY WNCPYSRC,HUT107_011                                                               HUT107
       *
       ** Format Tax Amounts if Main tax rate code 1 is not Blanks
       *

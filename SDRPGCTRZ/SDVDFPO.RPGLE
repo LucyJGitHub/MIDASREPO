@@ -14,8 +14,10 @@
       *    /COPY, Customer Portfolio Management Details amendments    *
       *    must not be applied to this source.                        *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. MD056309           Date 21Jul20               *
+      *  Prev Amend No. MD056300           Date 16Jul20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 AR1096288          Date 15Mar13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -23,6 +25,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056309 - Mising MD-51933 functionality at FM               *
+      *  MD056300 - Missing HUT113 functionality                      *
+      *             Addition of hooks HUT113_132 to HUT113_134        *
+      *    MD051933A - Invalid Portfolio created via Portfolio        *
+      *                Management Customer Details Mnt (system        *
+      *                accepts '000A' to '000I' as default portfolio) *
+      *    HUT113 - Full PB solution at FM                            *
+      *             (Upgrade HUT026 to FM2.1 SP22)                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR1096288 - Add Default Portfolio validation to avoid        *
@@ -30,10 +40,10 @@
       *  CSD079 - Enhanced Customer Maintenance API                   *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas SD Portfolio management ICD retrieval
      FSDPORTL1  IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -45,52 +55,52 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       ** External DS for Access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -117,11 +127,11 @@
      D WUN4ST          S              1
       ** External DS for Midas Module flag retrieval file,
      D SDMMOD        E DS                  EXTNAME (SDMMODPD)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIdx            S              3P 0
- 
+
       ** Work Variables
      D W0RTN           S              7A
      D DDDFPO          S              4A
@@ -133,7 +143,7 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -148,21 +158,23 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
      C                   Z-ADD     0             WIdx
       ** VALIDATION
- 
+
       ** Validate Default Portfolio,
      C                   MOVEL     *BLANK        WURTCD
+      /COPY WNCPYSRC,HUT113_132                                                               MD056300
      C                   MOVEL     '*PMCUSTV'    WUPMAC
+      /COPY WNCPYSRC,HUT113_133                                                               MD056300
       ** Customer number passed in SDCUSDIVL program,
      C                   MOVEL     DDCUSN        WUCUST
      C                   MOVEL     *BLANK        WUBKCD
@@ -180,7 +192,7 @@
      C     WUSCPF        PARM                    WUSCPF
      C     WUSCPT        PARM                    WUSCPT
      C     WUPGMN        PARM                    WUPGMN
- 
+
      C                   IF        *IN90 = *ON
       ** Send message '*Error occurred on CALL...'
      C                   EVAL      DDDFPOOK = 'N'
@@ -204,9 +216,19 @@
      C                   EVAL      MsgDtaXAr(IDx) = LenStr +%TRIM(DDDFPO)                   MD000091
      C                   ENDIF                                                             AR1096288
                                                                                            AR1096288
+      ** Send message 'Portfolio reference must be numeric from 0001-0099'                  MD056309
+     C                   IF        WURTCD = 'PMA1011'                                       MD056309
+     C                   EVAL      DDDFPOOK = 'N'                                           MD056309
+     C                   EVAL      Idx = Idx + 1                                            MD056309
+     C                   EVAL      FldNamXAr(Idx) = 'DDDFPO    '                            MD056309
+     C                   EVAL      MsgIdXAr(Idx)  = 'PMA1011'                               MD056309
+     C                   EVAL      BLen = %Len(%Trim(DDDFPO))                               MD056309
+     C                   EVAL      MsgDtaXAr(IDx) = LenStr +%TRIM(DDDFPO)                   MD056309
+     C                   ENDIF                                                              MD056309
+                                                                                            MD056309
       ** Get Portfolio Management ICD fields - Portfolio Management ICD
      C                   EXSR      SORVGN
- 
+
       ** Return Code work field is NORMAL
      C                   IF        (WURTCD = *BLANK AND
      C                              WUN4ST  <> 'Y') OR
@@ -215,9 +237,9 @@
      C                             (WUSCPF <> WUR997) AND
      C                             (WUN4ST  = 'Y'))
      C                   EVAL      DDDFPO = WUSCPF
- 
+
      C                   ELSE
- 
+
       ** Output error message if Private Banking is switched off, or if
       ** Private Banking is switched on, and either Default Portfolio Reference
       ** is blank, or Default Portfolio Reference is the same as the reference
@@ -232,11 +254,11 @@
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDDFPO    '
      C                   EVAL      MsgIdXAr(Idx)  = 'USR2888'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Return
      C     EMAIN         TAG
      C                   RETURN
@@ -259,7 +281,7 @@
      C                   IF        *IN90 = *OFF
       ** Process Data record
      C                   EVAL      WUR997 = FCR997
- 
+
      C                   ENDIF
       ** Access object to retrieve Midas module flags retrieval file SDMMODPD.
       ** Access MIDAS modules Flag retreival file
@@ -269,7 +291,7 @@
      C     SDMMOD        PARM      SDMMOD        DSFDY
       ** Retrieve the value of Private Banking, Flag.
      C                   EVAL      WUN4ST = BGN4ST
- 
+
      C     SOEXIT        ENDSR
       *****************************************************************
      C/EJECT
@@ -277,36 +299,37 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Inputs
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** Other parms
       ** Field(s) requiring validation
       ** Default Portfolio
      C                   PARM                    DDDFPO
       ** Customer Number
      C                   PARM                    DDCUSN
- 
+
       ** Outputs
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
       ** Default Portfolio - OK
- 
+
      C                   PARM                    DDDFPOOK
- 
+      /COPY WNCPYSRC,HUT113_134                                                 MD056300
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD055751           Date 22May20              */
-/*       Prev Amend No. MD055146           Date 04Feb20              */
+/*       Last Amend No. HUT121             Date 07Feb22              */
+/*       Prev Amend No. MD055751           Date 22May20              */
+/*                      MD055146           Date 04Feb20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD020205A          Date 27Jun13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       HUT121 -  Allow SE Price Input for Non-working day          */
 /*       MD055751 - Global Sync Issue for GOC0100 during COB         */
 /*                  Include zone in the creation of SQL view.        */
 /*       MD055146 - Failed MXC004802 seq. 00001 and others           */
@@ -92,6 +94,8 @@
              DCL        VAR(&FSQLVIEW) TYPE(*CHAR) LEN(10) VALUE('GOFILE')              /*MD055751*/
              DCL        VAR(&OPNQRY2)  TYPE(*CHAR) LEN(1000)                            /*MD055751*/
                                                                                         /*MD055751*/
+/*/COPY WNCPYSRC,HUT121_061                                          */                   /*HUT121*/
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
@@ -158,9 +162,12 @@
 
 /* Generate Key Data */
              CALL       PGM(GPC0012) PARM(&ZOZONE &GPF &GLFU)
+/*/COPY WNCPYSRC,HUT121_062                                          */                   /*HUT121*/
 
 /* Bulk synchronisation program */
              CHGVAR     VAR(&PGM) VALUE('GO' *CAT %SST(&GPF 3 8))
+
+/*/COPY WNCPYSRC,HUT121_063                                          */                   /*HUT121*/
 
 /* Do bulk synchronisation */
              CALL       PGM(QCMDEXC) PARM(&ZLFOVR 60)

@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1075401          Date 01Jun20               *     
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -109,6 +110,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  AR1075401 - Increase QFOAMT length in PMHOLDPD. Recompiled.  *
+      *              (Child: AR1075402)                               *     
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD to readable  *
       *             unicode equivalent.                               *

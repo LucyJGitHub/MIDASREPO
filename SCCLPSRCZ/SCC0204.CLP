@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD039086           Date 27Jan21              */
-/*       Prev Amend No. MD022132           Date 05Mar15              */
+/*       Last Amend No. HUT104             Date 27Apr20              */
+/*       Prev Amend No. MD039086           Date 27Jan21              */
+/*                      MD022132           Date 05Mar15              */
 /*                      MD046248           Date 05Feb18              */
 /*                      MD045731           Date 27Sep17              */
 /*                      MD031644           Date 08Jan15              */
@@ -37,6 +38,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       HUT104   - UPGRADE HUT010 TO FBM 2.1 SP 22                  */
+/*                - Call In-House Program on Input Cycle Re-open     */
+/*                  USE /COPY SCC0204MPE                             */
 /*       MD039086 - Submit GLC007011 when CAP205 is switched *ON.    */
 /*                  Applied for MD-57273.                            */
 /*       MD022132 - Triggers don't pick up Rollback deletes of ABC   */

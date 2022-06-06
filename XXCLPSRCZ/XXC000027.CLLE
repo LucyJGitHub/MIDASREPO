@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SE Initialisation Program for HUT113')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Securities Tradings Module                          */
+/*                                                                   */
+/*       XXC000027 - Initialisation program to setup feature         */
+/*                   dependencies for HUT113                         */
+/*                                                                   */
+/*       (c) Finastra International Systems Ltd. 2020                */
+/*                                                                   */
+/*       Last Amend No. HUT113  *Create    Date 03Apr20              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*      HUT113 - Upgrade HUT026 to FBM 2.1 SP 22                     */
+/*               Full Private Banking Functionality in Midas         */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&RTNCDE &IPMODE)
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2015')
+
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&MEM)  TYPE(*CHAR) LEN(52)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&IPMODE) TYPE(*CHAR) LEN(1)
+
+/* Global monitor message error trap */
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000 CPA0000) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+
+/* Create LDA if not present */
+
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+               CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                            AUT(*EXCLUDE)
+             ENDDO
+
+             CHGJOB     SWS(00000000)
+
+/* Call program */
+
+             CALL       PGM(XX000097) PARM(&RTCD &IPMODE)
+
+/* If database error, output message to user */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (132 52)) RTNVAR(&MEM)
+                SNDPGMMSG  MSG('XXC000027 - JOB TERMINATED, DATABASE IN +
+                              ERROR') TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ELSE
+                GOTO       CMDLBL(END)
+
+ABNOR:       SNDPGMMSG  MSG('Program XXC000027 ended ABNORMALLY.') +
+                          TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2016')
+
+             ENDPGM
+
+

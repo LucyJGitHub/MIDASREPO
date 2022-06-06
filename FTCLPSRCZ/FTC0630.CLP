@@ -568,7 +568,8 @@
         CHGVAR     VAR(&CSW122) VALUE('Y')                                               /*CSW122A*/
         ENDDO                                                                            /*CSW122A*/
 /**/                                                                                      /*CSW220*/
-/**  Call FT000199  **/                                                                   /*CSW220*/
+/****Call*FT000199****/                                                           /*CSW220 CSW122A*/
+/** Call FT000199 MT199 Extract and Format Program if CSW220 or CSW122 is installed **/  /*CSW122A*/
 /**/                                                                                      /*CSW220*/
         CHGJOB     SWS(XXXXXX00)                                                          /*CSW220*/
         CHGVAR     VAR(&RTCD) VALUE('       ')                                            /*CSW220*/

@@ -1957,6 +1957,8 @@
      C     Q             OCCUR     MULT                                                      CSW122A
      C                   ENDDO                                                               CSW122A
                                                                                              CSW122A
+     C                   EXSR      SrResetDS                                                 CSW122A
+                                                                                             CSW122A
      C                   ENDSR                                                               CSW122A
       *****************************************************************                      CSW122A
       /EJECT                                                                                 CSW122A
@@ -2828,6 +2830,24 @@
       ** Save the Branch Customer                                                            CSW122A
      C                   EVAL      WSeCN = A8BICN                                            CSW122A
       *                                                                                      CSW122A
+     C                   ENDSR                                                               CSW122A
+      *****************************************************************                      CSW122A
+     C/EJECT                                                                                 CSW122A
+      *****************************************************************                      CSW122A
+      *                                                               *                      CSW122A
+      *  SrResetDS - Reset Occurence for Data Structure               *                      CSW122A
+      *                                                               *                      CSW122A
+      *  Called by: SrOMSGN99                                         *                      CSW122A
+      *                                                               *                      CSW122A
+      *  Calls    : None                                              *                      CSW122A
+      *                                                               *                      CSW122A
+      *****************************************************************                      CSW122A
+     C     SrResetDS     BEGSR                                                               CSW122A
+      *                                                                                      CSW122A
+      ** Clear multiple occurrence data structure                                            CSW122A
+      *                                                                                      CSW122A
+     C                   CLEAR     *ALL          MULT                                        CSW122A
+     C                   EVAL      Q = 0                                                     CSW122A
      C                   ENDSR                                                               CSW122A
       *****************************************************************
      C/EJECT

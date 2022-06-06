@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR918985           Date 20Feb12               *
+      *  Last Amend No. CSW122A            Date 04May22               *	
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR918985           Date 20Feb12               *
       *                 MD056683           Date 14Sep20               *
       *                 MD055931           Date 02Jun20               *
       *                 AR921987           Date 22Feb12               *
@@ -152,16 +153,17 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122A  - SWIFT ISO 20022 CCR1 Generation of MTn99          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR918985 - Correct Retail account validation on From/To      *
       *             account data.                                     *
-      *             (Child: AR922601)                                 *      
+      *             (Child: AR922601)                                 *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
       *             the credit goes to the Account with Bank          *
       *  MD055931 - STP MT101/MT102 59F Validation - Error message    *
       *             description is not displayed when processing an   *
-      *             invalid 59F                                       *      
+      *             invalid 59F                                       *
       *  AR921987 - If Sender's Correspondent is decoded it must be   *
       *             placed in Receiver's Correspondent for IN (if     *
       *             Receiver's Correspondent is blank and Sender's    *
@@ -5197,11 +5199,21 @@
      C                     Z-ADDINMSGR    FTMSGR           Unique Ref.
      C                     Z-ADDINKPRT    FTKPRT           Part No.
      C                     MOVEL'MIN0182' FTINFG           Incoming Flag
+      *                                                                                      CSW122A
+      ** When CSW122 is on, set incoming flag to                                             CSW122A
+      *                                                                                      CSW122A
+     C           CSW122    IFEQ 'Y'                                                          CSW122A
+     C                     MOVEL'MIN0622' FTINFG           Incoming Flag                     CSW122A
+     C                     ENDIF                                                             CSW122A
       *                                                                                       CSW220
       ** Update MT199 flag                                                                    CSW220
       *                                                                                       CSW220
      C           CSW220    IFEQ 'Y'                                                           CSW220
      C           PMTPY     ANDEQ'103'                                                       MD055849
+     C           CSW122    OREQ 'Y'                                                          CSW122A
+     C           PMTPY     ANDEQ'202'                                                        CSW122A
+     C           CSW122    OREQ 'Y'                                                          CSW122A
+     C           PMTPY     ANDEQ'205'                                                        CSW122A
      C                     MOVEL'R'       FTM199                                              CSW220
      C                     ENDIF                                                              CSW220
       *
@@ -11831,7 +11843,7 @@
       *                                                                                       CSW201
      C                     CALL 'SWIF2001'                                                    CSW201
      C                     PARM *BLANKS   P@RTCD                                              CSW201
-a     *                                                                                       CSW201
+A     *                                                                                       CSW201
      C           P@RTCD    IFEQ 'CSW2001'                                                     CSW201
      C                     MOVE 'Y'       CSW201  1                                           CSW201
      C                     ELSE                                                               CSW201
@@ -12362,6 +12374,20 @@ a     *                                                                         
      C           @RTCD     IFEQ *BLANKS                                                       CAP205
      C                     MOVEL'Y'       CAP205                                              CAP205
      C                     ENDIF                                                              CAP205
+      *                                                                                      CSW122A
+      ** Determine if SAR CSW122 is installed                                                CSW122A
+      *                                                                                      CSW122A
+     C                     MOVEL'N'       CSW122  1                                          CSW122A
+     C                     CALL 'AOSARDR0'                                                   CSW122A
+     C                     PARM '       ' @RTCD                                              CSW122A
+     C                     PARM '*VERIFY' @OPTN                                              CSW122A
+     C                     PARM 'CSW122'  @SARD                                              CSW122A
+     C           SCSARD    PARM SCSARD    DSFDY                                              CSW122A
+      *                                                                                      CSW122A
+      *                                                                                      CSW122A
+     C           @RTCD     IFEQ *BLANKS                                                      CSW122A
+     C                     MOVEL'Y'       CSW122                                             CSW122A
+     C                     ENDIF                                                             CSW122A
       *                                                                                       CSW220
       ** Determine if Swift 2020 is activated                                                 CSW220
       *                                                                                       CSW220

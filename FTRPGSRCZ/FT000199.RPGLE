@@ -313,7 +313,7 @@
      D LF              S              1A
      D CRLF            S              2A
                                                                                             CSW122A
-      ** Work Variables (CSW122)                                                            CSW122A
+      ** Work Variables (CSW122A)                                                           CSW122A
      D WTRNoA          S             16A                                                    CSW122A
      D WTrnIdA         S             15A                                                    CSW122A
      D WTag79L3ac      S              6A                                                    CSW122A
@@ -731,8 +731,8 @@
      C                   ELSE                                                               MD055939
      C                   MOVEL     'N'           CFT014                                     MD055939
      C                   ENDIF                                                              MD055939
-      *                                                                                     MD055939
-      ** Access Switchable Features file for CSW122                                          CSW122A
+      *                                                                                      CSW122A
+      ** Access Switchable Features file for CSW122A                                         CSW122A
       *                                                                                      CSW122A
      C                   CALL      'AOSARDR0'                                                CSW122A
      C                   PARM      *BLANKS       @RTCD                                       CSW122A
@@ -804,7 +804,28 @@
      C                   DOW       *IN99 = '0'
 
      C                   EVAL      KFMsgR = FTMSGR
-
+      *                                                                                      CSW122A
+      ** If CSW122 is switched on, do processing for MT199REJT.                              CSW122A
+      *                                                                                      CSW122A
+     C                   IF        CSW122 = 'Y'                                              CSW122A
+      *                                                                                      CSW122A
+      ** Check for system value GenMTn99OnIgnore or GenMTn99OnSTPIgnore                      CSW122A
+      ** status REJT.                                                                        CSW122A
+      *                                                                                      CSW122A
+     C                   IF        PSVal2  = 'Y' AND FTINFG = 'MIN0622'                      CSW122A
+     C                             OR PSval3 = 'Y' AND FTINFG = 'MIN0182'                    CSW122A
+      *                                                                                      CSW122A
+      ** MT199 Status is RJCT                                                                CSW122A
+      *                                                                                      CSW122A
+     C                   IF        FTM199 = 'R'                                              CSW122A
+     C                   EXSR      SrSvCmFld                                                 CSW122A
+     C                   EXSR      MTn99REJT                                                 CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
       *                                                                                      CSW122A
      C                   IF        CSW220 = 'Y'                                              CSW122A
 
@@ -981,28 +1002,6 @@
      C                   IF        WGenFlg = 'Y'
      C                   EXSR      SrOMSG
      C                   ENDIF                                                               CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-      *                                                                                      CSW122A
-      ** If CSW122 is switched on, do processing for MT199UC.                                CSW122A
-      *                                                                                      CSW122A
-     C                   IF        CSW122 = 'Y'                                              CSW122A
-      *                                                                                      CSW122A
-      ** Check for system value GenMTn99OnIgnore or GenMTn99OnSTPIgnore                      CSW122A
-      ** status REJT.                                                                        CSW122A
-      *                                                                                      CSW122A
-     C                   IF        PSVal2  = 'Y' AND FTINFG = 'MIN0622'                      CSW122A
-     C                             OR PSval3 = 'Y' AND FTINFG = 'MIN0182'                    CSW122A
-      *                                                                                      CSW122A
-      ** MT199 Status is RJCT                                                                CSW122A
-      *                                                                                      CSW122A
-     C                   IF        FTM199 = 'R'                                              CSW122A
-     C                   EXSR      SrSvCmFld                                                 CSW122A
-     C                   EXSR      MTn99REJT                                                 CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
      C                   IF        WGenFlg = 'Y'                                             CSW122A

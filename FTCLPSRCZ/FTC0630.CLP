@@ -555,7 +555,9 @@
 /**  Check for Database Errors Trapped by Program  **/
 /**/
         IF COND(%SWITCH(XXXXXX11)) THEN(GOTO DBERR)
-
+/**/                                                                                     /*CSW122A*/
+/**  Check if CSW122 is installed **/                                                    /*CSW122A*/
+/**/                                                                                     /*CSW122A*/
         CHGVAR     VAR(&CSW122) VALUE('N')                                               /*CSW122A*/
         CHGVAR     VAR(&RTCD) VALUE('       ')                                           /*CSW122A*/
         CHGVAR     VAR(&SARD) VALUE('CSW122')                                            /*CSW122A*/
@@ -591,7 +593,8 @@
         IF         COND(&MPHAS *EQ '*YES') THEN(DO)                                       /*CSW220*/
         CHGVAR     VAR(&PCOB) VALUE('Y')                                                  /*CSW220*/
         ENDDO                                                                             /*CSW220*/
-        CALL       PGM(FT000199) PARM(&PCOB &RTCD)                                        /*CSW220*/
+/*******CALL       PGM(FT000199) PARM(&PCOB &RTCD)                                /*CSW220 CSW122A*/
+        CALL       PGM(FT000199) PARM(&PCOB &RTCD &CSW122)                               /*CSW122A*/
         MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)                                /*CSW220*/
  /**/                                                                                     /*CSW220*/
  /** Execute rollback if SAR CSC022 is not enrolled or */                                 /*CSW220*/

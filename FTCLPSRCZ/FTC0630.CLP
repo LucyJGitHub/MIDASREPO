@@ -575,7 +575,7 @@
         CHGVAR     VAR(&RTCD) VALUE('       ')                                            /*CSW220*/
         CHGVAR     VAR(&PSWIFT) VALUE('CSW220')                                           /*CSW220*/
         CALL   PGM(SWIFTACTV) PARM(&PSWIFT &RTCD)                                         /*CSW220*/
-/********** IF     COND(&RTCD *EQ 'CSWACTV') THEN(DO)                             /*CSW220 CSW122A*/
+/********** IF     COND(&RTCD *EQ 'CSWACTV') THEN(DO)*/                           /*CSW220 CSW122A*/
         IF     COND((&RTCD *EQ 'CSWACTV') *OR +
                    (&CSW122 *EQ 'Y')) THEN(DO)                                           /*CSW122A*/
 /*  Check that ZMUSER dataarea has been set up in QTEMP, if not   */                      /*CSW220*/
@@ -594,7 +594,7 @@
         IF         COND(&MPHAS *EQ '*YES') THEN(DO)                                       /*CSW220*/
         CHGVAR     VAR(&PCOB) VALUE('Y')                                                  /*CSW220*/
         ENDDO                                                                             /*CSW220*/
-/*******CALL       PGM(FT000199) PARM(&PCOB &RTCD)                                /*CSW220 CSW122A*/
+/********** CALL       PGM(FT000199) PARM(&PCOB &RTCD)*/                          /*CSW220 CSW122A*/
         CALL       PGM(FT000199) PARM(&PCOB &RTCD &CSW122)                               /*CSW122A*/
         MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)                                /*CSW220*/
  /**/                                                                                     /*CSW220*/

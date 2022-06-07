@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD059408           Date 02Mar22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059408 - Portfolio Customer View - Accrued Interest to     *
+      *             Date not Calculated using latest IR Diary Event   *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *
@@ -54,6 +57,21 @@ O    D G_SEDEVD      E DS                  EXTNAME(GZSEDEVD  ) PREFIX(G_)
      C                   PARM                    I#TRAP            1
      C                   PARM                    I#BIMG         4000
      C                   PARM                    I#AIMG         4000
+      *                                                                                     MD059408
+      ** GPTRAPPD Updates                                                                   MD059408
+      *                                                                                     MD059408
+     C     I#TRAP        IFEQ      'Y'                                                      MD059408
+     C     I#BFAF        ANDEQ     'A'                                                      MD059408
+     C                   CALLB     'GOWTTSEDE'                                              MD059408
+     C                   PARM      *BLANK        W#RTCD            7                        MD059408
+     C                   PARM      *BLANK        W#ERMS           50                        MD059408
+     C                   PARM                    I#BIMG                                     MD059408
+     C                   PARM                    I#AIMG                                     MD059408
+     C     W#RTCD        IFEQ      '*ERROR'                                                 MD059408
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOWTTSEDE'                    MD059408
+     C                   EXSR      *PSSR                                                    MD059408
+     C                   ENDIF                                                              MD059408
+     C                   ENDIF                                                              MD059408
 O
 O     * Global File Updates
 O

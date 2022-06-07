@@ -319,8 +319,7 @@
      D WTrnIdA         S             15A                                                    CSW122A
      D WTag79L3ac      S              6A                                                    CSW122A
      D WTag79L3bc      S             16A                                                    CSW122A
-     D WTag202COV      S              1A                                                    CSW122A
-     D WTag205COV      S              1A                                                    CSW122A
+     D WTag119COV      S              1A                                                    CSW122A
      D WMtpy           S              3A                                                    CSW122A
 
       ** Variables for getting SWIFT BIC of destination
@@ -744,7 +743,7 @@
      C                   MOVEL     'Y'           CSW220                                      CSW122A
      C                   ELSE                                                                CSW122A
      C                   MOVEL     'N'           CSW220                                      CSW122A
-     C                   ENDIF
+     C                   ENDIF                                                               CSW122A
 
      C                   ENDSR
       /EJECT
@@ -1073,8 +1072,7 @@
      C                   EVAL      WTag79L3bc = *BLANKS                                      CSW122A
      C                   EVAL      WGenFlg = *BLANKS
      C                   EVAL      WIOFlg = *BLANKS                                         MD055939
-     C                   EVAL      WTag202COV = *BLANKS                                      CSW122A
-     C                   EVAL      WTag205COV = *BLANKS                                      CSW122A
+     C                   EVAL      WTag119COV = *BLANKS                                      CSW122A
      C                   EVAL      WMtpy = *BLANKS                                           CSW122A
 
       *
@@ -1880,7 +1878,7 @@
       *                                                               *                      CSW122A
       * Called by: SrRdIncMsg                                         *                      CSW122A
       *                                                               *                      CSW122A
-      * Calls: SrExtract103, SRExtract202, SRExtract205, SrOMSGN99    *                      CSW122A
+      * Calls: SrExtract199, SRExtract299, SrOMSGN99                  *                      CSW122A
       *                                                               *                      CSW122A
       *****************************************************************                      CSW122A
      C     MTn99REJT     BEGSR                                                               CSW122A
@@ -1895,13 +1893,10 @@
       ** Enter subroutine for different Message Type.                                        CSW122A
       *                                                                                      CSW122A
      C                   IF        WMtpy = '103'                                             CSW122A
-     C                   EXSR      SRExtract103                                              CSW122A
+     C                   EXSR      SRExtract199                                              CSW122A
      C                   EVAL      WGenFlg = 'Y'                                             CSW122A
-     C                   ELSEIF    WMtpy = '202'                                             CSW122A
-     C                   EXSR      SRExtract202                                              CSW122A
-     C                   EVAL      WGenFlg = 'Y'                                             CSW122A
-     C                   ELSEIF    WMtpy = '205'                                             CSW122A
-     C                   EXSR      SRExtract205                                              CSW122A
+     C                   ELSEIF    WMtpy = '202' OR WMtpy = '205'                            CSW122A
+     C                   EXSR      SRExtract299                                              CSW122A
      C                   EVAL      WGenFlg = 'Y'                                             CSW122A
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
@@ -1920,18 +1915,14 @@
       *                                                               *                      CSW122A
       *   Called by: MTn99REJT                                        *                      CSW122A
       *                                                               *                      CSW122A
-      *   Calls    : SrWref199, SrWref299                             *                      CSW122A
+      *   Calls    : SrWREFN99                                        *                      CSW122A
       *                                                               *                      CSW122A
       *****************************************************************                      CSW122A
      C     SrOMSGN99     BEGSR                                                               CSW122A
                                                                                              CSW122A
       ** Write reference record  (PF/MGOREFPD)                                               CSW122A
                                                                                              CSW122A
-     C                   IF        Wmtpy = '103'                                             CSW122A
-     C                   EXSR      SrWRef199                                                 CSW122A
-     C                   ELSEIF    Wmtpy = '202' OR Wmtpy = '205'                            CSW122A
-     C                   EXSR      SrWRef299                                                 CSW122A
-     C                   ENDIF                                                               CSW122A
+     C                   EXSR      SrWREFN99                                                 CSW122A
                                                                                              CSW122A
       ** Write multiple occurrence data structure to MGOMSGPD                                CSW122A
                                                                                              CSW122A
@@ -1964,14 +1955,16 @@
       /EJECT                                                                                 CSW122A
       *****************************************************************                      CSW122A
       *                                                               *                      CSW122A
-      * SrExtract103- Extract details for MT103                       *                      CSW122A
+      * SrExtract199- Extract details for MT199                       *                      CSW122A
       *                                                               *                      CSW122A
       * Called by: MTn99REJT                                          *                      CSW122A
       *                                                               *                      CSW122A
       * Calls: SrGetSeCN                                              *                      CSW122A
       *                                                               *                      CSW122A
       *****************************************************************                      CSW122A
-     C     SrExtract103  BEGSR                                                               CSW122A
+     C     SrExtract199  BEGSR                                                               CSW122A
+                                                                                             CSW122A
+     C                   EXSR      SrGetSeCN                                                 CSW122A
       *                                                                                      CSW122A
       ** Get tag 121                                                                         CSW122A
       ** Populate tag 121:UETR with the UETR value of the rejected MT103.                    CSW122A
@@ -2035,9 +2028,9 @@
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
       ** Get tag 79 Line 1                                                                   CSW122A
-      ** Populate line 1 of tag 79: Narrative Description of the rejected MT103              CSW122A
+      ** Populate line 1 of tag 79: REJT code followed by identification number              CSW122A
+      ** - currently defaulted to 99                                                         CSW122A
       *                                                                                      CSW122A
-     C                   EXSR      SrGetSeCN                                                 CSW122A
      C                   EVAL      WTag79L1ValA = RsnCode + FldNumber                        CSW122A
                                                                                              CSW122A
      C                   ADD       1             Q                                           CSW122A
@@ -2046,7 +2039,7 @@
      C                   MOVEL     WTag79L1ValA  MFLD                                        CSW122A
       *                                                                                      CSW122A
       ** Get tag 79 Line 2                                                                   CSW122A
-      ** Populate line 2 of tag 79: Narrative Description of the rejected MT103              CSW122A
+      ** Populate line 2 of tag 79: Code XT99 followed by MXReason code MS03                 CSW122A
       *                                                                                      CSW122A
      C                   EVAL      WTag79L2ValA = '/XT99/' + 'MS03/'                         CSW122A
                                                                                              CSW122A
@@ -2055,7 +2048,8 @@
      C                   MOVEL     WTag79L2ValA  MFLD                                        CSW122A
       *                                                                                      CSW122A
       ** Get tag 79 Line 3                                                                   CSW122A
-      ** Populate line 3 of tag 79: Narrative Description of the rejected MT103              CSW122A
+      ** Populate line 3 of tag 79: Code MREF followed by Original Message ID                CSW122A
+      ** from field 20 of rejected 103                                                       CSW122A
       *                                                                                      CSW122A
      C                   EVAL      WTag79L3ac = '/MREF/'                                     CSW122A
      C                   EVAL      WTag79L3bc = WTRNoA                                       CSW122A
@@ -2066,20 +2060,15 @@
      C                   MOVEL     WTag79L3ValA  MFLD                                        CSW122A
       *                                                                                      CSW122A
       ** Get tag 70                                                                          CSW122A
-      ** Populate tag 70: Remittance Information (Payment Reference) of the rejected MT103   CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = ':70:'                                           CSW122A
      C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
      C                   EVAL      WTag70ValA = DSMF35                                       CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':70:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag70ValA    MFLD                                        CSW122A
       *                                                                                      CSW122A
       ** Get tag 79 Line 4                                                                   CSW122A
-      ** Populate line 4 of tag 79: Narrative Description of the rejected MT103              CSW122A
+      ** Populate line 4 of tag 79: TREF Code followed by EndtoEndID from pacs.008           CSW122A
+      ** mapped as field 70 of the rejected 103                                              CSW122A
       *                                                                                      CSW122A
      C                   EVAL      WTag79L4ValA = '/TREF/' + WTag70ValA                      CSW122A
      C                   ADD       1             Q                                           CSW122A
@@ -2093,26 +2082,23 @@
       /EJECT                                                                                 CSW122A
       *****************************************************************                      CSW122A
       *                                                               *                      CSW122A
-      * SrExtract202- Extract details for MT202                       *                      CSW122A
+      * SrExtract299 - Extract details for MT299                      *                      CSW122A
       *                                                               *                      CSW122A
       * Called by: MTn99REJT                                          *                      CSW122A
       *                                                               *                      CSW122A
       * Calls: SrGetSeCN                                              *                      CSW122A
       *                                                               *                      CSW122A
       *****************************************************************                      CSW122A
-     C     SrExtract202  BEGSR                                                               CSW122A
+     C     SrExtract299  BEGSR                                                               CSW122A
+                                                                                             CSW122A
+     C                   EXSR      SrGetSeCN                                                 CSW122A
       *                                                                                      CSW122A
-      ** Check if 202 is COV.                                                                CSW122A
+      ** Check if Message Type is COV                                                        CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = '119:'                                           CSW122A
      C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WTag202COV = DSMF35                                       CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':119:'       MTAG                                        CSW122A
-     C                   MOVEL     WTag70ValA    MFLD                                        CSW122A
+     C                   EVAL      WTag119COV = DSMF35                                       CSW122A
                                                                                              CSW122A
      C                   ELSE                                                                CSW122A
      C     *LOCK         IN        LDA                                                       CSW122A
@@ -2124,9 +2110,9 @@
                                                                                              CSW122A
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
-      ** Mapping for MT202COV                                                                CSW122A
+      ** Mapping for MT299                                                                   CSW122A
       *                                                                                      CSW122A
-     C                   IF        WTag202COV = 'COV'                                        CSW122A
+     C                   IF        WTag119COV = 'COV' OR WTag119COV = 'STP'                  CSW122A
       *                                                                                      CSW122A
       ** Get tag 121                                                                         CSW122A
       ** Populate tag 121:UETR with the UETR value of the rejected MT202 COV                 CSW122A
@@ -2152,7 +2138,8 @@
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
       ** Get tag 20                                                                          CSW122A
-      ** Populate tag 20: Transaction Reference Number of the rejected MT202 COV             CSW122A
+      ** Populate tag 20: Transaction Reference Number of the rejected                       CSW122A
+      ** MT202/205 or MT202 COV/MT205 COV                                                    CSW122A
       *                                                                                      CSW122A
      C                   EVAL      Wtag20a = %CHAR(KFMsgR)                                   CSW122A
      C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)                     CSW122A
@@ -2171,9 +2158,9 @@
      C                   MOVEL     WTag20ValA    MFLD                                        CSW122A
       *                                                                                      CSW122A
       ** Get tag 79 Line 1                                                                   CSW122A
-      ** Populate line 1 of tag 79: Narrative Description of the rejected MT202 COV          CSW122A
+      ** Populate line 1 of tag 79: REJT code followed by identification number              CSW122A
+      ** - currently defaulted to 99                                                         CSW122A
       *                                                                                      CSW122A
-     C                   EXSR      SrGetSeCN                                                 CSW122A
      C                   EVAL      WTag79L1ValA = RsnCode + FldNumber                        CSW122A
                                                                                              CSW122A
      C                   ADD       1             Q                                           CSW122A
@@ -2182,7 +2169,7 @@
      C                   MOVEL     WTag79L1ValA  MFLD                                        CSW122A
       *                                                                                      CSW122A
       ** Get tag 79 Line 2                                                                   CSW122A
-      ** Populate line 2 of tag 79: Narrative Description of the rejected MT202 COV          CSW122A
+      ** Populate line 2 of tag 79: Code XT99 followed by MXReason code MS03                 CSW122A
       *                                                                                      CSW122A
      C                   EVAL      WTag79L2ValA = '/XT99/' + 'MS03/'                         CSW122A
       *                                                                                      CSW122A
@@ -2191,7 +2178,8 @@
      C                   MOVEL     WTag79L2ValA  MFLD                                        CSW122A
       *                                                                                      CSW122A
       ** Get tag 79 Line 3                                                                   CSW122A
-      ** Populate line 3 of tag 79: Narrative Description of the rejected MT202 COV          CSW122A
+      ** Populate line 3 of tag 79: Code MREF followed by Original Msssage ID                CSW122A
+      ** from field 20 of rejected 202/205 or 202 COV/205 COV                                CSW122A
       *                                                                                      CSW122A
      C                   EVAL      WTag79L3ac = '/MREF/'                                     CSW122A
      C                   EVAL      WTag79L3bc = WTRNoA                                       CSW122A
@@ -2202,120 +2190,16 @@
      C                   MOVEL     WTag79L3ValA  MFLD                                        CSW122A
       *                                                                                      CSW122A
       ** Get tag 21                                                                          CSW122A
-      ** Populate tag 21: Related Reference Number of the rejected MT202 COV                 CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      KFMtag = ':21:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
-     C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WTag70ValA = DSMF35                                       CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':21:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag70ValA    MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 4                                                                   CSW122A
-      ** Populate line 4 of tag 79: Narrative Description of the rejected MT202 COV          CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L4ValA = '/TREF/' + WTag70ValA                      CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     WTag79L4ValA  MFLD                                        CSW122A
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-      ** Mapping for MT202                                                                   CSW122A
-      *                                                                                      CSW122A
-     C                   ELSE                                                                CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 121                                                                         CSW122A
-      ** Populate tag 121:UETR with the UETR value of the rejected MT202                     CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      KFMtag = '121:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEINDTL0                                                  CSW122A
-     C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WTag121ValA = DTMFLD                                      CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':121:'       MTAG                                        CSW122A
-     C                   MOVEL     WTag121ValA   MFLD                                        CSW122A
-                                                                                             CSW122A
-     C                   ELSE                                                                CSW122A
-     C     *LOCK         IN        LDA                                                       CSW122A
-     C                   MOVE      '033'         DBASE                                       CSW122A
-     C                   MOVEL     'KLIncMsg'    DBKEY                                       CSW122A
-     C                   MOVEL     'MEINDTL0'    DBFILE                                      CSW122A
-     C                   OUT       LDA                                                       CSW122A
-     C                   EXSR      *PSSR                                                     CSW122A
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 20                                                                          CSW122A
-      ** Populate tag 20: Transaction Reference Number of the rejected MT202                 CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      Wtag20a = %CHAR(KFMsgR)                                   CSW122A
-     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)                     CSW122A
-     C                   EVAL      WTag20ValA = 'P' + WTag20a + WTag20b + 'A'                CSW122A
-     C                   EVAL      WTRNoA = WTag20ValA                                       CSW122A
-      *                                                                                      CSW122A
-      ** If the transaction has no Payment Reference, default tag 20 to MTRN                 CSW122A
-      *                                                                                      CSW122A
-     C                   IF        WTrnIdA = *BLANKS                                         CSW122A
-     C                   EVAL      WTrnIdA = WTRNoA                                          CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     ':20:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag20ValA    MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 1                                                                   CSW122A
-      ** Populate line 1 of tag 79: Narrative Description of the rejected MT202              CSW122A
-      *                                                                                      CSW122A
-     C                   EXSR      SrGetSeCN                                                 CSW122A
-     C                   EVAL      WTag79L1ValA = RsnCode + FldNumber                        CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     ':79:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag79L1ValA  MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 2                                                                   CSW122A
-      ** Populate line 2 of tag 79: Narrative Description of the rejected MT202              CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L2ValA = '/XT99/' + 'MS03/'                         CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     WTag79L2ValA  MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 3                                                                   CSW122A
-      ** Populate line 3 of tag 79: Narrative Description of the rejected MT202              CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L3ac = '/MREF/'                                     CSW122A
-     C                   EVAL      WTag79L3bc = WTRNoA                                       CSW122A
-     C                   EVAL      WTag79L3ValA = WTag79L3ac + WTag79L3bc                    CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     WTag79L3ValA  MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 21                                                                          CSW122A
-      ** Populate tag 21: Related Reference Number of the rejected MT202                     CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = ':21:'                                           CSW122A
      C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
      C                   IF        %FOUND                                                    CSW122A
      C                   EVAL      WTag21ValA = DSMF35                                       CSW122A
                                                                                              CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':21:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag21ValA    MFLD                                        CSW122A
       *                                                                                      CSW122A
       ** Get tag 79 Line 4                                                                   CSW122A
-      ** Populate line 4 of tag 79: Narrative Description of the rejected MT202              CSW122A
+      ** Populate line 4 of tag 79: TREF Code followed by EndtoEndID from pacs.009           CSW122A
+      ** mapped as field 21 of the rejected MT202/MT205 OR MT202 COV/MT205 COV               CSW122A
       *                                                                                      CSW122A
      C                   EVAL      WTag79L4ValA = '/TREF/' + WTag21ValA                      CSW122A
      C                   ADD       1             Q                                           CSW122A
@@ -2324,258 +2208,19 @@
                                                                                              CSW122A
      C                   ENDIF                                                               CSW122A
                                                                                              CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
      C                   ENDSR                                                               CSW122A
       *****************************************************************                      CSW122A
       /EJECT                                                                                 CSW122A
       *****************************************************************                      CSW122A
       *                                                               *                      CSW122A
-      * SrExtract205- Extract details for MT205                       *                      CSW122A
-      *                                                               *                      CSW122A
-      * Called by: MTn99REJT                                          *                      CSW122A
-      *                                                               *                      CSW122A
-      * Calls: SrGetSeCN                                              *                      CSW122A
-      *                                                               *                      CSW122A
-      *****************************************************************                      CSW122A
-     C     SrExtract205  BEGSR                                                               CSW122A
-      *                                                                                      CSW122A
-      ** Check if 205 is COV.                                                                CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      KFMtag = '119:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
-     C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WTag205COV = DSMF35                                       CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':119:'       MTAG                                        CSW122A
-     C                   MOVEL     WTag70ValA    MFLD                                        CSW122A
-                                                                                             CSW122A
-     C                   ELSE                                                                CSW122A
-     C     *LOCK         IN        LDA                                                       CSW122A
-     C                   MOVE      '034'         DBASE                                       CSW122A
-     C                   MOVEL     'KLIncMsg'    DBKEY                                       CSW122A
-     C                   MOVEL     'MEIN35L0'    DBFILE                                      CSW122A
-     C                   OUT       LDA                                                       CSW122A
-     C                   EXSR      *PSSR                                                     CSW122A
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-      ** Mapping for MT205COV                                                                CSW122A
-      *                                                                                      CSW122A
-     C                   IF        WTag205COV = 'COV'                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 121                                                                         CSW122A
-      ** Populate tag 121:UETR with the UETR value of the rejected MT205 COV                 CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      KFMtag = '121:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEINDTL0                                                  CSW122A
-     C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WTag121ValA = DTMFLD                                      CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':121:'       MTAG                                        CSW122A
-     C                   MOVEL     WTag121ValA   MFLD                                        CSW122A
-                                                                                             CSW122A
-     C                   ELSE                                                                CSW122A
-     C     *LOCK         IN        LDA                                                       CSW122A
-     C                   MOVE      '035'         DBASE                                       CSW122A
-     C                   MOVEL     'KLIncMsg'    DBKEY                                       CSW122A
-     C                   MOVEL     'MEINDTL0'    DBFILE                                      CSW122A
-     C                   OUT       LDA                                                       CSW122A
-     C                   EXSR      *PSSR                                                     CSW122A
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 20                                                                          CSW122A
-      ** Populate tag 20: Transaction Reference Number of the rejected MT205 COV             CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      Wtag20a = %CHAR(KFMsgR)                                   CSW122A
-     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)                     CSW122A
-     C                   EVAL      WTag20ValA = 'P' + WTag20a + WTag20b + 'A'                CSW122A
-     C                   EVAL      WTRNoA = WTag20ValA                                       CSW122A
-      *                                                                                      CSW122A
-      ** If the transaction has no Payment Reference, default tag 20 to MTRN                 CSW122A
-      *                                                                                      CSW122A
-     C                   IF        WTrnIdA = *BLANKS                                         CSW122A
-     C                   EVAL      WTrnIdA = WTRNoA                                          CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     ':20:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag20ValA    MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 1                                                                   CSW122A
-      ** Populate line 1 of tag 79: Narrative Description of the rejected MT205 COV          CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L1ValA = RsnCode + FldNumber                        CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     ':79:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag79L1ValA  MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 2                                                                   CSW122A
-      ** Populate line 2 of tag 79: Narrative Description of the rejected MT205 COV          CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L2ValA = '/XT99/' + 'MS03/'                         CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     WTag79L2ValA  MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 3                                                                   CSW122A
-      ** Populate line 3 of tag 79: Narrative Description of the rejected MT205 COV          CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L3ac = '/MREF/'                                     CSW122A
-     C                   EVAL      WTag79L3bc = WTRNoA                                       CSW122A
-     C                   EVAL      WTag79L3ValA = WTag79L3ac + WTag79L3bc                    CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     WTag79L3ValA  MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 21                                                                          CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      KFMtag = ':21:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
-     C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WTag21ValA = DSMF35                                       CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':21:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag70ValA    MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 4                                                                   CSW122A
-      ** Populate line 4 of tag 79: Narrative Description of the rejected MT205 COV          CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L4ValA = '/TREF/' + WTag70ValA                      CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     WTag79L4ValA  MFLD                                        CSW122A
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-      ** Mapping for MT205                                                                   CSW122A
-      *                                                                                      CSW122A
-     C                   ELSE                                                                CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 121                                                                         CSW122A
-      ** Populate tag 121:UETR with the UETR value of the rejected MT205                     CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      KFMtag = '121:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEINDTL0                                                  CSW122A
-     C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WTag121ValA = DTMFLD                                      CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':121:'       MTAG                                        CSW122A
-     C                   MOVEL     WTag121ValA   MFLD                                        CSW122A
-                                                                                             CSW122A
-     C                   ELSE                                                                CSW122A
-     C     *LOCK         IN        LDA                                                       CSW122A
-     C                   MOVE      '036'         DBASE                                       CSW122A
-     C                   MOVEL     'KLIncMsg'    DBKEY                                       CSW122A
-     C                   MOVEL     'MEINDTL0'    DBFILE                                      CSW122A
-     C                   OUT       LDA                                                       CSW122A
-     C                   EXSR      *PSSR                                                     CSW122A
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 20                                                                          CSW122A
-      ** Populate tag 20: Transaction Reference Number of the rejected MT205                 CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      Wtag20a = %CHAR(KFMsgR)                                   CSW122A
-     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)                     CSW122A
-     C                   EVAL      WTag20ValA = 'P' + WTag20a + WTag20b + 'A'                CSW122A
-     C                   EVAL      WTRNoA = WTag20ValA                                       CSW122A
-      *                                                                                      CSW122A
-      ** If the transaction has no Payment Reference, default tag 20 to MTRN                 CSW122A
-      *                                                                                      CSW122A
-     C                   IF        WTrnIdA = *BLANKS                                         CSW122A
-     C                   EVAL      WTrnIdA = WTRNoA                                          CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     ':20:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag20ValA    MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 1                                                                   CSW122A
-      ** Populate line 1 of tag 79: Narrative Description of the rejected MT205              CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L1ValA = RsnCode + FldNumber                        CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     ':79:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag79L1ValA  MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 2                                                                   CSW122A
-      ** Populate line 2 of tag 79: Narrative Description of the rejected MT205              CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L2ValA = '/XT99/' + 'MS03/'                         CSW122A
-      *                                                                                      CSW122A
-      ** Store tag 79 Line 2; Identified before entering this subroutine                     CSW122A
-      *                                                                                      CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     WTag79L2ValA  MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 3                                                                   CSW122A
-      ** Populate line 3 of tag 79: Narrative Description of the rejected MT205              CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L3ac = '/MREF/'                                     CSW122A
-     C                   EVAL      WTag79L3bc = WTRNoA                                       CSW122A
-     C                   EVAL      WTag79L3ValA = WTag79L3ac + WTag79L3bc                    CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     WTag79L3ValA  MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 21                                                                          CSW122A
-      ** Populate tag 21: Related Reference Number of the rejected MT205                     CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      KFMtag = ':21:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
-     C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WTag21ValA = DSMF35                                       CSW122A
-                                                                                             CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVE      ':21:'        MTAG                                        CSW122A
-     C                   MOVEL     WTag21ValA    MFLD                                        CSW122A
-      *                                                                                      CSW122A
-      ** Get tag 79 Line 4                                                                   CSW122A
-      ** Populate line 4 of tag 79: Narrative Description of the rejected MT205              CSW122A
-      *                                                                                      CSW122A
-     C                   EVAL      WTag79L4ValA = '/TREF/' + WTag21ValA                      CSW122A
-     C                   ADD       1             Q                                           CSW122A
-     C     Q             OCCUR     MULT                                                      CSW122A
-     C                   MOVEL     WTag79L4ValA  MFLD                                        CSW122A
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
-     C                   ENDSR                                                               CSW122A
-      *****************************************************************                      CSW122A
-      /EJECT                                                                                 CSW122A
-      *****************************************************************                      CSW122A
-      *                                                               *                      CSW122A
-      *   SrWREF199 - Write reference record to PF/MGOREFPD (MT199)   *                      CSW122A
+      *   SrWREFN99 - Write reference record to PF/MGOREFPD (MTN99)   *                      CSW122A
       *                                                               *                      CSW122A
       *   Called by: SrOMSGN99                                        *                      CSW122A
       *                                                               *                      CSW122A
       *   Calls    : None                                             *                      CSW122A
       *                                                               *                      CSW122A
       *****************************************************************                      CSW122A
-     C     SrWREF199     BEGSR                                                               CSW122A
+     C     SrWREFN99     BEGSR                                                               CSW122A
                                                                                              CSW122A
      C                   MOVE      *BLANKS       SYTM                                        CSW122A
      C                   MOVEL     'FT'          MODI                                        CSW122A
@@ -2592,7 +2237,11 @@
      C                   MOVEL     WSender       NWSN                                        CSW122A
      C                   MOVEL     WBnCs         NWBN                                        CSW122A
      C                   MOVEL     'SWIFT'       NWRK                                        CSW122A
+     C                   IF        WMtpy = '103'                                             CSW122A
      C                   MOVE      '199'         MTPY                                        CSW122A
+     C                   ELSEIF    WMtpy = '202' OR WMtpy = '205'                            CSW122A
+     C                   MOVE      '299'         MTPY                                        CSW122A
+     C                   ENDIF                                                               CSW122A
      C                   MOVE      'N'           MPRY                                        CSW122A
      C                   MOVEL     *BLANKS       LSCC                                        CSW122A
      C                   MOVEL     *BLANKS       PTST                                        CSW122A
@@ -2682,129 +2331,12 @@
                                                                                              CSW122A
      C                   ENDSR                                                               CSW122A
       *****************************************************************                      CSW122A
-      /EJECT                                                                                 CSW122A
-      *****************************************************************                      CSW122A
-      *                                                               *                      CSW122A
-      *   SrWREF299 - Write reference record to PF/MGOREFPD (MT299)   *                      CSW122A
-      *                                                               *                      CSW122A
-      *   Called by: SrOMSGN99                                        *                      CSW122A
-      *                                                               *                      CSW122A
-      *   Calls    : None                                             *                      CSW122A
-      *                                                               *                      CSW122A
-      *****************************************************************                      CSW122A
-     C     SrWREF299     BEGSR                                                               CSW122A
-                                                                                             CSW122A
-     C                   MOVE      *BLANKS       SYTM                                        CSW122A
-     C                   MOVEL     'FT'          MODI                                        CSW122A
-     C                   MOVEL     WTRNoA        TRNO                                        CSW122A
-     C                   MOVE      *BLANKS       TRNF                                        CSW122A
-     C                   MOVE      *BLANKS       TRNM                                        CSW122A
-     C                   MOVEL     WTrnIdA       MTRN                                        CSW122A
-     C                   MOVE      WPyTp         TNTP                                        CSW122A
-     C                   MOVE      WPySt         SBTP                                        CSW122A
-     C                   MOVE      *BLANKS       EVTP                                        CSW122A
-     C                   MOVEL     WSeCN         SECN                                        CSW122A
-     C                   MOVE      *BLANKS       DECN                                        CSW122A
-     C                   MOVEL     WReceiver     NWDS                                        CSW122A
-     C                   MOVEL     WSender       NWSN                                        CSW122A
-     C                   MOVEL     WBnCs         NWBN                                        CSW122A
-     C                   MOVEL     'SWIFT'       NWRK                                        CSW122A
-     C                   MOVE      '299'         MTPY                                        CSW122A
-     C                   MOVE      'N'           MPRY                                        CSW122A
-     C                   MOVEL     *BLANKS       LSCC                                        CSW122A
-     C                   MOVEL     *BLANKS       PTST                                        CSW122A
-     C                   MOVEL     *BLANKS       CARQ                                        CSW122A
-     C                   MOVEL     *BLANKS       MPDE                                        CSW122A
-     C                   MOVEL     @HRDT         HRDT                                        CSW122A
-     C                   MOVE      WTag20b       MGDE                                        CSW122A
-     C                   TIME                    MGTM                                        CSW122A
-     C                   MOVE      BJMRDT        LADT                                        CSW122A
-     C                   MOVE      MGTM          LATM                                        CSW122A
-      *                                                                                      CSW122A
-      ** Set-up Message Generation  Century flag                                             CSW122A
-      *                                                                                      CSW122A
-     C                   MOVEL     MGDE          YY                                          CSW122A
-     C                   IF        YY < 72                                                   CSW122A
-     C                   EVAL      CIND = '2'                                                CSW122A
-     C                   ELSE                                                                CSW122A
-     C                   EVAL      CIND = '1'                                                CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
-     C     MGST          IFEQ      'RSND'                                                    CSW122A
-     C                   MOVE      BJMRDT        RELD                                        CSW122A
-     C                   MOVE      MGTM          RELT                                        CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
-     C                   MOVEL     WTag20b       SVDT                                        CSW122A
-     C                   MOVEL     WICcy         CCY                                         CSW122A
-                                                                                             CSW122A
-     C                   IF        FTM199 = 'H' OR                                           CSW122A
-     C                             FTM199 = 'A' OR                                           CSW122A
-     C                             FTM199 = 'T'                                              CSW122A
-     C                   MOVE      'I'           AORR                                        CSW122A
-     C                   ELSE                                                                CSW122A
-     C                   MOVE      'D'           AORR                                        CSW122A
-     C                   ENDIF                                                               CSW122A
-      *                                                                                      CSW122A
-      ** Setup century indicator CINDV for value date SVDT                                   CSW122A
-      *                                                                                      CSW122A
-     C     SVDT          IFEQ      *BLANK                                                    CSW122A
-     C                   MOVE      *BLANK        CINDV                                       CSW122A
-     C                   ELSE                                                                CSW122A
-     C                   MOVEL     SVDT          YY                                          CSW122A
-     C     YY            IFLT      72                                                        CSW122A
-     C                   MOVE      '2'           CINDV                                       CSW122A
-     C                   ELSE                                                                CSW122A
-     C                   MOVE      '1'           CINDV                                       CSW122A
-     C                   ENDIF                                                               CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
-     C                   MOVEL     *BLANKS       NSNO                                        CSW122A
-     C                   MOVEL     *BLANKS       SACN                                        CSW122A
-     C                   MOVEL     *BLANKS       DESI                                        CSW122A
-                                                                                             CSW122A
-     C                   MOVEL     *BLANKS       RUSR                                        CSW122A
-     C                   MOVEL     *BLANKS       RWSN                                        CSW122A
-     C                   MOVEL     *BLANKS       AMTS                                        CSW122A
-     C                   MOVEL     *BLANKS       AMTX                                        CSW122A
-                                                                                             CSW122A
-      ** Branch details                                                                      CSW122A
-                                                                                             CSW122A
-     C                   MOVE      WBrCA         BRCA                                        CSW122A
-     C                   MOVE      *BLANKS       OTHB                                        CSW122A
-                                                                                             CSW122A
-     C                   MOVE      *BLANKS       NETI                                        CSW122A
-     C                   MOVE      *BLANKS       DELC                                        CSW122A
-     C                   MOVE      *BLANKS       DYST                                        CSW122A
-     C                   MOVE      *BLANKS       RSID                                        CSW122A
-     C                   MOVE      *BLANKS       MSE1                                        CSW122A
-     C                   MOVE      *BLANKS       ELIN                                        CSW122A
-     C                   MOVE      *BLANKS       SSAC                                        CSW122A
-     C                   MOVE      *BLANKS       MIR                                         CSW122A
-     C                   MOVE      *BLANKS       TSKS                                        CSW122A
-     C                   MOVE      *BLANKS       TSKY                                        CSW122A
-                                                                                             CSW122A
-     C                   WRITE     MGOREFD0                             05                   CSW122A
-                                                                                             CSW122A
-      ** Error on write to PF/MGOREFPD (message reference file)                              CSW122A
-                                                                                             CSW122A
-     C     *IN05         IFEQ      '1'                                                       CSW122A
-     C     *LOCK         IN        LDA                                                       CSW122A
-     C                   MOVE      '038'         DBASE                                       CSW122A
-     C                   MOVEL     '       '     DBKEY                                       CSW122A
-     C                   MOVEL     'MGOREFPD'    DBFILE                                      CSW122A
-     C                   OUT       LDA                                                       CSW122A
-     C                   EXSR      *PSSR                                                     CSW122A
-     C                   ENDIF                                                               CSW122A
-                                                                                             CSW122A
-     C                   ENDSR                                                               CSW122A
-      *****************************************************************                      CSW122A
      C/EJECT                                                                                 CSW122A
       *****************************************************************                      CSW122A
       *                                                               *                      CSW122A
       *  SrGetSeCN - Save Branch Customer from SDBRANCHPD             *                      CSW122A
       *                                                               *                      CSW122A
-      *  Called by: SrExtract103,SrExtract202,SrExtract205            *                      CSW122A
+      *  Called by: SrExtract199, SrExtract299                        *                      CSW122A
       *                                                               *                      CSW122A
       *  Calls    : AOBRCHR0                                          *                      CSW122A
       *                                                               *                      CSW122A

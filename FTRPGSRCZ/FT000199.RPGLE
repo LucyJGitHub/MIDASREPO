@@ -319,7 +319,7 @@
      D WTrnIdA         S             15A                                                    CSW122A
      D WTag79L3ac      S              6A                                                    CSW122A
      D WTag79L3bc      S             16A                                                    CSW122A
-     D WTag119COV      S              1A                                                    CSW122A
+     D WTag119COV      S              3A                                                    CSW122A
      D WMtpy           S              3A                                                    CSW122A
 
       ** Variables for getting SWIFT BIC of destination

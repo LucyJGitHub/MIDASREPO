@@ -2193,13 +2193,7 @@
      C                   MOVEL     WTag20b       SVDT                                        CSW122A
      C                   MOVEL     WICcy         CCY                                         CSW122A
                                                                                              CSW122A
-     C                   IF        FTM199 = 'H' OR                                           CSW122A
-     C                             FTM199 = 'A' OR                                           CSW122A
-     C                             FTM199 = 'T'                                              CSW122A
-     C                   MOVE      'I'           AORR                                        CSW122A
-     C                   ELSE                                                                CSW122A
      C                   MOVE      'D'           AORR                                        CSW122A
-     C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
       ** Setup century indicator CINDV for value date SVDT                                   CSW122A
       *                                                                                      CSW122A

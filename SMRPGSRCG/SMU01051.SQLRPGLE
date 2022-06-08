@@ -16,12 +16,17 @@
       *                                                               *
       *  (c)Finastra International Limited 2020                       *
       *                                                               *
-      *  Last Amend No. MD059573           Date 15Feb22               *
-      *  Prev Amend No. MD059184           Date 05Nov21               *
+      *  Last Amend No. MD059958           Date 17May22               *
+      *  Prev Amend No. MD059573           Date 15Feb22               *
+      *                 MD059184           Date 05Nov21               *
       *                 CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059958 - GPST and ZPST successfully run but produced dump. *
+      *             Error in SQL insert in GZDEALSDG and DEALSDG      *
+      *             due to added fields by CIR020.                    *
+      *           - Applied for MD-60057                              *
       *  MD059573 - Re-apply and adjust MD058089 on top of MD059184   *
       *  MD058089 - Deliverable Data Split for SM and UP              *
       *  MD059184 - Enhance Update via SQL Command                    *
@@ -110,8 +115,10 @@
       ** LAYER IS ZONAL.                                                                    MD059184
       *                                                                                     MD059184
      C**********         EVAL      SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +      MD059184 MD058089
-     C                   EVAL      SortSQLStmnt = 'SELECT * FROM SMFIUJW0 ' +               MD058089
-     C                             'WHERE LAYR = ''Zonal''' +                               MD059184
+     C**********         EVAL      SortSQLStmnt = 'SELECT * FROM SMFIUJW0 ' +      MD058089 MD059958
+     C**********                   'WHERE LAYR = ''Zonal''' +                      MD059184 MD059958
+     C                   EVAL      SortSQLStmnt = 'SELECT DISTINCT * FROM ' +               MD059958
+     C                             'SMFIUJW0 WHERE LAYR = ''Zonal''' +                      MD059958
      C                             ' ORDER BY PFILE ASC'                                    MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
@@ -123,8 +130,10 @@
       ** LAYER IS GLOBAL.                                                                   MD059184
       *                                                                                     MD059184
      C**********         EVAL      SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +      MD059184 MD058089
-     C                   EVAL      SortSQLStmnt = 'SELECT * FROM SMFIUJW0 ' +               MD058089
-     C                             'WHERE LAYR = ''Global''' +                              MD059184
+     C**********         EVAL      SortSQLStmnt = 'SELECT * FROM SMFIUJW0 ' +      MD058089 MD059958
+     C**********                   'WHERE LAYR = ''Global''' +                     MD059184 MD059958
+     C                   EVAL      SortSQLStmnt = 'SELECT DISTINCT * FROM ' +               MD059958
+     C                             'SMFIUJW0 WHERE LAYR = ''Global''' +                     MD059958
      C                             ' ORDER BY PFILE ASC'                                    MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184

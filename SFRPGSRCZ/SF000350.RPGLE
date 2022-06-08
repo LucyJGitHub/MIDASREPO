@@ -48,6 +48,7 @@
       *             Some menus are not printed because items appear   *
       *             identical given 13 and 32 characters in the       *
       *             report: Extend field lengths                      *
+      *  263737 - Overlapping in 'Initial Menu' field in SF000350P1.  *
       *  MD050150 - Rename 'FusionBanking Midas' to 'Fusion Midas'    *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -450,7 +451,8 @@
       *
      C                   IF        %FOUND(GPTGRMNUH0)
      C                   EVAL      KMHID  = MHID
-     C                   MOVEL     MHNAME        SINITM
+     C**********         MOVEL     MHNAME        SINITM                                       263737
+     C                   MOVEL(P)  MHNAME        SINITM                                       263737
       *
      C                   EVAL      RQDLN1 = 1
      C                   EVAL      DIFLN1 = OFLLN1 - PRTLN1

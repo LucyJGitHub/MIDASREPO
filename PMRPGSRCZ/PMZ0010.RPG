@@ -19,12 +19,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056309           Date 21Jul20               *
+      *  Prev Amend No. HUT113             Date 01Apr20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSC022             Date 24Feb04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
@@ -34,6 +36,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056309 - Missing MD-51933 functionality                    *
+      *             Intrusive changes and amendments to hooks:        *
+      *             HUT113_028, HUT113_029, HUT113_030, HUT113_031    *
+      *             and HUT113_033                                    *
+      *  HUT113 - Full Private Banking Functionality in FM            *
+      *           (Upgrade HUT026 to FM2.1 SP22)                      *
+      *           Apply fix MD051933                                  *
+      *           Addition of hooks HUT113_027 to HUT113_033          *
+      *  MD051933A - Invalid Portfolio created via Portfolio          *
+      *              Management Customer Details Maintenance (system  *
+      *              accepts '000A' to '000I' as default portfolio)   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
@@ -91,6 +104,9 @@
      ISDMMOD    E DSSDMMODPD                                              CPB001
       * SDMMODD0 - Module Details                                         CPB001
       *
+     I/COPY WNCPYSRC,HUT113_033                                                        HUT113
+      ** Named Constant                                                                    MD056309
+     I              '0123456789'          C         DIGITS                                 MD056309
       *...................................................................
       * Error processing data structures:
       *
@@ -154,6 +170,8 @@
      C                     MOVELW0CUST    W0PREF    P
      C           W0BOKC    CAT  W0PREF:1  W0PREF
      C           W0PTFR    CAT  W0PREF:1  W0PREF
+      *
+     C/COPY WNCPYSRC,HUT113_027
       *
       **  Validate Portfolio Reference depending on action
       *
@@ -291,17 +309,38 @@
       *
       *  If not found send message to program queue
       *
+      *
+     C/COPY WNCPYSRC,HUT113_028                                                        HUT113
      C           W0PTFR    CAT  W0CUST    PMMSDT    P
      C                     MOVEL'PMA0001' PMMSID
      C                     MOVELW0CPGM    PMPGMQ
      C                     EXSR PMSNMS
+     C                     MOVEL'PMA0001' W0RTN                                            MD056309
+     C/COPY WNCPYSRC,HUT113_029                                                        HUT113
+      *                                                                                    MD056309
+     C                     Z-ADD*ZEROS    PORCHK  40                                       MD056309
+     C                     MOVE W0PTFR    PORCHK                                           MD056309
+     C           DIGITS    CHECKW0PTFR                   10                                MD056309
+     C           *IN10     IFEQ *OFF                                                       MD056309
+     C           PORCHK    IFGE 1                                                          MD056309
+     C           PORCHK    ANDLE99                                                         MD056309
+      *
       *
       * Cpysrc Templates portfolio does not exist
      C/COPY WNCPYSRC,PMZ0010NPT
       *
       *  Set return code to message id.
       *
-     C                     MOVEL'PMA0001' W0RTN
+     C/COPY WNCPYSRC,HUT113_030                                                        HUT113
+     C**********           MOVEL'PMA0001' W0RTN                                         MD056309
+     C/COPY WNCPYSRC,HUT113_031                                                        HUT113
+      *
+     C                     ELSE                                                         MD056309
+     C                     MOVEL'PMA1011' W0RTN                                         MD056309
+     C                     ENDIF                                                        MD056309
+     C                     ELSE                                                         MD056309
+     C                     MOVEL'PMA1011' W0RTN                                         MD056309
+     C                     ENDIF                                                        MD056309
       *
      C                     ENDIF
       *
@@ -617,6 +656,7 @@
      C                     MOVE 'N'       CSC022                                              CSC022
      C                     ENDIF                                                              CSC022
       *
+     C/COPY WNCPYSRC,HUT113_032                                                        HUT113
      C                     ENDSR
       *****************************************************************
       *

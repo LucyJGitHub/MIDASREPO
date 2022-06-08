@@ -20,12 +20,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057966           Date 19May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CAP087             Date 17Aug05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
@@ -35,6 +36,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057966 - Defaulting of exchange rate indicator not working.*
+      *             Need to ensure this works if customer is a Private*
+      *             Banking customer.                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CAP087 - Depot Movement API - Java Wrapper in Midasplus.     *
@@ -43,9 +47,9 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FPMHSEXPD  IF   E           K DISK                                         S01486
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -64,92 +68,92 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** DS for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Input field(s)
       ** --------------
- 
+
       ** Screen fields
- 
+
      D DDPTFR          S              4A
      D DDPTFROk        S              1A
      D DDDPDO          S              6A
      D DDDPID          S             10A
      D DDDPOD          S             10A
- 
- 
+
+
       ** ICD
       ** System Details
- 
+
      D PBInd           S              1A                                        CPB001
      D PortModInd      S              1A
      D Rundate         S              5P 0
      D FCR997          S              4A
- 
+
       ** Transaction Details
- 
+
      D WWPLCS          S              1A
      D QBCSBY          S              3A
      D PNPTCY          S              3A
      D DPMD            S              5P 0
      D DPDO            S              5P 0
- 
+
       ** Security Details
      D NMCY            S              3A
- 
+
      ** Output
- 
+
      D DDSPXR          S             14A
      D DDSPMD          S              1A
      D SPXR            S             13P 8
      D SPMD            S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -157,14 +161,14 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialization
       *
@@ -172,28 +176,34 @@
      C                   MOVE      *BLANKS       DDSPMD
      C                   Z-ADD     0             SPXR
      C                   MOVE      *BLANKS       SPMD
- 
+
      C     PortModInd    IFEQ      'Y'
      C     DDPTFROk      ANDNE     'N'
       *
       ** WWPLCS Processed in Portfolio Reference validation module.
       *
      C     WWPLCS        ANDEQ     'Y'
+      *                                                                                     MD057966
+      ** Or Private Banking customer                                                        MD057966
+      *                                                                                     MD057966
+     C     PortModInd    OREQ      'Y'                                                      MD057966
+     C     DDPTFROk      ANDNE     'N'                                                      MD057966
+     C     WWPBCS        ANDEQ     'Y'                                                      MD057966
       *
       ** - Depot is either a Walk In nor a Walk Out
       *
      C     DDDPID        IFNE      *BLANK
      C     DDDPOD        ORNE      *BLANK
- 
+
      C                   EXSR      SRCOMP
- 
+
      C                   END
      C                   END
       *
       ** Return
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -206,7 +216,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCOMP        BEGSR
       *
       ** Set Portfolio Currency to Customer Base Currency for 9997
@@ -230,7 +240,7 @@
       **  Format key HSEXKY using Nominal Ccy and Movement Date
       *
      C                   MOVE      NMCY          HSEXCY
- 
+
      C     DDDPDO        IFEQ      *BLANK
      C                   MOVE      DPMD          WWVD
      C                   ELSE
@@ -244,30 +254,30 @@
      C     WWVD          IFLT      RunDate
      C     DPMD          IFNE      RunDate
      C     DPDO          ANDNE     RunDate
- 
+
      C     HSEXKY        KLIST
      C                   KFLD                    HSEXCY            3
      C                   KFLD                    WWVD              5 0
- 
+
      C     HSEXKY        SETGT     PMHSEXPD
      C                   READP     PMHSEXPD                               44
- 
+
      C     *IN44         IFEQ      '1'
      C     NMCY          ORNE      Q8CCY
- 
+
      C     HSEXKY        SETLL     PMHSEXPD
      C                   READ      PMHSEXPD                               44
      C                   END
- 
+
      C                   END
      C                   ELSE
      C                   SETON                                            44
      C                   END
- 
+
      C     *IN44         IFEQ      '1'
      C     NMCY          ORNE      Q8CCY
      C     WWVD          OREQ      RunDate
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -282,7 +292,7 @@
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   Z-ADD     A6SPRT        Q8SPOT
      C                   MOVE      A6MDIN        Q8MDV1
      C                   Z-ADD     A6NBDP        Q8CDP
@@ -305,44 +315,44 @@
      C                   ELSE
      C                   MOVE      PNPTCY        HSEXCY
      C                   END
- 
+
      C     DPMD          IFNE      RunDate
      C     DPDO          ANDNE     RunDate
- 
+
      C     WWVD          IFNE      RunDate
      C     HSEXKY        SETGT     PMHSEXPD
      C                   READP     PMHSEXPD                               44
- 
+
      C     *IN44         IFEQ      '1'
      C     HSEXCY        ORNE      Q8CCY
      C     HSEXKY        SETLL     PMHSEXPD
      C                   READ      PMHSEXPD                               44
      C                   END
- 
+
      C                   END
      C                   ELSE
      C                   SETON                                            44
      C                   END
- 
+
      C     *IN44         IFEQ      '1'
      C     HSEXCY        ORNE      Q8CCY
      C     WWVD          ORGE      RunDate
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      HSEXCY        @AJCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDCURRPD'    DBFILE                         ************
      C                   MOVEL     '902'         DBASE                          * DBERR 902*
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   Z-ADD     A6SPRT        Q8SPOT
- 
+
      C                   Z-ADD     A6NBDP        Q8CDP
      C                   END
       *
@@ -351,14 +361,14 @@
      C                   Z-ADD     Q8SPOT        ZRATET           13 8
      C                   MOVE      Q8MDV1        ZMDINT            1
      C                   Z-ADD     Q8CDP         ZCDPT             1 0
- 
+
      C                   MOVE      PNPTCY        ZCCYT             3
       *
       **  Calculate Cross Rate between Nominal Currency and Portfolio
       **  Currency using standard SR/ZCCYCN.
       *
      C                   Z-ADD     0             ZAMTF            15 0
- 
+
      C                   CALLB     'ZCCYCN'
      C                   PARM                    ZAMTF
      C                   PARM                    ZCCYF
@@ -377,23 +387,23 @@
       **  SR/ZCCYCN to screen with warning.
       *
      C     AMCHK         TAG
- 
+
      C                   MOVE      *BLANKS       ZFIELD           16
      C                   MOVE      ZCRSRT        ZFIELD
      C                   Z-ADD     8             ZADEC             1 0
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
- 
+
      C                   MOVE      ZFIELD        DDSPXR
      C                   MOVE      ZCRSMD        DDSPMD
      C                   Z-ADD     ZCRSRT        SPXR
      C                   MOVE      ZCRSMD        SPMD
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -405,14 +415,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       ** Returned Fields
       ** ---------------
- 
+
      ** Screen fields
       * Portfolio Reference (4A) / Field Ok Indicator (1A)
       * Out Date (6A)
@@ -423,13 +433,13 @@
      C                   PARM                    DDDPDO
      C                   PARM                    DDDPID
      C                   PARM                    DDDPOD
- 
+
      ** Transaction Details
       * Movement (In) Date (5P 0)
       * Movement (Out) Date (5P 0)
      C                   PARM                    DPMD
      C                   PARM                    DPDO
- 
+
       ** Information from SEVDRTREF
       *  - OUTPUT of Portfolio Reference Validation Module
       * Portfolio Currency Code (3A) (PMPORTPD <DS PORTDET>)
@@ -438,10 +448,10 @@
      C                   PARM                    PNPTCY
      C                   PARM                    WWPLCS
      C                   PARM                    QBCSBY
- 
+
       ** Security Details
      C                   PARM                    NMCY
- 
+
      ** ICD
      ** System Details
       * Private Banking Indicator (1A)                                          CPB001
@@ -452,30 +462,31 @@
      C                   PARM                    PortModInd
      C                   PARM                    Rundate
      C                   PARM                    FCR997
- 
+
       ** Returned Parameters
       ** -------------------
- 
+
      ** Screen outputs
       * Exchange Rate (14A)
       * Spot Rate Mul/Div Ind (1A)
      C                   PARM                    DDSPXR
      C                   PARM                    DDSPMD
- 
+
      ** File outputs
       * Exchange Rate (13P 8)
       * Spot Rate Mul/Div Ind (1A)
      C                   PARM                    SPXR
      C                   PARM                    SPMD
- 
+     C                   PARM                    WWPBCS            1                        MD057966
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -1,0 +1,100 @@
+      *****************************************************************                       HUT110
+      *                                                               *                       HUT110
+      *  Midas - /COPY Member FT0510                                  *                       HUT110
+      *                                                               *                       HUT110
+      *  FT0510 - Midas FT Outgoing payments audit and report         *                       HUT110
+      *                                                               *                       HUT110
+      *  Last Amend No. HUT110  *CREATE    Date 17Apr20               *                       HUT110
+      *                                                               *                       HUT110
+      *---------------------------------------------------------------*                       HUT110
+      *                                                               *                       HUT110
+      *  HUT110 - Upgraded HUT022 to FBM 2.1 SP22                     *                       HUT110
+      *           RTGS via SWIFT.                                     *                       HUT110
+      *                                                               *                       HUT110
+      *****************************************************************                       HUT110
+      *                                                                                       HUT110
+      *                                                                                       HUT110
+      ** If HUT110 is ON, print details of RTGS Cover MT202 Destination.                      HUT110
+      *                                                                                       HUT110
+     C           HUT110    IFEQ 'Y'                                                           HUT110
+      *                                                                                       HUT110
+      ** Initialise print fields.                                                             HUT110
+      *                                                                                       HUT110
+     C                     MOVE '0'       *IN80                                               HUT110
+     C                     MOVEL*BLANKS   P3DST1 10                                           HUT110
+     C                     MOVEL*BLANKS   P3DST2 35                                           HUT110
+     C                     MOVEL*BLANKS   P3DST3 35                                           HUT110
+     C                     MOVEL*BLANKS   P3DST4 35                                           HUT110
+      *                                                                                       HUT110
+     C           PREF      CHAINXXPYXL1              90                                       HUT110
+     C           *IN90     IFEQ '0'                                                           HUT110
+     C           GD202C    ANDNE*BLANK                                                        HUT110
+      *                                                                                       HUT110
+      ** Access details based on type of entry (first check if Counterparty                   HUT110
+      ** Nostro then if a SWIFT BIC then if a Customer Number                                 HUT110
+      *                                                                                       HUT110
+      ** Check if Counterparty Nostro                                                         HUT110
+      *                                                                                       HUT110
+     C                     MOVELGD202C    @CNCD   8                                           HUT110
+     C                     CALL 'AOCNSTR0'                                                    HUT110
+     C                     PARM *BLANKS   @RTCD                                               HUT110
+     C                     PARM '*KEY   ' @OPTN                                               HUT110
+     C                     PARM           @CNCD                                               HUT110
+     C           SDCNST    PARM *BLANKS   DSFDY                                               HUT110
+      *                                                                                       HUT110
+     C           @RTCD     IFEQ *BLANKS                                                       HUT110
+      *                                                                                       HUT110
+      ** Counterparty Nostro found, get the CN details.                                       HUT110
+      *                                                                                       HUT110
+     C                     MOVEL@CNCD     P3DST1                                              HUT110
+     C                     MOVELAWCPNM    P3DST2                                              HUT110
+     C                     MOVELAWCNTN    P3DST3                                              HUT110
+     C                     MOVEL*BLANKS   P3DST4                                              HUT110
+     C                     MOVE '1'       *IN80                                               HUT110
+     C                     ELSE                                                               HUT110
+      *                                                                                       HUT110
+      ** Not Counterparty Nostro, check if SWIFT BIC.                                         HUT110
+      *                                                                                       HUT110
+     C                     MOVELGD202C    @SWFT  12                                           HUT110
+     C           @SWFT     CHAINSDCUSTL7             90                                       HUT110
+     C           *IN90     IFEQ '0'                                                           HUT110
+     C                     MOVELBBCUST    @CUST  10                                           HUT110
+     C                     ELSE                                                               HUT110
+      *                                                                                       HUT110
+      ** Not SWIFT BIC, must be a customer then.                                              HUT110
+      *                                                                                       HUT110
+     C                     MOVELGD202C    @CUST                                               HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+      ** Process as a customer.                                                               HUT110
+      *                                                                                       HUT110
+     C                     CALL 'AOCUSTR0'                                                    HUT110
+     C                     PARM *BLANKS   @RTCD                                               HUT110
+     C                     PARM '*KEY'    @OPTN                                               HUT110
+     C                     PARM           @CUST                                               HUT110
+     C                     PARM *BLANKS   @KEYS   7                                           HUT110
+     C           SDCUST    PARM SDCUST    DSSDY                                               HUT110
+      *                                                                                       HUT110
+      ** Record found, retrieve Name and Address Line 1-3 of customer.                        HUT110
+      *                                                                                       HUT110
+     C           @RTCD     IFEQ *BLANKS                                                       HUT110
+      *                                                                                       HUT110
+      ** Load RTGS MT202 Cover Destination details and enable                                 HUT110
+      ** *IN80 for printing in the report.                                                    HUT110
+      *                                                                                       HUT110
+     C                     MOVELGD202C    P3DST1                                              HUT110
+     C                     MOVELBBCNA1    P3DST2                                              HUT110
+     C                     MOVELBBCNA2    P3DST3                                              HUT110
+     C                     MOVELBBCNA3    P3DST4                                              HUT110
+     C                     MOVE '1'       *IN80                                               HUT110
+      *                                                                                       HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+     C                     ENDIF                                                              HUT110
+     C                     ENDIF                                                              HUT110
+      *                                                                                       HUT110
+      *****************************************************************                       HUT110
+      * End of /COPY HUT110_019                                       *                       HUT110
+      *****************************************************************                       HUT110

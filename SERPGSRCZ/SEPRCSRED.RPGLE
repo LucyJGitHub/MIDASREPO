@@ -14,12 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT121             Date 07Feb22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL031             Date 05Jul04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day           *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL031 - Taxation on Savings Income (Recompile)              *
@@ -36,18 +38,19 @@
       *           include                                             *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * FUNCTION Securities Details File - by Security name
      FPRICEL1   IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(PRICEDF:PRICEDFX)
+     F/COPY WNCPYSRC,HUT121_016                                                               HUT121
       * FUNCTION Securities Details File - if CAC005 is on use this file
      FSEPRICL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -59,54 +62,55 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
+     D/COPY WNCPYSRC,HUT121_017                                                               HUT121
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -173,7 +177,9 @@
      C                   IF        CAC005 = 'Y'
      C     KEY1          SETGT     SEPRICD0
      C                   ELSE
+     C/COPY WNCPYSRC,HUT121_019                                                               HUT121
      C     PRICEK        SETGT     PRICEDFX
+     C/COPY WNCPYSRC,HUT121_020                                                               HUT121
      C                   ENDIF
       *
       * Read until end of file or a valid record is found or an error
@@ -186,7 +192,9 @@
      C                   IF        CAC005 = 'Y'
      C                   READ      SEPRICD0                               99
      C                   ELSE
+     C/COPY WNCPYSRC,HUT121_021                                                               HUT121
      C                   READ      PRICEDFX                               99
+     C/COPY WNCPYSRC,HUT121_022                                                               HUT121
      C                   ENDIF
       *
      C                   ENDDO
@@ -214,7 +222,9 @@
      C                   IF        CAC005 = 'Y'
      C     KEY1          SETLL     SEPRICD0
      C                   ELSE
+     C/COPY WNCPYSRC,HUT121_023                                                               HUT121
      C     PRICEK        SETLL     PRICEDFX
+     C/COPY WNCPYSRC,HUT121_024                                                               HUT121
      C                   ENDIF
       *
       * Read until end of file or a valid record is found or an error
@@ -228,7 +238,9 @@
      C                   IF        CAC005 = 'Y'
      C                   READP     SEPRICD0                               99
      C                   ELSE
+     C/COPY WNCPYSRC,HUT121_025                                                               HUT121
      C                   READP     PRICEDFX                               99
+     C/COPY WNCPYSRC,HUT121_026                                                               HUT121
      C                   ENDIF
       *
      C                   ENDDO
@@ -252,7 +264,7 @@
       * FMTSCN - Format Screen Details
       *****************************************************************
      C     FMTSCN        BEGSR
- 
+
      C                   MOVEL     PSSN          @PSSN
      C*****PCNM*         IFNE      *ZEROS                                                     CSD027
      C     PCNM          IFNE      *BLANKS                                                    CSD027
@@ -306,25 +318,25 @@
       * VALCUS - VALIDATE*CUSTOMER                                    *
       *****************************************************************
      C     VALCUS        BEGSR
- 
+
       * Validate that the customer reference is numeric or blank.   *
      C**********         TESTN                   DDPCNM               98                      CSD027
      C**********         MOVE      DDPCNM        @@TEST            1                          CSD027
      C**********         TESTZ                   @@TEST                   99                  CSD027
- 
+
       * If Customer is blank, zero or a number, this is OK
      C*****DDPCNM        IFEQ      *BLANKS                                                    CSD027
      C******IN98         OREQ      '1'                                                        CSD027
      C******IN99         OREQ      '1'                                                        CSD027
      C**********         MOVE      DDPCNM        @@PCNM            6 0                        CSD027
      C                   MOVE      DDPCNM        @@PCNM            6                          CSD027
- 
+
       * RETURN ERROR MESSAGE
      C**********         ELSE                                                                 CSD027
      C**********         MOVEL     'MMA1142'     @ERRMS                                       CSD027
      C**********         RETURN                                                               CSD027
      C**********         ENDIF                                                                CSD027
- 
+     C/COPY WNCPYSRC,HUT121_153                                                               HUT121
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -351,6 +363,7 @@
      C                   PARM                    DDPRFC            4
      C                   PARM                    DDPPRT            2
      C                   PARM                    DDPTFR            4
+     C/COPY WNCPYSRC,HUT121_154                                                               HUT121
      C                   PARM                    @RDFWD            1
      C                   PARM                    @RDBCK            1
       * ICD
@@ -373,7 +386,7 @@
       ** Initialize program name
       *
      C                   MOVEL     'SEPRCSRED'   DBPGM
- 
+
      C     KEY1          KLIST
      C                   KFLD                    DDPSSN
      C                   KFLD                    @@PCNM
@@ -383,7 +396,7 @@
      C                   KFLD                    DDPRFC
      C                   KFLD                    DDPPRT
      C                   KFLD                    DDPTFR
- 
+
      C     PRICEK        KLIST
      C                   KFLD                    DDPSSN
      C                   KFLD                    @@PCNM
@@ -393,6 +406,7 @@
      C                   KFLD                    DDPPRT
      C                   KFLD                    DDPTFR
       *
+     C/COPY WNCPYSRC,HUT121_018                                                               HUT121
       *
       ** ACCESS BANK DETAILS
       *

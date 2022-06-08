@@ -791,7 +791,7 @@
       *                                                                                      CSW122A
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
-     C                   IF        CSW220 = 'Y'                                              CSW122A
+     C                   IF        CSW220 = 'Y' AND CRMTPY = '103'                           CSW122A
 
       *
       ** MT199 Status is ACCC

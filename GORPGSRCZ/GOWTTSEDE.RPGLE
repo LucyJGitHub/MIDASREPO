@@ -22,7 +22,7 @@
       *                                                               *
       *                                                               *
       *****************************************************************
-
+      *
      FSECTYXX   IF   E           K DISK    INFSR(*PSSR) USROPN PREFIX(SE_)
      FSDSECSL0XXIF   E           K DISK    INFSR(*PSSR) USROPN PREFIX(SD_)
      FCPOSS     IF   E           K DISK    INFSR(*PSSR)
@@ -140,7 +140,7 @@
      C                   EXSR      SETUP_TRAPSCPS
      C                   EXSR      WRITE_TRAP
      C                   ENDIF
-
+      *
      C                   ENDIF
       *
       ** Apply 'New' (After)

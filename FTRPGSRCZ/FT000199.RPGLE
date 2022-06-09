@@ -776,8 +776,8 @@
       ** Check for system value GenMTn99OnIgnore or GenMTn99OnSTPIgnore                      CSW122A
       ** status REJT.                                                                        CSW122A
       *                                                                                      CSW122A
-     C                   IF        (PSVal2  = 'Y' AND FTINFG = 'MIN0182')                    CSW122A
-     C                             OR (PSval3 = 'Y' AND FTINFG = 'MIN0622')                  CSW122A
+     C                   IF        (PSVal3  = 'Y' AND FTINFG = 'MIN0182')                    CSW122A
+     C                             OR (PSval2 = 'Y' AND FTINFG = 'MIN0622')                  CSW122A
       *                                                                                      CSW122A
       ** MT199 Status is RJCT                                                                CSW122A
       *                                                                                      CSW122A

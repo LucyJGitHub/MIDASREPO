@@ -130,16 +130,20 @@
       * File information data structure
       *
       * Outward parameters
-     IPARC        DS                              3
+     I***PARC        DS                              3                                        CLE138
+     IPARC        DS                              7                                           CLE138
       * KEY : Facility Types retrieval
       * I : MAP Facility type
      I                                        1   3 PAFCTY
+     I                                        4   7 PACLAS                                    CLE138
       *
       * Outward parameters
-     IPBRC        DS                              3
+     I***PBRC        DS                              3                                        CLE138
+     IPBRC        DS                              7                                           CLE138
       * KEY : Facility Types retrieval
       * I : MAP Facility type
      I                                        1   3 PBFCTY
+     I                                        4   7 PBCLAS                                    CLE138
       *
      IRUNDAT      DS
      I                                        1   7 MRDT
@@ -223,8 +227,10 @@
       * Position DBF file
      C           KPOS      KLIST
      C                     KFLD           AMFCTY           Facility type
+     C                     KFLD           AMCLAS           Facility class                     CLE138
       * Setup key
      C                     MOVEL#2FCTY    AMFCTY           Facility type
+     C                     MOVEL#2CLAS    AMCLAS           Facility class                     CLE138
      C           *INU1     IFEQ *ON                                                           CSD031
      C           KPOS      SETLLGPFACTD1                                                      CSD031
      C                     READ GPFACTD1               8782                                   CSD031
@@ -239,6 +245,8 @@
      C                     MOVEL#2TYLC    WZTYLC           Type of Last Ch
      C           *LIKE     DEFN #2FCTY    WZFCTY
      C                     MOVEL#2FCTY    WZFCTY           Facility type
+     C           *LIKE     DEFN #2CLAS    WZCLAS                                              CLE138
+     C                     MOVEL#2CLAS    WZCLAS           Facility class                     CLE138
      C           *LIKE     DEFN #2FCNM    WZFCNM
      C                     MOVEL#2FCNM    WZFCNM           Facility Name
      C           *LIKE     DEFN #2AACC    WZAACC                                              CSD031
@@ -326,10 +334,6 @@
      C           *IN82     DOWEQ'0'                        DO
      C           ##RROK    ANDLT##SFLN
      C           ##RRRD    ANDLTW0SLM
-      * Check Facility Type if the same as the previous record, read next record              CLE138
-     C           AMFCTY    IFEQ #1FCTY                     Facility Type                      CLE138
-     C           AMFCTY    CABEQ#1FCTY    BB020            Facility Type                      CLE138
-     C                     END                                                                CLE138
       * Check selection fields - if fail, read next record
      C           #2LCD     IFNE *ZERO                      Last Change Dat
      C           AMLCD     CABNE#2LCD     BB020            Last Change Dat
@@ -510,6 +514,7 @@
      C                     MOVEL'N'       W0DCF   1
       * Change of position specified
      C           WZFCTY    CASNE#2FCTY    FBRQRL
+     C           WZCLAS    CASNE#2CLAS    FBRQRL                                              CLE138
      C           WZFCNM    CASNE#2FCNM    FBRQRL
      C           WZPGID    CASNE#2PGID    FBRQRL                                              CLE164
      C                     END
@@ -542,6 +547,7 @@
       * Fr - Edit Facility Type - Facility Types  *
      C                     CLEARPARC
      C                     MOVEL*BLANK    PAFCTY           Facility type
+     C                     MOVEL*BLANK    PACLAS           Facility class                     CLE138
       *
      C                     CALL 'SD0271R'              90  Fr - Edit Facil
      C                     PARM *BLANK    W0RTN   7
@@ -659,6 +665,7 @@
       * Fr - Dsp Facility Type - Facility Types  *
      C                     CLEARPBRC
      C                     MOVEL#1FCTY    PBFCTY           Facility type
+     C                     MOVEL#1CLAS    PBCLAS           Facility class                     CLE138
       *
      C                     CALL 'SD0271E'              90  Fr - Dsp Facili
      C                     PARM *BLANK    W0RTN   7
@@ -696,6 +703,7 @@
       * Fr - Edit Facility Type - Facility Types  *
      C                     CLEARPARC
      C                     MOVEL#1FCTY    PAFCTY           Facility type
+     C                     MOVEL#1CLAS    PACLAS           Facility class                     CLE138
       *
      C                     CALL 'SD0271R'              90  Fr - Edit Facil
      C                     PARM *BLANK    W0RTN   7
@@ -721,45 +729,6 @@
      C                     MOVEL'Y'       W0RSF            *Reload subfile
      C                     END                             *FI
      C/COPY WNCPYSRC,SDH00054
-      *                                                                                       CLE138
-     C           CLE138    IFEQ 'Y'                                                           CLE138
-     C           #1SEL     ANDEQ'C'                                                           CLE138
-      *                                                                                       CLE138
-     C                     CALL 'SD0273M'              90                                     CLE138
-     C                     PARM           #1FCTY           Facility Type                      CLE138
-     C                     PARM           W0RTN   7        Return Code                        CLE138
-      *                                                                                       CLE138
-     C           *IN90     IFEQ '1'                                                           CLE138
-     C* Call to program ended in error                                                        CLE138
-     C                     MOVEL'Y2U0032' W0RTN                                               CLE138
-     C                     MOVEL*BLANKS   W0CLPG 10                                           CLE138
-     C                     MOVEL'SD0273M' W0CLPG                                              CLE138
-     C* Send message '*Error occured on CALL...'                                              CLE138
-     C                     MOVEL'Y2U0032' ZAMSID                                              CLE138
-     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CLE138
-     C                     MOVELW0CLPG    ZAMSDA           Message data                       CLE138
-     C                     EXSR ZASNMS                                                        CLE138
-     C                     ENDIF                                                              CLE138
-      *                                                                                       CLE138
-      * Error detected?                                                                       CLE138
-     C           W0RTN     IFNE *BLANK                                                        CLE138
-     C                     SETON                     98    *                                  CLE138
-     C                     END                                                                CLE138
-     C                     MOVEL'Y'       W0RSF            *Reload subfile                    CLE138
-      *                                                                                       CLE138
-     C                     ELSE                                                               CLE138
-      *                                                                                       CLE138
-     C           CLE138    IFEQ 'N'                                                           CLE138
-     C           #1SEL     ANDEQ'C'                                                           CLE138
-      ** Setup message data for message                                                       CLE138
-     C                     MOVEL#1SEL     ZA0001                                              CLE138
-      ** Send message 'Invalid action code'                                                   CLE138
-     C                     MOVEL'CLE1380' ZAMSID                                              CLE138
-     C                     EXSR ZASNMS                                                        CLE138
-     C                     SETON                     9833                                     CLE138
-     C                     ENDIF                                                              CLE138
-     C                     ENDIF                                                              CLE138
-      *                                                                                       CLE138
       * CASE: RCD.*SFLSEL is *Delete
      C           #1SEL     IFEQ 'D'                        *IF
       * CASE: WRK.Set Up Complete is No
@@ -767,6 +736,7 @@
       * Fr - Edit Facility Type - Facility Types  *
      C                     CLEARPARC
      C                     MOVEL#1FCTY    PAFCTY           Facility type
+     C                     MOVEL#1CLAS    PACLAS           Facility class                     CLE138
       *
      C                     CALL 'SD0271R'              90  Fr - Edit Facil
      C                     PARM *BLANK    W0RTN   7
@@ -833,33 +803,6 @@
      C**********           MOVEL'Y'       W0DCF            *Defer confirm                   MD024140
      C**********           GOTO DCEXIT                     *QUIT                            MD024140
      C/COPY WNCPYSRC,SDH00055
-      *                                                                                       CLE138
-     C           #1SEL     IFEQ 'C'                                                           CLE138
-      *                                                                                       CLE138
-     C                     CALL 'SD0273E'              90                                     CLE138
-     C                     PARM           #1FCTY           Facility Type                      CLE138
-     C                     PARM           W0RTN   7        Return Code                        CLE138
-      *                                                                                       CLE138
-     C           *IN90     IFEQ '1'                                                           CLE138
-     C* Call to program ended in error                                                        CLE138
-     C                     MOVEL'Y2U0032' W0RTN                                               CLE138
-     C                     MOVEL*BLANKS   W0CLPG 10                                           CLE138
-     C                     MOVEL'SD0273E' W0CLPG                                              CLE138
-     C* Send message '*Error occured on CALL...'                                              CLE138
-     C                     MOVEL'Y2U0032' ZAMSID                                              CLE138
-     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CLE138
-     C                     MOVELW0CLPG    ZAMSDA           Message data                       CLE138
-     C                     EXSR ZASNMS                                                        CLE138
-     C                     ENDIF                                                              CLE138
-      *                                                                                       CLE138
-      * Error detected?                                                                       CLE138
-     C           W0RTN     IFNE *BLANK                                                        CLE138
-     C                     SETON                     98    *                                  CLE138
-     C                     END                                                                CLE138
-     C                     MOVEL'Y'       W0RSF            *Reload subfile                    CLE138
-      *                                                                                       CLE138
-     C                     ENDIF                                                              CLE138
-      *                                                                                       CLE138
      C**********           END                             *FI                              MD024140
      C**********           END                             *FI                              MD024140
      C                     END                             *FI
@@ -918,6 +861,9 @@
      C                     MOVE WEACC     #1EACC                                              CSD031
      C                     MOVE AMEACC    #1EFDT                                              CSD031
      C                     ENDIF                                                              CSD031
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVELAMCLAS    #1CLAS           Facility class                     CLE138
+     C                     ENDIF                                                              CLE138
       *================================================================
      CSR         MBEXIT    ENDSR
       /EJECT
@@ -1326,6 +1272,7 @@
      C                     CALL 'TABLETQ'              90                                     CSD031
      C           W0RTN     PARM W0RTN     WQ0012  7                                           CSD031
      C                     PARM AMFCTY    WQ0013  3                                           CSD031
+     C                     PARM AMCLAS    WQ0017  4                                           CLE138
      C                     PARM AMFCNM    WQ0014 30                                           CSD031
      C**********           PARM AMTYLC    WQ0015  1                                  CSD031 BUG11777
      C                     PARM           WQ0015  1                                         BUG11777
@@ -1551,6 +1498,9 @@
       *                                                                                       CLE138
      C           @RTCD     IFEQ *BLANKS                                                       CLE138
      C                     MOVE 'Y'       CLE138                                              CLE138
+     C                     MOVE *ON       *IN60                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE *OFF      *IN60                                               CLE138
      C                     ENDIF                                                              CLE138
       *                                                                                       CLE138
       * Copyright Statement 1988 - Standard Functions  * copyright
@@ -1570,14 +1520,8 @@
      C* Setup footer text:
      C* E=Enquire   F3=Main Menu   F5=Refresh
      C/COPY WNCPYSRC,SDH00077
-      *                                                                                       CLE138
-     C           CLE138    IFEQ 'Y'                                                           CLE138
-     C                     MOVEL'CLE1388' WUMSID           Message Identifier                 CLE138
-     C                     ELSE                                                               CLE138
-      *                                                                                       CLE138
      C                     MOVEL'USR3341' WUMSID  7        Message Identifier
      C/COPY WNCPYSRC,SDH00078
-     C                     ENDIF                                                              CLE138
      C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
      C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
      C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
@@ -1602,15 +1546,8 @@
      C* A=Amend  D=Delete  E=Enquire  F3=Main Menu  F5=Refresh
      C* F9=Go to 'Add'
      C/COPY WNCPYSRC,SDH00057
-      *                                                                                       CLE138
-     C           CLE138    IFEQ 'Y'                                                           CLE138
-     C                     MOVEL'CLE1382' WUMSID           Message Identifier                 CLE138
-     C                     ELSE                                                               CLE138
-      *                                                                                       CLE138
      C                     MOVEL'USR3334' WUMSID           Message Identifier
      C/COPY WNCPYSRC,SDH00058
-      *                                                                                       CLE138
-     C                     ENDIF                                                              CLE138
      C           *INU1     IFEQ *OFF                                                          CSD031
      C           CSD040    ANDEQ'Y'                                                           CSD031
      C                     MOVEL'CSD0003' WUMSID                                              CSD031
@@ -1637,15 +1574,8 @@
      C* A=Amend   E=Enquire   F3=Main Menu   F5=Refresh
      C* F9=Go to 'Add'
      C/COPY WNCPYSRC,SDH00059
-      *                                                                                       CLE138
-     C           CLE138    IFEQ 'Y'                                                           CLE138
-     C                     MOVEL'CLE1383' WUMSID           Message Identifier                 CLE138
-     C                     ELSE                                                               CLE138
-      *                                                                                       CLE138
      C                     MOVEL'USR3335' WUMSID           Message Identifier
      C/COPY WNCPYSRC,SDH00060
-      *                                                                                       CLE138
-     C                     ENDIF                                                              CLE138
      C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
      C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
      C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
@@ -1792,12 +1722,10 @@
       *****************************************************************                     MD024140
      C           SRVALM    BEGSR                                                            MD024140
       *                                                                                     MD024140
-      ***Action*code*must*be*A*or*D*or*E                                             MD024140 CLE138
-      ** Action code must be A or D or E or C                                                 CLE138
+      ** Action code must be A or D or E                                                    MD024140
       *                                                                                     MD024140
      C           #1SEL     IFNE ' '                                                         MD024140
      C           #1SEL     ANDNE'A'                                                         MD024140
-     C           #1SEL     ANDNE'C'                                                           CLE138
      C           #1SEL     ANDNE'D'                                                         MD024140
      C           #1SEL     ANDNE'E'                                                         MD024140
      C                     MOVEL#1SEL     ZA0002                                            MD024140
@@ -1821,7 +1749,6 @@
       *                                                                                     MD024140
      C           #1SEL     IFNE ' '                                                         MD024140
      C           #1SEL     ANDNE'E'                                                         MD024140
-     C           #1SEL     ANDNE'C'                                                           CLE138
      C                     MOVEL#1SEL     ZA0002                                            MD024140
      C                     MOVEL'USR0553' ZAMSID                                            MD024140
      C                     EXSR ZASNMS                                                      MD024140

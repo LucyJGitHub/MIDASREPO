@@ -142,8 +142,9 @@
        //                                                            *
        // Called by: Main processing                                 *
        //                                                            *
-       //  Calls: initialseSDTCLDPD, initialseSDTCLSPD,              *
-       //         initialseLEFEED, initialiseLEFCLTQD,               *
+       //  Calls: initialiseSDTCLDPD, initialiseSDTCLSPD,            *
+       //         initialiseLEFEED, initialiseLEFCLTQD,              *
+       //         initialiseTABLETQ, initialiseSDFACTPD,             *
        //         initialiseLEAGFTQD, initialiseLEFCAMQD,            *
        //         initialiseACKEYAL                                  *
        //                                                            *
@@ -159,6 +160,12 @@
 
                    //Call subroutine to initialise Midas LE Fees master detail
                    exsr initialiseLEFEED;
+
+                   //Call subroutine to initialise Midas SD Table File - Facility Types
+                   exsr initialiseTABLETQ;
+
+                   //Call subroutine to initialise Midas SD Facility Type Class
+                   exsr initialiseSDFACTPD;
 
                    //Call subroutine to initialise Midas LE Facilities Extension File
                    exsr initialiseLEFCLTQD;
@@ -363,6 +370,85 @@
                          if sqlCod = NO_COLUMN;
                             COL9 = 'FECLAS';
                             ERRMSG9 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
+                         endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // initialiseSDFACTPD                                         *
+       //                                                            *
+       // Called by: startInitialisation                             *
+       //                                                            *
+       //  Calls: none                                               *
+       //                                                            *
+       //*************************************************************
+
+       begsr initialiseSDFACTPD;
+
+                         //Update SDFACTPD
+                         wSqlStr = 'update SDFACTPD A SET ' +
+                                   'A.AMCLAS = ' + QUO + DefaultClass + QUO +
+                                   ' where A.AMCLAS =  ' + QUO + BLK_CLASS
+                                     +  QUO;
+                         exec sql
+                         execute immediate :wSqlStr;
+                         Count12 = SQLER3;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and sqlCod <> NO_COLUMN
+                            and sqlCod <> DUPLICATE;
+                            dBase    = 007;
+                            dBfile   = 'SDFACTPD';
+                            dBkey    = *blanks;
+                            dBpgm    = 'LE005000';
+                            exsr *pssr;
+                         endif;
+
+                          if sqlCod = NO_COLUMN;
+                            COL12 = 'AMCLAS';
+                            ERRMSG12 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
+                         endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // initialiseTABLETQ                                          *
+       //                                                            *
+       // Called by: startInitialisation                             *
+       //                                                            *
+       //  Calls: none                                               *
+       //                                                            *
+       //*************************************************************
+
+       begsr initialiseTABLETQ;
+
+                         //Update TABLETQ
+                         wSqlStr = 'update TABLETQ A SET ' +
+                                   'A.FCLS = ' + QUO + DefaultClass + QUO +
+                                   ' where A.FCLS =  ' + QUO + BLK_CLASS
+                                     +  QUO;
+                         exec sql
+                         execute immediate :wSqlStr;
+                         Count13 = SQLER3;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and sqlCod <> NO_COLUMN;
+                            dBase    = 007;
+                            dBfile   = 'SDFACTPD';
+                            dBkey    = *blanks;
+                            dBpgm    = 'LE005000';
+                            exsr *pssr;
+                         endif;
+
+                          if sqlCod = NO_COLUMN;
+                            COL13 = 'AMCLAS';
+                            ERRMSG13 = 'COLUMN DOES NOT EXIST';
                             leavesr;
                          endif;
 

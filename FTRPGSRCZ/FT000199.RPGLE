@@ -2141,7 +2141,7 @@
      C                   MOVEL     WTRNoA        TRNO                                        CSW122A
      C                   MOVE      *BLANKS       TRNF                                        CSW122A
      C                   MOVE      *BLANKS       TRNM                                        CSW122A
-     C                   MOVEL     WTrnIdA       MTRN                                        CSW122A
+     C                   MOVEL     WTRNoA        MTRN                                        CSW122A
      C                   MOVE      WPyTp         TNTP                                        CSW122A
      C                   MOVE      WPySt         SBTP                                        CSW122A
      C                   MOVE      *BLANKS       EVTP                                        CSW122A

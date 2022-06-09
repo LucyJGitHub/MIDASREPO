@@ -320,7 +320,6 @@
      D WTrnIdA         S             15A                                                    CSW122A
      D WTag79L3ac      S              6A                                                    CSW122A
      D WTag79L3bc      S             16A                                                    CSW122A
-     D WTag119COV      S              3A                                                    CSW122A
      D WMtpy           S              3A                                                    CSW122A
 
       ** Variables for getting SWIFT BIC of destination
@@ -1073,7 +1072,6 @@
      C                   EVAL      WTag79L3bc = *BLANKS                                      CSW122A
      C                   EVAL      WGenFlg = *BLANKS
      C                   EVAL      WIOFlg = *BLANKS                                         MD055939
-     C                   EVAL      WTag119COV = *BLANKS                                      CSW122A
      C                   EVAL      WMtpy = *BLANKS                                           CSW122A
      C                   EVAL      WReceiverA = *BLANKS                                      CSW122A
 

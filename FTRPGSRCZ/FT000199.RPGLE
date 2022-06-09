@@ -301,6 +301,7 @@
      D WBIC            S              8A                                                    MD056303
      D WBranch         S              3A                                                    MD056303
      D WReceiver       S             12A
+     D WReceiverA      S             12A                                                     CSW122A
      D WTag20a         S              8A
      D WTag20b         S              6A
      D***WTag79L3a       S             14A                                                  MD056303
@@ -319,6 +320,7 @@
      D WTrnIdA         S             15A                                                    CSW122A
      D WTag79L3ac      S              6A                                                    CSW122A
      D WTag79L3bc      S             16A                                                    CSW122A
+     D WTag119COV      S              3A                                                    CSW122A
      D WMtpy           S              3A                                                    CSW122A
 
       ** Variables for getting SWIFT BIC of destination
@@ -1071,7 +1073,9 @@
      C                   EVAL      WTag79L3bc = *BLANKS                                      CSW122A
      C                   EVAL      WGenFlg = *BLANKS
      C                   EVAL      WIOFlg = *BLANKS                                         MD055939
+     C                   EVAL      WTag119COV = *BLANKS                                      CSW122A
      C                   EVAL      WMtpy = *BLANKS                                           CSW122A
+     C                   EVAL      WReceiverA = *BLANKS                                      CSW122A
 
       *
       ** Reset variables for getting SWIFT BIC of destination
@@ -1958,6 +1962,24 @@
                                                                                              CSW122A
      C                   EXSR      SrGetSeCN                                                 CSW122A
       *                                                                                      CSW122A
+      ** Store value of Receiver from Rejected MT to work variable (WReceiverA)              CSW122A
+      ** Get the value of Sender in MEINCRPD.CRSNDR(Sender)                                  CSW122A
+      *                                                                                      CSW122A
+     C     KFMsgR        CHAIN     MEINCRL1                                                  CSW122A
+     C                   IF        %FOUND                                                    CSW122A
+                                                                                             CSW122A
+     C                   EVAL      WReceiverA = CRSNDR                                       CSW122A
+                                                                                             CSW122A
+     C                   ELSE                                                                CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '036'         DBASE                                       CSW122A
+     C                   MOVEL     'KFMsgR'      DBKEY                                       CSW122A
+     C                   MOVEL     'MEINCRL1'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
       ** Get tag 121                                                                         CSW122A
       ** Populate tag 121:UETR with the UETR value of the rejected message                   CSW122A
       *                                                                                      CSW122A
@@ -2127,7 +2149,7 @@
      C                   MOVE      *BLANKS       EVTP                                        CSW122A
      C                   MOVEL     WSeCN         SECN                                        CSW122A
      C                   MOVE      *BLANKS       DECN                                        CSW122A
-     C                   MOVEL     WReceiver     NWDS                                        CSW122A
+     C                   MOVEL     WReceiverA    NWDS                                        CSW122A
      C                   MOVEL     WSender       NWSN                                        CSW122A
      C                   MOVEL     WBnCs         NWBN                                        CSW122A
      C                   MOVEL     'SWIFT'       NWRK                                        CSW122A

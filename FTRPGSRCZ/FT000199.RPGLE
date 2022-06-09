@@ -317,7 +317,6 @@
       ** Work Variables (CSW122A)                                                           CSW122A
                                                                                             CSW122A
      D WTRNoA          S             16A                                                    CSW122A
-     D WTrnIdA         S             15A                                                    CSW122A
      D WTag79L3ac      S              6A                                                    CSW122A
      D WTag79L3bc      S             16A                                                    CSW122A
      D WMtpy           S              3A                                                    CSW122A
@@ -1121,7 +1120,6 @@
      C                   EVAL      WTRNo = *BLANKS
      C                   EVAL      WTRNoA = *BLANKS                                          CSW122A
      C                   EVAL      WTrnId = *BLANKS
-     C                   EVAL      WTrnIdA = *BLANKS                                         CSW122A
      C                   EVAL      WPyTp = *BLANKS
      C                   EVAL      WPySt = *BLANKS
      C                   EVAL      WBnCs = *BLANKS

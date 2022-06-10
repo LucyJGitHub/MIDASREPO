@@ -2286,10 +2286,12 @@
       *****************************************************************                      CSW122A
      C     SrGetMTPY     BEGSR                                                               CSW122A
       *                                                                                      CSW122A
-      ** Clear multiple occurrence data structure                                            CSW122A
+      ** Get Message Type                                                                    CSW122A
       *                                                                                      CSW122A
-     C                   CLEAR     *ALL          MULT                                        CSW122A
-     C                   EVAL      Q = 0                                                     CSW122A
+     C     KFMsgR        CHAIN     MEINCRL1                                                  CSW122A
+     C                   IF        %FOUND                                                    CSW122A
+     C                   EVAL      WMtpy = CRMTPY                                            CSW122A
+     C                   ENDIF                                                               CSW122A
      C                   ENDSR                                                               CSW122A
       *****************************************************************                      CSW122A
      C/EJECT                                                                                 CSW122A

@@ -62,7 +62,7 @@ O    D G_SEDEVD      E DS                  EXTNAME(GZSEDEVD  ) PREFIX(G_)
       *                                                                                     MD059408
      C     I#TRAP        IFEQ      'Y'                                                      MD059408
      C     I#BFAF        ANDEQ     'A'                                                      MD059408
-     C                   CALLB     'GOWTTSEDE'                                              MD059408
+     C                   CALL      'GOWTTSEDE'                                              MD059408
      C                   PARM      *BLANK        W#RTCD            7                        MD059408
      C                   PARM      *BLANK        W#ERMS           50                        MD059408
      C                   PARM                    I#BIMG                                     MD059408
@@ -109,6 +109,7 @@ O    C                   WRITE     W_SEDEVDF
 O    C                   ENDIF
 O    C                   ENDIF
  
+     C                   SETON                                        LR                    MD059408
      C                   RETURN
  
      C/SPACE 5

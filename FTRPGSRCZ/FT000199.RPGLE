@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD057056           Date 19May21               *
-      *  Prev Amend No. MD056683           Date 14Sep20               *
+      *  Last Amend No. CSW122A            Date 04May22               *
+      *  Prev Amend No. MD057056           Date 19May21               *
+      *                 MD056683           Date 14Sep20               *
       *                 MD056303           Date 18Jul20               *
       *                 MD056187           Date 02Jul20               *
       *                 MD056170           Date 30Jun20               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122A  - SWIFT ISO 20022 CCR1 Generation of MTn99          *
       *  MD057056 - SWIFT: F21 in MT199 is truncated                  *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
       *             the credit goes to the Account with Bank          *
@@ -80,6 +82,9 @@
 
       ** Logical File for retrieving MT199 sender
      FMEINCRL1  IF   E           K DISK    INFSR(*PSSR)
+                                                                                             CSW122A
+      ** Logical File for Message Incoming Details by Message Tag                            CSW122A
+     FMEIN35L0  IF   E           K DISK    INFSR(*PSSR)                                      CSW122A
 
       ** Logical File for retrieving Incoming Message Transaction Number
      FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)
@@ -150,10 +155,14 @@
       ** +--------------------------------------+
 
      D SValK1          C                   CONST('MT199Destination')
+     D SValK2          C                   CONST('GenMTn99OnSTPIgnore')                      CSW122A
+     D SValK3          C                   CONST('GenMTn99OnIgnore')                         CSW122A
      D StsACCC         C                   CONST('//ACCC')
      D StsRJCT         C                   CONST('//RJCT/MS03')
      D StsACSPH        C                   CONST('//ACSP/G002')
      D StsACSPT        C                   CONST('//ACSP/G001')
+     D RsnCode         C                   CONST('/REJT/')                                   CSW122A
+     D FldNumber       C                   CONST('99')                                       CSW122A
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -229,6 +238,7 @@
       ** Entry Parameter List
      D PCob            S              1A
      D PRtnCode        S              7A
+     D PCSW122         S              1A                                                     CSW122A
 
       ** Parameter Variables to call 'AOSVALR0'
      D PRtcd           S              7A
@@ -271,6 +281,17 @@
      D***WTag79L3Val     S             27A                                                  MD056303
      D WTag79L3Val     S             25A                                                    MD056303
      D WTag79L4Val     S             22A
+      *                                                                                      CSW122A
+      ** Variables for storing the final value of tags (CSW122)                              CSW122A
+      *                                                                                      CSW122A
+     D WTag121ValA     S             36A                                                     CSW122A
+     D WTag70ValA      S             35A                                                     CSW122A
+     D WTag20ValA      S             16A                                                     CSW122A
+     D WTag21ValA      S             35A                                                     CSW122A
+     D WTag79L1ValA    S             35A                                                     CSW122A
+     D WTag79L2ValA    S             35A                                                     CSW122A
+     D WTag79L3ValA    S             35A                                                     CSW122A
+     D WTag79L4ValA    S             35A                                                     CSW122A
 
       ** Work Variables
      D WIPRef          S             15A
@@ -280,6 +301,7 @@
      D WBIC            S              8A                                                    MD056303
      D WBranch         S              3A                                                    MD056303
      D WReceiver       S             12A
+     D WReceiverA      S             12A                                                     CSW122A
      D WTag20a         S              8A
      D WTag20b         S              6A
      D***WTag79L3a       S             14A                                                  MD056303
@@ -291,6 +313,13 @@
      D CR              S              1A
      D LF              S              1A
      D CRLF            S              2A
+                                                                                            CSW122A
+      ** Work Variables (CSW122A)                                                           CSW122A
+                                                                                            CSW122A
+     D WTRNoA          S             16A                                                    CSW122A
+     D WTag79L3ac      S              6A                                                    CSW122A
+     D WTag79L3bc      S             16A                                                    CSW122A
+     D WMtpy           S              3A                                                    CSW122A
 
       ** Variables for getting SWIFT BIC of destination
      D WDstT           S              1A
@@ -366,6 +395,8 @@
      D S01499          S              1A                                                    MD055939
      D CFT009          S              1A                                                    MD055939
      D CFT014          S              1A                                                    MD055939
+     D CSW122          S              1A                                                     CSW122A
+     D CSW220          S              1A                                                     CSW122A
 
       ** Variable for accessing TABFP
      D ZTABKY          S             12A
@@ -417,6 +448,7 @@
      C     *ENTRY        PLIST
      C                   PARM                    PCob
      C                   PARM                    PRtnCode
+     C                   PARM                    PCSW122                                     CSW122A
 
       *
       ** Retrieve ZMUSER details.
@@ -440,9 +472,11 @@
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      SValK1        PSValK1
      C                   PARM                    PSVal1
-     C                   PARM      *BLANKS       PSValK2
+     C*********          PARM      *BLANKS       PSValK2                                     CSW122A
+     C                   PARM      SValK2        PSValK2                                     CSW122A
      C                   PARM                    PSVal2
-     C                   PARM      *BLANKS       PSValK3
+     C*********          PARM      *BLANKS       PSValK3                                     CSW122A
+     C                   PARM      SValK3        PSValK3                                     CSW122A
      C                   PARM                    PSVal3
      C                   PARM      *BLANKS       PSValK4
      C                   PARM                    PSVal4
@@ -468,6 +502,16 @@
      C                   MOVE      '001'         DBASE
      C                   MOVEL     SValK1        DBKEY
      C                   ENDIF
+                                                                                             CSW122A
+     C                   IF        PSVal2 = '*NRF  '                                         CSW122A
+     C                   MOVE      '001'         DBASE                                       CSW122A
+     C                   MOVEL     SValK2        DBKEY                                       CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   IF        PSVal3 = '*NRF  '                                         CSW122A
+     C                   MOVE      '001'         DBASE                                       CSW122A
+     C                   MOVEL     SValK3        DBKEY                                       CSW122A
+     C                   ENDIF                                                               CSW122A
 
 
      C                   OUT       LDA
@@ -687,6 +731,18 @@
      C                   ELSE                                                               MD055939
      C                   MOVEL     'N'           CFT014                                     MD055939
      C                   ENDIF                                                              MD055939
+      *                                                                                      CSW122A
+      ** Get Switchable Feature value for CSW122A                                            CSW122A
+      *                                                                                      CSW122A
+     C                   MOVEL     PCSW122       CSW122                                      CSW122A
+      *                                                                                      CSW122A
+      ** Get Switchable Feature value for CSW220                                             CSW122A
+      *                                                                                      CSW122A
+     C     PRtnCode      IFEQ      'CSWACTV'                                                 CSW122A
+     C                   MOVEL     'Y'           CSW220                                      CSW122A
+     C                   ELSE                                                                CSW122A
+     C                   MOVEL     'N'           CSW220                                      CSW122A
+     C                   ENDIF                                                               CSW122A
 
      C                   ENDSR
       /EJECT
@@ -712,6 +768,33 @@
      C                   DOW       *IN99 = '0'
 
      C                   EVAL      KFMsgR = FTMSGR
+                                                                                             CSW122A
+      ** Get Message Type of MT Message                                                      CSW122A
+                                                                                             CSW122A
+     C                   EXSR      SrGetMTPY                                                 CSW122A
+      *                                                                                      CSW122A
+      ** If CSW122 is switched on, do processing for MT199REJT.                              CSW122A
+      *                                                                                      CSW122A
+     C                   IF        CSW122 = 'Y'                                              CSW122A
+      *                                                                                      CSW122A
+      ** Check for system value GenMTn99OnIgnore or GenMTn99OnSTPIgnore                      CSW122A
+      ** status REJT.                                                                        CSW122A
+      *                                                                                      CSW122A
+     C                   IF        (PSVal3  = 'Y' AND FTINFG = 'MIN0182')                    CSW122A
+     C                             OR (PSval2 = 'Y' AND FTINFG = 'MIN0622')                  CSW122A
+      *                                                                                      CSW122A
+      ** MT199 Status is RJCT                                                                CSW122A
+      *                                                                                      CSW122A
+     C                   IF        FTM199 = 'R'                                              CSW122A
+     C                   EXSR      SrSvCmFld                                                 CSW122A
+     C                   EXSR      MTn99REJT                                                 CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   IF        CSW220 = 'Y' AND WMTPY = '103'                            CSW122A
 
       *
       ** MT199 Status is ACCC
@@ -885,7 +968,10 @@
       *
      C                   IF        WGenFlg = 'Y'
      C                   EXSR      SrOMSG
-
+     C                   ENDIF                                                               CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   IF        WGenFlg = 'Y'                                             CSW122A
       *
       ** If generation is successful, turn MT199 to 'Z'
       *
@@ -960,6 +1046,17 @@
      C                   EVAL      WTag79L2Val = *BLANKS
      C                   EVAL      WTag79L3Val = *BLANKS
      C                   EVAL      WTag79L4Val = *BLANKS
+      *                                                                                      CSW122A
+      ** Reset variables for storing the final value of tags (CSW122)                        CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      WTag121ValA = *BLANKS                                     CSW122A
+     C                   EVAL      WTag70ValA = *BLANKS                                      CSW122A
+     C                   EVAL      WTag20ValA = *BLANKS                                      CSW122A
+     C                   EVAL      WTag21ValA = *BLANKS                                      CSW122A
+     C                   EVAL      WTag79L1ValA = *BLANKS                                    CSW122A
+     C                   EVAL      WTag79L2ValA = *BLANKS                                    CSW122A
+     C                   EVAL      WTag79L3ValA = *BLANKS                                    CSW122A
+     C                   EVAL      WTag79L4ValA = *BLANKS                                    CSW122A
 
       *
       ** Reset work Variables
@@ -974,8 +1071,12 @@
       ** WTag20b not blanked since it is the rundate
      C                   EVAL      WTag79L3a = *BLANKS
      C                   EVAL      WTag79L3b = *BLANKS
+     C                   EVAL      WTag79L3ac = *BLANKS                                      CSW122A
+     C                   EVAL      WTag79L3bc = *BLANKS                                      CSW122A
      C                   EVAL      WGenFlg = *BLANKS
      C                   EVAL      WIOFlg = *BLANKS                                         MD055939
+     C                   EVAL      WMtpy = *BLANKS                                           CSW122A
+     C                   EVAL      WReceiverA = *BLANKS                                      CSW122A
 
       *
       ** Reset variables for getting SWIFT BIC of destination
@@ -1021,6 +1122,7 @@
       ** Reset variables for writing MGOREFPD
       *
      C                   EVAL      WTRNo = *BLANKS
+     C                   EVAL      WTRNoA = *BLANKS                                          CSW122A
      C                   EVAL      WTrnId = *BLANKS
      C                   EVAL      WPyTp = *BLANKS
      C                   EVAL      WPySt = *BLANKS
@@ -1770,6 +1872,438 @@
      C                   ENDIF
 
      C                   ENDSR
+      *****************************************************************                      CSW122A
+      /EJECT                                                                                 CSW122A
+      *****************************************************************                      CSW122A
+      *                                                               *                      CSW122A
+      * MTn99REJT   - Processing for MTn99 on Ignore                  *                      CSW122A
+      *                                                               *                      CSW122A
+      * Called by: SrRdIncMsg                                         *                      CSW122A
+      *                                                               *                      CSW122A
+      * Calls: SrExtractN99, SrOMSGN99                                *                      CSW122A
+      *                                                               *                      CSW122A
+      *****************************************************************                      CSW122A
+     C     MTn99REJT     BEGSR                                                               CSW122A
+                                                                                             CSW122A
+     C                   EXSR      SRExtractN99                                              CSW122A
+     C                   EVAL      WGenFlg = 'Y'                                             CSW122A
+                                                                                             CSW122A
+      *                                                                                      CSW122A
+      ** Writes to MGOMSGPD                                                                  CSW122A
+      *                                                                                      CSW122A
+     C                   IF        WGenFlg = 'Y'                                             CSW122A
+     C                   EXSR      SrOMSGN99                                                 CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+     C                   ENDSR                                                               CSW122A
+      *****************************************************************                      CSW122A
+     C/EJECT                                                                                 CSW122A
+      *****************************************************************                      CSW122A
+      *                                                               *                      CSW122A
+      *   SrOMSGN99 - output correctly generated messages             *                      CSW122A
+      *                                                               *                      CSW122A
+      *   Called by: MTn99REJT                                        *                      CSW122A
+      *                                                               *                      CSW122A
+      *   Calls    : SrWREFN99                                        *                      CSW122A
+      *                                                               *                      CSW122A
+      *****************************************************************                      CSW122A
+     C     SrOMSGN99     BEGSR                                                               CSW122A
+                                                                                             CSW122A
+      ** Write reference record  (PF/MGOREFPD)                                               CSW122A
+                                                                                             CSW122A
+     C                   EXSR      SrWREFN99                                                 CSW122A
+                                                                                             CSW122A
+      ** Write multiple occurrence data structure to MGOMSGPD                                CSW122A
+                                                                                             CSW122A
+     C                   Z-ADD     1             Q                                           CSW122A
+     C     Q             OCCUR     MULT                                                      CSW122A
+                                                                                             CSW122A
+     C     Q             DOWLE     95                                                        CSW122A
+     C     MULT          ANDNE     *BLANKS                                                   CSW122A
+     C                   WRITE     MGOMSGD0                             06                   CSW122A
+                                                                                             CSW122A
+      **  Error on write to PF/MGOMSGPD (message data file)                                  CSW122A
+                                                                                             CSW122A
+     C     *IN06         IFEQ      '1'                                                       CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '019'         DBASE                                       CSW122A
+     C                   MOVEL     '        '    DBKEY                                       CSW122A
+     C                   MOVEL     'MGOMSGPD'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   ADD       1             Q                                           CSW122A
+     C     Q             OCCUR     MULT                                                      CSW122A
+     C                   ENDDO                                                               CSW122A
+                                                                                             CSW122A
+     C                   EXSR      SrResetDS                                                 CSW122A
+                                                                                             CSW122A
+     C                   ENDSR                                                               CSW122A
+      *****************************************************************                      CSW122A
+      /EJECT                                                                                 CSW122A
+      *****************************************************************                      CSW122A
+      *                                                               *                      CSW122A
+      * SrExtractN99- Extract details for MTN99                       *                      CSW122A
+      *                                                               *                      CSW122A
+      * Called by: MTn99REJT                                          *                      CSW122A
+      *                                                               *                      CSW122A
+      * Calls: SrGetSeCN                                              *                      CSW122A
+      *                                                               *                      CSW122A
+      *****************************************************************                      CSW122A
+     C     SrExtractN99  BEGSR                                                               CSW122A
+                                                                                             CSW122A
+     C                   EXSR      SrGetSeCN                                                 CSW122A
+      *                                                                                      CSW122A
+      ** Store value of Receiver from Rejected MT to work variable (WReceiverA)              CSW122A
+      ** Get the value of Sender in MEINCRPD.CRSNDR(Sender)                                  CSW122A
+      *                                                                                      CSW122A
+     C     KFMsgR        CHAIN     MEINCRL1                                                  CSW122A
+     C                   IF        %FOUND                                                    CSW122A
+                                                                                             CSW122A
+     C                   EVAL      WReceiverA = CRSNDR                                       CSW122A
+                                                                                             CSW122A
+     C                   ELSE                                                                CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '036'         DBASE                                       CSW122A
+     C                   MOVEL     'KFMsgR'      DBKEY                                       CSW122A
+     C                   MOVEL     'MEINCRL1'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+      ** Get tag 121                                                                         CSW122A
+      ** Populate tag 121:UETR with the UETR value of the rejected message                   CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      KFMtag = '121:'                                           CSW122A
+     C     KLIncMsg      CHAIN     MEINDTL0                                                  CSW122A
+     C                   IF        %FOUND                                                    CSW122A
+     C                   EVAL      WTag121ValA = DTMFLD                                      CSW122A
+                                                                                             CSW122A
+     C                   ADD       1             Q                                           CSW122A
+     C     Q             OCCUR     MULT                                                      CSW122A
+     C                   MOVE      ':121:'       MTAG                                        CSW122A
+     C                   MOVEL     WTag121ValA   MFLD                                        CSW122A
+                                                                                             CSW122A
+     C                   ELSE                                                                CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '029'         DBASE                                       CSW122A
+     C                   MOVEL     'KLIncMsg'    DBKEY                                       CSW122A
+     C                   MOVEL     'MEINDTL0'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+      ** Get tag 20                                                                          CSW122A
+      ** Populate tag 20: New Transaction Reference Number                                   CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      Wtag20a = %CHAR(KFMsgR)                                   CSW122A
+     C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)                     CSW122A
+     C                   EVAL      WTag20ValA = 'P' + WTag20a + WTag20b + 'A'                CSW122A
+     C                   EVAL      WTRNoA = WTag20ValA                                       CSW122A
+
+     C                   ADD       1             Q                                           CSW122A
+     C     Q             OCCUR     MULT                                                      CSW122A
+     C                   MOVEL     ':20:'        MTAG                                        CSW122A
+     C                   MOVEL     WTag20ValA    MFLD                                        CSW122A
+      *                                                                                      CSW122A
+      ** Get the value of Sender in MEINCRPD.CRMOR(Output)                                   CSW122A
+      *                                                                                      CSW122A
+     C     KFMsgR        CHAIN     MEINCRL1                                                  CSW122A
+     C                   IF        %FOUND                                                    CSW122A
+                                                                                             CSW122A
+     C                   EVAL      WBIC = %SUBST(CRMOR:7:8)                                  CSW122A
+     C                   EVAL      WBranch = %SUBST(CRMOR:16:3)                              CSW122A
+     C                   EVAL      WSender = WBIC + WBranch                                  CSW122A
+                                                                                             CSW122A
+     C                   ELSE                                                                CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '030'         DBASE                                       CSW122A
+     C                   MOVEL     'KFMsgR'      DBKEY                                       CSW122A
+     C                   MOVEL     'MEINCRL1'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
+      *                                                                                      CSW122A
+      ** Get tag 79 Line 1                                                                   CSW122A
+      ** Populate line 1 of tag 79: REJT code followed by identification number              CSW122A
+      ** - currently defaulted to 99                                                         CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      WTag79L1ValA = RsnCode + FldNumber                        CSW122A
+                                                                                             CSW122A
+     C                   ADD       1             Q                                           CSW122A
+     C     Q             OCCUR     MULT                                                      CSW122A
+     C                   MOVEL     ':79:'        MTAG                                        CSW122A
+     C                   MOVEL     WTag79L1ValA  MFLD                                        CSW122A
+      *                                                                                      CSW122A
+      ** Get tag 79 Line 2                                                                   CSW122A
+      ** Populate line 2 of tag 79: Code XT99 followed by MXReason code MS03                 CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      WTag79L2ValA = '/XT99/' + 'MS03/'                         CSW122A
+                                                                                             CSW122A
+     C                   ADD       1             Q                                           CSW122A
+     C     Q             OCCUR     MULT                                                      CSW122A
+     C                   MOVEL     WTag79L2ValA  MFLD                                        CSW122A
+      *                                                                                      CSW122A
+      ** Get tag 79 Line 3                                                                   CSW122A
+      ** Populate line 3 of tag 79: Code MREF followed by Original Message ID                CSW122A
+      ** from field 20 of rejected MT                                                        CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      KFMtag = ':20:'                                           CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
+     C                   IF        %FOUND                                                    CSW122A
+     C                   EVAL      WTag79L3ac = '/MREF/'                                     CSW122A
+     C                   EVAL      WTag79L3bc = DSMF35                                       CSW122A
+     C                   EVAL      WTag79L3ValA = WTag79L3ac + WTag79L3bc                    CSW122A
+                                                                                             CSW122A
+     C                   ADD       1             Q                                           CSW122A
+     C     Q             OCCUR     MULT                                                      CSW122A
+     C                   MOVEL     WTag79L3ValA  MFLD                                        CSW122A
+                                                                                             CSW122A
+     C                   ELSE                                                                CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '033'         DBASE                                       CSW122A
+     C                   MOVEL     'KLIncMsg'    DBKEY                                       CSW122A
+     C                   MOVEL     'MEIN35L0'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   IF        WMtpy = '103'                                             CSW122A
+      *                                                                                      CSW122A
+      ** Get tag 70                                                                          CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      KFMtag = ':70:'                                           CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
+     C                   IF        %FOUND                                                    CSW122A
+     C                   EVAL      WTag70ValA = DSMF35                                       CSW122A
+      *                                                                                      CSW122A
+      ** Get tag 79 Line 4                                                                   CSW122A
+      ** Populate line 4 of tag 79: TREF Code followed by EndtoEndID from pacs.008           CSW122A
+      ** mapped as field 70 of the rejected 103                                              CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      WTag79L4ValA = '/TREF/' + WTag70ValA                      CSW122A
+     C                   ADD       1             Q                                           CSW122A
+     C     Q             OCCUR     MULT                                                      CSW122A
+     C                   MOVEL     WTag79L4ValA  MFLD                                        CSW122A
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   IF        WMtpy = '202' OR WMtpy = '205'                            CSW122A
+      *                                                                                      CSW122A
+      ** Get tag 21                                                                          CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      KFMtag = ':21:'                                           CSW122A
+     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
+     C                   IF        %FOUND                                                    CSW122A
+     C                   EVAL      WTag21ValA = DSMF35                                       CSW122A
+                                                                                             CSW122A
+      *                                                                                      CSW122A
+      ** Get tag 79 Line 4                                                                   CSW122A
+      ** Populate line 4 of tag 79: TREF Code followed by EndtoEndID from pacs.009           CSW122A
+      ** mapped as field 21 of the rejected MT202/MT205 OR MT202 COV/MT205 COV               CSW122A
+      *                                                                                      CSW122A
+     C                   EVAL      WTag79L4ValA = '/TREF/' + WTag21ValA                      CSW122A
+     C                   ADD       1             Q                                           CSW122A
+     C     Q             OCCUR     MULT                                                      CSW122A
+     C                   MOVEL     WTag79L4ValA  MFLD                                        CSW122A
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   ENDSR                                                               CSW122A
+      *****************************************************************                      CSW122A
+      /EJECT                                                                                 CSW122A
+      *****************************************************************                      CSW122A
+      *                                                               *                      CSW122A
+      *   SrWREFN99 - Write reference record to PF/MGOREFPD (MTN99)   *                      CSW122A
+      *                                                               *                      CSW122A
+      *   Called by: SrOMSGN99                                        *                      CSW122A
+      *                                                               *                      CSW122A
+      *   Calls    : None                                             *                      CSW122A
+      *                                                               *                      CSW122A
+      *****************************************************************                      CSW122A
+     C     SrWREFN99     BEGSR                                                               CSW122A
+                                                                                             CSW122A
+     C                   MOVE      *BLANKS       SYTM                                        CSW122A
+     C                   MOVEL     'FT'          MODI                                        CSW122A
+     C                   MOVEL     WTRNoA        TRNO                                        CSW122A
+     C                   MOVE      *BLANKS       TRNF                                        CSW122A
+     C                   MOVE      *BLANKS       TRNM                                        CSW122A
+     C                   MOVEL     WTRNoA        MTRN                                        CSW122A
+     C                   MOVE      WPyTp         TNTP                                        CSW122A
+     C                   MOVE      WPySt         SBTP                                        CSW122A
+     C                   MOVE      *BLANKS       EVTP                                        CSW122A
+     C                   MOVEL     WSeCN         SECN                                        CSW122A
+     C                   MOVE      *BLANKS       DECN                                        CSW122A
+     C                   MOVEL     WReceiverA    NWDS                                        CSW122A
+     C                   MOVEL     WSender       NWSN                                        CSW122A
+     C                   MOVEL     WBnCs         NWBN                                        CSW122A
+     C                   MOVEL     'SWIFT'       NWRK                                        CSW122A
+     C                   IF        WMtpy = '103'                                             CSW122A
+     C                   MOVE      '199'         MTPY                                        CSW122A
+     C                   ELSEIF    WMtpy = '202' OR WMtpy = '205'                            CSW122A
+     C                   MOVE      '299'         MTPY                                        CSW122A
+     C                   ENDIF                                                               CSW122A
+     C                   MOVE      'N'           MPRY                                        CSW122A
+     C                   MOVEL     *BLANKS       LSCC                                        CSW122A
+     C                   MOVEL     *BLANKS       PTST                                        CSW122A
+     C                   MOVEL     *BLANKS       CARQ                                        CSW122A
+     C                   MOVEL     *BLANKS       MPDE                                        CSW122A
+     C                   MOVEL     @HRDT         HRDT                                        CSW122A
+     C                   MOVE      WTag20b       MGDE                                        CSW122A
+     C                   TIME                    MGTM                                        CSW122A
+     C                   MOVE      BJMRDT        LADT                                        CSW122A
+     C                   MOVE      MGTM          LATM                                        CSW122A
+      *                                                                                      CSW122A
+      ** Set-up Message Generation  Century flag                                             CSW122A
+      *                                                                                      CSW122A
+     C                   MOVEL     MGDE          YY                                          CSW122A
+     C                   IF        YY < 72                                                   CSW122A
+     C                   EVAL      CIND = '2'                                                CSW122A
+     C                   ELSE                                                                CSW122A
+     C                   EVAL      CIND = '1'                                                CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C     MGST          IFEQ      'RSND'                                                    CSW122A
+     C                   MOVE      BJMRDT        RELD                                        CSW122A
+     C                   MOVE      MGTM          RELT                                        CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   MOVEL     WTag20b       SVDT                                        CSW122A
+     C                   MOVEL     WICcy         CCY                                         CSW122A
+                                                                                             CSW122A
+     C                   MOVE      'D'           AORR                                        CSW122A
+      *                                                                                      CSW122A
+      ** Setup century indicator CINDV for value date SVDT                                   CSW122A
+      *                                                                                      CSW122A
+     C     SVDT          IFEQ      *BLANK                                                    CSW122A
+     C                   MOVE      *BLANK        CINDV                                       CSW122A
+     C                   ELSE                                                                CSW122A
+     C                   MOVEL     SVDT          YY                                          CSW122A
+     C     YY            IFLT      72                                                        CSW122A
+     C                   MOVE      '2'           CINDV                                       CSW122A
+     C                   ELSE                                                                CSW122A
+     C                   MOVE      '1'           CINDV                                       CSW122A
+     C                   ENDIF                                                               CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   MOVEL     *BLANKS       NSNO                                        CSW122A
+     C                   MOVEL     *BLANKS       SACN                                        CSW122A
+     C                   MOVEL     *BLANKS       DESI                                        CSW122A
+                                                                                             CSW122A
+     C                   MOVEL     *BLANKS       RUSR                                        CSW122A
+     C                   MOVEL     *BLANKS       RWSN                                        CSW122A
+     C                   MOVEL     *BLANKS       AMTS                                        CSW122A
+     C                   MOVEL     *BLANKS       AMTX                                        CSW122A
+                                                                                             CSW122A
+      ** Branch details                                                                      CSW122A
+                                                                                             CSW122A
+     C                   MOVE      WBrCA         BRCA                                        CSW122A
+     C                   MOVE      *BLANKS       OTHB                                        CSW122A
+                                                                                             CSW122A
+     C                   MOVE      *BLANKS       NETI                                        CSW122A
+     C                   MOVE      *BLANKS       DELC                                        CSW122A
+     C                   MOVE      *BLANKS       DYST                                        CSW122A
+     C                   MOVE      *BLANKS       RSID                                        CSW122A
+     C                   MOVE      *BLANKS       MSE1                                        CSW122A
+     C                   MOVE      *BLANKS       ELIN                                        CSW122A
+     C                   MOVE      *BLANKS       SSAC                                        CSW122A
+     C                   MOVE      *BLANKS       MIR                                         CSW122A
+     C                   MOVE      *BLANKS       TSKS                                        CSW122A
+     C                   MOVE      *BLANKS       TSKY                                        CSW122A
+                                                                                             CSW122A
+     C                   WRITE     MGOREFD0                             05                   CSW122A
+                                                                                             CSW122A
+      ** Error on write to PF/MGOREFPD (message reference file)                              CSW122A
+                                                                                             CSW122A
+     C     *IN05         IFEQ      '1'                                                       CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '037'         DBASE                                       CSW122A
+     C                   MOVEL     '       '     DBKEY                                       CSW122A
+     C                   MOVEL     'MGOREFPD'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+     C                   ENDSR                                                               CSW122A
+      *****************************************************************                      CSW122A
+     C/EJECT                                                                                 CSW122A
+      *****************************************************************                      CSW122A
+      *                                                               *                      CSW122A
+      *  SrGetSeCN - Save Branch Customer from SDBRANCHPD             *                      CSW122A
+      *                                                               *                      CSW122A
+      *  Called by: SrExtract199, SrExtract299                        *                      CSW122A
+      *                                                               *                      CSW122A
+      *  Calls    : AOBRCHR0                                          *                      CSW122A
+      *                                                               *                      CSW122A
+      *****************************************************************                      CSW122A
+     C     SrGetSeCN     BEGSR                                                               CSW122A
+     C                   CALL      'AOBRCHR0'                                                CSW122A
+     C                   PARM      '*MSG   '     @RTCD                                       CSW122A
+     C                   PARM      '*KEY   '     @OPTN                                       CSW122A
+     C                   PARM      WBrCA         @BRCD                                       CSW122A
+     C     SDBRCH        PARM      SDBRCH        DSSDY                                       CSW122A
+                                                                                             CSW122A
+      ** Branch record not found - DB Error                                                  CSW122A
+                                                                                             CSW122A
+     C     @RTCD         IFNE      *BLANKS                                                   CSW122A
+     C     *LOCK         IN        LDA                                                       CSW122A
+     C                   MOVE      '039'         DBASE                                       CSW122A
+     C                   MOVEL     WBrCA         DBKEY                                       CSW122A
+     C                   MOVEL     'SDBRCHPD'    DBFILE                                      CSW122A
+     C                   OUT       LDA                                                       CSW122A
+     C                   EXSR      *PSSR                                                     CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+      ** Save the Branch Customer                                                            CSW122A
+     C                   EVAL      WSeCN = A8BICN                                            CSW122A
+      *                                                                                      CSW122A
+     C                   ENDSR                                                               CSW122A
+      *****************************************************************                      CSW122A
+     C/EJECT                                                                                 CSW122A
+      *****************************************************************                      CSW122A
+      *                                                               *                      CSW122A
+      *  SrGetMTPY - Get Message Type of MT Message                   *                      CSW122A
+      *                                                               *                      CSW122A
+      *  Called by: SrRdIncMsg                                        *                      CSW122A
+      *                                                               *                      CSW122A
+      *  Calls    : None                                              *                      CSW122A
+      *                                                               *                      CSW122A
+      *****************************************************************                      CSW122A
+     C     SrGetMTPY     BEGSR                                                               CSW122A
+      *                                                                                      CSW122A
+      ** Get Message Type                                                                    CSW122A
+      *                                                                                      CSW122A
+     C     KFMsgR        CHAIN     MEINCRL1                                                  CSW122A
+     C                   IF        %FOUND                                                    CSW122A
+     C                   EVAL      WMtpy = CRMTPY                                            CSW122A
+     C                   ENDIF                                                               CSW122A
+     C                   ENDSR                                                               CSW122A
+      *****************************************************************                      CSW122A
+     C/EJECT                                                                                 CSW122A
+      *****************************************************************                      CSW122A
+      *                                                               *                      CSW122A
+      *  SrResetDS - Reset Occurence for Data Structure               *                      CSW122A
+      *                                                               *                      CSW122A
+      *  Called by: SrOMSGN99                                         *                      CSW122A
+      *                                                               *                      CSW122A
+      *  Calls    : None                                              *                      CSW122A
+      *                                                               *                      CSW122A
+      *****************************************************************                      CSW122A
+     C     SrResetDS     BEGSR                                                               CSW122A
+      *                                                                                      CSW122A
+      ** Clear multiple occurrence data structure                                            CSW122A
+      *                                                                                      CSW122A
+     C                   CLEAR     *ALL          MULT                                        CSW122A
+     C                   EVAL      Q = 0                                                     CSW122A
+     C                   ENDSR                                                               CSW122A
       *****************************************************************
      C/EJECT
       *****************************************************************

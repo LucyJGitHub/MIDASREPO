@@ -19,8 +19,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058914           Date 06Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 254361A            Date 15Feb21               *
+      *  Prev Amend No. 254361             Date 15Feb21               *      
+      *                 HUT101CC1          Date 06Nov20               *      
+      *                 HUT101             Date 12May20               *      
+      *                 MD058914           Date 06Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD048586           Date 11Jan21               *
       *                 AR1088819          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
@@ -1179,6 +1183,7 @@
       ** Move valid file details to update file details.
       *
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
+     C/COPY WNCPYSRC,HUT101_008                                                               HUT101
       *                                                                                       CAP211
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CAP211
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CAP211
@@ -1203,6 +1208,9 @@
      C                   Z-ADD     002           DBase
      C                   EXSR      *PSSR
      C                   ENDIF
+     C                   MOVE      SMAM          ZZAMT                                       254361A
+     C                   EXSR      SRTrailer                                                  254361
+                                                                                              254361   
      C/COPY WNCPYSRC,FTH00407
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487
@@ -1320,11 +1328,12 @@
       *
       ** Update Incoming Payments trailer with Payment Amount.
       *
-     C                   MOVE      SMAM          ZZAMT
-     C                   EXSR      SRTrailer
+     C**********         MOVE      SMAM          ZZAMT                                       254361A
+     C**********         EXSR      SRTrailer                                                  254361
       *
      C                   IF        CAP211 = 'Y' AND PAuth = 'Y' AND                           CAP211
      C                             SVGOP = 'Y' AND OPIN = 'Y'                                 CAP211
+     C/COPY WNCPYSRC,HUT101_009                                                               HUT101
       *                                                                                       CAP211
       ** Generate Outgoing Payment if CAP211 is ON, PAuth is 'Y', CAP211GenerateOP system     CAP211
       ** value is 'Y' and OPIN (Outgoing payment generated from incoming payemnt) flag is 'Y' CAP211
@@ -1573,6 +1582,7 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
+     C/COPY WNCPYSRC,HUT101_010                                                               HUT101
       *                                                                                       CAP211
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CAP211
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CAP211
@@ -1792,6 +1802,7 @@
      C                   MOVEL     NwIpFilFmt    InPayUpdF
       *
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
+     C/COPY WNCPYSRC,HUT101_011                                                               HUT101
       *                                                                                       CAP211
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CAP211
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CAP211
@@ -1934,6 +1945,7 @@
      C                   Z-ADD     BJRDNB        DATE                                         CFT157
       *                                                                                       CFT157
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CFT157
+     C/COPY WNCPYSRC,HUT101_012                                                               HUT101
       *                                                                                       CFT157
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CFT157
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CFT157
@@ -2721,6 +2733,7 @@ e1   C                   ENDIF                                                  
      C                             FTM199 <> 'Z'                                              CSW220
      C                   EVAL      FTM199 = *BLANKS                                           CSW220
      C                   ENDIF                                                                CSW220
+      /COPY WNCPYSRC,HUT101_016                                                               HUT101
       *
       ** N.B. Audit Stamp details are determined in called program.
       *

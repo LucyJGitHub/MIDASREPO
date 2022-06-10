@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR324886           Date 07Apr20               *      
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 233071             Date 28Mar12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -64,6 +65,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
+      *             (Upgrade as required by HUT105)                   *      
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  233071 - Database error 106 in program AOTXBSR0 due to blank *
@@ -177,6 +181,9 @@
       ** Position Settlement for output only
      F                                     RENAME(POSETDF:POSETUP2)
      F                                     PREFIX(Nw_)
+     FPSAUTD    O    E             DISK                                                     AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      FSECOALL4  IF   E           K DISK                                                       215575
       ** Corporate allocation Client - MC                                                     215575
      FSECTY     IF   E           K DISK
@@ -315,6 +322,9 @@
       *                                                                                       229342
       ** DS for access objects - long data structure                                          229342
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     229342
+     D SDSTAT        E DS                  EXTNAME(SDSTAT)                                  AR324886
+      ** SD data area                                                                       AR324886
+      *                                                                                     AR324886
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -1586,6 +1596,7 @@
      C                   EVAL      Wk_PAMD = 0                                                215575
      C                   END                                                                  215575
      C                   WRITE     POSETUP2
+     C                   EXSR      PSAUDT                                                   AR324886
      C                   ADD       1             NWrtn
 
      C                   ELSE
@@ -2456,9 +2467,33 @@
      C                   EVAL      Wk_TXNM = 0                                                236594
      C                   EVAL      Wk_TXST = 0                                                236594
      C                   EVAL      Wk_TAXA = 0                                                236594
+     C     *DTAARA       DEFINE                  SDSTAT                                     AR324886
+     C                   IN        SDSTAT                                                   AR324886
 
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                                AR324886
+      *****************************************************************                     AR324886
+     C     PSAUDT        BEGSR                                                              AR324886
+      *                                                                                     AR324886
+     C                   EVAL      PARECI = Nw_RECI                                         AR324886
+     C                   EVAL      PAPBCA = Nw_PBCA                                         AR324886
+     C                   EVAL      PAPSSH = Nw_PSSH                                         AR324886
+     C                   EVAL      PAPCPY = Nw_PCPY                                         AR324886
+     C                   EVAL      PAPDUD = Nw_PDUD                                         AR324886
+     C                   EVAL      PAPEVT = Nw_PEVT                                         AR324886
+     C                   EVAL      PAPTFR = Nw_PTFR                                         AR324886
+     C                   EVAL      PATNLU = Nw_TNLU                                         AR324886
+     C                   EVAL      PATXBS = Nw_TXBS                                         AR324886
+     C                   EVAL      PABNFO = Nw_BNFO                                         AR324886
+     C                   EVAL      PAEXCD = Nw_EXCD                                         AR324886
+     C                   EVAL      PALUSR = LIBR + 'OWNER'                                  AR324886
+     C                   EVAL      PALCD  = Nw_LCD                                          AR324886
+     C                   EVAL      PALCTP = Nw_CHTP                                         AR324886
+     C                   WRITE     PSAUTDF                                                  AR324886
+      *                                                                                     AR324886
+     C                   ENDSR                                                              AR324886
+      *****************************************************************                     AR324886
       /EJECT
       *****************************************************************
       *                                                               *

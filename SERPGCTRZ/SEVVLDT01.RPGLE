@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. AR1075401          Date 01Jun20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT121             Date 04Mar22               *      
+      *  Prev Amend No. AR1075401          Date 01Jun20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 - Allow SE Price input for non-working day            *      
       *  AR1075401 - Increase QANOML and QAOTNM length in PMCPOSPD.   *
       *              Recompiled. (Child: AR1075402)                   *
       *  MD046248 - Finastra Rebranding                               *
@@ -114,6 +116,7 @@
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
       ** SD data area                                                                         CSC011
                                                                                               CSC011
+     D/COPY WNCPYSRC,HUT121_124                                                               HUT121
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
  
@@ -218,7 +221,9 @@
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0818'
      C                   EVAL      DDVDTOK   = 'N'
      C                   ELSE
+     C/COPY WNCPYSRC,HUT121_125                                                               HUT121
      C                   Z-ADD     ZDAYNO        PVDT
+     C/COPY WNCPYSRC,HUT121_126                                                               HUT121
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
@@ -368,6 +373,7 @@
                                                                                               CSC011
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
+     C/COPY WNCPYSRC,HUT121_127                                                               HUT121
  
       * Access Installation Control Data record fo Securities Trading
       * (Database error handling done in access program).

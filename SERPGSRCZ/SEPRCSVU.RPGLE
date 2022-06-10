@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. HUT121             Date 07Mar22               *      
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 - Alloww SE Price Input for Non-working day           *      
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -518,6 +520,7 @@
      C     @DDPRFC       PARM                    DDPRFC            4
      C     @DDPPRT       PARM                    DDPPRT            2
      C     @DDPTFR       PARM                    DDPTFR            4
+      /COPY WNCPYSRC,HUT121_003                                                               HUT121
 
       ** ICD
       ** Extel Indicator

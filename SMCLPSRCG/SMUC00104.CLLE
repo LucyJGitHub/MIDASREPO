@@ -10,10 +10,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD057448  *CREATE  Date 07Jan21              */
+/*       Last Amend No. MD059958           Date 17May22              */
+/*       Prev Amend No. MD057448  *CREATE  Date 07Jan21              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059958 - GPST and ZPST successfully run but produced dump.*/
+/*                  Error in SQL insert in GZDEALSDG due to added    */
+/*                  fields by CIR020.                                */
+/*                - Applied for MD-60081                             */
 /*       MD057448 - Component REC74 00001 failed during COB.         */
 /*                  Introduce a global counter part of SMUC00105.    */
 /*                                                                   */
@@ -32,6 +37,7 @@
              DCL        VAR(&SVAL) TYPE(*CHAR) LEN(200)
              DCL        VAR(&ZVAL) TYPE(*CHAR) LEN(200)
              DCL        VAR(&AORTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LIBR) TYPE(*CHAR) LEN(10)                                  /*MD059958*/
 
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
@@ -56,6 +62,24 @@
              CHGVAR     VAR(&ZPREFIX) VALUE(%SST(&ZVAL 1 2))
              ENDDO
 
+             CHGVAR     VAR(&LIBR) VALUE('#.' *CAT &GPREFIX *CAT 'GMLIB')               /*MD059958*/
+             DLTF       FILE(QTEMP/GZDEALSDG)                                           /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(GZDEALSDG) TOFILE(QTEMP/GZDEALSDG) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/GZDEALSDG) +
+                          TOFILE(QTEMP/GZDEALSDG) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+                                                                                        /*MD059958*/
+             DLTF       FILE(QTEMP/GZDLGHISPD)                                          /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(GZDLGHISPD) +
+                          TOFILE(QTEMP/GZDLGHISPD) CRTFILE(*YES)                        /*MD059958*/
+             CPYF       FROMFILE(&LIBR/GZDLGHISPD) +
+                          TOFILE(QTEMP/GZDLGHISPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
 
 /* Call SMU01050 to fix corrupted data */
 

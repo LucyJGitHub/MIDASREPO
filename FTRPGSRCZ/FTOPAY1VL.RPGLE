@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057597           Date 19Feb21               *
+      *  Last Amend No. HUT106             Date 06Apr20               *        
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057597           Date 19Feb21               *
       *                 MD057498           Date 26Jan21               *
       *                 254841B            Date 14May20               *
       *                 MD046248           Date 27Oct17               *
@@ -108,6 +109,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT106 - Upgrade HUT012 to FBM 2.1 SP22                      *
+      *           Allow FISC Bank Reference to be entered in SWIFT ID *
+      *           Field                                               *
+      *           Used hooks: FTOPA1VC12, FTOPA1VC14, FTOPA1VC16      *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057597 - Move re-execution of VSETCA after DFTCHG to       *

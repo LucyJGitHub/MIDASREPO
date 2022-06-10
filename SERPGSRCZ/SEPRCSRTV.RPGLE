@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. AR1075401          Date 01Jun20               *
+      *  Last Amend No. HUT121             Date 07Feb22               *      
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 AR1075401          Date 01Jun20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047196           Date 08Aug17               *
       *                 MD037408           Date 25May16               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day           *      
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  AR1075401 - Increase QANOML and QAOTNM length in PMCPOSPD.   *
       *              Recompiled. (Child: AR1075402)                   *
@@ -116,6 +118,9 @@
      F**********PRICE     IF   E           K DISK    INFSR(*PSSR)                             CAP060
      FPRICEL1   IF   E           K DISK    INFSR(*PSSR)                                       CAP060
 
+      *                                                                                       HUT121
+     F/COPY WNCPYSRC,HUT121_027                                                               HUT121
+      *                                                                                       HUT121
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
 
      FSECTYL5   IF   E           K DISK    INFSR(*PSSR)                                       CAP060
@@ -244,6 +249,10 @@
      D* Sec Prices API switchable feature                                                    205873
      D CSD006F         S              1A                                                     205873
 
+      *                                                                                       HUT121
+     D/COPY WNCPYSRC,HUT121_028                                                               HUT121
+      *                                                                                       HUT121
+                                                                                              HUT121
      D* Customer No in file format                                                           CAP060
      D*@PCNM****       S              6S 0                                            CAP060  CSD027
      D @PCNM           S              6A                                                      CSD027
@@ -347,7 +356,13 @@
      C                   IF        CSD006F = 'Y' AND                                          205873
      C                             ModeofOp =  '*FRONT'                                       205873
       * Retrieve price from file                                                              205873
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_029                                                               HUT121
+      *                                                                                       HUT121
      C     @PRICK        CHAIN     PRICEL1                                                    205873
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_030                                                               HUT121
+      *                                                                                       HUT121
      C                   IF        %FOUND AND                                                 205873
      C                             RECI <> '*'                                                205873
      C                   EVAL      DDACTN = 'A'                                               205873
@@ -666,6 +681,7 @@
      C                   ENDIF                                                                CAP060
       *                                                                                     BUG11512
      C                   ENDIF                                                              BUG11512
+     C/COPY WNCPYSRC,HUT121_134                                                               HUT121
 
      C     EMDFVAL       ENDSR                                                                CAP060
       *****************************************************************                       CAP060
@@ -683,7 +699,13 @@
      C                   ENDIF                                                               BUG9725
                                                                                              BUG9725
       * Retrieve price from file                                                              CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_031                                                               HUT121
+      *                                                                                       HUT121
      C     @PRICK        CHAIN     PRICEL1                            99                      CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_032                                                               HUT121
+      *                                                                                       HUT121
                                                                                               CAP060
      C                   MOVE      RECI          FL_RECI                                      CAP060
 
@@ -758,7 +780,12 @@
       *                                                                                       CAP060
       * Access Transaction from the Transactions file                                         CAP060
       *                                                                                       CAP060
+     C/COPY WNCPYSRC,HUT121_033                                                               HUT121
+      *                                                                                       HUT121
      C     @PRICK        CHAIN     PRICEL1                            99                      CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_034                                                               HUT121
+      *                                                                                       HUT121
                                                                                               CAP060
      C                   MOVE      RECI          FL_RECI                                      CAP060
                                                                                               CAP060
@@ -767,6 +794,9 @@
       *                                                                                       CAP060
      C     *IN99         IFEQ      '0'                                                        CAP060
      C     RECI          ANDNE     '*'                                                        CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_035                                                               HUT121
+      *                                                                                       HUT121
      C/COPY WNCPYSRC,SEH00120
      C                   MOVEL     'N'           OKACTN                                       CAP060
      C                   ADD       1             Ix                                           CAP060
@@ -1451,6 +1481,7 @@
       *
       * Portfolio Reference                                                                   CAP060
      C                   PARM                    DDPTFR            4                          CAP060
+     C/COPY WNCPYSRC,HUT121_135                                                               HUT121
       * ICD
       * Extel Indicator
      C                   PARM                    BVEXOP            1                          CAP060
@@ -1533,6 +1564,9 @@
      C                   KFLD                    @PPRT             2
      C                   KFLD                    @PTFR             4
 
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_036                                                               HUT121
+      *                                                                                       HUT121
      C     BKPHDK        KLIST                                                                CAP060
      C                   KFLD                    DDPSSN                                       CAP060
      C                   KFLD                    @PBRA                                        CAP060
@@ -1624,6 +1658,9 @@
      C                   ELSE                                                                 205873
      C                   MOVE      'N'           CSD006F                                      205873
      C                   ENDIF                                                                205873
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_037                                                               HUT121
+      *                                                                                       HUT121
                                                                                               CAP060
      C******DTAARA       DEFINE                  ZMUSER                               CAP060 BUG8550
      C**********         IN        ZMUSER                                             CAP060 BUG8550

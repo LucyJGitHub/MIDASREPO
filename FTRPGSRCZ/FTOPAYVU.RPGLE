@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054059           Date 28Nov19               *
+      *  Last Amend No. MD056457           Date 09Aug20               *
+      *  Prev Amend No. HUT106             Date 09Aug20               *      
+      *                 CSD103             Date 10Aug20               *
+      *                 MD054059           Date 28Nov19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
@@ -109,6 +111,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056457 - FISC Code details not expanding to Customer Name  *
+      *             on Inputs fields. Expand scope of HUT106.         *
+      *             Amend core hooks FTOPAYVUC4 and FTOPAYVUF1.       *
+      *             Addition of hook HUT106_038.                      *
+      *  HUT106 - Allow FISC Bank Reference to be entered in SWIFT ID *
+      *           Field                                               *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054059 - Missing outgoing payment reference in the         *
@@ -2694,6 +2702,7 @@
      C     SDCUST        PARM      SDCUST        DSSDY                                        CSF011
      C                   ENDIF                                                               CSF011A
                                                                                               CSF011
+     C/COPY WNCPYSRC,HUT106_038                                                             MD056457
      C                   IF        @RTCD = *BLANKS                                            CSF011
      C                             OR P@TYP = '*CNST'                                       MD030906
                                                                                              CSF011A

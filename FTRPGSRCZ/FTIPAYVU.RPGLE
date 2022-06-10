@@ -33,8 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 257943             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057525           Date 23Feb21               *
+      *  Prev Amend No. 254361             Date 15Feb21               *
+      *                 252696             Date 09Nov20               *      
+      *                 257943             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 CSD102             Date 08Jan19               *
@@ -104,6 +107,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057525 - Remove checking if IPMIR is blank.                *
+      *  254361 - Delete only the message which is currently selected *
+      *           for routing.                                        *
+      *         - Applied for MD-57585                                *
+      *  252696 - Ensure that field Swift Reference field is save in  *
+      *           in INPAYDD file for MidasPlus.                      *
+      *         - Applied for MD-57173                                *      
       *  257943 - Using the CANCEL button after routing MT103 to an   *
       *           incoming message, does not release the MT103 to be  *
       *           routed again. Ensure that a selected message is     *
@@ -239,6 +249,8 @@
 
      FMEINCRL2  IF   E           K DISK    INFSR(*PSSR)                                       257943
      FMEINCRL3  IF   E           K DISK    INFSR(*PSSR)                                       257943
+     FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)                                       252696
+     FINPAYLL   IF   E           K DISK    INFSR(*PSSR)                                       252696
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,FTIPAYV001
 
@@ -3554,12 +3566,18 @@
       ** file if the user cancels so that other workstations can access it                   BUG1282
                                                                                              BUG1282
      C                   CALL      'ME1070'                             0101                 BUG1282
-     C                   PARM      '*END   '     PACT                                        BUG1282
-     C                   PARM      *ZEROS        PMSGR                                       BUG1282
-     C                   PARM      *ZEROS        PKPRT                                       BUG1282
-     C                   PARM      *BLANKS       PMOR                                        BUG1282
-     C                   PARM      *BLANKS       PMIR                                        BUG1282
-     C                   PARM      *BLANKS       PRTN                                        BUG1282
+     C                   PARM      '*DEL   '     PActC             7                          254361
+     C                   PARM                    PMsgr                                        254361
+     C                   PARM                    PKprt                                        254361
+     C                   PARM                    PMor                                         254361
+     C                   PARM                    PMir                                         254361
+     C                   PARM      *BLANKS       PRtn                                         254361
+     C**********         PARM      '*END   '     PACT                                 BUG1282 254361
+     C**********         PARM      *ZEROS        PMSGR                                BUG1282 254361
+     C**********         PARM      *ZEROS        PKPRT                                BUG1282 254361
+     C**********         PARM      *BLANKS       PMOR                                 BUG1282 254361
+     C**********         PARM      *BLANKS       PMIR                                 BUG1282 254361
+     C**********         PARM      *BLANKS       PRTN                                 BUG1282 254361
                                                                                              BUG1282
       ** If call to program resulted in an error, then end program.                          BUG1282
                                                                                              BUG1282
@@ -6899,6 +6917,47 @@
       *****************************************************************
 
      C     UpdateDB      BEGSR
+      *                                                                                       252696
+     C**********         IF        IPMIR = *Blanks  and                              252696 MD057525
+     C**********                   DDSWFLG  = 'Y'                                    252696 MD057525
+     C                   IF        DDSWFLG  = 'Y'                                           MD057525
+     C                   MOVEL     DDSWTN        IPMIR                                        252696
+     C                   MOVEL     DDSWTN        MIR@             28                          252696
+     C     MIR@          CHAIN     INPAYLL                            92                      252696
+     C                   IF        *IN92 = '0'                                                252696
+     C                   GOTO      EMUpd                                                      252696
+     C                   ENDIF                                                                252696
+     C     IPMIR         CHAIN     MEINCRL2                           93                      252696
+     C                   IF        *IN93 = '1'                                                252696
+     C                   MOVEL     'Y'           WErr                                         252696
+     C                   MOVEL     'MIN0100'     PErrMs                                       252696
+     C                   EXSR      SRSndM                                                     252696
+     C                   MOVE      'N'           OKSWTN                                       252696
+     C                   GOTO      EMUpd                                                      252696
+     C                   ENDIF                                                                252696
+     C                   IF        *IN93 = '0'                                                252696
+     C                   MOVEL     CRMSGR        IPINMSGR                                     252696
+     C                   MOVEL     CRMTPY        IPINMTPY                                     252696
+     C                   MOVEL     CRNPRT        WWISEQ            3 0                        252696
+     C                   Z-ADD     WWISEQ        IPINKPRT                                     252696
+      *                                                                                       252696
+     C     KEYMP         CHAIN     MEINMPL1                           94                      252696
+     C                   IF        *IN94 = '0'                                                252696
+     C                   MOVEL     MPTRNO        IPINTRNO                                     252696
+     C                   ENDIF                                                                252696
+     C                   ENDIF                                                                252696
+      *                                                                                       252696
+     C                   ENDIF                                                                252696
+      *                                                                                       252696
+     C                   IF        IPINLVL1  = 'Y' and                                        252696
+     C                             IPINLVL2  = 'Y'                                            252696
+     C                   IF        IPAUP1    = *Blanks  and                                   252696
+     C                             IPAUP1    = *Blanks                                        252696
+     C                   MOVEL     PUSRID        IPAUP1                                       252696
+     C                   MOVEL     PUSRID        IPAUP2                                       252696
+     C                   MOVEL     'Y'           IPAUIN                                       252696
+     C                   ENDIF                                                                252696
+     C                   ENDIF                                                                252696
 
       ** Update files.
 
@@ -7055,7 +7114,8 @@
                                                                                               CER001
      C                   ENDIF                                                                CER001
                                                                                               CER001
-     C                   ENDSR
+     C**********         ENDSR                                                                252696
+     C     EMUpd         ENDSR                                                                252696
 
       *****************************************************************
       /EJECT
@@ -7746,6 +7806,10 @@
      C                   KFLD                    PCNUM                                      MD034973
      C                   KFLD                    PPYTY                                      MD034973
      C                   KFLD                    PPYST                                      MD034973
+      *                                                                                       252696
+     C     KEYMP         KLIST                                                                252696
+     C                   KFLD                    IPINMSGR                                     252696
+     C                   KFLD                    IPINKPRT                                     252696
 
      C     *LIKE         DEFINE    DDSMCY        WRCHCY
      C     *LIKE         DEFINE    DDSMAM        WRCHAM

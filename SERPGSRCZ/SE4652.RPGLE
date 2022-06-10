@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT121             Date 07Feb22               *      
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CCB020             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day           *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -230,6 +232,8 @@
  
      D CSE042          S              1                                         Feature CSE042
  
+     D/COPY WNCPYSRC,HUT121_145                                                               HUT121
+
      D ZCPNR           S                   LIKE(Se_CPNR)                        Current Coupon Rate
      D ZPPDI           S                   LIKE(Se_PPDI)                        Partly Paid Indicato
      D ZPPCP           S                   LIKE(Se_CPDP)                        Current Partly Paid
@@ -1276,12 +1280,18 @@
       ** Retrieve the lastest Market Price for Security
  
      C                   EVAL      KPriceTyp = 'V '                             Price Type
+     C/COPY WNCPYSRC,HUT121_138                                                               HUT121
      C                   EVAL      KValDate  = *ZEROS                           Value Date
+     C/COPY WNCPYSRC,HUT121_139                                                               HUT121
      C                   EVAL      KCustNb   = *ZEROS                           Customer Number
  
+     C/COPY WNCPYSRC,HUT121_140                                                               HUT121
      C     KPosPrice     SETLL     PRICT
+     C/COPY WNCPYSRC,HUT121_141                                                               HUT121
      C                   DOU       %EOF(PRICT) OR Pr_RECI = 'D'
+     C/COPY WNCPYSRC,HUT121_142                                                               HUT121
      C     KPrice        READE     PRICT
+     C/COPY WNCPYSRC,HUT121_143                                                               HUT121
      C                   ENDDO
  
       ** If price found
@@ -2112,6 +2122,7 @@
      C                   EVAL      CSE042 = 'Y'
      C                   ENDIF
  
+     C/COPY WNCPYSRC,HUT121_144                                                               HUT121
       ** Access General Ledger details
  
      C**********         CALL      'AOGELRR0'                                                 CGL029

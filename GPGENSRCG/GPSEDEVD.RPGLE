@@ -37,7 +37,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZSEDEVL1 UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZSEDEVD  O  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -46,9 +46,9 @@ O    F                                     USROPN
 O
 O    D Z_SEDEVD      E DS                  EXTNAME(GZSEDEVD  )
 O    D G_SEDEVD      E DS                  EXTNAME(GZSEDEVD  ) PREFIX(G_)
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -62,7 +62,7 @@ O    D G_SEDEVD      E DS                  EXTNAME(GZSEDEVD  ) PREFIX(G_)
       *                                                                                     MD059408
      C     I#TRAP        IFEQ      'Y'                                                      MD059408
      C     I#BFAF        ANDEQ     'A'                                                      MD059408
-     C                   CALLB     'GOWTTSEDE'                                              MD059408
+     C                   CALL      'GOWTTSEDE'                                              MD059408
      C                   PARM      *BLANK        W#RTCD            7                        MD059408
      C                   PARM      *BLANK        W#ERMS           50                        MD059408
      C                   PARM                    I#BIMG                                     MD059408
@@ -108,9 +108,10 @@ O    C                   ELSE
 O    C                   WRITE     W_SEDEVDF
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
+     C                   SETON                                        LR                    MD059408
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -131,7 +132,7 @@ O    C                   KFLD                    SEZONE
 O    C                   KFLD                    SDSN
 O    C                   KFLD                    SDED
 O    C                   KFLD                    SDET
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -139,15 +140,15 @@ O    C                   KFLD                    SDET
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -162,10 +163,10 @@ O    C                   KFLD                    SDET
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

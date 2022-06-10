@@ -20,7 +20,6 @@
       *  MD059408 - Portfolio Customer View - Accrued Interest to     *
       *             Date not Calculated using latest IR Diary Event   *
       *                                                               *
-      *                                                               *
       *****************************************************************
       *
      FSECTYXX   IF   E           K DISK    INFSR(*PSSR) USROPN PREFIX(SE_)

@@ -9,18 +9,20 @@
      F*                                                                  *
      F*  (c) Finastra International Limited 2001                         *
      F*                                                                  *
-      *     Last Amend No. MD046248           Date 27Oct17               *
+      *     Last Amend No. CLE138             Date 02Nov21               *
+      *     Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-     F*     PREV AMEND NO. S01230             DATE 07/11/89              *
+     F*                    S01230             DATE 07/11/89              *
      F*                    S01229             DATE 19/10/89              *
      F*                    E17596             DATE 20/03/89              *
      F*                                                                  *
      F********************************************************************
+     F*     CLE138 - Class Codes for Facilities                          *
      F*     MD046248 - Finastra Rebranding                               *
      F*     S01230  - STANDARDISE PROGRAMS                               *S01230
      F*     E17596  - RECOMPILED FOR NEW VERSION OF TABLETXL             *
@@ -57,18 +59,68 @@
      IA@CPY       DS                                                      S01230
      I* Copyright array                                                   S01230
      I                                        1  80 CPY@                  S01230
+     ISCSARD    E DSSCSARDPD                                                                  CLE138
+      **  Switchable Features File                                                            CLE138
+      *                                                                                       CLE138
+     IDSFDY     E DSDSFDY                                                                     CLE138
+      ** Short data structure for access objects                                              CLE138
+      *                                                                                       CLE138
+     ILDA        UDS                            256                                           CLE138
+      ** Local database data area                                                             CLE138
+     I                                      134 141 DBFILE                                    CLE138
+     I                                      142 170 DBKEY                                     CLE138
+     I                                      171 180 DBPGM                                     CLE138
+     I                                      181 1830DBASE                                     CLE138
+     I                                      251 2560ZFSIZE                                    CLE138
+      *                                                                                       CLE138
       /EJECT
      C*
      C           *ENTRY    PLIST
      C                     PARM           P0RTN   7        RETURN CODE
      C*********************PARM           WFACT   3        FACILITY TYPE  S01229
      C                     PARM           WFCTY   3        FACILITY TYPE  S01229
+     C                     PARM           WFCLS   4        Facility Class                     CLE138
      C*********************PARM           WFACN  30        FACILITY NAME  S01229
      C                     PARM           WFCNM  30        FACILITY NAME  S01229
      C*********************PARM           WCHTP   1        LAST CHANGE TYPS01229
      C                     PARM           WTYLC   1        LAST CHANGE TYPS01229
      C                     PARM           WLCD    50       LAST CHANGE DATE
      C           *LIKE     DEFN FACT      KFACT
+     C           *LIKE     DEFN FCLS      KFCLS                                               CLE138
+      *                                                                                       CLE138
+     C           KFCLTY    KLIST                                                              CLE138
+     C                     KFLD           KFACT                                               CLE138
+     C                     KFLD           KFCLS                                               CLE138
+      *                                                                                       CLE138
+     C           *NAMVAR   DEFN           LDA                                                 CLE138
+      *                                                                                       CLE138
+      ** Check if CLE138 is switched on                                                       CLE138
+      *                                                                                       CLE138
+     C                     MOVE 'N'       CLE138  1                                           CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   @RTCD   7                                           CLE138
+     C                     PARM '*VERIFY' @OPTN   7                                           CLE138
+     C                     PARM 'CLE138'  @SARD   6                                           CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFNE *BLANKS                                                       CLE138
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE138
+      *                                                                                       CLE138
+      ** Call to program ended in error                                                       CLE138
+      *                                                                                       CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE138
+     C                     Z-ADD1         DBASE                                               CLE138
+     C                     MOVEL'TABLETQ' DBPGM                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     SETON                     U7U8LR                                   CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
      C*
       /EJECT
      C****************************************************************
@@ -84,7 +136,9 @@
      C           WTYLC     IFEQ 'I'                                       S01229
      C*********************MOVE WFACT     KFACT                           S01229
      C                     MOVE WFCTY     KFACT                           S01229
-     C           KFACT     CHAINTABLETQ              30    CHAIN FAILED
+     C                     MOVE WFCLS     KFCLS                                               CLE138
+     C********** KFACT     CHAINTABLETQ              30    CHAIN FAILED                       CLE138
+     C           KFCLTY    CHAINTABLETQ              30    CHAIN FAILED                       CLE138
      C*
      C* IF RECORD DOES NOT EXIST
      C* THEN MOVE PARAMETERS RECIEVED INTO FILE FIELDS AND WRITE
@@ -102,6 +156,9 @@
      C                     Z-ADD46        RECT
      C*********************MOVE WFACT     FACT                            S01229
      C                     MOVE WFCTY     FACT                            S01229
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVE WFCLS     FCLS                                                CLE138
+     C                     ENDIF                                                              CLE138
      C*********************MOVE WFACN     FACN                            S01229
      C                     MOVE WFCNM     FACN
      C*********************MOVE WCHTP     CHTP                            S01229
@@ -138,7 +195,9 @@
      C           WTYLC     IFEQ 'A'                                       S01229
      C*********************MOVE WFACT     KFACT                           S01229
      C                     MOVE WFCTY     KFACT                           S01229
-     C           KFACT     CHAINTABLETQF             30    CHAIN FAILED
+     C                     MOVE WFCLS     KFCLS                                               CLE138
+     C********** KFACT     CHAINTABLETQF             30    CHAIN FAILED                       CLE138
+     C           KFCLTY    CHAINTABLETQF             30    CHAIN FAILED                       CLE138
      C*
      C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
      C* AND UPDATE
@@ -146,6 +205,9 @@
      C           *IN30     IFEQ '0'
      C*********************MOVE WFACT     FACT                            S01229
      C                     MOVE WFCTY     FACT                            S01229
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVE WFCLS     FCLS                                                CLE138
+     C                     ENDIF                                                              CLE138
      C*********************MOVE WFACN     FACN                            S01229
      C                     MOVE WFCNM     FACN                            S01229
      C*********************MOVE WCHTP     CHTP
@@ -172,7 +234,9 @@
      C           WTYLC     IFEQ 'D'                                       S01229
      C*********************MOVE WFACT     KFACT                           S01229
      C                     MOVE WFCTY     KFACT                           S01229
-     C           KFACT     CHAINTABLETQF             30    CHAIN FAILED
+     C                     MOVE WFCLS     KFCLS                                               CLE138
+     C********** KFACT     CHAINTABLETQF             30    CHAIN FAILED                       CLE138
+     C           KFCLTY    CHAINTABLETQF             30    CHAIN FAILED                       CLE138
      C*
      C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
      C* DELETE ANY RECORDS FROM THE OLD FILES)
@@ -260,6 +324,21 @@
      C*
      C                     SETON                     LR
      C                     RETRN
+      ****************************************************************                        CLE138
+      *                                                              *                        CLE138
+      * *PSSR  - Subroutine to handle abnormal error conditions      *                        CLE138
+      *                                                              *                        CLE138
+      ****************************************************************                        CLE138
+      *                                                                                       CLE138
+     C           *PSSR     BEGSR                                                              CLE138
+      *                                                                                       CLE138
+     C           WRUN      IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       WRUN    1                                           CLE138
+     C                     DUMP                                                               CLE138
+     C                     END                                                                CLE138
+      *                                                                                       CLE138
+     C                     ENDSR                                                              CLE138
+      ****************************************************************                        CLE138
      C*
 ** CPY@     : Copyright notice for inclusion in all programs           graS01230
 (c) Finastra International Limited 2001

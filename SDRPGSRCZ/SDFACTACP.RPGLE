@@ -29,7 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Code for Facilities (Recompile)               *
+      *  CLE138 - Class Code for Facilities                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -143,6 +143,7 @@
      D p_CmdLen        S             15  5 Inz(%Len(p_Cmd))
 
      D w_FcltyTyp      S                   Like(AMFCTY)
+     D w_FcltyCls      S                   Like(AMCLAS)                                       CLE138
      D w_Action        S              1A
 
      D v_Count         S              3  0
@@ -180,6 +181,7 @@
       *
      C                   EVAL      Ds_AcceptFile = PData
      C                   EVAL      w_FcltyTyp = AMFCTY
+     C                   EVAL      w_FcltyCls = AMCLAS                                        CLE138
       *
      C                   IF        AMAACC = c_Yes or
      C                             PProgram = 'SDC000061'
@@ -251,7 +253,8 @@
       ** ...if there are errors, iterate and start anew with processing
       **    until updates are successful
 
-     C     w_FcltyTyp    CHAIN(e)  @AMRECT
+     C*****w_FcltyTyp    CHAIN(e)  @AMRECT                                                    CLE138
+     C     K_Fclty       CHAIN(e)  @AMRECT                                                    CLE138
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
@@ -363,6 +366,7 @@
      C                   CALL      'TABLETQ'
      C     W0RTN         PARM      W0RTN         WQ0007            7
      C                   PARM      AMFCTY        WQ0008            3
+     C                   PARM      AMCLAS        WQ0004            4                          CLE138
      C                   PARM      AMFCNM        WQ0009           30
      C                   PARM      AMTYLC        WQ0010            1
      C                   PARM      BJRDNB        WQ0011            5 0                        CSD031
@@ -420,7 +424,8 @@
       ** ...if there are errors, iterate and start anew with processing
       **    until updates are successful
 
-     C     w_FcltyTyp    CHAIN(e)  SDFACTD0
+     C*****w_FcltyTyp    CHAIN(e)  SDFACTD0                                                   CLE138
+     C     K_Fclty       CHAIN(e)  SDFACTD0                                                   CLE138
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
@@ -499,6 +504,12 @@
      C                   PARM                    PRetCode
      C                   PARM                    PProgram
 
+      ** Facility Type and Class key list                                                     CLE138
+                                                                                              CLE138
+     C     K_Fclty       KLIST                                                                CLE138
+     C                   KFLD                    w_FcltyTyp                                   CLE138
+     C                   KFLD                    w_FcltyCls                                   CLE138
+                                                                                              CLE138
       ** Access Bank Details
 
      C                   CALL      'AOBANKR0'

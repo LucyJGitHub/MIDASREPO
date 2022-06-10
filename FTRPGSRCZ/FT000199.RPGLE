@@ -794,7 +794,7 @@
       *                                                                                      CSW122A
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
-     C                   IF        CSW220 = 'Y' AND CRMTPY = '103'                           CSW122A
+     C                   IF        CSW220 = 'Y' AND WMTPY = '103'                            CSW122A
 
       *
       ** MT199 Status is ACCC
@@ -1884,13 +1884,6 @@
       *                                                               *                      CSW122A
       *****************************************************************                      CSW122A
      C     MTn99REJT     BEGSR                                                               CSW122A
-      *                                                                                      CSW122A
-      ** Get Message Type                                                                    CSW122A
-      *                                                                                      CSW122A
-     C     KFMsgR        CHAIN     MEINCRL1                                                  CSW122A
-     C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WMtpy = CRMTPY                                            CSW122A
-     C                   ENDIF                                                               CSW122A
                                                                                              CSW122A
      C                   EXSR      SRExtractN99                                              CSW122A
      C                   EVAL      WGenFlg = 'Y'                                             CSW122A

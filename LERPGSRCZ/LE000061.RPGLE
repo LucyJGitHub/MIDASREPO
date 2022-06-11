@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR787620           Date 10Jun11               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -53,6 +55,8 @@
       ** Midas LE Aggregate Facility File
      FLEAGFCL0  IF   E           K DISK    IGNORE(FCLTYHHF:FCLTYFNF:FCLTYZZF)
      F/COPY WNCPYSRC,LEH00398
+     FLEAGFCL7  IF   E           K DISK    PREFIX(AB)                                         CLE138
+      *                                                                                       CLE138
  
       ** Midas LE Aggregate Facilities with Actions
      FLEAGACPD  UF A E           K DISK
@@ -166,6 +170,23 @@
      C                   OUT       LDA
       *
      C/COPY WNCPYSRC,LEH00399
+      *                                                                                       CLE138
+     C                   CALL      'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANK        PRTCD                                        CLE138
+     C                   PARM      '*VERIFY'     POPTN                                        CLE138
+     C                   PARM      'CLE138'      PSARD             6                          CLE138
+      *                                                                                       CLE138
+     C                   IF        PRTCD = *BLANK                                             CLE138
+     C                   MOVE      'Y'           CLE138            1                          CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      'N'           CLE138                                       CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C     KFCTYB        KLIST                                                                CLE138
+     C                   KFLD                    CNUM                                         CLE138
+     C                   KFLD                    CFACT             3                          CLE138
+     C                   KFLD                    CFCNO             2                          CLE138
+      *                                                                                       CLE138
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number.
       *
@@ -297,6 +318,15 @@
      C                   EVAL      AIORED = BJRDNB
       *
      C/COPY WNCPYSRC,LEH00400
+      *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                   MOVE      FACT          CFACT                                        CLE138
+     C                   MOVE      FCNO          CFCNO                                        CLE138
+     C     KFCTYB        CHAIN     LEAGFCL7                           91                      CLE138
+     C                   IF        *IN91 = *OFF                                               CLE138
+     C                   MOVE      ABFCXCLS      AIFCLS                                       CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ENDIF                                                                CLE138
      C                   WRITE     LEAGHSD0
       *
       ** Write history 'FC' record for facility which was both inserted

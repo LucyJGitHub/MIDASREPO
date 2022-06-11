@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,7 @@
      F*                                                                  *
      F********************************************************************
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -103,6 +105,11 @@
      D  W@SL02                 2      2
      D  W@SL03                 3      3
       *
+     D P@FCLS          DS                                                                     CLE138                                                               CLE138
+     D  W@SL04                 1      1                                                       CLE138
+     D  W@SL05                 2      2                                                       CLE138
+     D  W@SL06                 3      3                                                       CLE138
+     D  W@SL07                 4      4                                                       CLE138
      D*                                                                   S01230
      D* Description     : Copyright notice for inclusion in all programs  S01230
      D*                                                                   S01230
@@ -118,7 +125,12 @@
      C     W@RTCD        PARM                    P@RTCD            7            B:Return code
      C                   PARM                    P@OPTN            7            I:Option
      C                   PARM                    P@FCTY                         I:Key field
+     C                   PARM                    P@FCLS                         I:Faclty Cls  CLE138
      C                   PARM                    P@FMT                          O:Format
+      *                                                                                       CLE138
+     C     P@KEY         KLIST                                                                CLE138
+     C                   KFLD                    P@FCTY                                       CLE138
+     C                   KFLD                    P@FCLS                                       CLE138
       *****************************************************
       *MAIN
       *
@@ -189,15 +201,21 @@
      C     W@SL01        IFEQ      '?'                                          IF 8 SELECT
      C     W@SL02        OREQ      '?'                                           OR
      C     W@SL03        OREQ      '?'                                           OR
+     C     W@SL04        OREQ      '?'                                           OR           CLE138
+     C     W@SL05        OREQ      '?'                                           OR           CLE138
+     C     W@SL06        OREQ      '?'                                           OR           CLE138
+     C     W@SL07        OREQ      '?'                                           OR           CLE138
      C*********************CALL 'SDMVSRR'              98    <SELECT>     S01230
      C                   CALL      'SD0270S'                            98        <SELECT>     S0123
      C                   PARM      *BLANK        P@RTC2            7              B:Return code
      C                   PARM      *BLANK        P@FCTY                           B:Key
+     C                   PARM      *BLANK        P@FCLS                                       CLE138
      C     P@RTC2        COMP      *BLANK                             97          No selection
      C     *IN97         CABEQ     '1'           T@SKIP                           No selection
      C     *IN98         CABEQ     '1'           T@SKIP                           Program error
      C                   END                                                    FI 8
-     C     P@FCTY        CHAIN     @AMRECU                            9590        Get record
+     C*****P@FCTY        CHAIN     @AMRECU                            9590        Get record  CLE138
+     C     P@KEY         CHAIN     @AMRECU                            9590                    CLE138
      C     *IN95         CABEQ     '1'           T@SKIP                           No rec found
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   END                                                    FI 7

@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Initialisation program for CLE138')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending Module                                      */
+/*                                                                   */
+/*       LEC005000 - Midas LE CLE138 Initialisation Program          */
+/*                   (Lending initialisation program)                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No.  CLE138  *CREATE    Date 02Nov21             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE138 - Class Codes for Facilities.                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2022')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
+/* Mode 1 - First call or Mode 2 - Second Call */
+
+             IF         COND((&PMODE *EQ '1') *OR (&PMODE *EQ '2')) +
+                          THEN(DO)
+
+                CALL       PGM(LE005000)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                             CMDLBL(ABNOR))
+             ENDDO
+             COMMIT
+
+/* Mode 3 - Deletion */
+
+             IF         COND(&PMODE *EQ '3') THEN(DO)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+
+ /* Send the error message */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program LEC005000 +
+                          ended abnormally - see joblog ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ROLLBACK
+
+ END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+
+             ENDPGM

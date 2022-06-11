@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD021652           Date 13May22               *
-      *  Prev Amend No. CLE123             Date 02Nov21               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD021652           Date 13May22               *
+      *                 CLE123             Date 02Nov21               *
       *                 MD058307           Date 06Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD027065           Date 22Sep20               *
@@ -87,6 +88,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD021652 - Facility expiry date should be not be earlier than*
       *             any attached fee against it.                      *
       *             Introduced new error message LEF0239.             *
@@ -268,6 +270,8 @@
      F                                     RENAME(CLOANCLF:CLOANCL1)                          CLE147
      F                                     PREFIX(CL)                                         CLE147
                                                                                               CLE147
+      ** Midas LE Facilities Ext File by Facility                                             CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
       **  Compile time arrays
 
      D/COPY ZSRSRC,ZALIGNZ1LE
@@ -2420,6 +2424,24 @@ E4   C                   ENDIF
       *
       **  Validate Credit Agreement Type
      C                   MOVE      DDCAFT        FKEY
+     C                   MOVE      DDCANM        @CUST             6                          CLE138
+     C                   MOVE      DDCAFN        @SEQN                                        CLE138
+     C     KFCLQ         KLIST                                                                CLE138
+     C                   KFLD                    @CUST             6                          CLE138
+     C                   KFLD                    FKEY                                         CLE138
+     C                   KFLD                    @SEQN             2                          CLE138
+     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C     *LOCK         IN        LDA                                                        CLE138
+     C                   Z-ADD     5             DBASE                                        CLE138
+     C                   MOVEL     'LEFCLTLH'    DBFILE                                       CLE138
+     C                   MOVEL     'CLE138'      DBKEY                                        CLE138
+     C                   MOVEL     'LEFCIP1VL'   DBPGM                                        CLE138
+     C                   OUT       LDA                                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+     C                   MOVE      FCXCLS        FCLS                                         CLE138
+                                                                                              CLE138
      C                   CALLB     'AOFACTR0'    PLIST1
       *
      C     @RTCD         IFNE      *BLANKS
@@ -3673,6 +3695,7 @@ E4   C                   ENDIF
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    FKEY              3
+     C                   PARM                    FCLS              4                          CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
 
      C     PLIST2        PLIST

@@ -17,8 +17,9 @@
       *                                                               *
       *  Called From: SDC008150                                       *
       *                                                               *
-      *  Last Amend No. MD052216           Date 04Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD052216           Date 04Apr19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD038025           Date 27Jul16               *
       *                 AR1084524          Date 13Feb13               *
       *                 CLE148             Date 23Jul12               *
@@ -36,6 +37,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD052216 - Lending Fee's Payment Due and Taken Day           *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *

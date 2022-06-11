@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend no. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,7 @@
      F*                                                                  *
      F********************************************************************
      F*                                                                  *S01117
+      *  CLE138 - Class Code for Facilities                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -86,6 +88,9 @@
       * PRT: Facility Type Request Rep Print file
       *
      F/COPY WNCPYSRC,SDH00053
+      *                                                                                       CLE138
+     E                    ACL        16  8               CLASS ARRAY                          CLE138
+      *                                                                                       CLE138
      E                    UAR        53  1
      E                    ULN        53  1
      E                    UARRAY  1   2 26
@@ -315,6 +320,52 @@
       * Print detail line.
      C                     WRITEZZDTLRCD
      C/COPY WNCPYSRC,SDH00050
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+      *                                                                                       CLE138
+     C                     CLEARACL                                                           CLE138
+      *                                                                                       CLE138
+      ** RTV all Class CodeS for Facility                                                     CLE138
+      *                                                                                       CLE138
+     C           XRFCTY    SETLLSDFACTL1                                                      CLE138
+     C           XRFCTY    READESDFACTL1                 72                                   CLE138
+      *                                                                                       CLE138
+      ** If NO classes found                                                                  CLE138
+     C           *IN72     IFEQ *ON                                                           CLE138
+     C                     WRITEZHCLE138                                                      CLE138
+      *                                                                                       CLE138
+     C                     ELSE                                                               CLE138
+     C                     WRITEZHCLE138                                                      CLE138
+     C                     Z-ADD1         C       30                                          CLE138
+      *                                                                                       CLE138
+      ** Process facility type classes                                                        CLE138
+     C           *IN72     DOWEQ*OFF                                                          CLE138
+      *                                                                                       CLE138
+     C                     MOVE AMCLAS    ACL,C                                               CLE138
+     C                     ADD  1         C                                                   CLE138
+      *                                                                                       CLE138
+      ** Write classes to report and reset fields                                             CLE138
+     C           C         IFGT 16                                                            CLE138
+     C                     MOVEAACL       XRCLAS                                              CLE138
+     C                     WRITEZDCLE138                                                      CLE138
+     C                     CLEARACL                                                           CLE138
+     C                     Z-ADD1         C       30                                          CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           XRFCTY    READESDFACTL1                 72                                   CLE138
+     C                     ENDDO                                                              CLE138
+      *                                                                                       CLE138
+      ** Write to report remaining unwritten classes if any                                   CLE138
+     C           C         IFGT 1                                                             CLE138
+     C                     MOVEAACL       XRCLAS                                              CLE138
+     C                     WRITEZDCLE138                                                      CLE138
+     C                     CLEARACL                                                           CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
+      *
      C                     END
       *================================================================
      CSR         CAEXIT    ENDSR
@@ -842,6 +893,30 @@
      C                     END                                            S01117
      C*                                                                   S01117
      C/COPY WNCPYSRC,SDH00052
+      *                                                                                       CLE138
+     C                     MOVE 'N'       CLE138  1                                           CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM '       ' @RTCD   7                                           CLE138
+     C                     PARM '*VERIFY' @OPTN   7                                           CLE138
+     C                     PARM 'CLE138'  @SARD   6                                           CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFNE *BLANKS                                                       CLE138
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVEL'SD0270P 'DBPGM                                               CLE138
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
+     C                     Z-ADD2         DBASE                                               CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
       *                                                                                       CER001
       **  Determine if ULX004 is installed                                                    CER001
       *                                                                                       CER001

@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -91,6 +93,7 @@
      D  pRTCD                         7A
      D  pOPTN                         7A
      D  pFACT                         3A
+     D  pFCLS                         4A                                                      CLE138
      D  pDSSDY                      800A
 
      D ACCESS_FEE      PR                  EXTPGM('AOFEER0')
@@ -139,6 +142,7 @@
      D  pSUTP          S              2A
      D  pCLAS          S              2A
      D  pFACT          S              3A
+     D  pFCLS          S              4A                                                      CLE138
      D  pFEE           S              2A
      D  pDSSDY         S            800A
      D  wREPR          S              8S 0
@@ -411,6 +415,7 @@
                       CallP ACCESS_FACT (  pRTCD
                                          : pOPTN
                                          : pFACT
+                                         : pFCLS
                                          : pDSSDY
                                            );
                       DSSDFACT = pDSSDY;
@@ -445,6 +450,7 @@
                          CallP ACCESS_FACT (  pRTCD
                                             : pOPTN
                                             : pFACT
+                                            : pFCLS
                                             : pDSSDY
                                               );
                          DSSDFACT = pDSSDY;
@@ -456,6 +462,7 @@
                          CallP ACCESS_FACT (  pRTCD
                                             : pOPTN
                                             : pFACT
+                                            : pFCLS
                                             : pDSSDY
                                               );
                          DSSDFACT = pDSSDY;

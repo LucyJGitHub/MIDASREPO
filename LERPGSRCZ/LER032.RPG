@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055601           Date 08Apr20               *
       *                 AR674226           Date 04Dec19               *
       *                 MD053826           Date 25Sep19               *
@@ -159,6 +160,7 @@
      A*                                                               *
      A*---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -784,6 +786,7 @@
      I              HASQNO                          SQNO1                                     224974
      I              HARCIN                          RCIN1                                     224974
      I              HATSEQ                          SEQT1                                     224974
+     I              HAFCLS                          FCLS1                                     CLE138
       *                                                                                     AR657105
      IFACHIS1                                                                               AR657105
      I              FARECI                          F3RECI                                  AR657105
@@ -835,6 +838,7 @@
      I              HARCIN                          RCIN2                 154584
      I              HATSEQ                          SEQT2                                     200289
      I/COPY WNCPYSRC,LEH00308
+     I              HAFCLS                          FCLS2                                     CLE138
       *                                                                                      BUG8222
      IFCLTYF                                                                                 BUG8222
      I              ORED                            FMORED                                   BUG8222
@@ -1094,6 +1098,10 @@
      C*                                                                     0027
      C                     MOVE BRCA      WKBRCA  3                         0027
      C/COPY WNCPYSRC,LEH00309
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           *IN80     ANDEQ*OFF                                                          CLE138
+     C                     MOVE FCXCLS    WKFCLS  4                                           CLE138
+     C                     ENDIF                                                              CLE138
      C           CLE005    IFEQ 'Y'                                       127733
      C                     MOVE RECI      WRECI   1                       127733
      C                     ENDIF                                          127733
@@ -1677,6 +1685,10 @@
      C                     ENDIF                                                              CLE023
       *                                                                                       CLE023
      C/COPY WNCPYSRC,LEH00310
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVE FHFCLS    FHPCLS                                              CLE138
+     C                     MOVE WKFCLS    FHFCLS                                              CLE138
+     C                     ENDIF                                                              CLE138
      C                     UPDATFACHISHF
       ** DO *HIVAL end
      C                     END
@@ -1724,6 +1736,10 @@
      C                     END
       *
      C/COPY WNCPYSRC,LEH00311
+     C                     MOVE *BLANKS   FHPCLS                                              CLE138
+     C                     MOVE *BLANKS   FHFCLS                                              CLE138
+     C                     MOVE *BLANKS   FAFCLS                                              CLE138
+      *                                                                                       CLE138
      C                     DO   *HIVAL
      C                     READ PEFCLFM                  86
      C           *IN86     CABEQ'1'       AEXIT
@@ -2177,6 +2193,29 @@
      C                     MOVE 'N'       CLE025                                              CLE025
      C                     ENDIF                                                              CLE025
      C/COPY WNCPYSRC,LEH00312
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   PRTCD                                               CLE138
+     C                     PARM '*VERIFY' POPTN                                               CLE138
+     C                     PARM 'CLE138'  PSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFNE *BLANKS                                                       CLE138
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     Z-ADD900       DBASE                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
       *                                                                                       CSC042
      C* Set up CCY array                                                                      CSC042
      C                     Z-ADD0         Q       40                                          CSC042
@@ -2387,6 +2426,9 @@
      C                     ENDIF                                          154584
       *                                                                   154584
      C/COPY WNCPYSRC,LEH00313
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVE WKFCLS    FAFCLS                                              CLE138
+     C                     ENDIF                                                              CLE138
      C                     WRITEFACHISAF
      C*                                                                   S01408
      C/COPY WNCPYSRC,LER032CPLH                                           S01408
@@ -3037,6 +3079,7 @@
      C           HAACTN    OREQ 'FE'                                      CLE005
      C           HAACTN    OREQ 'FC'                                      CLE005
      C/COPY WNCPYSRC,LEH00435
+     C           HAACTN    OREQ 'CC'                                                          CLE138
      C                     MOVE FHRCIN    @RCI                            CLE005
      C                     ENDIF                                          CLE005
       *                                                                   CLE005
@@ -3227,6 +3270,12 @@
      C                     ENDIF                                                              CLE025
       *
      C/COPY WNCPYSRC,LEH00314
+     C                     MOVE *BLANKS   FAFCLS                                              CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           HAACTN    ANDEQ'CC'                                                          CLE138
+     C                     MOVE HAFCLS    FAFCLS                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C                     WRITEFACHISAF
       *                                                                   158559
      C                     Z-ADDFACFAM    WCFAM                           158559
@@ -3248,6 +3297,7 @@
      C           HAACTN    OREQ 'FE'                                      CLE005
      C           HAACTN    OREQ 'FC'                                      CLE005
      C/COPY WNCPYSRC,LEH00436
+     C           HAACTN    OREQ 'CC'                                                          CLE138
      C                     Z-ADD*ZERO     @FADJ                           CLE005
      C                     Z-ADD*ZERO     @UADJ                           CLE005
      C                     Z-ADD*ZERO     @DADJ                           CLE005
@@ -3337,6 +3387,7 @@
      C           HAACTN    OREQ 'RC'
      C           HAACTN    OREQ 'FR'                                                          228881
      C/COPY WNCPYSRC,LEH00437
+     C           HAACTN    OREQ 'CC'                                                          CLE138
      C           CLE023    IFEQ 'Y'                                                           CLE023
      C                     Z-ADDFAAFAM    @CFA                                                CLE023
      C                     ELSE                                                               CLE023

@@ -31,8 +31,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD035945           Date 11Feb20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD035945           Date 11Feb20               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041443           Date 19Sep16               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD035945 - Do not update trailer file for closed facility,   *
@@ -216,6 +218,10 @@
      F                                              KINFDS SPOOLU
      FLE0496P1O   E                    PRINTER                        UC
      F                                              KINFDS SPOOL1
+      ** Midas LE Facilities Ext file by Facility                                             CLE138
+     FLEFCLTLHUF  E           K        DISK                                                   CLE138
+      ** Midas LE Facility amendment extension file                                           CLE138
+     FLEFCAQL2IF  E           K        DISK                                                   CLE138
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
@@ -300,6 +306,7 @@
      I              CHTP                            ACHTP
      I              PCRF                            APCRF
      I              PCOB                            APCOB
+     I              SQNO                            ASQNO                                     CLE138
      I/COPY WNCPYSRC,LEH00336
      ILEFCAMZF
      I              RECI                            ZRECI
@@ -394,6 +401,13 @@
      I                                        1   30WFACT
      I                                        4   50WFCNO
      I                                        1   50HAFCTY
+     I            DS                                                                          CLE138  
+     I*                                                                                       CLE138
+     I** Facility Key                                                                         CLE138
+     I*                                                                                       CLE138
+     I                                        1   5 FKEY                                      CLE138
+     I                                        1   30FACT                                      CLE138
+     I                                        4   50FCNO                                      CLE138
       *
      ISDBANK    E DSSDBANKPD
       ** Bank Details
@@ -671,6 +685,31 @@
      C                     MOVE 'N'       CER020                                              CER020
      C                     ENDIF                                                              CER020
      C/COPY WNCPYSRC,LEH00338
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM '       ' PRTCD                                               CLE138
+     C                     PARM '*VERIFY' POPTN                                               CLE138
+     C                     PARM 'CLE138'  PSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSSDY                                               CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+      ** Handle Database Error                                                                CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFNE *BLANKS                                                       CLE138
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     Z-ADD020       DBASE                                               CLE138
+     C                     MOVEL'LE0496'  DBPGM                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
       *
       ** Access General Ledger details.
       *
@@ -770,6 +809,17 @@
      C                     KFLD           FPMFC                                             AR679409
      C                     KFLD           FPMFT                                             AR679409
      C                     KFLD           FPMFN                                             AR679409
+     C           KEYLQD    KLIST                                                              CLE138
+     C                     KFLD           ABRCA                                               CLE138
+     C                     KFLD           ACNUM                                               CLE138
+     C                     KFLD           AFACT                                               CLE138
+     C                     KFLD           AFCNO                                               CLE138
+     C                     KFLD           AFATP                                               CLE138
+     C                     KFLD           ASQNO                                               CLE138
+     C           KEYFXT    KLIST                                                              CLE138
+     C                     KFLD           CNUM                                                CLE138
+     C                     KFLD           @XFTP   3                                           CLE138
+     C                     KFLD           @XFNO   2                                           CLE138
       *
      C                     ENDSR
       *
@@ -850,6 +900,10 @@
      C           AFATP     WHEQ 'FR'
      C                     MOVE 'FR'      HAACTN
      C/COPY WNCPYSRC,LEH00339
+      *                                                                                       CLE138
+     C           AFATP     WHEQ 'CC'                                                          CLE138
+     C                     MOVE 'CC'      HAACTN                                              CLE138
+      *                                                                                       CLE138
      C                     ENDSL
       *
       ** Do History Action and Facility Update processings.
@@ -972,6 +1026,39 @@
       *
      C                     ADD  1         WROUT
      C/COPY WNCPYSRC,LEH00340
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           AFATP     ANDEQ'CC'                                                          CLE138
+      *                                                                                       CLE138
+     C                     MOVE AFACT     @XFTP                                               CLE138
+     C                     MOVE AFCNO     @XFNO                                               CLE138
+     C           KEYFXT    CHAINLEFCLTLH            N55                                       CLE138
+     C           *IN55     IFEQ *ON                                                           CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVE 'LEFCLTLH'DBFILE                                              CLE138
+     C                     MOVE *BLANKS   DBKEY                                               CLE138
+     C                     MOVELFKEY      DBKEY                                               CLE138
+     C                     Z-ADD021       DBASE                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+     C           KEYLQD    CHAINLEFCAQL2             55                                       CLE138
+     C           *IN55     IFEQ *ON                                                           CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVE 'LEFCAQL2'DBFILE                                              CLE138
+     C                     MOVE *BLANKS   DBKEY                                               CLE138
+     C                     MOVELFKEY      DBKEY                                               CLE138
+     C                     Z-ADD022       DBASE                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+     C                     MOVE FCXCLS    HAOCLS                                              CLE138
+     C                     MOVE FACLAS    HAFCLS                                              CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE *BLANKS   HAOCLS                                              CLE138
+     C                     MOVE *BLANKS   HAFCLS                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C                     WRITEHISACTF
       *
       ** Update Facilities with Actions File if existing. Otherwise
@@ -1211,6 +1298,24 @@
      C                     ENDIF
      C                     MOVE FRECI     WKRECI  1                                         MD035945
      C/COPY WNCPYSRC,LEH00546
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           AFATP     ANDEQ'CC'                                                          CLE138
+     C                     MOVE AFACT     @XFTP                                               CLE138
+     C                     MOVE AFCNO     @XFNO                                               CLE138
+     C           KEYFXT    CHAINLEFCLTLH             55                                       CLE138
+     C           *IN55     IFEQ *ON                                                           CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVE 'LEFCLTLH'DBFILE                                              CLE138
+     C                     MOVE *BLANKS   DBKEY                                               CLE138
+     C                     MOVELFKEY      DBKEY                                               CLE138
+     C                     Z-ADD023       DBASE                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+     C                     MOVE FACLAS    FCXCLS                                              CLE138
+     C                     UPDATLEFCLTD0                                                      CLE138
+     C                     ENDIF                                                              CLE138
       *                                                                                       223967
       *  Update exposure file if necessary                                                    223967
       *                                                                                       223967
@@ -1793,6 +1898,24 @@
      C                     MOVE FCCY      RHCCY
      C                     ENDIF
      C/COPY WNCPYSRC,LEH00342
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+      *                                                                                       CLE138
+     C                     MOVE WFACT     @XFTP                                               CLE138
+     C                     MOVE WFCNO     @XFNO                                               CLE138
+     C           KEYFXT    CHAINLEFCLTLH            N55                                       CLE138
+     C           *IN55     IFEQ *ON                                                           CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVE 'LEFCLTLH'DBFILE                                              CLE138
+     C                     MOVE *BLANKS   DBKEY                                               CLE138
+     C                     MOVELFKEY      DBKEY                                               CLE138
+     C                     Z-ADD024       DBASE                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+     C                     MOVE FCXCLS    RCLAS                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
       *
       ** Get Action narrative.
       *
@@ -1806,6 +1929,10 @@
      C           HAACTN    WHEQ 'FR'
      C                     MOVE '1'       *IN35
      C/COPY WNCPYSRC,LEH00343
+      *                                                                                       CLE138
+     C           HAACTN    WHEQ 'CC'                                                          CLE138
+     C                     MOVE *ON       *IN42                                               CLE138
+      *                                                                                       CLE138
      C                     ENDSL
       *
       ** Format Amendment Amount for Facility Increase/Decrease.
@@ -1865,6 +1992,12 @@
      C                     ENDSL                                          CLE014
      C                     ENDIF                                          CLE014
      C/COPY WNCPYSRC,LEH00344
+      *                                                                                       CLE138
+     C           HAACTN    WHEQ 'CC'                                                          CLE138
+     C                     MOVE HAOCLS    RCLAS                                               CLE138
+     C                     MOVE HAOCLS    OFCLS                                               CLE138
+     C                     MOVE HAFCLS    RFCLS                                               CLE138
+      *                                                                                       CLE138
       *
      C                     ENDSL
       *
@@ -1907,6 +2040,12 @@
      C                     MOVEA'000000'  *IN,30
       *
      C/COPY WNCPYSRC,LEH00345
+      *                                                                                       CLE138
+     C                     MOVE *OFF      *IN42                                               CLE138
+     C                     MOVE *BLANKS   RCLAS                                               CLE138
+     C                     MOVE *BLANKS   RFCLS                                               CLE138
+     C                     MOVE *BLANKS   OFCLS                                               CLE138
+      *                                                                                       CLE138
      C                     ENDSR
       *
       *****************************************************************

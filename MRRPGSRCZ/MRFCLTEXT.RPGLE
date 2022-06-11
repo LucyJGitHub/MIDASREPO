@@ -15,17 +15,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 242999             Date 12Oct06               *
+      *                 242999             Date 12Oct06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027A            Date 09May06               *
       *                 CRN001  *CREATE    Date 20Jul05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
+      *           Recoded fix of MD-51651                             *
       *  MD046248 - Finastra Rebranding                               *
       *  242999 - Missing parameter by CDL038.                        *
       *  CSD027A - Conversion Of Customer Number to Alpha             *
@@ -34,25 +37,28 @@
       *           Enhancement                                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Lending Facilities
      FFCLTYFM   IF   E             DISK    INFSR(*PSSR)
- 
+
       ** Lending Facilities detail B record
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(FCLTYFNF)
- 
+
+      ** Lending Facilities Extension File                                                    CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
+                                                                                              CLE138
       ** Reporting Parameters
      FMRRPRMPD  IF   E             DISK    INFSR(*PSSR)
- 
+
       ** Transactions Report File
      FMRTRAPPD  O    E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -79,62 +85,65 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D                 DS
      D DayMonthYear            1      6  0
      D Day                     1      2  0
      D Month                   3      4  0
      D Year                    5      6  0
- 
+
       ** Bank Details Data Structure
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Currency Details Data Structure
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Customer Details Data Structure
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Branch Details Data Structure
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  QQDFAC1      E                     EXTFLD(QQDFAC)
- 
+
       ** General Ledger Details Data Structure
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Short Access Object Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Access Object Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
+      ** External DS for SAR details                                                          CLE138
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE138
+                                                                                              CLE138
       ** Facility Type Data Structure
      D                 DS
      D FACT
      D  FactPos1                      2    Overlay( FACT )
      D  FactPos3                      1    Overlay( FACT: *NEXT )
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
      D WkTAmt          S             15  0
      D WkAmtInB        S             15  0
      D WkAmtIn1        S             15  0
@@ -162,7 +171,10 @@
      D WkCnum          S              6
      D WkFact          S              3
      D WkFcno          S              2
- 
+     D CLE138          S              1                                                       CLE138
+     D QFACT           S              3                                                       CLE138
+     D QFCNO           S              2                                                       CLE138
+
       ** Parameters for ZXRATE module
      D ZRATE1          S             13P 8
      D ZMDI1           S              1
@@ -170,7 +182,7 @@
      D ZMDI2           S              1
      D ZRATEX          S             13P 8
      D ZMDIX           S              1
- 
+
       ** Parameters for ZCONVZ1 module
      D ZAMTCI          S             15  0
      D ZEXCH           S             13P 8
@@ -180,13 +192,13 @@
      D ZCDPI           S              1  0
      D ZCDPO           S              1  0
      D ZAMTCO          S             15  0
- 
+
       ** Parameters for ZDATE2 module
      D ZDAYNO          S              5  0
      D ZDATFM          S              1
      D ZDATE           S              6  0
      D ZADATE          S              7
- 
+
       ** Parameters for MRACSACKY module
      D PAcKyPos01      S              2
      D PAcKyPos03      S              1
@@ -215,7 +227,7 @@
      D PAcCodCR3       S             10
      D PAcSecCR3       S              2
      D PPosRfCR3       S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -234,23 +246,23 @@
       ** Read through LE facilities file
       *
      C     1             SETLL     FCLTYFM
- 
+
      C                   READ      FCLTYFM
- 
+
      C                   DOW       NOT %EOF(FCLTYFM)
- 
+
      C                   IF        (   RECI = 'D'
      C                             OR  RECI = 'M' )
      C                             AND TRCA <> 'CA'
      C                   EXSR      SRProcess
      C                   ENDIF
- 
+
      C                   READ      FCLTYFM
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -313,7 +325,16 @@
      C                   EVAL      PackyPos03  = FactPos3
      C                   EVAL      PackyPos04  = FCTI
      C                   EVAL      PackyPos10  = 'A'
-     C                   EVAL      PackyPos11  = DFCL                                         242999
+      *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                   MOVE      FACT          QFACT                                        CLE138
+     C                   MOVE      FCNO          QFCNO                                        CLE138
+     C     KyFCLTQ       CHAIN     LEFCLTLH                                                   CLE138
+     C                   EVAL      PackyPos11  = FCXCLS                                       CLE138
+     C                   ELSE                                                                 CLE138
+     C**********         EVAL      PackyPos11  = DFCL                                  242999 CLE138
+     C                   EVAL      PackyPos11  = *BLANKS                                      CLE138
+     C                   ENDIF                                                                CLE138
      C                   EXSR      SRGetAcKeyD
      C                   EVAL      EXPACC = PAcCodCR1
      C                   EVAL      EXPACS = PAcSecCR1
@@ -331,8 +352,13 @@
       *
       ** Set other fields
      C                   MOVEL     FACT          EXTRTY
-     C                   EVAL      EXCLAS = DFCL                                              242999
- 
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                   EVAL      EXCLAS = FCXCLS                                            CLE138
+     C                   ELSE                                                                 CLE138
+     C**********         EVAL      EXCLAS = DFCL                                       242999 CLE138
+     C                   EVAL      EXCLAS = *BLANKS                                           CLE138
+     C                   ENDIF                                                                CLE138
+
       * Facility may be overdrawn.
      C                   IF        FAMT        < CAMD
      C                   EVAL      EXPDCI      = 0
@@ -343,7 +369,7 @@
      C                   EVAL      EXPSGN      = -1
      C                   EVAL      EXPALI      = 'L'
      C                   ENDIF
- 
+
      C                   EVAL      EXCAFI      = 'C'
      C                   EVAL      EXPERT      = 'M'
      C                   EVAL      EXCY        = Year
@@ -360,7 +386,7 @@
       ** Write record to output file
       *
      C                   WRITE     MRTRAPD0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -415,7 +441,7 @@
       *
       ** Access corresponding FCLTYFN record
      C     KyFCLTY       Chain     FCLTY
- 
+
      C                   IF        NOT %FOUND
      C                   EVAL      CAMD   = 0
      C                   ENDIF
@@ -459,17 +485,17 @@
       *****************************************************************
      C     SRSetCurDet   BEGSR
       *
- 
+
      C                   CALLB     'MXACSCURR'
       /COPY MXCPYSRC,MXACSPRME
- 
+
      C                   IF        ACS_RTCD = '*ERROR '
      C                   EVAL      I#ERMS = 'Invalid Currency: ' + I#LFD1
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SDCURR = InData
- 
+
      C                   EVAL      EXCYCD = A6CYCD
      C                   EVAL      EXEBRT = A6SPRT
      C                   EVAL      EXMDIB = A6MDIN
@@ -543,10 +569,10 @@
      C     SRSetCusDet   BEGSR
       *
      C                   MOVEL     CNUM          I#LFD1
- 
+
      C                   CALLB     'MXACSCUST'
      C/COPY MXCPYSRC,MXACSPRMI
- 
+
      C                   IF        I#RTCD = '*ERROR'
      C                   EVAL      I#ERMS = 'INVALID CUSTOMER: ' + I#LFD1
      C                   EXSR      *PSSR
@@ -650,7 +676,7 @@
       *                                                               *
       *****************************************************************
      C     SRGetAcKeyD   BEGSR
- 
+
      C                   CALLB     'MRACSACKY'
      C                   PARM                    PAcKyPos01
      C                   PARM                    PAcKyPos03
@@ -661,7 +687,7 @@
      C                   PARM                    PAcKyPos09
      C                   PARM                    PAcKyPos10
      C                   PARM                    PAcKyPos11                                   242999
- 
+
      C                   PARM      *BLANKS       PAcCodDR1
      C                   PARM      *BLANKS       PAcSecDR1
      C                   PARM      *BLANKS       PPosRfDR1
@@ -680,7 +706,7 @@
      C                   PARM      *BLANKS       PAcCodCR3
      C                   PARM      *BLANKS       PAcSecCR3
      C                   PARM      *BLANKS       PPosRfCR3
- 
+
      C                   ENDSR
      C*****************************************************************
       /EJECT
@@ -692,15 +718,21 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Key fields for FCLTYL5
      C     KyFCLTY       KLIST
      C                   KFLD                    CNUM
      C                   KFLD                    FACT
      C                   KFLD                    FCNO
- 
+
+      ** Key fields for FCLTYL5                                                               CLE138
+     C     KyFCLTQ       KLIST                                                                CLE138
+     C                   KFLD                    CNUM                                         CLE138
+     C                   KFLD                    QFACT                                        CLE138
+     C                   KFLD                    QFCNO                                        CLE138
+                                                                                              CLE138
       ** Initialise LDA field.
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'MRFCLTEXT'
      C                   OUT       LDA
@@ -790,6 +822,20 @@
      C                   EVAL      WkCalendarYear = Year
      C                   EVAL      WkCalendarMnth = Month
       *
+     C                   MOVE      'N'           CLE138                                       CLE138
+      *                                                                                       CLE138
+      ** Check if enhancement CLE138 is ON                                                    CLE138
+      *                                                                                       CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       @RTCD                                        CLE138
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+      *                                                                                       CLE138
+     C     @RTCD         IFEQ      *BLANK                                                     CLE138
+     C                   MOVEL     'Y'           CLE138                                       CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
      C                   ENDSR
       *********************************************************************
       /EJECT

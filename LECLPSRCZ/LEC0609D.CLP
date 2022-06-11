@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR402546           Date 31Jul12              */
+/*       Last Amend No. CLE138             Date 02Nov21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR402546           Date 31Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CLE138 - Class Codes for Facilities                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR402546 - LEFCAMPD should be reorganize every COB to avoid */
 /*                  COB time processing issue.                       */
@@ -125,7 +127,9 @@
                              MBROPT(*REPLACE)                                             /*CLE106*/
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                              FILE(XLEFNPRPD))                                             /*CLE106*/
- 
+                CPYF       FROMFILE(LEFCLTQD) TOFILE(XLEFCLTQD) MBROPT(*REPLACE)          /*CLE138*/	
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                             FILE(XLEFCLTQD))                                             /*CLE138*/
                 IF         COND(&CLE023 *EQ 'Y') THEN(DO)                                 /*CLE023*/
                    CPYF       FROMFILE(FACHISH) TOFILE(XFACHISH) +
                              MBROPT(*REPLACE)                                             /*CLE023*/
@@ -177,6 +181,9 @@
                              MBROPT(*REPLACE)                                             /*CLE106*/
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                              FILE(LEFNPRPD))                                              /*CLE106*/
+                CPYF       FROMFILE(XLEFCLTQD) TOFILE(LEFCLTQD) MBROPT(*REPLACE)          /*CLE138*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                             FILE(LEFCLTQD))                                              /*CLE138*/
                                                                                           /*CLE023*/
                 IF         COND(&CLE023 *EQ 'Y') THEN(DO)                                 /*CLE023*/
                    CPYF       FROMFILE(XFACHISH) TOFILE(FACHISH) +

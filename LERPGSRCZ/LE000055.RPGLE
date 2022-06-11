@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR674226 - Manual transaction reached 999. Increase the size *
@@ -75,6 +77,9 @@
       ** Midas LE Aggregated Facility file
      FLEAGFYJ0  IF   E           K DISK
 
+      ** Midas LE Aggregate Facilities Ext File by Facility                                   CLE138
+     FLEAGFCL7  IF   E           K DISK                                                       CLE138
+                                                                                              CLE138
       ** Midas LE Aggregated Facility file
      FLEAGFCL0  UF A E           K DISK    IGNORE(FCLTYHHF)
 
@@ -306,6 +311,20 @@
      C                   OUT       LDA
 
      C/COPY WNCPYSRC,LEH00396
+      *                                                                                       CLE138
+     C                   CALL      'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANK        PRTCD                                        CLE138
+     C                   PARM      '*VERIFY'     POPTN                                        CLE138
+     C                   PARM      'CLE138'      PSARD             6                          CLE138
+      *                                                                                       CLE138
+     C                   IF        PRTCD = *BLANK                                             CLE138
+     C                   MOVE      'Y'           CLE138            1                          CLE138
+     C                   MOVE      *ON           *IN40                                        CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      'N'           CLE138                                       CLE138
+     C                   MOVE      *OFF          *IN40                                        CLE138
+     C                   ENDIF                                                                CLE138
+
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number.
 
@@ -389,6 +408,11 @@
      C                   KFLD                    WCust
      C                   KFLD                    WFType
      C                   KFLD                    WFSeq
+
+     C     KAGFcltyX     KLIST                                                                CLE138
+     C                   KFLD                    WCust                                        CLE138
+     C                   KFLD                    WFTP              3                          CLE138
+     C                   KFLD                    WFNO              2                          CLE138
 
      C                   ENDSR
       *****************************************************************
@@ -574,6 +598,17 @@
      C                   EVAL      AIORED = BJRDNB
 
      C/COPY WNCPYSRC,LEH00397
+      *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                   MOVEL     AJFCTY        WFTP                                         CLE138
+     C                   MOVE      AJFCTY        WFNO                                         CLE138
+     C     KAGFcltyX     CHAIN     LEAGFCL7                           86                      CLE138
+     C                   IF        *IN83 = *OFF                                               CLE138
+     C                   MOVE      FCXCLS        AIFCLS                                       CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      *BLANKS       AIFCLS                                       CLE138
+     C                   ENDIF                                                                CLE138
      C                   WRITE     LEAGHSD0
 
      C                   ENDSR
@@ -984,6 +1019,10 @@
      C                   EVAL      RSTAT = 'EXPIRED   '
      C                   ENDIF
      C/COPY WNCPYSRC,LEH00401
+      *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                   MOVE      FCXCLS        RFCLS                                        CLE138
+     C                   ENDIF                                                                CLE138
 
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.

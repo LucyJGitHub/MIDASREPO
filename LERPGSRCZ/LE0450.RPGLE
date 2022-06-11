@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 257879             Date 12May22               *
-      *  Prev Amend No. MD059275           Date 23May22               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. 257879             Date 12May22               *
+      *                 MD059275           Date 23May22               *
       *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -433,6 +434,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  257879 - Use profit centre account keys with 'S' in position *
       *           8 for syndicated loans.                             *
       *  MD059275 - Incorrect action type on LE0497P1. Populate F1FPCT*
@@ -1416,6 +1418,9 @@
      FCLOANL4   IF   E           K DISK    INFSR(*PSSR)                                       CLE164
      F                                     PREFIX(F4_)                                        CLE164
      F                                     RENAME(CLOANCLF:CLOANCLF4)                         CLE164
+      *                                                                                       CLE138
+      ** LE Facilities Extension File by branch                                               CLE138
+     FLEFCLTLG  IF   E           K DISK    INFSR(*PsSR)                                       CLE138
      F*                                                                   S01408
      F** Core hook for externalisation.                                   S01408
      F/COPY WNCPYSRC,LE0450FFPG                                           S01408
@@ -1698,6 +1703,13 @@
      D***WSET            S             18A                                         MD046080 MD049078
      D***WWCCY           S              3A                                         MD046080 MD049078
      D WCLE134         S              1A                                                    MD049078
+      *                                                                                       CLE138
+      ** Key Fields                                                                           CLE138
+     D K_BRCA          S              3A                                                      CLE138
+     D K_CNUM          S              6A                                                      CLE138
+     D K_FACT          S              3A                                                      CLE138
+     D K_FCNO          S              2A                                                      CLE138
+     D @FCLS           S              4A                                                      CLE138
                                                                                               CLE164
       ** CLE164 Enhancement F variables for LE000801                                          CLE164
                                                                                               CLE164
@@ -4569,6 +4581,14 @@ L118 I                             P   72   77 7RTSPL
      C                   KFLD                    YKACOD
      C                   KFLD                    YKACSQ
      C                   KFLD                    YKBRCA
+      *                                                                                       CLE138
+      ** Key fields for LE Facility Extension File LEFCLTLG                                   CLE138
+      *                                                                                       CLE138
+     C     KFCLT         KLIST                                                                CLE138
+     C                   KFLD                    K_BRCA                                       CLE138
+     C                   KFLD                    K_CNUM                                       CLE138
+     C                   KFLD                    K_FACT                                       CLE138
+     C                   KFLD                    K_FCNO                                       CLE138
       *                                                                                       CLE134
      C                   MOVE      *BLANKS       KACCK            14
       *                                                                                       CLE134
@@ -20765,10 +20785,21 @@ C    C                   ENDIF                                                  
      C                   PARM                    @CLAS                                        CLE164
      C     SDLOAN1       PARM      SDLOAN        DSSDY                                        CLE164
      C                                                                                        CLE164
+      *                                                                                       CLE138
+      ** Get facility class from the extension file                                           CLE138
+      *                                                                                       CLE138
+     C                   MOVE      BRCA          K_BRCA                                       CLE138
+     C                   MOVE      FCUS          K_CNUM                                       CLE138
+     C                   MOVE      FTYP          K_FACT                                       CLE138
+     C                   MOVE      FSEQ          K_FCNO                                       CLE138
+     C     KFCLT         CHAIN     LEFCLTLG                           31                      CLE138
+     C                   MOVE      FCXCLS        @FCLS                                        CLE138
+      *                                                                                       CLE138
      C                   CALL      'AOFACTR0'                                                 CLE164
      C                   PARM      *BLANK        PRTCD                                        CLE164
      C                   PARM      '*KEY'        POPTN                                        CLE164
      C                   PARM                    @FTYP                                        CLE164
+     C                   PARM                    @FCLS                                        CLE138
      C     SDFACT1       PARM      SDFACT1       DSSDY                                        CLE164
      C                                                                                        CLE164
      C                   EVAL      wLSPDPGrpID = LN_AYPGID                                    CLE164

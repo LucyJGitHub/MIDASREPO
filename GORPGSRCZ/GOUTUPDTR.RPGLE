@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059767           Date 18Apr22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD059767           Date 18Apr22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054870           Date 17Jan20               *
       *                 MD052663           Date 04Feb19               *
       *                 MD051197           Date 05Jun18               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD059767 - Some GOC0040 task-split jobs fail during COB with *
       *             with error message unable to allocate a record on *
       *             file GPTRAPPD.                                    *

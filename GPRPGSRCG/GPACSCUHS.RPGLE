@@ -11,19 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR982217           Date 01Jun22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                         *CREATE    Date 17Jan05               *
+      *  Prev Amend No.         *CREATE    Date 17Jan05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR982217 - The BSPL report is not in sync with GL0740P1. Fix *
-      *             is to make sure that the correct M/D indicator is *
-      *             used.                                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP010 - Global BSPL                                         *
       *                                                               *
@@ -80,11 +76,8 @@
       *  pass back a rate of 1
 
      C     G2CYCD        IFEQ      I#ZBC
-     C**********         Z-ADD     1             G2SPRT                                     AR982217
-     C**********         MOVE      'M'           G2MDIN                                     AR982217
-                                                                                            AR982217
-     C     CUHSKP        CHAIN     GZSDCUHSL2                         99                    AR982217
-                                                                                            AR982217
+     C                   Z-ADD     1             G2SPRT
+     C                   MOVE      'M'           G2MDIN
      C                   ELSE
 
       * If the rate was previously accessed,

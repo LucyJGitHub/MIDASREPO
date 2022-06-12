@@ -565,22 +565,6 @@
      C                     GOTO DCEXIT
      C                     END
      C/COPY WNCPYSRC,SDH00040
-      *                                                                                       CLE138
-     C           CLE138    IFEQ 'Y'                                                           CLE138
-     C           #1SEL     ANDEQ'C'                                                           CLE138
-     C                     EXSR DEV3RC                                                        CLE138
-     C                     ELSE                                                               CLE138
-     C           CLE138    IFEQ 'N'                                                           CLE138
-     C           #1SEL     ANDEQ'C'                                                           CLE138
-      ** Setup message data for message                                                       CLE138
-     C                     MOVEL#1SEL     ZA0001                                              CLE138
-      ** Send message 'Invalid action code'                                                   CLE138
-     C                     MOVEL'CLE1380' ZAMSID                                              CLE138
-     C                     EXSR ZASNMS                                                        CLE138
-     C                     SETON                     9832                                     CLE138
-     C                     ENDIF                                                              CLE138
-     C                     ENDIF                                                              CLE138
-      *                                                                                       CLE138
       * Validate subfile record
      C                     EXSR DEV1RC
       * If SFLRCD invalid, note the fact
@@ -588,37 +572,6 @@
       *================================================================
      CSR         DCEXIT    ENDSR
      C/COPY WNCPYSRC,SDH00041
-      /EJECT                                                                                  CLE138
-      *****************************************************************                       CLE138
-      * DEV3RC - Call SD0273M                                                                 CLE138
-      *****************************************************************                       CLE138
-     C           DEV3RC    BEGSR                                                              CLE138
-      *                                                                                       CLE138
-     C                     CALL 'SD0273M'              90                                     CLE138
-     C                     PARM           #1FCTY           Facility Type                      CLE138
-     C                     PARM           P0RTNM  7        Return Code                        CLE138
-      *                                                                                       CLE138
-     C           *IN90     IFEQ '1'                                                           CLE138
-      ** Call to program ended in error                                                       CLE138
-     C                     MOVEL'Y2U0032' W0RTN                                               CLE138
-     C                     MOVEL*BLANKS   W0CLPG 10                                           CLE138
-     C                     MOVEL'SD0273M' W0CLPG                                              CLE138
-      ** Send message '*Error occured on CALL...'                                             CLE138
-     C                     MOVEL'Y2U0032' ZAMSID                                              CLE138
-     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CLE138
-     C                     MOVELW0CLPG    ZAMSDA           Message data                       CLE138
-     C                     EXSR ZASNMS                                                        CLE138
-     C                     ENDIF                                                              CLE138
-      *                                                                                       CLE138
-      ** Exit to main menu...                                                                 CLE138
-     C           P0RTNM    IFEQ 'Y2U9999'                                                     CLE138
-     C                     EXSR ZXEXPG                                                        CLE138
-     C                     ENDIF                                                              CLE138
-      *                                                                                       CLE138
-     C                     ENDSR                                                              CLE138
-      *****************************************************************                       CLE138
-      ** End of hook SDH00041                                         *                       CLE138
-      *****************************************************************                       CLE138
       /EJECT
      CSR         DDNLRC    BEGSR
       *================================================================
@@ -1113,6 +1066,7 @@
      C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
      C                     MOVEL*BLANK    #1SEL            *SFLSEL
      C                     MOVEL*BLANK    #1FCTY           Facility type
+     C                     MOVEL*BLANK    #1CLAS           Facility Class                     CLE138
      C                     MOVEL*BLANK    #1FCNM           Facility Name
       *================================================================
      CSR         MAEXIT    ENDSR
@@ -1124,6 +1078,7 @@
      C                     Z-ADDAMLCD     #1LCD            Last Change Dat
      C                     MOVELAMTYLC    #1TYLC           Type of Last Ch
      C                     MOVELAMFCTY    #1FCTY           Facility type
+     C                     MOVELAMCLAS    #1CLAS           Facility Class                     CLE138
      C                     MOVELAMFCNM    #1FCNM           Facility Name
       *****************************************************************                CLE134 CLE164
       ***Pre-Checking*Order********************************************                CLE134 CLE164
@@ -1140,6 +1095,7 @@
       * Initialise subfile control
       *================================================================
      C                     MOVEL*BLANK    #2FCTY           Facility type
+     C                     MOVEL*BLANK    #2CLAS           Facility Class                     CLE138
       *****************************************************************                CLE134 CLE134
       ***Pre-Checking*Order********************************************                CLE134 CLE134
       *****************************************************************                CLE134 CLE134
@@ -1155,6 +1111,7 @@
      C                     MOVEL*BLANK    W0RTN   7
       * Move all fields to @AMRECT
      C                     MOVEL#1FCTY    AMFCTY           Facility type
+     C                     MOVEL#1CLAS    AMCLAS           Facility Class                     CLE138
      C                     Z-ADDWURDNB    AMLCD            Last Change Dat
      C                     MOVEL'I'       AMTYLC           Type of Last Ch
      C                     MOVEL#1FCNM    AMFCNM           Facility Name
@@ -1166,6 +1123,7 @@
       *
      C           KLCRSA    KLIST
      C                     KFLD           AMFCTY           Facility type
+     C                     KFLD           AMCLAS           Facility Class                     CLE138
       * Check for duplicate primary key
      C           KLCRSA    SETLL@AMRECT                  90*
      C           *IN90     IFEQ '1'
@@ -1197,6 +1155,7 @@
      C                     CALL 'TABLETQ'              90  Update TABLETQ
      C           W0RTN     PARM W0RTN     WQ0006  7        *Return code
      C                     PARM AMFCTY    WQ0007  3        Facility type
+     C                     PARM AMCLAS    WQ0024  4        Facility Class                     CLE138
      C                     PARM AMFCNM    WQ0008 30        Facility Name
      C                     PARM AMTYLC    WQ0009  1        Type of Last Ch
      C                     PARM WURDNB    WQ0010  50       Run day number
@@ -1279,9 +1238,11 @@
      C                     MOVEL*BLANK    W0RTN   7
       * Move key fields to @AMRECT
      C                     MOVEL#1FCTY    AMFCTY           Facility type
+     C                     MOVEL#1CLAS    AMCLAS           Facility Class                     CLE138
       *
      C           KLDLSC    KLIST
      C                     KFLD           AMFCTY           Facility type
+     C                     KFLD           AMCLAS           Facility Class                     CLE138
      C           KLDLSC    CHAIN@AMRECT              9091  *
      C           *IN90     IFEQ '1'
       * Record already deleted
@@ -1470,9 +1431,11 @@
      C                     MOVEL*BLANK    W0RTN   7
       * Move key fields to @AMRECT
      C                     MOVEL#1FCTY    AMFCTY           Facility type
+     C                     MOVEL#1CLAS    AMCLAS           Facility Class                     CLE138
       *
      C           KLCHSE    KLIST
      C                     KFLD           AMFCTY           Facility type
+     C                     KFLD           AMCLAS           Facility Class                     CLE138
      C           KLCHSE    CHAIN@AMRECT              9091  *
       *
      C           *IN90     IFEQ '1'
@@ -1534,6 +1497,7 @@
      C                     CALL 'TABLETQ'              90  Update TABLETQ
      C           W0RTN     PARM W0RTN     WQ0016  7        *Return code
      C                     PARM AMFCTY    WQ0017  3        Facility type
+     C                     PARM AMCLAS    WQ0025  4        Facility Class                     CLE138
      C                     PARM AMFCNM    WQ0018 30        Facility Name
      C                     PARM AMTYLC    WQ0019  1        Type of Last Ch
      C                     PARM WURDNB    WQ0020  50       Run day number
@@ -1699,6 +1663,9 @@
       *                                                                                       CLE138
      C           @RTCD     IFEQ *BLANKS                                                       CLE138
      C                     MOVE 'Y'       CLE138                                              CLE138
+     C                     MOVE *ON       *IN60                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE *OFF      *IN60                                               CLE138
      C                     ENDIF                                                              CLE138
       *                                                                                       CLE138
       * Setup job date/time

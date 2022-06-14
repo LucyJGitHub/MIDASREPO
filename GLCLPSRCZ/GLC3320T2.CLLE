@@ -10,12 +10,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD024120           Date 19Aug14              */
+/*       Last Amend No. CGL092             Date 13Jun22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD024120           Date 19Aug14              */
 /*                      CGL120  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CGL092 - Copy Account Master File before Base CCY Transfer  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD024120 - GLC3320 Performance Issues                       */
 /*       CGL120 - GL COB Components Task Split                       */
@@ -23,7 +25,7 @@
 /*********************************************************************/
 /**********  PGM        PARM(&POSTNUM &CNAME &CSEQ &COPY_RECS)       */                 /*MD024120*/
              PGM        PARM(&POSTNUM &CNAME &CSEQ)                                     /*MD024120*/
- 
+
 /**********  DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +           */                 /*MD024120*/
 /**********               VALUE('GLACBAPD')                          */                 /*MD024120*/
 /**********  DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +          */                 /*MD024120*/
@@ -48,29 +50,90 @@
 /**********  DCL        VAR(&WKCUR) TYPE(*DEC) LEN(10 0)             */                 /*MD024120*/
 /**********  DCL        VAR(&WKDLT) TYPE(*DEC) LEN(10 0)             */                 /*MD024120*/
 /**********  DCL        VAR(&WKTOT) TYPE(*DEC) LEN(10 0)             */                 /*MD024120*/
- 
+             DCL        VAR(&EOM) TYPE(*CHAR) LEN(1)                                      /*CGL092*/
+             DCL        VAR(&EOY) TYPE(*CHAR) LEN(1)                                      /*CGL092*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)                                    /*CGL092*/
+             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)                                      /*CGL092*/
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                    /*CGL092*/
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)                                    /*CGL092*/
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)                                    /*CGL092*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CGL092*/
+             DCL        VAR(&PFIX) TYPE(*CHAR) LEN(2)                                     /*CGL092*/
+             DCL        VAR(&CGL092) TYPE(*CHAR) LEN(1)                                   /*CGL092*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2012')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Send message to MRUNQ */
- 
+
              SNDPGMMSG  MSG('GLC3320T2 - Balance Statements - Task +
                           Split Server') TOMSGQ(MRUNQ)
- 
+
              IF         COND(&POSTNUM = '3') THEN(DO)
+/* Check if CGL092 is enabled. */                                                         /*CGL092*/
+                CHGVAR     VAR(&PRTCD) VALUE('       ')                                   /*CGL092*/
+                CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                   /*CGL092*/
+                CHGVAR     VAR(&PSARD) VALUE('CGL092')                                    /*CGL092*/
+                CHGVAR     VAR(&CGL092) VALUE('N')                                        /*CGL092*/
+                                                                                          /*CGL092*/
+                CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)               /*CGL092*/
+                IF         COND(&PRTCD *EQ '       ') THEN(DO)                            /*CGL092*/
+                CHGVAR     VAR(&CGL092) VALUE('Y')                                        /*CGL092*/
+                ENDDO                                                                     /*CGL092*/
+                                                                                          /*CGL092*/
+/* Call SD2000 to determine whether EOM. If it is copy to month-end file                  /*CGL092*/
+/**/                                                                                      /*CGL092*/
+                IF         COND(&CGL092 = 'Y') THEN(DO)                                   /*CGL092*/
+                CALL       PGM(SD2000) PARM(&EOM &EOY &ERR)                               /*CGL092*/
+                IF         COND(&ERR *EQ 'Y') THEN(GOTO CMDLBL(ABNOR))                    /*CGL092*/
+/**/                                                                                      /*CGL092*/
+                IF         COND(&EOM *EQ 'Y') THEN(DO)                                    /*CGL092*/
+                RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PFIX)                             /*CGL092*/
+                CHGVAR     VAR(&DMLIB) VALUE(&PFIX *CAT 'DMLIB')                                    
+                MONMSG     MSGID(CPF0000)                                                 /*CGL092*/
+                CPYF       FROMFILE(ACCNTAB) TOFILE(&DMLIB/GLACMEPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                               /*CGL092*/
+                MONMSG     MSGID(CPF0000) EXEC(DO)                                        /*CGL092*/
+                DLTF       FILE(GLACMEPD)                                                 /*CGL092*/
+                CHGJOB     SWS(XXXXXX11)                                                  /*CGL092*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CGL092*/
+                ENDDO                                                                     /*CGL092*/
+                ENDDO                                                                     /*CGL092*/
+/* End if CGL092 is ON */                                                                 /*CGL092*/
+                ENDDO                                                                     /*CGL092*/
+                                                                                          /*CGL092*/
                 RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
                 IF         COND(&CURRCD = 0) THEN(DO)
                    GOTO       CMDLBL(END)
                 ENDDO
+                                                                                          /*CGL092*/
+/* CPYF of ACCNTAB to Year-End file is done only if transfer was                          /*CGL092*/
+/* successful and regardless if this is month-end or not. Fail                            /*CGL092*/
+/* component if copy was not successful                                                   /*CGL092*/
+/**/                                                                                      /*CGL092*/
+             IF         COND(&CGL092 = 'Y') THEN(DO)                                      /*CGL092*/
+                RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PFIX)                             /*CGL092*/
+                CHGVAR     VAR(&DMLIB) VALUE(&PFIX *CAT 'DMLIB')                          /*CGL092*/
+                DLTF       FILE(GLACYEPD)                                                 /*CGL092*/
+                MONMSG     MSGID(CPF0000)                                                 /*CGL092*/
+                CPYF       FROMFILE(ACCNTAB) TOFILE(&DMLIB/GLACYEPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                               /*CGL092*/
+                MONMSG     MSGID(CPF0000) EXEC(DO)                                        /*CGL092*/
+                CHGJOB     SWS(XXXXXX11)                                                  /*CGL092*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CGL092*/
+                ENDDO                                                                     /*CGL092*/
+/* End if CGL092 is ON */                                                                 /*CGL092*/
+             ENDDO                                                                        /*CGL092*/
+                                                                                          /*CGL092*/
              ENDDO
                                                                                         /*MD024120*/
              CHGVAR     VAR(&CSEQC) VALUE(&CSEQ)                                        /*MD024120*/
- 
+
 /**********  IF         COND(&POSTNUM = '2' *OR &POSTNUM = '3' *OR + */                 /*MD024120*/
 /**********               &POSTNUM = '4') THEN(DO)                   */                 /*MD024120*/
 /**********     RTVMBRD    FILE(ZACCNTAB) NBRCURRCD(&WKCUR) +        */                 /*MD024120*/
@@ -182,14 +245,14 @@
 /*********************************************************************/                 /*MD024120*/
 /**********  CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)                 */                 /*MD024120*/
 /**********  GOTO       CMDLBL(LOOP)                                 */                 /*MD024120*/
- 
+
 /* Wait for data queue entry */
- 
+
  RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA &RCVWAIT)
- 
+
 /* If message = FINISH, terminate the program */
- 
+
              IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
 /**********     CHGVAR     VAR(&STAT) VALUE('N')                     */                 /*MD024120*/
 /**********     CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)      */                 /*MD024120*/
@@ -204,7 +267,7 @@
 /**********     MONMSG     MSGID(CPF9801)                            */                 /*MD024120*/
                 GOTO       CMDLBL(RCVDTAQ)
              ENDDO
- 
+
  ABNOR:
 /**********  SNDPGMMSG  MSG('Program GLC3320T2 ended abnormally') +  */                 /*MD024120*/
 /**********               TOMSGQ(MOPERQ MRUNQ)                       */                 /*MD024120*/
@@ -215,7 +278,7 @@
 /**********  ROLLBACK                                                */                 /*MD024120*/
 /**********  MONMSG     MSGID(CPF0000 MCH0000 RPG0000)               */                 /*MD024120*/
              CHGJOB     SWS(XXXXXX11)
- 
+
  END:
 /**********  ENDCMTCTL                                               */                 /*MD024120*/
 /**********  MONMSG     MSGID(CPF0000)                               */                 /*MD024120*/

@@ -302,6 +302,10 @@
      D WBranch         S              3A                                                    MD056303
      D WReceiver       S             12A
      D WReceiverA      S             12A                                                     CSW122A
+     D WROC            S              2S 0                                                   CSW122A
+     D WROCL           S              2S 0                                                   CSW122A
+     D WROCEX          S              1A                                                     CSW122A
+     D WMECTR          S              2S 0                                                   CSW122A
      D WTag20a         S              8A
      D WTag20b         S              6A
      D***WTag79L3a       S             14A                                                  MD056303
@@ -2003,7 +2007,7 @@
      C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)                     CSW122A
      C                   EVAL      WTag20ValA = 'P' + WTag20a + WTag20b + 'A'                CSW122A
      C                   EVAL      WTRNoA = WTag20ValA                                       CSW122A
-
+                                                                                             CSW122A
      C                   ADD       1             Q                                           CSW122A
      C     Q             OCCUR     MULT                                                      CSW122A
      C                   MOVEL     ':20:'        MTAG                                        CSW122A
@@ -2077,14 +2081,53 @@
       ** Get tag 70                                                                          CSW122A
       *                                                                                      CSW122A
      C                   EVAL      KFMtag = ':70:'                                           CSW122A
-     C     KLIncMsg      CHAIN     MEIN35L0                                                  CSW122A
-     C                   IF        %FOUND                                                    CSW122A
-     C                   EVAL      WTag70ValA = DSMF35                                       CSW122A
+     C                   EVAL      WMECTR = 1                                                CSW122A
+     C                   EVAL      WROCEX = 'N'                                              CSW122A
+     C                   EVAL      WTag70ValA = *BLANKS                                      CSW122A
+     C     KLIncMsg      SETLL     MEIN35L0                                                  CSW122A
+     C     KLIncMsg      READE     MEIN35L0                                                  CSW122A
+     C                   DOW       NOT %EOF                                                  CSW122A
+                                                                                             CSW122A
+      ** Search for code /ROC/                                                               CSW122A
+                                                                                             CSW122A
+     C                   IF        WMECTR = 1                                                CSW122A
+     C                   EVAL      WROC = %SCAN('/ROC/':DSMF35)                              CSW122A
+     C                   IF        WROC <> 0                                                 CSW122A
+     C                   EVAL      WROCL = %SCAN('/':DSMF35:WROC+5)                          CSW122A
+     C                   IF        WROCL <> 0                                                CSW122A
+     C                   EVAL      WTag70ValA = %SUBST(DSMF35:WROC+5:WROCL-6)                CSW122A
+     C                   ELSE                                                                CSW122A
+     C                   EVAL      WROCEX = 'Y'                                              CSW122A
+     C                   EVAL      WTag70ValA = %SUBST(DSMF35:WROC+5)                        CSW122A
+     C                   ENDIF                                                               CSW122A
+     C                   ENDIF                                                               CSW122A
+     C                   ENDIF                                                               CSW122A
+                                                                                             CSW122A
+      ** Check second line for ROC continuation                                              CSW122A
+                                                                                             CSW122A
+     C                   IF        WMECTR = 2                                                CSW122A
+     C                   EVAL      WROCL = %SCAN('/':DSMF35)                                 CSW122A
+     C                   IF        WROCL <> 0 AND WROCL > 1                                  CSW122A
+     C                             AND WROCEX = 'Y'                                          CSW122A
+     C                   EVAL      WTag70ValA = %TRIM(WTag70ValA)                            CSW122A
+     C                             + %SUBST(DSMF35:1:WROCL-1)                                CSW122A
+     C                   ENDIF                                                               CSW122A
+     C                   IF        WROCL = 0 AND WROCEX = 'Y'                                CSW122A
+     C                   EVAL      WTag70ValA = %TRIM(WTag70ValA)                            CSW122A
+     C                              + %TRIM(DSMF35)                                          CSW122A
+     C                   ENDIF                                                               CSW122A
+     C                   ENDIF                                                               CSW122A
+     C                                                                                       CSW122A
+     C                   EVAL      WMECTR = WMECTR + 1                                       CSW122A
+                                                                                             CSW122A
+     C     KLIncMsg      READE     MEIN35L0                                                  CSW122A
+     C                   ENDDO                                                               CSW122A
       *                                                                                      CSW122A
       ** Get tag 79 Line 4                                                                   CSW122A
       ** Populate line 4 of tag 79: TREF Code followed by EndtoEndID from pacs.008           CSW122A
       ** mapped as field 70 of the rejected 103                                              CSW122A
       *                                                                                      CSW122A
+     C                   IF        WTag70ValA <> *BLANKS                                     CSW122A
      C                   EVAL      WTag79L4ValA = '/TREF/' + WTag70ValA                      CSW122A
      C                   ADD       1             Q                                           CSW122A
      C     Q             OCCUR     MULT                                                      CSW122A

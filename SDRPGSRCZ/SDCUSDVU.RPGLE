@@ -7271,8 +7271,8 @@
      C                   Else                                                                 CER050
      C                   eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
-      */COPY*WNCPYSRC,SDCUSDVU03***************************************                     MD058090                                                                                              CER050
-
+                                                                                              CER050
+      */COPY*WNCPYSRC,SDCUSDVU03***************************************                     MD058090
       ** Check if enhancement S01464 is on                                                  MD056548
                                                                                             MD056548
      C                   CALLB     'AOSARDR0'                                               MD056548

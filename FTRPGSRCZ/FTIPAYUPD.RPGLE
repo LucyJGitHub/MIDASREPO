@@ -103,6 +103,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254361A- Populate ZZAMT before call to SR/SRTrailer.         *
+      *         - Applied for MD-57585                                *
+      *  254361 - Update trailer right after update of inpaydd.       *
+      *         - Applied for MD-57585                                *
+      *  HUT101CC1 - Copy CSW220 processing from FT0060 here          *
+      *           so that SWIFT works in line with HUT101 feature     *
+      *           Addition of hook HUT101_016                         *
+      *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
+      *           Payment Authorisation for Funds Transfer            *
+      *           Upgraded with CAP211 functionality.                 *
+      *           Used hook: FTH00392, FTH00556                       *
+      *           Added hooks: HUT101_008 to HUT101_12                *      
       *  MD058914 - FT payments customer information on listviews     *
       *             is blank. Amend to add routine to retrieve        *
       *             Customer and Branch for INPAYDQD/OTPAYDQD.        *

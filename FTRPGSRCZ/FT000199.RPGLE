@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD057056           Date 19May21               *
-      *  Prev Amend No. MD056683           Date 14Sep20               *
+      *  Last Amend No. HUT116             Date 06Nov20               *      
+      *  Prev Amend No. MD057056           Date 19May21               *
+      *                 MD056683           Date 14Sep20               *
       *                 MD056303           Date 18Jul20               *
       *                 MD056187           Date 02Jul20               *
       *                 MD056170           Date 30Jun20               *
@@ -23,6 +24,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT116 - RTGS Messages are formatted into MT103 format but   *
+      *           these don't have field :121: and should not generate*
+      *           MT199                                               *
+      *           Addition of hooks: HUT116_001 to HUT116_006.        *      
       *  MD057056 - SWIFT: F21 in MT199 is truncated                  *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
       *             the credit goes to the Account with Bank          *
@@ -688,6 +693,7 @@
      C                   MOVEL     'N'           CFT014                                     MD055939
      C                   ENDIF                                                              MD055939
 
+      /COPY WNCPYSRC,HUT116_006                                                               HUT116
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -884,12 +890,14 @@
       ** Writes to MGOMSGPD
       *
      C                   IF        WGenFlg = 'Y'
+      /COPY WNCPYSRC,HUT116_001                                                               HUT116
      C                   EXSR      SrOMSG
 
       *
       ** If generation is successful, turn MT199 to 'Z'
       *
      C                   EVAL      FTM199 = 'Z'
+      /COPY WNCPYSRC,HUT116_002                                                               HUT116
      C                   UPDATE    @INFTL6                              98
 
      C                   IF        *IN98 = *ON
@@ -1229,6 +1237,7 @@
 
      C     SrExtract     BEGSR
 
+      /COPY WNCPYSRC,HUT116_003                                                               HUT116
       *
       ** Get tag 121
       *
@@ -1243,6 +1252,7 @@
      C                   MOVEL     WTag121Val    MFLD
 
      C                   ELSE
+      /COPY WNCPYSRC,HUT116_004                                                               HUT116
      C     *LOCK         IN        LDA
      C                   MOVE      '011'         DBASE
      C                   MOVEL     'KLIncMsg'    DBKEY
@@ -1378,6 +1388,7 @@
      C     Q             OCCUR     MULT
      C                   MOVEL     WTag79L4Val   MFLD
 
+      /COPY WNCPYSRC,HUT116_005                                                               HUT116
      C                   ENDSR
       *****************************************************************
       /EJECT

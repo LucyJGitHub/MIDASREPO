@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR324886           Date 08Apr20               *      
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -59,6 +60,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
+      *             (Upgrade as required by HUT105)                   *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -167,6 +171,9 @@
      F* SE Position Settlements - Details
      FPOSET1  UF  E           K        DISK         KINFSR *PSSR
      F*
+     FPSAUT   UF  E           K        DISK         KINFSR *PSSR                            AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      F* SE Trades details
      FTRADS   UF  E           K        DISK         KINFSR *PSSR A
      F*
@@ -394,6 +401,9 @@
      I              'SEVSEFSPR3'          C         SEVFSP                                    234829
      I              'SEETCPUPD'           C         SEETCP                                    234829
      I              'SEVOPUINT'           C         SEVOPI                                    234829
+     ISDSTAT    E DSSDSTAT                                                                  AR324886
+      ** SD Data area                                                                       AR324886
+      *                                                                                     AR324886
       /COPY ZSRSRC,ZNCDZ2                                                 CSE017
       /COPY ZSRSRC,ZHOLI                                                  CSE017
      I/COPY ZSRSRC,ZTNLU1Z1
@@ -456,6 +466,8 @@
      C                     Z-ADD0         W04CNT  50
      C                     Z-ADD0         W05CNT  50
      C                     Z-ADD0         W06CNT  50
+     C           *NAMVAR   DEFN           SDSTAT                                            AR324886
+     C                     IN   SDSTAT                                                      AR324886
      C*
      C** EXECUTE INITIAL PROCESSING SR/FIRST
      C                     EXSR FIRST
@@ -500,6 +512,18 @@
      C                     KFLD           K5EVTY
      C                     KFLD           VCPTFR
      C                     KFLD           VCTNL1
+      *                                                                                     AR324886
+     C           PSAUTH    KLIST                                                            AR324886
+     C                     KFLD           PBCA                                              AR324886
+     C                     KFLD           PSSH                                              AR324886
+     C                     KFLD           PCPY                                              AR324886
+     C                     KFLD           PDUD                                              AR324886
+     C                     KFLD           PEVT                                              AR324886
+     C                     KFLD           PTFR                                              AR324886
+     C                     KFLD           TNLU                                              AR324886
+     C                     KFLD           TXBS                                              AR324886
+     C                     KFLD           BNFO                                              AR324886
+     C                     KFLD           EXCD                                              AR324886
      C*
      C***KEY*TO*ACCESS*DPTMVDXA,X0,X1**********************************   S01496
      C** Key to access DPTMVDY1                                           S01496
@@ -785,6 +809,7 @@
      C                     MOVE 'D'       CHTP
      C                     Z-ADDBJRDNB    LCD
      C                     UPDATPOSETDF                89
+     C                     EXSR PSAUDT                                                      AR324886
      C*
      C** IF RECORD IS NOT FOUND
      C           *IN89     IFEQ '1'
@@ -814,6 +839,7 @@
      C                     MOVE 'R'       CHTP
      C                     Z-ADDBJRDNB    LCD
      C                     UPDATPOSETDF                89
+     C                     EXSR PSAUDT                                                      AR324886
      C*
      C** IF RECORD IS NOT FOUND
      C           *IN89     IFEQ '1'
@@ -930,6 +956,7 @@
      C                     MOVE 'D'       CHTP
      C                     Z-ADDBJRDNB    LCD
      C                     UPDATPOSETDF                89
+     C                     EXSR PSAUDT                                                      AR324886
      C*
      C** IF RECORD IS NOT FOUND
      C           *IN89     IFEQ '1'                        B*5
@@ -959,6 +986,7 @@
      C                     MOVE 'R'       CHTP
      C                     Z-ADDBJRDNB    LCD
      C                     UPDATPOSETDF                89
+     C                     EXSR PSAUDT                                                      AR324886
      C*
      C** IF RECORD IS NOT FOUND
      C           *IN89     IFEQ '1'                        B*5
@@ -2205,6 +2233,24 @@
      C*
      C                     ENDSR
      ******************************************************************
+      /EJECT                                                                                AR324886
+      *****************************************************************                     AR324886
+     C           PSAUDT    BEGSR                                                            AR324886
+      *                                                                                     AR324886
+     C           PSAUTH    CHAINPSAUT                80                                     AR324886
+     C           *IN80     IFEQ *OFF                                                        AR324886
+     C                     MOVE RECI      PARECI                                            AR324886
+     C                     MOVE PALUSR    PAPUSR                                            AR324886
+     C                     MOVE PALCD     PAPCD                                             AR324886
+     C                     MOVE PALCTP    PAPCTP                                            AR324886
+     C           LIBR      CAT  'OWNER'   PALUSR                                            AR324886
+     C                     MOVE LCD       PALCD                                             AR324886
+     C                     MOVE CHTP      PALCTP                                            AR324886
+     C                     UPDATPSAUTDF                                                     AR324886
+     C                     ENDIF                                                            AR324886
+      *                                                                                     AR324886
+     C                     ENDSR                                                            AR324886
+      *****************************************************************                     AR324886
       /EJECT
      ******************************************************************
      C* *PSSR : STANDARD DATABASE ERROR PROCESSING

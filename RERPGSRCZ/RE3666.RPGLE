@@ -2566,6 +2566,7 @@
       ** Define the narrative fields:
 
      C                   MOVE      *BLANKS       O#PNAR           30
+     C                   MOVE      *BLANKS       ##NARR                                       250390
 
       ** If the facility is switched off or unavailable,
       ** or UDC is not installed, exit this subroutine:
@@ -2586,8 +2587,8 @@
      C                   MOVE      ACSQ          D#ACSQ
      C                   MOVE      BRCA          D#BRCA
      C                   ENDIF
-     C                   MOVE      DSPNAR        O#PNAR
-
+     C**********         MOVE      DSPNAR        O#PNAR                                095479 250390
+     C                   MOVEL     DSPNAR        O#PNAR                                       250390
      C                   GOTO      EXPNAR
      C                   ENDIF
 
@@ -2640,8 +2641,8 @@
      C                   MOVE      BRCA          D#BRCA
      C                   MOVE      'GB00380'     ##MGID
      C                   ENDIF
-     C**********         MOVE DSPNAR    ##NARR                                       S01522 250390
-     C                   MOVEL     DSPNAR        ##NARR
+     C**********         MOVE DSPNAR    ##NARR                                         S01522 250390
+     C                   MOVEL     DSPNAR        ##NARR                                       250390
 
       ** Determine the value for the first narrative using AOPNARR0:
 

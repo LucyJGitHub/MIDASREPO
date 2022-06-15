@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT121             Date 07Feb22               *      
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day           *      
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -198,6 +200,7 @@
      C                   MOVEL     DDPBOK_In     DDPBOK
      C                   MOVEL     DDPPRT_In     DDPPRT
      C                   MOVEL     DDPTFR_In     DDPTFR
+     C/COPY WNCPYSRC,HUT121_130                                                               HUT121
      C                   ENDIF
 
       ** If security shortname read and no error message returned
@@ -285,6 +288,7 @@
      C                   PARM                    DDPRFC            4
      C                   PARM                    DDPPRT            2
      C                   PARM                    DDPTFR            4
+     C/COPY WNCPYSRC,HUT121_131                                                               HUT121
 
       ** Read fwd
      C                   PARM                    @RDFWD            1
@@ -356,6 +360,7 @@
      C                   PARM                    DDPRFC            4
      C                   PARM                    DDPPRT            2
      C                   PARM                    DDPTFR            4
+     C/COPY WNCPYSRC,HUT121_132                                                               HUT121
       ** ICD
       ** Extel Indicator
      C                   PARM                    BVEXOP            1
@@ -543,6 +548,7 @@
      C                   PARM                    DDPBOK_In         2
      C                   PARM                    DDPPRT_In         2
      C                   PARM                    DDPTFR_In         4
+     C/COPY WNCPYSRC,HUT121_133                                                               HUT121
 
      C                   PARM                    Buffer         6000
      C                   PARM                    FldNameArr

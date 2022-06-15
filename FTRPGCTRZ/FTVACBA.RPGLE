@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT110             Date 20Apr20               *      
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035364           Date 07Aug15               *
       *                 CFT049             Date 20Feb15               *
       *                 MD024825           Date 19Aug14               *
@@ -53,6 +54,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT110 - Upgrade HUT022 to FBM 2.1 SP22                      *
+      *           RTGS via SWIFT.                                     *
+      *           Add RTGS-related validation for Account with Bank.  *
+      *           Also upgraded fix MD030805.  Added the following:   *
+      *           HUT110_069   HUT110_070   HUT110_071   HUT110_072   *
+      *           HUT110_073   HUT110_074   HUT110_075   HUT110_076   *
+      *    MD030805 - Valid fields are not populated if A/c with      *
+      *               Bank entry contains a CNAPS code resulting      *
+      *               details missing in file after authorisation.    *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -102,6 +112,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
+     F/COPY WNCPYSRC,HUT110_069                                                               HUT110
 
       *****************************************************************
       ** +--------------------------------------+
@@ -195,6 +206,7 @@
 
       ** External data structure for customer number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
+     D/COPY WNCPYSRC,HUT110_070                                                               HUT110
 
       ** Midas Counterparty NOSTROS
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
@@ -204,6 +216,7 @@
 
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D/COPY WNCPYSRC,HUT110_071                                                               HUT110
 
      D/COPY FTCPYSRC,SFTADDRILE
 
@@ -360,6 +373,7 @@
      D PRTCD           S              7A                                                      CSW203
                                                                                               CSW203
       **                                                                        CFT004
+     D/COPY WNCPYSRC,HUT110_072                                                               HUT110
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -392,6 +406,7 @@
      C                   Eval      AD#4 = 'N'
      C                   Eval      AD#5 = 'N'
      C                   Eval      AD#6 = 'N'
+     C/COPY WNCPYSRC,HUT110_073                                                               HUT110
 
 
       * Sender's Correspondent
@@ -920,6 +935,7 @@
       *                                                                                       CFT049
      C                   Endif                                                                CFT049
       *                                                                                       CFT049
+     C/COPY WNCPYSRC,HUT110_074                                                               HUT110
 
      C                   ENDSR
      C*****************************************************************
@@ -934,6 +950,7 @@
 
       * Subroutine SWSET
      E/COPY FTCPYSRC,SFTADDRSC1
+     C/COPY WNCPYSRC,HUT110_075                                                              HUT110
 
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
@@ -1002,6 +1019,7 @@
      C                   MOVE      'Y'           CFT049                                       CFT049
      C                   ENDIF                                                                CFT049
 						*												                                                                     				  CFT049
+     C/COPY WNCPYSRC,HUT110_076                                                               HUT110
      C/COPY WNCPYSRC,FTH00494
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************

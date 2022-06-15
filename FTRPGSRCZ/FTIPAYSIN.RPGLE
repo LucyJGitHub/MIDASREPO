@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058498           Date 31Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 252696             Date 09Nov20               *      
+      *  Prev Amend No. MD058498           Date 31Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 BUG7555            Date 16Feb21               *
       *                 AR921987           Date 23Mar12               *
       *                 AR928996A          Date 03May12               *
@@ -109,6 +110,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252696 - Ensure that field Swift Reference field is save in  *
+      *           in INPAYDD file for MidasPlus as well as other      *
+      *           needed fields.                                      *
+      *         - Applied for MD-57173                                *      
       *  MD058498 - Two cover screens are not displayed in routed     *
       *             incoming payments. Jump to the end of subroutine  *
       *             EScrn_D if CSW209 is OFF so cover screens are     *
@@ -283,6 +288,7 @@
      F                                     INFSR(*PSSR)                                       CER001
                                                                                               CER001
      FSDCURRLD  IF   E           K DISK    INFSR(*PSSR)                                       225169
+     FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)                                       252696
       *
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,FTIPAYS001
@@ -8119,6 +8125,16 @@
      C                   CLEAR                   IPMSIG                         N
      C                   Z-ADD     *ZERO         IPMAMT                         N
      C                   ENDIF                                                  N
+      *                                                                                       252696
+     C     IPMIR         IFEQ      *BLANKS                                                    252696
+     C     DDSWTN        ANDNE     *BLANKS                                                    252696
+     C                   MOVEL     DDSWTN        IPMIR                                        252696
+      *                                                                                       252696
+     C     KEYMP         CHAIN     MEINMPL1                           94                      252696
+     C                   IF        *IN94 = '0'                                                252696
+     C                   MOVEL     MPTRNO        IPINTRNO                                     252696
+     C                   ENDIF                                                                252696
+     C                   ENDIF                                                                252696
       *
       ** Update files.
       *
@@ -13613,6 +13629,10 @@
      C                   KFLD                    KACCD
      C                   KFLD                    KACSQ
      C                   KFLD                    KBRCA
+      *                                                                                       252696
+     C     KEYMP         KLIST                                                                252696
+     C                   KFLD                    IPINMSGR                                     252696
+     C                   KFLD                    IPINKPRT                                     252696
       *
       * Initialise flag to show first time through                                            204152
      C                   MOVE      'Y'           FirstTime         1                          204152

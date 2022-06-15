@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. 260173             Date 22May20               *      
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -95,6 +96,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
+      *           parameter mismatch. Apply fix 258724.               *      
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -986,6 +989,8 @@
       *
       * Deal Amendment Type
      C                   PARM                    DDMTYP
+      * Action Code (Reversal transaction)                                                    260173
+     C                   PARM      *BLANK        @ACTRV            1                          260173
 
       * OUTPUTS
 

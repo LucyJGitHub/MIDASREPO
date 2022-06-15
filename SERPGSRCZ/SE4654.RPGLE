@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT121             Date 07Feb22               *      
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CCB020             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day           *      
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
@@ -1016,13 +1018,19 @@
       ** Retrieve the lastest Market Price for Security
 
      C                   EVAL      KPriceTyp = 'V '                             Price Type
+     C/COPY WNCPYSRC,HUT121_146                                                               HUT121
      C                   EVAL      KValDate  = *ZEROS                           Value Date
+     C/COPY WNCPYSRC,HUT121_147                                                               HUT121
      C**********         EVAL      KCustNb   = *ZEROS                           Customer Numb CSD027
      C                   EVAL      KCustNb   = *BLANKS                          Customer Numb CSD027
 
+     C/COPY WNCPYSRC,HUT121_148                                                               HUT121
      C     KPosPrice     SETLL     PRICT
+     C/COPY WNCPYSRC,HUT121_149                                                               HUT121
      C                   DOU       %EOF(PRICT) OR Pr_RECI = 'D'
+     C/COPY WNCPYSRC,HUT121_150                                                               HUT121
      C     KPrice        READE     PRICT
+     C/COPY WNCPYSRC,HUT121_151                                                               HUT121
      C                   ENDDO
 
       ** If price found
@@ -2551,6 +2559,8 @@
      C     @RTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CSE015
      C                   ENDIF
+                                                                                              HUT121
+     C/COPY WNCPYSRC,HUT121_152                                                               HUT121
                                                                                               CSW207
       ** Check if SWIFT 2007 is installed                                                     CSW207
                                                                                               CSW207

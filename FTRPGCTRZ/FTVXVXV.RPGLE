@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058899           Date 30Sep21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT110             Date 21Apr20               *      
+      *  Prev Amend No. MD058899           Date 30Sep21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 262674             Date 14Nov09               *
@@ -49,6 +50,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT110 - Upgrade HUT022 to FBM 2.1 SP22                      *
+      *           RTGS via SWIFT. Added the following hooks:          *
+      *           HUT110_079   HUT110_080   HUT110_081   HUT110_082   *
+      *           HUT110_083   HUT110_084   HUT110_085                *      
       *  MD058899 - Changed error displayed when validating /ACC/     *
       *             and other related keywords                        *
       *  MD046248 - Finastra Rebranding                               *
@@ -192,6 +197,7 @@
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
 
+     D/COPY WNCPYSRC,HUT110_079                                                               HUT110
      D/COPY FTCPYSRC,SFTADDRILE
 
      D SACBDS          DS           175
@@ -374,6 +380,7 @@
       ** Parameter used as return code for call SWIF2003                                      CSW203
      D PRTCD           S              7A                                                      CSW203
                                                                                               CSW203
+     D/COPY WNCPYSRC,HUT110_080                                                               HUT110
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -397,6 +404,7 @@
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      Idx = 0
 
+     C/COPY WNCPYSRC,HUT110_081                                                               HUT110
       * Bank Cross References
      C                   Exsr      VXREF
 
@@ -750,6 +758,7 @@
                                                                                             MD058899
      C                   OTHER                                                              BUG25085
                                                                                             BUG25085
+     C/COPY WNCPYSRC,HUT110_082                                                               HUT110
      C                   If        %Subst(X#FLDS:1:1) = 'Y'
       * Send error to screen
      C                   Move      'N'           OKBbi1
@@ -798,6 +807,7 @@
      C                   Movel     'MMA1074'     MsgIdXAr(Idx)
      C                   End
 
+     C/COPY WNCPYSRC,HUT110_083                                                               HUT110
      C                   ENDSL                                                              BUG25085
                                                                                             BUG25085
      C                   End
@@ -807,6 +817,7 @@
      C*****************************************************************
      C* END OF RECEIVER'S CORRESPONDENT VALIDATION                    *
      C*****************************************************************
+     C/COPY WNCPYSRC,HUT110_084                                                               HUT110
      C/EJECT
       * Subroutine SWIFT
      E/COPY FTCPYSRC,SFTSWFTCLE
@@ -872,6 +883,7 @@
      C                   EVAL      CSW203 = 'N'                                               CSW203
      C                   ENDIF                                                                CSW203
                                                                                               CSW203
+     C/COPY WNCPYSRC,HUT110_085                                                               HUT110
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

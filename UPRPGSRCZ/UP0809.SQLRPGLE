@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058986           Date 11Oct21               *
-      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *  Last Amend No. MD059943           Date 16May22               *
+      *  Prev Amend No. MD058986           Date 11Oct21               *
+      *                 MD055891           Date 01Sep20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059943 - Update tables using the 5 fields to avoid         *
+      *             duplicate key record.                             *
+      *           - Applied for MD-60081                              *
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -100,20 +104,24 @@
      C/EXEC SQL                                                                             MD055891
      C+ update CBDPRCTD set DIDRUN = :UNQNOA                                                MD055891
      C+ where DIDSON = :DIDSON and DIDSOS = :DIDSOS and DIDRUN = :DIDRUN                    MD055891
+     C+   and DIDDON = :DIDDON and DIDDOS = :DIDDOS                                         MD059943
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
      C+ update CBDPRXTD set DIDRUN = :UNQNOA                                                MD055891
      C+ where DIDSON = :DIDSON and DIDSOS = :DIDSOS and DIDRUN = :DIDRUN                    MD055891
+     C+   and DIDDON = :DIDDON and DIDDOS = :DIDDOS                                         MD059943
      C/END-EXEC                                                                             MD055891
      C                   ENDIF                                                              MD055891
      C                   If        DIMODE = 'B'                                             MD055891
      C/EXEC SQL                                                                             MD055891
      C+ update CBDPRBTD set DIDRUN = :UNQNOA                                                MD055891
      C+ where DIDSON = :DIDSON and DIDSOS = :DIDSOS and DIDRUN = :DIDRUN                    MD055891
+     C+   and DIDDON = :DIDDON and DIDDOS = :DIDDOS                                         MD059943
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
      C+ update CBDPRXTD set DIDRUN = :UNQNOA                                                MD055891
      C+ where DIDSON = :DIDSON and DIDSOS = :DIDSOS and DIDRUN = :DIDRUN                    MD055891
+     C+   and DIDDON = :DIDDON and DIDDOS = :DIDDOS                                         MD059943
      C/END-EXEC                                                                             MD055891
      C                   ENDIF                                                              MD055891
      C                   END

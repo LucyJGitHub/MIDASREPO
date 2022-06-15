@@ -418,6 +418,30 @@
      C                   ELSE                                                                 CGL018
      C                   MOVE      'N'           CGL018                                       CGL018
      C                   END                                                                  CGL018
+      *                                                                                       CLE138
+      ** Access SAR details file to determine if CLE138 is on.                                CLE138
+      *                                                                                       CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       @RTCD                                        CLE138
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+      *                                                                                       CLE138
+      ** Database Error                                                                       CLE138
+      *                                                                                       CLE138
+     C     @RTCD         IFNE      *BLANKS                                                    CLE138
+     C     @RTCD         ANDNE     '*NRF   '                                                  CLE138
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CLE138
+     C                   Z-ADD     7             DBASE                                        CLE138
+     C                   MOVEL     'CLE138'      DBKEY                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   END                                                                  CLE138
+      *                                                                                       CLE138
+     C     @RTCD         IFEQ      *BLANK                                                     CLE138
+     C                   MOVE      'Y'           CLE138            1                          CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      'N'           CLE138                                       CLE138
+     C                   END                                                                  CLE138
 
      C/COPY WNCPYSRC,GLCOLAVC07
       ** Initialise Program name
@@ -1047,11 +1071,15 @@
       *                                                                                       CLE138
       ** Get facility class from the extension file                                           CLE138
       *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
      C                   MOVE      WFcty1        K_CNUM                                       CLE138
      C                   MOVE      WFcty2        K_FACT                                       CLE138
      C                   MOVE      WFcty3        K_FCNO                                       CLE138
      C     KFCLTH        CHAIN     LEFCLTLH                           80                      CLE138
      C                   MOVE      FCXCLS        @FCls                                        CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      *BLANKS       @FCls                                        CLE138
+     C                   ENDIF                                                                CLE138
 
       ** Facility Flag still OK, Validate Facility type
 

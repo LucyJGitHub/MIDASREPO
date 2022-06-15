@@ -220,6 +220,7 @@
      D*DDACOD***       S             10                                              BUG4067 BUG4481
      D PACOD           S             10                                                      BUG4067
      D DDACOD          S             10                                                      BUG4067
+     D CLE138          S              1                                                       CLE138
       *                                                                                       CLE138
       ** Key Fields                                                                           CLE138
      D K_CNUM          S              6                                                       CLE138
@@ -251,6 +252,7 @@
       *                                                                                       CLE138
       ** Get facility class from the extension file                                           CLE138
       *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
      C                   IF        DDFCCU <> *BLANKS                                          CLE138
      C                   MOVE      DDFCCU        K_CNUM                                       CLE138
      C                   ELSE                                                                 CLE138
@@ -261,6 +263,9 @@
      C                   MOVE      DDFCNO        K_FCNO                                       CLE138
      C     KFCLT         CHAIN     LEFCLTLH                           80                      CLE138
      C                   MOVE      FCXCLS        @FCLS                                        CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      *BLANKS       @FCLS                                        CLE138
+     C                   ENDIF                                                                CLE138
       *
       ** Facility Type
      C     DDFACT        IFNE      *BLANK
@@ -535,6 +540,27 @@
      C                   ELSE                                                                 CLE025
      C                   EVAL      CLE025 = 'N'                                               CLE025
      C                   ENDIF                                                                CLE025
+                                                                                              CLE138
+      ** Check if switchable feature CLE138 (Class Codes for Facilities) is on                CLE138
+                                                                                              CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       PRTCD                                        CLE138
+     C                   PARM      '*VERIFY'     POPTN                                        CLE138
+     C                   PARM      'CLE138'      PSARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+                                                                                              CLE138
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                  CLE138
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CLE138
+     C                   EVAL      DBKEY = 'CLE138'                                           CLE138
+     C                   EVAL      DBASE = 2                                                  CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+                                                                                              CLE138
+     C                   IF        PRTCD = *BLANKS                                            CLE138
+     C                   EVAL      CLE138 = 'Y'                                               CLE138
+     C                   ELSE                                                                 CLE138
+     C                   EVAL      CLE138 = 'N'                                               CLE138
+     C                   ENDIF                                                                CLE138
       *                                                                                      BUG4067
       ** Access MIDAS Modules details via access program                                     BUG4067
       *  (database error handling done in access program)                                    BUG4067

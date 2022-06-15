@@ -209,6 +209,9 @@
       *
       ** Externally described DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
+      *                                                                                       CLE138
+      ** External DS for SAR Details                                                          CLE138
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE138
       *
       ** First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -252,6 +255,8 @@
      D I#RTCD          S              7A
      D PRtCd           S              7A
      D POptn           S              7A
+     D PSard           S              6A                                                      CLE138
+     D CLE138          S              1A                                                      CLE138
      D I#ERMS          S             30A
 
      D I#RDNB          S              5P 0
@@ -342,6 +347,26 @@
      C                   EVAL      I#ERMS = 'AOGELRR0'
      C                   EVAL      *INLR  = *ON
      C                   ENDIF
+      *                                                                                       CLE138
+      ** Check if Class Codes for Facilities (CLE138) is ON                                   CLE138
+      *                                                                                       CLE138
+     C                   MOVE      'N'           CLE138                                       CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       PRtCd                                        CLE138
+     C                   PARM      '*VERIFY'     POptn                                        CLE138
+     C                   PARM      'CLE138'      PSard                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+      *                                                                                       CLE138
+     C                   IF        PRtCd <> *BLANKS AND PRtCd <> '*NRF   '                    CLE138
+     C                   EVAL      I#RTCD = '*ERROR '                                         CLE138
+     C                   EVAL      I#ERMS = 'AOSARDR0'                                        CLE138
+     C                   EVAL      *INLR  = *ON                                               CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C                   IF        PRtCd = *BLANKS                                            CLE138
+     C                   EVAL      CLE138 = 'Y'                                               CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
 
      C                   ENDSR
       *
@@ -398,12 +423,16 @@
       *                                                                                       CLE138
       ** Get facility class from the extension file                                           CLE138
       *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
      C                   MOVE      FC_BRCA       K_BRCA                                       CLE138
      C                   MOVE      FC_CNUM       K_CNUM                                       CLE138
      C                   MOVE      FC_FACT       K_FACT                                       CLE138
      C                   MOVE      FC_FCNO       K_FCNO                                       CLE138
      C     WKeyList3     CHAIN     LEFCLTLG                           80                      CLE138
      C                   MOVE      FCXCLS        PClas                                        CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      *BLANKS       PClas                                        CLE138
+     C                   ENDIF                                                                CLE138
       *
       ** Access facility type details to set transaction description
      C                   MOVE      FC_FACT       PKey

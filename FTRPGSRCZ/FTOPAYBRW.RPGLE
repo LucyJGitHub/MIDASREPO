@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054957           Date 11Dec19               *
-      *  Prev Amend No. ERZ123             Date 29Jan13               *      
+      *  Last Amend No. MD060003           Date 02Jun22               *
+      *  Prev Amend No. MD054957           Date 11Dec19               *
+      *                 ERZ123             Date 29Jan13               *      
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 260903             Date 25Apr14               *
@@ -57,6 +58,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060003 - Enquiry of alphanumeric outgoing payment failed.  *
+      *             Amend /COPY FTH00623.                             *
       *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
       *  ERZ123 - FT Select Payment on Beneficiary Line 1             *
       *           Added hooks: FTH00618, FTH00619, FTH00621,          *

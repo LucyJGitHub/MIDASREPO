@@ -19,7 +19,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. M059859           Date 11May22               *
+      *  Last Amend No. MD059859           Date 11May22               *
       *  Prev Amend No. MD059908           Date 11May22               *
       *                 CCG025             Date 11May22               *
       *                 EML102A            Date 29Jan21               *

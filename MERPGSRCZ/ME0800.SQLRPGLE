@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD057490           Date 22Feb21               *
+      *  Last Amend No. MD060105           Date 15Jun21               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD057490           Date 22Feb21               *
       *                 MD052485           Date 02Apr19               *
       *                 MD051910           Date 02Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -75,6 +76,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060105 - Tag description is not printed due to incorrect   *
+      *             access to table                                   *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD057490 - MT202 Incorrect Bank Name in 57 field.            *
       *           - Use the correct message sequence in file MGOEXTPD *
@@ -968,7 +971,8 @@
      C+ SELECT *                                                                            MD056560
      C+ into :SDMTAG                                                                        MD056560
      C+ from SDMTGJW0                                                                       MD056560
-     C+ where EFMTAG = :MTAGK                                                               MD056560
+     C**where*EFMTAG = :MTAGK                                                      MD056560 MD060105
+     C+ where EFMTAG = :MTAGK and EFMTPY = :MTPYK                                           MD060105
      C/END-EXEC                                                                             MD056560
      C                   ENDIF                                                                 CSW09
      C*                                                                   CSW098

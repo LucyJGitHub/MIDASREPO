@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD059655           Date 02Mar22               *
-      *  Prev Amend No. MD039307           Date 02Mar22               *
+      *  Last Amend No. MD060076           Date 14Jun22               *
+      *  Prev Amend No. MD059655           Date 02Mar22               *
+      *                 MD039307           Date 02Mar22               *
       *                 MD050212           Date 02Apr18               *
       *                 MD039670           Date 11Aug16               *
       *                 MD046248           Date 27Oct17               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060076 - COB component SDC000715 00001 failed              *
       *  MD059655 - Amendment to MD39670 while testing MD039307.      *
       *             Used DSLDY instead of DSSDY when calling          *
       *             AONAHOR0                                          *
@@ -550,7 +552,7 @@
      C                   ENDIF
 
      C                   IF        WPrintYN = 'Y'                                           MD027483
-     C                             AND (BBDTDL =  0)                                        MD039307
+     C**********                   AND (BBDTDL =  0)                               MD039307 MD060076
                                                                                             MD027483
       ** Open printer file if there are successful record.
 
@@ -567,6 +569,7 @@
       ** Print Details. Print Title if next page occurs
 
      C**********         IF        WPrintYN = 'Y'                                           MD027483
+     C                   IF        BBDTDL =  0                                              MD060076
 
      C                   IF        PrtLn1 + 1 >= OflLn1
      C                   EXSR      SRHEADER
@@ -578,6 +581,7 @@
      C                   WRITE     SD0715R2
      C                   ENDIF
 
+     C                   ENDIF                                                              MD060076
      C                   ENDIF
 
      C                   ENDSR

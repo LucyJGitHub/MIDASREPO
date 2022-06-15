@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. AR324372           Date 13Jun22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
@@ -71,6 +72,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR324372 - Serious Midas Error occured. Amend to only allow  *
+      *             rollover on authorised deals.                     *
+      *           - Applied for MD-48315                              *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -508,10 +512,11 @@
      C                   MOVEL     'MMM0189'     Msgids(Idx)
      C                   END
      C*
-     C**  If the related deal status code is not 'A' or 'R', it is an
+     C****If*the*related*deal*status*code*is*not*'A'*or*'R',*it*is*an*                      AR324372
+      ** If the related deal status code is not 'A' it is an                                AR324372
      C**  error.
      C     HKDSTS        IFNE      'A'
-     C     HKDSTS        ANDNE     'R'
+     C*****HKDSTS        ANDNE     'R'                                                      AR324372
      C                   MOVE      'Y'           ErrorFound
      C                   ADD       1             Idx
      C                   MOVEL     'MMM0254'     Msgids(Idx)

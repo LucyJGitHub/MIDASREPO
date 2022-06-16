@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058466           Date 09Aug21               *
-      *  Prev Amend No. AR574704           Date 01Jun20               *
+      *  Last Amend No. MD058941           Date 15Apr22               *
+      *  Prev Amend No. MD058466           Date 09Aug21               *
+      *                 AR574704           Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056412           Date 11Aug20               *
       *                 MD052075           Date 07Jun19               *
@@ -99,6 +100,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058941 - The UPDATE:BITH part fails because the last       *
+      *             WRITE:BITP SOAP call triggers the batch to be     *
+      *             accepted automatically due to fix AR1029481.      *
       *  MD058466 - Batch item processed before Batch header          *
       *             Delay and check again before issuing error msg.   *
       *  AR574704 - Cannot delete item if account is invalid. Neglect *
@@ -1053,7 +1057,7 @@
      C     Idx           IFEQ      0
      C                   EXSR      SRSetOFld
      C                   EXSR      UpdateDB
-     C                   EXSR      SrAutoAuth                                              AR1029481
+     C**********         EXSR      SrAutoAuth                                     AR1029481 MD058941
      C                   ENDIF
 
      C                   ENDSR

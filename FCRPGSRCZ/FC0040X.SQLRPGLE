@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055265           Date 10Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060059           Date 16Jun22               *
+      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 262779             Date 23Nov09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060059 - Typo error in the program which was introduced by *
+      *             MD-55265(Deliverable Data Split for Report Control*
+      *             Facility). FCRPEJW0 was used instead of FCREPJW0. *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  262779 - Job GL0101C fails with authority issues when trying *
@@ -389,7 +393,8 @@
      C/EXEC SQL                                                                             MD055265
      C+ SELECT *                                                                            MD055265
      C+ into :FCREPT                                                                        MD055265
-     C+ from FCRPEJW0                                                                       MD055265
+     C**from*FCRPEJW0*************************************************             MD055265 MD060059
+     C+ from FCREPJW0                                                                       MD060059
      C+ where DXRNAM = :DXRNAM                                                              MD055265
      C/END-EXEC                                                                             MD055265
      C******IN90         IFEQ      '1'                                                      MD055265

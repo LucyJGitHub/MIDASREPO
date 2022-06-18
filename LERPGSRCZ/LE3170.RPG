@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060136           Date 17Jun21               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -52,6 +53,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060136 - Old facility class reflected on New Clasc column  *
+      *           - get the New Class code in the facility amendment  *
+      *             or Agg fclty amendment extension file             *
       *  CLE138 - Class Codes for Facilities                          *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
@@ -94,6 +98,12 @@
      F                                              KINFDS SPOOL1
      F/COPY WNCPYSRC,LEH00199
      FLEFCLTLHIF  E           K        DISK                                                   CLE138
+     FLEAGFCL7IF  E           K        DISK                                                   CLE138
+     F            LEFCLTD0                          KRENAMELEAGFCD1                           CLE138
+     FLEAGAQL0IF  E           K        DISK                                                   CLE138
+     F            LEFCAQD0                          KRENAMELEFCAQD1                           CLE138
+     FLEFCAQL0IF  E           K        DISK                                                   CLE138
+     F            LEFCAQD0                          KRENAMELEFCAQD2                           CLE138
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
@@ -368,6 +378,12 @@
      C                     KFLD           @FACT   3                                           CLE138
      C                     KFLD           @FCNO   2                                           CLE138
       *                                                                                       CLE138
+     C           FEXTN     KLIST                                                            MD060136
+     C                     KFLD           @FCNUM                                            MD060136
+     C                     KFLD           XFACT   30                                        MD060136
+     C                     KFLD           XFCNO   20                                        MD060136
+     C                     KFLD           XVLDT   50                                        MD060136
+     C                     KFLD           XSQNO   30                                        MD060136
       *
       ***  Check System Date Format, DDMMYY (*IN98 off)
       ***                            MMDDYY (*IN98 on).
@@ -625,6 +641,10 @@
      C           *IN80     IFEQ *OFF                                                          CLE138
      C                     MOVE FCXCLS    RFCLS                                               CLE138
      C                     ELSE                                                               CLE138
+     C           FCLTYB    CHAINLEAGFCL7             80                                       CLE138
+     C           *IN80     IFEQ *OFF                                                          CLE138
+     C                     MOVE FCXCLS    RFCLS                                               CLE138
+     C                     ELSE                                                               CLE138
      C           *LOCK     IN   LDA                                                           CLE138
      C                     MOVE 'LEFCLTQD'DBFILE           ****************                   CLE138
      C                     Z-ADD900       DBASE            * DB ERROR 900 *                   CLE138
@@ -633,11 +653,33 @@
      C                     OUT  LDA                                                           CLE138
      C                     EXSR *PSSR                                                         CLE138
      C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
       *                                                                                       CLE138
      C           FATP      IFEQ 'CC'                                                          CLE138
      C                     MOVEA@FATP,5   RFATP                                               CLE138
-     C                     MOVE FCXCLS    RNCLS                                               CLE138
+     C**********           MOVE FCXCLS    RNCLS                                      CLE138 MD060136
      C                     MOVE *ON       *IN21                                               CLE138
+     C                     MOVELFACT      XFACT                                             MD060136
+     C                     MOVELFCNO      XFCNO                                             MD060136
+     C                     MOVELVLDT      XVLDT                                             MD060136
+     C                     MOVELSQNO      XSQNO                                             MD060136
+     C           FEXTN     CHAINLEFCAQL0             80                                     MD060136
+     C           *IN80     IFEQ *OFF                                                        MD060136
+     C                     MOVE FACLAS    RNCLS                                             MD060136
+     C                     ELSE                                                             MD060136
+     C           FEXTN     CHAINLEAGAQL0             80                                     MD060136
+     C           *IN80     IFEQ *OFF                                                        MD060136
+     C                     MOVE FACLAS    RNCLS                                             MD060136
+     C                     ELSE                                                             MD060136
+     C           *LOCK     IN   LDA                                                         MD060136
+     C                     MOVE 'LEFCAMQD'DBFILE           ****************                 MD060136
+     C                     Z-ADD901       DBASE            * DB ERROR 901 *                 MD060136
+     C                     MOVE *BLANKS   DBKEY            ****************                 MD060136
+     C                     MOVELWFACT     DBKEY                                             MD060136
+     C                     OUT  LDA                                                         MD060136
+     C                     EXSR *PSSR                                                       MD060136
+     C                     ENDIF                                                            MD060136
+     C                     ENDIF                                                            MD060136
      C                     ENDIF                                                              CLE138
       *                                                                                       CLE138
      C                     ENDIF                                                              CLE138

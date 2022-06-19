@@ -20814,7 +20814,7 @@ C    C                   ENDIF                                                  
       ** Get facility class from the extension file                                           CLE138
       *                                                                                       CLE138
      C                   IF        CLE138 = 'Y'                                               CLE138
-     C                   MOVE      BRCA          K_BRCA                                       CLE138
+     C                   MOVE      FCLB          K_BRCA                                       CLE138
      C                   MOVE      FCUS          K_CNUM                                       CLE138
      C                   MOVE      FTYP          K_FACT                                       CLE138
      C                   MOVE      FSEQ          K_FCNO                                       CLE138

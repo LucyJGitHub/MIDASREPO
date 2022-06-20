@@ -6,11 +6,15 @@
       *                                                               *
       *  (C) Copyright Finastra Internatonal Limited 2018             *
       *                                                               *
-      *  Last Amend No. MD058332           Date 19Apr22               *
-      *  Prev Amend No. JMI111 *CREATE     Date 18May18               *
+      *  Last Amend No. MD058332A          Date 20Jun22               *
+      *  Prev Amend No. MD058332           Date 19Apr22               *
+      *                 JMI111 *CREATE     Date 18May18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058332A - Batch number field was not updated with correct  *
+      *              batch number generated for OPICS transaction.    *
+      *              Amend to correct conditioning.                   *
       *  MD058332 - OPICS transactions could not be inserted in       *
       *             FBM as the batch number reached # 999.            *
       *             Amend to prevent looping and pass return code     *
@@ -38,7 +42,7 @@
      C                   PARM      *BLANKS       @RETRN            7                          JMI111
                                                                                               JMI111
      C     D#BTNB        IFNE      XBTNB                                                    MD058332
-     C     WBTNB         ANDEQ     *ZERO                                                    MD058332
+     C*****WBTNB         ANDEQ     *ZERO                                          MD058332 MD058332A
      C                   EVAL      WBTNB  =  D#BTNB                                           JMI111
      C                   ENDIF                                                              MD058332
      C                   EVAL      PERRORFLAG = @RETRN                                      MD058332

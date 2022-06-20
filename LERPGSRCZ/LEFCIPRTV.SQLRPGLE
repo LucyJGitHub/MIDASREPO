@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD060121           Date 18Jun22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD039655           Date 03Sep19               *
       *                 MD036924           Date 06Nov19               *
@@ -73,7 +74,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  MD060121 - Serious Midas error in FCIP enquiry for agg fac.  *
+      *             Added access to aggregate fac file aside from     *
+      *             facilties extension file                          *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD039655 - Facility cannot be rejected.                      *
@@ -237,6 +241,12 @@
       *                                                                                     BUG4555
       ** Midas AP API Configuration                                                           CAP185
      FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
+      ** Midas LE Facilities Ext File by Facility                                             CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
+      ** Midas LE Aggregate Facilities Ext File by Facility                                 MD060121
+     FLEAGFCL7  IF   E           K DISK    INFSR(*PSSR)                                     MD060121
+     F                                     RENAME(LEFCLTD0:LEFCLTDX)                        MD060121
+     F                                     PREFIX(A_)                                       MD060121
      F/COPY WNCPYSRC,LEH00261
                                                                                               CAP185
       *****************************************************************
@@ -722,11 +732,42 @@
      C                   MOVEL     'LEF0004'     MsgIdArr(Ix)
 
      C                   ELSE
-
+     C     DDACTN        IFNE      'I'                                                        CLE138
+     C                   MOVEL     DDFACT        @FACT                                        CLE138
+     C                   MOVEL     DDCSSN        @CUST                                        CLE138
+     C                   MOVE      DDFCNO        @SEQN                                        CLE138
+     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C                   IF        CLE025 = 'Y'                                             MD060121
+     C     KFCLQ         CHAIN     LEAGFCL7                                                 MD060121
+     C                   IF        NOT %FOUND(LEAGFCL7)                                     MD060121
+     C     *LOCK         IN        LDA                                                        CLE138
+     C**********         EVAL      DBFILE = 'LEFCLTLH'                               CLE138 MD060121
+     C                   EVAL      DBFILE = 'LEAGFCL7'                                      MD060121
+     C                   EVAL      DBASE = 59                                                 CLE138
+     C                   EVAL      DBKEY = @FACT                                              CLE138
+     C                   OUT       LDA                                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ELSE                                                               MD060121
+     C                   MOVEL     A_FCXCLS      @CLAS             4                        MD060121
+     C                   ENDIF                                                                CLE138
+     C                   ELSE                                                               MD060121
+     C     *LOCK         IN        LDA                                                      MD060121
+     C                   EVAL      DBFILE = 'LEFCLTLH'                                      MD060121
+     C                   EVAL      DBASE = 60                                               MD060121
+     C                   EVAL      DBKEY = @FACT                                            MD060121
+     C                   OUT       LDA                                                      MD060121
+     C                   EXSR      *PSSR                                                    MD060121
+     C                   ENDIF                                                              MD060121
+     C                   ELSE                                                               MD060121
+     C                   MOVEL     FCXCLS        @CLAS                                      MD060121
+     C                   ENDIF                                                              MD060121
      C                   CALLB     'AOFACTR0'
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    DDFACT
+     C**********         PARM                    FCXCLS                                       CLE138
+     C                   PARM                    @CLAS                                      MD060121
      C     SDFACT        PARM      SDFACT        DSFDY
       *
      C     @RTCD         IFNE      *BLANKS
@@ -736,6 +777,7 @@
      C                   MOVEL     'LEF0004'     MsgIdArr(Ix)
      C                   ENDIF
 
+     C                   ENDIF                                                                CLE138
      C                   ENDIF
 
       **  Validate Facility Seq No.
@@ -1889,6 +1931,10 @@
      C                   KFLD                    KFACT
      C                   KFLD                    KFCNO
      C                   KFLD                    KRCTP
+     C     KFCLQ         KLIST                                                                CLE138
+     C                   KFLD                    @CUST             6
+     C                   KFLD                    @FACT             3                          CLE138
+     C                   KFLD                    @SEQN             2                          CLE138
 
       **  Used for LEFCLTL1 and L7
      C     K#KY02        KLIST

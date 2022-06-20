@@ -393,6 +393,7 @@
      D CCF001          S              1                                                     BUG4555
      D CSC011          S              1                                                     BUG4555
      D CSD015          S              1                                                     BUG4555
+     D CLE138          S              1                                                       CLE138
       *                                                                                     BUG4555
      D WFuncType       S              8                                                     BUG4555
      D WIdntifier      S             40                                                     BUG4555
@@ -732,36 +733,13 @@
      C                   MOVEL     'LEF0004'     MsgIdArr(Ix)
 
      C                   ELSE
-     C     DDACTN        IFNE      'I'                                                        CLE138
-     C                   MOVEL     DDFACT        @FACT                                        CLE138
-     C                   MOVEL     DDCSSN        @CUST                                        CLE138
-     C                   MOVE      DDFCNO        @SEQN                                        CLE138
-     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
-     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
-     C                   IF        CLE025 = 'Y'                                             MD060121
-     C     KFCLQ         CHAIN     LEAGFCL7                                                 MD060121
-     C                   IF        NOT %FOUND(LEAGFCL7)                                     MD060121
-     C     *LOCK         IN        LDA                                                        CLE138
-     C**********         EVAL      DBFILE = 'LEFCLTLH'                               CLE138 MD060121
-     C                   EVAL      DBFILE = 'LEAGFCL7'                                      MD060121
-     C                   EVAL      DBASE = 59                                                 CLE138
-     C                   EVAL      DBKEY = @FACT                                              CLE138
-     C                   OUT       LDA                                                        CLE138
-     C                   EXSR      *PSSR                                                      CLE138
-     C                   ELSE                                                               MD060121
-     C                   MOVEL     A_FCXCLS      @CLAS             4                        MD060121
+     C                   MOVEL     *BLANKS       @CLAS                                        CLE138
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C                   EXSR      GETCLAS                                                    CLE138
      C                   ENDIF                                                                CLE138
-     C                   ELSE                                                               MD060121
-     C     *LOCK         IN        LDA                                                      MD060121
-     C                   EVAL      DBFILE = 'LEFCLTLH'                                      MD060121
-     C                   EVAL      DBASE = 60                                               MD060121
-     C                   EVAL      DBKEY = @FACT                                            MD060121
-     C                   OUT       LDA                                                      MD060121
-     C                   EXSR      *PSSR                                                    MD060121
-     C                   ENDIF                                                              MD060121
-     C                   ELSE                                                               MD060121
-     C                   MOVEL     FCXCLS        @CLAS                                      MD060121
-     C                   ENDIF                                                              MD060121
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C     DDACTN        ANDNE     'I'                                                        CLE138
+     C     CLE138        ORNE      'Y'                                                        CLE138
      C                   CALLB     'AOFACTR0'
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -776,8 +754,9 @@
      C                   MOVEL     'DDFACT    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0004'     MsgIdArr(Ix)
      C                   ENDIF
-
      C                   ENDIF                                                                CLE138
+
+
      C                   ENDIF
 
       **  Validate Facility Seq No.
@@ -2397,11 +2376,74 @@
      C                   IF        @RTCD = *BLANKS                                            CSD083
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
+                                                                                              CSD083
+      ** Check if Class Code for Facilities (CLE138) is ON                                    CLE138
+                                                                                              CLE138
+     C                   EVAL      CLE138 = 'N'                                               CLE138
+                                                                                              CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       @RTCD                                        CLE138
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+                                                                                              CLE138
+     C                   IF        @RTCD <> *BLANKS AND                                       CLE138
+     C                             @RTCD <> '*NRF'                                            CLE138
+     C     *LOCK         IN        LDA                                                        CLE138
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CLE138
+     C                   EVAL      DBase = 10                                                 CLE138
+     C                   EVAL      DBKey = 'CLE138'                                           CLE138
+     C                   OUT       LDA                                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+                                                                                              CLE138
+     C                   IF        @RTCD = *BLANKS                                            CLE138
+     C                   EVAL      CLE138 = 'Y'                                               CLE138
+     C                   ENDIF                                                                CLE138
       *                                                                                       CAP185
      C                   ENDSR
+     C
       *****************************************************************
       /EJECT
-      ********************************************************************
+      *****************************************************************                       CLE138
+      * GETCLAS - GET FACILITY CLASS CODE                                                     CLE138
+      *****************************************************************                       CLE138
+     C     GETCLAS       BEGSR                                                                CLE138
+     C                   MOVEL     DDFACT        @FACT                                        CLE138
+     C                   MOVEL     DDCSSN        @CUST                                        CLE138
+     C                   MOVE      DDFCNO        @SEQN                                        CLE138
+     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C                   IF        CLE025 = 'Y'                                             MD060121
+     C     KFCLQ         CHAIN     LEAGFCL7                                                 MD060121
+     C                   IF        NOT %FOUND(LEAGFCL7)                                     MD060121
+     C     *LOCK         IN        LDA                                                      MD060121
+     C                   EVAL      DBFILE = 'LEAGFCL7'                                      MD060121
+     C                   EVAL      DBASE = 59                                               MD060121
+     C                   EVAL      DBKEY = @FACT                                            MD060121
+     C                   OUT       LDA                                                      MD060121
+     C                   EXSR      *PSSR                                                    MD060121
+     C                   ELSE                                                               MD060121
+     C                   MOVEL     A_FCXCLS      @CLAS             4                        MD060121
+     C                   ENDIF                                                              MD060121
+     C                   ELSE                                                                 CLE138
+     C     *LOCK         IN        LDA                                                        CLE138
+     C                   EVAL      DBFILE = 'LEFCLTLH'                                        CLE138
+     C                   EVAL      DBASE = 60                                                 CLE138
+     C                   EVAL      DBKEY = @FACT                                              CLE138
+     C                   EVAL      DBKEY = @FACT                                              CLE138
+     C                   OUT       LDA                                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVEL     FCXCLS        @CLAS                                        CLE138
+     C                   ENDIF                                                                CLE138
+                                                                                              CLE138
+     C                   ENDSR                                                                CLE138
+      *****************************************************************                       CLE138
+      /EJECT                                                                                  CLE138
+      *****************************************************************                       CLE138
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as

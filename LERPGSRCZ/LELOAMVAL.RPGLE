@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE125             Date 02Nov21               *
-      *  Prev Amend No. MD057739           Date 28Apr22               *
+      *  Last Amend No. 256362             Date 09Jun22               *
+      *  Prev Amend No. CLE125             Date 02Nov21               *
+      *                 MD057739           Date 28Apr22               *
       *                 MD026384           Date 28Apr22               *
       *                 MD058307           Date 06Aug21               *
       *                 CLE172             Date 01Oct20               *
@@ -107,6 +108,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  256362 - Modified validation for multi-currency rollover to  *
+      *           exclude non-multi-currency loans. (SVNCCY = '   ')  *
       *  CLE125 - Amendment to LE Authorization Rules                 *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
       *             field buffers.                                    *
@@ -1032,6 +1035,8 @@
 
      C     RLDT          IFNE      *ZEROS
      C     SVCCY         ANDNE     SVNCCY
+     C     SVNCCY        ANDNE     *BLANKS                                                    256362
+     C     SVMCRA        ANDEQ     'Y'                                                        256362
       *
      C                   CALLB     'ZFWDT'
      C                   PARM      RLDT          ZDAYNO            5 0

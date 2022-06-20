@@ -2016,6 +2016,9 @@
       *****************************************************************                       CLE134
      C     xrFACT        BEGSR                                                                CLE134
                                                                                               CLE134
+     C                   IF        CLE138 = 'N'                                               CLE138
+     C                   EVAL      @FCLS = *Blanks                                            CLE138
+     C                   ENDIF                                                                CLE138
       ** Retrieve Record.                                                                     CLE134
                                                                                               CLE134
      C                   CALLB     'AOFACTR0'                                                 CLE134
@@ -4748,7 +4751,8 @@
                                                                                               CLE164
       ** Loan Fees, retrieve SDFACTPD->PDP Group ID                                           CLE164
      C                   MOVEL     FTYP          @FACT                                        CLE164
-     C                   MOVEL     FECLAS        @FCLS                                        CLE138
+     C                   MOVE      FSEQ          @FACT                                        CLE138
+     C                   MOVEL     CLAS          @FCLS                                        CLE138
      C                   EXSR      XrFact                                                     CLE164
      C                   EVAL      wFTPDPGrpID = AMPGID                                       CLE164
                                                                                               CLE164

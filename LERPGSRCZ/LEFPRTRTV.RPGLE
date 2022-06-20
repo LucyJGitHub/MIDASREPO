@@ -158,6 +158,9 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
+     D PRTCD           S              7A                                                      CLE138
+     D POPTN           S              7A                                                      CLE138
+     D PSARD           S              6A                                                      CLE138
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -328,6 +331,8 @@
      C                   KFLD                    @FACT             3                          CLE138
      C                   KFLD                    @SEQN             2                          CLE138
       *                                                                                       CLE138
+     C                   EVAL      WCXCLS = *Blanks                                           CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
      C                   MOVEL     S#CNUM        @FACT                                        CLE138
      C                   MOVEL     S#FACT        @CUST                                        CLE138
      C                   MOVE      S#FCNO        @SEQN                                        CLE138
@@ -339,6 +344,8 @@
      C                   EVAL      DBASE       = 207                                          CLE138
      C                   EXSR      *PSSR                                                      CLE138
      C                   ENDIF                                                                CLE138
+     C                   EVAL      WCXCLS = FCXCLS                                            CLE138
+     C                   ENDIF                                                                CLE138
                                                                                               CLE138
 
       ** Validate Facility type
@@ -347,7 +354,7 @@
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      S#FACT        FKEY              3
-     C                   PARM                    FCXCLS                                       CLE138
+     C                   PARM                    WCXCLS            4                          CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
      C     @RTCD         IFNE      *BLANKS
@@ -687,6 +694,17 @@
       *  GET MBIN FROM DTAARA/RUNDAT
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
+      *                                                                                       CLE138
+      ***  Determine if CLE138 is installed                                                   CLE138
+      *                                                                                       CLE138
+     C                   MOVEL     'N'           CLE138            1                          CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       PRTCD                                        CLE138
+     C                   PARM      '*VERIFY'     POPTN                                        CLE138
+     C                   PARM      'CLE138'      PSARD                                        CLE138
+     C     PRTCD         IFEQ      *BLANKS                                                    CLE138
+     C                   MOVE      'Y'           CLE138                                       CLE138
+     C                   ENDIF                                                                CLE138
 
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT

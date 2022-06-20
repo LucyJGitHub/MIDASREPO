@@ -99,7 +99,7 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD027065 - Expiry date of CA facility cannot be earlier than *
-      *             TR facility attached to it. Pattern after 239194. *      
+      *             TR facility attached to it. Pattern after 239194. *
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
       *             truncated CANM. .                                 *
       *           - Applied for MD052591.                             *
@@ -573,6 +573,7 @@
      D CLE034          S              1A                                                      CLE034
      D CLE106          S              1A                                                      CLE106
      D CLE147          S              1A                                                      CLE147
+     D CLE138          S              1A                                                      CLE138
      D CLE160          S              1A                                                      CLE160
       *                                                                                       CLE160
      D DftCRInd        S              1A                                                      CLE160
@@ -2424,6 +2425,7 @@ E4   C                   ENDIF
       *
       **  Validate Credit Agreement Type
      C                   MOVE      DDCAFT        FKEY
+     C                   IF        CLE138 = 'Y'                                               CLE138
      C                   MOVE      DDCANM        @CUST             6                          CLE138
      C                   MOVE      DDCAFN        @SEQN                                        CLE138
      C     KFCLQ         KLIST                                                                CLE138
@@ -2441,6 +2443,7 @@ E4   C                   ENDIF
      C                   EXSR      *PSSR                                                      CLE138
      C                   ENDIF                                                                CLE138
      C                   MOVE      FCXCLS        FCLS                                         CLE138
+     C                   ENDIF                                                                CLE138
                                                                                               CLE138
      C                   CALLB     'AOFACTR0'    PLIST1
       *
@@ -3398,7 +3401,7 @@ E4   C                   ENDIF
       *                                                                                     MD039655
       ** Reject Action                                                                      MD039655
       *                                                                                     MD039655
-     C                   PARM                    @ACTRV            1                        MD039655 
+     C                   PARM                    @ACTRV            1                        MD039655
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
@@ -3505,6 +3508,19 @@ E4   C                   ENDIF
      C                   ELSE                                                                 CLE041
      C                   EVAL      CLE025 = 'N'                                               CLE041
      C                   ENDIF                                                                CLE041
+                                                                                              CLE138
+      ** Access Switchable SAR details for the existence of CLE138                            CLE138
+                                                                                              CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANK        @RTCD                                        CLE138
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+      *                                                                                       CLE138
+     C                   IF        @RTCD = *BLANK                                             CLE138
+     C                   EVAL      CLE138 = 'Y'                                               CLE138
+     C                   ELSE                                                                 CLE138
+     C                   EVAL      CLE138 = 'N'                                               CLE138
+     C                   ENDIF                                                                CLE138
       *
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages

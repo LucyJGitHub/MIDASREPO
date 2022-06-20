@@ -118,6 +118,9 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
+     D PRTCD           S              7A                                                      CLE138
+     D POPTN           S              7A                                                      CLE138
+     D PSARD           S              6A                                                      CLE138
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -226,6 +229,8 @@
      C                   KFLD                    @FACT             3                          CLE138
      C                   KFLD                    @SEQN             2                          CLE138
       *                                                                                       CLE138
+     C                   EVAL      WCXCLS = *Blanks                                           CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
      C                   MOVEL     R#CSSN        @FACT                                        CLE138
      C                   MOVEL     R#FACT        @CUST                                        CLE138
      C                   MOVE      R#FCNO        @SEQN                                        CLE138
@@ -237,6 +242,8 @@
      C                   EVAL      DBASE       = 209                                          CLE138
      C                   EXSR      *PSSR                                                      CLE138
      C                   ENDIF                                                                CLE138
+     C                   EVAL      WCXCLS = FCXCLS                                            CLE138
+     C                   ENDIF                                                                CLE138
                                                                                               CLE138
       ** Facility type may refer to a valid facility type
 
@@ -244,7 +251,7 @@
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      R#FACT        @FKEY             3
-     C                   PARM                    FCXCLS            4                          CLE138
+     C                   PARM                    WCXCLS            4                          CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
      C     @RTCD         IFEQ      *BLANKS
@@ -345,6 +352,17 @@
       ** an external data area
 
      C/COPY ZACPYSRC,DBFIELDS
+      *                                                                                       CLE138
+      ***  Determine if CLE138 is installed                                                   CLE138
+      *                                                                                       CLE138
+     C                   MOVEL     'N'           CLE138            1                          CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       PRTCD                                        CLE138
+     C                   PARM      '*VERIFY'     POPTN                                        CLE138
+     C                   PARM      'CLE138'      PSARD                                        CLE138
+     C     PRTCD         IFEQ      *BLANKS                                                    CLE138
+     C                   MOVE      'Y'           CLE138                                       CLE138
+     C                   ENDIF                                                                CLE138
 
      C                   ENDSR
       *****************************************************************

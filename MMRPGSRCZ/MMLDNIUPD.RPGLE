@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. AR637449           Date 16Jun22               *
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
       *                 CER050             Date 16Jun19               *
@@ -106,6 +107,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR637449 - Total Interest is not updated when Maturity Date  *
+      *             is changed. Always update the total interest.     *
+      *             Partially applied fix 238612.                     *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -1539,6 +1543,7 @@
      C     IKMTYP        ANDNE     'LP'                                         CDL006
      C     CDL006        ANDEQ     'Y'                                          CDL006
      C                   BITON     '2'           DNSI
+     C                   ENDIF                                                              AR637449
      C     IKMTTI        IFLT      0
      C                   Z-SUB     IKMTTI        TOTI
      C                   ELSE
@@ -1551,7 +1556,7 @@
      C                   Z-ADD     IKTNTR        FSTOTN                                       CAS005
      C                   ENDIF                                                                CAS005
      C                   ENDIF                                                                CAS005
-     C                   END
+     C**********         END                                                                AR637449
       *
       * MATURITY DATE
      C                   Z-ADD     MDAT          @@MDAT            5 0

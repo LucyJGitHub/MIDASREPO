@@ -603,7 +603,7 @@
      C                   MOVEL     AJFCTY        WFTP                                         CLE138
      C                   MOVE      AJFCTY        WFNO                                         CLE138
      C     KAGFcltyX     CHAIN     LEAGFCL7                           86                      CLE138
-     C                   IF        *IN83 = *OFF                                               CLE138
+     C                   IF        *IN86 = *OFF                                               CLE138
      C                   MOVE      FCXCLS        AIFCLS                                       CLE138
      C                   ENDIF                                                                CLE138
      C                   ELSE                                                                 CLE138

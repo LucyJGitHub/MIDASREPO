@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD056808           Date 20Sep20               *
-      *  Prev Amend No. MD057003           Date 19Oct20               *
+      *  Last Amend No. MD047210           Date 26Apr19               *
+      *  Prev Amend No. MD056808           Date 20Sep20               *
+      *                 MD057003           Date 19Oct20               *
       *                 CGL194             Date 01Aug20               *
       *                 MD056237           Date 20Jul20               *
       *                 MD056131           Date 05Jul20               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047210 - CGL177 - Print function dump system               *
       *  MD056808 - Deliverable Data Split for SDEXMAPD               *
       *  MD057003 - Incorrect controlling person details, finish      *
       *             processing all records in the file                *
@@ -250,7 +252,8 @@
      D CtrNum2         S              5  0
      D TINNum2         S              5  0
      D WsResEqTIB      S              1A
-     D WTN             S              4  0
+     D***WTN****         S              4  0                                                MD047210
+     D WTN             S              6  0                                                  MD047210
 
       ** ZSFILE Parameters
      D PSeq            S              5

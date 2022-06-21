@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *                 CLE138  *CREATE    Date 02Nov21               *
+      *  Last Amend No. CLE138  *CREATE    Date 02Nov21               *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -64,6 +64,10 @@
       ** ACKEYAL
      D ACKEYALDS     e ds                  extname(ACKEYAL)
      D dsACKEYAL       ds                  likeds(ACKEYALDS)
+      ** PSTTOM
+     D PSTTOMDS      e ds                  extname(PSTTOM)
+     D                                     prefix(P_)
+     D dsPSTTOM        ds                  likeds(PSTTOMDS)
 
       ** Core data structures
      D dssdy         e ds                  extname(DSSDY)
@@ -96,6 +100,8 @@
      D newAKEY         s             14a
      D facilityClass   s              4a
      D PrevSQLCod      s             10s 0
+     D CurFacTyp       s              3a
+     D FileToUpdate    s             10a
 
       ** +--------------------------------------+
       ** ¦ Array declaration                    ¦
@@ -173,10 +179,10 @@
                    //Call subroutine to initialise Midas LE Aggregate Facilities Trailer
                    exsr initialiseLEAGFTQD;
 
-                   //Call subroutine to initialise Midas LE Facility amendment extension file
+                   //Call subroutine to initialise Midas LE Facility amendment extension
                    exsr initialiseLEFCAMQD;
 
-                   //Call subroutine to initialise Midas LE Agg. Facility
+                   //Call subroutine to initialise Midas LE Agg. Facility file
                    //Amendment Trans Ext extension file
                    exsr initialiseLEAGAMQD;
 
@@ -186,8 +192,14 @@
                    //Call subroutine to initialise Midas LE Facility amounts
                    exsr initialiseFACHISA;
 
+                   //Call subroutine to initialise Midas LE Agg Facility History file
+                   exsr initialiseLEAGHSPD;
+
                    //Call subroutine to initialise account keys
                    exsr initialiseACKEYAL;
+
+                   //Call subroutine to initialise fees tomorrows acct keys
+                   exsr initialisePSTTOM;
 
                    //Call Print Audit Report
                    exsr printReport;
@@ -666,7 +678,7 @@
 
        begsr initialiseFACHISA;
 
-                         //Update FACHISH
+                         //Update FACHISA
                          wSqlStr = 'update FACHISA A SET ' +
                                    'A.FAFCLS = ' + QUO + DefaultClass + QUO +
                                    ' where FAACTN = ' + QUO + 'FS' + QUO +
@@ -686,6 +698,45 @@
                          if sqlCod = NO_COLUMN;
                             COL11 = 'FACHISA';
                             ERRMSG11 = 'COLUMN DOES NOT EXIST';
+                            leavesr;
+                         endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // initialiseLEAGHSPD                                         *
+       //                                                            *
+       // Called by: startInitialisation                             *
+       //                                                            *
+       //  Calls: none                                               *
+       //                                                            *
+       //*************************************************************
+
+       begsr initialiseLEAGHSPD;
+
+                         //Update LEAGHSPD
+                         wSqlStr = 'update LEAGHSPD A SET ' +
+                                   'A.AIFCLS = ' + QUO + DefaultClass + QUO +
+                                   ' where AIACTN = ' + QUO + 'FS' + QUO +
+                                   ' and A.AIFCLS =  ' + QUO + BLK_CLASS + QUO;
+                         exec sql
+                         execute immediate :wSqlStr;
+                         Count15 = SQLER3;
+                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                            and sqlCod <>  NO_COLUMN;
+                            dBase    = 008;
+                            dBfile   = 'LEAGHSPD';
+                            dBkey    = *blanks;
+                            dBpgm    = 'LE005000';
+                            exsr *pssr;
+                         endif;
+
+                         if sqlCod = NO_COLUMN;
+                            COL15 = 'LEAGHSPD';
+                            ERRMSG15 = 'COLUMN DOES NOT EXIST';
                             leavesr;
                          endif;
 
@@ -728,9 +779,10 @@
                    endif;
 
                    processRecord = *Off;
-
+                   CurFacTyp = %subst(dsACKEYAL.AKEY:1:3);
                    exsr checkIfProcess;
                    if ProcessRecord;
+                      FileToUpdate = 'ACKEYAL';
                       currentAKEY = dsACKEYAL.AKEY;
                       exsr updateRecord;
                    endif;
@@ -756,10 +808,87 @@
                        endif;
 
                        processRecord = *Off;
-
+                       CurFacTyp = %subst(dsACKEYAL.AKEY:1:3);
                        exsr checkIfProcess;
                        if ProcessRecord;
+                          FileToUpdate = 'ACKEYAL';
                           currentAKEY = dsACKEYAL.AKEY;
+                          exsr updateRecord;
+                       endif;
+                   enddo;
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // initialisePSTTOM                                           *
+       //                                                            *
+       // Called by: startInitialisation                             *
+       //                                                            *
+       //  Calls: checkIfProcess, updateRecord                       *
+       //                                                            *
+       //*************************************************************
+
+       begsr initialisePSTTOM;
+
+                   wSQLStr = 'select * from PSTTOM';
+                   Count6 = 0;
+                   exec sql prepare P4 from :wSQLStr;
+                   exec sql declare P4 cursor for P4;
+                   exec sql open P4;
+                   exec sql fetch next from P4 into :dsPSTTOM;
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                      and SqlCod <> NO_COLUMN;
+                      dBkey = *Blanks;
+                      dBFile = 'PSTTOM';
+                      dBase = 014;
+                      dBPgm  = 'LE005000';
+                      exsr *pssr;
+                   endif;
+
+                   if sqlCod = NO_COLUMN;
+                      COL14= 'AKEY';
+                      ERRMSG14= 'COLUMN DOES NOT EXIST';
+                      leavesr;
+                   endif;
+
+                   processRecord = *Off;
+                   CurFacTyp = %subst(dsPSTTOM.P_LKAKEY:1:3);
+                   exsr checkIfProcess;
+                   if ProcessRecord;
+                      FileToUpdate = 'PSTTOM';
+                      currentAKEY = dsPSTTOM.P_LKAKEY;
+                      exsr updateRecord;
+                   endif;
+
+
+                   dow sqlCod = NO_ERROR;
+
+                      exec sql fetch next from P4 into :dsPSTTOM;
+
+                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                         and sqlCod <> NO_COLUMN;
+                         dBkey = *Blanks;
+                         dBFile = 'PSTTOM';
+                         dBase = 015;
+                         dBPgm  = 'LE005000';
+                         exsr *pssr;
+                       endif;
+
+                       if sqlCod = NO_COLUMN;
+                          COL14= 'AKEY';
+                          ERRMSG14= 'COLUMN DOES NOT EXIST';
+                          leavesr;
+                       endif;
+
+                       processRecord = *Off;
+                       CurFacTyp = %subst(dsPSTTOM.P_LKAKEY:1:3);
+                       exsr checkIfProcess;
+                       if ProcessRecord;
+                          FileToUpdate = 'PSTTOM';
+                          currentAKEY = dsPSTTOM.P_LKAKEY;
                           exsr updateRecord;
                        endif;
                    enddo;
@@ -771,7 +900,7 @@
        //                                                            *
        // checkIfProcess                                             *
        //                                                            *
-       // Called by: initialiseACKEYAL                               *
+       // Called by: initialiseACKEYAL, initialisePSTTOM             *
        //                                                            *
        //  Calls: none                                               *
        //                                                            *
@@ -781,7 +910,7 @@
                    PrevSQLCod = SQLCOD;
                    wSQLStr = 'select * from SDFACTPD A' +
                              ' where A.AMFCTY = ' + QUO +
-                             %subst(dsACKEYAL.AKEY:1:3)  + QUO;
+                             CurFacTyp + QUO;
 
                    exec sql prepare P3 from :wSQLStr;
                    exec sql declare P3 cursor for P3;
@@ -789,7 +918,7 @@
                    exec sql fetch next from P3 into :dsFACTPD;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 014;
+                      dBase    = 016;
                       dBfile   = 'SDFACTPD';
                       dBkey    = *blanks;
                       dBpgm    = 'LE005000';
@@ -812,30 +941,50 @@
        //                                                            *
        // updateRecord                                               *
        //                                                            *
-       // Called by: initialiseACKEYAL                               *
+       // Called by: initialiseACKEYAL, initialisePSTTOM             *
        //                                                            *
        //  Calls: none                                               *
        //                                                            *
        //*************************************************************
 
        begsr updateRecord;
-                   Count6 = Count6 + 1;
                    PrevSQLCod = SQLCOD;
-                   newAKEY = %replace(facilityCLASS:dsACKEYAL.AKEY:11);
-                   wSQLStr = 'update ACKEYAL A' +
-                             ' set AKEY = ' + QUO + NewAKEY + QUO +
-                             ' where A.AKEY = ' + QUO + currentAKEY + QUO;
+                   if FileToUpdate = 'ACKEYAL';
+                      Count6 = Count6 + 1;
+                      newAKEY = %replace(facilityCLASS:dsACKEYAL.AKEY:11);
+                      wSQLStr = 'update ACKEYAL A' +
+                                ' set AKEY = ' + QUO + NewAKEY + QUO +
+                                ' where A.AKEY = ' + QUO + currentAKEY + QUO;
 
-                   exec sql
-                   execute immediate :wSqlStr;
+                      exec sql
+                      execute immediate :wSqlStr;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
-                      and sqlCod <> DUPLICATE;
-                      dBase    = 015;
-                      dBfile   = 'ACKEYAL';
-                      dBkey    = *blanks;
-                      dBpgm    = 'LE005000';
-                      exsr *pssr;
+                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                         and sqlCod <> DUPLICATE;
+                         dBase    = 017;
+                         dBfile   = 'ACKEYAL';
+                         dBkey    = *blanks;
+                         dBpgm    = 'LE005000';
+                         exsr *pssr;
+                      endif;
+                   else;
+                      Count14 = Count14 + 1;
+                      newAKEY = %replace(facilityCLASS:dsPSTTOM.P_LKAKEY:11);
+                      wSQLStr = 'update PSTTOM  A' +
+                                ' set LKAKEY = ' + QUO + NewAKEY + QUO +
+                                ' where A.LKAKEY = ' + QUO + currentAKEY + QUO;
+
+                      exec sql
+                      execute immediate :wSqlStr;
+
+                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                         and sqlCod <> DUPLICATE;
+                         dBase    = 018;
+                         dBfile   = 'PSTTOM';
+                         dBkey    = *blanks;
+                         dBpgm    = 'LE005000';
+                         exsr *pssr;
+                      endif;
                    endif;
                    SQLCOD = PrevSQLCod;
        endsr;
@@ -925,7 +1074,7 @@
                    SDBANK = dsfdy;
 
                    if pReturnCode <> *blanks;
-                      dBase    = 016;
+                      dBase    = 018;
                       dBfile   = 'SDBANKPD';
                       dBkey    = *blanks;
                       dBpgm    = 'LE005000';

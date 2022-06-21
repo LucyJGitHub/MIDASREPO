@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. 244279             Date 11May22               *
+      *  Last Amend No. MD060139           Date 21Jun22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 244279             Date 11May22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                  AR674226           Date 04Dec19               *
@@ -79,6 +80,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060139 - Incorrect New Class Code value is displayed in    *
+      *             the Unauth Facility Amendments enquiry screen for *
+      *             Class Code Change event type.                     *
       *  CLE138 - Class Codes for Facilities                          *
       *  244279 - Include adjustments to accrued interest/margin in   *
       *           enquiry and report.                                 *
@@ -192,6 +196,14 @@
      FLEFCLTL1IF  E           K        DISK         KINFSR *PSSR          124047
       **Unauthorised facilities                                           124047
       *                                                                   124047
+     FLEFCAQL0IF  E           K        DISK                                                 MD060139
+     F            LEFCAQD0                          KRENAMELEFCAQD1                         MD060139
+      ** Facility Amendment Extension File                                                  MD060139
+      *                                                                                     MD060139
+     FLEAGAQL0IF  E           K        DISK                                                 MD060139
+     F            LEFCAQD0                          KRENAMELEFCAQD2                         MD060139
+      ** Aggregate Facility Amendment Extension File                                        MD060139
+      *                                                                                     MD060139
      FLE2310DFCF  E                    WORKSTN                        UC
      F                                        SRRN  KSFILE LE2310S1
      F                                        SRRN  KSFILE LE2310S2
@@ -248,6 +260,8 @@
       *    78          Subfile clear                                  *
       *    77          Subfile display                                *
       *    79          End of File/subfile                            *
+      *    80          Chain to Facilities Extension File             *                       CLE138
+      *    81          Chain to Facility Amendments Extension File    *                     MD060139
       *    89          Chain to CLOAN                                 *
       *    98          Date format is MMDDYY                          *
       *    U7          Database error                                 *
@@ -562,6 +576,23 @@
      C                     KFLD           K#CNUM                          126627
      C                     KFLD           K#FACT                          126627
      C                     KFLD           K#FCNO                          126627
+      *                                                                                       CLE138
+      ** Key for file LEFCLTLH                                                                CLE138
+      *                                                                                       CLE138
+     C           FCLTB     KLIST                                                              CLE138
+     C                     KFLD           @FCNUM  6                                           CLE138
+     C                     KFLD           @FACT   3                                           CLE138
+     C                     KFLD           @FCNO   2                                           CLE138
+      *                                                                                     MD060139
+      ** Key for file LEFCAQ/LEAGAQL0                                                       MD060139
+      *                                                                                     MD060139
+     C           FEXTN     KLIST                                                            MD060139
+     C                     KFLD           CNUM                                              MD060139
+     C                     KFLD           FACT                                              MD060139
+     C                     KFLD           FCNO                                              MD060139
+     C                     KFLD           VLDT                                              MD060139
+     C                     KFLD           SQNO                                              MD060139
+      *                                                                                     MD060139
      C/COPY WNCPYSRC,LE2310C003
       *
       ** Initialise LDA
@@ -681,12 +712,6 @@
      C                     MOVE 'N'       CLE138                                              CLE138
      C                     MOVE *OFF      *IN29                                               CLE138
      C                     ENDIF                                                              CLE138
-      *                                                                                       CLE138
-     C           FCLTB     KLIST                                                              CLE138
-     C                     KFLD           @FCNUM  6                                           CLE138
-     C                     KFLD           @FACT   3                                           CLE138
-     C                     KFLD           @FCNO   2                                           CLE138
-      *                                                                                       CLE138
       *
       ** Open program Display file.
       *
@@ -2609,10 +2634,21 @@
       *                                                                                       CLE138
      C           CLE138    IFEQ 'Y'                                                           CLE138
      C           FATP      IFEQ 'CC'                                                          CLE138
-     C                     MOVELFCXCLS    SVCLA                                               CLE138
+      ** New Class for CC Type                                                              MD060139
+     C           FEXTN     CHAINLEFCAQL0             81                                     MD060139
+     C           *IN81     IFEQ *OFF                                                        MD060139
+     C                     MOVE FACLAS    SVCLA                                             MD060139
+     C                     ELSE                                                             MD060139
+     C           FEXTN     CHAINLEAGAQL0             81                                     MD060139
+     C           *IN81     IFEQ *OFF                                                        MD060139
+     C                     MOVELFACLAS    SVCLA                                               CLE138
+     C                     ENDIF                                                            MD060139
+     C                     ENDIF                                                            MD060139
+      ** Non CC Type                                                                        MD060139
      C                     ELSE                                                               CLE138
      C                     MOVE *BLANKS   SVCLA                                               CLE138
      C                     ENDIF                                                              CLE138
+      ** Current Class Code                                                                 MD060139
      C                     MOVELFCXCLS    SVCLS                                               CLE138
      C                     ENDIF                                                              CLE138
       *                                                                                       CLE138

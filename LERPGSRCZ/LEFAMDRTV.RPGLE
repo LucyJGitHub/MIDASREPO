@@ -113,12 +113,12 @@
       *           use as API's                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   F-specs                               
       **   =======                               
       ** +--------------------------------------+
- 
+
      FFCLTY     IF   E           K DISK
      F                                     PREFIX(FC_)
      FFCLTYL1   IF   E           K DISK                                                       246694
@@ -130,14 +130,14 @@
      F                                     RENAME(FCLTYFMF:AGFCLTFMF)                         CLE041
      F                                     RENAME(FCLTYFNF:AGFCLTFNF)                         CLE041
      F                                     RENAME(FCLTYZZF:AGFCLTZZF)                         CLE041
- 
+
      FLEFCAML3  IF   E           K DISK
      F                                     RENAME(LEFCAMPF:LEFCAMP3)
      F                                     PREFIX(FA_)
      FLEAGAML3  IF   E           K DISK                                                       CLE041
      F                                     RENAME(LEFCAMPF:LEAGAMP3)                          CLE041
      F                                     PREFIX(AGFA_)                                      CLE041
- 
+
      FLEFCAML6  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FA_)
      FLEAGAML2  IF   E           K DISK    INFSR(*PSSR)                                       CLE041
@@ -148,9 +148,17 @@
       *                                                                                     BUG4555
       ** Midas AP API Configuration                                                           CAP185
      FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
-     F/COPY WNCPYSRC,LEH00457
+     F*COPY WNCPYSRC,LEH00457                                                                 CLE138
+      *                                                                                       CLE138
+     FLEFCAMLE  IF   E           K DISK                                                       CLE138
+     F                                     RENAME(LEFCAMPF:LEFCAMPD)                          CLE138
+     F                                     PREFIX(LD_)                                        CLE138
+     FLEAGAML7  IF   E           K DISK                                                       CLE138
+     F                                     RENAME(LEFCAMPF:LEAGAMPD)                          CLE138
+     F                                     PREFIX(AGLD_)                                      CLE138
+      *                                                                                       CLE138
                                                                                               CAP185
- 
+
       *****************************************************************
       ** +--------------------------------------+
       **   Automatically included D-specs        
@@ -162,44 +170,44 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
      D*PSysVal1        C                   CONST('OMEIndicator')                       CSC024 CSC054
      D PSysVal1        C                   CONST('PEAIndicator')                              CSC054
      D CLAuthORED      C                   Const('CLAuthORED')                                240968
@@ -208,15 +216,15 @@
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
- 
+
       ** Facility Amendment Details in file format
      D LEFCAMPDFmt   E DS                  EXTNAME(LEFCAMPD)
      D                                     PREFIX(FA_)
- 
+
       ** Facility Amendment Details in file format (Aggregate)                                CLE041
      D LEAGAMPDFmt   E DS                  EXTNAME(LEAGAMPD)                                  CLE041
      D                                     PREFIX(AGFA_)                                      CLE041
- 
+
       * Facility run dates
      D  @RUNA          DS
      D  FC_RUN0                1      5  0
@@ -231,7 +239,7 @@
      D  FC_RUN9               46     50  0
      D  @FC_RUN                1     50  0
      D                                     DIM(10)
- 
+
       * Facility drawn amounts
      D  @OAMA          DS
      D  FC_OAM1                1     13  0
@@ -246,30 +254,30 @@
      D  FC_OA10              118    130  0
      D  @FC_OAM                1    130  0
      D                                     DIM(10)
- 
- 
+
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Customer lending Details
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
- 
+
       ** SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Branch Code Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D SDBRCHDFAC    E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
       ** Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)                    CAP084
       ** Java user information                                                               CAP084
                                                                                              CAP084
@@ -284,10 +292,10 @@
       ** Midas SD Watch List Configuration Data File                                        BUG4555
       *                                                                                     BUG4555
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** RUNDAT DATA AREA
      D RUNDAT          DS
      D  MBIN                  13     13
@@ -304,7 +312,7 @@
      D WFuncType       S              8                                                     BUG4555
      D WIdntifier      S             40                                                     BUG4555
      D WBranch         S              3                                                     BUG4555
- 
+
       ** +--------------------------------------+
       **   Declared variables                    
       **   ==================                    
@@ -336,7 +344,7 @@
      D*WOMEInd**       S              1A                                               CSC024 CSC054
      D CSC054          S              1A                                                      CSC054
      D WPEAInd         S              1A                                                      CSC054
- 
+
      D CAP086          S              1A                                                      CAP086
      D CLE056          S              1A                                                      CLE056
      D CA#FATPok       S              1A                                                      246694
@@ -344,30 +352,30 @@
       **   End of D-specs                        
       **   ==============                        
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       **   Hook for non-core D-specs (all types)   
       **   also any I-specs (if necessary)         
       **   =====================================   
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       **                                                                   
       **   Initial processing is performed automatically: the *inzsr is    
       **   executed at program activation.                                 
       **                                                                   
       ** +----------------------------------------------------------------+
- 
+
       *                                                                                      BUG6728
       * If the user is connected via a browser, the job user name is QUSER -                 BUG6728
       * their user name is stored in ZMUSER                                                  BUG6728
      C                   IN        ZMUSER                                                    BUG6728
       * CLEAR OUTPUTS
- 
+
      C                   CLEAR                   LEFCAMPDFmt
      C                   MOVE      'Y'           S#ACTNok
      C                   MOVE      'Y'           S#CSSNok
@@ -378,7 +386,7 @@
      C                   MOVE      'Y'           S#SQNOok
      C                   MOVE      *BLANK        S#CNUM
      C                   Z-ADD     *ZERO         W#VLDT
- 
+
      C                   Z-ADD     *ZERO         W#FAMT
      C                   MOVEL     *BLANK        FcbrBranch
      C                   MOVEL     *BLANK        FcbrBICN
@@ -393,10 +401,10 @@
      C                   Z-ADD     *ZERO         FcDTEX
      C                   Z-ADD     *ZERO         FcCDTE
      C/COPY WNCPYSRC,LEH00227
- 
+
      C                   Z-ADD     *ZERO         @FC_RUN
      C                   Z-ADD     *ZERO         @FC_OAM
- 
+
      C                   MOVE      *BLANK        FldNameArr
      C                   MOVE      *BLANK        MsgIdArr
      C                   MOVE      *BLANK        MsgDtaArr
@@ -414,9 +422,9 @@
      C                   EVAL      FA_AUTO = *BLANKS                                          CAP086
      C                   ENDIF                                                                CAP086
      C                   EVAL      WAggregate = 'N'                                           CLE041
- 
+
       **  Valid action code
- 
+
      C                   EXSR      VALACTN
       *
       **  Carry out no further validation if errors occurred.
@@ -424,9 +432,9 @@
      C     S#ACTNok      IFEQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** Validate customer, facility type and facility number
- 
+
      C                   EXSR      VLCFTFN
       *
       **  Carry out no further validation if errors occurred.
@@ -436,9 +444,9 @@
      C     S#FCNOok      OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** Check facility exists
- 
+
      C                   EXSR      CHKFCLTY
       *
       **  Carry out no further validation if errors occurred.
@@ -448,7 +456,7 @@
      C     S#FCNOok      OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** Validate facility amendment type
       *
      C                   EXSR      VLDFATP
@@ -458,9 +466,9 @@
      C     S#FATPok      IFEQ      'N'
      C                   RETURN
      C                   END
- 
+
       * Validate Value Date
- 
+
      C                   EXSR      VLDVLDT
       *
       **  Carry out no further validation if errors occurred.
@@ -468,9 +476,9 @@
      C     S#VLDTok      IFEQ      'N'
      C                   RETURN
      C                   END
- 
+
       * Validate Sequence Number
- 
+
      C                   EXSR      VLDSQNO
       *
       **  Carry out no further validation if errors occurred.
@@ -478,9 +486,9 @@
      C     S#SQNOok      IFEQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** If not insert, check facility amendment exists
- 
+
      C     S#ACTN        IFNE      'I'
      C                   EXSR      CHKFCAM
      C                   ENDIF
@@ -494,9 +502,9 @@
      C     S#SQNOok      OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** If not insert, valididate the action
- 
+
      C     S#ACTN        IFNE      'I'
      C                   EXSR      VLDACT
      C                   ENDIF
@@ -513,18 +521,18 @@
      C     RESPMODE      ANDEQ     'S'
      C                   EXSR      VLDAUT
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       ***********************************************************
       /SPACE 5
       ***********************************************************
       ** Valididate the action code
       ***********************************************************
      C     VALACTN       BEGSR
- 
+
      C     P#MODE        IFEQ      'B'
- 
+
      C     S#ACTN        IFNE      'A'
      C     S#ACTN        ANDNE     'X'
      C     S#ACTN        ANDNE     'D'
@@ -534,9 +542,9 @@
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0001'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     S#ACTN        IFNE      'E'
      C     S#ACTN        ANDNE     'A'
      C     S#ACTN        ANDNE     'X'
@@ -547,9 +555,9 @@
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0001'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ***********************************************************
       /SPACE 5
@@ -557,19 +565,19 @@
       ** Validate customer, facility type and facility number
       ***********************************************************
      C     VLCFTFN       BEGSR
- 
+
       ** Customer number must be defined
- 
+
      C     S#CSSN        IFEQ      *BLANKS
      C                   MOVE      'N'           S#CSSNok
      C                   ADD       1             Ix
      C                   MOVEL     'S#CSSN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0214'     MsgIdArr(Ix)
- 
+
      C                   ELSE
- 
+
       ** Customer number must refer to a valid customer
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY    '    @OPTN             7
@@ -583,16 +591,16 @@
      C                   MOVEL     'S#CSSN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0214'     MsgIdArr(Ix)
      C                   ELSE
- 
+
      C                   MOVEL     *BLANK        S#CSSN
      C                   MOVEL     BBCUST        S#CSSN
      C                   MOVEL     BBCUST        S#CNUM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Facility type and facility number must be defined
- 
+
      C     S#FACT        IFEQ      *BLANKS
      C     S#FCNO        OREQ      *BLANKS
      C                   MOVE      'N'           S#FACTok
@@ -600,15 +608,15 @@
      C                   ADD       1             Ix
      C                   MOVEL     'S#FACT    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0215'     MsgIdArr(Ix)
- 
+
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#FACT        ZFIELD
      C                   Z-ADD     0             ZADEC
      C                   Z-ADD     3             ZADIG
      C                   EXSR      ZALIGN
- 
+
      C     ZALIGNok      IFNE      'Y'
      C                   MOVE      'N'           S#FACTok
      C                   ADD       1             Ix
@@ -617,13 +625,13 @@
      C                   ELSE
      C                   MOVE      ZFIELD        S#FACT
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#FCNO        ZFIELD
      C                   Z-ADD     0             ZADEC
      C                   Z-ADD     2             ZADIG
      C                   EXSR      ZALIGN
- 
+
      C     ZALIGNok      IFNE      'Y'
      C                   MOVE      'N'           S#FCNOok
      C                   ADD       1             Ix
@@ -632,9 +640,9 @@
      C                   ELSE
      C                   MOVE      ZFIELD        S#FCNO
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ***********************************************************
       /SPACE 5
@@ -642,16 +650,16 @@
       **  Check facility exists                                 *
       ***********************************************************
      C     CHKFCLTY      BEGSR
- 
+
      C                   MOVEL     S#CSSN        K#CNUM
      C                   MOVEL     S#FACT        K#FACT
      C                   MOVEL     S#FCNO        K#FCNO
      C                   MOVEL     'A'           K#RCDT
- 
+
      C     FCLTYK        CHAIN     FCLTYFMF                           80
       *
      C     *IN80         IFEQ      *OFF
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -665,7 +673,7 @@
      C                   MOVEL     FC_BRCA       DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -679,11 +687,11 @@
      C                   MOVEL     FC_FCCY       DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     'B'           K#RCDT
- 
+
      C     FCLTYK        CHAIN     FCLTYFNF                           80
- 
+
      C                   Z-ADD     FC_FAMT       W#FAMT
      C                   MOVEL     FC_BRCA       FcbrBranch
      C                   MOVEL     A8BICN        FcbrBICN
@@ -699,7 +707,7 @@
      C                   Z-ADD     FC_CDTE       FcCDTE
      C                   EVAL      S#FUTN = FC_PCRF                                         BUG10384
      C/COPY WNCPYSRC,LEH00228
- 
+
      C                   ELSE
      C                   EVAL      WkFound = 'N'                                              CLE041
       **  If not found, check if existing in aggregates file LEAGFCL0                         CLE041
@@ -737,7 +745,11 @@
      C                   ADD       1             Ix
      C                   MOVEL     'S#FATP    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0216'     MsgIdArr(Ix)
-     C/COPY WNCPYSRC,LEH00265
+     C*COPY WNCPYSRC,LEH00265                                                                 CLE138
+      *                                                                                       CLE138
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C                   MOVEL     'LEF1381'     MsgIdArr(Ix)                                 CLE138
+     C                   ENDIF                                                                CLE138
       *
      C                   ELSE
       *
@@ -910,9 +922,16 @@
      C                   MOVE      'N'           S#FATPok
      C                   ADD       1             Ix
      C                   MOVEL     'S#FATP    '  FldNameArr(Ix)
-     C/COPY WNCPYSRC,LEH00475
+     C*COPY WNCPYSRC,LEH00475                                                                 CLE138
+      *                                                                                       CLE138
+     C     S#FATP        IFEQ      'CC'                                                       CLE138
+     C                   MOVEL     'LEF1387'     MsgIdArr(Ix)                                 CLE138
+     C                   ELSE                                                                 CLE138
+      *                                                                                       CLE138
      C                   MOVEL     'LEF0219'     MsgIdArr(Ix)
-     C/COPY WNCPYSRC,LEH00476
+     C*COPY WNCPYSRC,LEH00476                                                                 CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
      C                   ENDIF
       *
      C                   ENDIF
@@ -974,10 +993,10 @@
       * Validate Value Date                                           *
       *****************************************************************
      C     VLDVLDT       BEGSR
- 
+
       ** Value date must be defined
       ** (but is defaulted to the run date for reactivations)
- 
+
      C     S#VLDT        IFEQ      *BLANKS
      C     S#FATP        IFEQ      'FR'
      C                   Z-ADD     BJRDNB        ZDAYNO
@@ -990,9 +1009,9 @@
      C                   MOVEL     'LEF0220'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Value date must be valid
- 
+
      C     S#VLDTok      IFEQ      'Y'
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#VLDT        ZFIELD
@@ -1013,13 +1032,13 @@
      C                   Z-ADD     ZDAYNO        W#VLDT
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validation on insert only
- 
+
      C     S#ACTN        IFEQ      'I'
- 
+
       ** Value date can't be before the facility approval date
- 
+
      C     S#VLDTok      IFEQ      'Y'
      C     W#VLDT        ANDLT     FC_DTAP
      C     WAggregate    ANDNE     'Y'                                                        CLE041
@@ -1031,9 +1050,9 @@
      C                   MOVEL     'S#VLDT    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0221'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       ** If value date is OK
- 
+
      C     S#VLDTok      IFEQ      'Y'
       *
       **If the value date is after the expiry date
@@ -1118,10 +1137,10 @@
       *
      C                   ENDIF
      C                   ENDIF                                                              MD024809
- 
+
       * If value date is OK
       * issue a warning if the date is a holiday
- 
+
      C                   IF        S#ACTN = 'I' or S#ACTN = 'X' or S#ACTN = 'A'             MD024809
      C     S#VLDTok      IFEQ      'Y'
      C                   Z-ADD     W#VLDT        ZDAYNO
@@ -1138,10 +1157,30 @@
      C                   MOVEL     'LEF0223'     WMsgIDArr(Wx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
-     C/COPY WNCPYSRC,LEH00458
- 
+     C*COPY WNCPYSRC,LEH00458                                                                 CLE138
+      *                                                                                       CLE138
+     C     S#VLDTok      IFEQ      'Y'                                                        CLE138
+     C     CLE138        ANDEQ     'Y'                                                        CLE138
+     C     S#ACTN        ANDEQ     'I'                                                        CLE138
+     C     S#FATP        ANDEQ     'CC'                                                       CLE138
+      *                                                                                       CLE138
+     C                   IF        WAggregate = 'Y'                                           CLE138
+     C     KFAMDD        CHAIN     LEAGAML7                           80                      CLE138
+     C                   ELSE                                                                 CLE138
+     C     KFAMDD        CHAIN     LEFCAMLE                           80                      CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C     *In80         IFEQ      *Off                                                       CLE138
+     C                   MOVE      'N'           S#FATPok                                     CLE138
+     C                   ADD       1             Ix                                           CLE138
+     C                   MOVEL     'S#FATP    '  FldNameArr(Ix)                               CLE138
+     C                   MOVEL     'LEF1386'     MsgIdArr(Ix)                                 CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C                   ENDIF                                                                CLE138
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1149,12 +1188,12 @@
       * Validate Sequence Number                                      *
       *****************************************************************
      C     VLDSQNO       BEGSR
- 
+
       ** On insert, sequence number must be blank.
       ** Otherwise, it must be defined
- 
+
      C     S#ACTN        IFEQ      'I'
- 
+
      C     S#SQNO        IFEQ      '000'                                                      261287
      C                   MOVE      *BLANKS       S#SQNO                                       261287
      C                   ENDIF                                                                261287
@@ -1197,17 +1236,17 @@
      C                   ENDIF                                                                CSC024
                                                                                               CSC024
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     S#SQNO        IFEQ      *BLANKS
      C                   MOVE      'N'           S#SQNOok
      C                   ADD       1             Ix
      C                   MOVEL     'S#SQNO    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0225'     MsgIdArr(Ix)
- 
+
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#SQNO        ZFIELD
      C                   Z-ADD     0             ZADEC
@@ -1222,10 +1261,10 @@
      C                   ELSE
      C                   MOVE      ZFIELD        S#SQNO
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1257,7 +1296,7 @@
      C                   MOVEL     'S#CSSN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0226'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1265,15 +1304,15 @@
       * Validate the action                                           *
       *****************************************************************
      C     VLDACT        BEGSR
- 
+
      C                   SELECT
- 
+
       * Amendments are only allowed:
- 
+
      C     S#ACTN        WHENEQ    'A'
- 
+
       * . on live records
- 
+
      C     FA_RECI       IFNE      'D'
      C     WAggregate    ANDNE     'Y'                                                        CLE041
      C     AGFA_RECI     ORNE      'D'                                                        CLE041
@@ -1283,9 +1322,9 @@
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0227'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       * Authorisations are only allowed:
- 
+
      C     S#ACTN        WHENEQ    'X'
       *                                                                                     BUG4555
       ** If Compliance Watch Enhancement (CSD015) is installed, Watch                       BUG4555
@@ -1320,10 +1359,10 @@
      C                   ENDIF                                                              BUG4555
      C                   ENDIF                                                              BUG4555
      C                   ENDIF                                                              BUG4555
- 
+
       * . if lending authorisations is installed
       *   and if facility amendments are to be authorised
- 
+
      C     CLE002        IFEQ      'N'
      C     BPFAAM        ORNE      'Y'
      C                   MOVE      'N'           S#ACTNok
@@ -1331,11 +1370,11 @@
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0213'     MsgIdArr(Ix)
      C                   ELSE
- 
+
       * . on live records
       * . records whose status is 'complete' or 'awaiting reauthorisation'
       * . if the user is different from the last insert or amend user
- 
+
      C     FA_RECI       IFNE      'D'
      C     WAggregate    ANDNE     'Y'                                                        CLE041
      C     AGFA_RECI     ORNE      'D'                                                        CLE041
@@ -1440,13 +1479,13 @@
      C                   ENDIF                                                                240968
      C                   ENDIF
      C                   ENDIF                                                                CAP185
- 
+
      C                   ENDIF
- 
+
       * Deletions are only allowed:
- 
+
      C     S#ACTN        WHENEQ    'D'
- 
+
       * . on live records
      C     FA_RECI       IFNE      'D'
      C     WAggregate    ANDNE     'Y'                                                        CLE041
@@ -1457,9 +1496,9 @@
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0229'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1658,19 +1697,19 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
       * Response Code
      C                   PARM                    RESPMODE          1
- 
+
       * Action, customer, facility type, facility number, facility
       * amendment type, value date and sequence number
      C                   PARM                    S#ACTN            1
@@ -1680,13 +1719,13 @@
      C                   PARM                    S#FATP            2
      C                   PARM                    S#VLDT            6
      C                   PARM                    S#SQNO            3
- 
+
       *
       * OUTPUTS
- 
+
       * Facility Amendment Details in file format
      C                   PARM                    LEFCAMPDFmt
- 
+
       * Action, customer, facility type, facility number, facility
       * amendment type, value date and sequence number OK indicators
      C                   PARM                    S#ACTNok          1
@@ -1696,14 +1735,14 @@
      C                   PARM                    S#FATPok          1
      C                   PARM                    S#VLDTok          1
      C                   PARM                    S#SQNOok          1
- 
+
       * Customer number
      C**********         PARM                    S#CNUM            6                          CAP084
      C                   PARM                    S#CNUM           10                          CAP084
- 
+
       * Value date of amendment
      C                   PARM                    W#VLDT            5 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -1728,7 +1767,7 @@
      C                   PARM                    FcDTEX            5 0
      C                   PARM                    FcCDTE            5 0
      C/COPY WNCPYSRC,LEH00231
- 
+
       * Facility run dates
       * Facility drawn amounts
      C                   PARM                    @RUNA
@@ -1751,7 +1790,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -1784,23 +1823,23 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CLE002 - Lending Authorisations - is Installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      'CLE002'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     'Y'           CLE002
      C                   ELSE
      C                   MOVEL     'N'           CLE002            1
      C                   ENDIF
- 
+
       ** Retrieve customer lending data, if CLE002 is Installed
- 
+
      C     CLE002        IFEQ      'Y'
       *
      C                   CALL      'AOCLNDR0'
@@ -1839,7 +1878,7 @@
      C                   EVAL      DBKEY  = @SARD                                             CLE041
      C                   EXSR      *PSSR                                                      CLE041
      C                   ENDIF                                                                CLE041
- 
+
       *  GET MBIN FROM DTAARA/RUNDAT
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
@@ -1847,16 +1886,16 @@
       **If*the*user*is connected via a browser, the job user name is QUSER -          CAP084 BUG6728
       **their*user*name is stored in ZMUSER                                           CAP084 BUG6728
      C**********         IN        ZMUSER                                             CAP084 BUG6728
- 
+
      C     *LIKE         DEFINE    FC_CNUM       K#CNUM
      C     *LIKE         DEFINE    FC_FACT       K#FACT
      C     *LIKE         DEFINE    FC_FCNO       K#FCNO
      C     *LIKE         DEFINE    FC_RCDT       K#RCDT
      C     *LIKE         DEFINE    FA_VLDT       K#VLDT
      C     *LIKE         DEFINE    FA_SQNO       K#SQNO
- 
+
       ** Key lists
- 
+
      C     FCLTYK        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
@@ -2146,16 +2185,45 @@
      C                   IF        @RTCD = *BLANKS                                            CSD083
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
-     C/COPY WNCPYSRC,LEH00233
+     C*COPY WNCPYSRC,LEH00233                                                                 CLE138
+      *                                                                                       CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       @RTCD                                        CLE138
+     C                   PARM      '*VERIFY '    @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+      *                                                                                       CLE138
+     C                   IF        @RTCD = *BLANKS                                            CLE138
+     C                   MOVE      'Y'           CLE138            1                          CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      'N'           CLE138                                       CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C                   IF        (@RTCD <> '*NRF    ') AND                                  CLE138
+     C                             (@RTCD <> *BLANKS)                                         CLE138
+     C     *LOCK         IN        LDA                                                        CLE138
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CLE138
+     C                   EVAL      DBASE = 903                                                CLE138
+     C                   EVAL      DBKEY = @SARD                                              CLE138
+     C                   OUT       LDA                                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C     KFAMDD        KLIST                                                                CLE138
+     C                   KFLD                    K#CNUM                                       CLE138
+     C                   KFLD                    K#FACT                                       CLE138
+     C                   KFLD                    K#FCNO                                       CLE138
+     C                   KFLD                    W#VLDT                                       CLE138
+      *                                                                                       CLE138
       *
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

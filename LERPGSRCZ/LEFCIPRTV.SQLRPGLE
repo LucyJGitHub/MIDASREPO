@@ -748,6 +748,7 @@
      C                   ELSE
      C                   MOVEL     *BLANKS       @CLAS                                        CLE138
      C     CLE138        IFEQ      'Y'                                                        CLE138
+     C     DDACTN        ANDNE     'I'                                                        CLE138
      C                   EXSR      GETCLAS                                                    CLE138
      C                   ENDIF                                                                CLE138
      C     CLE138        IFEQ      'Y'                                                        CLE138

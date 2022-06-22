@@ -15,15 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058332           Date 19Apr22               *
-      *  Prev Amend No. JMI111A            Date 08Jan20               *
+      *  Last Amend No. MD058332A          Date 20Jun22               *
+      *  Prev Amend No. MD058332           Date 19Apr22               *
+      *                 JMI111A            Date 08Jan20               *
       *                 JMI111             Date 18May18               *      
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CDL038             Date 10May05               *
+      *                 CDL038             Date 10May05               *
       *                 216612             Date 07Apr03               *
       * Midas Release 4.01.03 ----------------------------------------*
       *                 212636             Date 07Jan03               *
@@ -35,6 +36,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058332A - Batch number field was not updated with correct  *
+      *              batch number generated for OPICS transaction.    *
+      *              Recompile due to JMI111_013 changes (Recompile)  *
       *  MD058332 - OPICS transactions could not be inserted in       *
       *             FBM as the batch number reached # 999.            *
       *             Amend to prevent looping and pass return code     * 

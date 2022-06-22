@@ -94,6 +94,8 @@
      C                   KFLD                    FACNUM
      C                   KFLD                    FAFTYP
      C                   KFLD                    FAFCNO
+     C                   KFLD                    FAVLDT
+     C                   KFLD                    FASQNO
 
      C                   ENDSR
       ********************************************************************

@@ -67,17 +67,19 @@
      D  END_SS                 5      6S 0
 
      IFormatZON     01
-     I                                          FABRCA        L1M5
-     I                                          FACNUM        L1M4
-     I                                          FAFTYP        L1M3
-     I                                          FAFCNO        L1M2
-     I                                          FACLAS        L1M1
+     I                                          FABRCA        L1M6
+     I                                          FACNUM        L1M5
+     I                                          FAFTYP        L1M4
+     I                                          FAFCNO        L1M3
+     I                                          FAVLDT        L1M2
+     I                                          FASQNO        L1M1
      IFormatGLB     02
-     I                                          G_FABRCA      L1M5
-     I                                          G_FACNUM      L1M4
-     I                                          G_FAFTYP      L1M3
-     I                                          G_FAFCNO      L1M2
-     I                                          G_FACLAS      L1M1
+     I                                          G_FABRCA      L1M6
+     I                                          G_FACNUM      L1M5
+     I                                          G_FAFTYP      L1M4
+     I                                          G_FAFCNO      L1M3
+     I                                          G_FAVLDT      L1M2
+     I                                          G_FASQNO      L1M1
 
      C     *INMR         IFEQ      *OFF
      C     *IN01         IFEQ      *ON

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060141           Date 20Jun22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CGP017             Date 06Aug12               *
       *                 CLE134             Date 01Aug12               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060141 - Did not replicate the Class Code in GZSDFACTPD    *
+      *             Include the Class Code in the key fields          *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -80,9 +83,13 @@
      D  END_SS                 5      6S 0
 
      IFormatZON     01
-     I                                          AMFCTY        L1M1
+     I**********                                AMFCTY        L1M1                          MD060141
+     I                                          AMFCTY        L1M2                          MD060141
+     I                                          AMCLAS        L1M1                          MD060141
      IFormatGLB     02
-     I                                          G_AMFCTY      L1M1
+     I**********                                G_AMFCTY      L1M1                          MD060141
+     I                                          G_AMFCTY      L1M2                          MD060141
+     I                                          G_AMCLAS      L1M1                          MD060141
 
      C     *INMR         IFEQ      *OFF
      C     *IN01         IFEQ      *ON

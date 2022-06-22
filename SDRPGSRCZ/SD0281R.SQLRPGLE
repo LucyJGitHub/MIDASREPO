@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059608           Date 18Feb22               *
-      *  Prev Amend No. AR635013           Date 17Feb22               *
+      *  Last Amend No. 250391             Date 22Jun22               *
+      *  Prev Amend No. MD059608           Date 18Feb22               *
+      *                 AR635013           Date 17Feb22               *
       *                 260748             Date 17Feb22               *
       *                 MD056555           Date 31Aug20               *
       *                 MD057859           Date 07Apr21               *
@@ -103,6 +104,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250391 - Loan class should be used as a key so that same     *
+      *           loan type and subtype but with different classes    *
+      *           are allowed to be inserted.                         *
       *  MD059608 - Set numeric field AYEACC to zero if CSD042 is     *
       *             off to prevent decimal data error.                *
       *  AR635013 - Cannot enter Loan type/subtype for processing 70, *
@@ -303,9 +307,12 @@
      F                                     COMMIT
       ** Midas GP Global Instruments X-Reference                                              CGP001
       *                                                                                       CGP001
-     FCLOANL8   IF   E           K DISK
-      ** Customer Loans keyed by loan type and sub-type                                       CAS009
-      *                                                                                       CAS009
+     F*CLOANL8*IF  E           K        DISK                                           CAS009 250391
+      ***Customer*Loans*keyed*by*loan*type*and*sub-type***************                 CAS009 250391
+      ****************************************************************                 CAS009 250391
+     FCLOANL10  IF   E           K DISK                                                       250391
+      ** Customer Loans keyed by loan type and sub-type and class (CLE042)                    250391
+      *                                                                                       250391
      F*SCSARPL1* IF   E           K DISK                                                    MD056555
       ** Midas SC Switchable Feature Initialisation PGM index                                 231566
       *                                                                                       231566
@@ -2586,16 +2593,19 @@
      C     KLTST         KLIST
      C                   KFLD                    KYLTYP            2
      C                   KFLD                    KYSUTP            2
+     C                   KFLD                    KYCLAS            4                          250391
       *                                                                                       CAS009
       ** Move values to the keyed list fields.                                                CAS009
       *                                                                                       CAS009
      C                   MOVE      #1LNTY        KYLTYP
      C                   MOVE      #1LNST        KYSUTP
+     C                   MOVE      #1LNCL        KYCLAS                                       250391
       *                                                                                       CAS009
      C     #1ACAI        IFNE      AYACAI
      C     AYACAI        ANDNE     ' '                                                        260748
       *                                                                                       CAS009
-     C     KLTST         CHAIN     CLOANL8                            92
+     C*****KLTST         CHAIN     CLOANL8                            92               CAS009 250391
+     C     KLTST         CHAIN     CLOANL10                           92                      250391
       *                                                                                       CAS009
       ** Only Validate when the initialisation program has ran                                231566
      C     *IN92         IFEQ      '0'

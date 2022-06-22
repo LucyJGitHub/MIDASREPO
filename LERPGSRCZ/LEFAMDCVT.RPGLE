@@ -54,12 +54,12 @@
       *           use as API's                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -71,107 +71,107 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Facility Amendment Details in file format
      D LEFCAMPDFmt   E DS                  EXTNAME(LEFCAMPD)
- 
+
       ** Facility Amendment Details in screen format
      D FAMD          E DS                  EXTNAME(LEFAMDPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D CLE106          S              1A                                                      CLE106
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Set output screen fields
- 
+
      C                   EXSR      SETFLD
- 
+
      C                   RETURN
- 
+
       /SPACE 5
       *****************************************************************
       ** Set output screen fields
       *****************************************************************
      C     SETFLD        BEGSR
- 
+
       ** Customer
- 
+
      C                   MOVEL     CNUM          S#CNUM
- 
+
       ** Customer details
- 
+
      C                   MOVE      *BLANK        @CNUM
      C                   MOVE      CNUM          @CNUM
      C                   CALLB     'AOCUSTR0'
@@ -188,55 +188,55 @@
      C                   MOVEL     @CNUM         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANK        S#CSSN
      C                   MOVEL     BBCUST        S#CSSN
      C                   MOVEL     BBCSSN        S#CSNM
      C                   MOVEL     BBCRNM        S#CRNM
      C                   MOVEL     BBCRTN        S#CRTN
- 
+
       ** Facility Type and Facility Number
- 
+
      C                   MOVE      FACT          S#FACT
      C                   MOVE      FCNO          S#FCNO
- 
+
       ** Sequence Number
- 
+
      C                   MOVE      SQNO          S#SQNO
- 
+
       ** Value Date
- 
+
      C                   Z-ADD     VLDT          ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVEL     ZDATE         S#VLDT
      C                   MOVEL     ZADATE        S#VLDA
- 
+
       ** Amendment Type
- 
+
      C                   MOVE      FATP          S#FATP
       *
      C                   SELECT
- 
+
      C     FATP          WHENEQ    'FI'
      C                   MOVEL     'LEF0281'     ZAMSID
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTX        S#FATN
- 
+
      C     FATP          WHENEQ    'FD'
      C                   MOVEL     'LEF0282'     ZAMSID
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTX        S#FATN
- 
+
      C     FATP          WHENEQ    'FR'
      C                   MOVEL     'LEF0283'     ZAMSID
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTX        S#FATN
- 
+
      C     FATP          WHENEQ    'RC'
      C                   MOVEL     'LEF0284'     ZAMSID
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTX        S#FATN
-     C*COPY WNCPYSRC,LEH00223
+     C/COPY WNCPYSRC,LEH00223
       *                                                                                       CLE138
      C     FATP          WHENEQ    'CC'                                                       CLE138
      C                   MOVEL     'LEF1380'     ZAMSID                                       CLE138
@@ -244,13 +244,13 @@
      C                   MOVEL     ZAMSTX        S#FATN                                       CLE138
       *                                                                                       CLE138
      C                   ENDSL
- 
+
       ** Amendment Currency
- 
+
      C                   MOVEL     ACCY          S#ACCY
- 
+
       ** Amendment Amount and Sign
- 
+
      C                   Z-ADD     AAMT          W#AAMT           13 0          *
      C     FATP          IFEQ      'FR'
      C     AAMT          IFLT      *ZERO
@@ -262,7 +262,7 @@
      C                   ELSE
      C                   MOVE      *BLANK        S#SIGN
      C                   END
- 
+
      C     W#AAMT        IFNE      *ZERO
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      W#AAMT        ZFIELD
@@ -272,13 +272,13 @@
      C                   ELSE
      C                   MOVE      *BLANK        S#AAMT
      C                   ENDIF
- 
+
       ** Revolving Credit Indicator
- 
+
      C                   MOVEL     RVCR          S#RVCR
- 
+
       ** New Expiry Date
- 
+
      C     NDEX          IFNE      *ZERO
      C                   Z-ADD     NDEX          ZDAYNO
      C                   EXSR      ZDATE2
@@ -286,26 +286,26 @@
      C                   ELSE
      C                   MOVE      *BLANK        S#NDEX
      C                   ENDIF
- 
+
       ** Record Status
- 
+
      C                   SELECT
- 
+
      C     ASTS          WHENEQ    'R'
      C                   MOVEL     'LEF0285'     ZAMSID
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTX        S#STAT
- 
+
      C     ASTS          WHENEQ    'C'
      C                   MOVEL     'LEF0286'     ZAMSID
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTX        S#STAT
- 
+
      C     ASTS          WHENEQ    'A'
      C                   MOVEL     'LEF0287'     ZAMSID
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTX        S#STAT
- 
+
      C                   ENDSL
      C     CLE106        IFEQ      'Y'                                                        CLE106
       *                                                                                       CLE106
@@ -313,7 +313,7 @@
       *                                                                                       CLE106
      C                   EVAL      S#NPRT = NPRT                                              CLE106
      C                   ENDIF                                                                CLE106
- 
+
      C/COPY WNCPYSRC,LEH00224
      C                   ENDSR
       *****************************************************************
@@ -340,14 +340,14 @@
       * SRTEXT  -  Set up text from message file                      *
       *****************************************************************
      C     SRTEXT        BEGSR
- 
+
      C                   CALL      'Y2RVMGC'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    ZAMSID            7
      C                   PARM      'LERMSGF '    ZAMSGF           10
      C                   PARM                    ZAMSDA          132
      C                   PARM      *BLANK        ZAMSTX          132
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -355,7 +355,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -365,7 +365,7 @@
       *
       * Facility Amendment details in file format
      C                   PARM                    LEFCAMPDFmt
- 
+
       * Prime Facility currency
       * Prime Facility currency decimal places
      C                   PARM                    FccyFCCY          3
@@ -375,21 +375,21 @@
       *
       * Facility Amendment Details in screen format
      C                   PARM                    FAMD
- 
+
       * Customer details
      C**********         PARM                    S#CNUM            6                          CAP084
      C                   PARM                    S#CNUM           10                          CAP084
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Facility amendment type narrative
       * Record status
       * Value date in alpha format
      C                   PARM                    S#FATN           24
      C                   PARM                    S#STAT           10
      C                   PARM                    S#VLDA            7
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -435,9 +435,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

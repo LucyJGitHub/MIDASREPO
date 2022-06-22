@@ -478,7 +478,7 @@
      C                   MOVEL     'LEF0203'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
-     C*COPY WNCPYSRC,LEH00242                                                                 CLE138
+     C/COPY WNCPYSRC,LEH00242
                                                                                               CLE138
       * For amendment types CC, amount mustn't be defined                                     CLE138
                                                                                               CLE138

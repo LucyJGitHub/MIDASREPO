@@ -336,9 +336,8 @@
      C                   KFLD                    @SEQN             2                          CLE138
       *                                                                                       CLE138
      C                   EVAL      WCXCLS = *Blanks                                           CLE138
-     C     CLE138        IFEQ      'Y'                                                        CLE138
-     C     S#ACTN        ANDNE     'I'                                                        CLE138
-     C     CLE138        ORNE      'Y'                                                        CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                             AND S#ACTN <> 'I'                                          CLE138
      C                   MOVEL     S#CNUM        @CUST                                        CLE138
      C                   MOVEL     S#FACT        @FACT                                        CLE138
      C                   MOVE      S#FCNO        @SEQN                                        CLE138
@@ -365,10 +364,12 @@
      C                   EVAL      WCXCLS = FCXCLS                                            CLE138
      C                   ENDIF                                                                CLE138
      C                   ENDIF                                                                CLE138
-                                                                                              CLE138
 
       ** Validate Facility type
 
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C     S#ACTN        ANDNE     'I'                                                        CLE138
+     C     CLE138        ORNE      'Y'                                                        CLE138
      C                   CALL      'AOFACTR0'
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -384,6 +385,7 @@
      C                   ELSE
      C                   MOVEL     AMFCTY        S#FACT
      C                   ENDIF
+     C                   ENDIF                                                                CLE138
 
       **  Validate Facility Seq No.
 

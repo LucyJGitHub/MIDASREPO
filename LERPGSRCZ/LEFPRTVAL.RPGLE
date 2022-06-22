@@ -427,8 +427,9 @@
      C                   KFLD                    @SEQN             2                          CLE138
       *                                                                                       CLE138
      C                   EVAL      WCXCLS = *Blanks                                           CLE138
-     C                   IF        CLE138 = 'Y'                                               CLE138
-     C                             AND S#ACTN <> 'I'                                          CLE138
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C     S#ACTN        ANDNE     'I'                                                        CLE138
+     C     CLE138        ORNE      'Y'                                                        CLE138
      C                   MOVEL     S#CNUM        @CUST                                        CLE138
      C                   MOVEL     S#FACT        @FACT                                        CLE138
      C                   MOVE      S#FCNO        @SEQN                                        CLE138

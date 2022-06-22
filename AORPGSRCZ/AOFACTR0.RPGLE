@@ -105,7 +105,7 @@
      D  W@SL02                 2      2
      D  W@SL03                 3      3
       *
-     D P@FCLS          DS                                                                     CLE138                                                               CLE138
+     D P@FCLS          DS                                                                     CLE138
      D  W@SL04                 1      1                                                       CLE138
      D  W@SL05                 2      2                                                       CLE138
      D  W@SL06                 3      3                                                       CLE138
@@ -214,8 +214,13 @@
      C     *IN97         CABEQ     '1'           T@SKIP                           No selection
      C     *IN98         CABEQ     '1'           T@SKIP                           Program error
      C                   END                                                    FI 8
+     C     P@OPTN        IFEQ      '*KEY   '                                                  CLE138
      C*****P@FCTY        CHAIN     @AMRECU                            9590        Get record  CLE138
      C     P@KEY         CHAIN     @AMRECU                            9590                    CLE138
+     C                   ELSE                                                                 CLE138
+     C     P@FCTY        SETLL     @AMRECU                              90                    CLE138
+     C     P@FCTY        READE     @AMRECU                              9095                  CLE138
+     C                   ENDIF                                                                CLE138
      C     *IN95         CABEQ     '1'           T@SKIP                           No rec found
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   END                                                    FI 7

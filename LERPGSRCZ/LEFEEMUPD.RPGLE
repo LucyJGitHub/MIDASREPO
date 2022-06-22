@@ -4754,9 +4754,9 @@
      C                   MOVEL     FTYP          @FACT                                        CLE164
      C                   MOVE      *BLANKS       @FCLS                                        CLE138
      C     CLE138        IFEQ      'Y'                                                        CLE138
-     C                   MOVE      WCNUM         @WCNUM                                       CLE138
-     C                   MOVE      WFAC03        @WFAC03                                      CLE138
-     C                   MOVE      WFAC02        @WFAC02                                      CLE138
+     C                   MOVE      FCUS          @WCNUM                                       CLE138
+     C                   MOVE      FTYP          @WFAC03                                      CLE138
+     C                   MOVE      FSEQ          @WFAC02                                      CLE138
      C     KFCLTLH       CHAIN     LEFCLTLH                           85                      CLE138
      C     *IN85         IFEQ      *OFF                                                       CLE138
      C                   MOVE      FCXCLS        @FCLS                                        CLE138

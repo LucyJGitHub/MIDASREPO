@@ -364,10 +364,12 @@
      C                   EVAL      WCXCLS = FCXCLS                                            CLE138
      C                   ENDIF                                                                CLE138
      C                   ENDIF                                                                CLE138
-                                                                                              CLE138
 
       ** Validate Facility type
 
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C     S#ACTN        ANDNE     'I'                                                        CLE138
+     C     CLE138        ORNE      'Y'                                                        CLE138
      C                   CALL      'AOFACTR0'
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -383,6 +385,7 @@
      C                   ELSE
      C                   MOVEL     AMFCTY        S#FACT
      C                   ENDIF
+     C                   ENDIF                                                                CLE138
 
       **  Validate Facility Seq No.
 

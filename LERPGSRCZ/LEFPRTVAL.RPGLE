@@ -456,6 +456,10 @@
      C                   ENDIF                                                                CLE138
      C                   ENDIF                                                                CLE138
                                                                                               CLE138
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C     S#ACTN        ANDNE     'I'                                                        CLE138
+     C     CLE138        ORNE      'Y'                                                        CLE138
+      *                                                                                       CLE138
      C                   CALL      'AOFACTR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY'        @OPTN
@@ -474,6 +478,7 @@
      C                   MOVEL     AMFCTY        S#FACT
       *
      C                   ENDIF
+     C                   ENDIF                                                                CLE138
      C                   ENDIF
       *
      C                   ENDSR

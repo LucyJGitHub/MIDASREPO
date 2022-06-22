@@ -231,8 +231,8 @@
       *                                                                                       CLE138
      C                   EVAL      WCXCLS = *Blanks                                           CLE138
      C                   IF        CLE138 = 'Y'                                               CLE138
-     C                   MOVEL     R#CSSN        @FACT                                        CLE138
-     C                   MOVEL     R#FACT        @CUST                                        CLE138
+     C                   MOVEL     R#CSSN        @CUST                                        CLE138
+     C                   MOVE      R#FACT        @FACT                                        CLE138
      C                   MOVE      R#FCNO        @SEQN                                        CLE138
       *                                                                                       CLE138
      C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
@@ -244,7 +244,7 @@
      C                   ENDIF                                                                CLE138
      C                   EVAL      WCXCLS = FCXCLS                                            CLE138
      C                   ENDIF                                                                CLE138
-                                                                                              CLE138
+                                                                                                     
       ** Facility type may refer to a valid facility type
 
      C                   CALL      'AOFACTR0'

@@ -1115,7 +1115,7 @@
      C                   MOVE      WFAC03        @WFAC03                                      CLE138
      C                   MOVE      WFAC02        @WFAC02                                      CLE138
      C     KFCLTLH       CHAIN     LEFCLTLH                           85                      CLE138
-     C     *IN85         IFEQ      *Off                                                       CLE138
+     C     *IN85         IFEQ      *OFF                                                       CLE138
      C                   MOVE      FCXCLS        FECLAS                                       CLE138
      C                   ENDIF                                                                CLE138
      C                   ENDIF                                                                CLE138
@@ -1583,11 +1583,12 @@
      C/COPY WNCPYSRC,LEH00157
       *                                                                                       CLE138
      C     CLE138        IFEQ      'Y'                                                        CLE138
+     C     FELOAN        ANDEQ     *BLANKS                                                    CLE138
      C                   MOVE      WCNUM         @WCNUM                                       CLE138
      C                   MOVE      WFAC03        @WFAC03                                      CLE138
      C                   MOVE      WFAC02        @WFAC02                                      CLE138
      C     KFCLTLH       CHAIN     LEFCLTLH                           85                      CLE138
-     C     *IN85         IFEQ      *Off                                                       CLE138
+     C     *IN85         IFEQ      *OFF                                                       CLE138
      C                   MOVE      FCXCLS        FECLAS                                       CLE138
      C                   ENDIF                                                                CLE138
      C                   ENDIF                                                                CLE138
@@ -4751,8 +4752,17 @@
                                                                                               CLE164
       ** Loan Fees, retrieve SDFACTPD->PDP Group ID                                           CLE164
      C                   MOVEL     FTYP          @FACT                                        CLE164
-     C                   MOVE      FSEQ          @FACT                                        CLE138
-     C                   MOVEL     CLAS          @FCLS                                        CLE138
+     C                   MOVE      *BLANKS       @FCLS                                        CLE138
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C                   MOVE      WCNUM         @WCNUM                                       CLE138
+     C                   MOVE      WFAC03        @WFAC03                                      CLE138
+     C                   MOVE      WFAC02        @WFAC02                                      CLE138
+     C     KFCLTLH       CHAIN     LEFCLTLH                           85                      CLE138
+     C     *IN85         IFEQ      *OFF                                                       CLE138
+     C                   MOVE      FCXCLS        @FCLS                                        CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
      C                   EXSR      XrFact                                                     CLE164
      C                   EVAL      wFTPDPGrpID = AMPGID                                       CLE164
                                                                                               CLE164

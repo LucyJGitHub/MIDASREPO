@@ -87,6 +87,10 @@
      F                                     RENAME(FCLTYFMF:FCLTL2)
      FLEPARTL1  IF   E           K DISK    INFSR(*PSSR)
      FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
+      ** Midas LE Aggregate Facilities Ext File by Facility                                   CLE138
+     FLEAGFCL7  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
+     F                                     RENAME(LEFCLTD0:LEFCLTDX)                          CLE138
+     F                                     PREFIX(A_)                                         CLE138
 
       *****************************************************************
       ** +--------------------------------------+
@@ -424,18 +428,32 @@
       *                                                                                       CLE138
      C                   EVAL      WCXCLS = *Blanks                                           CLE138
      C                   IF        CLE138 = 'Y'                                               CLE138
-     C                   MOVEL     S#CNUM        @FACT                                        CLE138
-     C                   MOVEL     S#FACT        @CUST                                        CLE138
+     C                             AND S#ACTN <> 'I'                                          CLE138
+     C                   MOVEL     S#CNUM        @CUST                                        CLE138
+     C                   MOVEL     S#FACT        @FACT                                        CLE138
      C                   MOVE      S#FCNO        @SEQN                                        CLE138
       *                                                                                       CLE138
      C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
      C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C                   IF        CLE025 = 'Y'                                               CLE138
+     C     KFCLQ         CHAIN     LEAGFCL7                                                   CLE138
+     C                   IF        NOT %FOUND(LEAGFCL7)                                       CLE138
+     C                   EVAL      DBFILE = 'LEAGFCL7'                                        CLE138
+     C                   EVAL      DBASE = 208                                                CLE138
+     C                   EVAL      DBKEY = @FACT                                              CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVEL     A_FCXCLS      @CLAS             4                          CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ELSE                                                                 CLE138
      C                   EVAL      DBFILE      = 'SDFACTPD'                                   CLE138
      C                   EVAL      DBKEY       = @FACT                                        CLE138
      C                   EVAL      DBASE       = 207                                          CLE138
      C                   EXSR      *PSSR                                                      CLE138
      C                   ENDIF                                                                CLE138
+     C                   ELSE                                                                 CLE138
      C                   EVAL      WCXCLS = FCXCLS                                            CLE138
+     C                   ENDIF                                                                CLE138
      C                   ENDIF                                                                CLE138
                                                                                               CLE138
      C                   CALL      'AOFACTR0'
@@ -1713,6 +1731,18 @@
                                                                                               CLE138
      C     PRTCD         IFEQ      *BLANKS                                                    CLE138
      C                   MOVE      'Y'           CLE138                                       CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+      ** Determine if CLE025 is installed                                                     CLE138
+      *                                                                                       CLE138
+     C                   MOVE      'N'           CLE025            1                          CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       PRTCD                                        CLE138
+     C                   PARM      '*VERIFY'     POPTN                                        CLE138
+     C                   PARM      'CLE025'      PSARD                                        CLE138
+                                                                                              CLE138
+     C     PRTCD         IFEQ      *BLANKS                                                    CLE138
+     C                   MOVE      'Y'           CLE025                                       CLE138
      C                   ENDIF                                                                CLE138
 
       ** OVRDBF FCLTYXFN to FCLTY then OPEN FCLTYX

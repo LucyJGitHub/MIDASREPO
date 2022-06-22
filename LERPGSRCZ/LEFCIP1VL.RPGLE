@@ -2425,6 +2425,7 @@ E4   C                   ENDIF
       *
       **  Validate Credit Agreement Type
      C                   MOVE      DDCAFT        FKEY
+     C                   MOVE      *BLANKS       FCLS                                         CLE138
      C                   IF        CLE138 = 'Y'                                               CLE138
      C                   MOVE      DDCANM        @CUST             6                          CLE138
      C                   MOVE      DDCAFN        @SEQN                                        CLE138

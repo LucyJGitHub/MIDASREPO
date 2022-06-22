@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD060143           Date 20Jun22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055657           Date 14May20               *
       *                 AR674226           Date 04Dec19               *
@@ -76,6 +77,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060143 - No Facility Class details printed and class code  *
+      *             header are being displayed when feature is off    *
       *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -178,6 +181,12 @@
      FLEFERCL2IF  E           K        DISK         KINFSR *PSSR                              CLE071
      F/COPY WNCPYSRC,LE2320F001
      FLEFCLTLHIF  E           K        DISK                                                   CLE138
+     FLEAGFCL7IF  E           K        DISK                                                 MD060143
+     F            LEFCLTD0                          KRENAMELEAGFCD1                         MD060143
+     FLEAGAQL0IF  E           K        DISK                                                 MD060143
+     F            LEFCAQD0                          KRENAMELEFCAQD1                         MD060143
+     FLEFCAQL0IF  E           K        DISK                                                 MD060143
+     F            LEFCAQD0                          KRENAMELEFCAQD2                         MD060143
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
@@ -475,8 +484,10 @@
       *                                                                                       CLE138
      C           PRTCD     IFEQ *BLANKS                                                       CLE138
      C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE '1'       *IN35                                             MD060143
      C                     ELSE                                                               CLE138
      C                     MOVE 'N'       CLE138                                              CLE138
+     C                     MOVE '0'       *IN35                                             MD060143
      C                     ENDIF                                                              CLE138
       *                                                                                       CLE138
      C           PRTCD     IFNE *BLANKS                                                       CLE138
@@ -493,6 +504,12 @@
      C                     KFLD           @FCNUM  6                                           CLE138
      C                     KFLD           @FACT   3                                           CLE138
      C                     KFLD           @FCNO   2                                           CLE138
+     C           FEXTN     KLIST                                                            MD060143
+     C                     KFLD           @FCNUM                                            MD060143
+     C                     KFLD           XFACT   30                                        MD060143
+     C                     KFLD           XFCNO   20                                        MD060143
+     C                     KFLD           XVLDT   50                                        MD060143
+     C                     KFLD           XSQNO   30                                        MD060143
       *
       ***  RCF Processing for Printer File
       *
@@ -1791,6 +1808,9 @@
      C                     MOVE '1'       *IN19                                               201797
      C                     MOVE *BLANKS   OLNOZ                                               201123
      C/COPY WNCPYSRC,LEH00446
+     C           CLE138    IFEQ 'Y'                                                         MD060143
+     C                     MOVE FECLAS    PFCLS                                             MD060143
+     C                     ENDIF                                                            MD060143
      C                     ENDIF
       *
       ***  Format Loan
@@ -1849,6 +1869,7 @@
      C                     MOVE *BLANKS   PCSSN                                               201797
      C                     MOVE *BLANKS   OLNOZ                                               201123
      C/COPY WNCPYSRC,LEH00447
+     C                     MOVE *BLANKS   PFCLS                                             MD060143
       *
      C                     ENDSR
       *                                                                   124047
@@ -1877,6 +1898,20 @@
      C                     MOVELFCCY      PCCY                            124047
      C                     MOVELIUSR      PIUSR                           124047
      C                     MOVELAUSR      PAUSR                           124047
+      *                                                                                     MD060143
+      ** Get Facility Class                                                                 MD060143
+      *                                                                                     MD060143
+     C           CLE138    IFEQ 'Y'                                                         MD060143
+     C                     MOVELCNUM      @FCNUM                                            MD060143
+     C                     MOVELFACT      @FACT                                             MD060143
+     C                     MOVELFCNO      @FCNO                                             MD060143
+     C           FCTYB     CHAINLEFCLTLH             92                                     MD060143
+     C           *IN92     IFEQ *OFF                                                        MD060143
+     C                     MOVE FCXCLS    PFCLS                                             MD060143
+     C                     ELSE                                                             MD060143
+     C                     MOVE *BLANKS   PFCLS                                             MD060143
+     C                     ENDIF                                                            MD060143
+     C                     ENDIF                                                            MD060143
       *                                                                   124047
       ***  Validate Fields                                                124047
      C                     EXSR VALID                                     124047
@@ -2023,14 +2058,36 @@
      C                     MOVELZADATE    PNEXP                           127657
      C/COPY WNCPYSRC,LEH00280
      C           CLE138    IFEQ 'Y'                                                           CLE138
-     C                     MOVE FCXCLS    PFCLS                                               CLE138
+      *                                                                                     MD060143
+      ** Get New Facility Class from LEFCAMQD                                               MD060143
+      *                                                                                     MD060143
+     C                     MOVELCNUM      @FCNUM                                            MD060143
+     C                     MOVELFACT      XFACT                                             MD060143
+     C                     MOVELFCNO      XFCNO                                             MD060143
+     C                     MOVELVLDT      XVLDT                                             MD060143
+     C                     MOVELSQNO      XSQNO                                             MD060143
+     C           FEXTN     CHAINLEFCAQL0             80                                     MD060143
+     C           *IN80     IFEQ *OFF                                                        MD060143
+     C                     MOVE FACLAS    PFCLS                                             MD060143
+     C                     ELSE                                                             MD060143
+     C           FEXTN     CHAINLEAGAQL0             80                                     MD060143
+     C           *IN80     IFEQ *OFF                                                        MD060143
+     C                     MOVE FACLAS    PFCLS                                             MD060143
+     C                     ENDIF                                                            MD060143
+     C                     ENDIF                                                            MD060143
+     C**********           MOVE FCXCLS    PFCLS                                      CLE138 MD060143
      C                     MOVELCNUM      @FCNUM                                              CLE138
      C                     MOVELFACT      @FACT                                               CLE138
      C                     MOVELFCNO      @FCNO                                               CLE138
-     C           FCTYB     CHAINLEFCLTLH             92                                       CLE138
-     C           *IN92     IFEQ *OFF                                                          CLE138
+     C           FCTYB     CHAINLEFCLTLH             80                                       CLE138
+     C           *IN80     IFEQ *OFF                                                          CLE138
      C                     MOVE FCXCLS    POCLS                                               CLE138
-     C                     ENDIF                                                              CLE138
+     C                     ELSE                                                             MD060143
+     C           FCTYB     CHAINLEAGFCL7             80                                     MD060143
+     C           *IN80     IFEQ *OFF                                                        MD060143
+     C                     MOVE FCXCLS    POCLS                                             MD060143
+     C                     ENDIF                                                            MD060143
+     C                     ENDIF                                                            MD060143
      C                     ENDIF                                                              CLE138
       *                                                                   127657
       ***  Write out the record.                                          127657

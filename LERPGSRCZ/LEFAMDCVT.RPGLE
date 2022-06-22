@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,LEH00223                                 *
@@ -234,8 +236,13 @@
      C                   MOVEL     'LEF0284'     ZAMSID
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTX        S#FATN
-     C/COPY WNCPYSRC,LEH00223
- 
+     C*COPY WNCPYSRC,LEH00223
+      *                                                                                       CLE138
+     C     FATP          WHENEQ    'CC'                                                       CLE138
+     C                   MOVEL     'LEF1380'     ZAMSID                                       CLE138
+     C                   EXSR      SRTEXT                                                     CLE138
+     C                   MOVEL     ZAMSTX        S#FATN                                       CLE138
+      *                                                                                       CLE138
      C                   ENDSL
  
       ** Amendment Currency

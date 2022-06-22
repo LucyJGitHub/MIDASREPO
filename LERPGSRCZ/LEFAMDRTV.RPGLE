@@ -150,7 +150,15 @@
       *                                                                                     BUG4555
       ** Midas AP API Configuration                                                           CAP185
      FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
-     F/COPY WNCPYSRC,LEH00457
+     F*COPY WNCPYSRC,LEH00457                                                                 CLE138
+      *                                                                                       CLE138
+     FLEFCAMLE  IF   E           K DISK                                                       CLE138
+     F                                     RENAME(LEFCAMPF:LEFCAMPD)                          CLE138
+     F                                     PREFIX(LD_)                                        CLE138
+     FLEAGAML7  IF   E           K DISK                                                       CLE138
+     F                                     RENAME(LEFCAMPF:LEAGAMPD)                          CLE138
+     F                                     PREFIX(AGLD_)                                      CLE138
+      *                                                                                       CLE138
                                                                                               CAP185
 
       *****************************************************************
@@ -739,7 +747,11 @@
      C                   ADD       1             Ix
      C                   MOVEL     'S#FATP    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0216'     MsgIdArr(Ix)
-     C/COPY WNCPYSRC,LEH00265
+     C*COPY WNCPYSRC,LEH00265                                                                 CLE138
+      *                                                                                       CLE138
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C                   MOVEL     'LEF1381'     MsgIdArr(Ix)                                 CLE138
+     C                   ENDIF                                                                CLE138
       *
      C                   ELSE
       *
@@ -912,9 +924,16 @@
      C                   MOVE      'N'           S#FATPok
      C                   ADD       1             Ix
      C                   MOVEL     'S#FATP    '  FldNameArr(Ix)
-     C/COPY WNCPYSRC,LEH00475
+     C*COPY WNCPYSRC,LEH00475                                                                 CLE138
+      *                                                                                       CLE138
+     C     S#FATP        IFEQ      'CC'                                                       CLE138
+     C                   MOVEL     'LEF1387'     MsgIdArr(Ix)                                 CLE138
+     C                   ELSE                                                                 CLE138
+      *                                                                                       CLE138
      C                   MOVEL     'LEF0219'     MsgIdArr(Ix)
-     C/COPY WNCPYSRC,LEH00476
+     C*COPY WNCPYSRC,LEH00476                                                                 CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
      C                   ENDIF
       *
      C                   ENDIF
@@ -1142,7 +1161,27 @@
      C                   ENDIF
 
      C                   ENDIF
-     C/COPY WNCPYSRC,LEH00458
+     C*COPY WNCPYSRC,LEH00458                                                                 CLE138
+      *                                                                                       CLE138
+     C     S#VLDTok      IFEQ      'Y'                                                        CLE138
+     C     CLE138        ANDEQ     'Y'                                                        CLE138
+     C     S#ACTN        ANDEQ     'I'                                                        CLE138
+     C     S#FATP        ANDEQ     'CC'                                                       CLE138
+      *                                                                                       CLE138
+     C                   IF        WAggregate = 'Y'                                           CLE138
+     C     KFAMDD        CHAIN     LEAGAML7                           80                      CLE138
+     C                   ELSE                                                                 CLE138
+     C     KFAMDD        CHAIN     LEFCAMLE                           80                      CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C     *In80         IFEQ      *Off                                                       CLE138
+     C                   MOVE      'N'           S#FATPok                                     CLE138
+     C                   ADD       1             Ix                                           CLE138
+     C                   MOVEL     'S#FATP    '  FldNameArr(Ix)                               CLE138
+     C                   MOVEL     'LEF1386'     MsgIdArr(Ix)                                 CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C                   ENDIF                                                                CLE138
 
      C                   ENDSR
       *****************************************************************
@@ -2183,7 +2222,36 @@
      C                   IF        @RTCD = *BLANKS                                            CLE125
      C                   EVAL      CLE125 = 'Y'                                               CLE125
      C                   ENDIF                                                                CLE125
-     C/COPY WNCPYSRC,LEH00233
+     C*COPY WNCPYSRC,LEH00233                                                                 CLE138
+      *                                                                                       CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       @RTCD                                        CLE138
+     C                   PARM      '*VERIFY '    @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+      *                                                                                       CLE138
+     C                   IF        @RTCD = *BLANKS                                            CLE138
+     C                   MOVE      'Y'           CLE138            1                          CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      'N'           CLE138                                       CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C                   IF        (@RTCD <> '*NRF    ') AND                                  CLE138
+     C                             (@RTCD <> *BLANKS)                                         CLE138
+     C     *LOCK         IN        LDA                                                        CLE138
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CLE138
+     C                   EVAL      DBASE = 903                                                CLE138
+     C                   EVAL      DBKEY = @SARD                                              CLE138
+     C                   OUT       LDA                                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C     KFAMDD        KLIST                                                                CLE138
+     C                   KFLD                    K#CNUM                                       CLE138
+     C                   KFLD                    K#FACT                                       CLE138
+     C                   KFLD                    K#FCNO                                       CLE138
+     C                   KFLD                    W#VLDT                                       CLE138
+      *                                                                                       CLE138
       *
       *
       ** Program, module and procedure names for database error processing.

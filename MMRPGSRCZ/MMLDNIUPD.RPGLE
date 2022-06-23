@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR637449           Date 16Jun22               *
-      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *  Last Amend No. 263173             Date 20Jun22               *
+      *  Prev Amend No. AR637449           Date 16Jun22               *
+      *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
@@ -107,6 +108,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263173 - No Cancellation Confirmation: apply 226737          *
       *  AR637449 - Total Interest is not updated when Maturity Date  *
       *             is changed. Always update the total interest.     *
       *             Partially applied fix 238612.                     *
@@ -274,6 +276,10 @@
      F                                     PREFIX(DX)
      FHIST1     UF   E           K DISK
      F                                     PREFIX(HS)
+      *                                                                                       263173
+     FSDTIXL1   IF   E           K DISK                                                       263173
+     F                                     PREFIX(XX)                                         263173
+     F                                     RENAME(DTRIXDF:REC2)                               263173
                                                                                               CRE020
      FREADVCL1  UF   E           K DISK    COMMIT                                             CRE020
      F                                     USROPN                                             CRE020
@@ -2400,7 +2406,35 @@
      C     CAP042        ANDEQ     'Y'                                                        CAP042
      C                   BITOFF    '0'           CNFI
      C                   MOVE      'Y'           @@CNRQ
-     C                   END
+     C*****              END                                                                  263173
+     C                   ELSE                                                                 263173
+      *When deals are collected as a package by API-server, the confirmation of               263173
+      *deal is flagged with CNRQ="Y", but has not been generated yet. If such a               263173
+      *reversed shortly after insetion, no reversal confirmation would be genera              263173
+     C     KEY1          KLIST                                                                263173
+     C                   KFLD                    BRCA                                         263173
+     C                   KFLD                    DLNO                                         263173
+     C     KEY1          SETLL     REC2                                                       263173
+      *                                                                                       263173
+     C                   EVAL      *IN77 = *OFF                                               263173
+     C     KEY1          READE     REC2                                   77   e              263173
+      *                                                                                       263173
+     C     *IN77         DOWEQ     *OFF                                                       263173
+     C     XXCHTP        IFEQ      'I'                                                        263173
+     C     XXCHTP        OREQ      'A'                                                        263173
+     C     XXCNRQ        IFEQ      'Y'                                                        263173
+     C                   EVAL      *IN77 = *ON                                                263173
+     C                   MOVE      'Y'           @@CNRQ                                       263173
+     C                   ENDIF                                                                263173
+     C                   ENDIF                                                                263173
+      *                                                                                       263173
+     C     KEY1          READE     REC2                                   77   e              263173
+      *                                                                                       263173
+     C                   ENDDO                                                                263173
+      *                                                                                       263173
+      *                                                                                       263173
+     C                   END                                                                  263173
+      *                                                                                       263173
       *
      C                   ENDSR
      C****************************************************************

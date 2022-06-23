@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  CLE134 - Past Due Call Loan processing                       *
@@ -136,10 +138,12 @@
       *                                                                                       CSD031
       /EJECT
       * Parameter declarations
-     IP1PARM      DS                              3
+     I***P1PARM      DS                              3                                        CLE138
+     IP1PARM      DS                              7                                           CLE138
       * KEY: Facility Types retrieval
       * I : MAP Facility type
      I                                        1   3 P1FCTY
+     I                                        4   7 P1CLAS                                    CLE138
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -280,8 +284,10 @@
       * Check for existing record
      C           KRTV      KLIST
      C                     KFLD           AMFCTY           Facility type
+     C                     KFLD           AMCLAS           Facility class                     CLE138
       * Setup key
      C                     MOVEL#1FCTY    AMFCTY           Facility type
+     C                     MOVEL#1CLAS    AMCLAS           Facility class                     CLE138
      C********** KRTV      CHAIN@AMRECU              9091  *                                  CSD031
      C           *INU1     IFEQ *ON                                                           CSD031
      C           KRTV      CHAINGPFACTL1             9091                                     CSD031
@@ -614,6 +620,7 @@
      C                     Z-ADDAMLCD     #1LCD            Last Change Dat
      C                     MOVELAMTYLC    #1TYLC           Type of Last Ch
      C                     MOVELAMFCTY    #1FCTY           Facility type
+     C                     MOVELAMCLAS    #1CLAS           Facility class                     CLE138
      C                     MOVELAMFCNM    #1FCNM           Facility Name
       *                                                                                       CSD031
      C           CSD040    IFEQ 'Y'                                                           CSD031
@@ -642,6 +649,7 @@
       * Initialize key screen
       *================================================================
      C                     MOVELP1FCTY    #1FCTY           Facility type
+     C                     MOVELP1CLAS    #1CLAS           Facility class                     CLE138
       * USER: Load key screen
       * CASE: WRK.S01212 is Fix installed
      C           WUMFTS    IFEQ 'Y'                        *IF
@@ -1013,6 +1021,31 @@
      C                     MOVE 'N'       CLE134                                              CLE134
      C                     MOVE *OFF      *IN42                                               CLE134
      C                     ENDIF                                                              CLE134
+      *                                                                                       CLE138
+      ** Check if enhancement CLE138 (Class Codes for Facilities) is on                       CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   PRTCD                                               CLE138
+     C                     PARM '*VERIFY 'POPTN                                               CLE138
+     C                     PARM 'CLE138'  PSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFNE *BLANKS                                                       CLE138
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
+     C                     MOVEL'CLE138  'DBKEY                                               CLE138
+     C                     Z-ADD4         DBASE                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE *ON       *IN60                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     MOVE *OFF      *IN60                                               CLE138
+     C                     ENDIF                                                              CLE138
       *================================================================
      CSR         ZZEXIT    ENDSR
       /EJECT

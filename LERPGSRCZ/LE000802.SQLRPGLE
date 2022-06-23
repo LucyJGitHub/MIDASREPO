@@ -121,7 +121,6 @@
      D DSSDLOAN      E DS                  EXTNAME(SDLOANPD)
      D DSSDFACT      E DS                  EXTNAME(SDFACTPD)
      D DSSDFEE       E DS                  EXTNAME(SDFEEPD)
-     D DSLFQD        E DS                  EXTNAME(LEFCLTQD)                                  CLE138
      D SCSARD        e ds                  EXTNAME(SCSARDPD)                                  CLE138
 
       ** +--------------------------------------+

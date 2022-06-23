@@ -154,10 +154,10 @@
      FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
      F/COPY WNCPYSRC,LEH00457
       *                                                                                       CLE138
-     FLEFCAMLE  IF   E           K DISK                                                       CLE138
+     FLEFCAMLE  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
      F                                     RENAME(LEFCAMPF:LEFCAMPD)                          CLE138
      F                                     PREFIX(LD_)                                        CLE138
-     FLEAGAML7  IF   E           K DISK                                                       CLE138
+     FLEAGAML7  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
      F                                     RENAME(LEFCAMPF:LEAGAMPD)                          CLE138
      F                                     PREFIX(AGLD_)                                      CLE138
       *                                                                                       CLE138

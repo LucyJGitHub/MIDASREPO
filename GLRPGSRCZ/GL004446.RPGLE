@@ -13,8 +13,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060058           Date 21Jun22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD023889           Date 10Dic13               *
       *                 CGL135B            Date 04Nov13               *
       *                 AR1093096          Date 30Sep13               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060058 - Locking on PRONO with job GO_ONL_OLP. Call        *
+      *             AOPRONU0 for updates. Fix is similar to MD027654. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -71,8 +74,10 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *
-     FPRONO     UF   E           K DISK
+     F***PRONO     UF   E           K DISK                                               MD060058
+     FPRONO     IF   E           K DISK                                                  MD060058
      F                                     COMMIT
+     F                                     INFSR(ERRSR)                                  MD060058
       *
      FRSACMTPD  O    E             DISK
      F                                     COMMIT
@@ -556,64 +561,89 @@
      C                   MOVEL     'PRONO'       W0RTCD
      C                   EXSR      ERRSR
      C                   END
-     C                   END
-      *
-     C                   Z-ADD     ZNRDYS        #ZNRDYS           2 0                        CAP084
-     C                   Z-ADD     0             ZDYNBR                                       CAP084
-     C                   CALLB     'ZFWDT'
-     C                   PARM                    ZDAYNO
+     C**********         END                                                                MD060058
+     C                   ELSE                                                               MD060058
+      **********                                                                            MD060058
+     C**********         Z-ADD     ZNRDYS        #ZNRDYS           2 0               CAP084 MD060058
+     C**********         Z-ADD     0             ZDYNBR                              CAP084 MD060058
+     C**********         CALLB     'ZFWDT'                                                  MD060058
+     C**********         PARM                    ZDAYNO                                     MD060058
      C**********         PARM                    ZNRDYS                                       CAP084
-     C                   PARM                    #ZNRDYS                                      CAP084
-     C                   PARM                    ZDYNBR
-     C                   PARM                    ZCCY
-     C                   PARM                    ZLOC
-      *
-     C                   Z-ADD     ZDYNBR        PNDS              5 0
-      **
-     C     BTVLDT        IFLT      PNDS
-      *
-      *
-      ** Access the date 'equal to' or 'greater than' the value date
-      *
-     C     BTVLDT        LOOKUP    PRD(X)                             09  09
-      *
-      *     Array pointer would be positioned at:
-      *
-      *     Equal element     - When an *EQ is on
-      *     Greater than element - When *EQ is off and *HI is on
-      *     First element     - When both *EQ & *HI are off
-      *
-     C     X             DOWLT     6
-      *
-     C     BTDCIN        IFEQ      'D'
-     C                   ADD       BTPTAM        PRB(X)
-     C                   END
-      *
-     C     BTDCIN        IFEQ      'C'
-     C                   SUB       BTPTAM        PRB(X)
-     C                   END
-      *
-     C                   ADD       1             X
-     C                   END
+     C**********         PARM                    #ZNRDYS                             CAP084 MD060058
+     C**********         PARM                    ZDYNBR                                     MD060058
+     C**********         PARM                    ZCCY                                       MD060058
+     C**********         PARM                    ZLOC                                       MD060058
+      **********                                                                            MD060058
+     C**********         Z-ADD     ZDYNBR        PNDS              5 0                      MD060058
+      **********                                                                            MD060058
+     C*****BTVLDT        IFLT      PNDS                                                     MD060058
+      **********                                                                            MD060058
+      **********                                                                            MD060058
+      ***Access*the*date*'equal*to'*or*'greater*than'*the*value*date*                       MD060058
+      **********                                                                            MD060058
+     C*****BTVLDT        LOOKUP    PRD(X)                             09  09                MD060058
+      **********                                                                            MD060058
+      ******Array*pointer*would*be*positioned*at:*                                          MD060058
+      **********                                                                            MD060058
+      ******Equal*element*****-*When*an**EQ*is*on*                                          MD060058
+      ******Greater*than*element*-*When**EQ*is*off*and**HI*is*on*                           MD060058
+      ******First*element*****-*When*both**EQ*&**HI*are*off*                                MD060058
+      **********                                                                            MD060058
+     C*****X****         DOWLT     6                                                        MD060058
+      **********                                                                            MD060058
+     C*****BTDCIN        IFEQ      'D'                                                      MD060058
+     C**********         ADD       BTPTAM        PRB(X)                                     MD060058
+     C**********         END                                                                MD060058
+      **********                                                                            MD060058
+     C*****BTDCIN        IFEQ      'C'                                                      MD060058
+     C**********         SUB       BTPTAM        PRB(X)                                     MD060058
+     C**********         END                                                                MD060058
+      **********                                                                            MD060058
+     C**********         ADD       1             X                                          MD060058
+     C**********         END                                                                MD060058
       *
      C                   MOVE      'Y'           UPDIND
      C                   MOVE      'Y'           NOSIND            1
-     C                   END
+     C**********         END                                                                MD060058
      C                   ENDIF
       *
       *     Prono record update
       *
-     C  N07              UPDATE    PRONOPNF                             08
+     C**N07*****         UPDATE    PRONOPNF                             08                  MD060058
       *
+     C     *IN07         IFEQ      *OFF                                                     MD060058
+      *                                                                                     MD060058
+     C                   MOVEL     BTCYCD        NOSKEY            5                        MD060058
+     C                   MOVE      BTNNBI        NOSKEY                                     MD060058
+     C                   MOVEL     NOSKEY        PPRKEY                                     MD060058
+     C                   MOVEL     BTVLDT        PVDAT                                      MD060058
+     C                                                                                      MD060058
+     C     BTDCIN        IFEQ      'D'                                                      MD060058
+     C                   Z-ADD     BTPTAM        PAMT                                       MD060058
+     C                   ELSE                                                               MD060058
+     C     BTDCIN        IFEQ      'C'                                                      MD060058
+     C                   Z-SUB     BTPTAM        PAMT                                       MD060058
+     C                   ENDIF                                                              MD060058
+     C                   ENDIF                                                              MD060058
+      *                                                                                     MD060058
+     C                   CALL      'AOPRONU0'                                               MD060058
+     C                   PARM      *BLANKS       PRTCD             7                        MD060058
+     C                   PARM                    PPRKEY            8                        MD060058
+     C                   PARM                    PVDAT             5 0                      MD060058
+     C                   PARM                    PAMT             15 0                      MD060058
       *     Data base error if update fails
       *
-     C     *IN08         IFEQ      '1'
+     C******IN08         IFEQ      '1'                                                      MD060058
+     C     PRTCD         IFNE      *BLANKS                                                  MD060058
      C                   Z-ADD     05            DBASE                          * DB ERROR 05 *
      C                   MOVE      'PRONO'       DBFILE
      C                   MOVEL     PROERR        DBKEY
      C                   MOVEL     'PRONO'       W0RTCD
      C                   EXSR      ERRSR
      C                   END
+      *                                                                                     MD600058
+     C                   ENDIF                                                              MD060058
+     C                   ENDIF                                                              MD060058
       *
      C                   ENDSR
       ********************************************************************

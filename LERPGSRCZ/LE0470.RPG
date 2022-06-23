@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CLE126             Date 02Nov21               *
+      *  Prev Amend No. 249680             Date 18May22               *
+      *                 CLE126             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD050817           Date 21Oct20               *
@@ -215,6 +216,9 @@
      F*---------------------------------------------------------------*
       *                                                               *
       *  CLE138 -  Facilities Class Codes (Recompile)                 *
+      *  249680 - If account key is for a participant facility and    *
+      *           posting reference 3, post to prime facility         *
+      *           customer.                                           *
       *  CLE126 - Amend Narrative for Participation Purchased Loans   *
       *           to use the Original Borrower of the loan instead    *
       *           of the customer of the Part Sold Loan               *
@@ -3332,6 +3336,37 @@
      C                     ENDIF                                          165179
       *                                                                   165179
      C                     ENDIF                                          165179
+      *                                                                                       249680
+     C                     MOVE 'N'       CLE007  1                                           249680
+      *                                                                                       249680
+      ** Determine if Enhanced Lending (CLE007) is installed                                  249680
+      *                                                                                       249680
+     C                     CALL 'AOSARDR0'                                                    249680
+     C                     PARM *BLANKS   W0RTCD                                              249680
+     C                     PARM '*VERIFY' W0OPTN                                              249680
+     C                     PARM 'CLE007'  W0SARD                                              249680
+     C           SCSARD    PARM SCSARD    DSFDY                                               249680
+      *                                                                                       249680
+      ** If feature is switched on, set up SAR work flag                                      249680
+      *                                                                                       249680
+     C           W0RTCD    IFEQ *BLANKS                                                       249680
+     C                     MOVE 'Y'       CLE007                                              249680
+     C                     ELSE                                                               249680
+      *                                                                                       249680
+      ** else, database error (return code other than *NRF)                                   249680
+      *                                                                                       249680
+     C           W0RTCD    IFNE '*NRF   '                                                     249680
+     C                     MOVEL'LE0470'  DBPGM                                               249680
+     C                     MOVEL'SCSARDPD'DBFILE           ************                       249680
+     C                     MOVEL'CLE007 ' DBKEY            * DBERR 83 *                       249680
+     C                     MOVEL'083'     DBASE            ************                       249680
+     C                     MOVE '1'       *INU7                                               249680
+     C                     MOVE '1'       *INU8                                               249680
+     C                     MOVE '1'       *INLR                                               249680
+     C                     GOTO ERROR                                                         249680
+     C                     ENDIF                                                              249680
+      *                                                                                       249680
+     C                     ENDIF                                                              249680
       *                                                                   CEU004
       ** Access SAR details file to see if CEU004 is installed            CEU004
       *                                                                   CEU004
@@ -4501,6 +4536,16 @@
      C           RCSI      ANDEQ'P'                                       165179
      C           CLE004    ANDEQ'Y'                                       165179
      C           CLE005    ANDEQ'Y'                                       165179
+      *                                                                                       249680
+      ** If a/c key is for a participant facility and posting                                 249680
+      ** reference is '3', post to prime facility customer number                             249680
+      *                                                                                       249680
+     C           *IN03     OREQ '1'                                                           249680
+     C           AKEY6     ANDEQ'P'                                                           249680
+     C           CLE007    ANDEQ'Y'                                                           249680
+     C           *IN03     OREQ '1'                                                           249680
+     C           AKEY6     ANDEQ'I'                                                           249680
+     C           CLE007    ANDEQ'Y'                                                           249680
       *                                                                   165179
      C                     MOVE *BLANKS   WKFCTY 11                       165179
      C                     MOVELCNUM      WKFCTY                          165179

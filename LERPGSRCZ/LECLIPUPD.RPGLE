@@ -13,7 +13,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. AR574541           Date 25Apr22               *
+      *  Prev Amend No. 246192             Date 13May22               *
+      *                 AR574541           Date 25Apr22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 207964             Date 23Aug02               *
@@ -169,6 +170,10 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE138 - Class Codes for Facilities                          *
+      *  246192 - Insert validation for auto-generated loan.          *
+      *           if PCRF string (pos 12-15) contains '0001'          *
+      *              then set MNSG = 'M' (primary transaction)        *
+      *           otherwise then set MNSG = 'S'                       *
       *  AR574541 - Error Automatic Pay at Maturity Field on Loans.   *
       *             Reset TLXI bit to '0' when the Maturity Date was  *
       *             amended.                                          *
@@ -3727,6 +3732,13 @@
      C     CLE134        OREQ      'Y'                                                      MD020605
      C     PTREF         ANDNE     *BLANK                                                   MD020605
      C                   MOVEL     PTREF         PCRFL
+      *                                                                                       246192
+      ** System Generated                                                                     246192
+      *                                                                                       246192
+     C                   IF        (%SUBST(PCRFL:12:4)) <> '0001'                             246192
+     C                   MOVE      'S'           MNSG                                         246192
+     C                   ENDIF                                                                246192
+      *                                                                                       246192
      C                   ELSE
      C                   MOVE      L_CLBRCA      @BRCD
      C                   EXSR      ACS_BRCA
@@ -4792,7 +4804,11 @@
      C                   Z-ADD     BJRDNB        LCD
       *
       *** Manual/system generated
+     C                   IF        (%SUBST(PCRFL:12:4)) <> '0001'                             246192
+     C                   MOVE      'S'           MNSG                                         246192
+     C                   ELSE                                                                 246192
      C                   MOVE      'M'           MNSG
+     C                   ENDIF                                                                246192
       *
       *** PC orig. branch
      C                   MOVE      L_CLPCOB      PCOBL

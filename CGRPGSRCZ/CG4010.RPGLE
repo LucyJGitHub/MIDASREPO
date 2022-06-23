@@ -1,24 +1,25 @@
      H DEBUG
      H CCSID(*GRAPH:*SRC)                                                                   MD056543
-     F*****************************************************************
+      *****************************************************************
 /*S*D ***RPGBASE*******************************************************                     MD056543
 /*STD *  RPGBASEBND                                                   *                     MD056543
 /*EXI *  TEXT('Midas CG Confirmations (start) extract')               *
-     F*****************************************************************
-     F*                                                               *
-     F*  Midas - User Defined Correspondence                          *
-     F*                                                               *
-     F*  CG4010 - Dealing Input Cycle Confirmations                   *
-     F*                                                               *
-     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
-     F*  (phase(s))                                                   *
-     F*                                                               *
-     F*  Called By: mmCnnnn - (program name)                          *
-     F*                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG4010 - Dealing Input Cycle Confirmations                   *
+      *                                                               *
+      *  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: mmCnnnn - (program name)                          *
+      *                                                               *
       *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-      *  Last Amend No. MD059690           Date 14Mar22               *
-      *  Prev Amend No. MD059369           Date 24Dec21               *
+      *                                                               *
+      *  Last Amend No  255150             Date 22Jun22               *
+      *  Prev Amend No. MD059690           Date 14Mar22               *
+      *                 MD059369           Date 24Dec21               *
       *                 MD059367           Date 24Dec21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057051           Date 28Oct20               *
@@ -133,45 +134,48 @@
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 150163             Date 14Dec98               *
       *                 CEU015             Date 19Jun98               *
-     F*                 CEU014             DATE 02JUN98               *
-     F*                 CDL002             DATE 12Sep97               *
+      *                 CEU014             DATE 02JUN98               *
+      *                 CDL002             DATE 12Sep97               *
       *                 119240             DATE 12Jun97               *
-     F*                 116840             DATE 30May97               *
-     F*                 CSW011             Date 20Mar97               *
-     F*                 105810             DATE 18FEB97               *
-     F*                 CSW005             Date 01Aug96               *
-     F*                 S01408             DATE 16AUG96               *
-     F*                 089776             DATE 17APR95               *
-     F*                 092970             DATE 16APR96               *
-     F*                 089649             DATE 16APR96               *
-     F*                 095473             DATE 02JAN96               *
-     F*                 095471             DATE 02JAN96               *
-     F*                 S01408             DATE 04AUG95               *
-     F*                 088619             DATE 05JUN95               *
-     F*                 088486             DATE 26MAY95               *
-     F*                 088484             DATE 26MAY95               *
-     F*                 088485             DATE 25MAY95               *
-     F*                 087364             DATE 10MAY95               *
-     F*                 087364             DATE 10MAY95               *
-     F*                 087117             DATE 05MAY95               *
-     F*                 087053             DATE 04MAY95               *
-     F*                 087000             DATE 03MAY95               *
-     F*                 086962             DATE 03MAY95               *
-     F*                 086918             DATE 02MAY95               *
-     F*                 086864             DATE 01MAY95               *
-     F*                 086797             DATE 27APR95               *
-     F*                 086780             DATE 27APR95               *
-     F*                 S01408             DATE 13APR95               *
-     F*                 CIR001             DATE 12JUL95               *
-     F*                 086158             DATE 22MAR95               *
-     F*                 084929             DATE 17MAR95               *
-     F*                 086159             DATE 12MAR95               *
-     F*                 082060             DATE 24JAN95               *
-     F*                 081961             DATE 12JAN95               *
-     F*                 S01522             DATE 22NOV94               *
-     F*                                                               *
-     F*---------------------------------------------------------------*
-     F*                                                               *
+      *                 116840             DATE 30May97               *
+      *                 CSW011             Date 20Mar97               *
+      *                 105810             DATE 18FEB97               *
+      *                 CSW005             Date 01Aug96               *
+      *                 S01408             DATE 16AUG96               *
+      *                 089776             DATE 17APR95               *
+      *                 092970             DATE 16APR96               *
+      *                 089649             DATE 16APR96               *
+      *                 095473             DATE 02JAN96               *
+      *                 095471             DATE 02JAN96               *
+      *                 S01408             DATE 04AUG95               *
+      *                 088619             DATE 05JUN95               *
+      *                 088486             DATE 26MAY95               *
+      *                 088484             DATE 26MAY95               *
+      *                 088485             DATE 25MAY95               *
+      *                 087364             DATE 10MAY95               *
+      *                 087364             DATE 10MAY95               *
+      *                 087117             DATE 05MAY95               *
+      *                 087053             DATE 04MAY95               *
+      *                 087000             DATE 03MAY95               *
+      *                 086962             DATE 03MAY95               *
+      *                 086918             DATE 02MAY95               *
+      *                 086864             DATE 01MAY95               *
+      *                 086797             DATE 27APR95               *
+      *                 086780             DATE 27APR95               *
+      *                 S01408             DATE 13APR95               *
+      *                 CIR001             DATE 12JUL95               *
+      *                 086158             DATE 22MAR95               *
+      *                 084929             DATE 17MAR95               *
+      *                 086159             DATE 12MAR95               *
+      *                 082060             DATE 24JAN95               *
+      *                 081961             DATE 12JAN95               *
+      *                 S01522             DATE 22NOV94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  255150 - Amendment confirmation for adding maturity date to  *
+      *           a call deal was not produced from Correspondence    *
+      *           Manager. Reverse fix 235304                         *
       *  MD059369 - LIBOR fields must be extracted for both sides     *
       *  MD059369 - CIR020 - LIBOR IRS - Correspondence Manager       *
       *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *
@@ -974,15 +978,15 @@
      C                   MOVEL     'N'           ##SPPS                                       087053
      C                   EXSR      SRAUTO                                                     087053
      C     ##SPPS        CABEQ     'Y'           EXMAIN                                       087053
-     C     DTCHTP        IFNE      'R'                                                        235304
-     C     DTYP          IFEQ      'CD'                                                       235304
-     C     MDAT          ANDNE     0                                                          235304
-     C     DTYP          OREQ      'CL'                                                       235304
-     C     MDAT          ANDNE     0                                                          235304
-     C                   MOVE      'X'           ##COPD                                       235304
-     C                   GOTO      EXMAIN                                                     235304
-     C                   END                                                                  235304
-     C                   END                                                                  235304
+     C*****DTCHTP        IFNE      'R'                                                 235304 255150
+     C*****DTYP          IFEQ      'CD'                                                235304 255150
+     C*****MDAT          ANDNE     0                                                   235304 255150
+     C*****DTYP          OREQ      'CL'                                                235304 255150
+     C*****MDAT          ANDNE     0                                                   235304 255150
+     C**********         MOVE      'X'           ##COPD                                235304 255150
+     C**********         GOTO      EXMAIN                                              235304 255150
+     C**********         END                                                           235304 255150
+     C**********         END                                                           235304 255150
      C                   EXSR      SRGENR
      C*                                                                                       S01408
      C/COPY WNCPYSRC,CG4010CP19                                                               S01408

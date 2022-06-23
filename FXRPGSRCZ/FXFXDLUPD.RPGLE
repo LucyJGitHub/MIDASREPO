@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 251029             Date 22May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 255899A            Date 21Jun22               *
+      *  Prev Amend No. 251029             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 247151A            Date 29Jun17               *
       *                 MD030956           Date 09Oct14               *
@@ -70,6 +71,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255899A- Remove the CSW050 condition when checking for       *       
+      *           confirmation request.                               *
       *  251029 - Applied fix 231306.                                 *
       *  231306 - Handle file locking properly.                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -1812,7 +1815,7 @@
      C*****NETBY         ANDNE     'Y'                                                 240603 246387
      C*****F3NSEL        OREQ      'Y'                                                 240603 246387
      C*****NETSL         ANDNE     'Y'                                                 240603 246387
-     C     CSW050        OREQ      'Y'                                                        246801
+     C*****CSW050        OREQ      'Y'                                                246801 255899A
      C     F3NBUY        ORNE      NETBY                                                      246387
      C     F3NSEL        ORNE      NETSL                                                      246387
      C     SSR1          ORNE      F3SSR1                                                   AR990243

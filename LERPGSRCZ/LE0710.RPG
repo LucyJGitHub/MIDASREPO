@@ -11,8 +11,10 @@
 0007 F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE123             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR828288           Date 02Nov21               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CLE123             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR950498           Date 13Apr12               *
       *                 MD050457           Date 06Mar19               *
       *                 MD046248           Date 27Oct17               *
@@ -45,6 +47,9 @@
 0009 F*                                                                  *
 0009 F*------------------------------------------------------------------*
       *                                                               *
+      *  AR828288 - Swap facility class and ccy columns in report     *
+      *             (CLE138)                                          *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE123 - Commitment and Outstanding Report by Account Officer*
       *           (Recompiled)                                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -577,6 +582,32 @@
      C                     ENDIF                                                            AR950498
      C                     MOVELSVAL1     SETZER  1                                         AR950498
       *                                                                                     AR950498
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   @RTCD                                               CLE138
+     C                     PARM '*VERIFY' @OPTN                                               CLE138
+     C                     PARM 'CLE138'  @SARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE *ON       *IN50                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     MOVE *OFF      *IN50                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFNE *BLANKS                                                       CLE138
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE138
+      *                                                                                       CLE138
+      ** Call to program ended in error                                                       CLE138
+      *                                                                                       CLE138
+     C                     SETON                     U7U8                                     CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE138
+     C                     MOVEL'LE0710'  DBPGM                                               CLE138
+     C                     Z-ADD900       DBASE                                               CLE138
+     C                     GOTO END                                                           CLE138
+     C                     ENDIF                                                              CLE138
      C/COPY WNCPYSRC,LEH00141
 0213 C**
 0214 C                     SETON                     40
@@ -605,10 +636,12 @@
      C                     ENDIF                                                            AR950498
       *                                                                                       CLE040
       ** If either Credit Lines or Collateralised Lending is available,                       CLE040
+      ** or when Class Codes for Facilities is enabled,                                       CLE138
       ** access Facilities Extension file                                                     CLE040
       *                                                                                       CLE040
      C           CLE024    IFEQ 'Y'                                                           CLE040
      C           CLE025    OREQ 'Y'                                                           CLE040
+     C           CLE138    OREQ 'Y'                                                           CLE138
      C                     MOVE 'N'       WKERRF  1                                           CLE040
      C                     EXSR SRRTVX                                                        CLE040
      C           WKERRF    IFEQ 'Y'                                                           CLE040
@@ -1207,8 +1240,14 @@
      O       OR        U7 U8 37                                           CLE004
      O/COPY WNCPYSRC,LEH00145
      O/COPY WNCPYSRC,LEH00147
-     O                                   25 'CUSTOMER NAME'               CLE004
-     O                                   54 'NO    CMMT/FCLT   CCY'       CLE004
+     O**********                         25 'CUSTOMER NAME'                            CLE004 CLE138
+     O**********                         54 'NO    CMMT/FCLT   CCY'                    CLE004 CLE138
+     O                                   20 'CUSTOMER NAME'                                   CLE138
+     O********                           49 'NO    CMMT/FCLT   CCY'                  CLE138 AR828288
+     O********               50          54 'CLAS'                                   CLE138 AR828288
+     O                                   43 'NO    CMMT/FCLT'                               AR828288
+     O                       50          49 'CLAS'                                          AR828288
+     O                                   54 'CCY'                                           AR828288
      O/COPY WNCPYSRC,LEH00146
      O/COPY WNCPYSRC,LEH00148
      O                                   72 'FACILITY/COMMT.'             CLE004
@@ -1230,8 +1269,10 @@
      O       OR        L2NU7 37                                           S01117
 0521 O                       21          07 'PARENT'
      O/COPY WNCPYSRC,LEH00143
-0522 O                       21CRNM      28
-0523 O                       21PNUM      35
+0522 O**********             21CRNM      28                                                   CLE138
+0523 O**********             21PNUM      35                                                   CLE138
+     O                       21CRNM      23                                                   CLE138
+     O                       21PNUM      30                                                   CLE138
 0524 O********D**2     01NU7                                              S01117
      O********D**2     01NU7 37                                    S01117 CLE004
 0525 O***********      L1      CNAM      39                               CLE004
@@ -1260,13 +1301,24 @@
      O***********      41               126 '*'                           CLE004
       *                                                                   CLE004
      O        D  2     01NU7 37                                           CLE004
-     O                 L1      CNAM      32                               CLE004
-     O                 L1      CNUM      39                               CLE004
-     O                      N45CFNO      47                               CLE004
-     O                       45CFN1      44                               CLE004
-     O                       45          45 '/'                           CLE004
-     O                       45CFN2      47                               CLE004
-     O                         CMCY      54                               CLE004
+     O**********       L1      CNAM      32                                            CLE004 CLE138
+     O**********       L1      CNUM      39                                            CLE004 CLE138
+     O**********            N45CFNO      47                                            CLE004 CLE138
+     O**********             45CFN1      44                                            CLE004 CLE138
+     O**********             45          45 '/'                                        CLE004 CLE138
+     O**********             45CFN2      47                                            CLE004 CLE138
+     O**********               CMCY      54                                            CLE004 CLE138
+     O                 L1      CNAM      27                                                   CLE138
+     O                 L1      CNUM      34                                                   CLE138
+     O                      N45CFNO      42                                                   CLE138
+     O                       45CFN1      39                                                   CLE138
+     O                       45          40 '/'                                               CLE138
+     O                       45CFN2      42                                                   CLE138
+     O********                 CMCY      49                                          CLE138 AR828288
+     O********               50FCLS      54                                          CLE138 AR828288
+     O                       50FCXCLS    49                                                 AR828288
+     O                         CMCY      54                                                 AR828288
+      *
      O/COPY WNCPYSRC,LEH00144
      O***********      60      OAMT      73 ' ,   ,   ,   , 0 '    CLE004 171784
      O***********      61      OAMT      73 '   ,   ,   , 0 . '    CLE004 171784

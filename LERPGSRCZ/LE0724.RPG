@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059660A          Date 17Mar22               *
-      *  Prev Amend No. MD059660           Date 08Mar22               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD059660A          Date 17Mar22               *
+      *                 MD059660           Date 08Mar22               *
       *                 MD059656           Date 04Mar22               *
       *                 MD059597           Date 16Feb22               *
       *                 254270             Date 02Nov21               *
@@ -21,6 +22,7 @@
       *                 CLE124  *Create    Date 02Nov21               *
       *                                                               *
       *****************************************************************
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD059660A - Align positions of MFU specific fields (FACEXFA) *
       *  MD059660 - Duplicate Dept in LE0723P3 and wrong Dept Code    *
       *             in LE0723P1 (Recompile)                           *
@@ -423,6 +425,33 @@
      C                     Z-ADD12        DBASE
      C                     GOTO END
      C                     ENDIF
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   @RTCD                                               CLE138
+     C                     PARM '*VERIFY' @OPTN                                               CLE138
+     C                     PARM 'CLE138'  @SARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE *ON       *IN18                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     MOVE *OFF      *IN18                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFNE *BLANKS                                                       CLE138
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE138
+      *                                                                                       CLE138
+      ** Call to program ended in error                                                       CLE138
+      *                                                                                       CLE138
+     C                     SETON                     U7U8                                     CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE138
+     C                     MOVEL'LE0724'  DBPGM                                               CLE138
+     C                     Z-ADD900       DBASE                                               CLE138
+     C                     GOTO END                                                           CLE138
+     C                     ENDIF                                                              CLE138
       *
      C                     SETON                     40
       **********************************
@@ -462,10 +491,12 @@
       **      END AFTER THE REQUESTED BRANCH
       *
       ** If either Credit Lines or Collateralised Lending is available,
+      ** or when Class Codes for Facilities is enabled,                                       CLE138
       ** access Facilities Extension file
       *
      C           CLE024    IFEQ 'Y'
      C           CLE025    OREQ 'Y'
+     C           CLE138    OREQ 'Y'                                                           CLE138
      C           *IN01     IFEQ '1'
      C                     MOVE 'N'       WKERRF  1
      C                     EXSR SRRTVX
@@ -1162,6 +1193,7 @@
      O       OR   10   U7 U8 37
      O*******AND      N44                                                                   MD059597
      O/COPY WNCPYSRC,LE0724O003
+     O                       18          33 'CLAS'                                            CLE138
      O                      N73         130 'RISK DOM.  DATE'
      O                       73         126 'RISK DOM.DATE'
      O        DF20     01NU7N50
@@ -1188,6 +1220,11 @@
      O                 62N46   CAVL      77 '  ,   ,   , 0 .  -'
      O                 63N46   CAVL      77 ' ,   ,   , 0 .   -'
      O/COPY WNCPYSRC,LE0724O004
+     O        DF10     01NU7N50                                                               CLE138
+     O       AND       37N44                                                                  CLE138
+     O       ORF10     02NU7 48                                                               CLE138
+     O       AND       37N44                                                                  CLE138
+     O                       18FCXCLS    33                                                   CLE138
      O        D 00     02NU7 48
      O       AND       37N44
      O       OR 20     02NU7N48

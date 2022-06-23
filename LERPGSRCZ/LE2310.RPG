@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 244279             Date 11May22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD060139           Date 21Jun22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 244279             Date 11May22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                  AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
@@ -78,6 +80,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060139 - Incorrect New Class Code value is displayed in    *
+      *             the Unauth Facility Amendments enquiry screen for *
+      *             Class Code Change event type.                     *
+      *  CLE138 - Class Codes for Facilities                          *
       *  244279 - Include adjustments to accrued interest/margin in   *
       *           enquiry and report.                                 *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
@@ -190,6 +196,14 @@
      FLEFCLTL1IF  E           K        DISK         KINFSR *PSSR          124047
       **Unauthorised facilities                                           124047
       *                                                                   124047
+     FLEFCAQL0IF  E           K        DISK                                                 MD060139
+     F            LEFCAQD0                          KRENAMELEFCAQD1                         MD060139
+      ** Facility Amendment Extension File                                                  MD060139
+      *                                                                                     MD060139
+     FLEAGAQL0IF  E           K        DISK                                                 MD060139
+     F            LEFCAQD0                          KRENAMELEFCAQD2                         MD060139
+      ** Aggregate Facility Amendment Extension File                                        MD060139
+      *                                                                                     MD060139
      FLE2310DFCF  E                    WORKSTN                        UC
      F                                        SRRN  KSFILE LE2310S1
      F                                        SRRN  KSFILE LE2310S2
@@ -202,6 +216,10 @@
      F                                        SRRN  KSFILE LE2310S0       126627
      F                                        SRRN  KSFILE LE2310SA                           CLE071
      F/COPY WNCPYSRC,LE2310F002
+      *                                                                                       CLE138
+     FLEFCLTLHIF  E           K        DISK                                                   CLE138
+      ** Midas LE Facility file B record                                                      CLE138
+      *                                                                                       CLE138
       *
       /EJECT
       *****************************************************************
@@ -242,6 +260,8 @@
       *    78          Subfile clear                                  *
       *    77          Subfile display                                *
       *    79          End of File/subfile                            *
+      *    80          Chain to Facilities Extension File             *                       CLE138
+      *    81          Chain to Facility Amendments Extension File    *                     MD060139
       *    89          Chain to CLOAN                                 *
       *    98          Date format is MMDDYY                          *
       *    U7          Database error                                 *
@@ -556,6 +576,23 @@
      C                     KFLD           K#CNUM                          126627
      C                     KFLD           K#FACT                          126627
      C                     KFLD           K#FCNO                          126627
+      *                                                                                       CLE138
+      ** Key for file LEFCLTLH                                                                CLE138
+      *                                                                                       CLE138
+     C           FCLTB     KLIST                                                              CLE138
+     C                     KFLD           @FCNUM  6                                           CLE138
+     C                     KFLD           @FACT   3                                           CLE138
+     C                     KFLD           @FCNO   2                                           CLE138
+      *                                                                                     MD060139
+      ** Key for file LEFCAQ/LEAGAQL0                                                       MD060139
+      *                                                                                     MD060139
+     C           FEXTN     KLIST                                                            MD060139
+     C                     KFLD           CNUM                                              MD060139
+     C                     KFLD           FACT                                              MD060139
+     C                     KFLD           FCNO                                              MD060139
+     C                     KFLD           VLDT                                              MD060139
+     C                     KFLD           SQNO                                              MD060139
+      *                                                                                     MD060139
      C/COPY WNCPYSRC,LE2310C003
       *
       ** Initialise LDA
@@ -661,6 +698,20 @@
      C                     ENDIF                                                              CLE071
       *                                                                                       CLE071
      C/COPY WNCPYSRC,LE2310C004
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   PRTCD                                               CLE138
+     C                     PARM '*VERIFY' POPTN                                               CLE138
+     C                     PARM 'CLE138'  PSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE *ON       *IN29                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     MOVE *OFF      *IN29                                               CLE138
+     C                     ENDIF                                                              CLE138
       *
       ** Open program Display file.
       *
@@ -898,6 +949,15 @@
      C           FCLTL1    SETLLLEFCLTL1                                  124047
      C                     READ LEFCLTL1                 79               124047
      C/COPY WNCPYSRC,LEH00083
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           *IN79     ANDEQ*OFF                                                          CLE138
+     C                     MOVELCNUM      @FCNUM                                              CLE138
+     C                     MOVELFACT      @FACT                                               CLE138
+     C                     MOVELFCNO      @FCNO                                               CLE138
+     C           FCLTB     CHAINLEFCLTLH             80                                       CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C           WFMT      WHEQ 'S7'                                      126627
      C********** WLFRM     SETLLLEFEEAL3                           126627 190495
      C********** WLFRM     SETLLLEFEEAL4                                               190495 CSD027
@@ -908,6 +968,15 @@
      C           FCLTL2    SETLLLEFCAML2                                  126627
      C                     READ LEFCAML2                 79               126627
      C/COPY WNCPYSRC,LEH00428
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           *IN79     ANDEQ*OFF                                                          CLE138
+     C                     MOVELCNUM      @FCNUM                                              CLE138
+     C                     MOVELFACT      @FACT                                               CLE138
+     C                     MOVELFCNO      @FCNO                                               CLE138
+     C           FCLTB     CHAINLEFCLTLH             80                                       CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C           WFMT      WHEQ 'S9'                                      126627
      C           FCLTL2    SETLLLEMNFUL2                                  126627
      C                     READ LEMNFUL2                 79               126627
@@ -960,6 +1029,15 @@
      C                     WRITELE2310S7                                  124047
      C                     READ LEFCLTL1                 79               124047
      C/COPY WNCPYSRC,LEH00420
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           *IN79     ANDEQ*OFF                                                          CLE138
+     C                     MOVELCNUM      @FCNUM                                              CLE138
+     C                     MOVELFACT      @FACT                                               CLE138
+     C                     MOVELFCNO      @FCNO                                               CLE138
+     C           FCLTB     CHAINLEFCLTLH             80                                       CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C           WFMT      WHEQ 'S7'                                      126627
      C                     EXSR SRSU72                                    126627
      C                     WRITELE2310S8                                  126627
@@ -970,6 +1048,15 @@
      C                     WRITELE2310S9                                  126627
      C                     READ LEFCAML2                 79               126627
      C/COPY WNCPYSRC,LEH00429
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           *IN79     ANDEQ*OFF                                                          CLE138
+     C                     MOVELCNUM      @FCNUM                                              CLE138
+     C                     MOVELFACT      @FACT                                               CLE138
+     C                     MOVELFCNO      @FCNO                                               CLE138
+     C           FCLTB     CHAINLEFCLTLH             80                                       CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C           WFMT      WHEQ 'S9'                                      126627
      C                     EXSR SRSU92                                    126627
      C                     WRITELE2310S0                                  126627
@@ -1918,6 +2005,7 @@
      C                     MOVE *BLANKS   SFPAY
      C                     MOVE *BLANKS   SFADV
      C/COPY WNCPYSRC,LEH00430
+     C                     MOVE *BLANKS   SFCLA                                               CLE138
       *
      C                     ENDSR
       /EJECT
@@ -2049,6 +2137,15 @@
      C                     MOVE ZDATE     SFEND
      C                     ENDIF
      C/COPY WNCPYSRC,LEH00431
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           FELOAN    IFEQ *BLANKS                                                       CLE138
+     C                     MOVELFECLAS    SFCLA                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE *BLANKS   SFCLA                                               CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
       *
      C                     ENDSR
       /EJECT                                                              124047
@@ -2204,6 +2301,13 @@
      C                     ENDIF                                          124047
       *                                                                   124047
      C/COPY WNCPYSRC,LEH00084
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVELFCXCLS    SFCLS                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE *BLANKS   SFCLS                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C                     ENDSR                                          124047
       /EJECT                                                              126627
       *****************************************************************   126627
@@ -2437,6 +2541,10 @@
      C                     MOVE *BLANKS   SVVDT                           126627
      C                     MOVE *BLANKS   SVCRT                           126627
      C/COPY WNCPYSRC,LEH00085
+      *                                                                                       CLE138
+     C                     MOVE *BLANKS   SVCLS                                               CLE138
+     C                     MOVE *BLANKS   SVCLA                                               CLE138
+      *                                                                                       CLE138
       *                                                                   126627
      C                     ENDSR                                          126627
       /EJECT                                                              126627
@@ -2523,6 +2631,27 @@
      C                     ENDIF                                          126627
       *                                                                   126627
      C/COPY WNCPYSRC,LEH00086
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           FATP      IFEQ 'CC'                                                          CLE138
+      ** New Class for CC Type                                                              MD060139
+     C           FEXTN     CHAINLEFCAQL0             81                                     MD060139
+     C           *IN81     IFEQ *OFF                                                        MD060139
+     C                     MOVE FACLAS    SVCLA                                             MD060139
+     C                     ELSE                                                             MD060139
+     C           FEXTN     CHAINLEAGAQL0             81                                     MD060139
+     C           *IN81     IFEQ *OFF                                                        MD060139
+     C                     MOVELFACLAS    SVCLA                                               CLE138
+     C                     ENDIF                                                            MD060139
+     C                     ENDIF                                                            MD060139
+      ** Non CC Type                                                                        MD060139
+     C                     ELSE                                                               CLE138
+     C                     MOVE *BLANKS   SVCLA                                               CLE138
+     C                     ENDIF                                                              CLE138
+      ** Current Class Code                                                                 MD060139
+     C                     MOVELFCXCLS    SVCLS                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
       *                                                                   126627
      C                     ENDSR                                          126627
       /EJECT                                                              126627

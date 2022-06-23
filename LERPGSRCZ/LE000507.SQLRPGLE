@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD038258           Date 13Apr16               *
@@ -24,6 +25,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -101,6 +103,12 @@
      D  @RTCD                         7A
      D  @OPTN                         7A
      D  DSFDY                       200A
+                                                                                              CLE138
+     D  check_SARD     pr                  extpgm('AOSARDR0')                                 CLE138
+     D    pReturnCode                 7A                                                      CLE138
+     D    pOption                     7A                                                      CLE138
+     D    pSARD                       6A                                                      CLE138
+     D    pDSSDY                    200A                                                      CLE138
 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
@@ -114,6 +122,9 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D GPDWNL        E DS                  EXTNAME(GPDWNLPD)
+     D SCSARD        e ds                  EXTNAME(SCSARDPD)                                  CLE138
+     D                                     PREFIX(SC_)                                        CLE138
+     D  wkCLAS         S              4A                                                      CLE138
 
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
@@ -200,6 +211,12 @@
      D  WLTYP          S              2A   INZ(*BLANKS)                                     MD036881
      D  WSTYP          S              2A   INZ(*BLANKS)                                     MD036881
                                                                                             MD036881
+     D CLE138          s              1a                                                      CLE138
+     D pReturnCode     s              7A                                                      CLE138
+     D pOption         s              7A                                                      CLE138
+     D pSARD           s              6A                                                      CLE138
+     D pDSSDY          s            200A                                                      CLE138
+     D @CLASS          s              4a   INZ(*BLANKS)                                       CLE138
      D SDSTAT        E DS                  DTAARA(SDSTAT)
 
      C     KUpdFees      KLIST
@@ -378,6 +395,10 @@
 
        // Retrieve SDFACTPD->PDP Group ID
                   @@FACL = %Editc(FTYP:'X');
+                  @CLASS = *Blanks;                                                      //CLE138
+                  if CLE138 = 'Y';                                                       //CLE138
+                     exsr RetrieveLEFQD;                                                 //CLE138
+                     endif;                                                              //CLE138
                   Exsr RetrievePDPFT;
 
                   wAction = '*INSERT';
@@ -460,6 +481,12 @@
 
                      If  F_FEFACL <> *Zeros And F_FELOAN = *Blanks;
                          @@FACL = %Subst(%Editc(F_FEFACL:'X'):1:3);
+
+                         @CLASS = *Blanks;                                                  //CLE138
+                         if CLE138 = 'Y';                                                   //CLE138
+                            @CLASS = F_FECLAS;                                              //CLE138
+                         Endif;                                                             //CLE138
+
                          Exsr RetrievePDPFT;
 
                          wLSPDPGrpID = '***';
@@ -469,9 +496,15 @@
 
                      If  F_FEFACL = *Zeros And F_FELOAN <> *Blanks;
                          @@LNRF = F_FELOAN;
-                         Exsr RetrieveLoan;
 
+                         Exsr RetrieveLoan;
                          @@FACL = %Editc(FTYP:'X');
+
+                         @CLASS = *Blanks;                                                  //CLE138
+                         if CLE138 = 'Y';                                                   //CLE138
+                            exsr RetrieveLEFQD;                                             //CLE138
+                         endif;                                                             //CLE138
+
                          Exsr RetrievePDPFT;
 
        // Retrieve SDLOANPD->PDP Group-ID
@@ -705,7 +738,8 @@
        //Retrieve Facility Types PDP Group ID
 
                      SQLStr = 'select * from SDFACTPD ' +
-                              'where AMFCTY = ' +  @@FACL;
+                              'where AMFCTY = ' +  @@FACL +
+                              ' and  AMCLAS = ' + @CLASS;                                   //CLE138
 
                      Exec SQL Prepare P4 from :SQLStr;
                      Exec SQL Declare P4 Cursor for P4;
@@ -714,7 +748,7 @@
 
                      If Sqlcod <> 0 and Sqlcod <> 100;
                           In *Lock Lda;
-                          DbKey = @@FACL;
+                          DbKey = @@FACL + ' ' + @CLASS;                                    //CLE138
                           DbFile = 'SDFACTPD';
                           Dbase = 007;
                           DbPgm  = 'LE000507';
@@ -1178,6 +1212,22 @@
                      Exsr *Pssr;
                   Endif;
 
+                   //Check if CLE138 is switched on                                         //CLE138
+                   pOption = '*VERIFY';                                                     //CLE138
+                   pSARD = 'CLE138';                                                        //CLE138
+                   callp check_SARD(                                                        //CLE138
+                                  pReturnCode                                               //CLE138
+                                : pOption                                                   //CLE138
+                                : pSARD                                                     //CLE138
+                                : pDSSDY                                                    //CLE138
+                               );                                                           //CLE138
+                   SCSARD = pDSSDY;                                                         //CLE138
+                                                                                            //CLE138
+                   if pReturnCode = *blanks;                                                //CLE138
+                      CLE138 = 'Y';                                                         //CLE138
+                   endif;                                                                   //CLE138
+                                                                                            //CLE138
+
        Endsr;
        //*************************************************************
        /EJECT
@@ -1215,6 +1265,51 @@
                    Update @DWNLL0;
                    EndIf;
        Endsr;
+                                                                                            //CLE138
+       //*************************************************************                      //CLE138
+       /EJECT                                                                               //CLE138
+       //*************************************************************                      //CLE138
+       //                                                            *                      //CLE138
+       // RetrieveLEFQD - Retrieve Class from Facilties Extension    *                      //CLE138
+       //                                                            *                      //CLE138
+       // Called by: Various                                         *                      //CLE138
+       //                                                            *                      //CLE138
+       // Calls: None                                                *                      //CLE138
+       //                                                            *                      //CLE138
+       //*************************************************************                      //CLE138
+                                                                                            //CLE138
+       Begsr RetrieveLEFQD;                                                                 //CLE138
+                                                                                            //CLE138
+       //Retrieve Facilities Class                                                          //CLE138
+                                                                                            //CLE138
+                     SQLStr = 'select FCXCLS from LEFCLTQD ' +                              //CLE138
+                              'where FCXFCU = ' + QUO + FCUS   + QUO +                      //CLE138
+                              ' and ' +                                                     //CLE138
+                              ' FCXFTP = ' + QUO +  %Editc(FTYP:'X')  + QUO +               //CLE138
+                              ' and ' +                                                     //CLE138
+                              ' FCXFNO = ' + QUO +  %Editc(FSEQ:'X')  + QUO;                //CLE138
+                              Exec SQL Prepare P7 from :SQLStr;                             //CLE138
+                              Exec SQL Declare P7 Cursor for P7;                            //CLE138
+                              Exec SQL Open P7;                                             //CLE138
+                              Exec SQL Fetch P7 into :wkCLAS;                               //CLE138
+                                                                                            //CLE138
+                              If Sqlcod <> 0 and Sqlcod <> 100;                             //CLE138
+                                   In *Lock Lda;                                            //CLE138
+                                   DbKey = FCUS  + ' '                                      //CLE138
+                                    +  %Editc(FTYP:'X') + ' '                               //CLE138
+                                    +  %Editc(FSEQ:'X');                                    //CLE138
+                                   DbFile = 'LEFCLTQD';                                     //CLE138
+                                   Dbase = 106;                                             //CLE138
+                                   DbPgm  = 'LE000507';                                     //CLE138
+                                   Out Lda;                                                 //CLE138
+                                   Exsr *PSSR;                                              //CLE138
+                              Endif;                                                        //CLE138
+                                                                                            //CLE138
+                              @CLASS = wkCLAS;                                         //CLE138
+                              Exec SQL Close P7;                                            //CLE138
+                                                                                            //CLE138
+       Endsr;                                                                               //CLE138
+
        //*************************************************************
        /EJECT
        //*************************************************************

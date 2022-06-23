@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD022057           Date 08Nov16               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD022057           Date 08Nov16               *
       *                 AR1092610          Date 26Feb13               *
       *                 CLE075AT           Date 06Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 -  Facilities Class Codes                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022057 - Increase variable size for facilities.            *
       *  AR1092610 - Error in printer outputs. Amended program to use *
@@ -66,6 +68,7 @@
      FLE3180P1O   E                    PRINTER      KINFDS SPOOL1     UC
      FLE3180P2O   E                    PRINTER      KINFDS SPOOL2     UC
      FLE3180P4O   E                    PRINTER      KINFDS SPOOL4     UC
+     FLEFCLTLHIF  E           K        DISK                                                   CLE138
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -114,6 +117,10 @@
       *
      IDSFDY     E DSDSFDY
      IDSSDY     E DSDSSDY
+      *                                                                                       CLE138
+      ** MIDAS Switchable Features Accessed via Access Program                                CLE138
+      *                                                                                       CLE138
+     ISCSARD    E DSSCSARDPD                                                                  CLE138
       *
       ** Data structure for Access Program
       *
@@ -298,6 +305,12 @@
       ** FACHISA reconcile with the facility details on FCLTY.
       *
      C                     EXSR SRFAMT
+      *                                                                                       CLE138
+      ** Execute subroutine SRFCLS, to retrieve the facility class code                       CLE138
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     EXSR SRFCLS                                                        CLE138
+     C                     ENDIF                                                              CLE138
       *
       ** Execute subroutine SRREVC, to check if the revolving credit
       ** indicator on the history is correct.
@@ -535,6 +548,12 @@
       ** Move amount values into corresponding display fields.
       *
      C                     EXSR SRDISP
+      *                                                                                       CLE138
+      ** Execute subroutine SRFCLS, to retrieve the facility class code                       CLE138
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     EXSR SRFCLS                                                        CLE138
+     C                     ENDIF                                                              CLE138
       *
      C                     Z-ADD2         RQDLIN
      C           OFFLN1    SUB  CURLIN    AVALIN  20
@@ -712,6 +731,26 @@
      C                     WRITELETFHAD0
       *
      C                     ENDSR
+      *****************************************************************                       CLE138
+      *                                                               *                       CLE138
+      *  SRFCLS - Retrieve Facility Class Code                        *                       CLE138
+      *                                                               *                       CLE138
+      *  Called from:  Main Processing                                *                       CLE138
+      *                                                               *                       CLE138
+      *  Calls: Nothing                                               *                       CLE138
+      *                                                               *                       CLE138
+      *****************************************************************                       CLE138
+      *                                                                                       CLE138
+     C           SRFCLS    BEGSR                                                              CLE138
+     C                     MOVE ' '       FCLS                                                CLE138
+     C                     MOVELCNUM      @FCNUM                                              CLE138
+     C                     MOVELFACT      @FACT                                               CLE138
+     C                     MOVELFCNO      @FCNO                                               CLE138
+     C           FCLTQD    CHAINLEFCLTLH             81                                       CLE138
+     C           *IN81     IFEQ *OFF                                                          CLE138
+     C                     MOVE FCXCLS    FCLS                                                CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDSR                                                              CLE138
       *****************************************************************
       *                                                               *                     CLE075AT
       *  *INZSR - Initial Subroutine                                  *                     CLE075AT
@@ -736,6 +775,23 @@
      C                     MOVE A6CYCD    #CCY,A                                            CLE075AT
      C                     ENDDO                                                            CLE075AT
      C                     Z-ADDA         CURARR  30                                        CLE075AT
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM '       ' @RTCD                                               CLE138
+     C                     PARM '*VERIFY' @OPTN                                               CLE138
+     C                     PARM 'CLE138'  @SARD   6                                           CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           FCLTQD    KLIST                                                              CLE138
+     C                     KFLD           @FCNUM  6                                           CLE138
+     C                     KFLD           @FACT   3                                           CLE138
+     C                     KFLD           @FCNO   2                                           CLE138
       *                                                                                     CLE075AT
      C                     ENDSR                                                            CLE075AT
       *****************************************************************                     CLE075AT

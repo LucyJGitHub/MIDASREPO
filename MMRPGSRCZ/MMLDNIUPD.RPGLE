@@ -109,7 +109,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  255899A - Remove the CSW050 condition when checking for      *
-      *            confo request                                      *
+      *            confo request.                                     *
       *  AR637449 - Total Interest is not updated when Maturity Date  *
       *             is changed. Always update the total interest.     *
       *             Partially applied fix 238612.                     *

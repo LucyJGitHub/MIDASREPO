@@ -71,8 +71,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  255899A- Remove the CSW050 condition when checking for       *       
-      *           confirmation request.                               *
+      *  255899A- Remove the CSW050 condition when checking for       *
+      *           confirmation request                                *
       *  251029 - Applied fix 231306.                                 *
       *  231306 - Handle file locking properly.                       *
       *  MD046248 - Finastra Rebranding                               *

@@ -979,10 +979,10 @@
      C                   EXSR      SRAUTO                                                     087053
      C     ##SPPS        CABEQ     'Y'           EXMAIN                                       087053
      C*****DTCHTP        IFNE      'R'                                                 235304 255150
-     C*****DTYP          IFEQ      'CD'                                                235304 255150
-     C*****MDAT          ANDNE     0                                                   235304 255150
-     C*****DTYP          OREQ      'CL'                                                235304 255150
-     C*****MDAT          ANDNE     0                                                   235304 255150
+     C*****DTYP*         IFEQ      'CD'                                                235304 255150
+     C*****MDAT*         ANDNE     0                                                   235304 255150
+     C*****DTYP*         OREQ      'CL'                                                235304 255150
+     C*****MDAT*         ANDNE     0                                                   235304 255150
      C**********         MOVE      'X'           ##COPD                                235304 255150
      C**********         GOTO      EXMAIN                                              235304 255150
      C**********         END                                                           235304 255150

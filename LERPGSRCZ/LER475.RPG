@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250608             Date 19May22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. 250608             Date 19May22               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  250608 - The Name should be over the type of loan on the     *
       *           summary of Agent section. (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -166,6 +168,8 @@
      F                                        RGYTD KSFILE LER475S2
      F                                        RDMTD KSFILE LER475S3
      F                                        RDYTD KSFILE LER475S4
+      ** Facilities Ext File by Facility                                                      CLE138
+     FLEFCLTLHIF  E           K        DISK                                                   CLE138
       /EJECT
      F*****************************************************************
      F*                                                               *
@@ -469,6 +473,13 @@
      I*
      I                                      244 253 JOB
      I                                      254 263 USER
+     I            DS                                                                          CLE138
+     I*                                                                                       CLE138
+     I** Split up date for printing                                                           CLE138
+     I*                                                                                       CLE138
+     I                                        1   7 DBFKEY                                    CLE138
+     I                                        1   3 PTYPA                                     CLE138
+     I                                        4   7 PFCLS                                     CLE138
      ILDA       E DS
      I*
      I** Database error data structure.
@@ -2585,11 +2596,34 @@
      C           FACNAM    BEGSR
      C*
      C                     MOVE NQFTYP    FTYPA   3
+      *                                                                                       CLE138
+      ** Get facility class from the extension file                                           CLE138
+      *                                                                                       CLE138
+     C                     MOVE *BLANKS   PFCLS                                               CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVE NQFTYP    @FACT                                               CLE138
+     C                     MOVE NQLCUS    @CUST                                               CLE138
+     C                     MOVE NQFSEQ    @SEQN                                               CLE138
+     C           KFCLQ     CHAINLEFCLTLH             55                                       CLE138
+     C           *IN55     IFEQ *OFF                                                          CLE138
+     C                     MOVE FCXCLS    PFCLS                                               CLE138
+     C                     ELSE                                                               CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVEL'LER475  'DBPGM                                               CLE138
+     C                     MOVEL'LEFCLTQD'DBFILE                                              CLE138
+     C                     MOVE *BLANKS   DBKEY                                               CLE138
+     C                     MOVELFTYPA     DBKEY                                               CLE138
+     C                     Z-ADD011       DBASE                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
      C*
      C                     CALL 'AOFACTR0'
      C                     PARM *BLANKS   PRTCD
      C                     PARM '*KEY'    POPTN
      C                     PARM FTYPA     PTYPA   3
+     C                     PARM           PFCLS   4                                           CLE138
      C           SDFACT    PARM SDFACT    DSFDY
      C*
      C** Record not found.
@@ -2599,7 +2633,8 @@
      C                     MOVEL'LER475  'DBPGM
      C                     MOVEL'SDFACTPD'DBFILE
      C                     MOVE *BLANKS   DBKEY
-     C                     MOVELFTYPA     DBKEY
+     C**********           MOVELFTYPA     DBKEY                                              CLE138
+     C                     MOVELDBFKEY    DBKEY                                              CLE138
      C                     Z-ADD001       DBASE
      C                     OUT  LDA
      C                     EXSR *PSSR
@@ -3314,6 +3349,38 @@
      C                     EXSR *PSSR                                     CSD007
      C                     ENDIF                                          CSD007
      C                     ENDIF                                          CSD007
+      *                                                                                       CLE138
+      **  Define key list for Facility Extension file                                         CLE138
+      *                                                                                       CLE138
+     C           KFCLQ     KLIST                                                              CLE138
+     C                     KFLD           @CUST   6                                           CLE138
+     C                     KFLD           @FACT   3                                           CLE138
+     C                     KFLD           @SEQN   2                                           CLE138
+      *                                                                                       CLE138
+      ** Determine if CLE138 feature is enabled                                               CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   @RTCD                                               CLE138
+     C                     PARM '*VERIFY' @OPTN                                               CLE138
+     C                     PARM 'CLE138'  @SARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFNE '*NRF   '                                                     CLE138
+     C                     MOVEL'LER475  'DBPGM                                               CLE138
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
+     C                     Z-ADD10        DBASE                                               CLE138
+     C                     MOVEL'CLE138  'DBKEY                                               CLE138
+     C                     MOVE *ON       *INU7                                               CLE138
+     C                     MOVE *ON       *INU8                                               CLE138
+     C                     MOVE *ON       *INLR                                               CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
      C*
      C** Define work fields.
      C*

@@ -11,8 +11,9 @@
 0008 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No  245911             Date 05May22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. 245911             Date 05May22               *
+      *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR950498           Date 13Apr12               *
@@ -98,6 +99,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  245911 - Current facility amount is reduced twice while      *
       *           current exposure is not diminished everytime an     *
       *           autosettle repayment schedule is done against a     *
@@ -247,7 +249,8 @@
      F/COPY WNCPYSRC,LE0220F001
 0017 F***LE0220FMCF**F     502            WORKSTN                         CLE014              241236
       /COPY OFCPYSRCZ,CGL145_002                                                             CGL145B
-     FLE0220FMCF  F     520            WORKSTN                                                241236
+     F***LE0220FMCF**F     520            WORKSTN                                      241236 CLE138
+     FLE0220FMCF  F     524            WORKSTN                                                CLE138
       /COPY OFCPYSRCZ,CGL145_009                                                             CGL145B
      F/COPY WNCPYSRC,LE0220F002
 0019 F*FCLTY***IF  F     256 12AI     2 DISK                              145826
@@ -336,6 +339,7 @@
 0069 F*       68      USED TO ACCESS ICD-1
 0069 F*       69      END OF FILE LEFCAML3                                152170
       *       74      Record found on LEFCLTLH                                                256346
+      *       75      CLE138 is switched ON                                                   CLE138
       *       80      Facility not found in FACHISA file.                                     CLE023
 0070 F**
 0071 F*       98      DATE FORMAT = MMDDYY
@@ -951,6 +955,38 @@
      C                     MOVE 'N'       CLE023                                              CLE023
      C                     MOVE '0'       *IN38                                               CLE023
      C                     ENDIF                                                              CLE023
+      *                                                                                       CLE138
+      **  Check if CLE138 (Class Code for Facility Type) is switched on                       CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM '       ' PRTCD                                               CLE138
+     C                     PARM '*VERIFY' POPTN                                               CLE138
+     C                     PARM 'CLE138'  PSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSSDY                                               CLE138
+      *                                                                                       CLE138
+      ** Handle Database Error                                                                CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFNE *BLANKS                                                       CLE138
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE138
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE138
+     C                     MOVELPSARD     DBKEY                                               CLE138
+     C                     Z-ADD9         DBASE                                               CLE138
+     C                     MOVE *ON       *INU7                                               CLE138
+     C                     MOVE *ON       *INU8                                               CLE138
+     C                     MOVE *ON       *INLR                                               CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+      ** CLE138 is installed.                                                                 CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE *ON       *IN75                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     MOVE *OFF      *IN75                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C/COPY WNCPYSRC,LEH00075
       *                                                                                       CLE134
       ** CLE134 - Past Due Call Loans                                                         CLE134
@@ -1625,6 +1661,7 @@
       ** Add up offset amount to amount available when CLE025 is ON                           256346
       *                                                                                       256346
      C           CLE025    IFEQ 'Y'                                                           256346
+     C           CLE138    OREQ 'Y'                                                           CLE138
       *                                                                                       256346
      C                     MOVELCNUM      FQCNUM  6                                           256346
      C                     MOVELFACT      FQFACT  3                                           256346
@@ -1647,6 +1684,11 @@
      C                     ADD  FCXOF8    OAM8A                                               256346
      C                     ADD  FCXOF9    OAM9A                                               256346
      C                     ADD  FCXO10    OA10A                                               256346
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVELFCXCLS    FCLSA   4                                           CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C                     ENDIF                                                              256346
       *                                                                                       256346
      C                     ENDIF                                                              256346
@@ -3427,6 +3469,7 @@
      O                 61      DRAWA    520 '   ,   ,   , 0 . -'                              241236
      O                 62      DRAWA    520 '  ,   ,   , 0 .  -'                              241236
      O                 63      DRAWA    520 ' ,   ,   , 0 .   -'                              241236
+     O                         FCLSA    524                                                   CLE138
      O/COPY WNCPYSRC,LE0220O002
       /COPY OFCPYSRCZ,CGL145_017                                                             CGL145B
 **  POWR -- USED IN CURRENCY CONVERSION(FACILITY)                         158930

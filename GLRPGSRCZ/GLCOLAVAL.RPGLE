@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -122,6 +124,9 @@
       ** Deal Details File                                                      CGL018
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)                         CGL018
      F                                     INCLUDE(DEALSDCF)                    CGL018
+      *                                                                                       CLE138
+      ** Facilities Extension File by branch                                                  CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PsSR)                                       CLE138
 
       *****************************************************************
       ** +--------------------------------------+
@@ -245,6 +250,11 @@
      D  WFcty1                 1      6
      D  WFcty2                 7      9
      D  WFcty3                10     11
+      *                                                                                       CLE138
+      ** Key Fields                                                                           CLE138
+     D K_CNUM          S              6A                                                      CLE138
+     D K_FACT          S              3A                                                      CLE138
+     D K_FCNO          S              2A                                                      CLE138
 
       ** Index for arrays of of error message ids etc
      D RIdx            S              3P 0
@@ -408,6 +418,30 @@
      C                   ELSE                                                                 CGL018
      C                   MOVE      'N'           CGL018                                       CGL018
      C                   END                                                                  CGL018
+      *                                                                                       CLE138
+      ** Access SAR details file to determine if CLE138 is on.                                CLE138
+      *                                                                                       CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       @RTCD                                        CLE138
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+      *                                                                                       CLE138
+      ** Database Error                                                                       CLE138
+      *                                                                                       CLE138
+     C     @RTCD         IFNE      *BLANKS                                                    CLE138
+     C     @RTCD         ANDNE     '*NRF   '                                                  CLE138
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CLE138
+     C                   Z-ADD     7             DBASE                                        CLE138
+     C                   MOVEL     'CLE138'      DBKEY                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   END                                                                  CLE138
+      *                                                                                       CLE138
+     C     @RTCD         IFEQ      *BLANK                                                     CLE138
+     C                   MOVE      'Y'           CLE138            1                          CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      'N'           CLE138                                       CLE138
+     C                   END                                                                  CLE138
 
      C/COPY WNCPYSRC,GLCOLAVC07
       ** Initialise Program name
@@ -490,6 +524,13 @@
      C**********         ELSE                                                         224995 BUG8550
      C**********         MOVE      'N'           JAVAUSER                             224995 BUG8550
      C**********         ENDIF                                                        224995 BUG8550
+      *                                                                                       CLE138
+      ** Key fields for LE Facility Extension File LEFCLTLH                                   CLE138
+      *                                                                                       CLE138
+     C     KFCLTH        KLIST                                                                CLE138
+     C                   KFLD                    K_CNUM                                       CLE138
+     C                   KFLD                    K_FACT                                       CLE138
+     C                   KFLD                    K_FCNO                                       CLE138
                                                                                               224995
       ** Parameter list for AOCLLMR0
 
@@ -1027,6 +1068,18 @@
      C
      C                   EndIf
      C                   EndIf
+      *                                                                                       CLE138
+      ** Get facility class from the extension file                                           CLE138
+      *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                   MOVE      WFcty1        K_CNUM                                       CLE138
+     C                   MOVE      WFcty2        K_FACT                                       CLE138
+     C                   MOVE      WFcty3        K_FCNO                                       CLE138
+     C     KFCLTH        CHAIN     LEFCLTLH                           80                      CLE138
+     C                   MOVE      FCXCLS        @FCls                                        CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      *BLANKS       @FCls                                        CLE138
+     C                   ENDIF                                                                CLE138
 
       ** Facility Flag still OK, Validate Facility type
 
@@ -1037,6 +1090,7 @@
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm      WFcty2        @Ftyp             3
+     C                   Parm                    @FCls             4                          CLE138
      C     SDFACT        Parm      SDFACT        DSFDY
 
      C     @Rtcd         IfNe      *BLANKS

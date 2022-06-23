@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -142,6 +144,9 @@
       *
       ** Customer Positions File
      FCPOSN     IF   E           K DISK    INFSR(*PSSR)
+      *                                                                                       CLE138
+      ** Facilities Extension File by branch                                                  CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PsSR)                                       CLE138
       *
       *****************************************************************
       /EJECT
@@ -314,6 +319,12 @@
      D WWACCR          S                   LIKE(CDACCR)
      D WWIAMT          S                   LIKE(CDIAMT)
      D WWLNLM          S                   LIKE(CDLNLM)
+      *                                                                                       CLE138
+      ** Key Fields                                                                           CLE138
+     D K_CNUM          S              6A                                                      CLE138
+     D K_FACT          S              3A                                                      CLE138
+     D K_FCNO          S              2A                                                      CLE138
+     D PClas           S              4A                                                      CLE138
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -709,11 +720,24 @@
      C                   ELSE
      C                   MOVEL     BBCUST        DDFCUS
      C                   ENDIF
+      *                                                                                       CLE138
+      ** Get facility class from the extension file                                           CLE138
+      *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                   MOVE      DDFCUS        K_CNUM                                       CLE138
+     C                   MOVE      DDFTYP        K_FACT                                       CLE138
+     C                   MOVE      DDFSEQ        K_FCNO                                       CLE138
+     C     KFCLTH        CHAIN     LEFCLTLH                           80                      CLE138
+     C                   MOVE      FCXCLS        PClas                                        CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      *BLANKS       PClas                                        CLE138
+     C                   ENDIF                                                                CLE138
       *
      C                   CALL      'AOFACTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      DDFTYP        PFCTY             3
+     C                   PARM                    PClas                                        CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
      C     PRTCD         IFNE      *BLANKS
@@ -1539,6 +1563,13 @@
      C                   KFLD                    WCSBA
      C                   KFLD                    WCSSC
      C                   KFLD                    WCSCN#
+      *                                                                                       CLE138
+      ** Key fields for LE Facility Extension File LEFCLTLH                                   CLE138
+      *                                                                                       CLE138
+     C     KFCLTH        KLIST                                                                CLE138
+     C                   KFLD                    K_CNUM                                       CLE138
+     C                   KFLD                    K_FACT                                       CLE138
+     C                   KFLD                    K_FCNO                                       CLE138
       *
       ** Move program name into *LDA field.
       *
@@ -1623,6 +1654,30 @@
      C                   ELSE                                                                 CGL018
      C                   MOVE      'N'           CGL018                                       CGL018
      C                   END                                                                  CGL018
+      *                                                                                       CLE138
+      ** Access SAR details file to determine if CLE138 is on.                                CLE138
+      *                                                                                       CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       @RTCD                                        CLE138
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+      *                                                                                       CLE138
+      ** Database Error                                                                       CLE138
+      *                                                                                       CLE138
+     C     @RTCD         IFNE      *BLANKS                                                    CLE138
+     C     @RTCD         ANDNE     '*NRF   '                                                  CLE138
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CLE138
+     C                   Z-ADD     13            DBASE                                        CLE138
+     C                   MOVEL     'CLE138'      DBKEY                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   END                                                                  CLE138
+      *                                                                                       CLE138
+     C     @RTCD         IFEQ      *BLANK                                                     CLE138
+     C                   MOVE      'Y'           CLE138            1                          CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      'N'           CLE138                                       CLE138
+     C                   END                                                                  CLE138
 
      C     P_AOSVALR0    PLIST                                                                CLE148
       *                                                                                       CLE148

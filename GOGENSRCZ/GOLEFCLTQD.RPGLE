@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGP017             Date 06Aug12               *
       *                 263108             Date 23Nov12               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *

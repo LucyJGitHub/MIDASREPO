@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 250758             Date 02May22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. 250758             Date 02May22               *
+      *                 MD058815           Date 28Sep21               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  250758 - If calc method 6 then INT6DY contains the number    *
       *           of days from ZINTDY.                                *
       *  MD058815 - Dealing interest Calculation type 6 have different*

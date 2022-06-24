@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD060080           Date 10Jun22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 MD031074           Date 23Oct14               *
       *                 CLE134             Date 01Aug12               *
       *                 CSC043             Date 18Jun10               *
@@ -37,6 +39,10 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD060080 - Issues on Facility Type Input Screen              *
+      *           - add validation if facility exist before deletion  *
+      *           - validate facility class after facility type       *
+      *  CLE138 - Class Code for Facilities                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD031074 - Make sure that the pre check order will not       *
@@ -93,6 +99,9 @@
      F                                              KINFSR *PSSR                              CSD031
       ** Bank Details ICD Keyed on DNWD                                                       CSD031
      FSDPRGPI0IF  E           K        DISK                                                   CLE164
+      *                                                                                     MD060080
+      ** Facilities File by FACT and FCLS                                                   MD060080
+     FLEFCLTLXIF  E           K        DISK         KINFSR *PSSR                            MD060080
      E* Description     : Copyright notice for inclusion in all programs
      E*
      E********************************************************************
@@ -143,13 +152,17 @@
      I              SPARE                           SPAREX                                    CSD031
       ** Local data area for database error details                                           CSD031
       *                                                                                       CSD031
+     ISDTCLS    E DSSDTCLSPD                                                                  CLE138
+      ** External DS for Class                                                                CLE138
+      *                                                                                       CLE138
      IWDTQ        DS                                                                          CSD031
      I                                        1  10 WPFNAM                                    CSD031
      I                                       11  40 WKEYS                                     CSD031
      I                                       41 296 WDATA                                     CSD031
      IPDQMSG      DS                           4040                                           CSD031
      I***#1DBRC*     DS                             82                                 CSD031 CLE134
-     I#1DBRC      DS                             87                                           CLE134
+     I***#1DBRC*     DS                             87                                 CLE134 CLE138
+     I#1DBRC      DS                             89                                           CLE138
      I***#1DBRC*     DS                             37                                        CSD031
       * Stored master file format fields
      I                                        1   1 #1DB1
@@ -217,10 +230,12 @@
      I                                        1  80 CPY@
       /EJECT
       * Parameter declarations
-     IP1PARM      DS                              3
+     I***P1PARM      DS                              3                                        CLE138
+     IP1PARM      DS                              7                                           CLE138
       * KEY: Facility Types            Retrieval index
       * I : MAP Facility type
      I                                        1   3 P1FCTY
+     I                                        4   7 P1CLAS                                    CLE138
      IP2PARM      DS
       * I :  Action Code
      I                                        1   1 P2ANCD
@@ -397,8 +412,10 @@
       * Check for existing record
      C           KRTV      KLIST
      C                     KFLD           AMFCTY           Facility type
+     C                     KFLD           AMCLAS           Facility class                     CLE138
       * Setup key
      C                     MOVEL#1FCTY    AMFCTY           Facility type
+     C   60                MOVEL#1CLAS    AMCLAS           Facility class                     CLE138
      C********** KRTV      CHAIN@AMRECU              9091  *                                  CSD031
      C           *INU1     IFEQ *ON                                                           CSD031
      C           KRTV      CHAINGPFACTD1             9091                                     CSD031
@@ -408,6 +425,9 @@
      C           *IN91     IFEQ '1'
       * Record locked
      C                     SETON                     9931  *
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     SETON                       32                                     CLE138
+     C                     ENDIF                                                              CLE138
      C                     GOTO BEEXIT
      C                     END                             FI 91
       *
@@ -416,6 +436,9 @@
       * If record does not exist, error
      C           *IN90     IFEQ '1'
      C                     SETON                     9931  *
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     SETON                       32                                     CLE138
+     C                     ENDIF                                                              CLE138
       * Send message 'Facility Types         NF'
      C                     MOVEL'USR0031' ZAMSID
      C                     EXSR ZASNMS
@@ -521,9 +544,12 @@
       * If record already exists, error
      C           *IN90     IFEQ '0'
      C                     SETON                     9931  *
-      * Send message 'Facility Types         EX'
-     C                     MOVEL'USR0032' ZAMSID
-     C                     EXSR ZASNMS
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     SETON                     32                                       CLE138
+     C                     ENDIF                                                              CLE138
+      **Send*message*'Facility*Types*********EX'                                            MD060080
+     C**********           MOVEL'USR0032' ZAMSID                                            MD060080
+     C**********           EXSR ZASNMS                                                      MD060080
      C                     ELSE
       * USER: Initialise detail screen (new record)
       * Set-up DTL Screen Footer - Standard Functions  *
@@ -752,6 +778,22 @@
      C                     END                             *FI
      C                     END                             *FI
      C                     END                             *FI
+      *                                                                                     MD060080
+      ** Validate Facility class when no error in Facility type                             MD060080
+      *                                                                                     MD060080
+     C           W0RTN     IFEQ *BLANK                                                      MD060080
+     C           CLE138    IFEQ 'Y'                                                         MD060080
+     C           #1CLAS    IFEQ *BLANK                                                      MD060080
+     C                     SETON                     9932                                   MD060080
+      * Send message '*Value required'                                                      MD060080
+     C                     MOVEL'Y2U0001' ZAMSID                                            MD060080
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            MD060080
+     C                     EXSR ZASNMS                                                      MD060080
+     C                     ELSE                                                             MD060080
+     C                     EXSR SLCLAS                                                      MD060080
+     C                     ENDIF                                                            MD060080
+     C                     ENDIF                                                            MD060080
+     C                     ENDIF                                                            MD060080
      C                     END                             *FI
       * End of Fix S01117
       * CASE: WRK.S01212 is Fix installed
@@ -767,6 +809,20 @@
      C                     MOVEL'Y2USRMSG'ZAMSGF
      C                     EXSR ZASNMS
      C                     END                             FI
+      **********                                                                     CLE138 MD060060
+      ***Facility*class*required                                                     CLE138 MD060060
+      **********                                                                     CLE138 MD060060
+     C********** CLE138    IFEQ 'Y'                                                  CLE138 MD060060
+     C********** #1CLAS    IFEQ *BLANK                                               CLE138 MD060060
+     C**********           SETON                     9932                            CLE138 MD060060
+      **Send*message*'*Value*required'**********                                     CLE138 MD060060
+     C**********           MOVEL'Y2U0001' ZAMSID                                     CLE138 MD060060
+     C**********           MOVEL'Y2USRMSG'ZAMSGF                                     CLE138 MD060060
+     C**********           EXSR ZASNMS                                               CLE138 MD060060
+     C**********           ELSE                                                      CLE138 MD060060
+     C**********           EXSR SLCLAS                                               CLE138 MD060060
+     C**********           ENDIF                                                     CLE138 MD060060
+     C**********           ENDIF                                                     CLE138 MD060060
       *================================================================
      CSR         BFEXIT    ENDSR
       /EJECT
@@ -1183,6 +1239,26 @@
       *================================================================
       * USER: Delete DBF record
       * Fr Delete Facility Type - Facility Types  *
+      *                                                                                     MD060080
+      ** Check if facility type is used by Facility                                         MD060080
+      *                                                                                     MD060080
+     C           KFCLT     KLIST                                                            MD060080
+     C                     KFLD           AMFCTY           Facility type                    MD060080
+     C                     KFLD           AMCLAS           Facility class                   MD060080
+     C                     MOVEL#1FCTY    AMFCTY                                            MD060080
+     C   60                MOVEL#1CLAS    AMCLAS                                            MD060080
+     C           KFCLT     CHAINLEFCLTLX             85                                     MD060080
+     C           *IN85     IFEQ '0'                                                         MD060080
+     C           CLE138    IFEQ 'Y'                                                         MD060080
+     C                     MOVEL'CLE1387' W0RTN                                             MD060080
+     C                     MOVEL'CLE1387' ZAMSID                                            MD060080
+     C                     ELSE                                                             MD060080
+     C                     MOVEL'CLE1388' W0RTN                                             MD060080
+     C                     MOVEL'CLE1388' ZAMSID                                            MD060080
+     C                     ENDIF                                                            MD060080
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                            MD060080
+     C                     EXSR ZASNMS                                                      MD060080
+     C                     ELSE                                                             MD060080
      C                     EXSR SDDLRC
      C           W0RTN     IFEQ *BLANK
       * Send message '*Record deleted'
@@ -1190,6 +1266,7 @@
      C                     MOVEL'Y2USRMSG'ZAMSGF
      C                     EXSR ZASNMS
      C                     END
+     C                     ENDIF                                                            MD060080
       *================================================================
      CSR         EDEXIT    ENDSR
       /EJECT
@@ -1258,6 +1335,7 @@
      C                     MOVEL*BLANK    #1FCNM           Facility Name
      C                     MOVE *BLANK    #1EACC                                              CSD031
      C                     MOVE *BLANK    #1AACC                                              CSD031
+     C                     MOVE *BLANKS   #1PGID                                            MD060080
       *================================================================
      CSR         MAEXIT    ENDSR
       /EJECT
@@ -1297,6 +1375,7 @@
       * Initialise key screen
       *================================================================
      C                     MOVELP1FCTY    #1FCTY           Facility type
+     C                     MOVELP1CLAS    #1CLAS           Facility class                     CLE138
       * USER: Initialise key screen
       * Set-up KEY Screen Footer - Standard Functions  *
      C*
@@ -1338,8 +1417,10 @@
       * Define keylist
      C           KRSSA     KLIST
      C                     KFLD           AMFCTY           Facility type
+     C                     KFLD           AMCLAS           Facility class                     CLE138
       * Move fields to key list
      C                     MOVEL#1FCTY    AMFCTY           Facility type
+     C   60                MOVEL#1CLAS    AMCLAS           Facility class                     CLE138
      C********** KRSSA     CHAIN@AMRECU              90    *                                  CSD031
      C           *INU1     IFEQ *ON                                                           CSD031
      C           KRSSA     CHAINGPFACTD1             90                                       CSD031
@@ -1368,6 +1449,7 @@
      C                     MOVEL*BLANK    W0RTN   7
       * Move all fields to @AMRECT
      C                     MOVEL#1FCTY    AMFCTY           Facility type
+     C   60                MOVEL#1CLAS    AMCLAS           Facility class                     CLE138
      C                     Z-ADDWURDNB    AMLCD            Last Change Dat
      C                     MOVEL'I'       AMTYLC           Type of Last Ch
      C                     MOVEL#1FCNM    AMFCNM           Facility Name
@@ -1455,6 +1537,7 @@
      C                     END                             *FI
      C           KLCRSB    KLIST
      C                     KFLD           AMFCTY           Facility type
+     C                     KFLD           AMCLAS           Facility class                     CLE138
       * Check for duplicate primary key
      C********** KLCRSB    SETLL@AMRECT                  90*                                  CSD031
      C           *INU1     IFEQ *ON                                                           CSD031
@@ -1501,6 +1584,7 @@
      C                     CALL 'TABLETQ'              90  Update TABLETQ
      C           W0RTN     PARM W0RTN     WQ0007  7        *Return code
      C                     PARM AMFCTY    WQ0008  3        Facility type
+     C                     PARM AMCLAS    WQ0025  4        Facility Class                     CLE138
      C                     PARM AMFCNM    WQ0009 30        Facility Name
      C                     PARM 'I'       WQ0010  1        Type of Last Ch
      C                     PARM WURDNB    WQ0011  50       Run day number
@@ -1664,9 +1748,11 @@
      C                     END                             *FI
       * Move key fields to @AMRECT
      C                     MOVEL#1FCTY    AMFCTY           Facility type
+     C                     MOVEL#1CLAS    AMCLAS           Facility class                     CLE138
       *
      C           KLDLSD    KLIST
      C                     KFLD           AMFCTY           Facility type
+     C                     KFLD           AMCLAS           Facility class                     CLE138
      C********** KLDLSD    CHAIN@AMRECT              9091  *                                  CSD031
      C           *INU1     IFEQ *ON                                                           CSD031
      C           KLDLSD    CHAINGPFACTD0             9091                                     CSD031
@@ -1780,6 +1866,7 @@
      C                     CALL 'TABLETQ'              90  Update TABLETQ
      C           W0RTN     PARM W0RTN     WQ0012  7        *Return code
      C                     PARM AMFCTY    WQ0013  3        Facility type
+     C                     PARM AMCLAS    WQ0026  4        Facility class                     CLE138
      C                     PARM AMFCNM    WQ0014 30        Facility Name
      C                     PARM 'D'       WQ0015  1        Type of Last Ch
      C                     PARM WURDNB    WQ0016  50       Run day number
@@ -2025,6 +2112,7 @@
      C                     CALL 'TABLETQ'              90  Update TABLETQ
      C           W0RTN     PARM W0RTN     WQ0017  7        *Return code
      C                     PARM AMFCTY    WQ0018  3        Facility type
+     C                     PARM AMCLAS    WQ0027  4        Facility Class                     CLE138
      C                     PARM AMFCNM    WQ0019 30        Facility Name
      C                     PARM 'A'       WQ0020  1        Type of Last Ch
      C                     PARM WURDNB    WQ0021  50       Run day number
@@ -2201,6 +2289,9 @@
      C           WUMFTS    IFEQ 'Y'                        *IF
       * 00/COPY member SD0271REPP - Facility Types  * S01212
      C/COPY WNCPYSRC,SD0271REPP
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     CLOSESDFACTL0                                                      CLE138
+     C                     ENDIF                                                              CLE138
      C                     END                             *FI
       * Start of Fix S01117
       * Fast Exit Processing
@@ -2456,6 +2547,21 @@
       * 00/COPY member SD0271RIPG - Facility Types  * S01212
       * 00/COPY member SD0271RCPG - Facility Types  * S01212
      C/COPY WNCPYSRC,SD0271RCPG
+      *                                                                                       CLE138
+     C                     MOVE 'N'       CLE138  1                                           CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM '       ' @RTCD   7                                           CLE138
+     C                     PARM '*VERIFY' @OPTN   7                                           CLE138
+     C                     PARM 'CLE138'  @SARD   6                                           CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138                                              CLE138
+     C                     MOVE *ON       *IN60                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE *OFF      *IN60                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
       * 00/COPY member SD0271ROPG - Facility Types  * S01212
      C                     END                             *FI
       *                                                                                       CSD031
@@ -2629,6 +2735,40 @@
      C                     MOVEL'Y'       W0DCF   1                                           CLE164
      C                     END                                                                CLE164
      C                     ENDSR                                                              CLE164
+      *****************************************************************                       CLE138
+      *                                                               *                       CLE138
+      *  SLCLAS - Select Facility Class Code                          *                       CLE138
+      *                                                               *                       CLE138
+      *****************************************************************                       CLE138
+     C           SLCLAS    BEGSR                                                              CLE138
+      *                                                                                       CLE138
+     C                     MOVEL#1CLAS    CLASSL  1                                           CLE138
+     C*          CLASSL    IFEQ '?'                                                           CLE138
+     C*                    CALL 'SD0780S'              90                                     CLE138
+     C*                    PARM           W0RTN                                               CLE138
+     C*          #1CLAS    PARM #1CLAS    WVAR01                                              CLE138
+     C*          *IN90     IFEQ '1'                                                           CLE138
+      *                                                                                       CLE138
+     C*                    MOVEL'Y2U0021' W0RTN                                               CLE138
+     C*                    END                                                                CLE138
+      * Defer confirm                                                                         CLE138
+     C*                    MOVEL'Y'       W0DCF                                               CLE138
+     C*                    END                                                                CLE138
+     C                     CALL 'AOTCLSR0'                                                    CLE138
+     C                     PARM *BLANK    @RTCD                                               CLE138
+     C                     PARM '*KEY   ' @OPTN                                               CLE138
+     C                     PARM #1CLAS    @CLAS   4                                           CLE138
+     C           SDTCLS    PARM SDTCLS    DSFDY                                               CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C           @CLAS     ANDNE*BLANKS                                                       CLE138
+     C                     SETOF                     9932                                     CLE138
+     C                     MOVE @CLAS     #1CLAS                                              CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVEL'CLE1392' ZAMSID                                              CLE138
+     C                     EXSR ZASNMS                                                        CLE138
+     C                     SETON                     9932                                     CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDSR                                                              CLE138
      C/COPY ZSRSRC,ZDATE1Z2                                                                   CSD031
      O/COPY WNCPYSRC,SD0271ROPG
 ** CPY@     : Copyright notice for inclusion in all programs

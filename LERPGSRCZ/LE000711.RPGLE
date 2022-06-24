@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057538           Date 11Feb21               *
       *                 MD055657           Date 14May20               *
       *                 AR674226           Date 04Dec19               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *

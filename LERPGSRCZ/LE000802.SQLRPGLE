@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -91,6 +93,7 @@
      D  pRTCD                         7A
      D  pOPTN                         7A
      D  pFACT                         3A
+     D  @@CLAS                        4A                                                      CLE138
      D  pDSSDY                      800A
 
      D ACCESS_FEE      PR                  EXTPGM('AOFEER0')
@@ -98,6 +101,12 @@
      D  pOPTN                         7A
      D  pFEE                          2A
      D  pDSSDY                      800A
+                                                                                              CLE138
+     D  check_SARD     pr                  extpgm('AOSARDR0')                                 CLE138
+     D    pReturnCode                 7A                                                      CLE138
+     D    pOption                     7A                                                      CLE138
+     D    pSARD                       6A                                                      CLE138
+     D    pDSSDY1                   200A                                                      CLE138
       **---------------------------------------------------------------
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
@@ -112,6 +121,7 @@
      D DSSDLOAN      E DS                  EXTNAME(SDLOANPD)
      D DSSDFACT      E DS                  EXTNAME(SDFACTPD)
      D DSSDFEE       E DS                  EXTNAME(SDFEEPD)
+     D SCSARD        e ds                  EXTNAME(SCSARDPD)                                  CLE138
 
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
@@ -139,9 +149,17 @@
      D  pSUTP          S              2A
      D  pCLAS          S              2A
      D  pFACT          S              3A
+     D  @@CLAS         S              4A                                                      CLE138
+     D  @@CUST         S              6A                                                      CLE138
+     D  @@FTYP         S              3A                                                      CLE138
+     D  @@FSEQ         S              2A                                                      CLE138
      D  pFEE           S              2A
      D  pDSSDY         S            800A
      D  wREPR          S              8S 0
+     D CLE138          s              1a                                                      CLE138
+     D pOption         s              7A                                                      CLE138
+     D pSARD           s              6A                                                      CLE138
+     D pDSSDY1         s            200A                                                      CLE138
 
       /free
 
@@ -408,9 +426,19 @@
                       pOvrdftflg = AYOVRD;
 
                       pFACT = %EditC(LN_FTYP:'X');
+                                                                                            //CLE138
+                      @@CLAS = *Blanks;                                                     //CLE138
+                      if CLE138 = 'Y';                                                      //CLE138
+                         @@CUST = LN_FCUS;                                                  //CLE138
+                         @@FTYP = %EditC(LN_FTYP:'X');                                      //CLE138
+                         @@FSEQ = %EditC(LN_FSEQ:'X');                                      //CLE138
+                         exsr RetrieveClass;                                                //CLE138
+                      endif;                                                                //CLE138
+
                       CallP ACCESS_FACT (  pRTCD
                                          : pOPTN
                                          : pFACT
+                                         : @@CLAS                                           //CLE138
                                          : pDSSDY
                                            );
                       DSSDFACT = pDSSDY;
@@ -442,9 +470,19 @@
                          DSSDLOAN = pDSSDY;
 
                          pFACT = %EditC(LN_FTYP:'X');
+                                                                                            //CLE138
+                         @@CLAS = *Blanks;                                                  //CLE138
+                         if CLE138 = 'Y';                                                   //CLE138
+                            @@CUST = LN_FCUS;                                               //CLE138
+                            @@FTYP = %EditC(LN_FTYP:'X');                                   //CLE138
+                            @@FSEQ = %EditC(LN_FSEQ:'X');                                   //CLE138
+                            exsr RetrieveClass;                                             //CLE138
+                         endif;                                                             //CLE138
+                                                                                            //CLE138
                          CallP ACCESS_FACT (  pRTCD
                                             : pOPTN
                                             : pFACT
+                                            : @@CLAS                                        //CLE138
                                             : pDSSDY
                                               );
                          DSSDFACT = pDSSDY;
@@ -453,9 +491,19 @@
                          pFCPDPGrpID = AUPGID;
                       Else;
                          pFACT = %EditC(pFacility:'X');
-                         CallP ACCESS_FACT (  pRTCD
+                                                                                            //CLE138
+                         @@CLAS = *Blanks;                                                  //CLE138
+                         if CLE138 = 'Y';                                                   //CLE138
+                            @@CUST = pCustomer;                                             //CLE138
+                            @@FTYP = %Subst(%EditC(pFacility:'X'):1:3);                     //CLE138
+                            @@FTYP = %Subst(%EditC(pFacility:'X'):4:2);                     //CLE138
+                            exsr RetrieveClass;                                             //CLE138
+                         endif;                                                             //CLE138
+                                                                                            //CLE138
+                         CallP ACCESS_FACT (  pRTCD                                         //CLE138
                                             : pOPTN
                                             : pFACT
+                                            : @@CLAS                                        //CLE138
                                             : pDSSDY
                                               );
                          DSSDFACT = pDSSDY;
@@ -528,6 +576,31 @@
 
        Endsr;
 
+       //*************************************************************                      //CLE138
+       /EJECT                                                                               //CLE138
+       //*************************************************************                      //CLE138
+       //                                                            *                      //CLE138
+       // RetrieveClass - Get class code from LEFCLTQD               *                      //CLE138
+       //                                                            *                      //CLE138
+       // Called by: Various                                         *                      //CLE138
+       //                                                            *                      //CLE138
+       // Calls: None                                                *                      //CLE138
+       //                                                            *                      //CLE138
+       //*************************************************************                      //CLE138
+                                                                                            //CLE138
+       Begsr RetrieveClass;                                                                 //CLE138
+                                                                                            //CLE138
+             exec sql                                                                       //CLE138
+                      select FCXCLS into :@@CLAS from LEFCLTQD                              //CLE138
+                      where                                                                 //CLE138
+                      FCXFCU = : @@CUST                                                     //CLE138
+                      and                                                                   //CLE138
+                      FCXFTP = : @@FTYP                                                     //CLE138
+                      and                                                                   //CLE138
+                      FCXFNO = : @@FSEQ;                                                    //CLE138
+                                                                                            //CLE138
+       Endsr;                                                                               //CLE138
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -541,6 +614,21 @@
        //*************************************************************
 
        Begsr *Inzsr;
+                   //Check if CLE138 is switched on                                         //CLE138
+                   pOption = '*VERIFY';                                                     //CLE138
+                   pSARD = 'CLE138';                                                        //CLE138
+                   callp check_SARD(                                                        //CLE138
+                                  pReturnCode                                               //CLE138
+                                : pOption                                                   //CLE138
+                                : pSARD                                                     //CLE138
+                                : pDSSDY                                                    //CLE138
+                               );                                                           //CLE138
+                   SCSARD = pDSSDY1;                                                        //CLE138
+                                                                                            //CLE138
+                   if pReturnCode = *blanks;                                                //CLE138
+                      CLE138 = 'Y';                                                         //CLE138
+                   endif;                                                                   //CLE138
+                                                                                            //CLE138
        Endsr;
 
        //*************************************************************

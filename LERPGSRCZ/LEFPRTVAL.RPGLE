@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -84,6 +86,11 @@
      FLEFCLTL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FCLTYFMF:FCLTL2)
      FLEPARTL1  IF   E           K DISK    INFSR(*PSSR)
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
+      ** Midas LE Aggregate Facilities Ext File by Facility                                   CLE138
+     FLEAGFCL7  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
+     F                                     RENAME(LEFCLTD0:LEFCLTDX)                          CLE138
+     F                                     PREFIX(A_)                                         CLE138
 
       *****************************************************************
       ** +--------------------------------------+
@@ -411,10 +418,53 @@
 
      C                   ELSE
       *
+      *                                                                                       CLE138
+      ** Access facility extension record to retrieve facility class                          CLE138
+      *                                                                                       CLE138
+     C     KFCLQ         KLIST                                                                CLE138
+     C                   KFLD                    @CUST             6                          CLE138
+     C                   KFLD                    @FACT             3                          CLE138
+     C                   KFLD                    @SEQN             2                          CLE138
+      *                                                                                       CLE138
+     C                   EVAL      WCXCLS = *Blanks                                           CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                             AND S#ACTN <> 'I'                                          CLE138
+     C                   MOVEL     S#CNUM        @CUST                                        CLE138
+     C                   MOVEL     S#FACT        @FACT                                        CLE138
+     C                   MOVE      S#FCNO        @SEQN                                        CLE138
+      *                                                                                       CLE138
+     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C                   IF        CLE025 = 'Y'                                               CLE138
+     C     KFCLQ         CHAIN     LEAGFCL7                                                   CLE138
+     C                   IF        NOT %FOUND(LEAGFCL7)                                       CLE138
+     C                   EVAL      DBFILE = 'LEAGFCL7'                                        CLE138
+     C                   EVAL      DBASE = 208                                                CLE138
+     C                   EVAL      DBKEY = @FACT                                              CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVEL     A_FCXCLS      @CLAS             4                          CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ELSE                                                                 CLE138
+     C                   EVAL      DBFILE      = 'SDFACTPD'                                   CLE138
+     C                   EVAL      DBKEY       = @FACT                                        CLE138
+     C                   EVAL      DBASE       = 207                                          CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ELSE                                                                 CLE138
+     C                   EVAL      WCXCLS = FCXCLS                                            CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ENDIF                                                                CLE138
+                                                                                              CLE138
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C     S#ACTN        ANDNE     'I'                                                        CLE138
+     C     CLE138        ORNE      'Y'                                                        CLE138
+      *                                                                                       CLE138
      C                   CALL      'AOFACTR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM                    S#FACT
+     C                   PARM                    WCXCLS            4                          CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
       *
       ** Record not found.
@@ -428,6 +478,7 @@
      C                   MOVEL     AMFCTY        S#FACT
       *
      C                   ENDIF
+     C                   ENDIF                                                                CLE138
      C                   ENDIF
       *
      C                   ENDSR
@@ -1674,6 +1725,30 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
+      *                                                                                       CLE138
+      ** Determine if CLE138 is installed                                                     CLE138
+      *                                                                                       CLE138
+     C                   MOVE      'N'           CLE138            1                          CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       PRTCD                                        CLE138
+     C                   PARM      '*VERIFY'     POPTN                                        CLE138
+     C                   PARM      'CLE138'      PSARD                                        CLE138
+                                                                                              CLE138
+     C     PRTCD         IFEQ      *BLANKS                                                    CLE138
+     C                   MOVE      'Y'           CLE138                                       CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+      ** Determine if CLE025 is installed                                                     CLE138
+      *                                                                                       CLE138
+     C                   MOVE      'N'           CLE025            1                          CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       PRTCD                                        CLE138
+     C                   PARM      '*VERIFY'     POPTN                                        CLE138
+     C                   PARM      'CLE025'      PSARD                                        CLE138
+                                                                                              CLE138
+     C     PRTCD         IFEQ      *BLANKS                                                    CLE138
+     C                   MOVE      'Y'           CLE025                                       CLE138
+     C                   ENDIF                                                                CLE138
 
       ** OVRDBF FCLTYXFN to FCLTY then OPEN FCLTYX
 

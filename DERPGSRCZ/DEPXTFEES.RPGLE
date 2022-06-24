@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058437           Date 09Jul21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD058437           Date 09Jul21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR674226           Date 04Dec19               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD058437 - Change DERDFR to alphanumeric (Recompile)         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060143           Date 20Jun22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055657           Date 14May20               *
       *                 AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
@@ -75,6 +77,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060143 - No Facility Class details printed and class code  *
+      *             header are being displayed when feature is off    *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055657 - Manual transaction from FFC TI Interface went to  *
@@ -175,6 +180,8 @@
      FLEMNFUL2IF  E           K        DISK         KINFSR *PSSR          127657
      FLEFERCL2IF  E           K        DISK         KINFSR *PSSR                              CLE071
      F/COPY WNCPYSRC,LE2320F001
+     FLEFCLTLHIF  E           K        DISK                                                   CLE138
+     FLEFCAQL0IF  E           K        DISK                                                 MD060143
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
@@ -239,8 +246,9 @@
      E**********          DESC    1  17 20                                             127657 201797
      E**********          DESC    1  18 20                                             201797 244279
      E**********          DESC    1  20 20                                             244279 CLE148
-     E                    DESC    1  21 20                                                    CLE148
+     E**********          DESC    1  21 20                                             CLE148 CLE138
      E/COPY WNCPYSRC,LEH00276
+     E                    DESC    1  21 20                                                    CLE138
       *
       ** Array containing Description of Unauthorised Loans/Parts
       *
@@ -463,6 +471,40 @@
      C                     ENDIF                                                              CLE071
       *                                                                                       CLE071
      C/COPY WNCPYSRC,LE2320C006
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   PRTCD                                               CLE138
+     C                     PARM '*VERIFY' POPTN                                               CLE138
+     C                     PARM 'CLE138'  PSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE '1'       *IN35                                             MD060143
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     MOVE '0'       *IN35                                             MD060143
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFNE *BLANKS                                                       CLE138
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
+     C                     Z-ADD900       DBASE                                               CLE138
+     C                     MOVELPSARD     DBKEY                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           FCTYB     KLIST                                                              CLE138
+     C                     KFLD           @FCNUM  6                                           CLE138
+     C                     KFLD           @FACT   3                                           CLE138
+     C                     KFLD           @FCNO   2                                           CLE138
+     C           FEXTN     KLIST                                                            MD060143
+     C                     KFLD           @FCNUM                                            MD060143
+     C                     KFLD           XFACT   30                                        MD060143
+     C                     KFLD           XFCNO   20                                        MD060143
+     C                     KFLD           XVLDT   50                                        MD060143
+     C                     KFLD           XSQNO   30                                        MD060143
       *
       ***  RCF Processing for Printer File
       *
@@ -893,6 +935,16 @@
      C                     EXSR ZDATE2
      C                     MOVELZADATE    PMDAT
      C/COPY WNCPYSRC,LEH00277
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVELCNUM      @FCNUM                                              CLE138
+     C                     MOVELFACT      @FACT                                               CLE138
+     C                     MOVELFCNO      @FCNO                                               CLE138
+     C           FCTYB     CHAINLEFCLTLH             92                                       CLE138
+     C           *IN92     IFEQ *OFF                                                          CLE138
+     C                     MOVE FCXCLS    PFCLS                                               CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
       *
       ***  Write out the record.
       *
@@ -1751,6 +1803,9 @@
      C                     MOVE '1'       *IN19                                               201797
      C                     MOVE *BLANKS   OLNOZ                                               201123
      C/COPY WNCPYSRC,LEH00446
+     C           CLE138    IFEQ 'Y'                                                         MD060143
+     C                     MOVE FECLAS    PFCLS                                             MD060143
+     C                     ENDIF                                                            MD060143
      C                     ENDIF
       *
       ***  Format Loan
@@ -1809,6 +1864,7 @@
      C                     MOVE *BLANKS   PCSSN                                               201797
      C                     MOVE *BLANKS   OLNOZ                                               201123
      C/COPY WNCPYSRC,LEH00447
+     C                     MOVE *BLANKS   PFCLS                                             MD060143
       *
      C                     ENDSR
       *                                                                   124047
@@ -1837,6 +1893,20 @@
      C                     MOVELFCCY      PCCY                            124047
      C                     MOVELIUSR      PIUSR                           124047
      C                     MOVELAUSR      PAUSR                           124047
+      *                                                                                     MD060143
+      ** Get Facility Class                                                                 MD060143
+      *                                                                                     MD060143
+     C           CLE138    IFEQ 'Y'                                                         MD060143
+     C                     MOVELCNUM      @FCNUM                                            MD060143
+     C                     MOVELFACT      @FACT                                             MD060143
+     C                     MOVELFCNO      @FCNO                                             MD060143
+     C           FCTYB     CHAINLEFCLTLH             92                                     MD060143
+     C           *IN92     IFEQ *OFF                                                        MD060143
+     C                     MOVE FCXCLS    PFCLS                                             MD060143
+     C                     ELSE                                                             MD060143
+     C                     MOVE *BLANKS   PFCLS                                             MD060143
+     C                     ENDIF                                                            MD060143
+     C                     ENDIF                                                            MD060143
       *                                                                   124047
       ***  Validate Fields                                                124047
      C                     EXSR VALID                                     124047
@@ -1906,6 +1976,7 @@
      C                     MOVE *BLANKS   PDTAP                           124047
      C                     MOVE *BLANKS   PDTEX                           124047
      C/COPY WNCPYSRC,LEH00278
+     C                     MOVE *BLANKS   PFCLS                                               CLE138
      C                     MOVE *BLANKS   PIUSR                           124047
      C                     MOVE *BLANKS   PAUSR                           124047
       *                                                                   124047
@@ -1949,6 +2020,11 @@
      C                     MOVELDESC,16   PAMTP                           127657
      C                     ENDIF                                          127657
      C/COPY WNCPYSRC,LEH00279
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           FATP      IFEQ 'CC'                                                          CLE138
+     C                     MOVELDESC,21   PAMTP                                               CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
       *                                                                   127657
       ***  Validate Fields                                                127657
      C                     EXSR VALID                                     127657
@@ -1976,6 +2052,28 @@
      C                     EXSR ZDATE2                                    127657
      C                     MOVELZADATE    PNEXP                           127657
      C/COPY WNCPYSRC,LEH00280
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+      *                                                                                     MD060143
+      ** Get New Facility Class from LEFCAMQD                                               MD060143
+      *                                                                                     MD060143
+     C                     MOVELCNUM      @FCNUM                                            MD060143
+     C                     MOVELFACT      XFACT                                             MD060143
+     C                     MOVELFCNO      XFCNO                                             MD060143
+     C                     MOVELVLDT      XVLDT                                             MD060143
+     C                     MOVELSQNO      XSQNO                                             MD060143
+     C           FEXTN     CHAINLEFCAQL0             80                                     MD060143
+     C           *IN80     IFEQ *OFF                                                        MD060143
+     C                     MOVE FACLAS    PFCLS                                             MD060143
+     C                     ENDIF                                                            MD060143
+     C**********           MOVE FCXCLS    PFCLS                                      CLE138 MD060143
+     C                     MOVELCNUM      @FCNUM                                              CLE138
+     C                     MOVELFACT      @FACT                                               CLE138
+     C                     MOVELFCNO      @FCNO                                               CLE138
+     C           FCTYB     CHAINLEFCLTLH             80                                       CLE138
+     C           *IN80     IFEQ *OFF                                                          CLE138
+     C                     MOVE FCXCLS    POCLS                                               CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
       *                                                                   127657
       ***  Write out the record.                                          127657
       *                                                                   127657
@@ -1998,6 +2096,8 @@
      C                     MOVE *BLANKS   PAUSR                           127657
      C                     MOVE *BLANKS   PCSSN                                               201797
      C/COPY WNCPYSRC,LEH00281
+     C                     MOVE *BLANKS   PFCLS                                               CLE138
+     C                     MOVE *BLANKS   POCLS                                               CLE138
       *                                                                   127657
      C                     ENDSR                                          127657
       *****************************************************************   127657
@@ -2792,7 +2892,8 @@ MANUAL FCLTY UTLSTN   17                                                  127657
 START ACCRUAL        =18                                                                      201797
 ACCRUED INTEREST ADJ =19                                                                      244279
 ACCRUED MARGIN ADJ.  =20                                                                      244279
-X/COPY WNCPYSRC,LEH00282
+FACILITY CLASS CHG   =21                                                                      CLE138
+     X/COPY WNCPYSRC,LEH00282                                                                 CLE138
 **  SYTP                                                                  124047
 NON-AGENT  =1                                                             124047
 AGENT      =2                                                             124047

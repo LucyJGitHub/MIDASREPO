@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE064             Date 06Dec10               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *           (Recompile)                                         *
       *  AR674226 - Manual transaction reached 999. Increase the size *

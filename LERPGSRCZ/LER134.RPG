@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058204           Date 24Jul21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD058204           Date 24Jul21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031496           Date 06Jan15               *
       *                 CLE164             Date 18Aug14               *
@@ -60,6 +61,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD058204 - Parts Sold loan fee causes LEC06A 10014 failure.  *
       *             Amend to populate LKOLNO with OLNO from CLOANCL   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -614,6 +616,38 @@
       *
       ** Perform initial processing.
       *
+     C           KFEE@     KLIST                                                              CLE138
+     C                     KFLD           LKBRC@  3                                           CLE138
+     C                     KFLD           LKCNU@  6                                           CLE138
+     C                     KFLD           LKFAC@  50                                          CLE138
+     C                     KFLD           LKLOA@  6                                           CLE138
+     C                     KFLD           LKFSE@  20                                          CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM '       ' WRTCD                                               CLE138
+     C                     PARM '*VERIFY' WOPTN                                               CLE138
+     C                     PARM 'CLE138'  WSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           WRTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     SETON                     12                                       CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     SETOF                     12                                       CLE138
+      *                                                                                       CLE138
+      ** Handle Database Error                                                                CLE138
+      *                                                                                       CLE138
+     C           WRTCD     IFNE '*NRF    '                                                    CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
+     C                     MOVEL'900'     DBASE                                               CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C           *IN10     CASEQ'0'       INIT
      C                     END
       *
@@ -663,6 +697,28 @@
      C                     ENDIF                                                            MD058204
      C                     ENDIF                                                            MD058204
       *                                                                                     MD058204
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVE *BLANKS   LKLOA@                                              CLE138
+     C                     MOVE *ZEROS    LKFSE@                                              CLE138
+     C                     MOVE LKBRCD    LKBRC@                                              CLE138
+     C                     MOVE LKCNUM    LKCNU@                                              CLE138
+     C           LKRECI    IFEQ 'L'                                                           CLE138
+     C                     MOVE LKLNNO    LKLOA@                                              CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE LKLNNO    LKFAC@                                              CLE138
+     C                     ENDIF                                                              CLE138
+     C                     MOVE LKFSEQ    LKFSE@                                              CLE138
+      *                                                                                       CLE138
+      ** Chain fee file                                                                       CLE138
+      *                                                                                       CLE138
+     C                     MOVEL*BLANKS   WKCLAS                                              CLE138
+     C           KFEE@     CHAINLEFEED               51                                       CLE138
+     C           *IN51     IFEQ *OFF                                                          CLE138
+     C           FELOAN    IFEQ *BLANKS                                                       CLE138
+     C           4         SUBSTLKAKEY:11 WKCLAS                                              CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
      C                     EXSR REPORT
       *
       ** Write to LKEYFED

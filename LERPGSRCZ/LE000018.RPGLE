@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. AR635013           Date 17Feb22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. AR635013           Date 17Feb22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  AR635013 - Cannot enter Loan type/Subtype. For processing    *
       *             70-72, do not include them in initialisation.     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD020563           Date 21May13               *
       *                 AR1097176          Date 22Mar13               *
       *                 CFC006             Date 06Aug12               *
@@ -117,6 +118,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020563 - CFC006 issues                                     *
@@ -296,6 +298,10 @@
      F*                                                                   S01408
      FLEFCX2L0UF  E           K        DISK                      A                            CER001
       ** ER Facilities details - LUX Extension File                                           CER001
+     FLEFCLTLHIF  E           K        DISK                                                   CLE138
+     F            LEFCLTD0                          KRENAMELEFCLTQ0                           CLE138
+      ** LE Facilities Extension File                                                         CLE138
+      *                                                                                       CLE138
      F*****************************************************************   MOF60
      F*
      F* ID F  C  H  L    FUNCTION OF INDICATORS
@@ -321,7 +327,9 @@
      F*       19      CLE106 installed & Risk Participant                                     CLE106
      F*
      F*       20      FIRST CYCLE INDICATOR
+     F*       21      CLE138 is installed                                                     CLE138
      F*       22      ACTIONED TODAY
+     F*       23      Chain to LEFCLTLG and LEAGFYL4 Files                                    CLE138
      F*       24      INSERTED RECORD
      F*       25      AMENDED RECORD
      F*       26      REVERSED OR CLOSED RECORD
@@ -332,6 +340,7 @@
      F*       29      CLE007 is ON                                        CLE007
      F*       30      OUTPUT INDICATOR
      F*       31      FILE CONTROLS BALANCE
+     F*       32      Chain to LEFCLTQD Extension File                                        CLE138
      F*       33      MULTIBRANCHING INDICATOR = NO                       S01117
      F*       34      NO INPUT TODAY
      F*       35      0 DECIMAL PLACES
@@ -562,6 +571,10 @@
      I              PCRF                            PCRF2                 CLE004
      I              PRTR                            PRTR2                                     CLE106
      I*
+     ILEFCLTQ0                                                                                CLE138
+      ** Extension Details File                                                               CLE138
+     I*                                                                                       CLE138
+     I              FCXCLS                          FHCLS                                     CLE138
      I********NS* 08   1 CT                                               S01117
      IFCLTYZZ NS  08   1 CT                                               S01117
      I***  FACILITIES FILE - TRAILER RECORD
@@ -624,6 +637,7 @@
      I              LCD                             AGLCD                                     CLE041
      I              CHTP                            AGCHTP                                    CLE041
      I              TNLU                            AGTNLU                                    CLE041
+      *
      I/COPY WNCPYSRC,LEH00126
      I*
      I****CLIENT*FILE*-*CUSTOMER*STANDING*DATA*RECORD                     S01194
@@ -1305,6 +1319,43 @@
      C                     MOVE 'N'       CLE025                                              CLE025
      C                     MOVE *OFF      *IN18                                               CLE025
      C                     ENDIF                                                              CLE025
+      *                                                                                       CLE138
+     C           KFCTY5    KLIST                                                              CLE138
+     C                     KFLD           K5CNUM  6                                           CLE138
+     C                     KFLD           K5FACT  3                                           CLE138
+     C                     KFLD           K5FCNO  2                                           CLE138
+      *                                                                                       CLE138
+      **  Check if CLE138 (Class Codes for Facilities) is switched on                         CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM *BLANKS   PRTCD                                               CLE138
+     C                     PARM '*VERIFY' POPTN                                               CLE138
+     C                     PARM 'CLE138'  PSARD                                               CLE138
+     C           SCSARD    PARM SCSARD    DSSDY                                               CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFNE *BLANKS                                                       CLE138
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVEL'LE0300'  DBPGM                                               CLE138
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     Z-ADD58        DBASE                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     MOVE *ON       *INU7                                               CLE138
+     C                     MOVE *ON       *INU8                                               CLE138
+     C                     MOVE *ON       *INLR                                               CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     GOTO ENDT                                                          CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           PRTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138  1                                           CLE138
+     C                     MOVE *ON       *IN21                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE 'N'       CLE138                                              CLE138
+     C                     MOVE *OFF      *IN21                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C/COPY WNCPYSRC,LEH00090
       *                                                                                       CLE025
       ** Check if enhancement CFX001 (FX Margin Trading) is on                                CFX001
@@ -2245,6 +2296,22 @@
      C*    DETAIL 'A' RECORD PROCESSING
      C*
      C           DETA      BEGSR                           *** DETA ***
+      *                                                                                       CLE138
+      ** Get main facility extension details                                                  CLE138
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVE BRCA      KBRCA                                               CLE138
+     C                     MOVE CNUMA     KCNUMA                                              CLE138
+     C                     MOVE FACTA     KFACTA                                              CLE138
+     C                     MOVE FCNOA     KFCNOA                                              CLE138
+      *                                                                                       CLE138
+     C           *IN09     IFEQ *OFF                                                          CLE138
+     C           KFCLT     CHAINLEFCLTLG             23                                       CLE138
+     C                     ELSE                                                               CLE138
+     C           KFCLT     CHAINLEAGFYL4             23                                       CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
      C*
      C                     MOVE *OFF      *IN59                                               CLE106
      C                     MOVE *OFF      *IN60                                               CLE106
@@ -2324,6 +2391,7 @@
      C                     MOVEL*BLANKS   RCAXR  14                       189544
      C                     MOVEL*BLANKS   RCMDI   1                       189544
      C                     MOVEL*BLANKS   RCOMD   7                       189544
+     C                     MOVE *BLANKS   TACL    6                                           CLE138
      C/COPY WNCPYSRC,LEH00127
       *                                                                   CLE029
      C                     MOVEL*BLANKS   RSVCD   9                       CLE029
@@ -2363,6 +2431,24 @@
      C                     MOVELCANM      TANM                            141486
      C                     MOVELCAFT      TAFT                            141486
      C                     MOVELCAFN      TAFN                            141486
+      *                                                                                       CLE138
+      ** Get CA facility extension details                                                    CLE138
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           TANM      ANDNE*BLANKS                                                       CLE138
+     C           TAFT      ANDNE*BLANKS                                                       CLE138
+     C           TAFN      ANDNE*BLANKS                                                       CLE138
+      *                                                                                       CLE138
+     C                     MOVE TANM      K5CNUM                                              CLE138
+     C                     MOVE TAFT      K5FACT                                              CLE138
+     C                     MOVE TAFN      K5FCNO                                              CLE138
+      *                                                                                       CLE138
+     C           KFCTY5    CHAINLEFCLTQ0             32                                       CLE138
+     C           *IN32     IFEQ *OFF                                                          CLE138
+     C                     MOVE FHCLS     TACL                                                CLE138
+     C                     ENDIF                                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C/COPY WNCPYSRC,LEH00128
       *                                                                   189544
       ** Format C/A exchange rate                                         189544
@@ -3510,6 +3596,11 @@
      C                     MOVELNAR3      RNAR3                           CLE004
      C                     MOVELNAR4      RNAR4                           CLE004
      C                     Z-ADDBLDY      RBLDY                           CLE004
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C                     MOVELFCXCLS    RFCLS                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
      C/COPY WNCPYSRC,LEH00091
       *                                                                                     BUG12715
       ** Save current value of indicator 58                                                 BUG12715
@@ -3667,6 +3758,24 @@
      C                     MOVELACSQ      RACSQ                           CLE004
      C                     Z-ADDCAFT      RCAFT                           CLE004
      C                     Z-ADDCAFN      RCAFN                           CLE004
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           RCANM     ANDNE*BLANKS                                                       CLE138
+     C           RCAFT     ANDNE0                                                             CLE138
+     C           RCAFN     ANDNE0                                                             CLE138
+      *                                                                                       CLE138
+     C                     MOVE RCANM     K5CNUM                                              CLE138
+     C                     MOVE RCAFT     K5FACT                                              CLE138
+     C                     MOVE RCAFN     K5FCNO                                              CLE138
+      *                                                                                       CLE138
+     C           KFCTY5    CHAINLEFCLTQ0             32                                       CLE138
+     C           *IN32     IFEQ *OFF                                                          CLE138
+     C                     MOVE FHCLS     RCACL                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE *BLANKS   RCACL                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
      C/COPY WNCPYSRC,LEH00129
       *                                                                   CLE004
      C           PRTR      IFNE 'A'                                       CLE004
@@ -3942,6 +4051,24 @@
      C                     MOVE PMFC      RPMFC                                               CSD027
      C                     Z-ADDPMFT      RPMFT                           CLE004
      C                     Z-ADDPMFN      RPMFN                           CLE004
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           RPMFC     ANDNE*BLANKS                                                       CLE138
+     C           RPMFT     ANDNE0                                                             CLE138
+     C           RPMFN     ANDNE0                                                             CLE138
+      *                                                                                       CLE138
+     C                     MOVE RPMFC     K5CNUM                                              CLE138
+     C                     MOVE RPMFT     K5FACT                                              CLE138
+     C                     MOVE RPMFN     K5FCNO                                              CLE138
+      *                                                                                       CLE138
+     C           KFCTY5    CHAINLEFCLTQ0             32                                       CLE138
+     C           *IN32     IFEQ *OFF                                                          CLE138
+     C                     MOVE FHCLS     RPMCL                                               CLE138
+     C                     ELSE                                                               CLE138
+     C                     MOVE *BLANKS   RPMCL                                               CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C                     ENDIF                                                              CLE138
      C/COPY WNCPYSRC,LEH00125
       *                                                                   CLE004
      C                     MOVE INUM      RINUM                           CLE004
@@ -4530,6 +4657,10 @@
      C                     MOVE *BLANKS   RFBRT                                               CLE106
      C                     MOVE *BLANKS   RPRTR                                               CLE106
      C                     MOVE *BLANKS   RFBCD                                               CLE106
+      *                                                                                       CLE138
+     C                     MOVE *BLANKS   RFCLS                                               CLE138
+     C                     MOVE *BLANKS   RPMCL                                               CLE138
+     C                     MOVE *BLANKS   RCACL                                               CLE138
      C/COPY WNCPYSRC,LEH00094
       *                                                                   CLE004
      C           CER020    IFEQ 'Y'                                                           CER020
@@ -4617,6 +4748,10 @@
      O                         FCNOA     83                               S01117
      O***********                        94 'BRANCH'                      S01117
      O***********              BRCD      99                               S01117
+      *                                                                                       CLE138
+     O                 21                94 'CLASS'                                           CLE138
+     O                 21      FCXCLS    99                                                   CLE138
+      *                                                                                       CLE138
      O/COPY WNCPYSRC,LEH00092
      O                                  122 'ACTION'
      O                         ACTN     125
@@ -4855,6 +4990,10 @@
      O                                   91 'FCTY TYPE/NO'                141486
      O                         TAFT      96                               141486
      O                         TAFN      99                               141486
+      *                                                                                       CLE138
+     O                 21               106 'CLASS'                                           CLE138
+     O                 21      TACL     111                                                   CLE138
+      *                                                                                       CLE138
      O/COPY WNCPYSRC,LEH00130
      O        D  2     15                                                 CLE015
      O       AND      N09                                                                     CLE041
@@ -5073,6 +5212,10 @@
      O                         FACTA     72                                                   CLE039
      O                                   79 'NO.'                                             CLE039
      O                         FCNOA     83                                                   CLE039
+      *                                                                                       CLE138
+     O                 21                94 'CLASS'                                           CLE138
+     O                 21      FCXCLS    99                                                   CLE138
+      *                                                                                       CLE138
      O/COPY WNCPYSRC,LEH00095
      O                                  122 'ACTION'                                          CLE039
      O                         ACTN     125                                                   CLE039
@@ -5128,6 +5271,10 @@
      O                         FACTA     72                                                   CLE041
      O                                   79 'NO.'                                             CLE041
      O                         FCNOA     83                                                   CLE041
+      *                                                                                       CLE138
+     O                 21                94 'CLASS'                                           CLE138
+     O                 21      FCXCLS    99                                                   CLE138
+      *                                                                                       CLE138
      O/COPY WNCPYSRC,LEH00093
      O                                  122 'ACTION'                                          CLE041
      O                         ACTN     125                                                   CLE041
@@ -5267,6 +5414,10 @@
      O                                   91 'FCTY TYPE/NO'                                    CLE041
      O                         TAFT      96                                                   CLE041
      O                         TAFN      99                                                   CLE041
+      *                                                                                       CLE138
+     O                 21               106 'CLASS'                                           CLE138
+     O                 21      TACL     111                                                   CLE138
+      *                                                                                       CLE138
      O/COPY WNCPYSRC,LEH00131
      O        D  2     15 09                                                                  CLE041
      O                                   28 'ACCOUNT SEQUENCE NUMBER'                         CLE041
@@ -5401,6 +5552,10 @@
      O                         FACTA     72                                                   CLE041
      O                                   79 'NO.'                                             CLE041
      O                         FCNOA     83                                                   CLE041
+      *                                                                                       CLE138
+     O                 21                94 'CLASS'                                           CLE138
+     O                 21      FCXCLS    99                                                   CLE138
+      *                                                                                       CLE138
      O/COPY WNCPYSRC,LEH00096
      O                                  122 'ACTION'                                          CLE041
      O                         ACTN     125                                                   CLE041

@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR402546           Date 31Jul12              */
+/*       Last Amend No. MD060096           Date 13Jun22              */
+/*       Prev Amend No. CLE138             Date 02Nov21              */
+/*                      MD046248           Date 27Oct17              */
+/*                      AR402546           Date 31Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -28,6 +30,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060096 - XLEFCLTQD in *LIBL not found or not created      */
+/*                - add CRTFILE(*YES) in XLEFCLTQD                   */
+/*       CLE138 - Class Codes for Facilities                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR402546 - LEFCAMPD should be reorganize every COB to avoid */
 /*                  COB time processing issue.                       */
@@ -41,7 +46,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
- 
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -50,7 +55,8 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                 /*MD060096*/
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                  /*MD060096*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CLE023*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CLE023*/
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CLE023*/
@@ -58,16 +64,20 @@
              DCL        VAR(&CLE023) TYPE(*CHAR) LEN(1)                                   /*CLE023*/
                                                                                           /*CLE023*/
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              RTVJOBA    TYPE(&JOBTYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
- 
+
              SNDPGMMSG  MSG('Facility Amendments Processing') +
                           TOMSGQ(MRUNQ)
+ /** Setup system prefix variable from SDSTAT data area */                              /*MD060096*/
+                                                                                        /*MD060096*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                             /*MD060096*/
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)                       /*MD060096*/
                                                                                           /*CLE023*/
 /** Access SAR file to determine if switchable feature CLE023     */                      /*CLE023*/
 /** is switched ON                                                */                      /*CLE023*/
@@ -81,13 +91,13 @@
              IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE023*/
                 CHGVAR     VAR(&CLE023) VALUE('Y')
              ENDDO                                                                        /*CLE023*/
- 
+
 /* Check the current status of this component */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* If this is not a restart, copy master files to backup files */
- 
+
              IF         COND(&STAT *EQ 'N') THEN(DO)
                 CPYF       FROMFILE(LEFCAMPD) TOFILE(XLEFCAMPD) +
                              MBROPT(*REPLACE)
@@ -125,7 +135,11 @@
                              MBROPT(*REPLACE)                                             /*CLE106*/
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                              FILE(XLEFNPRPD))                                             /*CLE106*/
- 
+/**********     CPYF       FROMFILE(LEFCLTQD) TOFILE(XLEFCLTQD) MBROPT(*REPLACE) /*CLE138 MD060096*/
+                CPYF       FROMFILE(LEFCLTQD) TOFILE(&DPLIB/XLEFCLTQD) +
+                           MBROPT(*REPLACE) CRTFILE(*YES)                               /*MD060096*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                             FILE(XLEFCLTQD))                                             /*CLE138*/
                 IF         COND(&CLE023 *EQ 'Y') THEN(DO)                                 /*CLE023*/
                    CPYF       FROMFILE(FACHISH) TOFILE(XFACHISH) +
                              MBROPT(*REPLACE)                                             /*CLE023*/
@@ -136,11 +150,11 @@
                 CHGVAR     VAR(&STAT) VALUE('Y')
                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
              ENDDO
- 
+
 /* If this is a restart, restore master files */
- 
+
              ELSE       CMD(DO)
- 
+
                 CPYF       FROMFILE(XLEFCAMPD) TOFILE(LEFCAMPD) +
                              MBROPT(*REPLACE)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
@@ -177,6 +191,9 @@
                              MBROPT(*REPLACE)                                             /*CLE106*/
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                              FILE(LEFNPRPD))                                              /*CLE106*/
+                CPYF       FROMFILE(XLEFCLTQD) TOFILE(LEFCLTQD) MBROPT(*REPLACE)          /*CLE138*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                             FILE(LEFCLTQD))                                              /*CLE138*/
                                                                                           /*CLE023*/
                 IF         COND(&CLE023 *EQ 'Y') THEN(DO)                                 /*CLE023*/
                    CPYF       FROMFILE(XFACHISH) TOFILE(FACHISH) +
@@ -185,14 +202,17 @@
                                 FILE(FACHISH))                                            /*CLE023*/
                 ENDDO                                                                     /*CLE023*/
              ENDDO
- 
+
 /* Call Facility Amendments Processing */
- 
+
              CALL       PGM(LE0496)
- 
+
 /* No database error */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                DLTF       FILE(&DPLIB/XLEFCLTQD)                                         /*CLE138*/
+                MONMSG     MSGID(CPF2105)                                                 /*CLE138*/
+
                 CHGVAR     VAR(&STAT) VALUE('N')
                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                 CLRPFM     FILE(FCUPDFM)                              /*154584*/
@@ -201,31 +221,31 @@
                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                            CMDLBL(ABNOR))                                               /*AR402546*/
              ENDDO
- 
+
 /* Database error processing */
- 
+
              ELSE       CMD(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              IF         COND(&JOBTYPE = '0') THEN(DO)
                 SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                              LEC0609D ended abnormally - see job log') +
                              TOMSGQ(MOPERQ MRUNQ)
                 MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
- 
+
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

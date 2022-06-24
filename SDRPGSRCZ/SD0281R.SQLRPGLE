@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059608           Date 18Feb22               *
-      *  Prev Amend No. AR635013           Date 17Feb22               *
+      *  Last Amend No. 250113             Date 24Jun22               *
+      *  Prev Amend No. MD059608           Date 18Feb22               *
+      *                 AR635013           Date 17Feb22               *
       *                 260748             Date 17Feb22               *
       *                 MD056555           Date 31Aug20               *
       *                 MD057859           Date 07Apr21               *
@@ -103,6 +104,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250113 - Condition Internal Loan Participation Class (CLE042)*
+      *           on Syndications being switched on as well           *
+      *           Recompile because of changes to SD0281R#            *
       *  MD059608 - Set numeric field AYEACC to zero if CSD042 is     *
       *             off to prevent decimal data error.                *
       *  AR635013 - Cannot enter Loan type/subtype for processing 70, *

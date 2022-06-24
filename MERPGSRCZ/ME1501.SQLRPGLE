@@ -1,4 +1,5 @@
-     H DEBUG
+     H***DEBUG**                                                                            MD060125
+     H DEBUG FIXNBR(*ZONED)                                                     MD060125
      F*****************************************************************
 /**** *  RPGBASE                                                      *                     MD056560
 /*STD *  RPGSQLBND                                                    *                     MD056560
@@ -19,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060125           Date 21Jun22               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR936976           Date 13Apr12               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -73,6 +75,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060125 - STP job ME_FT_IMM on MSGW with decimal data error *
+      *             in ME1501.                                        *
+      *           - Include FIXNBR(*ZONED), avoid decimal data error. *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

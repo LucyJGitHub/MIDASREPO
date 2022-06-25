@@ -10,14 +10,16 @@
       *                                                               *
       *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060172           Date 25Jun22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR837609A          Date 15Nov11               *
       *                 AR837609           Date 09Nov11               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060172 - Call AODEALR1 to get BNDCSP.                      *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR837609A - Update current fields during COB only.           *
@@ -73,6 +75,10 @@
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
+     D DSSDY         E DS                  EXTNAME(DSSDY)                                   MD060172
+      ** First DS for Access programs - long data structure                                 MD060172
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD060172
+      ** External DS for Deal details                                                       MD060172
 
      D LDA           E DS           256    EXTNAME(LDA)
      D  W24          E                     EXTFLD(SPARE)
@@ -220,7 +226,23 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+                                                                                            MD060172
+      ** Access Dealing details                                                             MD060172
+                                                                                            MD060172
+     C                   CALL      'AODEALR1'                                               MD060172
+     C                   PARM      '*DBERR '     ULRTCD                                     MD060172
+     C                   PARM      '*FIRST '     ULOPTN                                     MD060172
+     C     SDDEAL        PARM      SDDEAL        DSSDY                                      MD060172
+                                                                                            MD060172
+     C                   IF        ULRTCD <> *BLANKS                                        MD060172
+     C     *LOCK         IN        LDA                                                      MD060172
+     C                   EVAL      DBFILE = 'SDDEALPD'                                      MD060172
+     C                   EVAL      DBASE = 002                                              MD060172
+     C                   EVAL      DBKEY = ULOPTN                                           MD060172
+     C                   OUT       LDA                                                      MD060172
+     C                   EXSR      *PSSR                                                    MD060172
+     C                   ENDIF                                                              MD060172
+                                                                                            MD060172
       ** Obtain Midas Run Date
 
      C                   MOVEL     BJMRDT        U#MRDT

@@ -23,7 +23,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD060020 - Fusion Midas ARR Adapter: Expired Token           *
-      *             prevents ARR requests. Add checking of exception  *
+      *             prevents ARR requests. Add checking to exception  *
       *             to seton switch to fail component.                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *

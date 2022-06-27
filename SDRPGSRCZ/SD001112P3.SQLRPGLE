@@ -80,6 +80,7 @@
      D  SJMODI                        2A
      D  SJTREF                        6A
      D  SJEXMS                      150A
+     D  SJSTAT                        1A                                                    MD060020
 
       ** Work variables
      D @RUN            S              1A
@@ -131,7 +132,8 @@
       ** ARR Calculator Batch Job
      C/EXEC SQL
      C+ declare ERRCursor insensitive scroll cursor for
-     C+ select SJMODI, SJTREF, SJEXMS
+     C***+ select SJMODI, SJTREF, SJEXMS                                                    MD060020
+     C+ select SJMODI, SJTREF, SJEXMS, SJSTAT                                               MD060020
      C+ from SDARRLOGTD
      C+ where (SJMODI = 'RU' OR SJMODI = 'RT')
      C+   and SJSTAT = 'F'

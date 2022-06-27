@@ -7,14 +7,17 @@
       *                                                               *
       *  Midas - CLE138 Class Codes for Facilities                    *
       *                                                               *
-      *  UTFCLTYFN  - Midas UT Populate FCLS in FCLTYFN               *
+      *  UTFCLTYFN  - Midas UT Populate FCXCLS in LEFCLTQD            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2021            *
+      *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CLE138   *Create   Date 02Nov21               *
+      *  Last Amend No. MD060173           Date 26Jun22               *
+      *  Prev Amend No. CLE138   *Create   Date 02Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060173 - Compilation errors. Correct key fields and value  *
+      *             passed.                                           *
       *  CLE138 - Class Codes for Facilities                          *
       *                                                               *
       *****************************************************************
@@ -28,11 +31,15 @@
      C                   READ      UTFCLTY                                80
      C     *IN80         DOWEQ     *OFF
 
+     C                   MOVEL     UTCNUM        UXCNUM                                     MD060173
+     C                   MOVE      UTFACT        UXFACT                                     MD060173
+     C                   MOVE      UTFCNO        UXFCNO                                     MD060173
      C     KFCLTY        CHAIN     LEFCLTLH                           81
      C     *IN81         IFEQ      *OFF
      C     FCXCLS        ANDEQ     *BLANKS
      C                   MOVE      UTFCLS        FCXCLS
-     C                   UPDATE    LEFCLTLH
+     C**********         UPDATE    LEFCLTLH                                                 MD060173
+     C                   UPDATE    LEFCLTD0                                                 MD060173
      C                   ENDIF
 
      C                   READ      UTFCLTY                                80
@@ -50,9 +57,12 @@
      C                   MOVEL     PSJobNo       PSJobNoA          6
 
      C     KFCLTY        KLIST
-     C                   KFLD                    UTCNUM
-     C                   KFLD                    UTFACT
-     C                   KFLD                    UTFCNO
+     C**********         KFLD                    UTCNUM                                     MD060173
+     C**********         KFLD                    UTFACT                                     MD060173
+     C**********         KFLD                    UTFCNO                                     MD060173
+     C                   KFLD                    UXCNUM            6                        MD060173
+     C                   KFLD                    UXFACT            3                        MD060173
+     C                   KFLD                    UXFCNO            2                        MD060173
 
      C                   ENDSR
       ********************************************************************

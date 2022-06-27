@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 263173             Date 20Jun22               *
-      *  Prev Amend No. AR637449           Date 16Jun22               *
+      *  Last Amend No. 255899A            Date 21Jun22               *
+      *  Prev Amend No. 263173             Date 20Jun22               *
+      *                 AR637449           Date 16Jun22               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
@@ -108,6 +109,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255899A - Remove the CSW050 condition when checking for      *
+      *            confo request                                      *
       *  263173 - No Cancellation Confirmation: apply 226737          *
       *  AR637449 - Total Interest is not updated when Maturity Date  *
       *             is changed. Always update the total interest.     *
@@ -2332,7 +2335,7 @@
      C     FSLQPR        ORNE      IKLQPR                                                     CAS005
      C     FSLQPS        ANDNE     IKLQPS                                                     CAS005
      C     CAS005        ANDEQ     'Y'                                                        CAS005
-     C     CSW050        OREQ      'Y'                                                        246801
+     C*****CSW050        OREQ      'Y'                                                246801 255899A
      C     IMET          ORNE      IKIMET                                                     247835
      C     INSA          ORNE      IKINSA                                                     247835
      C     INOS          ORNE      IKINOS                                                     248932

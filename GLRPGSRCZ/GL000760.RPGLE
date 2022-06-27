@@ -15,11 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD045190           Date 07Apr17               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. MD049340           Date 27Jun22               *
+      *  Prev Amend No. MD045190           Date 07Apr17               *
+      *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049340 - CRS report with incorrect accountbalances for     *
+      *             closed accounts                                   *
       *  MD045190 - Other Closed FATCA Transaction records besides    *
       *             Closed Retail Accounts are deleted after FATCA    *
       *             EOY COB (Recompile)                               *
@@ -259,6 +262,24 @@
       ** Record found.
 
      C                   DOW       NOT %EOF(GLCSBAL0)
+                                                                                            MD049340
+     C                   IF        CBTTYP <> 'FDMAT'                                        MD049340
+     C                             AND CBTTYP <> 'FRMAT'                                    MD049340
+     C                             AND CBTTYP <> 'LEMAT'                                    MD049340
+     C                             AND CBTTYP <> 'MMMAT'                                    MD049340
+     C                             AND CBTTYP <> 'RFMAT'                                    MD049340
+     C                             AND CBTTYP <> 'RPMAT'                                    MD049340
+     C                             AND CBTTYP <> 'RSMAT'                                    MD049340
+     C                             AND CBTTYP <> 'RXMAT'                                    MD049340
+     C                             AND CBTTYP <> 'FDMA0'                                    MD049340
+     C                             AND CBTTYP <> 'FRMA0'                                    MD049340
+     C                             AND CBTTYP <> 'LEMA0'                                    MD049340
+     C                             AND CBTTYP <> 'MMMA0'                                    MD049340
+     C                             AND CBTTYP <> 'RFMA0'                                    MD049340
+     C                             AND CBTTYP <> 'RPMA0'                                    MD049340
+     C                             AND CBTTYP <> 'RSMA0'                                    MD049340
+     C                             AND CBTTYP <> 'RXMA0'                                    MD049340
+     C                             AND CBTTYP <> 'SEMVD'                                    MD049340
 
      C                   IF        CBCUST <> ' '
      C                   IF        PCUST <> CBCUST
@@ -309,6 +330,7 @@
      C                   ENDIF
 
      C                   WRITE     GLCRMXD0
+     C                   ENDIF                                                              MD049340
      C                   READ      GLCSBAL0
 
      C                   ENDDO

@@ -156,11 +156,6 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
-     C                   IF        ARRCalcExpn = 'Y'                                        MD060020
-     C                             AND SJEXMS <> *blanks                                    MD060020
-     C                   EVAL      *INU1 = *ON                                              MD060020
-     C                   ENDIF                                                              MD060020
-                                                                                            MD060020
      C                   EXSR      SRReportP1
 
      C/EXEC SQL
@@ -168,6 +163,11 @@
      C/END-EXEC
 
      C                   ENDDO
+                                                                                            MD060020
+     C                   IF        ARRCalcExpn = 'Y'                                        MD060020
+     C                             AND SJSTAT = 'F'                                         MD060020
+     C                   EVAL      *INU1 = *ON                                              MD060020
+     C                   ENDIF                                                              MD060020
 
      C/EXEC SQL
      C+ close ERRCursor

@@ -9,11 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD055282           Date 15Feb20              */
-/*       Prev Amend No. MD054905 *CREATE   Date 04Dec19              */
+/*       Last Amend No. MD060078           Date 23Jun22              */
+/*       Prev Amend No. MD055282           Date 15Feb20              */
+/*                      MD054905 *CREATE   Date 04Dec19              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060078 - Program SMUC01006 ended abnormally when taking   */
+/*                  menu option ZDBU from the Bridge.                */
 /*       MD055282 - Error encountered during ZDBU                    */
 /*       MD054905 - CRS issue: Message Header  MessageRefID         */
 /*                                                                   */
@@ -37,6 +40,10 @@
              DCL        VAR(&ZLCRMDPD) TYPE(*CHAR) LEN(10) VALUE('ZLCRMDPD  ')
              DCL        VAR(&ZLCRMIPD) TYPE(*CHAR) LEN(10) VALUE('ZLCRMIPD  ')
              DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0) VALUE(0)
+             DCL        VAR(&RTND) TYPE(*CHAR) LEN(7)                                   /*MD060078*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                   /*MD060078*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                   /*MD060078*/
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)                                /*MD060078*/
 
              COPYRIGHT  TEXT('(c) Finastra International Limited 2019')
 
@@ -44,6 +51,20 @@
 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ERROR))
 
+                                                                                        /*MD060078*/
+/** Check if switchable feature CGL177 is ON **/                                        /*MD060078*/
+                                                                                        /*MD060078*/
+             CHGVAR     VAR(&RTND) VALUE(*BLANKS)                                       /*MD060078*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD060078*/
+             CHGVAR     VAR(&SARD) VALUE('CGL177')                                      /*MD060078*/
+             CALL       PGM(AOSARDR0) PARM(&RTND &OPTN &SARD &DSFDY)                    /*MD060078*/
+                                                                                        /*MD060078*/
+             IF         COND(&RTND *NE '       ') THEN(DO)                              /*MD060078*/
+             SNDPGMMSG  MSG('Utility SMUC01006 is not allowed to run +
+                        when CGL177 is OFF.') TOMSGQ(MOPERQ)                            /*MD060078*/
+             GOTO       CMDLBL(END)                                                     /*MD060078*/
+             ENDDO                                                                      /*MD060078*/
+                                                                                        /*MD060078*/
              RTVJOBA    JOB(&JOBID)
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              RTVDTAARA  DTAARA(RUNDAT (6 2)) RTNVAR(&PYRNO)

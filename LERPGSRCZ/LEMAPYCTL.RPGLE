@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 255282             Date 24Jun22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -57,6 +58,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255282 - Apply MP1.2T core fix 243329.                       *
+      *  243329 - If no defined settlement details entered, default   *
+      *           payment settlement details of the loan if PTYP is   *
+      *           66, 67, 69, or 72. Pattern fix 242348.              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -499,6 +504,10 @@
       ** Parameter for LERPSCRTV                                                              244636
      D***PRcvParm        S             92                                             244636 CSF011A
      D PRcvParm        S            335                                                      CSF011A
+      *                                                                                       243329
+      ** Parameter for LEMAPYRTV                                                              243329
+      *                                                                                       243329
+     D PPayParm        S             92                                                       243329
                                                                                               CAP086
      D CAP086          S              1A                                                      CAP086
                                                                                               CAP086
@@ -656,6 +665,17 @@
      C                             PRcvParm <> *blank                                         244636
      C                   MOVEL     PRcvParm      S_Rec                                        244636
      C                   ENDIF                                                                244636
+      *                                                                                       243329
+      ** Default settlement details from related parts sold                                   243329
+      *                                                                                       243329
+     C                   IF        WRKLNPTYP = 66 or WRKLNPTYP = 67                           243329
+     C                             or WRKLNPTYP = 69 or WRKLNPTYP = 72                        243329
+     C                   IF        S_Pay = *blank AND                                         243329
+     C                             PPayParm <> *blank                                         243329
+     C                   MOVEL     PPayParm      S_Pay                                        243329
+     C                   ENDIF                                                                243329
+     C                   ENDIF                                                                243329
+      *                                                                                       243329
      C                   EXSR      ValidateSt
       *
      C                   WHEN         DDACTN = 'A'
@@ -975,6 +995,7 @@
      C                   PARM                    Idx
      C                   PARM                    WIdx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                     243329
       *
       ***  Save the settlement details for update if not insert
       *

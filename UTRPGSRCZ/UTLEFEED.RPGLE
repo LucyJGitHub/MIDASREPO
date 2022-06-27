@@ -11,10 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CLE138   *CREATE   Date 02Nov21               *
+      *  Last Amend No. MD060173           Date 26Jun22               *
+      *  Prev Amend No. CLE138   *CREATE   Date 02Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060173 - Compilation errors. Correct key fields and value  *
+      *             passed.                                           *
       *  CLE138 - Class Codes of Facilities                           *
       *                                                               *
       *****************************************************************
@@ -26,9 +29,12 @@
      D/COPY ZACPYSRC,PSDS
 
       * Work variables
-     D KCNUM           S                   LIKE(CNUM)
-     D KFACT           S                   LIKE(FACT)
-     D KFCNO           S                   LIKE(FCNO)
+     D*KCNUM****       S                   LIKE(CNUM)                                       MD060173
+     D*KFACT****       S                   LIKE(FACT)                                       MD060173
+     D*KFCNO****       S                   LIKE(FCNO)                                       MD060173
+     D KCNUM           S              6                                                     MD060173
+     D KFACT           S              3                                                     MD060173
+     D KFCNO           S              2                                                     MD060173
      D                 DS
      D WFACL                   1      5  0
      D WFACT                   1      3  0
@@ -40,8 +46,10 @@
      C                   IF        FEFACL > 0
      C                   EVAL      KCNUM = FECNUM
      C                   EVAL      WFACL = FEFACL
-     C                   EVAL      KFACT = WFACT
-     C                   EVAL      KFCNO = WFCNO
+     C**********         EVAL      KFACT = WFACT                                            MD060173
+     C**********         EVAL      KFCNO = WFCNO                                            MD060173
+     C                   MOVE      WFACT         KFACT                                      MD060173
+     C                   MOVE      WFCNO         KFCNO                                      MD060173
      C     KFCTYB        CHAIN     LEFCLTLH                           81
      C                   IF        *IN81 = *OFF
      C                   EVAL      FECLAS = FCXCLS

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR548538           Date 10Mar20               *
-      *  Prev Amend No. 215711             Date 10Mar20               *     
+      *  Last Amend No. MD059841           Date 21Jun22               *
+      *  Prev Amend No. AR548538           Date 10Mar20               *
+      *                 215711             Date 10Mar20               *
       *                 224411             Date 05Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -54,12 +55,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059841 - Postings over Primary Funding Gap account are     *
+      *             consolidated.  Introduce a new system value       *
+      *             ConPosFundGapAccnt.                               *
       *  AR548538 - Wrong narrative for IN/EX postings. Need to       *
       *             include FROM ACCNT. Details  Apply fix 232846.    *
       *           - Applied for MD-55379.                             *
       *  215711 - The system accrued the B/CCY transferred from F/CCY *
       *           IN/EX. PRP05 should not be executed for this entry. *
-      *         - Applied for MD-55379.  
+      *         - Applied for MD-55379.
       *  224411 - Gap accrual detail was incorrectly updated for the  *
       *           batch item posted to an IN/EX account. Only Gap     *
       *           requirements should create the gap balance and      *
@@ -187,6 +191,7 @@
       *                                                                                       CGL029
       **  Zeros Constant                                                                      CGL029
      I              '0000000000'          C         WZEROS                                    CGL029
+     I              'ConPosFundGapAccnt'  C         PSVAL1                                  MD059841
       /EJECT
       *================================================================
       *  P R O G R A M     S T A R T                                  *
@@ -312,6 +317,41 @@
      C                     ENDIF
      C**********           MOVE A6SPAE    BCEQIV  4                                           CGL029
      C                     MOVE A6SPAE    BCEQIV 10                                           CGL029
+      *                                                                                     MD059841
+      ** Get sysval ConPosFundGapAccnt.                                                     MD059841
+      *                                                                                     MD059841
+     C                     CALL 'AOSVALR0'                                                  MD059841
+     C                     PARM *BLANKS   RTNCDE  7                                         MD059841
+     C                     PARM PSVAL1    SVALK1 20                                         MD059841
+     C                     PARM *BLANKS   SVAL1 200                                         MD059841
+     C                     PARM           SVALK2 20                                         MD059841
+     C                     PARM *BLANKS   SVAL2 200                                         MD059841
+     C                     PARM           SVALK3 20                                         MD059841
+     C                     PARM *BLANKS   SVAL3 200                                         MD059841
+     C                     PARM           SVALK4 20                                         MD059841
+     C                     PARM *BLANKS   SVAL4 200                                         MD059841
+     C                     PARM           SVALK5 20                                         MD059841
+     C                     PARM *BLANKS   SVAL5 200                                         MD059841
+     C                     PARM           SVALK6 20                                         MD059841
+     C                     PARM *BLANKS   SVAL6 200                                         MD059841
+     C                     PARM           SVALK7 20                                         MD059841
+     C                     PARM *BLANKS   SVAL7 200                                         MD059841
+     C                     PARM           SVALK8 20                                         MD059841
+     C                     PARM *BLANKS   SVAL8 200                                         MD059841
+     C                     PARM           SVALK9 20                                         MD059841
+     C                     PARM *BLANKS   SVAL9 200                                         MD059841
+     C                     PARM           SVALK0 20                                         MD059841
+     C                     PARM *BLANKS   SVAL10200                                         MD059841
+      *                                                                                     MD059841
+     C           RTNCDE    IFNE *BLANKS                                                     MD059841
+     C                     MOVEL'SDSVLCTD'WFILE                                             MD059841
+     C                     Z-ADD9         WBASE                                             MD059841
+     C                     MOVELPSVAL1    WKEY                                              MD059841
+     C                     EXSR DBERR                                                       MD059841
+     C                     ELSE                                                             MD059841
+     C                     MOVELSVAL1     CONPFA  1                                         MD059841
+     C                     ENDIF                                                            MD059841
+      *                                                                                     MD059841
      C/COPY WNCPYSRC,MC0410C001
       *
       **  End First Cycle
@@ -897,6 +937,14 @@
      C                     Z-ADDXPDTM     PDTM             Posting Date/Time
      C                     MOVE XATYP     ATYP             Account Type
      C                     MOVE *BLANK    PNAR
+      *                                                                                     MD059841
+      ** If ConPosFundGapAccnt is Y, then consolidate postings.                             MD059841
+      ** If N, then produce detail postings as per AR548538.                                MD059841
+      *                                                                                     MD059841
+     C           CONPFA    IFEQ 'Y'                                                         MD059841
+     C           'TRANSFER'CAT  XCCY:1    PNAR                                              MD059841
+     C           PNAR      CAT  NTRF:1    PNAR                                              MD059841
+     C                     ELSE                                                             MD059841
      C                     MOVE *BLANK    WNAR1  21                                         AR548538
      C********** 'TRANSFER'CAT  XCCY:1    PNAR                                              AR548538
      C********** PNAR      CAT  NTRF:1    PNAR             Posting Narrative                AR548538
@@ -911,6 +959,7 @@
       *                                                                                     AR548538
      C           PNAR      CAT  WNAR1:1   PNAR                                              AR548538
       *                                                                                     AR548538
+     C                     ENDIF                                                            MD059841
      C           XPNAR     IFNE *BLANK
      C                     MOVE *BLANK    PNAR
      C           'GAP TFR' CAT  XCCY:1    PNAR
@@ -947,6 +996,14 @@
      C                     MOVE *BLANK    ACSC             Spot Trade A/c Sect.
      C                     MOVE *BLANK    ATYP             Spot Trade A/c Type
      C                     MOVE *BLANK    PNAR
+      *                                                                                     MD059841
+      ** If ConPosFundGapAccnt is Y, then consolidate postings.                             MD059841
+      ** If N, then produce detail postings as per AR548538.                                MD059841
+      *                                                                                     MD059841
+     C           CONPFA    IFEQ 'Y'                                                         MD059841
+     C           'TRANSFER'CAT  XCCY:1    PNAR                                              MD059841
+     C           PNAR      CAT  NTRF:1    PNAR                                              MD059841
+     C                     ELSE                                                             MD059841
      C                     MOVE *BLANK    WNAR1  21                                         AR548538
      C********** 'TRANSFER'CAT  XCCY:1    PNAR                                              AR548538
      C********** PNAR      CAT  NTRF:1    PNAR             Posting Narrative                AR548538
@@ -961,6 +1018,7 @@
       *                                                                                     AR548538
      C           PNAR      CAT  WNAR1:1   PNAR                                              AR548538
       *                                                                                     AR548538
+     C                     ENDIF                                                            MD059841
      C           XPNAR     IFNE *BLANK
      C                     MOVE *BLANK    PNAR
      C           'GAP TFR' CAT  XCCY:1    PNAR
@@ -1051,6 +1109,14 @@
      C                     Z-ADDXPDTM     PDTM             Posting Date/Time
      C                     MOVE *BLANK    ATYP             Account Type
      C                     MOVE *BLANK    PNAR
+      *                                                                                     MD059841
+      ** If ConPosFundGapAccnt is Y, then consolidate postings.                             MD059841
+      ** If N, then produce detail postings as per AR548538.                                MD059841
+      *                                                                                     MD059841
+     C           CONPFA    IFEQ 'Y'                                                         MD059841
+     C           'TRANSFER'CAT  XCCY:1    PNAR                                              MD059841
+     C           PNAR      CAT  NTRF:1    PNAR                                              MD059841
+     C                     ELSE                                                             MD059841
      C                     MOVE *BLANK    WNAR1  21                                         AR548538
      C********** 'TRANSFER'CAT  XCCY:1    PNAR                                              AR548538
      C********** PNAR      CAT  NTRF:1    PNAR             Posting Narrative                AR548538
@@ -1065,6 +1131,7 @@
       *                                                                                     AR548538
      C           PNAR      CAT  WNAR1:1   PNAR                                              AR548538
       *                                                                                     AR548538
+     C                     ENDIF                                                            MD059841
      C           XPNAR     IFNE *BLANK
      C                     MOVE *BLANK    PNAR
      C           'GAP TFR' CAT  XCCY:1    PNAR

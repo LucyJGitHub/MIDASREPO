@@ -24,7 +24,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD060020 - Fusion Midas ARR Adapter: Expired Token           *
-      *             prevents ARR requests. Add checking of exception  *
+      *             prevents ARR requests. Add checking to exception  *
       *             to seton switch to fail component.                *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *                                                               *
@@ -80,6 +80,7 @@
      D  SJMODI                        2A
      D  SJTREF                        6A
      D  SJEXMS                      150A
+     D  SJSTAT                        1A                                                    MD060020
 
       ** Work variables
      D @RUN            S              1A
@@ -131,7 +132,8 @@
       ** ARR Calculator Batch Job
      C/EXEC SQL
      C+ declare ERRCursor insensitive scroll cursor for
-     C+ select SJMODI, SJTREF, SJEXMS
+     C***+ select SJMODI, SJTREF, SJEXMS                                                    MD060020
+     C+ select SJMODI, SJTREF, SJEXMS, SJSTAT                                               MD060020
      C+ from SDARRLOGTD
      C+ where SJMODI = 'DL'
      C+   and SJSTAT = 'F'
@@ -157,11 +159,6 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
-     C                   IF        ARRCalcExpn = 'Y'                                        MD060020
-     C                             AND SJEXMS <> *blanks                                    MD060020
-     C                   EVAL      *INU1 = *ON                                              MD060020
-     C                   ENDIF                                                              MD060020
-                                                                                            MD060020
      C                   EXSR      SRReportP1
 
      C/EXEC SQL
@@ -169,6 +166,11 @@
      C/END-EXEC
 
      C                   ENDDO
+                                                                                            MD060020
+     C                   IF        ARRCalcExpn = 'Y'                                        MD060020
+     C                             AND SJSTAT = 'F'                                         MD060020
+     C                   EVAL      *INU1 = *ON                                              MD060020
+     C                   ENDIF                                                              MD060020
 
      C/EXEC SQL
      C+ close ERRCursor

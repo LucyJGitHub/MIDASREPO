@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 255282             Date 24Jun22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
@@ -55,6 +56,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255282 - Apply MP1.2T core fix 243329.                       *
+      *  243329 - If no defined settlement details entered, default   *
+      *           payment settlement details of the loan if PTYP is   *
+      *           66, 67, 69, or 72. Pattern fix 242348.              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -262,9 +267,15 @@
      D WrkReactFacil   S              1
      D CntrMR          S              1  0
                                                                                               244636
-      ** Parameter for LERPSCRTV                                                              244636
+      ***Parameter*for*LERPSCRTV***************************************                244636 243329
+      ** Parameter for LEMAPYRTV                                                              243329
+      *                                                                                       243329
      D***PRcvParm        S             92                                             244636 CSF011A
      D PRcvParm        S            335                                                      CSF011A
+      *                                                                                       243329
+      ** Parameter for LEMAPYRTV                                                              243329
+      *                                                                                       243329
+     D PPayParm        S             92                                                       243329
 
       ** LEMAPYCVT parameters
      D WrkProcTypLoan  S              2  0
@@ -708,6 +719,7 @@
      C**********         PARM      *BLANKS       UpSRFlg           1                 CLE134 MD020445
      C                   PARM      *BLANKS       UpSRFlg           1                        MD021202
      C                   PARM      *BLANKS       DDAuto            1                          CLE164
+     C                   PARM                    PPayParm                                     243329
 
 
      C                   ENDSR

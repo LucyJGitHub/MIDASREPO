@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 255282             Date 24Jun22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -48,6 +49,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255282 - Apply MP1.2T core fix 243329.                       *
+      *  243329 - If no defined settlement details entered, default   *
+      *           payment settlement details of the loan if PTYP is   *
+      *           66, 67, 69, or 72. Pattern fix 242348.              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -401,10 +406,13 @@
      D WSkpCom         S              1A                                                      CSC022
      D WPos            S              2S 0                                                    CSC022
                                                                                               CSC022
-      ** Parameter for LERPSCRTV                                                              244636
+      ***Parameter*for*LERPSCRTV***************************************               2446366 243329
+      ** Parameter for LEMAPYRTV                                                              243329
      D***PRcvParm        S             92                                             244636 CSF011A
      D PRcvParm        S            335                                                      CSF011A
                                                                                               244636
+     D PPayParm        S             92                                                       243329
+                                                                                              243329
      D CAP086          S              1A                                                      CAP086
                                                                                               CAP086
      D #TRCCY          S              3A                                                     CSF011A
@@ -1228,6 +1236,7 @@
      C                   PARM      *ZERO         Idx
      C                   PARM      *ZERO         Widx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                     243329
       *
       ***  Save the settlement details for update (OLDSettlDS)
       *

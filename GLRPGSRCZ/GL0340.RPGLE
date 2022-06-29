@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD026356           Date 06Nov19               *
-      *  Prev Amend No. MD053725           Date 31Jul19               *
+      *  Last Amend No. MD059860           Date 14Jun22               *
+      *  Prev Amend No. MD026356           Date 06Nov19               *
+      *                 MD053725           Date 31Jul19               *
       *                 MD052414A          Date 26Mar19               *
       *                 MD034242           Date 13Mar19               *
       *                 MD052414           Date 06Feb19               *
@@ -82,6 +83,9 @@
      F*                                                                  *
       ********************************************************************
       *                                                               *
+      *  MD059860 - GL0340 Discrepancy.                               *
+      *           - Retail Accounts consolidated details are not      *
+      *             printed on the GL0340P1 report.                   *
       *  MD026356  - Report displays *ERROR* when account is closed.  *
       *              Display '-Customer Closed-' text instead.        *
       *  MD053725 - CGL050 feature still has differences against      *
@@ -1940,10 +1944,12 @@
      CL2                 EVAL      *IN77 = *ON                                              MD053725
      CL2                 EVAL      *IN72 = *OFF                                             MD053725
      CL2                 EVAL      *IN76 = *ON                                              MD034242
-     CL2                 ELSE                                                               MD053725
-     CL2                 EVAL      *IN77 = *OFF                                             MD053725
+     C***L2*****            ELSE                                                   MD053725 MD059860
+     C***L2*****            EVAL      *IN77 = *OFF                                 MD053725 MD059860
      CL2                 ENDIF                                                              MD034242
      CL2N66              GOTO      MISS                                                     MD034242
+     C                   ELSE                                                               MD059860
+     CL2   RINDB         COMP      0                                  777776                MD059860
      CL2                 ENDIF                                                              MD034242
      C/COPY WNCPYSRC,GL0340C008
      C*                                                                   120830
@@ -3301,7 +3307,8 @@
 1280 O********E**1     86                                                 S01117
      O********E**1     86 25                                        S01117S01290
      O**********EF   86 25                  1                                        S01290 MD053725
-     O          EF   86 25 27               1                                               MD053725
+     O**********EF   86 25 27               1                                      MD053725 MD059860
+     O          EF   86 25                  1                                               MD059860
 1281 O***********                       106 'RETAIL ACCOUNT O/B'          S01290
      O                                           16 'RETAIL ACCOUNTS'           S01290
      O******************************************106*'O/B'*****************      S01290      MD042411
@@ -3354,7 +3361,8 @@
      O               33      TPSTCR             128 '   ,   ,   ,   , 0 .   CR'             MD042411
      O*                                                                   120830
      O**********E    86 25                  1                                        120830 MD053725
-     O          E    86 25 27               1                                               MD053725
+     O**********E    86 25 27               1                                      MD053725 MD059860
+     O          E    86 25                  1                                               MD059860
      O                                            6 '(NET)'                     120830
      O***************30******TPRFC***************28*'***,***,***,***,*0*CR'     120830      MD042411
      O***************31******TPRFC***************28*'**,***,***,***,*0*.*CR'    120830      MD042411
@@ -3394,7 +3402,8 @@
 1297 O********E**1     86                                                 S01117
 1297 O**********E    86 25                  1                                          S01117 CGL120
      O**********EF   86 25                  1                                        CGL120 MD053725
-     O          EF   86 25 27               1                                               MD053725
+     O**********EF   86 25 27               1                                      MD053725 MD059860
+     O          EF   86 25                  1                                               MD059860
 1298 O******************************************106*'C/B'*****************                  MD042411
 1299 O***************30******TACOD**************128*'***,***,***,***,*0*CR'                 MD042411
 1300 O***************31******TACOD**************128*'**,***,***,***,*0*.*CR'                MD042411
@@ -3410,7 +3419,7 @@
      O*                                                                   S01408
 1303 O*
      O          E    86 25                  1                                        S01290 MD053725
-     O          E    86 25 27               1                                               MD053725
+     O**********E    86 25 27               1                                      MD053725 MD059860
      O                                           24 '------------------------'  S01290
      O                                           48 '------------------------'  S01290
      O                                           72 '------------------------'  S01290

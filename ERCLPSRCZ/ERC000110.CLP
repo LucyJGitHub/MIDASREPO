@@ -27,9 +27,31 @@
              DCL        VAR(&CLOCK) TYPE(*CHAR) LEN(6)
              DCL        VAR(&SYSPR) TYPE(*CHAR) LEN(2)
              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+
+/** Check if SAR CER047 is installed */
+
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CER047')
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &PFMT)
+
+/** If an error ocurred  */
+
+             IF         COND((&PRTCD *NE '       ') *AND (&PRTCD *NE +
+                          '*NRF    ')) THEN(DO)
+               SNDPGMMSG  MSG('Switchable Feature CER047 is not *ON') +
+                          TOMSGQ(MOPERQ)
+               SNDPGMMSG  MSG('AOSARDR0 - Program Error') +
+                TOMSGQ(MOPERQ)
+               CHGJOB     SWS('XXXXXX11')
+               GOTO       CMDLBL(END)
+             ENDDO
 
 /* Call response file renamer                                        */
-             SNDUSRMSG 'HALT'
              CALL       PGM(ER000140)
 
 /* Call response file receiver with multilanguage support            */
@@ -64,5 +86,5 @@
                           USER(&USER) INLLIBL(*JOBD) +
                           SCDTIME(&CLOCK) MSGQ(*NONE)
              ENDDO
-
+END:
              ENDPGM

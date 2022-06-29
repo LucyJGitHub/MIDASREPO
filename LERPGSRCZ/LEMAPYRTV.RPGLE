@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 255282             Date 24Jun22               *
-      *  Prev Amend No. CLE125             Date 02Nov21               *
+      *  Last Amend No. 246320             Date 29Jun22               *
+      *  Prev Amend No. 243329             Date 29Jun22               *
+      *                 MD049414           Date 29Jun22               *
+      *                 CLE125             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD047582           Date 13Jul20               *
@@ -81,13 +83,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  255282 - Apply MP1.2T core fixes 246320 and 243329. Change   *
-      *           to *ZERO as fields are numeric.                     *
       *  246320 - Error in account validation if settlement method is *
       *           '05'. Enhanced fix 242348 and 243329.               *
+      *         - Applied for MD-49414.                               *
       *  243329 - If no defined settlement details entered, default   *
       *           payment settlement details of the loan if PTYP is   *
       *           66, 67, 69, or 72. Pattern fix 242348.              *
+      *         - Applied for MD-49414.                               *
+      *  MD049414 - CLE031. Settlement ccy defaulting does not        *
+      *             happen.                                           *
+      *         - Applied for MD020027.                               *
       *  CLE125 - Amendment to LE Authorization Rules                 *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -339,7 +344,7 @@
       *                                                                                       244636
      D PPayParm      E DS                  EXTNAME(SDESSPPD)                                  243329
      D  ZComplete             15     15                                                       243329
-      ** Screen Payment Instructions                                                          243329
+      ***  Screen Payment Instructions                                                        243329
       *                                                                                       243329
      D ZMUSER          DS            17
      D  USRID                  1     10                                                     MD024398
@@ -768,7 +773,7 @@
      C                   MOVEL     'LEM0032'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      C                   ENDIF
-      *                                                                                       243329
+      *                                                                                       244636
       ** Default payment settlement details for parts sold.                                   243329
       *                                                                                       243329
      C     CL_PTYP       IFEQ      66                                                         243329
@@ -782,6 +787,7 @@
      C                   ENDIF                                                                243329
      C                   IF        CL_PONS <> *BLANKS AND                                     243329
      C                             CL_BRCA <> *BLANKS                                         243329
+     C**********         IF        ZComplete <> *BLANKS                                243329 246320
      C                   IF        CL_PSTM =  05                                              246320
      C                   MOVE      CL_PONS       DDPONX                                       243329
      C                   MOVEL     CL_BRCA       DDPONX                                       243329
@@ -789,10 +795,28 @@
      C                   EVAL      DDPONX = CL_PONS                                           243329
      C                   ENDIF                                                                243329
      C                   ENDIF                                                                243329
-     C                   IF        CL_POCN <> *ZERO                                           255282
+      *                                                                                     MD049414
+     C                   IF        CLE031 = 'Y'                                             MD049414
+     C                   MOVE      CL_PSCY       DDPSCY                                     MD049414
+     C                   MOVE      CL_PEXI       DDPEXI                                     MD049414
+     C                   MOVE      *BLANK        ZFIELD                                     MD049414
+      *                                                                                     MD049414
+     C     CL_PEXR       IFNE      *ZEROS                                                   MD049414
+     C                   MOVE      CL_PEXR       ZFIELD                                     MD049414
+     C                   Z-ADD     8             ZADEC                                      MD049414
+     C                   CALLB     'ZEDIT'                                                  MD049414
+     C                   PARM                    ZFIELD                                     MD049414
+     C                   PARM                    ZADEC                                      MD049414
+     C                   MOVE      ZFIELD        DDPEXR                                     MD049414
+     C                   ELSE                                                               MD049414
+     C                   MOVE      *BLANKS       DDPEXR                                     MD049414
+     C                   ENDIF                                                              MD049414
+     C                   ENDIF                                                              MD049414
+      *                                                                                     MD049414
+     C                   IF        CL_POCN <> *BLANKS                                         243329
      C                   MOVEL     CL_POCN       DDPOCN                                       243329
      C                   ENDIF                                                                243329
-     C                   IF        CL_POBN <> *ZERO                                           255282
+     C                   IF        CL_POBN <> *BLANKS                                         243329
      C                   MOVEL     CL_POBN       DDPOBN                                       243329
      C                   ENDIF                                                                243329
      C                   IF        CL_PIBN <> *BLANKS                                         243329
@@ -801,21 +825,39 @@
      C                   ENDIF                                                                243329
       *                                                                                       243329
      C                   ELSE                                                                 243329
-      *                                                                                       244636
+      *                                                                                       243329
      C                   IF        DDACTN = 'I'                                               244636
      C                   IF        CL_RSTM <> 0                                               244636
      C                   MOVEL     CL_RSTM       DDRSTM                                       244636
      C                   ENDIF                                                                244636
      C                   IF        CL_RONS <> *BLANKS AND                                     244636
      C                             CL_BRCA <> *BLANKS                                         244636
-     C**********         IF        WComplete <> *BLANKS                                244636 246320
-     C                   IF        CL_RSTM  =  05                                             246320
+     C**********         IF        WComplete <> *BLANKS                         244636 243329 246320
+     C                   IF        CL_RSTM =  05                                              246320
      C                   MOVE      CL_RONS       DDRONX                                       244636
      C                   MOVEL     CL_BRCA       DDRONX                                       244636
      C                   ELSE                                                                 244636
      C                   EVAL      DDRONX = CL_RONS                                           244636
      C                   ENDIF                                                                244636
      C                   ENDIF                                                                244636
+      *                                                                                     MD049414
+     C                   IF        CLE031 = 'Y'                                             MD049414
+     C                   MOVE      CL_SCCY       DDRSCY                                     MD049414
+     C                   MOVE      CL_REXI       DDREXI                                     MD049414
+     C                   MOVE      *BLANK        ZFIELD                                     MD049414
+      *                                                                                     MD049414
+     C     CL_REXR       IFNE      *ZEROS                                                   MD049414
+     C                   MOVE      CL_REXR       ZFIELD                                     MD049414
+     C                   Z-ADD     8             ZADEC                                      MD049414
+     C                   CALLB     'ZEDIT'                                                  MD049414
+     C                   PARM                    ZFIELD                                     MD049414
+     C                   PARM                    ZADEC                                      MD049414
+     C                   MOVE      ZFIELD        DDREXR                                     MD049414
+     C                   ELSE                                                               MD049414
+     C                   MOVE      *BLANKS       DDREXR                                     MD049414
+     C                   ENDIF                                                              MD049414
+     C                   ENDIF                                                              MD049414
+      *                                                                                     MD049414
      C**********         IF        CL_ROCN <> 0                                        244636 CPK027
      C                   IF        CL_ROCN <> *BLANKS                                         CPK027
      C                   MOVEL     CL_ROCN       DDROCN                                       244636
@@ -2435,10 +2477,10 @@
      C                   PARM                    Ix                3 0
      C                   PARM                    Wx                3 0
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                     243329
      C**********         PARM                    UpSRFlg           1                 CLE134 MD020445
      C                   PARM                    UpSRFlg           1                          CLE164
      C                   PARM                    DDAuto            1                          CLE164
-     C                   PARM                    PPayParm                                     243329
                                                                                              BUG3760
      C     KCwFld        KLIST                                                               BUG3760
      C                   KFLD                    WFuncType                                   BUG3760
@@ -2518,6 +2560,19 @@
      C                   ELSE                                                                 CLE106
      C                   MOVE      'N'           CLE106                                       CLE106
      C                   ENDIF                                                                CLE106
+      *                                                                                     MD049414
+      ** Access Switchable SAR details for the existence of CLE031                          MD049414
+      *                                                                                     MD049414
+     C                   CALLB     'AOSARDR0'                                               MD049414
+     C                   PARM      *BLANK        @RTCD                                      MD049414
+     C                   PARM      '*VERIFY'     @OPTN                                      MD049414
+     C                   PARM      'CLE031'      @SARD                                      MD049414
+      *                                                                                     MD049414
+     C     @RTCD         IFEQ      *BLANKS                                                  MD049414
+     C                   MOVE      'Y'           CLE031            1                        MD049414
+     C                   ELSE                                                               MD049414
+     C                   MOVE      'N'           CLE031                                     MD049414
+     C                   ENDIF                                                              MD049414
       *
       ***  Retrieve Lending ICD
       *

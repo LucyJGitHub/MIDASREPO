@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 255282             Date 24Jun22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. 243329             Date 29Jun22               *
+      *  Prev Amend No. MD020027           Date 29Jun22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD029248           Date 22Aug14               *
       *                 MD055733           Date 03Jul20               *
@@ -124,10 +125,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  255282 - Apply MP1.2T core fix 243329.                       *
       *  243329 - If no defined settlement details entered, default   *
       *           payment settlement details of the loan if PTYP is   *
       *           66, 67, 69, or 72. Pattern fix 242348.              *
+      *         - Applied for MD049414.                               *
+      *         - Applied for MD020027.                               *
+      *  MD020027 - Pay Settlement details are not defaulted from     *
+      *             original part sold transactions.  Added defaulting*
+      *             of pay/receipt settlement during insert.          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD029248 - Move interest amount for projection of risk loans *
@@ -655,11 +660,12 @@
       ***  Index for arrays of of error message ids etc
       *
                                                                                               244636
-      ***Parameter*for*LERPSCRTV*to*retrive*Extended*settlement*intruction            2446366 243329
-      ** Parameter for LEMAPYRTV to retrieve Extended settlement instruction                  243329
+      ** Parameter for LERPSCRTV to retrive Extended settlement intruction                    244636
      D***PRcvParm        S             92                                             244636 CSF011A
      D PRcvParm        S            335                                                      CSF011A
-     D PPayParm        S             92                                                       243329
+      ** Parameter for LEMAPYRTV to retrive Extended settlement intruction                  MD020027
+     D***PPayParm        S            335                                            MD020027 243329
+     D PPayParm        S           1045                                                       243329
                                                                                               244636
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
@@ -1434,10 +1440,10 @@
      C                   PARM      *ZERO         Ix                3 0
      C                   PARM      *ZERO         WIdx              3 0
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   MD020027
      C**********         PARM                    UpSRFlg                             CLE134 MD020445
      C                   PARM                    UpSRFlg           1                          CLE164
      C                   PARM                    DDauto            1                          CLE164
-     C                   PARM                    PPayParm                                     243329
 
       ***  Reset MidasEseq regardless.                                                       BUG4325
      C                   EVAL      MidasEseq = SavEseq                                       BUG4325

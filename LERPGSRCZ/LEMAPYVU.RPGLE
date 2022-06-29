@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 255282             Date 24Jun22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD049414           Date 29Jun22               *
+      *  Prev Amend No. MD020027           Date 29Jun22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055652           Date 13Jul20               *
       *                 CER050             Date 16Jun19               *
@@ -102,15 +103,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  255282 - Apply MP1.2T core fixes 244546, 244128, 244127 and  *
-      *           243329.                                             *
-      *  244546 - Change conditions on LEMAPY2VL from ='Y' to <>'N'   *
-      *  244128 - Do not call LEMAPY2VL if nostro is invalid          *
-      *  244127 - Settlement details not defaulting from underlying   *
-      *           loan until transaction is complete                  *
-      *  243329 - If no defined settlement details entered, default   *
-      *           payment settlement details of the loan if PTYP is   *
-      *           66, 67, 69, or 72. Pattern fix 242348.              *
+      *  MD049414 - Changed size of PPayParm from 92 to 1045 to       *
+      *             include other fields.                             *
+      *         - Applied for MD020027.                               *
+      *  MD020027 - Pay Settlement details are not defaulted from     *
+      *             original part sold transactions.  Added defaulting*
+      *             of pay/receipt settlement during insert.          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055652 - Error LEM0215 occurs when authorising a manual    *
@@ -694,10 +692,8 @@
      D WKCNUM          S              6A                                                      CLE035
      D WKFACT          S              3A                                                      CLE035
      D WKFCNO          S              2A                                                      CLE035
-      *                                                                                       243329
-      ** Parameter for LEMAPYRTV                                                              243329
-      *                                                                                       243329
-     D PPayParm        S             92                                                       243329
+      ** Parameter for LEMAPYRTV                                                            MD049414
+     D PPayParm        S           1045                                                     MD049414
                                                                                               244636
       ** Parameter for LEMAPYRTV                                                              244636
      D***PRcvParm        S             92                                             244636 CSF011A
@@ -801,25 +797,6 @@
 
       * Withholding tax indicator
      C                   MOVE      WRKLNWTIN     DDWTTP
-      *                                                                                       244127
-      ** Default settlement details from related participations sold                          244127
-      *                                                                                       244127
-     C                   IF        WRKLNPTYP = 66 or WRKLNPTYP = 67                           244127
-     C                             or WRKLNPTYP = 69 or WRKLNPTYP = 72                        244127
-     C                   IF        InPaySttmt = *blank AND                                    244127
-     C                             PPayParm <> *blank                                         244127
-     C                   MOVEL     PPayParm      InPaySttmt                                   244127
-     C                   ENDIF                                                                244127
-      *                                                                                       244127
-     C                   ELSE                                                                 244127
-      *                                                                                       244127
-      ** Default settlement details from related loan                                         244127
-     C                   IF        InRecSttmt = *blank AND                                    244127
-     C                             PRcvParm <> *blank                                         244127
-     C                   MOVEL     PRcvParm      InRecSttmt                                   244127
-     C                   ENDIF                                                                244127
-                                                                                              244127
-     C                   ENDIF                                                                244127
 
       ** If error in validation of action code, fail this input
      C                   IF        Idx <> 0
@@ -865,6 +842,18 @@
      C***********        MOVEL     PRcvParm      InRecSttmt                            244636 249205
      C***********        ENDIF                                                         244636 249205
       ***********                                                                      244636 249205
+      *                                                                                     MD020027
+      ** Default settlement details from related loan                                       MD020027
+     C                   IF        InRecSttmt = *blank AND                                  MD020027
+     C                             PRcvParm <> *blank                                       MD020027
+     C                   MOVEL     PRcvParm      InRecSttmt                                 MD020027
+     C                   ENDIF                                                              MD020027
+      *                                                                                     MD020027
+      ** Default settlement details from related loan                                       MD020027
+     C                   IF        InPaySttmt = *blank AND                                  MD020027
+     C                             PPayParm <> *blank                                       MD020027
+     C                   MOVEL     PPayParm      InPaySttmt                                 MD020027
+     C                   ENDIF                                                              MD020027
       ***Protect*Pay Settlement from Validation as it is already not in use            244636 249205
      C***********        EVAL      ##PPAY = 'Y'                                        244636 249205
 
@@ -1018,10 +1007,10 @@
      C                   PARM      *ZERO         Idx
      C                   PARM      *ZERO         WIdx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   MD020027
      C**********         PARM      *BLANKS       UpSRFlg           1                 CLE134 MD020445
      C                   PARM                    UpSRFlg           1                          CLE164
      C                   PARM                    DDauto            1                          CLE164
-     C                   PARM                    PPayParm                                     243329
 
       ** Save the settlement details for update if not insert
      C                   IF        DDACTN <> 'I'
@@ -2207,10 +2196,6 @@
       ***  Perform the additional validations
       *
       ***  Set up PassDtaDs fields
-     C     DDRONXOK      IFNE      'N'                                                        244546
-     C     DDPONXOK      ANDNE     'N'                                                        244546
-     C     DDRSCYOK      ANDNE     'N'                                                        244546
-     C     DDPSCYOK      ANDNE     'N'                                                        244546
      C                   eval      WrkDDeseq = DDeseq
      C                   eval      WrkDDpasd = DDpasd
      C
@@ -2241,7 +2226,6 @@
       *
       ***  Array index
      C                   PARM                    WIdx
-     C                   Endif                                                                244128
 
      C                   ENDSR
       /EJECT

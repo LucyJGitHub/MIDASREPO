@@ -24,6 +24,10 @@
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
              DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
                           International Limited 2021')
 /**/
@@ -33,6 +37,25 @@
                           CMDLBL(ABNOR1))
 /**/
 /* Start of program */
+
+/** Check if SAR CER047 is installed */
+
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CER047')
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &PFMT)
+
+/** If an error ocurred  */
+
+             IF         COND((&PRTCD *NE '       ') *AND (&PRTCD *NE +
+                          '*NRF    ')) THEN(DO)
+               SNDPGMMSG  MSG('Switchable Feature CER047 is not *ON') +
+                          TOMSGQ(MOPERQ)
+               SNDPGMMSG  MSG('AOSARDR0 - Program Error') +
+                TOMSGQ(MOPERQ)
+               CHGJOB     SWS('XXXXXX11')
+               GOTO       CMDLBL(END)
+             ENDDO
 
 /**/
 /* Get system prefix */

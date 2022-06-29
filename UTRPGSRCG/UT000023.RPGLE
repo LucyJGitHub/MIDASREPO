@@ -12,13 +12,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUT017             Date 17Mar20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060194           Date 29Jun22               *
+      *  Prev Amend No. CUT017             Date 17Mar20               *
+      *                 MD046248           Date 27Oct17               *
       *                 BUG27790 *CREATE   Date 02Jul10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060914 - Hex fields are not considered (GPGLFCTD)          *
       *  CUT017 - Adaptive Database Upgrade                           *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27790 - New utility                                       *
@@ -243,6 +245,7 @@
      C                   Z-ADD     FDBUFF        SAVBUF
       *
      C     FDTYPE        IFEQ      'A'
+     C     FDTYPE        OREQ      'H'                                                      MD060194
      C     FDTYPE        OREQ      'Z'
      C     FDTYPE        OREQ      'L'
      C                   MOVEA     AR(FDBUFF)    OT(Z)

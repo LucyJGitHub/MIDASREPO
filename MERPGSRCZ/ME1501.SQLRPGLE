@@ -1,4 +1,5 @@
-     H DEBUG
+     H***DEBUG**                                                                            MD060125
+     H DEBUG FIXNBR(*ZONED)                                                     MD060125
      F*****************************************************************
 /**** *  RPGBASE                                                      *                     MD056560
 /*STD *  RPGSQLBND                                                    *                     MD056560
@@ -19,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058687           Date 09Jul21               *
-      *  Prev Amend No. CFT162             Date 16Dec20               *
+      *  Last Amend No. MD060125           Date 21Jun22               *
+      *  Prev Amend No. MD058687           Date 09Jul21               *
+      *                 CFT162             Date 16Dec20               *
       *                 217679             Date 04Feb13               *
       *                 AR918987A          Date 04Feb13               *
       *                 AR918987           Date 09Feb12               *
@@ -78,6 +80,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060125 - STP job ME_FT_IMM on MSGW with decimal data error *
+      *             in ME1501.                                        *
+      *           - Include FIXNBR(*ZONED), avoid decimal data error. *
       *  MD058687 - Formalise 217679/AR918987A/AR918987 for CFT162    *
       *  CFT162 - MT900 and MT910 Message Generation                  *
       *           Applied 217679/AR918987A/AR918987 and conditioned to*

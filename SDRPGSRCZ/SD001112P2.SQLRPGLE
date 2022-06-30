@@ -24,8 +24,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD060020 - Fusion Midas ARR Adapter: Expired Token           *
-      *             prevents ARR requests. Add checking to exception  *
-      *             to seton switch to fail component.                *
+      *             prevents ARR requests. Check for exceptions and   *
+      *             seton U1 job switch in order to fail SDC000114    *
+      *             component.                                        *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *                                                               *
       *****************************************************************

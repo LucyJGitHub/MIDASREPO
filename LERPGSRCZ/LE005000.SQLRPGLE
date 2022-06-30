@@ -11,10 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CLE138  *CREATE    Date 02Nov21               *
+      *  Last Amend No. MD060201           Date 30Jun22               *
+      *  Prev Amend No. CLE138  *CREATE    Date 02Nov21               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060201 - LE00500AU report has incorrect value on ACKEYAL   *
+      *           - initialize count14 instead of count6              *
       *  CLE138 - Class Codes for Facilities.                         *
       *                                                               *
       *****************************************************************
@@ -833,7 +836,8 @@
        begsr initialisePSTTOM;
 
                    wSQLStr = 'select * from PSTTOM';
-                   Count6 = 0;
+       //          Count6 = 0;                                                            //MD060201
+                   Count14 = 0;                                                           //MD060201
                    exec sql prepare P4 from :wSQLStr;
                    exec sql declare P4 cursor for P4;
                    exec sql open P4;

@@ -47,8 +47,8 @@
       *  MD059867 - Calculator fails when RFR used is ESTR and calcu- *
       *             lation method is simple ARR due to Calculator     *
       *             not supporting ESTR for the specific calc method. *
-      *             Add a new validation rule to not allow ESTR for   *
-      *             this calc method                                  *
+      *             Add a new validation rule to allow only SOFR and  *
+      *             SONIA for this calc method                        *
       *  MD059141 - SIRS Transaction accepting NCCR and SARR on       *
       *             'Their Details'                                   *
       *  MD059065 - IR020 fields/values not auto-populating when      *

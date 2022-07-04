@@ -51,6 +51,14 @@
                GOTO       CMDLBL(END)
              ENDDO
 
+/** If CER047 is OFF, end program */
+
+             IF         COND(&PRTCD *NE '       ') THEN(DO)
+               SNDPGMMSG  MSG('Switchable Feature CER047 is not *ON') +
+                          TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(END)
+             ENDDO
+
 /* Call response file renamer                                        */
              CALL       PGM(ER000140)
 

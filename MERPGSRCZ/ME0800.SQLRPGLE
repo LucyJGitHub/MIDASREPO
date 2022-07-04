@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD057490           Date 22Feb21               *
+      *  Last Amend No. 256996             Date 19Jan09               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD057490           Date 22Feb21               *
       *                 MD052485           Date 02Apr19               *
       *                 MD051910           Date 02Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -75,6 +76,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  256996 - Include end date of 30G in MT350                    *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD057490 - MT202 Incorrect Bank Name in 57 field.            *
       *           - Use the correct message sequence in file MGOEXTPD *
@@ -460,6 +462,10 @@
      D  YY3                    1      4                                         CSW097
      D  MM3                    5      6                                         CSW097
      D  DD3                    7      8                                         CSW097
+      *                                                                                       256996
+     D                 DS                                                                     256996
+     D  DAT4                   1     17                                                       256996
+     D  DAT5                  10     17                                                       256996
       *                                                                   CSW097
       ** Data structure to hold defined constants.                        CSW097
       *                                                                   CSW097
@@ -2278,6 +2284,34 @@
      C                   MOVEA     FLD           SMFLD
      C                   ENDIF                                                                 CSW09
       *
+      ** If tag is 30G and message type is 350, include end date                              256996
+     C     MTPY          IFEQ      '350'                                                      256996
+     C     SAVTAG        ANDEQ     ':30G:'                                                    256996
+     C                   MOVEA     *BLANKS       FLD                                          256996
+     C                   MOVEL     *BLANKS       DAT4                                         256996
+     C                   MOVEL     MFLD          DAT4                                         256996
+      *                                                                                       256996
+     C                   MOVEL     DAT5          DAT3                                         256996
+     C                   MOVEA     DD3           FLD(1)                                       256996
+     C                   MOVEA     '/'           FLD(3)                                       256996
+     C                   MOVEA     MM3           FLD(4)                                       256996
+     C                   MOVEA     '/'           FLD(6)                                       256996
+     C                   MOVEA     YY3           FLD(7)                                       256996
+     C                   MOVEA     FLD           WEND             10                          256996
+      *                                                                                       256996
+     C     DATF          IFEQ      'M'                                                        256996
+     C                   MOVEA     FLD(1)        WKDAT                                        256996
+     C                   MOVEL     WKMM          @CH5                                         256996
+     C                   MOVE      WKDD          @CH5                                         256996
+     C                   MOVE      WKYY          CHYY                                         256996
+     C                   MOVEA     CHDAT         FLD(1)                                       256996
+     C                   MOVEA     FLD           WEND                                         256996
+     C                   ENDIF                                                                256996
+      *                                                                                       256996
+     C     SMFLD         CAT       ' -':0        SMFLD                                        256996
+     C     SMFLD         CAT       WEND:1        SMFLD                                        256996
+      *                                                                                       256996
+     C                   ENDIF                                                                256996
      C                   ENDSR                                                  DSR
      C/EJECT
       *****************************************************************   CSW098

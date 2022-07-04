@@ -7,9 +7,9 @@
 /*                                                                   */
 /*       ERC000110 - §24 KWG response file processing                */
 /*                                                                   */
-/*       (c) Finastra International Limited 2021                     */
+/*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. BUG25857B*CREATE    Date 21Jul21             */
+/*       Last Amend No. BUG25857B*CREATE    Date 04Jul22             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
@@ -20,7 +20,7 @@
              PGM
 
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                      Copyright Finastra International Limited 2021.')
+                      Copyright Finastra International Limited 2022.')
              DCL        VAR(&H) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&M) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&S) TYPE(*DEC) LEN(2 0)

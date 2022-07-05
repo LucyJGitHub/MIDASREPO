@@ -9,16 +9,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD059471           Date 04Apr22              */
-/*       Prev Amend No. MD059593           Date 16Feb22              */
+/*       Last Amend No. MD060005           Date 24May22              */
+/*       Prev Amend No. MD059471           Date 04Apr22              */
 /*                      MD054336           Date 27Sep19              */
 /*                      CUP042             Date 26May15              */
 /*                      CUP041   *CREATE   Date 27May14              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060005 - SCSWPSVL is removed from Bridge library after    */
+/*                  database upgrade                                 */
 /*       MD059471 - SWIFT 2022 Changes Feature Password              */
-/*       MD059593 - Missing password for mandatory features          */
 /*       MD054336 - Bridge ends in error after GPST option when two  */
 /*                  different sessions were used                     */
 /*       CUP042 - New option to run Upgrade Programs after           */
@@ -97,23 +98,10 @@
 
 /* Set up library list. */
              CALLSUBR   SUBR(SETUPLIBL)
-
-/* Make sure all mandatory features have their password set */                          /*MD059593*/
-/* Check that VLDL does exist in &BRGBRGLIB */                                          /*MD059593*/
-             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                               /*MD059593*/
-             CHKOBJ     OBJ(&BRGBRGLIB/UPVLDZVL) OBJTYPE(*VLDL)                         /*MD059593*/
-             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD059593*/
-/**********     GOTO       CMDLBL(RUNUPGPGM)                */                 /*MD059593 MD059471*/
-             GOTO       CMDLBL(SWIFTVLDL)                                               /*MD059471*/
-             ENDDO       /*MD059593*/
-             CALL       PGM(UP000712) PARM(&BRGBRGLIB &PFX &RTNCODE)                    /*MD059593*/
-             IF         COND(&RTNCODE *NE ' ') THEN(DO)                                 /*MD059593*/
-                CHGVAR     VAR(&ERRPGM) VALUE('UP000712')                               /*MD059593*/
-                GOTO       CMDLBL(ERROR)                                                /*MD059593*/
-             ENDDO       /*MD059593*/
                                                                                         /*MD059471*/
 SWIFTVLDL:                                                                              /*MD059471*/
-             CHKOBJ     OBJ(&BRGBRGLIB/SCSWPSVL) OBJTYPE(*VLDL)                         /*MD059471*/
+/**********  CHKOBJ     OBJ(&BRGBRGLIB/SCSWPSVL) OBJTYPE(*VLDL)  */            /*MD059471 MD060005*/
+             CHKOBJ     OBJ(&BRGBRGLIB/SCSWPSVLB) OBJTYPE(*VLDL)                        /*MD060005*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD059471*/
                 GOTO       CMDLBL(RUNUPGPGM)                                            /*MD059471*/
              ENDDO                                                                      /*MD059471*/
@@ -122,21 +110,7 @@ SWIFTVLDL:                                                                      
                 CHGVAR     VAR(&ERRPGM) VALUE('UP000712')                               /*MD059471*/
                 GOTO       CMDLBL(ERROR)                                                /*MD059471*/
              ENDDO                                                                      /*MD059471*/
-             ENDDO       /*MD059593*/
-                                                                                        /*MD059593*/
-             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                             /*MD059593*/
-             CHKOBJ     OBJ(&BRGBRGLIB/UPVLDGVL) OBJTYPE(*VLDL)                         /*MD059593*/
-             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD059593*/
-                GOTO       CMDLBL(RUNUPGPGM)                                            /*MD059593*/
-             ENDDO       /*MD059593*/
-             CALL       PGM(UP000713) PARM(&BRGBRGLIB &PFX &RTNCODE)                    /*MD059593*/
-             IF         COND(&RTNCODE *NE ' ') THEN(DO)                                 /*MD059593*/
-                CHGVAR     VAR(&ERRPGM) VALUE('UP000713')                               /*MD059593*/
-                GOTO       CMDLBL(ERROR)                                                /*MD059593*/
-             ENDDO       /*MD059593*/
-             ENDDO       /*MD059593*/
-                                                                                        /*MD059593*/
-                                                                                        /*MD059593*/
+
 /* Run Upgrade Programs after deliverable data changes. */                                /*CUP042*/
 RUNUPGPGM:                                                                                /*CUP042*/
              CHGVAR     VAR(&SUBOPT) VALUE('RunUpgradePgmsPostDD')                        /*CUP042*/

@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD060225           Date 05Jul22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057048           Date 24Nov20               *
@@ -220,6 +221,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060225 - Fee entries on APOSTPD and LEFEED are not updated *
       *  CLE138 - Class Codes for Facilities                          *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
@@ -626,6 +628,7 @@
      F* 18    Chain to LF/LEFEALL0                                    *                       CLE106
      F* 20    First cycle indicator                                   *
      F* 21    Details output to report                                *
+     F* 26    Chain to PF/FACHISH                                     *                     MD060225
      F* 30    Number of Decimal Places = 0                            *
      F* 31    Number of Decimal Places = 1                            *
      F* 32    Number of Decimal Places = 2                            *
@@ -689,6 +692,7 @@
      F            FCLTYHHF                          KIGNORE                                   CGL020
      F            FCLTYFNF                          KIGNORE                                   CGL020
      F            FCLTYZZF                          KIGNORE                                   CGL020
+     FFACHISH IF  E           K        DISK                                                 MD060225
      F***RVLNSL0 IF  E           K        DISK                                       260961 MD049826
      FLEFEED  UF  E           K        DISK         KINFSR *PSSR
      FLEFEEZ  UF  E                    DISK         KINFSR *PSSR
@@ -1880,6 +1884,7 @@
       *
      C**********           Z-ADD0         LFCN                                         230521 CSD027
      C                     MOVE *BLANKS   LFCN                                                CSD027
+     C                     MOVE *BLANKS   WCLASS  4                                         MD060225
       *                                                                                    AR750543A
       ** Set report header (either Paid or Capitalised)                                    AR750543A
      C           CCAP      IFEQ 'C'                                                        AR750543A
@@ -1908,6 +1913,22 @@
      C           FECAPI    ANDNE'Y'                                                           CLE139
      C                     EXSR TOTFEE                                                        CAS009
      C                     ENDIF                                                              CAS009
+      *                                                                                     MD060225
+      ** Get Class code for Facility Fee                                                    MD060225
+      *                                                                                     MD060225
+     C           CLE138    IFEQ 'Y'                                                         MD060225
+     C           FELOAN    ANDEQ*BLANKS                                                     MD060225
+      *                                                                                     MD060225
+     C                     MOVELFEFACL    KHFTYP  30                                        MD060225
+     C                     MOVE FEFACL    KHFSEQ  20                                        MD060225
+     C           KFACHI    CHAINFACHISH              26                                     MD060225
+     C           *IN26     IFEQ '0'                                                         MD060225
+     C                     MOVE FHFCLS    WCLASS                                            MD060225
+     C                     ELSE                                                             MD060225
+     C                     MOVE FECLAS    WCLASS                                            MD060225
+     C                     ENDIF                                                            MD060225
+      *                                                                                     MD060225
+     C                     ENDIF                                                            MD060225
       *                                                                                       CLE134
       ** if CLE134 is on, access SDFEEPD                                                      CLE134
       *                                                                                       CLE134
@@ -3861,6 +3882,11 @@
      C           FEPYON    IFEQ 'S'
      C                     MOVE 'S'       AKY,6
      C                     END
+      *                                                                                     MD060225
+     C           CLE138    IFEQ 'Y'                                                         MD060225
+     C           LKREVI    ANDNE1                                                           MD060225
+     C                     MOVE WCLASS    FECLAS                                            MD060225
+     C                     ENDIF                                                            MD060225
      C/COPY WNCPYSRC,LEH00326
       *                                                                                       CLE138
      C                     EXSR SRSETC                                                        CLE138
@@ -4736,6 +4762,10 @@
      C           FEPYON    IFEQ 'S'
      C                     MOVE 'S'       AKY,6
      C                     END
+      *                                                                                     MD060225
+     C           CLE138    IFEQ 'Y'                                                         MD060225
+     C                     MOVE WCLASS    FECLAS                                            MD060225
+     C                     ENDIF                                                            MD060225
      C/COPY WNCPYSRC,LEH00327
       *                                                                                       CLE138
      C                     EXSR SRSETC                                                        CLE138
@@ -6865,6 +6895,13 @@
      C                     KFLD           ZCNUM   6                                           CLE134
      C                     KFLD           ZFEFCL  50                                          CLE134
      C                     KFLD           ZFSEQ   20                                          CLE134
+      *                                                                                     MD060225
+      ** Key list for FACHISH                                                               MD060225
+      *                                                                                     MD060225
+     C           KFACHI    KLIST                                                            MD060225
+     C                     KFLD           FECNUM                                            MD060225
+     C                     KFLD           KHFTYP                                            MD060225
+     C                     KFLD           KHFSEQ                                            MD060225
       *                                                                                       CLE134
       *                                                                                       CLE159
       ** Check if CLE159 is installed                                                         CLE159
@@ -7905,6 +7942,7 @@
      C           SRSETC    BEGSR                                                              CLE138
      C                     MOVEL*BLANKS   WKCLAS                                              CLE138
      C           CLE138    IFEQ 'Y'                                                           CLE138
+     C           FELOAN    ANDEQ*BLANKS                                                     MD060225
      C                     MOVEAFECLAS    AKY,11                                              CLE138
      C                     ENDIF                                                              CLE138
      C           FELOAN    IFNE *BLANKS                                                       CLE138

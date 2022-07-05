@@ -16,10 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD059471 *CREATE   Date 04Apr22               *
+      *  Last Amend No. MD060005           Date 24May22               *
+      *  Prev Amend No. MD059471 *CREATE   Date 04Apr22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060005 - SCSWPSVL is removed from Bridge library after     *
+      *             database upgrade                                  *
       *  MD059471 - Validation List Password for SWIFT Changes        *
       *                                                               *
       *****************************************************************
@@ -32,8 +35,8 @@
       *****************************************************************
 
       ** +--------------------------------------+
-      ** Â¦ F-specs                              Â¦
-      ** Â¦ =======                              Â¦
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
       ** +--------------------------------------+
 
       * Validation list entries maintenance display file.
@@ -44,13 +47,13 @@
       *****************************************************************
 
       ** +--------------------------------------+
-      ** Â¦ D-specs                              Â¦
-      ** Â¦ =======                              Â¦
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
       ** +--------------------------------------+
 
       ** +--------------------------------------+
-      ** Â¦ Named constants                      Â¦
-      ** Â¦ ===============                      Â¦
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
       ** +--------------------------------------+
       *
       * Action codes.
@@ -59,13 +62,13 @@
       *
       *
       ** +--------------------------------------+
-      ** Â¦ Arrays and Data Structures           Â¦
-      ** Â¦ ==========================           Â¦
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** Â¦ Declared variables                   Â¦
-      ** Â¦ ==================                   Â¦
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
       *
@@ -99,7 +102,8 @@
      C                   CALL      'UT000033'
      C                   PARM      *Blanks       PReturnCode
      C                   PARM      Find          PAction
-     C                   PARM      'SCSWPSVL'    PValidList
+     C**********         PARM      'SCSWPSVL'    PValidList                                 MD060005
+     C                   PARM      'SCSWPSVLB'   PValidList                                 MD060005
      C                   PARM      BLibrary      Library
      C                   PARM      SWFEAT        PID
      C     PASS          PARM      *Blanks       PPass1

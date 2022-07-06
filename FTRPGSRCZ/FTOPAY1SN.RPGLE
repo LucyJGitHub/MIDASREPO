@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW122             Date 04Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060111           Date 01Jul22               *
+      *  Prev Amend No. CSW122             Date 04Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD054131           Date 13Sep19               *
@@ -175,6 +176,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060111 - IPAY processing failed being unable to allocate   *
+      *             INPAYDA.                                          *
+      *           - Condition lock of OTPAYD if CFT151 is OFF.        *
       *  CSW122 - SWIFT ISO 20022                                     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -9156,8 +9160,9 @@
                                                                                               209067
      C                   ELSE                                                                 209067
       *                                                                                       209067
+     C                   IF        CFT151 = 'N'                                             MD060111
      C     *LOCK         IN        OTPAYD                                                     209067
-     C                   IF        CFT151 = 'N'                                               CFT151
+     C**********         IF        CFT151 = 'N'                                      CFT151 MD060111
      C**************     z-add     prnum         svnum                                 209067 CFT151
      C                   eval      aprnum = prnum                                             CFT151
      C                   eval      svnum = nprnum                                             CFT151
@@ -9981,8 +9986,9 @@
      C                   OUT       RGPAYD                                                     204152
      C                   ELSE                                                                 204152
       *                                                                                       204152
+     C                   IF        CFT151 = 'N'                                             MD060111
      C     *LOCK         IN        OTPAYD                                                     204152
-     C                   IF        CFT151 = 'N'                                               CFT151
+     C**********         IF        CFT151 = 'N'                                      CFT151 MD060111
      C*************      z-add     prnum         svnum                                 209067 CFT151
      C                   eval      aprnum = prnum                                             CFT151
      C                   eval      svnum = nprnum                                             CFT151

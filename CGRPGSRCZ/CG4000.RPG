@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 263173             Date 20Jun22               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. 255465             Date 05Jul22               *
+      *  Prev Amend No. 263173             Date 20Jun22               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
@@ -82,6 +83,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  255465 - Reprint confirmations in Correspondence Manager     *
       *  263173 - No Cancellation Confirmation: apply 226737          *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
@@ -193,6 +195,7 @@
      F                                              KINFSR SRFILE
      F                                              KCOMIT
      FDLRPIFL1IF  E           K        DISK                                                   CSW213
+     FMSDLRPF UF  E                    DISK                           U5                      255465
      F/COPY WNCPYSRC,CG4000F001
      E/SPACE 5
      E*
@@ -303,12 +306,20 @@
      C                     MOVEL'SRMAIN'  @STK,Q
       *
       *................................................................
+      *                                                                                       255465
+      ** Read from the SWIFT Confirmations Reprint File for reprint of                        255465
+      ** confirmation                                                                         255465
+      *                                                                                       255465
+     C           *INU5     IFEQ *ON                                                           255465
+     C                     READ MSDLRPF                  99                                   255465
+     C                     ELSE                                                               255465
       *
       ** Read from the Deal Transaction Index File
       ** (This logical selects DTRIXDD records with CNPR = 'N')
       *
      C           *LOVAL    SETLLDTRIXL1
      C                     READ DTRIXL1                  99*
+     C                     ENDIF                                                              255465
       *
       ** Read until End of File
       *
@@ -321,7 +332,8 @@
       *
      C           CNRQ      IFEQ 'Y'                        * DEAL INPUT
      C           CNRQ      OREQ 'S'                                       183477
-      *
+     C           CNRQ      OREQ 'R'                                                           255465
+     C           *INU5     ANDEQ'1'                                                           255465
       **  Reset DRID                                                                          250885
      C                     MOVEL*BLANKS   DRID                                                250885
       *                                                                                       250885
@@ -432,6 +444,7 @@
       *
       ** Access Deal
       *
+     C           *INU5     IFNE '1'                                                           255465
      C                     EXSR SRDEAL
       *                                                                                       263173
       ** Was a confirmation previously generated?                                             263173
@@ -504,6 +517,14 @@
       *
      C                     MOVEL'Y'       CNPR
      C                     EXCPTUDTRIX
+      *                                                                                       255465
+     C                     ELSE                                                               255465
+      *                                                                                       255465
+      ** Delete record in MSDLRPF after generating a                                          255465
+      ** confirmation in Correspondence Manager                                               255465
+      *                                                                                       255465
+     C                     DELETMSDLRPF                                                       255465
+     C                     ENDIF                                                              255465
       *                                                                   081961
      C                     ELSE                                           088652
       *                                                                   088652
@@ -519,9 +540,16 @@
       ** Commit
      C                     COMIT
       *
+      ** Read next record from MSDLRPF                                                        255465  
+      *                                                                                       255465
+     C           *INU5     IFEQ *ON                                                           255465
+     C                     READ MSDLRPF                  99                                   255465
+     C                     ELSE                                                               255465
+      *
       ** Read next record from DTRIXDD
       *
      C                     READ DTRIXL1                  99*
+     C                     ENDIF                                                              255465
      C                     END                             * *IN99 DOWEQ '0'
       *
       *................................................................

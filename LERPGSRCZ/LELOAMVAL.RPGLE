@@ -3910,7 +3910,7 @@
      C     *LOCK         IN        LDA                                                        257949
      C                   MOVEL     WKLNR         DBKey                                        257949
      C                   MOVEL     'CLOANCL '    DBFile                                       257949
-     C                   Z-ADD     911           DBase                                        257949
+     C                   Z-ADD     912           DBase                                        257949
      C                   OUT       LDA                                                        257949
      C                   EXSR      *PSSR                                                      257949
      C                   ENDIF                                                                257949

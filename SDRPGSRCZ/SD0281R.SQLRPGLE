@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250391             Date 22Jun22               *
-      *  Prev Amend No. MD059608           Date 18Feb22               *
+      *  Last Amend No. 250113             Date 24Jun22               *
+      *  Prev Amend No. 250391             Date 22Jun22               *
+      *                 MD059608           Date 18Feb22               *
       *                 AR635013           Date 17Feb22               *
       *                 260748             Date 17Feb22               *
       *                 MD056555           Date 31Aug20               *
@@ -104,6 +105,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250113 - Condition Internal Loan Participation Class (CLE042)*
+      *           on Syndications being switched on as well           *
+      *           Recompile because of changes to SD0281R#            *
       *  250391 - Loan class should be used as a key so that same     *
       *           loan type and subtype but with different classes    *
       *           are allowed to be inserted.                         *

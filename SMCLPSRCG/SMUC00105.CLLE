@@ -10,10 +10,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CSD103    *CREATE  Date 10Aug20              */
+/*       Last Amend No. MD059958           Date 04Jul22              */
+/*       Prev Amend No. MD059758           Date 18Apr22              */
+/*                      CSD103    *CREATE  Date 10Aug20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059958 - GPST and ZPST successfully run but produced dump.*/
+/*                  Error in SQL insert in DEALSDG due to added      */
+/*                  fields by CIR020.                                */
+/*                - Applied for MD-60098.                            */
+/*       MD059758 - SMU01051 error handling issue                    */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*                                                                   */
 /*********************************************************************/
@@ -31,7 +38,11 @@
              DCL        VAR(&SVAL) TYPE(*CHAR) LEN(200)
              DCL        VAR(&ZVAL) TYPE(*CHAR) LEN(200)
              DCL        VAR(&AORTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LIBR) TYPE(*CHAR) LEN(10)                                  /*MD059958*/
 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                               /*MD059758*/
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)                                /*MD059758*/
+                                                                                        /*MD059758*/
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
 
@@ -56,6 +67,116 @@
              ENDDO
 
 
+             CHGVAR     VAR(&LIBR) VALUE('#.' *CAT &ZPREFIX *CAT 'DMLIB')               /*MD059958*/
+             DLTF       FILE(QTEMP/DEALSDG)                                             /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(DEALSDG) TOFILE(QTEMP/DEALSDG) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/DEALSDG) +
+                          TOFILE(QTEMP/DEALSDG) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK) /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/DLGHISPD)                                            /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(DLGHISPD) TOFILE(QTEMP/DLGHISPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/DLGHISPD) +
+                          TOFILE(QTEMP/DLGHISPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/DLUPDDG)                                             /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(DLUPDDG) TOFILE(QTEMP/DLUPDDG) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/DLUPDDG) +
+                          TOFILE(QTEMP/DLUPDDG) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/IRVCACFPD)                                           /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(IRVCACFPD) TOFILE(QTEMP/IRVCACFPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/IRVCACFPD) +
+                          TOFILE(QTEMP/IRVCACFPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/IRVCIRSPD)                                           /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(IRVCIRSPD) TOFILE(QTEMP/IRVCIRSPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/IRVCIRSPD) +
+                          TOFILE(QTEMP/IRVCIRSPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/IRVECACFPD)                                          /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(IRVECACFPD) TOFILE(QTEMP/IRVECACFPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/IRVECACFPD) +
+                          TOFILE(QTEMP/IRVECACFPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/IRVECIRSPD)                                          /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(IRVECIRSPD) TOFILE(QTEMP/IRVECIRSPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/IRVECIRSPD) +
+                          TOFILE(QTEMP/IRVECIRSPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/IRVESIRSPD)                                          /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(IRVESIRSPD) TOFILE(QTEMP/IRVESIRSPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/IRVESIRSPD) +
+                          TOFILE(QTEMP/IRVESIRSPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/IRVEXSRPD)                                           /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(IRVEXSRPD) TOFILE(QTEMP/IRVEXSRPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/IRVEXSRPD) +
+                          TOFILE(QTEMP/IRVEXSRPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/IRVSIRSPD)                                           /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(IRVSIRSPD) TOFILE(QTEMP/IRVSIRSPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/IRVSIRSPD) +
+                          TOFILE(QTEMP/IRVSIRSPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/MXSDLDGPD)                                           /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(MXSDLDGPD) TOFILE(QTEMP/MXSDLDGPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/MXSDLDGPD) +
+                          TOFILE(QTEMP/MXSDLDGPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+             DLTF       FILE(QTEMP/TSMDDGPD)                                            /*MD059958*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD059958*/
+             CPYF       FROMFILE(TSMDDGPD) TOFILE(QTEMP/TSMDDGPD) +
+                          CRTFILE(*YES)                                                 /*MD059958*/
+             CPYF       FROMFILE(&LIBR/TSMDDGPD) +
+                          TOFILE(QTEMP/TSMDDGPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                /*MD059958*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD059958*/
+
+
 /* Call SMU01050 to fix corrupted data */
 
              CALL       PGM(SMU01050) PARM(&LAYER &ZPREFIX &GPREFIX)
@@ -64,9 +185,31 @@
 
              CALL       PGM(SMU01051) PARM(&LAYER)
 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                /*MD059758*/
+                                                                                        /*MD059758*/
+             SNDPGMMSG  MSG('SMUC00105 completed normally.') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD059758*/
+                                                                                        /*MD059758*/
              GOTO       CMDLBL(END)
 
  ABNOR:
+                                                                                        /*MD059758*/
+             CHGVAR     VAR(&ERRPGM) VALUE('SMUC00105')                                 /*MD059758*/
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA(&ERRPGM) MSG(&MESSAGE)                                 /*MD059758*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059758*/
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                       /*MD059758*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059758*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')                                          /*MD059758*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059758*/
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'JOBLOG' 'Y')                         /*MD059758*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD059758*/
+                                                                                        /*MD059758*/
+             SNDPGMMSG  MSG('Error occurred in SMUC00105 program') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD059758*/
+                                                                                        /*MD059758*/
              CHGJOB     SWS(XXXXXX11)
 
  END:

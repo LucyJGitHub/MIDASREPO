@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058914           Date 06Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060066           Date 30Jun22               *
+      *  Prev Amend No. MD058914           Date 06Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD048586           Date 11Jan21               *
       *                 MD023298A          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
@@ -128,6 +129,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060066 - MT202 message not generated for MT103 transactions*
+      *             Add reversal of FTM199 for Stop of Outgoing Pay-  *
+      *             ment transaction.                                 *
       *  MD058914 - FT payments customer information on listviews     *
       *             is blank. Amend to add routine to retrieve        *
       *             Customer and Branch for INPAYDQD/OTPAYDQD.        *
@@ -2532,6 +2536,15 @@
      C                             FTM199 <> 'Z'                                              CSW220
      C                   EVAL      FTM199 = *BLANKS                                           CSW220
      C                   ENDIF                                                                CSW220
+      *                                                                                     MD060066
+      ** Update MT199 Flag to 'X' for Stop of Outgoing Payment                              MD060066
+      ** transaction where CSW220 is ON and MT199 is not 'Z'                                MD060066
+      ** Note: The said field will be updated to blank in ME1050.                           MD060066
+      *                                                                                     MD060066
+     C                   IF        (CSW220 = 'Y' AND OTCHTP = 'S' AND                       MD060066
+     C                              FTM199 <> 'Z')                                          MD060066
+     C                   EVAL      FTM199 = 'X'                                             MD060066
+     C                   ENDIF                                                              MD060066
 
       *  N.B. Audit Stamp details are determined in called program
       *  Set up data to be passed using the rcd format data structure
@@ -2554,6 +2567,14 @@
      C                   MOVEL     '*CALL   '    DBFILE
      C                   EXSR      *PSSR
      C                   END
+      *                                                                                     MD060066
+      ** After ME1050, update MT199 back to blank for Stop of Outgoing                      MD060066
+      ** Payment transaction where CSW220 is ON and MT199 is 'X'.                           MD060066
+      *                                                                                     MD060066
+     C                   IF        (CSW220 = 'Y' AND OTCHTP = 'S' AND                       MD060066
+     C                              FTM199 = 'X')                                           MD060066
+     C                   EVAL      FTM199 = *BLANKS                                         MD060066
+     C                   ENDIF                                                              MD060066
       *
      CSR                 ENDSR
      C/EJECT

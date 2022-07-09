@@ -17,8 +17,9 @@
       *                                                               *
       *  (C) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059046           Date 05Jan22               *
-      *  Prev Amend No. CAP774             Date 21Jan21               *
+      *  Last Amend No. MD060088           Date 07Jul22               *
+      *  Prev Amend No. MD059046           Date 05Jan22               *
+      *                 CAP774             Date 21Jan21               *
       *                 CAP773             Date 21Jan21               *
       *                 CAP735             Date 12May20               *
       *                 CAP734             Date 12May20               *
@@ -26,6 +27,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060088 - 24x7: FCIP final message processing failed with   *
+      *             CNTR0020E.                                        *
+      *           - Use length function instead of scan to retrieve   *
+      *             the correct lenght of APXML field.                *
       *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
       *             the one sent in response. Amend to include loan   *
       *             ref to pass to MQ Series Queue.                   *
@@ -555,7 +560,9 @@
      C                   Z-ADD     0             F                 5 0          CAP734
      C                   Z-ADD     0             G                 5 0          CAP734
      C                   Z-ADD     0             H                 5 0          CAP734
-     C                   Eval      F = %SCAN('   ':APXML)                       CAP734
+     C**********         Eval      F = %SCAN('   ':APXML)                            CAP734 MD060088
+     C                   Eval      F = %LEN(%TRIM(APXML))                                   MD060088
+     C                   Eval      F+=1                                                     MD060088
      C                   MOVEL     *BLANKS       WMSGBF3       32000            CAP734
      C                   MOVEL     *BLANKS       WMSGBF4       32000            CAP734
      C                   Z-ADD     24            E                 5 0          CAP734
@@ -709,7 +716,9 @@
      C                   Z-ADD     0             B                 5 0          CAP735
      C                   Z-ADD     0             C                 5 0          CAP735
      C                   Z-ADD     0             D                 5 0          CAP735
-     C                   Eval      A = %SCAN('   ':PMsgBuf)                     CAP735
+     C**********         Eval      F = %SCAN('   ':APXML)                            CAP735 MD060088
+     C                   Eval      F = %LEN(%TRIM(APXML))                                   MD060088
+     C                   Eval      F+=1                                                     MD060088
      C                   MOVEL     *BLANKS       WMSGBF1       32000            CAP735
      C                   MOVEL     *BLANKS       WMSGBF2       32000            CAP735
      C                   Z-ADD     24            B                              CAP735
@@ -891,7 +900,9 @@
      C                   Z-ADD     0             F                 5 0          CAP773
      C                   Z-ADD     0             G                 5 0          CAP773
      C                   Z-ADD     0             H                 5 0          CAP773
-     C                   Eval      F = %SCAN('   ':APXML)                       CAP773
+     C**********         Eval      F = %SCAN('   ':APXML)                            CAP773 MD060088
+     C                   Eval      F = %LEN(%TRIM(APXML))                                   MD060088
+     C                   Eval      F+=1                                                     MD060088
      C                   MOVEL     *BLANKS       WMSGBF3       32000            CAP773
      C                   MOVEL     *BLANKS       WMSGBF4       32000            CAP773
      C                   Z-ADD     24            E                 5 0          CAP773
@@ -1060,7 +1071,9 @@
      C                   Z-ADD     0             F                 5 0          CAP774
      C                   Z-ADD     0             G                 5 0          CAP774
      C                   Z-ADD     0             H                 5 0          CAP774
-     C                   Eval      F = %SCAN('   ':APXML)                       CAP774
+     C**********         Eval      F = %SCAN('   ':APXML)                            CAP774 MD060088
+     C                   Eval      F = %LEN(%TRIM(APXML))                                   MD060088
+     C                   Eval      F+=1                                                     MD060088
      C                   MOVEL     *BLANKS       WMSGBF3       32000            CAP774
      C                   MOVEL     *BLANKS       WMSGBF4       32000            CAP774
      C                   Z-ADD     24            E                 5 0          CAP774

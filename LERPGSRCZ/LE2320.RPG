@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD053095           Date 07Jul22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055657           Date 14May20               *
       *                 AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
@@ -75,6 +76,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053095 - Unauthorised Transaction Report LE2320P1 does not *
+      *             report a reversal requiring authorisation of      *
+      *             repayment schedule that is still in WIP. Include  *
+      *             unauthorised reversed repayment schedule in the   *
+      *             LE2320P1 report.                                  *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055657 - Manual transaction from FFC TI Interface went to  *
@@ -174,6 +180,9 @@
      FLEFCAML2IF  E           K        DISK         KINFSR *PSSR          127657
      FLEMNFUL2IF  E           K        DISK         KINFSR *PSSR          127657
      FLEFERCL2IF  E           K        DISK         KINFSR *PSSR                              CLE071
+     FGPLEWPL1IF  E           K        DISK         KINFSR *PSSR                            MD053095
+     FLELOAML0IF  E           K        DISK         KINFSR *PSSR                            MD053095
+     F            LOAMSDKF                          KRENAMELELOAM                           MD053095
      F/COPY WNCPYSRC,LE2320F001
       *****************************************************************
       *                                                               *
@@ -256,6 +265,12 @@
      E/COPY WNCPYSRC,LEH00283
      ILEMNFUPF                                                                              AR674226
      I              SQNO                            MFSQNO                                  AR674226
+      *                                                                                     MD053095
+     IT@MSWIP                                                                               MD053095
+     I              MSWTREF                         MSTREF                                  MD053095
+     I              MSWSTAT                         MSSTAT                                  MD053095
+     I              MSWZONE                         MSZONE                                  MD053095
+      *                                                                                     MD053095
      ILDA       E DSLDA                         256
       *
       ** Local data area for database error details
@@ -291,6 +306,13 @@
      I                                    B 123 1240SFNUMU
      I                                    B 188 1890OFLLNU
      I                                    B 367 3680PRTLNU
+      *                                                                                     MD053095
+     IYRDT        DS                                                                        MD053095
+      *                                                                                     MD053095
+      ** DS for date manipulation                                                           MD053095
+      *                                                                                     MD053095
+     I                                        1   4 YIR                                     MD053095
+     I                                        5   8 DEYT                                    MD053095
       *
       ***  Dummy Data Structures used by Access Programs.
       *
@@ -555,6 +577,55 @@
      C                     ENDIF
       *
      C                     ENDDO
+      *                                                                                     MD053095
+      ** Process unauthorised reversed loan amendments                                      MD053095
+      *                                                                                     MD053095
+     C                     EXSR GETZON                                                      MD053095
+      *                                                                                     MD053095
+     C                     MOVE *OFF      *IN89                                             MD053095
+     C           *IN89     DOWEQ*OFF                                                        MD053095
+      *                                                                                     MD053095
+     C                     READ GPLEWPL1                 89                                 MD053095
+      *                                                                                     MD053095
+     C           *IN89     IFEQ '0'                                                         MD053095
+     C           MSWAPI    ANDEQ'RPSC'                                                      MD053095
+     C           MSZONE    ANDEQWZONE                                                       MD053095
+      *                                                                                     MD053095
+     C           LLOAMK    KLIST                                                            MD053095
+     C                     KFLD           LLNRF   6                                         MD053095
+     C                     KFLD           LVDAT                                             MD053095
+     C                     KFLD           LLASN   30                                        MD053095
+      *                                                                                     MD053095
+     C                     MOVE 0         LVDAT   50P                                       MD053095
+      *                                                                                     MD053095
+     C                     Z-ADD1         A       20                                        MD053095
+     C           6         SUBSTMSTREF:A  TLNRF   6                                         MD053095
+     C                     MOVE TLNRF     LLNRF                                             MD053095
+      *                                                                                     MD053095
+     C                     Z-ADD8         A       20                                        MD053095
+     C           8         SUBSTMSTREF:A  YRDT                                              MD053095
+     C                     MOVELDEYT      TVDAT   8                                         MD053095
+     C                     MOVE YIR       TVDAT                                             MD053095
+     C                     MOVE ' '       EFLAG   1                                         MD053095
+     C                     MOVE 'M'       BJDFN   1                                         MD053095
+     C                     CALL 'ZDATE11'                                                   MD053095
+     C                     PARM           TVDAT                                             MD053095
+     C                     PARM           LVDAT                                             MD053095
+     C                     PARM           BJDFN                                             MD053095
+     C                     PARM           EFLAG                                             MD053095
+      *                                                                                     MD053095
+     C                     Z-ADD17        A       20                                        MD053095
+     C           3         SUBSTMSTREF:A  TLASN   3                                         MD053095
+     C                     MOVE TLASN     LLASN                                             MD053095
+      *                                                                                     MD053095
+     C           LLOAMK    CHAINLELOAM               80                                     MD053095
+     C           *IN80     IFEQ '0'                                                         MD053095
+     C                     EXSR REP2                                                        MD053095
+     C                     ENDIF                                                            MD053095
+      *                                                                                     MD053095
+     C                     ENDIF                                                            MD053095
+      *                                                                                     MD053095
+     C                     ENDDO                                                            MD053095
       *
       ***  Process Audit Report
       *
@@ -2750,6 +2821,40 @@
      C                     ENDIF
       *
      C                     ENDSR
+      *                                                                                     MD053095
+      *****************************************************************                     MD053095
+      /TITLE SR/GETZON                                                                      MD053095
+      *****************************************************************                     MD053095
+      *                                                               *                     MD053095
+      * GETZON - Subroutine to get the zone                           *                     MD053095
+      *                                                               *                     MD053095
+      *****************************************************************                     MD053095
+      *                                                                                     MD053095
+     C           GETZON    BEGSR                                                            MD053095
+      *                                                                                     MD053095
+     C                     MOVEL'GOGET'   WPGM    9                                         MD053095
+     C                     MOVE 'ZONE'    WPGM                                              MD053095
+      *                                                                                     MD053095
+     C                     CALL WPGM                                                        MD053095
+     C                     PARM *BLANKS   PZRTCD  7                                         MD053095
+     C                     PARM *BLANKS   PZERMS 50                                         MD053095
+     C                     PARM 'N'       PZFCHK  1                                         MD053095
+     C                     PARM *BLANKS   PZZONE 10                                         MD053095
+     C                     PARM *BLANKS   PZSHTC  4                                         MD053095
+     C                     PARM *ZERO     PZRDNB  50                                        MD053095
+     C                     PARM *ZERO     PZDNWD  50                                        MD053095
+     C                     PARM *BLANKS   PZBCCY  3                                         MD053095
+     C                     PARM *ZERO     PZNJOB  10                                        MD053095
+      *                                                                                     MD053095
+     C           PZRTCD    IFEQ *BLANKS                                                     MD053095
+     C                     MOVELPZZONE    WZONE  10                                         MD053095
+     C                     ELSE                                                             MD053095
+     C           PZRTCD    IFEQ '*ERROR'                                                    MD053095
+     C                     EXSR *PSSR                                                       MD053095
+     C                     ENDIF                                                            MD053095
+     C                     ENDIF                                                            MD053095
+      *                                                                                     MD053095
+     C                     ENDSR                                                            MD053095
       *
       *****************************************************************
       /TITLE SR/ZDATE2

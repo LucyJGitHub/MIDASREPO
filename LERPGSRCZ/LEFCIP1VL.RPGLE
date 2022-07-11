@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD021652           Date 13May22               *
-      *  Prev Amend No. CLE123             Date 02Nov21               *
+      *  Last Amend No. 250755A            Date 09Jul22               *
+      *  Prev Amend No. 250755             Date 09Jul22               *
+      *                 CLE138             Date 02Nov21               *
+      *                 MD021652           Date 13May22               *
+      *                 CLE123             Date 02Nov21               *
       *                 MD058307           Date 06Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD027065           Date 22Sep20               *
@@ -87,6 +90,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250755A - User wishes to amend expiry date prior to run date.*
+      *            Re-application of fix is incorrect!                *
+      *  250755  - User wishes to amend expiry date prior to run date.*
+      *  CLE138 - Class Codes for Facilities                          *
       *  MD021652 - Facility expiry date should be not be earlier than*
       *             any attached fee against it.                      *
       *             Introduced new error message LEF0239.             *
@@ -268,6 +275,8 @@
      F                                     RENAME(CLOANCLF:CLOANCL1)                          CLE147
      F                                     PREFIX(CL)                                         CLE147
                                                                                               CLE147
+      ** Midas LE Facilities Ext File by Facility                                             CLE138
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
       **  Compile time arrays
 
      D/COPY ZSRSRC,ZALIGNZ1LE
@@ -569,6 +578,7 @@
      D CLE034          S              1A                                                      CLE034
      D CLE106          S              1A                                                      CLE106
      D CLE147          S              1A                                                      CLE147
+     D CLE138          S              1A                                                      CLE138
      D CLE160          S              1A                                                      CLE160
       *                                                                                       CLE160
      D DftCRInd        S              1A                                                      CLE160
@@ -1390,24 +1400,33 @@
       *
       **  Earlier than run date
       **   Field protected for expired facilities - do not validate
-     C     ZDAYNO        IFLT      RUND
-     C     DDACTN        ANDNE     'A'
-     C     DDACTN        ANDNE     'X'
-     C     @@RECI        ANDNE     'E'
-     C                   Move      'N'           DDDTEXOK
-     C                   Add       1             Idx
-     C                   Movel     'DDDTEX'      FldNamXAr(Idx)
-     C                   Movel     'LEF0024'     MsgIDXAr(Idx)
-     C                   ENDIF
+     C*****ZDAYNO        IFLT      RUND                                                       250755
+     C*****DDACTN        ANDNE     'A'                                                        250755
+     C*****DDACTN        ANDNE     'X'                                                        250755
+     C*****@@RECI        ANDNE     'E'                                                        250755
+     C**********         Move      'N'           DDDTEXOK                                     250755
+     C**********         Add       1             Idx                                          250755
+     C**********         Movel     'DDDTEX'      FldNamXAr(Idx)                               250755
+     C**********         Movel     'LEF0024'     MsgIDXAr(Idx)                                250755
+     C**********         ENDIF                                                                250755
+     C     ZDAYNO        IFLT      RUND                                                      250755A
+     C     DDACTN        ANDNE     'A'                                                       250755A
+     C     DDACTN        ANDNE     'X'                                                       250755A
+     C     @@RECI        ANDNE     'E'                                                       250755A
+     C                   Move      'N'           DDDTEXOK                                    250755A
+     C                   Add       1             Idx                                         250755A
+     C                   Movel     'DDDTEX'      FldNamXAr(Idx)                              250755A
+     C                   Movel     'LEF0024'     MsgIDXAr(Idx)                               250755A
+     C                   ENDIF                                                               250755A
       *
-     C     ZDAYNO        IFLT      RUND
-     C     DDACTN        ANDEQ     'A'
-     C     @@RECI        ANDNE     'E'
-     C                   Move      'N'           DDDTEXOK
-     C                   Add       1             Idx
-     C                   Movel     'DDDTEX'      FldNamXAr(Idx)
-     C                   Movel     'LEF0024'     MsgIDXAr(Idx)
-     C                   ENDIF
+     C*****ZDAYNO        IFLT      RUND                                                      250755A
+     C*****DDACTN        ANDEQ     'A'                                                       250755A
+     C*****@@RECI        ANDNE     'E'                                                       250755A
+     C**********         Move      'N'           DDDTEXOK                                    250755A
+     C**********         Add       1             Idx                                         250755A
+     C**********         Movel     'DDDTEX'      FldNamXAr(Idx)                              250755A
+     C**********         Movel     'LEF0024'     MsgIDXAr(Idx)                               250755A
+     C**********         ENDIF                                                               250755A
       *
      C     ZDAYNO        IFLE      W#DTAP
      C                   Move      'N'           DDDTEXOK
@@ -2420,6 +2439,27 @@ E4   C                   ENDIF
       *
       **  Validate Credit Agreement Type
      C                   MOVE      DDCAFT        FKEY
+     C                   MOVE      *BLANKS       FCLS                                         CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                   MOVE      DDCANM        @CUST             6                          CLE138
+     C                   MOVE      DDCAFN        @SEQN                                        CLE138
+     C     KFCLQ         KLIST                                                                CLE138
+     C                   KFLD                    @CUST             6                          CLE138
+     C                   KFLD                    FKEY                                         CLE138
+     C                   KFLD                    @SEQN             2                          CLE138
+     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C     *LOCK         IN        LDA                                                        CLE138
+     C                   Z-ADD     5             DBASE                                        CLE138
+     C                   MOVEL     'LEFCLTLH'    DBFILE                                       CLE138
+     C                   MOVEL     'CLE138'      DBKEY                                        CLE138
+     C                   MOVEL     'LEFCIP1VL'   DBPGM                                        CLE138
+     C                   OUT       LDA                                                        CLE138
+     C                   EXSR      *PSSR                                                      CLE138
+     C                   ENDIF                                                                CLE138
+     C                   MOVE      FCXCLS        FCLS                                         CLE138
+     C                   ENDIF                                                                CLE138
+                                                                                              CLE138
      C                   CALLB     'AOFACTR0'    PLIST1
       *
      C     @RTCD         IFNE      *BLANKS
@@ -3483,6 +3523,19 @@ E4   C                   ENDIF
      C                   ELSE                                                                 CLE041
      C                   EVAL      CLE025 = 'N'                                               CLE041
      C                   ENDIF                                                                CLE041
+                                                                                              CLE138
+      ** Access Switchable SAR details for the existence of CLE138                            CLE138
+                                                                                              CLE138
+     C                   CALLB     'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANK        @RTCD                                        CLE138
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+      *                                                                                       CLE138
+     C                   IF        @RTCD = *BLANK                                             CLE138
+     C                   EVAL      CLE138 = 'Y'                                               CLE138
+     C                   ELSE                                                                 CLE138
+     C                   EVAL      CLE138 = 'N'                                               CLE138
+     C                   ENDIF                                                                CLE138
       *
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
@@ -3673,6 +3726,7 @@ E4   C                   ENDIF
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    FKEY              3
+     C                   PARM                    FCLS              4                          CLE138
      C     SDFACT        PARM      SDFACT        DSFDY
 
      C     PLIST2        PLIST

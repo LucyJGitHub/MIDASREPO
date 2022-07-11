@@ -134,17 +134,13 @@
      D PASS            S             16A                                                    MD059471
      D PReturnCode     S              7A                                                    MD059471
      D PAction         S              1A                                                    MD059471
-     D PValidList      S             10A   INZ('SCFEATVL')                                  MD059471
+     D PValidList      S             10A                                                    MD059471
      D PLibrary        S             10A                                                    MD059471
      D PIDName         S            100A                                                    MD059471
      D PPass1          S            600A                                                    MD059471
      D PPass2          S            600A                                                    MD059471
      D PDescr          S           1000A                                                    MD059471
       * Action codes.                                                                       MD059471
-     D Insert          C                   CONST('A')                                       MD059471
-     D Modify          C                   CONST('M')                                       MD059471
-     D Reset           C                   CONST('R')                                       MD059471
-     D Delete          C                   CONST('D')                                       MD059471
      D Find            C                   CONST('F')                                       MD059471
                                                                                             MD059471
       ** SQL Statements.                                                                    MD059471
@@ -172,7 +168,6 @@
       ** Process all available features, if it exist in file
       ** skip processing and proceed to the next feature.
       *
-                                                                                            MD059471
       *                                                                                     MD059471
       ** Get key from MESWACTD for checking SCSRDJW0                                        MD059471
       *                                                                                     MD059471
@@ -215,7 +210,7 @@
      C                   DOW       SQLCOD = 0                                               MD059471
       *                                                                                     MD059471
      C**********         FOR        I = 1 to N                                              MD059471
-     C*
+     C*                                                                                     MD059471
      C*****Feat(I)       CHAIN(N)  SCSARDL0                                                 MD055681
      C**********         EVAL      XXFeat = Feat(I)                                MD055681 MD059471
      C/EXEC SQL                                                                             MD055681
@@ -298,7 +293,8 @@
      C**********         UNLOCK    SCSARDL0                                                 MD055681
      C                   ENDIF
       *
-     C     Feat(I)       CHAIN     SCPASSPD
+     C*****Feat(I)       CHAIN     SCPASSPD                                                 MD059471
+     C     XXFeat        CHAIN     SCPASSPD                                                 MD059471
      C                   IF        NOT%FOUND(SCPASSPD)
      C                   EXSR      SrWritePass
      C                   ELSE
@@ -394,23 +390,13 @@
       *****************************************************************
      C     SrWritePass   BEGSR
       *
-     C**********         CLEAR                   SCPASSD0                                   MD059471
+     C                   CLEAR                   SCPASSD0
      C**********         EVAL      PASS = PWord(I)                                          MD059471
      C                   EXSR      SrGetPass                                                MD059471
      C**********         EVAL      P@SARN = Feat(I)                                         MD059471
      C                   EVAL      P@SARN = XXFeat                                          MD059471
-     C**********         EVAL      WriteFlag = 'Y'                                          MD059471
-     C**********         WRITE(E)  SCPASSD0                                                 MD059471
-     C                   CALL      'UT000033'                                               MD059471
-     C                   PARM      *Blanks       PReturnCode                                MD059471
-     C                   PARM      Insert        PAction                                    MD059471
-     C                   PARM      'SCFEATVL'    PValidList                                 MD059471
-     C                   PARM                    PLibrary                                   MD059471
-     C                   PARM      P@SARN        PIDName                                    MD059471
-     C                   PARM      PASS          PPass1                                     MD059471
-     C                   PARM      PASS          PPass2                                     MD059471
-     C                   PARM      *Blanks       PDescr                                     MD059471
-                                                                                            MD059471
+     C                   EVAL      WriteFlag = 'Y'
+     C                   WRITE(E)  SCPASSD0
       *
      C                   IF        %ERROR
      C                   EVAL      Msg = 'Write to SCPASSPD ended in error.'

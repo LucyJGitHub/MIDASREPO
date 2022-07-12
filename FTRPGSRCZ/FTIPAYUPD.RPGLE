@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 254361A            Date 15Feb21               *
-      *  Prev Amend No. 254361             Date 15Feb21               *      
+      *  Last Amend No. MD060066           Date 30Jun22               *
+      *  Prev Amend No. 254361A            Date 15Feb21               *
+      *                 254361             Date 15Feb21               *
       *                 HUT101CC1          Date 06Nov20               *      
       *                 HUT101             Date 12May20               *      
       *                 MD058914           Date 06Oct21               *
@@ -103,6 +104,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060066 - MT202 message not generated for MT103 transactions*
+      *             Add reversal of FTM199 for Stop of Incoming Pay-  *
+      *             ment transaction.                                 *
       *  254361A- Populate ZZAMT before call to SR/SRTrailer.         *
       *         - Applied for MD-57585                                *
       *  254361 - Update trailer right after update of inpaydd.       *
@@ -2746,6 +2750,15 @@ e1   C                   ENDIF                                                  
      C                   EVAL      FTM199 = *BLANKS                                           CSW220
      C                   ENDIF                                                                CSW220
       /COPY WNCPYSRC,HUT101_016                                                               HUT101
+      *                                                                                     MD060066
+      ** Update MT199 Flag to 'X' for Stop of Incoming Payment                              MD060066
+      ** transaction where CSW220 is ON and MT199 is not 'Z'                                MD060066
+      ** Note: The said field will be updated to blank in ME1050.                           MD060066
+      *                                                                                     MD060066
+     C                   IF        (CSW220 = 'Y' AND IPCHTP = 'S' AND                       MD060066
+     C                              FTM199 <> 'Z')                                          MD060066
+     C                   EVAL      FTM199 = 'X'                                             MD060066
+     C                   ENDIF                                                              MD060066
       *
       ** N.B. Audit Stamp details are determined in called program.
       *
@@ -2767,6 +2780,14 @@ e1   C                   ENDIF                                                  
      C                   MOVEL     013           DBase
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                     MD060066
+      ** After ME1050, update MT199 back to blank for Stop of Incoming                      MD060066
+      ** Payment transaction where CSW220 is ON and MT199 is 'X'.                           MD060066
+      *                                                                                     MD060066
+     C                   IF        (CSW220 = 'Y' AND IPCHTP = 'S' AND                       MD060066
+     C                              FTM199 = 'X')                                           MD060066
+     C                   EVAL      FTM199 = *BLANKS                                         MD060066
+     C                   ENDIF                                                              MD060066
       *
      C                   ENDSR
       *

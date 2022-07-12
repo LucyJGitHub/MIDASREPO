@@ -19,13 +19,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. BUG25857B          Date 13Jul22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 262095             Date 14Oct09               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG25857B - Various error on KWG                             *
+      *            - Applied for MD060204.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  262095 - Change BankName to ServiceProvider.                 *
@@ -116,15 +119,24 @@
      D  WAbLen                 1      4I 0 INZ(80)
      D  WAbRtp                 5      5    INZ('A')
      D  WAbVId                 6     11S 0
-     D  WAbBkN                12     15
-     D  WAbVer                16     21
-     D  WAbDat                22     29
-     D  WAbTim                30     35
-     D  WAbFnr                36     41S 0
-     D  WAbFtp                42     43
-     D  WAbUtp                44     44
-     D  WAbLid                45     46S 0
-     D  WAbFnm                47     58
+     D**WAbBkN**              12     15                                                    BUG25857B
+     D**WAbVer**              16     21                                                    BUG25857B
+     D**WAbDat**              22     29                                                    BUG25857B
+     D**WAbTim**              30     35                                                    BUG25857B
+     D**WAbFnr**              36     41S 0                                                 BUG25857B
+     D**WAbFtp**              42     43                                                    BUG25857B
+     D**WAbUtp**              44     44                                                    BUG25857B
+     D**WAbLid**              45     46S 0                                                 BUG25857B
+     D**WAbFnm**              47     58                                                    BUG25857B
+     D  WAbBkN                12     22                                                    BUG25857B
+     D  WAbVer                23     30                                                    BUG25857B
+     D  WAbDat                31     38                                                    BUG25857B
+     D  WAbTim                39     44                                                    BUG25857B
+     D  WAbFnr                45     50S 0                                                 BUG25857B
+     D  WAbFtp                51     52                                                    BUG25857B
+     D  WAbUtp                53     53                                                    BUG25857B
+     D  WAbLid                54     55S 0                                                 BUG25857B
+     D  WAbFnm                56     67                                                    BUG25857B
       *
       ** Unsigned Integer value of a character
       *

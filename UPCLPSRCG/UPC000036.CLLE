@@ -9,12 +9,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD054336           Date 27Sep19              */
-/*       Prev Amend No. CUP042             Date 26May15              */
+/*       Last Amend No. MD060005           Date 24May22              */
+/*       Prev Amend No. MD059471           Date 04Apr22              */
+/*                      MD054336           Date 27Sep19              */
+/*                      CUP042             Date 26May15              */
 /*                      CUP041   *CREATE   Date 27May14              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060005 - SCSWPSVL is removed from Bridge library after    */
+/*                  database upgrade                                 */
+/*       MD059471 - SWIFT 2022 Changes Feature Password              */
 /*       MD054336 - Bridge ends in error after GPST option when two  */
 /*                  different sessions were used                     */
 /*       CUP042 - New option to run Upgrade Programs after           */
@@ -94,6 +99,20 @@
 /* Set up library list. */
              CALLSUBR   SUBR(SETUPLIBL)
 
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                               /*MD059471*/
+SWIFTVLDL:                                                                              /*MD059471*/
+/**********  CHKOBJ     OBJ(&BRGBRGLIB/SCSWPSVL) OBJTYPE(*VLDL)  */            /*MD059471 MD060005*/
+             CHKOBJ     OBJ(&BRGBRGLIB/SCSWPSVLB) OBJTYPE(*VLDL)                        /*MD060005*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD059471*/
+                GOTO       CMDLBL(RUNUPGPGM)                                            /*MD059471*/
+             ENDDO                                                                      /*MD059471*/
+             CALL       PGM(UP000714) PARM(&BRGBRGLIB &PFX &RTNCODE)                    /*MD059471*/
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)                                 /*MD059471*/
+                CHGVAR     VAR(&ERRPGM) VALUE('UP000712')                               /*MD059471*/
+                GOTO       CMDLBL(ERROR)                                                /*MD059471*/
+             ENDDO                                                                      /*MD059471*/
+             ENDDO                                                                      /*MD059471*/
+
 /* Run Upgrade Programs after deliverable data changes. */                                /*CUP042*/
 RUNUPGPGM:                                                                                /*CUP042*/
              CHGVAR     VAR(&SUBOPT) VALUE('RunUpgradePgmsPostDD')                        /*CUP042*/
@@ -103,17 +122,17 @@ RUNUPGPGM:                                                                      
              IF         COND(&STATUS *EQ 'E') THEN(DO)                                    /*CUP042*/
                 CHGVAR     VAR(&ERRPGM) VALUE('UP000009')                                 /*CUP042*/
                 GOTO       CMDLBL(ERROR)                                                  /*CUP042*/
-             ENDDO                                                                        /*CUP042*/
+             ENDDO       /*CUP042*/
              IF         COND(&STATUS *NE 'C') THEN(DO)                                    /*CUP042*/
                 CALL       PGM(UP000012) PARM(&LAYER '*POSTDD' &RTNFLAG)                  /*CUP042*/
                 CALLSUBR   SUBR(ERRORHAND1) RTNVAL(&SRERROR)                              /*CUP042*/
                 IF         COND(&SRERROR *EQ 1) THEN(DO)                                  /*CUP042*/
                    GOTO       CMDLBL(ENDPGM)                                              /*CUP042*/
-                ENDDO                                                                     /*CUP042*/
+                ENDDO       /*CUP042*/
                 IF         COND(&SRERROR *EQ 2) THEN(DO)                                  /*CUP042*/
                    GOTO       CMDLBL(ERROR)                                               /*CUP042*/
-                ENDDO                                                                     /*CUP042*/
-             ENDDO                                                                        /*CUP042*/
+                ENDDO       /*CUP042*/
+             ENDDO       /*CUP042*/
 
 /* Update adoption programs. */
 ADOPTPGMS:
@@ -282,7 +301,7 @@ ENDPGM:
                 IF         COND(&SAVLIBL *EQ 'Y') THEN(DO)                              /*MD054336*/
                    RSTLIBL    SAVEDLIBL(UPC000036)                                      /*MD054336*/
                    MONMSG     MSGID(CPF0000 MCH0000)                                    /*MD054336*/
-                ENDDO                                                                   /*MD054336*/
+                ENDDO       /*MD054336*/
              ENDDO
              ELSE       CMD(DO)
                 RMVLIBLE   LIB(&BRGBRGLIB)

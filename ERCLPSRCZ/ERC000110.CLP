@@ -9,10 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. BUG25857B*CREATE    Date 21Jul21             */
+/*       Last Amend No. MD060204            Date 13Jul22             */
+/*       Prev Amend No. BUG25857B*CREATE    Date 21Jul21             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060204 - KWG24 answerback processing is sitting on a MSGW */
+/*                  called 'HALT'.                                   */
+/*                - Removed send user message 'HALT'.                */
+/*                - Check if CER047 is ON (from MDSC036501 changes). */
 /*       BUG25857B - Various error on KWG                            */
 /*                 - Applied for MD058462.                           */
 /*                                                                   */
@@ -27,9 +32,36 @@
              DCL        VAR(&CLOCK) TYPE(*CHAR) LEN(6)
              DCL        VAR(&SYSPR) TYPE(*CHAR) LEN(2)
              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                  /*MD060204*/
+             DCL        VAR(&PFMT) TYPE(*CHAR) LEN(200)                                 /*MD060204*/
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)                                  /*MD060204*/
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)                                  /*MD060204*/
+                                                                                        /*MD060204*/
+/** Check if SAR CER047 is installed */                                                 /*MD060204*/
+                                                                                        /*MD060204*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                    /*MD060204*/
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                    /*MD060204*/
+             CHGVAR     VAR(&PSARD) VALUE('CER047')                                     /*MD060204*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &PFMT)                  /*MD060204*/
+                                                                                        /*MD060204*/
+/** If an error ocurred  */                                                             /*MD060204*/
+                                                                                        /*MD060204*/
+             IF         COND((&PRTCD *NE '       ') *AND (&PRTCD *NE +
+                          '*NRF    ')) THEN(DO)                                         /*MD060204*/
+               SNDPGMMSG  MSG('AOSARDR0 - Program Error') +
+                TOMSGQ(MOPERQ)                                                          /*MD060204*/
+               CHGJOB     SWS('XXXXXX11')                                               /*MD060204*/
+               GOTO       CMDLBL(END)                                                   /*MD060204*/
+             ENDDO                                                                      /*MD060204*/
+                                                                                        /*MD060204*/
+/** If CER047 is OFF, end program */                                                    /*MD060204*/
+                                                                                        /*MD060204*/
+             IF         COND(&PRTCD *NE '       ') THEN(DO)                             /*MD060204*/
+               GOTO       CMDLBL(END)                                                   /*MD060204*/
+             ENDDO                                                                      /*MD060204*/
 
 /* Call response file renamer                                        */
-             SNDUSRMSG 'HALT'
+/**********  SNDUSRMSG 'HALT' /*                                                        /*MD060204*/
              CALL       PGM(ER000140)
 
 /* Call response file receiver with multilanguage support            */
@@ -64,5 +96,5 @@
                           USER(&USER) INLLIBL(*JOBD) +
                           SCDTIME(&CLOCK) MSGQ(*NONE)
              ENDDO
-
+END:                                                                                    /*MD060204*/
              ENDPGM

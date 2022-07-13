@@ -15,7 +15,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. JIMMER             Date 11Mar08               *
+      *  Last Amend No. MD060257           Date 11Mar08               *
       *  Prev Amend No. CLE172             Date 01Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -34,7 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  JIMMER - Do not perform DBASE 5 if currency is ESP/DEM       *
+      *  MD060257 - Do not perform DBASE 5 if currency is ESP/DEM     *
+      *             (Upgrade of original code annotated as JIMMER)    *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -1253,14 +1254,14 @@
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    TKEY                                       A
      C     SDCURR        PARM      SDCURR        DSSDY                                      B
-     C     TKEY          IFEQ      'ESP'                                                      JIMMER
-     C                   Z-ADD     0             CDP                                          JIMMER
-     C                   GOTO      ENDERR                                                     JIMMER
-     C                   ENDIF                                                                JIMMER
-     C     TKEY          IFEQ      'DEM'                                                      JIMMER
-     C                   Z-ADD     2             CDP                                          JIMMER
-     C                   GOTO      ENDERR                                                     JIMMER
-     C                   ENDIF                                                                JIMMER
+     C     TKEY          IFEQ      'ESP'                                                    MD060257
+     C                   Z-ADD     0             CDP                                        MD060257
+     C                   GOTO      ENDERR                                                   MD060257
+     C                   ENDIF                                                              MD060257
+     C     TKEY          IFEQ      'DEM'                                                    MD060257
+     C                   Z-ADD     2             CDP                                        MD060257
+     C                   GOTO      ENDERR                                                   MD060257
+     C                   ENDIF                                                              MD060257
       *
       ** Database error if live record not found
       *
@@ -1275,7 +1276,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-     C     ENDERR        TAG                                                                  JIMMER
+     C     ENDERR        TAG                                                                MD060257
       *
       ** Determine no of decimals 24=0 25=1 26=2 27=3
       *

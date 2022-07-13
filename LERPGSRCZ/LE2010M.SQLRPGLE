@@ -28,8 +28,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD057705           Date 21Jan21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. 250603             Date 12Jul22               *
+      *  Prev Amend No. MD057705           Date 21Jan21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056890           Date 11Oct20               *
       *                 CER050             Date 16Jun19               *
@@ -130,6 +131,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250603 - Allow OVRDBF to file LEIFEELX regardless of CAP064. *
       *  MD057705 - Deliverable Data Split for SDOREFPD               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -2583,12 +2585,12 @@
      C                   PARM      OVR_LEFEED    QCMD                                         149199
      C                   PARM                    LENGTH                                       149199
       *                                                                                       CAP064
-     C     CAP064        IFEQ      'Y'                                                        CAP064
+     C*****CAP064        IFEQ      'Y'                                                 CAP064 250603
      C                   EVAL      LENGTH = %SIZE(OVR_LEIFEELX)                               CAP064
      C                   CALL      'QCMDEXC'                                                  CAP064
      C                   PARM      OVR_LEIFEELX  QCMD                                         CAP064
      C                   PARM                    LENGTH                                       CAP064
-     C                   ENDIF                                                                CAP064
+     C**********         ENDIF                                                         CAP064 250603
       *                                                                                       134390
      C                   IF        CLE034 = 'Y'                                               CLE034
      C**********                   AND WStAlocUsed = 'Y'                               CLE034 227708
@@ -2620,12 +2622,12 @@
      C                   PARM                    F4MFPD
      C                   PARM                    PTimestamp                                   CLE034
       *                                                                                       CAP064
-     C     CAP064        IFEQ      'Y'                                                        CAP064
+     C*****CAP064        IFEQ      'Y'                                                 CAP064 250603
      C                   EVAL      LENGTH = %SIZE(DLT_LEIFEELX)                               CAP064
      C                   CALL      'QCMDEXC'                                                  CAP064
      C                   PARM      DLT_LEIFEELX  QCMD                                         CAP064
      C                   PARM                    LENGTH                                       CAP064
-     C                   ENDIF                                                                CAP064
+     C**********         ENDIF                                                         CAP064 250603
                                                                                               CLE034
      C     CLE034        IFEQ      'Y'                                                        CLE034
      C                   EVAL      LENGTH = %SIZE(DLT_LESTALLX)                               CLE034

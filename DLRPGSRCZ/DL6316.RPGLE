@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR905057           Date 15Feb12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 217486             Date 06Jun06               *
+      *                 217486             Date 06Jun06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
@@ -48,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR905057 - Amend the structure of TRNO by dropping the CLS   *
+      *             Sequence number and extending the value date to   *
+      *             include the Year. (Child: AR905058)               *
       *  MD046248 - Finastra Rebranding                               *
       *  217486 - MT202/MT210 generated for a customer even though it *
       *           is setup not to.  Do not generate message if it is  *
@@ -127,7 +131,7 @@
      FMGOREFA6  IF   E           K DISK                                                       194019
       *                                                                                       194019
      FDL6316AU  O    E             PRINTER USROPN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -148,12 +152,12 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -209,7 +213,7 @@
      D WLtimhh                 1      2S 0
      D WLtimmm                 3      4S 0
      D WCLSTimeA               1      4A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -243,7 +247,8 @@
      D WLeadHr         S              2S 0
      D WLeadMin        S              2S 0
      D WTotmm          S              3S 0
-     D WVDat           S              4A
+     D***WVDat**         S              4A                                                  AR905057
+     D WVDat           S              6A                                                    AR905057
      D WTrnSeq         S              2A
       *
       ** Pointer for the indicator array
@@ -260,7 +265,7 @@
      I              PYPRFC                      DPRFC
      I              PYTIMD                      DTIMD
      I              PYTIMS                      DTIMS
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -287,7 +292,7 @@
       ** Repeat while not end of file.
       *
      C                   DOW       EndOfFileH = False
- 
+
      C                   IF        PYVALD >= BJRDNB AND PYRECI = 'D'
       *
       ** Initialise fields
@@ -305,18 +310,18 @@
       *
       ** Read pay schedule details
      C                   EXSR      SRCLSDet
- 
+
      C                   ENDIF
       *
       ** Read next pay schedule header record.
      C                   READ      FXCLSPSHL1                             01
- 
+
      C                   ENDDO
       *
       **  Terminate program
       *
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -333,12 +338,12 @@
       ** Read pay schedule detail record.
       *
      C     KPaydetail    READE     FXCLSPSDL1                             02
- 
+
      C                   DOW       EndOfFileD = False
- 
+
      C                   IF        DRECI = 'D'
      C                   EVAL      Noupdate = 'Y'
- 
+
       ** Process receive detail
      C                   IF        WPay_Rec = 'R'
      C                   EXSR      SRMGF210
@@ -357,11 +362,11 @@
       *
       ** Read next pay schedule detail record.
      C     KPaydetail    READE     FXCLSPSDL1                             02
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -386,7 +391,7 @@
      C                   PARM      *BLANKS       PCsSn
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCyCd + PNoNb
@@ -417,7 +422,7 @@
      C                   PARM      *BLANKS       PCsSn
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCyCd + PNoNb
@@ -448,7 +453,7 @@
      C                   PARM      'D'           PFmt
      C                   PARM                    PDate
      C                   PARM      *BLANKS       PADate
- 
+
      C                   MOVEL     PDate         WVDat
      C                   MOVE      DSEQN         WSeqN
       *
@@ -456,7 +461,8 @@
      C                   MOVE      PYTSEQ        WTrnSeq                                      194019
      C***********        EVAL      MGTNUM = DCCY + DNOST + WVDat +                            190033
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           190033
-     C                             WSeqN + WTrnSeq                                            194019
+     C**********                   WSeqN + WTrnSeq                                   194019 AR905057
+     C                             WTrnSeq                                                  AR905057
      C***********                  WSeqN + '01'                                               194019
       *
       **  Determine if the TRN is unique                                                      194019
@@ -467,7 +473,8 @@
      C                   ADD       1             PYTSEQ                                       194019
      C                   MOVE      PYTSEQ        WTrnSeq                                      194019
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           194019
-     C                             WSeqN + WTrnSeq                                            194019
+     C**********                   WSeqN + WTrnSeq                                   194019 AR905057
+     C                             WTrnSeq                                                  AR905057
      C                   EVAL      TRNO = 'DL' + MGTNUM                                       194019
      C     TRNO          CHAIN     MGOREFD0                           11                      194019
      C                   END                                                                  194019
@@ -512,10 +519,10 @@
       *
      C                   MOVE      'I'           MGCHTP                                       CSW025
      C                   WRITE     MGF210D0
- 
+
      C**********         ENDSR                                                                217486
      C     EMGF210       ENDSR                                                                217486
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -541,7 +548,7 @@
      C                   PARM      *BLANKS       PCsSn
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCyCd + PNoNb
@@ -560,7 +567,7 @@
       ** CET time is ahead, add system time and time difference. Otherwise
       ** subtract.
      C                   IF        Wsign = '+'
- 
+
      C                   EVAL      WTothh = Whh + WTimdhh
      C                   EVAL      WTotmm = Wmm + WTimdmm
      C                   IF        WTotmm >= 60
@@ -569,9 +576,9 @@
      C                   ENDIF
      C                   EVAL      Whh = WTothh
      C                   EVAL      Wmm = WTotmm
- 
+
      C                   ELSE
- 
+
      C                   IF        Wmm < WTimdmm
      C                   EVAL      WTotmm = Wmm + 60
      C                   EVAL      Whh = Whh - 1
@@ -582,7 +589,7 @@
      C                   EVAL      WTothh = Whh - WTimdhh
      C                   EVAL      Whh = WTothh
      C                   EVAL      Wmm = WTotmm
- 
+
      C                   ENDIF
       *
       ** Compute: CLS Time minus Payment Lead Time
@@ -600,7 +607,7 @@
      C                   MVR                     WLeadMin
      C                   EVAL      A7PMLT = WLeadMin
      C                   ENDIF
- 
+
      C                   IF        WLtimmm < A7PMLT
      C                   EVAL      WTotmm = WLtimmm + 60
      C                   EVAL      WLtimhh = WLtimhh - 1
@@ -608,11 +615,11 @@
      C                   ELSE
      C                   EVAL      WTotmm = WLtimmm - A7PMLT
      C                   ENDIF
- 
+
      C                   IF        WLeadHr <> *ZERO
      C                   EVAL      WLtimhh = WLtimhh - WLeadHr
      C                   ENDIF
- 
+
      C                   EVAL      WLtimmm = WTotmm
       *                                                                                       189658
      C                   ENDIF                                                                189658
@@ -634,7 +641,7 @@
      C                   GOTO      EMGF202
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Branch code
@@ -664,7 +671,7 @@
      C                   PARM      *BLANKS       PCsSn
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = PCyCd + PNoNb
@@ -693,14 +700,14 @@
      C                   PARM      'D'           PFmt
      C                   PARM                    PDate
      C                   PARM      *BLANKS       PADate
- 
+
      C                   MOVEL     PDate         WVDat
      C                   MOVE      DSEQN         WSeqN
- 
+
       ** Obtain transaction sequence number from file or create new
- 
+
      C     KSeqNo        CHAIN     FXSEQNPD                           03
- 
+
       **  Determine if the TRN is unique                                                      194019
      C     *IN03         IFEQ      '1'                                                        196191
      C                   Z-ADD     1             PYTSEQ                                       194019
@@ -709,7 +716,8 @@
      C                   ENDIF                                                                196191
      C                   MOVE      PYTSEQ        WTrnSeq                                      194019
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           194019
-     C                             WSeqN + WTrnSeq                                            194019
+     C**********                   WSeqN + WTrnSeq                                   194019 AR905057
+     C                             WTrnSeq                                                  AR905057
      C                   EVAL      TRNO = 'DL' + MGTNUM                                       194019
      C     TRNO          CHAIN     MGOREFD0                           11                      194019
       *                                                                                       194019
@@ -717,7 +725,8 @@
      C                   ADD       1             PYTSEQ                                       194019
      C                   MOVE      PYTSEQ        WTrnSeq                                      194019
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           194019
-     C                             WSeqN + WTrnSeq                                            194019
+     C**********                   WSeqN + WTrnSeq                                   194019 AR905057
+     C                             WTrnSeq                                                  AR905057
      C                   EVAL      TRNO = 'DL' + MGTNUM                                       194019
      C     TRNO          CHAIN     MGOREFD0                           11                      194019
      C                   END                                                                  194019
@@ -733,12 +742,13 @@
      C***********        EVAL      PYTSEQ = 1                                                 194019
      C                   WRITE     FXSEQND0
      C                   ENDIF
- 
+
      C                   MOVE      PYTSEQ        WTrnSeq
- 
+
      C***********        EVAL      MGTNUM = DCCY + DNOST + WVDat +                            190033
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           190033
-     C                             WSeqN + WTrnSeq
+     C**********                   WSeqN + WTrnSeq                                          AR905057
+     C                             WTrnSeq                                                  AR905057
       *
       ** Value date
       *
@@ -780,9 +790,9 @@
       *
      C                   MOVE      'I'           MGCHTP                                       CSW025
      C                   WRITE     MGF202D0
- 
+
      C     EMGF202       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -799,7 +809,7 @@
       ** Update pay schedule file
       *
      C                   UPDATE    FXCLPDD0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  217486
@@ -925,7 +935,7 @@
       ** Set value for module id.
       *
      C                   EVAL      MGMODI = 'DL'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -938,9 +948,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
@@ -969,16 +979,16 @@
      C                   KFLD                    PYNOST
      C                   KFLD                    PYVALD
      C                   KFLD                    PYSEQN
- 
+
       ** Key list for Transaction sequence number
- 
+
      C     KSeqNo        KLIST
      C                   KFLD                    DCCY
      C                   KFLD                    DNOST
      C                   KFLD                    PYVDAT
      C                   KFLD                    DSEQN
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -987,7 +997,7 @@
       *                                                               *
       *****************************************************************
      C     SRDBErr       BEGSR
- 
+
      C                   OPEN      DL6316AU
      C                   WRITE     HEADAU
      C                   EVAL      *INU7 = *ON
@@ -995,11 +1005,11 @@
      C                   EVAL      *INLR = *ON
      C                   WRITE     DBERROR
      C                   CLOSE     DL6316AU
- 
+
      C                   EXSR      *PSSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1011,17 +1021,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *
       ********************************************************************

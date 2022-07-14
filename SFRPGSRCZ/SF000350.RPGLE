@@ -39,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR635878 - Request to apply fix SC263737 and AR576681.       *
       *  AR576681 - User not printed consistently on a specific line  *
       *             (for optical reporting): Skip a line when Dep't   *
       *             is not to be printed                              *
@@ -48,7 +49,6 @@
       *             identical given 13 and 32 characters in the       *
       *             report: Extend field lengths                      *
       *  263737 - Overlapping in 'Initial Menu' field in SF000350P1.  *
-      *  AR635878 - Request to apply fix SC263737 and AR576681.       *
       *  MD050150 - Rename 'FusionBanking Midas' to 'Fusion Midas'    *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *

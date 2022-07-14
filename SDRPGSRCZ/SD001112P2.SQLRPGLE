@@ -18,10 +18,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CDL102  *CREATE    Date 01Jun21               *
+      *  Last Amend No. MD060020           Date 21Jun22               *
+      *  Prev Amend No. CDL102  *CREATE    Date 01Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060020 - Fusion Midas ARR Adapter: Expired Token           *
+      *             prevents ARR requests. Check for exceptions and   *
+      *             seton U1 job switch in order to fail SDC000114    *
+      *             component.                                        *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *                                                               *
       *****************************************************************
@@ -76,10 +81,12 @@
      D  SJMODI                        2A
      D  SJTREF                        6A
      D  SJEXMS                      150A
+     D  SJSTAT                        1A                                                    MD060020
 
       ** Work variables
      D @RUN            S              1A
      D WErrMsg         S                   LIKE(SJEXMS)
+     D ARRCalcExpn     S              1A                                                    MD060020
 
       ** Access Object Variables
      D PRTCD           S              7A
@@ -90,6 +97,29 @@
      D DIFLN1          S              3S 0
      D WOPNP1          S              1A
 
+      ** Parameters for calling AOSVALR0                                                    MD060020
+     D RtnCode         S              7A                                                    MD060020
+     D PSysVal01       S             20A                                                    MD060020
+     D PCurSet01       S            200A                                                    MD060020
+     D PSysVal02       S             20A                                                    MD060020
+     D PCurSet02       S            200A                                                    MD060020
+     D PSysVal03       S             20A                                                    MD060020
+     D PCurSet03       S            200A                                                    MD060020
+     D PSysVal04       S             20A                                                    MD060020
+     D PCurSet04       S            200A                                                    MD060020
+     D PSysVal05       S             20A                                                    MD060020
+     D PCurSet05       S            200A                                                    MD060020
+     D PSysVal06       S             20A                                                    MD060020
+     D PCurSet06       S            200A                                                    MD060020
+     D PSysVal07       S             20A                                                    MD060020
+     D PCurSet07       S            200A                                                    MD060020
+     D PSysVal08       S             20A                                                    MD060020
+     D PCurSet08       S            200A                                                    MD060020
+     D PSysVal09       S             20A                                                    MD060020
+     D PCurSet09       S            200A                                                    MD060020
+     D PSysVal10       S             20A                                                    MD060020
+     D PCurSet10       S            200A                                                    MD060020
+                                                                                            MD060020
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -103,7 +133,8 @@
       ** ARR Calculator Batch Job
      C/EXEC SQL
      C+ declare ERRCursor insensitive scroll cursor for
-     C+ select SJMODI, SJTREF, SJEXMS
+     C***+ select SJMODI, SJTREF, SJEXMS                                                    MD060020
+     C+ select SJMODI, SJTREF, SJEXMS, SJSTAT                                               MD060020
      C+ from SDARRLOGTD
      C+ where SJMODI = 'DL'
      C+   and SJSTAT = 'F'
@@ -136,6 +167,11 @@
      C/END-EXEC
 
      C                   ENDDO
+                                                                                            MD060020
+     C                   IF        ARRCalcExpn = 'Y'                                        MD060020
+     C                             AND SJSTAT = 'F'                                         MD060020
+     C                   EVAL      *INU1 = *ON                                              MD060020
+     C                   ENDIF                                                              MD060020
 
      C/EXEC SQL
      C+ close ERRCursor
@@ -237,6 +273,43 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
+      ** Get setting of system value ARR Calculation Exception Fail Component               MD060020
+                                                                                            MD060020
+     C                   EVAL      ARRCalcExpn = *BLANKS                                    MD060020
+     C                   EVAL      PSysVal01 = 'ARRCalcExcptFailComp'                       MD060020
+                                                                                            MD060020
+     C                   CALL      'AOSVALR0'                                               MD060020
+     C                   PARM      *BLANKS       RtnCode                                    MD060020
+     C                   PARM                    PSysVal01                                  MD060020
+     C                   PARM      *BLANKS       PCurSet01                                  MD060020
+     C                   PARM      *BLANKS       PSysVal02                                  MD060020
+     C                   PARM      *BLANKS       PCurSet02                                  MD060020
+     C                   PARM      *BLANKS       PSysVal03                                  MD060020
+     C                   PARM      *BLANKS       PCurSet03                                  MD060020
+     C                   PARM      *BLANKS       PSysVal04                                  MD060020
+     C                   PARM      *BLANKS       PCurSet04                                  MD060020
+     C                   PARM      *BLANKS       PSysVal05                                  MD060020
+     C                   PARM      *BLANKS       PCurSet05                                  MD060020
+     C                   PARM      *BLANKS       PSysVal06                                  MD060020
+     C                   PARM      *BLANKS       PCurSet06                                  MD060020
+     C                   PARM      *BLANKS       PSysVal07                                  MD060020
+     C                   PARM      *BLANKS       PCurSet07                                  MD060020
+     C                   PARM      *BLANKS       PSysVal08                                  MD060020
+     C                   PARM      *BLANKS       PCurSet08                                  MD060020
+     C                   PARM      *BLANKS       PSysVal09                                  MD060020
+     C                   PARM      *BLANKS       PCurSet09                                  MD060020
+     C                   PARM      *BLANKS       PSysVal10                                  MD060020
+     C                   PARM      *BLANKS       PCurSet10                                  MD060020
+                                                                                            MD060020
+     C                   IF        RtnCode <> *BLANKS                                       MD060020
+     C                   EVAL      DBFILE = 'SDSVLCTD'                                      MD060020
+     C                   EVAL      DBKEY = PSysVal01                                        MD060020
+     C                   EVAL      DBASE  = 002                                             MD060020
+     C                   EXSR      *PSSR                                                    MD060020
+     C                   ELSE                                                               MD060020
+     C                   MOVEL     PCurSet01     ARRCalcExpn                                MD060020
+     C                   ENDIF                                                              MD060020
+                                                                                            MD060020
      C                   ENDSR
       *****************************************************************
       /EJECT

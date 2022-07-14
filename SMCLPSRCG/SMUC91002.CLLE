@@ -1,0 +1,65 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CL Program to call SMU91002')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC90007 - CL program to call SMU90002                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD060155  *CREATE  Date 13Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD060155 - In FBM 2021.C Facility-Edit, there is message    */
+/*                  "45028960" that cannot be overridden.            */
+/*                - Update the severity of BFTEVTCODE from client    */
+/*                  previous DB to migrated DB.                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2022')
+/**/
+/* Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+/* Start of program */
+
+
+/* Create backup */
+/* CPYF command is not applicable for BF tables because of alternate name*/
+/* Create a back up copy using WRKOBJ command */
+/* Please see CDD for file back up and restore instructions */
+/**/
+/**/
+/* Call ILE/SMU91001*/
+/**/
+             CHGJOB     SWS(XXXXXX00)
+
+             CALL       PGM(SMU91002)
+
+/**/
+/* If errror occurred*/
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('SMUC91002 completed normally.')
+
+             GOTO       CMDLBL(END)
+
+/**/
+/* Abnormal Termination of the program */
+/**/
+ ABNOR:     SNDPGMMSG  MSG('Error occurred in SMUC90007 program')
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2022')
+             SNDPGMMSG  MSG('End of SMUC91002')
+             ENDPGM

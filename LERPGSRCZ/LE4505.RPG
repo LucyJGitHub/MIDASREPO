@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 252993             Date 13Jul22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055733           Date 03Jul20               *
       *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -66,6 +67,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  252993 - Apply 241135                                        *
+      *  241135 - Add MT320 handling for bank/nonbank term loan.      *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -158,6 +161,8 @@
      F            CLOANZ1F                          KIGNORE
      F                                              KCOMIT
      FSDCURRL1IF  E           K        DISK                                                 CLE075BO
+     FMGF320PDO   E                    DISK                                                   241135
+     F                                              KCOMIT                                    241135
      FMGF330PDO   E                    DISK
      F                                              KCOMIT
      FLE4505AUO   E                    PRINTER                        UC
@@ -416,6 +421,15 @@
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     END
+      *                                                                                       241135
+      **  Guarantees Issued (Processing type 70) do NOT generate                              241135
+      **  messages - so no processing required                                                241135
+      *                                                                                       241135
+     C           PTYP      IFNE 70                                                            241135
+      *                                                                                       241135
+      **  Determine message type                                                              241135
+      *                                                                                       241135
+     C                     EXSR TYPE                                                          241135
       *                                                                   123333
       * Get no. of dec. places.                                           123333
      C                     Z-ADDCURARR    A                                                 CLE075BO
@@ -455,6 +469,7 @@
      C                     READ LENXT                    10
       *
      C                     END
+     C                     END                                                                241135
       *
       **  Terminate program
       *
@@ -669,7 +684,7 @@
      C                     MOVE *BLANKS   MGBRKC
      C                     MOVE *BLANKS   MGEVTP
       *
-     C                     MOVE '330'     @TYP    3        *MT330 message*
+     C***                  MOVE '330'     @TYP    3        *MT330 message*                    241135
       *
      C                     ENDSR
       *
@@ -731,39 +746,159 @@
       *
       *****************************************************************
      C/EJECT
+      *****************************************************************                       241135
+      *   TYPE - determine message type                               *                       241135
+      *   Called by - main process                                    *                       241135
+      *****************************************************************                       241135
+      *                                                                                       241135
+     C           TYPE      BEGSR                                                              241135
+      *                                                                                       241135
+      ** Check loan processing type - types allowed are :                                     241135
+      *                                                                                       241135
+      *  61      Call loans                                                                   241135
+      *  62      Time loans                                                                   241135
+      *  63      Discounted loans                                                             241135
+      *  64      Participations purchased - time                                              241135
+      *  65      Participations purchased - discounted                                        241135
+      *  66      Participations sold - time                                                   241135
+      *  67      Participations sold - discounted                                             241135
+      *                                                                                       241135
+     C           PTYP      IFEQ 61                                                            241135
+     C                     MOVE '330'     @TYP    3                                           241135
+     C                     ELSE                                                               241135
+     C                     MOVE '320'     @TYP                                                241135
+     C                     END                                                                241135
+      *                                                                                       241135
+     C                     ENDSR                                                              241135
+      *                                                                                       241135
+      *****************************************************************                       241135
+     C/EJECT                                                                                  241135
       *****************************************************************
-      *   VALD - generate message type for destination customer ?     *
-      *   Called by - main process                                    *
-      *   Calls - ACUM accumulate event amounts                       *
-      *         - F330 format message fields                          *
-      *         - SEQN update CLOAN/LF with incremented sequence no.s *
-      *****************************************************************
-      *
-     C           VALD      BEGSR
-      *
-      **  Check message type to be generated for destination customer
-      *
-     C           @TYP      LOKUPNGN                      20
-     C           '3**'     LOKUPNGN                      21
-     C           '33*'     LOKUPNGN                      22
-      *
-     C           *IN20     IFNE '1'
-     C           *IN21     ANDNE'1'
-     C           *IN22     ANDNE'1'
-      *
-      **  Accumulate event amounts
-      *
-     C                     EXSR ACUM
-      *
-      **  Format message fields
-      *
-     C                     EXSR F330
-      *
-     C                     COMIT
-      *
-     C                     END
-      *
-     C                     ENDSR
+      **  VALD - generate message type for destination customer ?     *                       241135
+      **  Called by - main process                                    *                       241135
+      **  Calls - ACUM accumulate event amounts                       *                       241135
+      **        - F330 format message fields                          *                       241135
+      **        - SEQN update CLOAN/LF with incremented sequence no.s *                       241135
+      *****************************************************************                       241135
+      **                                                                                      241135
+     C***********VALD      BEGSR                                                              241135
+      **                                                                                      241135
+      **  Check message type to be generated for destination customer                         241135
+      **                                                                                      241135
+     C***********@TYP      LOKUPNGN                      20                                   241135
+     C***********'3**'     LOKUPNGN                      21                                   241135
+     C***********'33*'     LOKUPNGN                      22                                   241135
+      *                                                                                       241135
+     C************IN20     IFNE '1'                                                           241135
+     C************IN21     ANDNE'1'                                                           241135
+     C************IN22     ANDNE'1'                                                           241135
+      *                                                                                       241135
+      **  Accumulate event amounts                                                            241135
+      *                                                                                       241135
+     C***********          EXSR ACUM                                                          241135
+      *                                                                                       241135
+      **  Format message fields                                                               241135
+      *                                                                                       241135
+     C***********          EXSR F330                                                          241135
+      *                                                                                       241135
+     C***********          COMIT                                                              241135
+      *                                                                                       241135
+     C***********          END                                                                241135
+      *                                                                                       241135
+     C***********          ENDSR                                                              241135
+      *                                                                                       241135
+      *****************************************************************                       241135
+      *   VALD - generate message type for destination customer ?     *                       241135
+      *   Called by - main process                                    *                       241135
+      *   Calls - COMM format common fields                           *                       241135
+      *         - F320 format message specific fields for MT320       *                       241135
+      *         - F330 format message specific fields for MT330       *                       241135
+      *****************************************************************                       241135
+      *                                                                                       241135
+     C           VALD      BEGSR                                                              241135
+      *                                                                                       241135
+      **  Check  message type to be generated for destination customer                        241135
+      *                                                                                       241135
+     C           @TYP      LOKUPNGN                      20                                   241135
+      *                                                                                       241135
+     C           *IN30     IFNE '1'                                                           241135
+      *                                                                                       241135
+      **  Check message group is to be generated                                              241135
+      *                                                                                       241135
+     C           '3**'     LOKUPNGN                      21                                   241135
+     C                     MOVE @TYP      GROUP   3                                           241135
+     C                     MOVE '*'       GROUP                                               241135
+     C           GROUP     LOKUPNGN                      22                                   241135
+      *                                                                                       241135
+     C           *IN21     IFNE '1'                                                           241135
+     C           *IN22     ANDNE'1'                                                           241135
+      *                                                                                       241135
+      **  Format common fields                                                                241135
+      *                                                                                       241135
+     C                     EXSR COMM                                                          241135
+      *                                                                                       241135
+      **  Format message specific fields                                                      241135
+      *                                                                                       241135
+     C           @TYP      IFEQ '320'                                                         241135
+     C                     EXSR F320                                                          241135
+     C                     ELSE                                                               241135
+     C           @TYP      IFEQ '330'                                                         241135
+      **  Accumulate event amounts                                                            241135
+     C                     EXSR ACUM                                                          241135
+     C                     EXSR F330                                                          241135
+     C                     ENDIF                                                              241135
+     C                     ENDIF                                                              241135
+      *                                                                                       241135
+     C                     COMIT                                                              241135
+      *                                                                                       241135
+     C                     END                                                                241135
+     C                     END                                                                241135
+      *                                                                                       241135
+     C                     ENDSR                                                              241135
+      *****************************************************************                       241135
+     C/EJECT                                                                                  241135
+      *****************************************************************                       241135
+      *   COMM - format common fields                                 *                       241135
+      *   Called by - VALD generate message for destination customer ?*                       241135
+      *****************************************************************                       241135
+      *                                                                                       241135
+     C           COMM      BEGSR                                                              241135
+      *                                                                                       241135
+      ** Module ID                                                                            241135
+      *                                                                                       241135
+     C                     MOVE 'LE'      MGMODI                                              241135
+     C**********           MOVE 'L'       MGLORD                          051522              241135
+      *                                                                                       241135
+      ** Deal details                                                                         241135
+      *                                                                                       241135
+      ** For a discounted loan, principal amount is loan amount less      079412              241135
+      ** discount.                                                        079412              241135
+     C           PTYP      IFEQ 63                                        079412              241135
+     C           PTYP      OREQ 65                                        079412              241135
+     C           PTYP      OREQ 67                                        079412              241135
+     C           CPAM      SUB  TOTI      CPAM                            079412              241135
+     C                     END                                            079412              241135
+      *                                                                   079412              241135
+     C                     MOVELCNUM      MGCNUM                                              241135
+     C                     MOVELXLNRF     MGTNUM                                              241135
+     C                     MOVELLBRCA     MGBRCA                                              241135
+     C                     Z-ADDDDAT      MGTDAT                                              241135
+     C                     Z-ADDVDATS     MGVDAT                                              241135
+     C                     Z-ADDMDAT      MGMDAT                                              241135
+     C                     MOVELLCCY      MGCCY                                               241135
+     C                     Z-ADDCPAM      MGPCPL                                              241135
+     C                     Z-ADDINTR      MGINTR                                              241135
+     C*********************Z-ADDINTR      MGNINT                                              241135
+     C                     Z-ADDNIDT      MGNIDT                                              241135
+     C                     Z-ADDSLID      MGSLID                                              241135
+     C                     MOVELICBS      MGICBS                                              241135
+     C                     Z-ADDTOTI      MGTOTI                                              241135
+     C                     MOVELIPFR      MGIPFR                                              241135
+     C                     MOVELLTYP      MGTTYP                                              241135
+     C***********          MOVELPTYP      MGTSTP                          E31467              241135
+     C                     MOVELSUTP      MGTSTP                          E31467              241135
+      *                                                                                       241135
+     C                     ENDSR                                                              241135
       *
       *****************************************************************
      C/EJECT
@@ -928,6 +1063,89 @@
       *
      C                     ENDSR
       *
+      *****************************************************************                       241135
+     C/EJECT                                                                                  241135
+      *****************************************************************                       241135
+      *   F320 - FORMAT MESSAGE SPECIFIC FIELDS FOR MT320             *                       241135
+      *   Called by - VALD generate message for destination customer ?*                       241135
+      *****************************************************************                       241135
+      *                                                                                       241135
+     C           F320      BEGSR                                                              241135
+      *                                                                                       241135
+      **  Determine settlement parties                                                        241135
+      *                                                                                       241135
+     C           PTYP      IFEQ 66                                                            241135
+     C           PTYP      OREQ 67                                                            241135
+      *                                                                                       241135
+      **  Participations Sold                                                                 241135
+      *                                                                                       241135
+     C                     MOVELOMDA      MGPONS                                              241135
+     C                     MOVELOSDA      MGRONS                                              241135
+     C                     MOVELTMAN      MGAWBN                                              241135
+     C                     MOVELOMDB      MGPOBR                                              241135
+     C                     MOVELOSDB      MGROBR                                              241135
+     C                     Z-ADDMDST      MGPSTM                                              241135
+     C                     Z-ADDSDST      MGRSTM                                              241135
+     C                     MOVE 'D'       MGLORD                                              241135
+      *                                                                                       241135
+     C                     ELSE                                                               241135
+      *                                                                                       241135
+     C                     MOVELOSDA      MGPONS                                              241135
+     C                     MOVELOMDA      MGRONS                                              241135
+     C                     MOVELTSTN      MGAWBN                                              241135
+     C                     MOVELOSDB      MGPOBR                                              241135
+     C                     MOVELOMDB      MGROBR                                              241135
+     C           S01518    IFEQ 'Y'                                       S01518              241135
+     C                     MOVELBENN      MGBENN                          S01518              241135
+     C                     ELSE                                           S01518              241135
+     C                     MOVELCNUM      MGBENN                                              241135
+     C                     END                                            S01518              241135
+     C                     Z-ADDSDST      MGPSTM                                              241135
+     C                     Z-ADDMDST      MGRSTM                                              241135
+     C                     MOVE 'L'       MGLORD                                              241135
+      *                                                                                       241135
+     C                     END                                                                241135
+     C*                                                                   S01518              241135
+     C           S01518    IFEQ 'Y'                                       S01518              241135
+     C                     MOVELPIBN      MGPIBN                          S01518              241135
+     C                     MOVELPIBA      MGPIBA                          S01518              241135
+     C                     MOVELRIBN      MGRIBN                          S01518              241135
+     C                     MOVELRIBA      MGRIBA                          S01518              241135
+     C                     MOVELAWBA      MGAWBA                          S01518              241135
+     C                     MOVELRVNO      MGRVNO                          S01518              241135
+     C                     END                                            S01518              241135
+      *                                                                   063542              241135
+      **  If our rec. and our pay branch are blank use default            063542              241135
+      **  from the loan record.                                           063542              241135
+      *                                                                   063542              241135
+     C           MGPOBR    IFEQ *BLANKS                                   063542              241135
+     C                     MOVE LBRCA     MGPOBR                          063542              241135
+     C                     END                                            063542              241135
+     C           MGROBR    IFEQ *BLANKS                                   063542              241135
+     C                     MOVE LBRCA     MGROBR                          063542              241135
+     C                     END                                            063542              241135
+      *                                                                                       241135
+      ** Move settlement currency.                                        137909              241135
+     C           CEU004    IFEQ 'Y'                                       137909              241135
+     C                     EXSR STCY1                                     137909              241135
+     C                     ENDIF                                          137909              241135
+      *                                                                   137909              241135
+     C           MGCHTP    IFEQ *BLANK                                                        241135
+     C                     MOVE @CHG      MGCHTP                                              241135
+     C                     END                                                                241135
+     C                     WRITEMGF320D0               40                                     241135
+      *                                                                                       241135
+     C           *IN40     IFEQ '1'                                                           241135
+     C           *LOCK     IN   LDA                                                           241135
+     C                     MOVE '005'     DBASE            * * * * * * * *                    241135
+     C                     MOVEL@TYP      DBKEY            * DB ERROR 005*                    241135
+     C                     MOVEL'MGF320PD'DBFILE           * * * * * * * *                    241135
+     C                     OUT  LDA                                                           241135
+     C                     EXSR *PSSR                                                         241135
+     C                     END                                                                241135
+      *                                                                                       241135
+     C                     ENDSR                                                              241135
+      *                                                                                       241135
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1187,7 +1405,7 @@
       *****************************************************************   137909
       *   STCY1- If CEU004 (EMU enhancement) is on set up             *   137909
       *          settlement currency.                                 *   137909
-      *   Called by - F330                                            *   137909
+      *   Called by - F330 F320                                       *   137909              241135
       *****************************************************************   137909
       *                                                                   137909
      C           STCY1     BEGSR                                          137909

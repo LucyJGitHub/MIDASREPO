@@ -2373,6 +2373,14 @@
      C                   EVAL      WMXFlg = 'N'                                             MD060250
      C                   ENDIF                                                              MD060250
       *                                                                                     MD060250
+     C                   ELSE                                                               MD060250
+     C     *LOCK         IN        LDA                                                      MD060250
+     C                   MOVE      '040'         DBASE                                      MD060250
+     C                   MOVEL     'KLIncMsg'    DBKEY                                      MD060250
+     C                   MOVEL     'MEINDTL0'    DBFILE                                     MD060250
+     C                   OUT       LDA                                                      MD060250
+     C                   EXSR      *PSSR                                                    MD060250
+      *                                                                                     MD060250
      C                   ENDIF                                                              MD060250
       *                                                                                     MD060250
      C                   ENDSR                                                              MD060250

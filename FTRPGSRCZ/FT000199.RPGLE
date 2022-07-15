@@ -796,6 +796,7 @@
       *                                                                                     MD060250
       ** Check if Incoming MT Message is Translated to MX Message                           MD060250
       *                                                                                     MD060250
+     C                   EXSR      SrChkIfMX                                                MD060250
      C                   IF        WMXFlg = 'Y'                                             MD060250
       *                                                                                      CSW122A
       ** Check for system value GenMTn99OnIgnore or GenMTn99OnSTPIgnore                      CSW122A

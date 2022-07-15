@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021577           Date 05Aug13              */
+/*       Last Amend No. 252993             Date 13Jul22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021577           Date 05Aug13              */
 /*                      CLE075BO           Date 06Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -36,6 +37,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       252993 - Apply 241135                                       */
+/*       241135 - Add MT320 Handling: Clear MGF320PD, Journal        */
+/*                MGF320PD and call MG0320.                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021577 - LEC0702 failed due to lock conflict              */
 /*       CLE075BO - COB Restructure - LE COB Optimisation Phase 1    */
@@ -58,15 +62,15 @@
 /************PGM                                                      /*CCB009*/
 /**********  PGM        PARM(&CNAM &CSEQ)      */                                  /*CCB009 CLE134*/
              PGM        PARM(&CNAM &CSEQ &RERUN)                                          /*CLE134*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
 /**********  DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6)              */                   /*CLE075BO*/
 /**********  DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)            */                   /*CLE075BO*/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
- 
+
 /**********  DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)          */                   /*CLE075BO*/
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
 /**********  DCL        VAR(&COUNT) TYPE(*DEC) LEN(1)              */            /*087362 CLE075BO*/
@@ -104,13 +108,13 @@
              DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CLE075BO*/
              DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CLE075BO*/
 /*/COPY WNCPYSRC,LEC0702001                                          */
- 
+
              DCLF       FILE(SDMGMEPD)
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
 /*/COPY WNCPYSRC,LEH01063                                            */
- 
+
                                                                                           /*CLE134*/
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
              RTVDTAARA  DTAARA(LEPDCL) RTNVAR(&LEPDCL)                                    /*CLE134*/
@@ -128,7 +132,7 @@
 /**********               TEXT(&STEXT)                             */            /*CSC020 CLE075BO*/
              SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
                           FLAG('S') TEXT(&STEXT)                                        /*CLE075BO*/
- 
+
 /* Notify MRUNQ & create temporary journal */
              SNDPGMMSG  MSG('CoB Confirmations Generation') +
                           TOMSGQ(MRUNQ)
@@ -154,7 +158,7 @@
                 GOTO       CMDLBL(ERROR)                              /*CCG008*/
              ENDDO                                                    /*CCG008*/
 /*/COPY WNCPYSRC,LEC0702005                                          */
- 
+
 /* Clear down extract files */
              CLRPFM     FILE(LENXTAA)
 /**/                                                                  /*CCG008*/
@@ -168,10 +172,11 @@
              ENDDO                                                    /*CCG008*/
 /**/                                                                  /*CCG008*/
              CLRPFM     FILE(LENXTAC)
+             CLRPFM     FILE(MGF320PD)                                /*241135*/
              CLRPFM     FILE(MGF330PD)
- 
+
 /**********  RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)             */                   /*CLE075BO*/
- 
+
 /**********  CHGVAR     VAR(&PREFIX) VALUE(%SST(&SDSTAT 6 2))      */                   /*CLE075BO*/
 /**********  CHGVAR     VAR(&JLIB) VALUE(&PREFIX *CAT 'JLIB')      */                   /*CLE075BO*/
                                                                       /*S01408*/
@@ -254,13 +259,13 @@
 /**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */            /*190127 CLE075BO*/
 /**********  ENDDO                                                 */            /*CCB009 CLE075BO*/
 /**********  ENDDO                                                 */            /*CCB009 CLE075BO*/
- 
+
                                                            /* E29371 */
  /***********CRTJRNRCV  JRNRCV(&JLIB/TEMPRCV)               */
 /************CRTJRNRCV  JRNRCV(&JLIB/LETEMPRCV)****************/      /*CCB009*/
  /***********CRTJRN     JRN(&JLIB/TEMPJRN) JRNRCV(TEMPRCV)  */
 /************CRTJRN     JRN(&JLIB/LETEMPJRN) JRNRCV(LETEMPRCV)*/      /*CCB009*/
- 
+
 /*******************************************************************/            /*CCB009 CLE075BO*/
 /**If*Feature*CCB009*is*NOT*'on'*(close*of*business*journaling),****/            /*CCB009 CLE075BO*/
 /*******************************************************************/            /*CCB009 CLE075BO*/
@@ -290,7 +295,7 @@
  /***********STRJRNPF   FILE(CLOANCL MGOREFPD MGOMSGPD MGF330PD +
  /***********             CFFEEDPD) JRN(TEMPJRN) IMAGES(*BOTH) +
  /***********             OMTJRNE(*NONE)                    */
- 
+
 /************STRJRNPF   FILE(CLOANCL MGOREFPD MGOMSGPD MGF330PD +
 /************             CFFEEDPD) JRN(LETEMPJRN) IMAGES(*BOTH) +
 /************             OMTJRNE(*NONE)                              /*087362*/
@@ -351,26 +356,26 @@
 /**********  ENDDO                                                 */            /*CCB009 CLE075BO*/
 /***BYPASS:*********************************************************/            /*087362 CLE075BO*/
                                                            /* E29371 */
- 
+
 /* Begin commitment control */
 /**********  STRCMTCTL LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))             /*CPK009*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                              /*CPK009*/
              MONMSG     MSGID(CPF0000)
- 
+
 /**********  CHGVAR     VAR(&STAT) VALUE('Y')                      */            /*CCB009 CLE075BO*/
 /*******************************************************************/            /*CCB009 CLE075BO*/
 /**********  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)        */            /*CCB009 CLE075BO*/
 /*******************************************************************/            /*CCB009 CLE075BO*/
 /* Zero switches */
              CHGJOB     LOG(4) LOGCLPGM(*YES) SWS(10000000)
- 
+
 /* Create LDA */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           TEXT('Midas SD AS400 LOCAL DATA AREA +
                           EQUIVALENT')
              MONMSG     MSGID(CPF0000)
- 
+
 /* Produce confirmation extract LENXT */
 /* U4 - LE SWIFT Extract File Details */
              CHGJOB     SWS(XXX1XXXX)
@@ -390,19 +395,19 @@
 /*/COPY WNCPYSRC,LEC0702006                                          */
              ELSE       CMD(CALL PGM(LE0420))                        /*S01465*/
 /************CALL PGM(LE0420)                                     */ /*S01465*/
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Confirmation print failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
              IF COND(%SST(&MMOD 28 1) *EQ 'Y') THEN(DO)
- 
+
              OVRDBF     FILE(MGOREFPD) SHARE(*NO)
              CALL       PGM(LE4505)   /* COMIT LOANS ONLY */
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Confirmation extract failure')
@@ -414,13 +419,24 @@
 /**********  ENDDO                                                 */            /*CCG008 CLE075BO*/
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* GDFs records are deleted as they are processed */
 /*/COPY WNCPYSRC,LEC0702009                                          */
- 
+
+/* Process term loan */                                               /*241135*/
+             CALL       PGM(MG0320)                                   /*241135*/
+                                                                      /*241135*/
+             IF         COND(%SWITCH(XXXXXX1X) *OR +
+                          %SWITCH(XXXXXXX1)) THEN(DO)                 /*241135*/
+             SNDPGMMSG  MSG('Term/Time Loan confirmation formatting +
+                          failure') TOPGMQ(*EXT) TOMSGQ(MOPERQ) +
+                          MSGTYPE(*INFO)                              /*241135*/
+             GOTO       CMDLBL(ERROR)                                 /*241135*/
+             ENDDO                                                    /*241135*/
+                                                                      /*241135*/
 /* Process call loan/deposits */
              CALL       PGM(MG0330)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              SNDPGMMSG  MSG('Call loan/deposit confirmation +
@@ -429,7 +445,7 @@
              GOTO       CMDLBL(ERROR)
              ENDDO
 /*/COPY WNCPYSRC,LEC0702010                                          */
- 
+
 /* If ISO confirmations required print messages */
              RCVF
              IF         COND(&ENFFCR = 'N') THEN(DO)
@@ -442,7 +458,7 @@
              ENDDO
              ENDDO
              ENDDO
- 
+
              COMMIT                                                                     /*MD021577*/
                                                                                         /*MD021577*/
              GOTO       CMDLBL(END)
@@ -453,7 +469,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ) +
                           MSGTYPE(*INFO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /* Send database error message to workstation & MOPERQ */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MSG)
@@ -462,12 +478,12 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              ENDDO
- 
+
 /* If U7/U8 both OFF, must be CPF error - ensure switches ON for */
 /* return to CB */
              IF         COND(%SWITCH(XXXXXX00)) THEN(CHGJOB +
                           SWS(XXXXXX11))
- 
+
                                                            /* E29371 */
 /*******************************************************************/            /*CCB009 CLE075BO*/
 /**If*Feature*CCB009*is*'on'*(close*of*business*journaling),********/            /*CCB009 CLE075BO*/
@@ -547,7 +563,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
 /**********  ELSE       CMD(DO)                                    */            /*CCB009 CLE075BO*/
  /*          RMVJRNCHG  JRN(TEMPJRN) FILE((CLOANCL) (MGOREFPD) +
                           (MGOMSGPD) (CFFEEDPD))    */
- 
+
 /************RMVJRNCHG  JRN(LETEMPJRN) FILE((CLOANCL) (MGOREFPD) +
                           (MGOMSGPD) (CFFEEDPD))********************/ /*CCB009*/
 /**********  RMVJRNCHG  JRN(JLEC0702) FILE((CLOANCL) (MGOREFPD) +  */                   /*CLE075BO*/
@@ -559,7 +575,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
 /***COPY WNCPYSRC,LEC0702004                                       */                   /*CLE075BO*/
                                                            /* E29371 */
 /**********  ENDDO                                                 */            /*CCB009 CLE075BO*/
- 
+
 /* Reset busy flag in LESTAT */
  END:        ALCOBJ     OBJ((LESTAT *DTAARA *EXCLRD)) WAIT(32000)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
@@ -567,10 +583,10 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DLCOBJ     OBJ((LESTAT *DTAARA *EXCLRD))
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              ENDCMTCTL
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /*******************************************************************/            /*CCB009 CLE075BO*/
 /**If*Feature*CCB009*is*NOT*'on'*(close*of*business*journaling),****/            /*CCB009 CLE075BO*/
 /*******************************************************************/            /*CCB009 CLE075BO*/
@@ -584,7 +600,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
 /**********  ENDDO                                                 */            /*CCB009 CLE075BO*/
              CHGJOB     INQMSGRPY(*DFT)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
                                                            /* E29371 */
  /*          DLTJRN     JRN(&JLIB/TEMPJRN)                  */
 /************DLTJRN     JRN(&JLIB/LETEMPJRN)               */         /*CCB009*/
@@ -595,7 +611,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
 /**********  DLTJRNRCV  JRNRCV(&JLIB/JRLEC0702)                    */            /*CCB009 CLE075BO*/
 /**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */                   /*CLE075BO*/
                                                            /* E29371 */
- 
+
 /* CLEAR FILES NO LONGER NEEDED                                     */
 /**/
              IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
@@ -613,7 +629,9 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CLRPFM     FILE(MGF330PD)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+             CLRPFM     FILE(MGF320PD)                                /*241135*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*241135*/
+
 /**********      CHGVAR     VAR(&STAT) VALUE('N')                  */            /*CCB009 CLE075BO*/
 /*******************************************************************/            /*CCB009 CLE075BO*/
 /**********      CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)    */            /*CCB009 CLE075BO*/

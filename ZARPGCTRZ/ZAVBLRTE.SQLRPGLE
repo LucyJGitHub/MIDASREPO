@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059141           Date 26Oct21               *
-      *  Prev Amend No. MD059065           Date 15Oct21               *
+      *  Last Amend No. MD059867           Date 03May22               *
+      *  Prev Amend No. MD059141           Date 26Oct21               *
+      *                 MD059065           Date 15Oct21               *
       *                 MD058988           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058513           Date 09Sep21               *
@@ -43,6 +44,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059867 - Calculator fails when RFR used is ESTR and calcu- *
+      *             lation method is simple ARR due to Calculator     *
+      *             not supporting ESTR for the specific calc method. *
+      *             Add a new validation rule to allow only SOFR and  *
+      *             SONIA for this calc method.                       *
       *  MD059141 - SIRS Transaction accepting NCCR and SARR on       *
       *             'Their Details'                                   *
       *  MD059065 - IR020 fields/values not auto-populating when      *
@@ -772,6 +778,28 @@
      C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049407'
      C                   ENDIF
+      ** Do not allow other risk free rates aside from 'SOFR' and 'SONIA'                   MD059867
+      ** when calculation method is Simple ARR                                              MD059867
+      *                                                                                     MD059867
+     C                   IF        DDBLRT = 'Y'                                             MD059867
+     C                   IF        ( DDCALM =  'SARR' AND                                   MD059867
+     C                               DDRFRR <> 'SONIA     ' AND                             MD059867
+     C                               DDRFRR <> 'SOFR      ' )                               MD059867
+     C                   EVAL      DDCALMOK = 'N'                                           MD059867
+     C                   EVAL      Idx += 1                                                 MD059867
+     C                   EVAL      MsgIdXAr(Idx) = '5049539'                                MD059867
+     C                   SELECT                                                             MD059867
+     C                   WHEN      ApiName = 'LERI'                                         MD059867
+     C                   EVAL      FldNamXAr(Idx) = 'DDNCALM'                               MD059867
+     C                   WHEN      ApiName = 'CIR1' OR ApiName = 'SIR1'                     MD059867
+     C                   EVAL      FldNamXAr(Idx) = 'SUCALM'                                MD059867
+     C                   WHEN      ApiName = 'CIR2' OR ApiName = 'SIR2'                     MD059867
+     C                   EVAL      FldNamXAr(Idx) = 'STCALM'                                MD059867
+     C                   OTHER                                                              MD059867
+     C                   EVAL      FldNamXAr(Idx) = 'DDCALM'                                MD059867
+     C                   ENDSL                                                              MD059867
+     C                   ENDIF                                                              MD059867
+     C                   ENDIF                                                              MD059867
 
      C                   IF        DDCALMOK <> 'N'
      C                   MOVE      DDCALM        VCALM

@@ -48,7 +48,7 @@
       *             lation method is simple ARR due to Calculator     *
       *             not supporting ESTR for the specific calc method. *
       *             Add a new validation rule to allow only SOFR and  *
-      *             SONIA for this calc method                        *
+      *             SONIA for this calc method.                       *
       *  MD059141 - SIRS Transaction accepting NCCR and SARR on       *
       *             'Their Details'                                   *
       *  MD059065 - IR020 fields/values not auto-populating when      *

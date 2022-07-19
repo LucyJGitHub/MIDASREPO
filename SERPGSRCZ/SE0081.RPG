@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 250771             Date 14Jul22               *
+      *  Prev Amend No. 243942             Date 14Jul22               *      
+      *                 MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +28,19 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250771 - MidasPlus partial upgrade of Enhanced Treasury.     *
+      *         - Do not show matured and deleted securities in the   *
+      *           Quick price maintenance.                            *
+      *         - Only one PF/PRICED record should exist for a        *
+      *           security shortname regardless of value date and     *
+      *           record id.                                          *
+      *         - Recompile for change to #1DBRC on SE0081DF for      *
+      *           additional fields added to PRICED.                  *
+      *         - File controls out of balance.  Amends and inserts   *
+     F*           add to the number of records since the values are   *
+     F*           zeroed out in the COB.                              *
+     F*         - Recode missing LHT120 codes                         *
+      *  243942 - Recompile this program for MP1.2.1 SP03 usage.      *      
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion Of Customer Number to Alpha             *
@@ -96,7 +111,8 @@
      FSE0081DFCF  E                    WORKSTN
      F                                        ##RR  KSFILE #SFLRCD
      F                                              KINFDS INFDS#
-     FPRICM   UF  E           K        DISK                           UC
+     F***PRICMUF**E***        K        DISK                           UC                      250771
+     FPRICMV0 UF  E           K        DISK                           UC                      250771
      F                                              KINFDS INFDS1
      F                                              KCOMIT
      FPRICEA  UF  E                    DISK                           UC
@@ -130,7 +146,8 @@
      IINFDS1    E DSY2I1DSP
       * File information data structure.
       *
-     I@1DBRC    E DSPRICM
+     I***@1DBRC*E*DSPRICM***                                                                  250771
+     I@1DBRC    E DSPRICMV0                                                                   250771
       * Current/previous master file format fields for change control.
       *
      IRUNDAT      DS
@@ -232,6 +249,8 @@
       *................................................................
       * Load next page of SFL:
      C  N82      ##RROK    DOWLT##SFPG
+     C           RECI      IFNE '*'                                                           250771
+     C           RECI      ANDNE'M'                                                           250771
      C                     MOVE '0'       *IN32
      C                     SETOF                     87
       * Clear SFL fields.
@@ -247,6 +266,7 @@
      C                     ADD  1         ##RR       81
      C                     ADD  1         ##RROK
      C                     WRITE#SFLRCD
+     C                     ENDIF                                                              250771
      C                     READ SECTYDF                  82
      C  N82                END                             OD 1 - #SFPG
       *................................................................
@@ -510,14 +530,27 @@
       /EJECT
      CSR         GETPRC    BEGSR
       *================================================================
-      * Get existing price from PRICM if one has been entered today.
+      **Get*existing*price*from*PRICM*if*one*has*been*entered*today.***                       250771
+      * Get existing price from PRICMV0 regardless of value date.                             250771
       *================================================================
      C                     MOVEL*BLANK    W0RTN   7
       * Define Keylist.
      C           KRSSA     KLIST
      C                     KFLD           SESN             Shortname
-     C                     KFLD           BJRDNB           Run Date
+     C                     KFLD           V0RECI           Record Id                          250771
+     C**********           KFLD           BJRDNB           Run Date                           250771
+      *                                                                                       250771
+      **First try to access live record.                                                      250771
+     C                     MOVEL'D'       V0RECI  1                                           250771
      C           KRSSA     CHAINPRICEDF              50
+      *                                                                                       250771
+      **If live record not found, try to access deleted record.                               250771
+      *                                                                                       250771
+     C           *IN50     IFEQ '1'                                                           250771
+     C                     MOVEL'*'       V0RECI                                              250771
+     C           KRSSA     CHAINPRICEDF              50    *                                  250771
+     C                     ENDIF                                                              250771
+      *                                                                                       250771
       * If record found and live, use today's price in place of MKPR.
      C           *IN50     IFEQ '0'
      C           RECI      ANDEQ'D'
@@ -555,8 +588,29 @@
       *
      C           KLCHSJ    KLIST
      C                     KFLD           #1SESN           Shortname
-     C                     KFLD           BJRDNB           Run Date
+     C                     KFLD           V0RECI           Record Id                          250771
+     C**********           KFLD           BJRDNB           Run Date                           250771
+      *                                                                                       250771
+      **First try to access live record.                                                      250771
+      *                                                                                       250771
+     C                     MOVE '0'       *IN59                                               250771
+     C                     MOVEL'D'       V0RECI                                              250771
      C           KLCHSJ    CHAINPRICEDF              5051
+      *                                                                                       250771
+      **If live record is found then this was already inserted or amended                     250771
+      **today.  In this case only update the trailer for number of amends.                    250771
+      *                                                                                       250771
+     C           *IN50     IFEQ '0'                                                           250771
+     C                     MOVE '1'       *IN59                                               250771
+     C                     END                                                                250771
+      *                                                                                       250771
+      **If live record not found, try to access deleted record.                               250771
+      *                                                                                       250771
+     C           *IN50     IFEQ '1'                                                           250771
+     C                     MOVEL'*'       V0RECI                                              250771
+     C           KLCHSJ    CHAINPRICEDF              5051  *                                  250771
+     C                     ENDIF                                                              250771
+      *                                                                                       250771
       *
      C           *IN51     IFEQ '1'
       * Record locked.
@@ -577,6 +631,7 @@
      C                     GOTO UPDEND
      C                     ELSE                            Not locked
      C                     MOVEL'D'       RECI             Set to live
+     C                     Z-ADDBJRDNB    PVDT             New Value date                     250771
      C                     Z-ADD#1PPRC    PPRC
      C                     Z-ADDBJRDNB    LCD              Last Change Dat
      C                     MOVE 'A'       CHTP             Type of Last Ch
@@ -678,6 +733,12 @@
      C                     ADD  1         SINS             No. of Inserts
      C                     ELSE
      C                     ADD  1         SAMD             No. of Amends
+      * Only update the number of records before and after if this record was not             250771
+      * already inserted or amended today.                                                    250771
+     C           *IN59     IFEQ '0'                                                           250771
+     C                     ADD  1         NORE             No. of Records                     250771
+     C                     ADD  1         SLRB             No. of Records b/f                 250771
+     C                     END                                                                250771
      C                     END
       *
      C                     UPDATPRICEAF                53
@@ -879,7 +940,8 @@
      C           W0RTN     ANDNE'CPF8351'
      C                     EXSR ZYEXPG
      C                     END
-     C                     OPEN PRICM
+     C**********           OPEN PRICM                                                         250771
+     C                     OPEN PRICMV0                                                       250771
      C                     OPEN PRICE
      C                     OPEN PRICEA
       *

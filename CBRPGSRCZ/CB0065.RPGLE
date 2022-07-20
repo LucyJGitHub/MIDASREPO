@@ -708,13 +708,15 @@
      C     *IN75         IFEQ      '0'
      C     WSEQR         ANDNE     '99999'
      C*
-     C*  BYPASSED                                                                             250660
+      *                                                                                       250660
+      ** BYPASSED                                                                             250660
+      *                                                                                       250660
      C                   MOVE      SCCOT         XCCOT                                        250660
      C                   MOVE      SCSEQA        XCSEQ                                        250660
      C                   MOVE      'B'           XSTAT                                        250660
-     C*                                                                                       250660
+      *                                                                                       250660
      C                   WRITE     CBCOMPD0                                                   250660
-     C*                                                                                       250660
+      *                                                                                       250660
      C** MOVE BYPASSED MESSAGE TO COMPONENT FIELD
      C*
      C                   MOVEA     RSTARR(2)     RSTMSG
@@ -814,13 +816,15 @@
      C                   PARM                    LEN               5 0
      C                   PARM                    DTQMSG
      C*
-     C*  RESTARTED                                                                            250660
+      *                                                                                       250660
+      ** RESTARTED                                                                            250660
+      *                                                                                       250660
      C                   MOVE      SCCOT         XCCOT                                        250660
      C                   MOVE      SCSEQA        XCSEQ                                        250660
      C                   MOVE      'R'           XSTAT                                        250660
-     C*                                                                                       250660
+      *                                                                                       250660
      C                   WRITE     CBCOMPD0                                                   250660
-     C*                                                                                       250660
+      *                                                                                       250660
      C** MOVE RESTARTED MESSAGE TO COMPONENT FIELD
      C*
      C                   MOVEA     RSTARR(1)     RSTMSG

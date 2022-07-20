@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 253037             Date 01Jun20              */
-/*       Prev Amend No. 249112             Date 01Jun20              */
+/*       Last Amend No. 250676             Date 15Jul22              */
+/*       Prev Amend No. 253037             Date 01Jun20              */
+/*                      249112             Date 01Jun20              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -35,6 +36,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       250676 - &LGTH is returned as blank from HF0201. Use *CALC. */
 /*       253037 - Suppress generation of program dump when NDSUJR    */
 /*                record is not found in SCJSEQPD.                   */
 /*       249112 - SFDC 00192180. Apply fix SC#240261 / SFDC 00126651 */
@@ -79,7 +81,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -104,7 +106,7 @@
              DCL        VAR(&TXT) TYPE(*CHAR) LEN(50)                                     /*249112*/
              DCL        VAR(&YRL) TYPE(*CHAR) LEN(5)                                      /*249112*/
              DCL        VAR(&RCOD) TYPE(*CHAR) LEN(1)                                     /*249112*/
- 
+
              DCLF       FILE(HFFILEPD)
 /* */
 /** GLOBAL MONITOR MESSAGE */
@@ -120,7 +122,7 @@
              CALL       PGM(HF0201) PARM(&LGTH)                       /*088064*/
              DLTUSRSPC  USRSPC(QTEMP/RCDSPC)                          /*088064*/
              MONMSG     MSGID(CPF0000)                                /*088064*/
- 
+
 /* */                                                                 /*049980*/
 /* Get ICD information on 'Save HAF data to media' */                 /*049980*/
 /* */                                                                 /*049980*/
@@ -147,7 +149,7 @@
 /* */
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LID)
              CHGVAR     VAR(&HFLIB) VALUE(&LID *CAT 'HFLIB')
- 
+
 /* */                                                                 /*049980*/
 /* If the HAF save option is not active then clear down PF/XX */      /*049980*/
 /* */                                                                 /*049980*/
@@ -178,8 +180,8 @@ REDSP:                                                                /*088064*/
 /**************************CURRENT)*JRN(ICJRN)*FILE(')**************************************CSC020*/
              CHGVAR     VAR(&X) VALUE('DSPJRN RCVRNG(*CURCHAIN+
                           )         JRN(ICJRN) FILE(')                                    /*CSC020*/
- 
- 
+
+
 /* */
 /* Create dataraea JRNMOD in QTEMP and initialise it */
 /* */
@@ -187,13 +189,13 @@ REDSP:                                                                /*088064*/
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/JRNMOD) TYPE(*CHAR) LEN(6) +
                           VALUE('EODAUD') TEXT('mode of run')
- 
+
 /* */
 /* If HFFILEPD is empty then do no further processing */              /*112986*/
 /* */
              RTVMBRD    FILE(HFFILEPD) NBRCURRCD(&NBRRCD)             /*112986*/
              IF         COND(&NBRRCD *EQ 0) THEN(GOTO CMDLBL(END))    /*112986*/
- 
+
 /* */
 /* Read all records from HFFILEPD */
 /* */
@@ -202,13 +204,13 @@ REDSP:                                                                /*088064*/
 /* EOF. Goto main processing section */
 /* */
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(MAIN))
- 
+
 /* */
 /* If the file is not enabled then read the next record */
 /* */
              IF         COND(&ENAB *NE 'E') +
                           THEN(GOTO CMDLBL(RETRY))
- 
+
 /* */
 /* Add this file name onto the end of the DSPJRN variable */
 /* */
@@ -222,12 +224,12 @@ REDSP:                                                                /*088064*/
              GOTO       CMDLBL(MAIN)                                  /*088064*/
              ENDDO                                                    /*088064*/
 /**/                                                                  /*088064*/
- 
+
 /* */
 /* Next record */
 /* */
              GOTO       CMDLBL(RETRY)
- 
+
 /* */
 /* Main processing section */
 /* Complete the DSPJRN variable */
@@ -247,14 +249,14 @@ REDSP:                                                                /*088064*/
                           &HFLIB *TCAT '/XX) OUTMBR(*FIRST *ADD) +
                           FROMENT(' *TCAT &STRSEQA *TCAT ')')                             /*CSC020*/
 /* END   084645 */
- 
+
 /* */
 /* Get the description of the work file XX */
 /* */
 /*********** RTVMBRD    FILE(&HFLIB/XX) NBRCURRCD(&CURREC)            /*088064*/
 /*********** MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&CURREC) +     /*088064*/
 /***********              VALUE(0))                                   /*088064*/
- 
+
 /** Check if file XX is journalled, then ENDJRNPF */                                      /*249112*/
              CALL       PGM(HFC0110) PARM('XX' &TXT &YRL &RCOD)                           /*249112*/
              IF         COND(&RCOD *NE 'R') THEN(DO)                                      /*249112*/
@@ -276,18 +278,25 @@ REDSP:                                                                /*088064*/
                           NBRENT(1) JRNCDE(R) PGM(DUMMYPROG) +
                           OUTPUT(*OUTFILE) OUTFILE(&HFLIB/XX) +
                           OUTMBR(*FIRST *REPLACE) ENTDTALEN(&LGTH)**************************CSC020*/
+/* Start of change 250676*/
+/*********   DSPJRN     JRN(ICJRN) RCVRNG(*CURCHAIN) +
+                          FROMENT(&STRSEQ) NBRENT(1) JRNCDE((R)) +
+                          PGM(DUMMYPROG) OUTPUT(*OUTFILE) +
+                          OUTFILE(&HFLIB/XX) OUTMBR(*FIRST +
+                          *REPLACE) ENTDTALEN(&LGTH) *********** ****************CSC020*/ /*250676*/
              DSPJRN     JRN(ICJRN) RCVRNG(*CURCHAIN) +
                           FROMENT(&STRSEQ) NBRENT(1) JRNCDE((R)) +
                           PGM(DUMMYPROG) OUTPUT(*OUTFILE) +
                           OUTFILE(&HFLIB/XX) OUTMBR(*FIRST +
-                          *REPLACE) ENTDTALEN(&LGTH)                                      /*CSC020*/
+                          *REPLACE) ENTDTALEN(*CALC)                                      /*250676*/
+/* End of change 250676 */
 /* END   084645 */
                MONMSG     MSGID(CPF7062)
                CLRPFM     FILE(&HFLIB/XX)
                MONMSG     MSGID(CPF0000)
              CHGPF      FILE(&HFLIB/XX) MAXMBRS(*NOMAX) SIZE(*NOMAX)
              ENDDO
- 
+
 /* */
 /* Call QCMDEXC to execute the DSPJRN variable stored in &X */
 /* */
@@ -300,7 +309,7 @@ RETRY2:                                                      /*091505*/
              DLYJOB     DLY(60)                              /*091505*/
              GOTO       RETRY2                               /*091505*/
              ENDDO                                           /*091505*/
- 
+
 /* */
 /* If command fails then do a generic DSPJRN to file XX */
 /* */
@@ -314,10 +323,16 @@ RETRY2:                                                      /*091505*/
                           JRNCDE(R) OUTPUT(*OUTFILE) +
                           OUTFILE(&HFLIB/XX) OUTMBR(*FIRST *ADD) +
                           ENTDTALEN(&LGTH)**************************************************CSC020*/
+/* Start of change 250676*/
+/*********   DSPJRN     JRN(ICJRN) RCVRNG(&STRRCV *CURRENT) +
+                          JRNCDE((R)) OUTPUT(*OUTFILE) +
+                          OUTFILE(&HFLIB/XX) OUTMBR(*FIRST *ADD) +
+                          ENTDTALEN(&LGTH) ********************* ****************CSC020*/ /*250676*/
              DSPJRN     JRN(ICJRN) RCVRNG(&STRRCV *CURRENT) +
                           JRNCDE((R)) OUTPUT(*OUTFILE) +
                           OUTFILE(&HFLIB/XX) OUTMBR(*FIRST *ADD) +
-                          ENTDTALEN(&LGTH)                                                /*CSC020*/
+                          ENTDTALEN(*CALC)                                                /*250676*/
+/* End of change 250676*/
 /* END   084645 */
                MONMSG     MSGID(CPF7062)
              ENDDO
@@ -359,7 +374,7 @@ RETRY2:                                                      /*091505*/
              DLTF       FILE(&HFLIB/XX2)                              /*088064*/
              ENDDO                                                    /*088064*/
              ENDDO                                                    /*088064*/
- 
+
 /* */
 /* Delete entries that are superfluous */
 /* */
@@ -370,14 +385,14 @@ RETRY2:                                                      /*091505*/
              CALL       PGM(SCC000060) PARM('XX' '*FIRST')                                /*228542*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))                                                  /*228542*/
- 
+
 /* */
 /* Call HF0230 to remove duplicate entries */
 /* */
              CHGPF      FILE(HFDUPEPD) SIZE(*NOMAX)
              CLRPFM     FILE(HFDUPEPD)
              CHGJOB     SWS(0XXXXXXX)
- 
+
              IF         COND(&CURREC *NE 0) THEN(DO)
              CALL       PGM(HF0230)
 /**********  RGZPFM     FILE(&HFLIB/XX)                                                   /*228542*/
@@ -385,15 +400,15 @@ RETRY2:                                                      /*091505*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))                                                  /*228542*/
              ENDDO
- 
+
              RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&DAT)
              CHGDTAARA  DTAARA(HFSAVE (1 6)) VALUE(&DAT)
- 
+
 /* */
 /* Copy the entries from the extract file XX into the database files */
 /* */
              CALL       PGM(HFC0220)
- 
+
 /* */
 /*If duplicate entries or old entries added */
 /* Reorganise all items */
@@ -403,23 +418,23 @@ RETRY2:                                                      /*091505*/
              CALL       PGM(HFC0230)
              CHGJOB     SWS(0XXXXXXX)
              ENDDO
- 
+
 /* */
 /* Print audit report   */
 /* */
              CALL       PGM(HFC0240)
- 
+
 /* */
 /* Delete entries beyond retention period  */
 /* */
              CALL       PGM(HFC0210)
- 
+
 /* */
 /* Allow other users to access the XX file */
 /* */
 /************GRTOBJAUT  OBJ(&HFLIB/XX) OBJTYPE(*FILE) USER(*PUBLIC) + /*107487*/
 /************             AUT(*ALL)                                   /*107487*/
- 
+
              GOTO       CMDLBL(END)
 /* */
 /** ABNORMAL ERROR PROCESSING                                      */
@@ -428,9 +443,9 @@ RETRY2:                                                      /*091505*/
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              CALL       PGM(AOHAFDR0) PARM(&RTCD '*FREE' &DSFDY)      /*049980*/
- 
+
              ENDPGM

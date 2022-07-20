@@ -10,8 +10,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054484           Date 09Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 250667             Date 11Jul22               *
+      *  Prev Amend No. 250666             Date 11Jul22               *
+      *                 250660             Date 11Jul22               *
+      *                 MD054484           Date 09Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042846           Date 13Jan17               *
       *                 MD034991           Date 09Nov15               *
       *                 MD024294           Date 07May14               *
@@ -33,6 +36,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  250667 - Report should show old run date, not new one        *
+      *  250666 - Only call CB0300AD if component failed              *
+      *  250660 - Add status "Bypassed" component after "Failed"      *
+      *           status.                                             *
       *  MD054484 - CBC0540 failed due to Database Error 003 at key   *
       *             SCC0420 20001.                                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -118,6 +125,11 @@
      I                                        1   20SNH
      I                                        3   40SNM
      I                                        5   60SNS
+      *                                                                                       250667
+      **   JNSTAT DATA AREA                                                                   250667
+      *                                                                                       250667
+     IJNSTAT     UDS                            200                                           250667
+     I                                    P 103 1050PRUN                                      250667
      I**  DATA STRUCTURE TO SPLIT FIELD DHMWNB
      I**  INTO HOURS, MINUTES AND SECONDS
      I*
@@ -167,6 +179,11 @@
      C           *NAMVAR   DEFN           LDA                             057781
      C           *LOCK     IN   LDA                                       057781
      C*
+      *                                                                                       250667
+      **   DEFN JNSTAT                                                                        250667
+      *                                                                                       250667
+     C           *NAMVAR   DEFN           JNSTAT                                              250667
+      *                                                                                       250667
      C** KEY TO CHAIN TO CBAUDTL1
      C*
      C           FLKY      KLIST
@@ -288,6 +305,9 @@
      C                     PARM '*FIRST ' P@OPTN  7
      C           SDBANK    PARM SDBANK    DSFDY
      C*
+     C                     MOVE PRUN      ZDAYNO                                              250667
+     C                     EXSR ZDATE2                                                        250667
+     C                     MOVE ZADATE    PRUNA   7                                           250667
      C** IF ERROR FOUND BY ACCESS OBJECT EXIT
      C** PROGRAM VIA DATABASE ERROR SUBROUTINE
      C*
@@ -575,6 +595,25 @@
      C           DHCFAL    IFEQ 'F'
      C                     SETON                     72
      C                     END
+      *                                                                                       250666
+      ** If component failed get bypass or restart info                                       250666
+      *                                                                                       250666
+     C           DHCFAL    IFEQ 'Y'                                                           250666
+     C                     CALL 'CB0300AD'                                                    250660
+     C                     PARM           DHCOTT                                              250660
+     C                     PARM           DHCSEQ                                              250660
+     C           XXPAS     PARM *BLANKS   XPAS    1                                           250660
+     C           *LIKE     DEFN XPAS      XXPAS                                               250660
+      *                                                                                       250660
+     C           XXPAS     IFEQ 'B'                                                           250660
+     C                     MOVE '1'       *IN73                                               250660
+     C                     END                                                                250660
+      *                                                                                       250660
+     C           XXPAS     IFEQ 'R'                                                           250660
+     C                     MOVE '1'       *IN74                                               250660
+     C                     END                                                                250660
+      *                                                                                       250666
+     C                     ENDIF                                                              250666
      C/COPY WNCPYSRC,CB0300C002
       *                                                                                       CCB015
       ** If file controls out of balance - Display 'FCOOB' on                                 CCB015
@@ -601,6 +640,7 @@
      C                     ENDIF                                                              197767
      C*
      C                     SETOF                     72
+     C                     SETOF                     74                                       250660
      C/COPY WNCPYSRC,CB0300C003
      C                     SETOF                     73                                       CCB015
      C*

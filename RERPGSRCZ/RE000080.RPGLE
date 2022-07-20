@@ -19,8 +19,9 @@
       *                                                               *
       *  (c)Finastra International Limited 2004                       *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *  Last Amend No. MD060195           Date 29Jun22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
       *                 AR847010           Date 25May16               *
       *                 MD031950           Date 17Jun15               *
@@ -48,6 +49,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060195 - Reverse fix AR847010 and apply MD-44044 instead.  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -185,6 +187,7 @@
 
      FRE000080AUO    E             PRINTER INFSR(*PSSR)
      F**********                           INFDS(SPOOLAU)                                   AR847010
+     F                                     INFDS(SPOOLAU)                                   MD060195
       ** Midas RE Debit/Credit Retail Transaction Advices Audit
 
       *****************************************************************
@@ -228,6 +231,9 @@
      D*SPOOLAU**       DS                                                                   AR847010
      D**PZFileAU              83     92                                                     AR847010
      D**PZFNumAU             123    124B 0                                                  AR847010
+     D SPOOLAU         DS                                                                   MD060195
+     D  PZFileAU              83     92                                                     MD060195
+     D  PZFNumAU             123    124B 0                                                  MD060195
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -241,6 +247,10 @@
      D*PZEnty***       S              3A                                                    AR847010
      D*PZSNum***       S              6P 0                                                  AR847010
      D*PZSErr***       S              1A                                                    AR847010
+     D PZSeq           S              5A                                                    MD060195
+     D PZEnty          S              3A                                                    MD060195
+     D PZSNum          S              6P 0                                                  MD060195
+     D PZSErr          S              1A                                                    MD060195
 
       ** Parameter fields
      D PRtCd           S              7A
@@ -827,6 +837,30 @@
      C**********         ENDIF                                                              AR847010
 
      C**********         ENDSR                                                              AR847010
+      *****************************************************************                     MD060195
+      *  SrRCFAU - Registers the audit file via ZSFILE.               *                     MD060195
+      *                                                               *                     MD060195
+      *****************************************************************                     MD060195
+     C     SrRCFAU       BEGSR                                                              MD060195
+                                                                                            MD060195
+     C                   EVAL      PZSNum = PZFNumAU                                        MD060195
+                                                                                            MD060195
+     C                   CALL      'ZSFILE'                                                 MD060195
+     C                   PARM                    PZSeq                                      MD060195
+     C                   PARM                    PZEnty                                     MD060195
+     C                   PARM                    PZFileAU                                   MD060195
+     C                   PARM                    PZSNum                                     MD060195
+     C                   PARM      *BLANK        PZSErr                                     MD060195
+                                                                                            MD060195
+     C                   IF        PZSErr = 'Y'                                             MD060195
+     C                   DUMP                                                               MD060195
+     C                   EVAL      *INU7 = *ON                                              MD060195
+     C                   EVAL      *INU8 = *ON                                              MD060195
+     C                   EVAL      *INLR = *ON                                              MD060195
+     C                   RETURN                                                             MD060195
+     C                   ENDIF                                                              MD060195
+                                                                                            MD060195
+     C                   ENDSR                                                              MD060195
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -840,6 +874,7 @@
 
       ** Call RCF Processing for Audit File
      C**********         EXSR      SrRCFAU                                                  AR847010
+     C                   EXSR      SrRCFAU                                                  MD060195
 
       ** Key list for RERSACL0
 

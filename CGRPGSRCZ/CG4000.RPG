@@ -16,8 +16,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. 255465             Date 05Jul22               *
+      *  Prev Amend No. 263173             Date 20Jun22               *
+      *                 CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -81,6 +83,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  255465 - Reprint confirmations in Correspondence Manager     *
+      *  263173 - No Cancellation Confirmation: apply 226737          *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -191,6 +195,7 @@
      F                                              KINFSR SRFILE
      F                                              KCOMIT
      FDLRPIFL1IF  E           K        DISK                                                   CSW213
+     FMSDLRPF UF  E                    DISK                           U5                      255465
      F/COPY WNCPYSRC,CG4000F001
      E/SPACE 5
      E*
@@ -301,22 +306,34 @@
      C                     MOVEL'SRMAIN'  @STK,Q
       *
       *................................................................
+      *                                                                                       255465
+      ** Read from the SWIFT Confirmations Reprint File for reprint of                        255465
+      ** confirmation                                                                         255465
+      *                                                                                       255465
+     C           *INU5     IFEQ *ON                                                           255465
+     C                     READ MSDLRPF                  99                                   255465
+     C                     ELSE                                                               255465
       *
       ** Read from the Deal Transaction Index File
       ** (This logical selects DTRIXDD records with CNPR = 'N')
       *
      C           *LOVAL    SETLLDTRIXL1
      C                     READ DTRIXL1                  99*
+     C                     ENDIF                                                              255465
       *
       ** Read until End of File
       *
      C           *IN99     DOWEQ'0'
       *
+      ** DTRIXDD last change type                                                             263173
+     C                     MOVE CHTP      CHTRX   1                                           263173
+      *                                                                                       263173
       ** If Confirmation Requested
       *
      C           CNRQ      IFEQ 'Y'                        * DEAL INPUT
      C           CNRQ      OREQ 'S'                                       183477
-      *
+     C           CNRQ      OREQ 'R'                                                           255465
+     C           *INU5     ANDEQ'1'                                                           255465
       **  Reset DRID                                                                          250885
      C                     MOVEL*BLANKS   DRID                                                250885
       *                                                                                       250885
@@ -427,16 +444,40 @@
       *
       ** Access Deal
       *
+     C           *INU5     IFNE '1'                                                           255465
      C                     EXSR SRDEAL
+      *                                                                                       263173
+      ** Was a confirmation previously generated?                                             263173
+     C                     TESTB'7'       CNFI           50                                   263173
       *
       ** Update Confirmation Printed Bit Settings on relevant DEALS File
      C           RECI      IFEQ 'R'                                       143058
      C           ORED      ANDEQAGRDNB                                    143058
      C           *IN98     ANDEQ'0'                                       143058
      C                     SETON                     98                   143058
+     C           *IN50     IFEQ *ON                                                           263173
+      *                                                                                       263173
+      ** If this run is reversal, flag confirmation as final                                  263173
+     C                     BITON'0'       CNFI                                                263173
+     C                     ELSE                                                               263173
+      *                                                                                       263173
+      ** flag 1 confirmation produced for this run                                            263173
+     C                     BITON'7'       CNFI                                                263173
+     C                     ENDIF                                                              263173
      C                     ELSE                                           143058
       *
+     C           *IN50     IFEQ *ON                                                           263173
+      *                                                                                       263173
+      ** If this run is reversal, flag confirmation as final                                  263173
+     C           RECI      IFEQ 'R'                                                           263173
+     C           ORED      ANDEQAGRDNB                                                        263173
+     C           CHTRX     ANDEQ'R'                                                           263173
      C                     BITON'07'      CNFI
+     C                     ENDIF                                                              263173
+     C                     ELSE                                                               263173
+     C                     BITON'7'       CNFI                                                263173
+     C                     ENDIF                                                              263173
+      *                                                                                       263173
      C                     SETOF                     98                   143058
      C                     END                                            143058
      C                     ADD  1         TNLU
@@ -476,6 +517,14 @@
       *
      C                     MOVEL'Y'       CNPR
      C                     EXCPTUDTRIX
+      *                                                                                       255465
+     C                     ELSE                                                               255465
+      *                                                                                       255465
+      ** Delete record in MSDLRPF after generating a                                          255465
+      ** confirmation in Correspondence Manager                                               255465
+      *                                                                                       255465
+     C                     DELETMSDLRPF                                                       255465
+     C                     ENDIF                                                              255465
       *                                                                   081961
      C                     ELSE                                           088652
       *                                                                   088652
@@ -491,9 +540,16 @@
       ** Commit
      C                     COMIT
       *
+      ** Read next record from MSDLRPF                                                        255465  
+      *                                                                                       255465
+     C           *INU5     IFEQ *ON                                                           255465
+     C                     READ MSDLRPF                  99                                   255465
+     C                     ELSE                                                               255465
+      *
       ** Read next record from DTRIXDD
       *
      C                     READ DTRIXL1                  99*
+     C                     ENDIF                                                              255465
      C                     END                             * *IN99 DOWEQ '0'
       *
       *................................................................

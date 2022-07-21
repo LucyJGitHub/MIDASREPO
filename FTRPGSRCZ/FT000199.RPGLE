@@ -2122,7 +2122,6 @@
      C**********         EVAL      WTag70ValA = %SUBST(WTag70ALL:WROC+5:WROCL-6)    CSW122A MD060263
      C                   EVAL      WTag70ValA =                                             MD060263
      C                                       %SUBST(WTag70ALL:WROCA:WROCL-WROCA)            MD060263
-     C                                                                                      MD060263
      C                   ELSE                                                                CSW122A
      C                   EVAL      WTag70ValA = %SUBST(WTag70ALL:WROC+5)                     CSW122A
      C                   ENDIF                                                               CSW122A

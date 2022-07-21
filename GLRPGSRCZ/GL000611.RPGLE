@@ -958,6 +958,7 @@
      C                   ENDIF                                                             MD048482A
      C                                                                                     MD048482A
      C                   READ      DLDEALLF                                                MD048482A
+     C                   ENDIF                                                             MD048482A
      C                   ENDDO                                                             MD048482A
      C                   ENDSR
 

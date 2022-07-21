@@ -7,10 +7,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD059751 *CREATE   Date 25Mar22               *
+      *  Last Amend No. MD060271           Date 21Jul22               *
+      *  Prev Amend No. MD059751 *CREATE   Date 25Mar22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060271 - SQL view is reported different when the differ-   *
+      *             ence is only one blank character.                 *
       *  MD059751 - SQL view statement change is not detected by aDBU *
       *                                                               *
       *****************************************************************
@@ -82,6 +85,12 @@
      C                             XXTMT)
      C                   endif
 
+     C                   EVAL      pos = %scan('  ':XXTMT)                                  MD060271
+     C                   if        pos > 0                                                  MD060271
+     C                   EVAL      UPD = 'Y'                                                MD060271
+     C                   EVAL      XXTMT= %scanrpl('  ':' ':XXTMT)                          MD060271
+     C                   endif                                                              MD060271
+                                                                                            MD060271
      C                   if        UPD = 'Y'
      C                   eval      DATAX = XXTMT
      C                   Update    UPSQLSTD      DATAX

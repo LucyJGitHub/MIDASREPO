@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD060271             Date 21Jul22             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060271 - Dashed line appeared trimmed                      *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -42,6 +44,11 @@
      D UPGCMP_S      E DS                  EXTNAME(UPGCMPTD)
      D                                     PREFIX(S_)
 
+     D C_DOTL          C                   Const('--------------------------                MD060271
+     D                                     -----------------------------------              MD060271
+     D                                     -----------------------------------              MD060271
+     D                                     -----------------------------------              MD060271
+     D                                     -----------------------------------')            MD060271
      D/COPY ZACPYSRC,PSDS
       *****************************************************************
 
@@ -169,6 +176,7 @@
      C                   eval      %Subarr(*IN : 30 : 40) = *OFF
      C                   eval      V_TOTF = 0
      C                   eval      UPGCMP_S = UPGCMP
+     C                   eval      ##DOTL = C_DOTL                                          MD060271
 
       * Zone
      C                   eval      ##PRFX = PREFIX

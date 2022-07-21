@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060132           Date 06Jul22               *
+      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060132 - Unable to amend customers. Add condition if       *	
+      *             account holder type is 'J' in checking if 2       *	
+      *             parties are entered.                              *	
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -283,6 +287,7 @@
 
       * Account Holder Type J - 2 parties must be entered
 
+     C     DDAHLT        IFEQ      'J'                                                      MD060132
      C     Z             IFEQ      0
      C                   MOVE      'N'           DD1NAMOK
      C                   ADD       1             Idx
@@ -297,6 +302,7 @@
      C                   MOVE      'Error'       RetCodeIn
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                              MD060132
      C                   ENDIF
       *
      C                   ENDIF                                                                CRE007

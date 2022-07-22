@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 255899A            Date 21Jun22               *
-      *  Prev Amend No. 263173             Date 20Jun22               *
+      *  Last Amend No. 250747             Date 22Jul22               *
+      *  Prev Amend No. 255899A            Date 21Jun22               *
+      *                 263173             Date 20Jun22               *
       *                 AR637449           Date 16Jun22               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
@@ -109,6 +110,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250747 - Default CI deal customer with internal branch cust  *
       *  255899A - Remove the CSW050 condition when checking for      *
       *            confo request                                      *
       *  263173 - No Cancellation Confirmation: apply 226737          *
@@ -657,7 +659,7 @@
      C**********         MOVE      A8BICN        CNUM                                         185914
      C**********         ELSE                                                                 185914
      C     IKMTYP        IFEQ      'CI'                                                       202780
-     C     CIdeals       ANDEQ     'Y'                                                      AR784570
+     C*****CIdeals       ANDEQ     'Y'                                               AR784570 250747
      C     IKMTYP        OREQ      'CF'                                                       CDL033
      C     CDL033        ANDEQ     'Y'                                                        CDL033
      C/COPY WNCPYSRC,MMLDNIDC10
@@ -1518,7 +1520,7 @@
      C**********         MOVE      A8BICN        CNUM                                         185914
      C**********         ELSE                                                                 185914
      C     IKMTYP        IFEQ      'CI'                                                       202780
-     C     CIdeals       ANDEQ     'Y'                                                      AR784570
+     C*****CIdeals       ANDEQ     'Y'                                               AR784570 250747
      C     IKMTYP        OREQ      'CF'                                                       CDL033
      C     CDL033        ANDEQ     'Y'                                                        CDL033
      C/COPY WNCPYSRC,MMLDNIDC14

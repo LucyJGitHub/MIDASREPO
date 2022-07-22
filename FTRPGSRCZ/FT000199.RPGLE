@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060250           Date 11Jul22               *
-      *  Prev Amend No. CSW122A            Date 04May22               *
+      *  Last Amend No. MD060263           Date 20Jul22               *
+      *  Prev Amend No. MD060250           Date 11Jul22               *
+      *                 CSW122A            Date 04May22               *
       *                 MD057056           Date 19May21               *
       *                 MD056683           Date 14Sep20               *
       *                 MD056303           Date 18Jul20               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060263 - MT199 REJT field tag 79 Line 4 TREF value should  *
+      *             not include further trailing info.                *
       *  MD060250 - Not translated Incoming MT is generating MTn99    *
       *             REJT.                                             *
       *  CSW122A  - SWIFT ISO 20022 CCR1 Generation of MTn99          *
@@ -315,6 +318,7 @@
      D WReceiverA      S             12A                                                     CSW122A
      D WROC            S              3S 0                                                   CSW122A
      D WROCL           S              3S 0                                                   CSW122A
+     D WROCA           S              3S 0                                                  MD060263
      D WTag20a         S              8A
      D WTag20b         S              6A
      D***WTag79L3a       S             14A                                                  MD056303
@@ -2114,7 +2118,10 @@
      C                   IF        WROC <> 0                                                 CSW122A
      C                   EVAL      WROCL = %SCAN('/':WTag70ALL:WROC+5)                       CSW122A
      C                   IF        WROCL <> 0                                                CSW122A
-     C                   EVAL      WTag70ValA = %SUBST(WTag70ALL:WROC+5:WROCL-6)             CSW122A
+     C                   EVAL      WROCA = WROC + 5                                         MD060263
+     C**********         EVAL      WTag70ValA = %SUBST(WTag70ALL:WROC+5:WROCL-6)    CSW122A MD060263
+     C                   EVAL      WTag70ValA =                                             MD060263
+     C                                       %SUBST(WTag70ALL:WROCA:WROCL-WROCA)            MD060263
      C                   ELSE                                                                CSW122A
      C                   EVAL      WTag70ValA = %SUBST(WTag70ALL:WROC+5)                     CSW122A
      C                   ENDIF                                                               CSW122A

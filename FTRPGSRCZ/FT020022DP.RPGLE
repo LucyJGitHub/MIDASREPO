@@ -10,11 +10,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059739           Date 23Mar22               *
-      *  Prev Amend No. CSW122  *CREATE    Date 04Oct21               *
+      *  Last Amend No. MD060246           Date 21Jul22               *
+      *  Prev Amend No. MD059739           Date 23Mar22               *
+      *                 CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060246 - Increase field length value for MX Element Value  *
+      *             changed from 120A to 500A.                        *
       *  MD059739 - Use only the UETR field to link MX and FT         *
       *             transaction                                       *
       *  CSW122 - SWIFT ISO 20022                                     *
@@ -197,12 +200,85 @@
       ** Element Value with more than 60 char
 
      C                   IF        WrkLen > 60
-     C                   EVAL      S0EVAL = %SUBST(MEEVAL:66)
+     C*********          EVAL      S0EVAL = %SUBST(MEEVAL:66)                               MD060246
+     C                   EVAL      S0EVAL = %SUBST(MEEVAL:61)                               MD060246
      C                   EVAL      S0ELEM = *BLANKS
      C                   ADD       1             S0RRN                31
      C                   Z-ADD     S0RRN         C0SFRC
-     C                   Z-ADD     0             WrkLen
+     C*********          Z-ADD     0             WrkLen                                     MD060246
      C                   WRITE     FT020022S0
+                                                                                            MD060246
+      ** Element Value with more than 120 char                                              MD060246
+                                                                                            MD060246
+     C                   IF        WrkLen > 120                                             MD060246
+     C                   EVAL      S0EVAL = %SUBST(MEEVAL:121)                              MD060246
+     C                   EVAL      S0ELEM = *BLANKS                                         MD060246
+     C                   ADD       1             S0RRN                31                    MD060246
+     C                   Z-ADD     S0RRN         C0SFRC                                     MD060246
+     C                   WRITE     FT020022S0                                               MD060246
+     C                   ENDIF                                                              MD060246
+                                                                                            MD060246
+      ** Element Value with more than 180 char                                              MD060246
+                                                                                            MD060246
+     C                   IF        WrkLen > 180                                             MD060246
+     C                   EVAL      S0EVAL = %SUBST(MEEVAL:181)                              MD060246
+     C                   EVAL      S0ELEM = *BLANKS                                         MD060246
+     C                   ADD       1             S0RRN                31                    MD060246
+     C                   Z-ADD     S0RRN         C0SFRC                                     MD060246
+     C                   WRITE     FT020023S0                                               MD060246
+     C                   ENDIF                                                              MD060246
+                                                                                            MD060246
+      ** Element Value with more than 240 char                                              MD060246
+                                                                                            MD060246
+     C                   IF        WrkLen > 240                                             MD060246
+     C                   EVAL      S0EVAL = %SUBST(MEEVAL:241)                              MD060246
+     C                   EVAL      S0ELEM = *BLANKS                                         MD060246
+     C                   ADD       1             S0RRN                31                    MD060246
+     C                   Z-ADD     S0RRN         C0SFRC                                     MD060246
+     C                   WRITE     FT020022S0                                               MD060246
+     C                   ENDIF                                                              MD060246
+                                                                                            MD060246
+      ** Element Value with more than 300 char                                              MD060246
+                                                                                            MD060246
+     C                   IF        WrkLen > 300                                             MD060246
+     C                   EVAL      S0EVAL = %SUBST(MEEVAL:301)                              MD060246
+     C                   EVAL      S0ELEM = *BLANKS                                         MD060246
+     C                   ADD       1             S0RRN                31                    MD060246
+     C                   Z-ADD     S0RRN         C0SFRC                                     MD060246
+     C                   WRITE     FT020022S0                                               MD060246
+     C                   ENDIF                                                              MD060246
+                                                                                            MD060246
+      ** Element Value with more than 360 char                                              MD060246
+                                                                                            MD060246
+     C                   IF        WrkLen > 360                                             MD060246
+     C                   EVAL      S0EVAL = %SUBST(MEEVAL:361)                              MD060246
+     C                   EVAL      S0ELEM = *BLANKS                                         MD060246
+     C                   ADD       1             S0RRN                31                    MD060246
+     C                   Z-ADD     S0RRN         C0SFRC                                     MD060246
+     C                   WRITE     FT020022S0                                               MD060246
+     C                   ENDIF                                                              MD060246
+                                                                                            MD060246
+      ** Element Value with more than 420 char                                              MD060246
+                                                                                            MD060246
+     C                   IF        WrkLen > 420                                             MD060246
+     C                   EVAL      S0EVAL = %SUBST(MEEVAL:421)                              MD060246
+     C                   EVAL      S0ELEM = *BLANKS                                         MD060246
+     C                   ADD       1             S0RRN                31                    MD060246
+     C                   Z-ADD     S0RRN         C0SFRC                                     MD060246
+     C                   WRITE     FT020022S0                                               MD060246
+     C                   ENDIF                                                              MD060246
+                                                                                            MD060246
+      ** Element Value with more than 480 char                                              MD060246
+                                                                                            MD060246
+     C                   IF        WrkLen > 480                                             MD060246
+     C                   EVAL      S0EVAL = %SUBST(MEEVAL:481)                              MD060246
+     C                   EVAL      S0ELEM = *BLANKS                                         MD060246
+     C                   ADD       1             S0RRN                31                    MD060246
+     C                   Z-ADD     S0RRN         C0SFRC                                     MD060246
+     C                   WRITE     FT020022S0                                               MD060246
+     C                   ENDIF                                                              MD060246
+                                                                                            MD060246
+     C                   Z-ADD     0             WrkLen                                     MD060246
 
      C                   ELSE
 

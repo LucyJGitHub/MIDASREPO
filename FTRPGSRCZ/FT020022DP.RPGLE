@@ -225,7 +225,7 @@
      C                   EVAL      S0ELEM = *BLANKS                                         MD060246
      C                   ADD       1             S0RRN                31                    MD060246
      C                   Z-ADD     S0RRN         C0SFRC                                     MD060246
-     C                   WRITE     FT020023S0                                               MD060246
+     C                   WRITE     FT020022S0                                               MD060246
      C                   ENDIF                                                              MD060246
                                                                                             MD060246
       ** Element Value with more than 240 char                                              MD060246

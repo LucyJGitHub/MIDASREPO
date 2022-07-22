@@ -79,6 +79,7 @@
      D WrkUETR         S             36A
      D WrkF20          S             20A
      D WrkLen          S              3S 0
+     D WLineT          S              3S 0                                                  MD060246
      D WFound          S              1A
      D WMXRef          S              8S 0
      D WSeqNo          S              4S 0

@@ -442,8 +442,26 @@
       *
      C                   EVAL      DIFLNE = OFLINE - PRTLNE
      C                   IF        DIFLNE <= RQDLNE
-     C                   WRITE     SD001110H1
+     C                   ADD       1             PGENUM                                     MD059624
+     C                   WRITE     SD001110H1                                               MD059624
+     C                   EVAL      *IN50 = '0'                                              MD059624
      C                   ENDIF
+      *
+     C                   EVAL      isRndApplies = 'Y'                                       MD059624
+     C                   IF        TRCALM = 'NCCR'                                          MD059624
+     C                   CALL      'ZAGETRDAPL'                                             MD059624
+     C                   PARM                    TRRFRR                                     MD059624
+     C                   PARM                    isRndApplies      1                        MD059624
+     C                   ENDIF                                                              MD059624
+     C                   IF        isRndApplies = 'N'                                       MD059624
+     C                   EVAL      P1RAPL= 'Yes'                                            MD059624
+     C                   EVAL      P1ROPR = TRRRDP                                          MD059624
+     C                   EVAL      P1RTRO = 0                                               MD059624
+     C                   ELSE                                                               MD059624
+     C                   EVAL      P1RAPL= 'No'                                             MD059624
+     C                   EVAL      P1ROPR = 0                                               MD059624
+     C                   EVAL      P1RTRO = TRRRDP                                          MD059624
+     C                   ENDIF                                                              MD059624
       *
      C                   WRITE     SD001110D2
      C                   WRITE     SD001110H3

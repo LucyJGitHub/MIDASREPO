@@ -208,10 +208,11 @@
      C                   EVAL      S0ELEM = *BLANKS
      C                   ADD       1             S0RRN                31
      C                   Z-ADD     S0RRN         C0SFRC
-     C                   Z-ADD     0             WrkLen
+     C*********          Z-ADD     0             WrkLen                                     MD060246
      C                   WRITE     FT020022S0
      C                   EVAL      WLineT = WLineT + 60                                     MD060246
      C                   ENDDO                                                              MD060246
+     C                   Z-ADD     0             WrkLen                                     MD060246
 
      C                   ELSE
 

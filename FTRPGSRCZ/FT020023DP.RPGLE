@@ -202,7 +202,7 @@
 
      C                   IF        WrkLen > 60
      C                   EVAL      WLineT = 61                                              MD060246
-     C                   DOW       WLineT < 61                                              MD060246
+     C                   DOW       WLineT < WrkLen                                          MD060246
      C*********          EVAL      S0EVAL = %SUBST(MEEVAL:66)                               MD060246
      C                   EVAL      S0EVAL = %SUBST(MEEVAL:WLineT)                           MD060246
      C                   EVAL      S0ELEM = *BLANKS

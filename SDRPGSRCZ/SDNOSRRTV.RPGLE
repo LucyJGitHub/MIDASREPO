@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037493           Date 28Nov16               *
+      *  Last Amend No. MD023962           Date 26Jul22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *               . MD037493           Date 28Nov16               *
       *                 CDL094             Date 01Sep14               *
       *                 MD027264           Date 25Jun14               *
       *                 MD000091           Date 03May13               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023962 - Nostro cannot be deleted after removal of         *
+      *             security module                                   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037493 - Nostro record cannot be deleted even after        *
       *             deletion of SSI                                   *
@@ -36,12 +39,12 @@
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDNOSTL7  IF   E           K DISK       INFSR(*PSSR)
       * Nostro Details by Currency, Shortname and PN.
      FSDNOSTL1  IF   E           K DISK       INFSR(*PSSR)
@@ -51,7 +54,7 @@
       * Nostro Codes File by Front Office Id
      FSTDSEDCY  IF   E           K DISK       INFSR(*PSSR)                                  MD037493
       * STDSED (Nostro by currency)                                                         MD037493
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -63,83 +66,86 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DepotSn         S             10    DIM(10)
       ** Depot shortnames array
- 
+
      D DepotNo         S              6    DIM(10)
       ** Depot customer numbers array
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details ICD retrieval
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** External DS for Securities ICD Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
- 
+
+     D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                MD023962
+      ** EXTERNAL DS FOR MIDAS MODULES DETAILS                                              MD023962
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs, long data structure
- 
+
      D TranFilFmt    E DS                  EXTNAME(SDNOSTPD)
       ** Transaction Details in File Format
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
+
      D ZMUSER          DS
      D  DBRN                  11     13
      D  BANK                  17     17
- 
+
       ** Data Structure for Event Code Substitution                                         MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -148,10 +154,10 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -247,7 +253,7 @@
      C                             OKNONB = 'N'
      C                   RETURN
      C                   ENDIF
- 
+
       * Return
      C                   RETURN
       *****************************************************************
@@ -324,10 +330,10 @@
       * RTVNOST - RETRIEVE Nostro DETAILS IF ACTION CODE 'A', 'E' OR 'D'
       **********************************************************************
      C     RTVNOST       BEGSR
- 
+
       * Access Nostro Codes from the Nostro Codes file
      C     KNost         CHAIN     SDNOSTL1                           99
- 
+
       * Nostro Codes details not found
      C                   IF        *IN99 = *ON
      C                   MOVEL     'N'           OKNONB
@@ -335,7 +341,7 @@
      C                   MOVEL     'DDNONB'      FldNameArr(Ix)
      C                   MOVEL     'USR0073'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C     EndRTV        ENDSR
       *****************************************************************
       /EJECT
@@ -406,7 +412,7 @@
       * VAL - VALIDATION OF ACTION CODE CURRENCY CODE AND NOSTRO NUMBER
       *****************************************************************
      C     VAL           BEGSR
- 
+
       * Action Code
       *  .. must be 'I','A','D' or 'E'
      C                   IF        DDACTN <> 'I' AND
@@ -478,7 +484,7 @@
       *
      C                   ENDIF
       *
- 
+
      C     EVAL          ENDSR
       *****************************************************************
       /EJECT
@@ -486,7 +492,7 @@
       * VALACI - VALIDATION OF ACTION CODE 'I'
       *****************************************************************
      C     VALACI        BEGSR
- 
+
       *
       * Access Nostro Codes from the Nostro Codes file
      C     KNost         CHAIN     SDNOSTL1                           44
@@ -507,7 +513,7 @@
       * VALACD - VALIDATION OF ACTION CODE 'D'
       *****************************************************************
      C     VALACD        BEGSR
- 
+
       *
       ** Nostro code must exists
       *
@@ -533,6 +539,7 @@
       *
       ** Add validation to SE Extended Settlements                                          MD037493
       *                                                                                     MD037493
+     C                   IF        BGSECS = 'Y'                                             MD023962
      C                   EVAL      *IN55 = *OFF                                             MD037493
      C     DDCYCD        SETLL     STDSEDCY                           55                    MD037493
      C     DDCYCD        READE     STDSEDCY                               55                MD037493
@@ -558,11 +565,12 @@
       *                                                                                     MD037493
      C     DDCYCD        READE     STDSEDCY                               55                MD037493
      C                   ENDDO                                                              MD037493
+     C                   ENDIF                                                              MD023962
       *                                                                                     MD037493
      C                   ENDIF
       *
- 
- 
+
+
      C     EVALAD        ENDSR
       *****************************************************************
       /EJECT
@@ -570,14 +578,14 @@
       * INIT - Initial processing
       *****************************************************************
      C     INIT          BEGSR
- 
+
       * Clear Outputs
      C                   CLEAR                   TranFilFmt
      C                   EVAL      OKACTN = 'Y'
      C                   EVAL      OKCYCD = 'Y'
      C                   EVAL      OKNONB = 'Y'
- 
- 
+
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -585,10 +593,10 @@
       * *INZSR - Initialisation
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Parameters
      C     *ENTRY        PLIST
- 
+
       * Inputs
       *
       * Return code
@@ -660,14 +668,28 @@
      C                   EVAL      DBKEY = @OPTN                                 ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+      *                                                                                     MD023962
+      ** Access Midas Module Details                                                        MD023962
+     C                   CALL      'AOMMODR0'                                               MD023962
+     C                   PARM      *BLANKS       @RTCD                                      MD023962
+     C                   PARM      '*FIRST '     @OPTN                                      MD023962
+     C     SDMMOD        PARM      SDMMOD        DSFDY                                      MD023962
+      *                                                                                     MD023962
+      * Database Error                                                                      MD023962
+     C                   IF        @RTCD <> *BLANKS                                         MD023962
+     C                   EVAL      DBFILE = 'SDMMODPD'                                      MD023962
+     C                   EVAL      DBASE  = 901                                 ************MD023962
+     C                   EVAL      DBKEY = @OPTN                                * DBERR 901 MD023962
+     C                   EXSR      *PSSR                                        ************MD023962
+     C                   ENDIF                                                              MD023962
+
       ** Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDAPI         PARM      SDAPI         DSFDY
       *
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
@@ -754,7 +776,7 @@
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       *  Note: if non-standard processing required, use the PSSR_ILENE
       *  subroutine
       ****************************************************************

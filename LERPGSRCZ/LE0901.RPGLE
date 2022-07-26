@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD060257           Date 13Jul22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 07Aug12               *
       *                 260891             Date 17Dec12               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060257 - Do not perform DBASE 5 if currency is ESP/DEM     *
+      *             (Upgrade of original code annotated as JIMMER)    *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -1251,6 +1254,14 @@
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    TKEY                                       A
      C     SDCURR        PARM      SDCURR        DSSDY                                      B
+     C     TKEY          IFEQ      'ESP'                                                    MD060257
+     C                   Z-ADD     0             CDP                                        MD060257
+     C                   GOTO      ENDERR                                                   MD060257
+     C                   ENDIF                                                              MD060257
+     C     TKEY          IFEQ      'DEM'                                                    MD060257
+     C                   Z-ADD     2             CDP                                        MD060257
+     C                   GOTO      ENDERR                                                   MD060257
+     C                   ENDIF                                                              MD060257
       *
       ** Database error if live record not found
       *
@@ -1265,6 +1276,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+     C     ENDERR        TAG                                                                MD060257
       *
       ** Determine no of decimals 24=0 25=1 26=2 27=3
       *

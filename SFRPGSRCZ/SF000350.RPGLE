@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD050150           Date 12Oct18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR635878           Date 14Jul22               *
+      *  Prev Amend No. MD050150           Date 12Oct18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFB001             Date 12Nov14               *
       *                 AR805470           Date 27Jul11               *
       *                 262341             Date 22Oct09               *
@@ -38,6 +39,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR635878 - Request to apply fix SC263737 and AR576681.       *
+      *  AR576681 - User not printed consistently on a specific line  *
+      *             (for optical reporting): Skip a line when Dep't   *
+      *             is not to be printed                              *
+      *             Users with no initial menu are not printed: Use   *
+      *             MAIN                                              *
+      *             Some menus are not printed because items appear   *
+      *             identical given 13 and 32 characters in the       *
+      *             report: Extend field lengths                      *
+      *  263737 - Overlapping in 'Initial Menu' field in SF000350P1.  *
       *  MD050150 - Rename 'FusionBanking Midas' to 'Fusion Midas'    *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -101,7 +112,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FMUSERL5   IF   E           K DISK
      F                                     RENAME(MUSERDDF:MUSER5DF)
      FMUSERL7   IF   E           K DISK                                                       244592
@@ -147,7 +158,7 @@
       *
       ** Access Rights of MidasPlus users Audit Report
       *
- 
+
      FSF000350P1O    E             PRINTER INFDS(SPOOL1)
      F                                     USROPN
       *
@@ -173,23 +184,23 @@
       **                               error handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in
       ** the PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       **  Array For ZEDIT And ZALIGN
      D/COPY ZSRSRC,ZALIGNZ1LE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -201,27 +212,27 @@
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
       ** File Information Data Structure for SF00350AU
      D SPOOLU          DS
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
       ** Dummy Data Structures used by Access Programs.
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Dummy Data Structures used by Access Programs.
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structures for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structures for Switchable features
      D SCSARDPD      E DS                  EXTNAME(SCSARDPD)
- 
+
       ** External data structures for Department codes
      D SDDEPT        E DS                  EXTNAME(SDDEPTPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -267,6 +278,7 @@
      D PREVDEP         S                   LIKE(DPPT)
      D PREVMN          S                   LIKE(MGNAME)
      D PREVUSR         S                   LIKE(USRP)
+     D PREVINDX        S                   LIKE(INDX)                                       AR576681
      D WSHNAME         S            100A
      D WFIRST          S              1A
      D WRKF1           S              4A
@@ -303,7 +315,7 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
@@ -371,7 +383,7 @@
      C     RUNTYP        OREQ      'L'                                                        244592
      C                   EXSR      REPORT
      C                   ENDIF                                                                244592
- 
+
      C                   IF        #RECI = 'D'                                                254503
      C                   EVAL      RCTR = RCTR + 1                                            247020
      C                   ENDIF                                                                254503
@@ -425,6 +437,9 @@
      C                   MOVEL     *BLANKS       WSHNAME
      C                   MOVEL     SHNAME        WSHNAME
      C                   EVAL      WSHNAME = %TRIM(WSHNAME)
+     C                   IF        WSHNAME = *BLANKS                                        AR576681
+     C                   EVAL      WSHNAME = 'MAIN'                                         AR576681
+     C                   ENDIF                                                              AR576681
      C                   MOVE      WSHNAME       KSHNME
      C                   ELSE
      C                   EVAL      KSHNME  = 'MAIN'
@@ -436,7 +451,8 @@
       *
      C                   IF        %FOUND(GPTGRMNUH0)
      C                   EVAL      KMHID  = MHID
-     C                   MOVEL     MHNAME        SINITM
+     C**********         MOVEL     MHNAME        SINITM                                       263737
+     C                   MOVEL(P)  MHNAME        SINITM                                       263737
       *
      C                   EVAL      RQDLN1 = 1
      C                   EVAL      DIFLN1 = OFLLN1 - PRTLN1
@@ -456,7 +472,9 @@
       ** If first pass, print the header
       *
      C                   IF        WFIRST = 'Y'
+     C                   EVAL      *IN42 = *ON                                              AR576681
      C                   WRITE     SF000350H0
+     C                   EVAL      *IN42 = *OFF                                             AR576681
      C                   WRITE     SF000350H1
      C                   EVAL      WFIRST = 'N'
      C                   EVAL      PREVDEP = DPPT
@@ -468,7 +486,9 @@
       *
      C                   IF        DPPT <> PREVDEP or
      C                             USRP <> PREVUSR
+     C                   EVAL      *IN42 = *ON                                              AR576681
      C                   WRITE     SF000350H0
+     C                   EVAL      *IN42 = *OFF                                             AR576681
      C                   WRITE     SF000350H1
      C                   EVAL      PREVDEP = DPPT
      C                   EVAL      PREVUSR = USRP
@@ -527,7 +547,7 @@
       *                                                               *
       *****************************************************************
      C     SRGETHIR      BEGSR
- 
+
      C                   EVAL      KMNHID = KMHID
      C     KMNHID        SETLL     GPTGRMNUL0
      C     KMNHID        READE     GPTGRMNUL0                             50
@@ -562,7 +582,7 @@
       *                                                               *
       *****************************************************************
      C     SRGTACRT      BEGSR
- 
+
      C                   EVAL      KMNHID = KMHID
      C                   EVAL      KMNUCODE = *LOVAL
      C                   EVAL      PREVMENCO = *BLANKS                                        248436
@@ -587,7 +607,7 @@
       *
      C     KMACBR        SETLL     GZMACBRL2
      C     KMACBRP       READE     GZMACBRL2                              51
- 
+
      C                   DOW       *IN51 = *OFF
       *
       ** Get the menu name
@@ -595,9 +615,9 @@
      C                   EVAL      KMLHYD = MLHYID
      C                   EVAL      KPRNT  = MLPARENT
      C     KGRMNG        CHAIN     GPTGRMNUG0
- 
+
       *  If previous menu name the same, hide the item
- 
+
      C                   IF        %FOUND(GPTGRMNUG0) AND
      C                             MGNAME <> PREVMN
      C                   EVAL      PREVMN = MGNAME
@@ -690,27 +710,40 @@
       *
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN41 = *ON
+     C                   EVAL      *IN43 = *ON                                              AR576681
+     C                   ELSE                                                               AR576681
+     C                   EVAL      *IN40 = *OFF                                             AR576681
+     C                   EVAL      *IN41 = *OFF                                             AR576681
      C                   ENDIF
       *
       *
      C     KMACBRP       READE     GZMACBRL2                              51
       *
      C                   IF        *IN51 = '1'
+     C                             OR BACOL3 = 'Y'                                          AR576681
       *                                                                                       248436
       * Suppress fields if previously written                                                 248436
-     C                   IF        SHIER <> PREVHIER OR                                       248436
-     C                             PRTLN1 < 16                                                248436
-     C                   EVAL      *IN40 = *ON                                                248436
-     C                   ELSE                                                                 248436
-     C                   EVAL      *IN40 = *OFF                                               248436
-     C                   ENDIF                                                                248436
+     C**********         IF        SHIER <> PREVHIER OR                              248436 AR576681
+     C**********                   PRTLN1 < 16                                       248436 AR576681
+     C**********         EVAL      *IN40 = *ON                                       248436 AR576681
+     C**********         ELSE                                                        248436 AR576681
+     C**********         EVAL      *IN40 = *OFF                                      248436 AR576681
+     C**********         ENDIF                                                       248436 AR576681
       *                                                                                       248436
-     C                   IF        SITEMS <> PREVITEM  OR                                     248436
-     C                             PRTLN1 < 16                                                248436
-     C                   EVAL      *IN41 = *ON                                                248436
-     C                   ELSE                                                                 248436
-     C                   EVAL      *IN41 = *OFF                                               248436
-     C                   ENDIF                                                                248436
+     C**********         IF        SITEMS <> PREVITEM  OR                            248436 AR576681
+     C**********                   PRTLN1 < 16                                       248436 AR576681
+     C**********         EVAL      *IN41 = *ON                                       248436 AR576681
+     C**********         ELSE                                                        248436 AR576681
+     C**********         EVAL      *IN41 = *OFF                                      248436 AR576681
+     C**********         ENDIF                                                       248436 AR576681
+     C                   IF        SHIER <> PREVHIER                                        AR576681
+     C                              OR *IN43 = *ON                                          AR576681
+     C                   EVAL      *IN40 = *ON                                              AR576681
+     C                   ENDIF                                                              AR576681
+     C                   IF        INDX <> PREVINDX                                         AR576681
+     C                              OR *IN43 = *ON                                          AR576681
+     C                   EVAL      *IN41 = *ON                                              AR576681
+     C                   ENDIF                                                              AR576681
       *                                                                                       248436
      C                   EVAL      *IN42 = *ON                                              AR805470
      C                   WRITE     SF000350D0
@@ -719,7 +752,10 @@
      C                   EVAL      BACOL3 = 'N'
      C                   EVAL      PREVMENCO = MLMENUCODE                                     248436
      C                   EVAL      PREVITEM  = SITEMS                                         248436
+     C                   EVAL      PREVINDX  = INDX                                         AR576681
      C                   EVAL      PREVHIER  = SHIER                                          248436
+     C                   EVAL      *IN43 = *OFF                                             AR576681
+     C                   CLEAR                   SF000350D0                                 AR576681
      C                   ENDIF
       *
      C                   ENDDO
@@ -837,7 +873,7 @@
       *****************************************************************
       *
      C     RCFP1         BEGSR
- 
+
      C                   OPEN      SF000350P1
       *
       ** Ensure Report Spool File recorded by RCF.

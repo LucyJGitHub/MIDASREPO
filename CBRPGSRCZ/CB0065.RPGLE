@@ -11,12 +11,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 250660             Date 03Oct07               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPK025             Date 23Nov06               *
+      *                 CPK025             Date 23Nov06               *
       *                 CGP002             Date 31Jul03               *
       *                 CAAA02             Date 16Jul03               *
       *  Converted to ILE and code-stripped                           *
@@ -35,6 +36,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  250660 - Restarted, Bypassed component                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - Revert fix CAAA02                                   *
       *  CGP002 - Add call to GOC000100 to submit an update to the    *
@@ -67,6 +69,7 @@
      FCBAUDTL1  IF   E           K DISK
      FCBCOMSL8  IF   E           K DISK    USROPN
      FCBCOMSL0  UF   E           K DISK    USROPN
+     FCBCOMPD   O    E             DISK                                                       250660
      F*
       /SPACE 2
      F********************************************************************
@@ -705,6 +708,15 @@
      C     *IN75         IFEQ      '0'
      C     WSEQR         ANDNE     '99999'
      C*
+      *                                                                                       250660
+      ** BYPASSED                                                                             250660
+      *                                                                                       250660
+     C                   MOVE      SCCOT         XCCOT                                        250660
+     C                   MOVE      SCSEQA        XCSEQ                                        250660
+     C                   MOVE      'B'           XSTAT                                        250660
+      *                                                                                       250660
+     C                   WRITE     CBCOMPD0                                                   250660
+      *                                                                                       250660
      C** MOVE BYPASSED MESSAGE TO COMPONENT FIELD
      C*
      C                   MOVEA     RSTARR(2)     RSTMSG
@@ -804,6 +816,15 @@
      C                   PARM                    LEN               5 0
      C                   PARM                    DTQMSG
      C*
+      *                                                                                       250660
+      ** RESTARTED                                                                            250660
+      *                                                                                       250660
+     C                   MOVE      SCCOT         XCCOT                                        250660
+     C                   MOVE      SCSEQA        XCSEQ                                        250660
+     C                   MOVE      'R'           XSTAT                                        250660
+      *                                                                                       250660
+     C                   WRITE     CBCOMPD0                                                   250660
+      *                                                                                       250660
      C** MOVE RESTARTED MESSAGE TO COMPONENT FIELD
      C*
      C                   MOVEA     RSTARR(1)     RSTMSG

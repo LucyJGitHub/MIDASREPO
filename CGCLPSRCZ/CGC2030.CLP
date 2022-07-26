@@ -9,20 +9,23 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR633404           Date 25Jul22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK009             Date 09Jul99              */
+/*                      CPK009             Date 09Jul99              */
 /*                      079860             Date 07Dec94              */
 /*                      079856             DATE 07DEC94              */
 /*                      S01522             DATE 21NOV94              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR633404 - Reorganise UDC files daily as the bank is set-up */
+/*                  with no non-working day.                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
@@ -73,9 +76,9 @@
              OVRDBF     FILE(SDBANKPD) SHARE(*NO)
              RCVF
              CHGVAR     VAR(&DAYS) VALUE(&BJDNWD - &BJRDNB)
-             IF         COND(&DAYS *LE 1) THEN(DO)
-             GOTO       CMDLBL(ENDCLPGM)
-             ENDDO
+/**********  IF         COND(&DAYS *LE 1) THEN(DO) */                                   /*AR633404*/
+/**********  GOTO       CMDLBL(ENDCLPGM) */                                             /*AR633404*/
+/**********  ENDDO */                                                                   /*AR633404*/
 /* */
 /* Start Commitment Control */
 /* */

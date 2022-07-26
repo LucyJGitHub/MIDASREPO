@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD021652           Date 13May22               *
+      *  Last Amend No. 250755A            Date 09Jul22               *
+      *  Prev Amend No. 250755             Date 09Jul22               *
+      *                 CLE138             Date 02Nov21               *
+      *                 MD021652           Date 13May22               *
       *                 CLE123             Date 02Nov21               *
       *                 MD058307           Date 06Aug21               *
       *                 CSD103             Date 10Aug20               *
@@ -88,6 +90,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250755A - User wishes to amend expiry date prior to run date.*
+      *            Re-application of fix is incorrect!                *
+      *  250755  - User wishes to amend expiry date prior to run date.*
       *  CLE138 - Class Codes for Facilities                          *
       *  MD021652 - Facility expiry date should be not be earlier than*
       *             any attached fee against it.                      *
@@ -1395,24 +1400,33 @@
       *
       **  Earlier than run date
       **   Field protected for expired facilities - do not validate
-     C     ZDAYNO        IFLT      RUND
-     C     DDACTN        ANDNE     'A'
-     C     DDACTN        ANDNE     'X'
-     C     @@RECI        ANDNE     'E'
-     C                   Move      'N'           DDDTEXOK
-     C                   Add       1             Idx
-     C                   Movel     'DDDTEX'      FldNamXAr(Idx)
-     C                   Movel     'LEF0024'     MsgIDXAr(Idx)
-     C                   ENDIF
+     C*****ZDAYNO        IFLT      RUND                                                       250755
+     C*****DDACTN        ANDNE     'A'                                                        250755
+     C*****DDACTN        ANDNE     'X'                                                        250755
+     C*****@@RECI        ANDNE     'E'                                                        250755
+     C**********         Move      'N'           DDDTEXOK                                     250755
+     C**********         Add       1             Idx                                          250755
+     C**********         Movel     'DDDTEX'      FldNamXAr(Idx)                               250755
+     C**********         Movel     'LEF0024'     MsgIDXAr(Idx)                                250755
+     C**********         ENDIF                                                                250755
+     C     ZDAYNO        IFLT      RUND                                                      250755A
+     C     DDACTN        ANDNE     'A'                                                       250755A
+     C     DDACTN        ANDNE     'X'                                                       250755A
+     C     @@RECI        ANDNE     'E'                                                       250755A
+     C                   Move      'N'           DDDTEXOK                                    250755A
+     C                   Add       1             Idx                                         250755A
+     C                   Movel     'DDDTEX'      FldNamXAr(Idx)                              250755A
+     C                   Movel     'LEF0024'     MsgIDXAr(Idx)                               250755A
+     C                   ENDIF                                                               250755A
       *
-     C     ZDAYNO        IFLT      RUND
-     C     DDACTN        ANDEQ     'A'
-     C     @@RECI        ANDNE     'E'
-     C                   Move      'N'           DDDTEXOK
-     C                   Add       1             Idx
-     C                   Movel     'DDDTEX'      FldNamXAr(Idx)
-     C                   Movel     'LEF0024'     MsgIDXAr(Idx)
-     C                   ENDIF
+     C*****ZDAYNO        IFLT      RUND                                                      250755A
+     C*****DDACTN        ANDEQ     'A'                                                       250755A
+     C*****@@RECI        ANDNE     'E'                                                       250755A
+     C**********         Move      'N'           DDDTEXOK                                    250755A
+     C**********         Add       1             Idx                                         250755A
+     C**********         Movel     'DDDTEX'      FldNamXAr(Idx)                              250755A
+     C**********         Movel     'LEF0024'     MsgIDXAr(Idx)                               250755A
+     C**********         ENDIF                                                               250755A
       *
      C     ZDAYNO        IFLE      W#DTAP
      C                   Move      'N'           DDDTEXOK

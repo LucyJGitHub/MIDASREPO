@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD058079           Date 11May21              */
-/*       Prev Amend No. MD055891           Date 01Sep20              */
+/*       Last Amend No. 250731             Date 15Jul22              */
+/*       Prev Amend No. MD058079           Date 11May21              */
+/*                      MD055891           Date 01Sep20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD023005           Date 23Oct13              */
 /*                      MD022112           Date 05Sep13              */
@@ -56,6 +57,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       250731 - Clear work file CBCOMPD.                           */
 /*       MD058079 - Deliverable Data Split for sundry files          */
 /*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
@@ -987,6 +989,10 @@ AUDREP:      RTVDTAARA  DTAARA(CBSTAT) RTNVAR(&CBSTAT)
                   IF       COND((&INU7 *EQ '1') *AND (&INU8 *EQ '1')) +
                                THEN(GOTO CMDLBL(ABNORMAL))
              ENDDO
+                                                                                          /*250731*/
+             CLRPFM     FILE(*LIBL/CBCOMPD)                                               /*250731*/
+             MONMSG     MSGID(CPF0000)                                                    /*250731*/
+                                                                                          /*250731*/
              IF         COND(&PRINT *EQ ' ') THEN(GOTO +
                           CMDLBL(ABNORMAL))
 /**/

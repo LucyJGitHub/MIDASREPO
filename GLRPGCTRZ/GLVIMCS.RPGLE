@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058336           Date 29Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR568919           Date 28Jun22               *
+      *  Prev Amend No. MD058336           Date 29Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR568919 - API Journal Entries allow the Associated Customer *
+      *             to be the same as the Account Customer. Added     *
+      *             checking of Associated Customer when the Account  *
+      *             is not found. (Child: AR568920)                   *
       *  MD058336 - Not enough information in the error message shown *
       *             when inserting a batch item where account customer*
       *             number is the same with the associated customer.  *
@@ -142,6 +147,19 @@
       *
       ** DS for Access Programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+      *                                                                                     AR568919
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   AR568919
+      *                                                                                     AR568919
+      ** DS for Access programs - short data structure                                      AR568919
+      *                                                                                     AR568919
+     D SDACOD        E DS                  EXTNAME(SDACODPD)                                AR568919
+     D                                     PREFIX(S_)                                       AR568919
+      *                                                                                     AR568919
+      ** DS for Account Code Details                                                        AR568919
+      *                                                                                     AR568919
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                AR568919
+      *                                                                                     AR568919
+      ** Externally described DS for SAR details                                            AR568919
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -230,6 +248,22 @@
       *
      C                   MOVE      *BLANKS       DDACNB                                       242224
      C                   MOVEL     BBCUST        DDACNB
+      *                                                                                     AR568919
+      ** Check if Account Code used is a GL Account                                         AR568919
+      *                                                                                     AR568919
+     C                   MOVE      *BLANKS       @ACOD            10                        AR568919
+     C                   MOVEL     B2ACCD        @ACOD                                      AR568919
+     C                   CALL      'AOACODR0'                                               AR568919
+     C                   PARM      '*MSG   '     PRTCD                                      AR568919
+     C                   PARM      '*KEY   '     POPTN                                      AR568919
+     C                   PARM                    @ACOD                                      AR568919
+     C     SDACOD        PARM      SDACOD        DSFDY                                      AR568919
+     C     PRTCD         IFEQ      *BLANKS                                                  AR568919
+     C     S_A5ACTY      ANDEQ     'G'                                                      AR568919
+     C                   MOVEL     'Y'           @ISGL             1                        AR568919
+     C                   ELSE                                                               AR568919
+     C                   MOVEL     'N'           @ISGL                                      AR568919
+     C                   ENDIF                                                              AR568919
       *
       ** Compare Associated Customer with A/c Customer only
       ** if Account is acceptable and there are no non-
@@ -242,6 +276,9 @@
      C     PAccount      IFEQ      *BLANKS
      C     POVERRIDE     ANDEQ     *BLANKS
      C     PAccount      OREQ      '*INCP'
+     C     PAccount      OREQ      '*NRFD'                                                  AR568919
+     C     CGL148        ANDEQ     'Y'                                                      AR568919
+     C     @ISGL         ANDEQ     'Y'                                                      AR568919
       *
      C     B2CUST        IFEQ      BBCUST
      C     CmpAssCust    ANDNE     'N'                                                        243965
@@ -342,6 +379,20 @@
       *
       ** Valid JE Item (DS) - for file update
      C                   PARM                    PVBITP
+      *                                                                                     AR568919
+      ** Access SAR details file to determine if CGL148 is on.                              AR568919
+      *                                                                                     AR568919
+     C                   CALLB     'AOSARDR0'                                               AR568919
+     C                   PARM      *BLANKS       @RTCD             7                        AR568919
+     C                   PARM      '*VERIFY'     @OPTN             7                        AR568919
+     C                   PARM      'CGL148'      @SARD             6                        AR568919
+     C     SCSARD        PARM      SCSARD        DSFDY                                      AR568919
+      *                                                                                     AR568919
+     C     @RTCD         IFEQ      *BLANK                                                   AR568919
+     C                   MOVE      'Y'           CGL148            1                        AR568919
+     C                   ELSE                                                               AR568919
+     C                   MOVE      'N'           CGL148                                     AR568919
+     C                   ENDIF                                                              AR568919
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

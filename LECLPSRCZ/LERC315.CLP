@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. 250615             Date 13Jul22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       250615 - Remove clear of action files - it makes research   */
+/*                of system problems very difficult                  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing                      */
 /*       E49419  -  LER315 has been re-instated for daily accruals   */
@@ -132,10 +135,10 @@ PGM  PARM(&CNAM &CSEQ)
          MONMSG     MSGID(CPF2817 CPF2869)                                                /*CLE134*/
        ENDDO                                                                              /*CLE134*/
 /**/                                                                                      /*CLE134*/
-                   CLRPFM     FILE(ACTN3DH)                /* BH3382 */
-                   CLRPFM     FILE(ACTN3DK)                /* BH3382 */
-                   CLRPFM     FILE(ACTN3DN)                /* BH3382 */
-                   CLRPFM     FILE(ACTN3ZX)                /* BH3382 */
+/**********        CLRPFM     FILE(ACTN3DH)                          */            /*BH3382 250615*/
+/**********        CLRPFM     FILE(ACTN3DK)                          */            /*BH3382 250615*/
+/**********        CLRPFM     FILE(ACTN3DN)                          */            /*BH3382 250615*/
+/**********        CLRPFM     FILE(ACTN3ZX)                          */            /*BH3382 250615*/
  
 /* If the component has completed successfully reset the status field */
  

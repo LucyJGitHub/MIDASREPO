@@ -23,8 +23,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059908           Date 06May22               *
-      *  Prev Amend No. CCG025             Date 04Apr22               *
+      *  Last Amend No. MD059859A          Date 28Jun22               *
+      *  Prev Amend No. MD059859           Date 11May22               *
+      *                 MD059908           Date 06May22               *
+      *                 CCG025             Date 04Apr22               *
       *                 CGL193             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
@@ -68,6 +70,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059859A - Apply change to both credit and debit side.      *
+      *              If no entries prior to last posting date, check  *
+      *              for the first entry after last posting date.     *
+      *  MD059859 - Initial rate should be zero if no interest is     *
+      *             calculated. Pattern fix from MD057283.            *
       *  MD059908 - Decimal data error in job GLC0064. Also correct   *
       *             extract of debit rate change.                     *
       *  CCG025 - Tiered and Threshold Interest Details on Statements *
@@ -371,7 +378,11 @@
      D C#STMT          C                   CONST('STATEMENT ')
      D C#NORM          C                   CONST('NORMAL    ')
      D C#TURN          C                   CONST('TURNOVER  ')
-                                                                                              CCG025
+      *                                                                                     MD059859
+      * System Value                                                                        MD059859
+     D                 DS                                                                   MD059859
+     D  WSYSVL                 1     20    INZ('DspZeroIntRate')                            MD059859
+      *                                                                                       CCG025
      D                 DS                                                                     CCG025
      D  RAT2                   1     36                                                       CCG025
      D  RAT21                  1      6P 7                                                    CCG025
@@ -1589,6 +1600,15 @@
      C                   MOVEL     'Y'           FIRST             1                          CCG025
      C     ##ACDK        SETGT     REHRCJ                                                     CCG025
      C     ##ACKY        READPE    REHRCJ                                 55                  CCG025
+      *                                                                                    MD059859A
+      **  If there are no posting on or before the last statement date,                    MD059859A
+      **  check for the next posting after the last statement date                         MD059859A
+      *                                                                                    MD059859A
+     C                   IF        *IN55 = *ON                                             MD059859A
+     C                   SETOFF                                       55                   MD059859A
+     C     ##ACDK        SETGT     REHRCJ                                                  MD059859A
+     C     ##ACKY        READE     REHRCJ                                 55               MD059859A
+     C                   ENDIF                                                             MD059859A
       *                                                                                       CCG025
       **  For each rate change ...                                                            CCG025
      C     *IN55         DOWEQ     *OFF                                                       CCG025
@@ -1728,7 +1748,12 @@
      C                   MOVEL     INST          ##D(3)                                       CCG025
       *                                                                                       CCG025
       **  Set up Rates                                                                        CCG025
+     C     INTH          IFGT      BAL21                                                    MD059859
+     C     WZERAT        ANDEQ     'Y'                                                      MD059859
+     C                   MOVEL     '0'           ##D(4)                                     MD059859
+     C                   ELSE                                                               MD059859
      C                   MOVEL     RAT21         ##D(4)                                       CCG025
+     C                   ENDIF                                                              MD059859
      C                   MOVEL     RAT22         ##D(5)                                       CCG025
      C                   MOVEL     RAT23         ##D(6)                                       CCG025
      C                   MOVEL     RAT24         ##D(7)                                       CCG025
@@ -1838,6 +1863,15 @@
      C     ##ACDK        SETGT     REHRDJ                                                     CCG025
      C*****##ACKY        READE     REHRDJ                                 55         CCG025 MD059908
      C     ##ACKY        READPE    REHRDJ                                 55                MD059908
+      *                                                                                    MD059859A
+      **  If there are no posting on or before the last statement date,                    MD059859A
+      **  check for the next posting after the last statement date                         MD059859A
+      *                                                                                    MD059859A
+     C                   IF        *IN55 = *ON                                             MD059859A
+     C                   SETOFF                                       55                   MD059859A
+     C     ##ACDK        SETGT     REHRDJ                                                  MD059859A
+     C     ##ACKY        READE     REHRDJ                                 55               MD059859A
+     C                   ENDIF                                                             MD059859A
       *                                                                                       CCG025
       **  For each rate change ...                                                            CCG025
      C     *IN55         DOWEQ     *OFF                                                       CCG025
@@ -1977,7 +2011,12 @@
      C                   MOVEL     INST          ##D(3)                                       CCG025
       *                                                                                       CCG025
       **  Set up Rates                                                                        CCG025
+     C     INTH          IFGT      BAL21                                                   MD059859A
+     C     WZERAT        ANDEQ     'Y'                                                     MD059859A
+     C                   MOVEL     '0'           ##D(4)                                    MD059859A
+     C                   ELSE                                                              MD059859A
      C                   MOVEL     RAT21         ##D(4)                                       CCG025
+     C                   ENDIF                                                             MD059859A
      C                   MOVEL     RAT22         ##D(5)                                       CCG025
      C                   MOVEL     RAT23         ##D(6)                                       CCG025
      C                   MOVEL     RAT24         ##D(7)                                       CCG025
@@ -4552,6 +4591,38 @@
      C                   ENDIF                                                                CCG025
      C                   ENDIF                                                                CCG025
       *                                                                                       CCG025
+     C     CCG025        IFEQ      'Y'                                                      MD059859
+     C                   CALL      'AOSVALR0'                                               MD059859
+     C                   PARM      *BLANKS       PRTCD             7                        MD059859
+     C                   PARM      WSYSVL        WSVLK1           20                        MD059859
+     C                   PARM                    WSVL1           200                        MD059859
+     C                   PARM      *BLANKS       WSVLK2           20                        MD059859
+     C                   PARM                    WSVL2           200                        MD059859
+     C                   PARM      *BLANKS       WSVLK3           20                        MD059859
+     C                   PARM                    WSVL3           200                        MD059859
+     C                   PARM      *BLANKS       WSVLK4           20                        MD059859
+     C                   PARM                    WSVL4           200                        MD059859
+     C                   PARM      *BLANKS       WSVLK5           20                        MD059859
+     C                   PARM                    WSVL5           200                        MD059859
+     C                   PARM      *BLANKS       WSVLK6           20                        MD059859
+     C                   PARM                    WSVL6           200                        MD059859
+     C                   PARM      *BLANKS       WSVLK7           20                        MD059859
+     C                   PARM                    WSVL7           200                        MD059859
+     C                   PARM      *BLANKS       WSVLK8           20                        MD059859
+     C                   PARM                    WSVL8           200                        MD059859
+     C                   PARM      *BLANKS       WSVLK9           20                        MD059859
+     C                   PARM                    WSVL9           200                        MD059859
+     C                   PARM      *BLANKS       WSVLK0           20                        MD059859
+     C                   PARM                    WSVL0           200                        MD059859
+      *                                                                                     MD059859
+     C     PRTCD         IFNE      *BLANKS                                                  MD059859
+     C     WSVL1         ANDEQ     '*NRF   '                                                MD059859
+     C                   EXSR      *PSSR                                                    MD059859
+     C                   ELSE                                                               MD059859
+     C                   MOVEL     WSVL1         WZERAT            1                        MD059859
+     C                   ENDIF                                                              MD059859
+      *                                                                                     MD059859
+     C                   ENDIF                                                              MD059859
       **  Copyright
      C                   MOVEA     ##CPY         ##BIS            80
      C/COPY WNCPYSRC,CG4510C006

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. 255626             Date 25Jul22               *      
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058285           Date 22Jun21               *
       *                 AR806147           Date 21May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -89,6 +90,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255626 - Applied fix 250878. NAAD (next amendment action     *
+      *           date ) and NASN ( next amendment sequence ) are not *
+      *           properly updated when a deal amendment is authorised*
+      *           and related deal amendments with lower value or     *
+      *           sequence are authorised.                            *      
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  AR806147 - Value date of any deal amendment must be less     *
@@ -1029,7 +1035,8 @@
      C*
      C*****@DEAMK        SETLL     MMDEAMLL                           65                      191881
      C*****@DEAMK        READPE    MMDEAMLL                               65                  191881
-     C     @@DLNO        SETLL     MMDEAMLL                           65                      191881
+     C     @DEAMK        SETLL     MMDEAMLL                           65                      255626     
+     C*****@@DLNO        SETLL     MMDEAMLL                           65               191881 255626
      C     @@DLNO        READPE    MMDEAMLL                               65                  191881
 B2   C     *IN65         DOWEQ     '0'
 B3   C     HNDSTS        IFNE      'A'

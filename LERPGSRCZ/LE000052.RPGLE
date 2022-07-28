@@ -37,9 +37,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD060268 - Aggregate history and main extension files are    *
-      *             not updated after CC event. Amended to correct    *
-      *             the retrieval of the new class code from the      *
-      *             aggregate facility amendment file on 'CC' event.  *
+      *             not updated after CC event. Correct the retrieval *
+      *             of the new class code from the aggregate facility *
+      *             amendment file when event code is 'CC'.           *
       *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

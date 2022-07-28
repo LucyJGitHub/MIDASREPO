@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059424           Date 29Mar22               *
-      *  Prev Amend No. MD059104           Date 02Dec21               *
+      *  Last Amend No. MD059624           Date 20Jul22               *
+      *  Prev Amend No. MD059424           Date 29Mar22               *
+      *                 MD059104           Date 02Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058182           Date 25May21               *
@@ -24,6 +25,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059424 - Calculator returned rates for previous period     *
       *             of deal defined with forward rate prior to        *
       *             backward rate amendment                           *
@@ -102,6 +104,10 @@
      D    DateIN                      6p 0
      D    DateInd                     1a
      D    DateOUT                     5p 0
+
+     D  CHECK_RNDAPL   pr                  extpgm('ZAGETRDAPL')                             MD059624
+     D    riskFreeRat                10a                                                    MD059624
+     D    isRndApply                  1a                                                    MD059624
 
       *  +----------------+
       ** |Parameter lists |
@@ -317,6 +323,11 @@
      D endDate         s              5s 0
      D writeRecord     s              1a                                                    MD058040
      D FileID          s             10a                                                      CDL102
+     D RiskFreeRat     s             10a                                                    MD059624
+     D isRndApply      s              1a                                                    MD059624
+     D paramCCR_RA     s             50a                                                    MD059624
+     D paramROU_ST     s             50a                                                    MD059624
+
 
       *---------------*
       ** JSON Details *
@@ -653,6 +664,13 @@
 
        begsr processTransaction;
 
+                   // Start of change MD059624
+                   //** This will check if rounding appplies for NCCR
+
+                   exsr checkIfRoundingApplies;
+
+                   // End of change MD059624
+
                    //** This will build the URL parameter for the REST API Call
 
                    exsr buildParameter;
@@ -682,6 +700,44 @@
 
        endsr;
 
+       //*************************************************************                      MD059624
+       /EJECT                                                                               MD059624
+       //*************************************************************                      MD059624
+       //                                                            *                      MD059624
+       // checkIfRoundingApplies                                     *                      MD059624
+       // ======================                                     *                      MD059624
+       //                                                            *                      MD059624
+       // Called by: processTransaction                              *                      MD059624
+       //                                                            *                      MD059624
+       // Calls: None                                                *                      MD059624
+       //                                                            *                      MD059624
+       //*************************************************************                      MD059624
+                                                                                            MD059624
+       begsr checkIfRoundingApplies;
+
+             RiskFreeRat = RiskFreeRate;
+             isRndApply = 'N';
+
+             if CalcMethod = 'NCCR';
+                CallP CHECK_RNDAPL(
+                                   RiskFreeRat
+                                 : isRndApply
+                                  );
+             else;
+             endif;
+
+             if isRndApply = 'Y';
+                paramCCR_RA = AMP + 'ccrRoundingApplies=' +
+                                    TRUE_STR;
+                paramROU_ST = AMP + 'ccrRoundingPrecision=' +
+                              %trim(RateRndDecPts);
+             else;
+                paramCCR_RA = BLANK_STR;
+                paramROU_ST = AMP + 'rateRoundingDecimalPoints=' +
+                              %trim(RateRndDecPts);
+             endif;
+       endsr;
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -708,8 +764,10 @@
                                       %trim(riskFreeRate) +
                                     AMP + 'lookBackDays=' +
                                       %trim(lookBackDays)  +
-                                    AMP + 'rateRoundingDecimalPoints=' +
-                                      %trim(RateRndDecPts) +
+                                    //AMP + 'rateRoundingDecimalPoints=' +                //MD059624
+                                    //  %trim(RateRndDecPts) +                            //MD059624
+                                    %trim(paramCCR_RA) +                                  //MD059624
+                                    %trim(paramROU_ST) +                                  //MD059624
                                     AMP + 'dayCountConvention=' +
                                       %trim(dayCntConvent) +
                                     AMP + 'observationPeriodShift=' +
@@ -734,8 +792,10 @@
                                       %trim(riskFreeRate) +                               //MD057871
                                     AMP + 'lookBackDays=' +                               //MD057871
                                       %trim(lookBackDays)  +                              //MD057871
-                                    AMP + 'rateRoundingDecimalPoints=' +                  //MD057871
-                                      %trim(RateRndDecPts) +                              //MD057871
+                                    //AMP + 'rateRoundingDecimalPoints=' +       //MD057871 MD059624
+                                    //  %trim(RateRndDecPts) +                   //MD057871 MD059624
+                                    %trim(paramCCR_RA) +                                  //MD059624
+                                    %trim(paramROU_ST) +                                  //MD059624
                                     AMP + 'dayCountConvention=' +                         //MD057871
                                       %trim(dayCntConvent) +                              //MD057871
                                     AMP + 'observationPeriodShift=' +                     //MD057871

@@ -16628,10 +16628,10 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
      C                   ADD       WK13N         ACPD                                          CAC00
       *                                                                   CAC001
-      *                                                                   250371
-      **  Re-initialize after a/c output for internal funding             250371
-      *                                                                   250371
-     C                   Z-ADD     0             WK13N                    250371
+      *                                                                                       250371
+      **  Re-initialize after a/c output for internal funding                                 250371
+      *                                                                                       250371
+     C                   Z-ADD     0             WK13N                                        250371
      C                   ENDIF                                                  - BGN0ST       CAC00
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'

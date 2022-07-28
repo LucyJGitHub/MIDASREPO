@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059248           Date 10Jan22               *
-      *  Prev Amend No. MD058048           Date 06May21               *
+      *  Last Amend No. MD060094           Date 14Jul22               *
+      *  Prev Amend No. MD059248           Date 10Jan22               *
+      *                 MD058048           Date 06May21               *
       *                 258482             Date 01Jun20               *
       *                 248968             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
@@ -197,6 +198,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060094 - SP2021.D Missing retail postings on RSACMTPD after*
+      *             1st COB.                                          *
+      *             Introduced a work variable fields to avoid clashes*
+      *             of usage of indicators resulting to skipping of   *
+      *             postings processing.                              *
       *  MD059248 - FM2021A/A1 FX Netting: Unexpected projections for *
       *             netted FX deals. This is due to MD055401 code in  *
       *             FX0920. Fix is to reverse MD055401 in FX0920 and  *
@@ -2493,6 +2499,12 @@
 0513 C*
 0514 C*    SETOF THE NEW YORK STATE PROCESSING INDICATOR
 0515 C                     SETOF                     89
+      *                                                                                     MD060094
+      ** Initialize work variables for FX Netting                                           MD060094
+      *                                                                                     MD060094
+     C                     MOVE 'N'       WFXDL   1                                         MD060094
+     C                     MOVE 'N'       WBUYND  1                                         MD060094
+     C                     MOVE 'N'       WSELND  1                                         MD060094
 0516 C*
 0517 C*    INCREMENT COUNT OF RECORDS READ
 0518 C***********NREC      ADD  1         NREC    50                      AUS007
@@ -3059,8 +3071,15 @@
      C           *IN07     IFEQ '1'                                       CDL002
       ** SETOF NET INDICATOR again to set default of NET NO               CDL002
      C                     MOVE '0'       *IN07                           CDL002
-     C                     MOVE '0'       *IN59                                             MD059248
-     C                     MOVE '0'       *IN72                                             MD059248
+      *                                                                                     MD060094
+      ** Set WFXDL to 'Y' for deal that is FX and netted. Then, set                         MD060094
+      ** buy and sell work variables (WBUYND and WSELND) to 'N'.                            MD060094
+      *                                                                                     MD060094
+     C                     MOVE 'Y'       WFXDL                                             MD060094
+     C**********           MOVE '0'       *IN59                                    MD059248 MD060094
+     C**********           MOVE '0'       *IN72                                    MD059248 MD060094
+     C                     MOVE 'N'       WBUYND                                            MD060094
+     C                     MOVE 'N'       WSELND                                            MD060094
      C           DLNO      CHAINDEALS                40                   CDL002
      C           *IN40     IFEQ '0'                                       CDL002
      C** Preparation for getting FX Net Reference Depending on B/S                          MD048346
@@ -3076,7 +3095,11 @@
      C           NETBY     IFEQ 'Y'                                                         MD049950
      C           NETBR     ANDNE*BLANKS                                                     MD049950
      C                     MOVE '1'       *IN07                                             MD049950
-     C                     MOVE '1'       *IN59                                             MD059248
+      *                                                                                     MD060094
+      ** Set WBUYND to 'Y' for buy side netting settlement.                                 MD060094
+      *                                                                                     MD060094
+     C**********           MOVE '1'       *IN59                                    MD059248 MD060094
+     C                     MOVE 'Y'       WBUYND                                            MD060094
      C                     ENDIF                                                            MD049950
      C           SVBRCA    IFEQ *BLANKS                                                     MD048346
      C                     MOVE NETBR     FXNETR                                            MD048346
@@ -3089,7 +3112,11 @@
      C           NETSL     IFEQ 'Y'                                                         MD049950
      C           NETSR     ANDNE*BLANKS                                                     MD049950
      C                     MOVE '1'       *IN07                                             MD049950
-     C                     MOVE '1'       *IN72                                             MD059248
+      *                                                                                     MD060094
+      ** Set WSELND to 'Y' for sell side netting settlement.                                MD060094
+      *                                                                                     MD060094
+     C**********           MOVE '1'       *IN72                                    MD059248 MD060094
+     C                     MOVE 'Y'       WSELND                                            MD060094
      C                     ENDIF                                                            MD049950
      C           SVBRCA    IFEQ *BLANKS                                                     MD048346
      C                     MOVE NETSR     FXNETR                                            MD048346
@@ -3127,16 +3154,20 @@
       *                                                                                     MD059248
      C           EVCOD     IFEQ 'V'                                                         MD059248
      C           AMCOD     ANDEQ'FB'                                                        MD059248
-     C           *IN59     ANDEQ'1'                                                         MD059248
+     C********** *IN59     ANDEQ'1'                                                MD059248 MD060094
+     C           WBUYND    ANDEQ'Y'                                                         MD060094
      C           EVCOD     OREQ 'V'                                                         MD059248
      C           AMCOD     ANDEQ'BB'                                                        MD059248
-     C           *IN59     ANDEQ'1'                                                         MD059248
+     C********** *IN59     ANDEQ'1'                                                MD059248 MD060094
+     C           WBUYND    ANDEQ'Y'                                                         MD060094
      C           EVCOD     OREQ 'V'                                                         MD059248
      C           AMCOD     ANDEQ'FC'                                                        MD059248
-     C           *IN72     ANDEQ'1'                                                         MD059248
+     C********** *IN72     ANDEQ'1'                                                MD059248 MD060094
+     C           WSELND    ANDEQ'Y'                                                         MD060094
      C           EVCOD     OREQ 'V'                                                         MD059248
      C           AMCOD     ANDEQ'BC'                                                        MD059248
-     C           *IN72     ANDEQ'1'                                                         MD059248
+     C********** *IN72     ANDEQ'1'                                                MD059248 MD060094
+     C           WSELND    ANDEQ'Y'                                                         MD060094
       *                                                                                     MD059248
       ** Set 01 as narrative code for missing account key                                   MD059248
       ** to avoid DB error 108                                                              MD059248
@@ -3341,8 +3372,12 @@
      C                     ENDIF                                                              257937
       *                                                                                       257937
 0611 C*    ADDITIONAL PROCESSING FOR POSTING REFERENCE 2.
-     C           *IN59     IFEQ '0'                                                         MD059248
-     C           *IN72     ANDEQ'0'                                                         MD059248
+     C********** *IN59     IFEQ '0'                                                MD059248 MD060094
+     C********** *IN72     ANDEQ'0'                                                MD059248 MD060094
+     C           WFXDL     IFEQ 'N'                                                         MD060094
+     C           WFXDL     OREQ 'Y'                                                         MD060094
+     C           WBUYND    ANDEQ'N'                                                         MD060094
+     C           WSELND    ANDEQ'N'                                                         MD060094
 0612 C   35                EXSR PREF2
      C   70 35             EXSR EXTRA
      C  N10 70 35          GOTO ERROR

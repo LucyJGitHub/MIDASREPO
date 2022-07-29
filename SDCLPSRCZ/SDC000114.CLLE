@@ -17,6 +17,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060020 - Fusion Midas ARR Adapter: Expired Token          */
+/*                  prevents ARR requests. Add checking to U1 job    */
+/*                  switch to capture if there are exceptions and    */
+/*                  fail component during *COB.                      */
 /*       MD058673 - Only benchmark rate is applied on deal on day1   */
 /*                  of its valuation. For deal with FLID = Y, call a */
 /*                  new program to recompute deal's one day interest */
@@ -47,6 +51,8 @@
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           2020')
 
+             CHGJOB     SWS(0XXXXXXX)                                                   /*MD060020*/
+                                                                                        /*MD060020*/
 /** Global monitor message */
 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
@@ -242,6 +248,13 @@ CONTINUE:
              ENDDO                                                                        /*CDL102*/
              ENDDO                                                                        /*CDL102*/
                                                                                           /*CDL102*/
+/** Error when Exceptions reported */                                                   /*MD060020*/
+             IF         COND(&MODE *EQ '*COB') THEN(DO)                                 /*MD060020*/
+             IF         COND(%SWITCH(1XXXXXXX)) THEN(DO)                                /*MD060020*/
+                GOTO       CMDLBL(ERROR)                                                /*MD060020*/
+             ENDDO                                                                      /*MD060020*/
+             ENDDO                                                                      /*MD060020*/
+                                                                                        /*MD060020*/
 /** If sucessful completion, update status file to Completed */
 
              CALL       PGM(SD000118) PARM('C')

@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059190           Date 08Nov21               *
-      *  Prev Amend No. MD059137           Date 29Oct21               *
+      *  Last Amend No. MD059624           Date 20Jul22               *
+      *  Prev Amend No. MD059190           Date 08Nov21               *
+      *                 MD059137           Date 29Oct21               *
       *                 MD058103           Date 19May21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059190 - Use rollover ARR parameters if loan exists in     *
       *             RO extract file and rollover is authorised.       *
       *  MD059137 - Include in the report loans with interest due date*
@@ -33,6 +35,7 @@
       *****************************************************************
 
      FSD001110P1O    E             PRINTER OFLIND(*IN50)
+     F                                     INFDS(SPOOL1)
       ** Midas SD Compounding Rate History Details Report
 
      FLECLIPL2  IF   E           K DISK    INFSR(*PSSR)
@@ -98,6 +101,12 @@
      D WrkRollChk      S              1A                                                    MD059137
      D NoOfRecs        S              3S 0                                                  MD059137
      D WrkEDATE        S              5P 0                                                  MD059137
+     D DIFLNE          S              3  0                                                  MD059624
+     D RQDLNE          S              3  0                                                  MD059624
+                                                                                            MD059624
+     D SPOOL1          DS                                                                   MD059624
+     D  OFLINE               188    189B 0                                                  MD059624
+     D  PRTLNE               367    368B 0                                                  MD059624
 
       ** Temporary DS for SDHSDRTD
 
@@ -369,6 +378,32 @@
      C                   PARM      *BLanks       ZADate
       *
      C                   EVAL      P1ENDT = ZADate
+      *
+      ** Check that sufficient lines remain for the format
+      *
+     C                   EVAL      RQDLNE = 22                                              MD059624
+      *                                                                                     MD059624
+     C                   EVAL      DIFLNE = OFLINE - PRTLNE                                 MD059624
+     C                   IF        DIFLNE <= RQDLNE                                         MD059624
+     C                   ADD       1             PGENUM                                     MD059624
+     C                   WRITE     SD001110H1                                               MD059624
+     C                   EVAL      *IN50 = '0'                                              MD059624
+     C                   ENDIF                                                              MD059624
+     C                   EVAL      isRndApplies = 'N'                                       MD059624
+     C                   IF        CALM = 'NCCR'                                            MD059624
+     C                   CALL      'ZAGETRDAPL'                                             MD059624
+     C                   PARM                    RFRR                                       MD059624
+     C                   PARM                    isRndApplies      1                        MD059624
+     C                   ENDIF                                                              MD059624
+     C                   IF        isRndApplies = 'Y'                                       MD059624
+     C                   EVAL      P1RAPL= 'Yes'                                            MD059624
+     C                   EVAL      P1ROPR = RRDP                                            MD059624
+     C                   EVAL      P1RTRO = 0                                               MD059624
+     C                   ELSE                                                               MD059624
+     C                   EVAL      P1RAPL= 'No'                                             MD059624
+     C                   EVAL      P1ROPR = 0                                               MD059624
+     C                   EVAL      P1RTRO = RRDP                                            MD059624
+     C                   ENDIF                                                              MD059624
       *
      C                   WRITE     SD001110D2
      C                   WRITE     SD001110H3

@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 257879             Date 12May22               *
-      *  Prev Amend No. MD059275           Date 23May22               *
+      *  Last Amend No. 250371             Date 06Jun22               *
+      *  Prev Amend No. 257879             Date 12May22               *
+      *                 MD059275           Date 23May22               *
       *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -433,6 +434,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250371 - Funding accrual account keys are incorrect.         *
+      *           'HBA45T   I0000'                                    *
+      *           'HBA45F   I0000'                                    *
+      *           Need to re-initialise work field WK13N to zero      *
       *  257879 - Use profit centre account keys with 'S' in position *
       *           8 for syndicated loans.                             *
       *  MD059275 - Incorrect action type on LE0497P1. Populate F1FPCT*
@@ -16623,6 +16628,10 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
      C                   ADD       WK13N         ACPD                                          CAC00
       *                                                                   CAC001
+      *                                                                                       250371
+      **  Re-initialize after a/c output for internal funding                                 250371
+      *                                                                                       250371
+     C                   Z-ADD     0             WK13N                                        250371
      C                   ENDIF                                                  - BGN0ST       CAC00
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'

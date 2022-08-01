@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD035923           Date 07Feb22               *
-      *  Prev Amend No. MD057255           Date 27Nov20               *
+      *  Last Amend No. MD032119           Date 19Jul22               *
+      *  Prev Amend No. MD035923           Date 07Feb22               *
+      *                 MD057255           Date 27Nov20               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD051233           Date 03May18               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032119 - Wrong validation if birthdate is earlier than 1972*
+      *             Use E5DBTH instead of E5BRTH.                     *
       *  MD035923 - Program SD000714 dumps due to missing non-account *
       *             holders                                           *
       *  MD057255 - Controlling Person not removed in report          *
@@ -270,6 +273,7 @@
      D WRUND           S              5S 0
      D WBthDate        S              5S 0
      D WBthDateA       S              8A
+     D WBthDateC       S              8A                                                    MD032119
      D WBthCntry       S              2A
      D WBthTown        S             35A
      D WExpiryDate     S              5S 0
@@ -739,7 +743,8 @@
      C                             AND FAUTIN = *BLANKS
 
      C                             OR WSvalTinBrthRq = 'B'
-     C                             AND WBthDate = *ZERO
+     C**********                   AND WBthDate = *ZERO                                     MD032119
+     C                             AND WBthDateC = *BLANKS                                  MD032119
      C**********                   OR WSvalTinBrthRq = 'B'                                  MD044164
      C**********                   AND WBthCntry = *BLANKS                                  MD044164
      C                             OR WSvalTinBrthRq = 'B'
@@ -748,7 +753,8 @@
      C                             OR WSvalTinBrthRq = 'Y'
      C                             AND FAUTIN = *BLANKS
      C                             OR WSvalTinBrthRq = 'Y'
-     C                             AND WBthDate = *ZERO
+     C**********                   AND WBthDate = *ZERO                                     MD032119
+     C                             AND WBthDateC= *BLANKS                                   MD032119
      C**********                   OR WSvalTinBrthRq = 'Y'                                  MD044164
      C**********                   AND WBthCntry = *BLANKS                                  MD044164
      C                             OR WSvalTinBrthRq = 'Y'
@@ -2661,6 +2667,7 @@
 
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      WBthDate  = E5BRTH
+     C                   EVAL      WBthDateC = E5DBTH                                       MD032119
      C                   EVAL      WBthCntry = E5BTHC
      C                   EVAL      WBthTown  = E5BTHT
      C                   ELSE

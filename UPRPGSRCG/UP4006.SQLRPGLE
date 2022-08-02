@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059751             Date 25Mar22             *
-      *  Prev Amend No. MD059742             Date 23Mar22             *
+      *  Last Amend No. MD060271             Date 21Jul22             *
+      *  Prev Amend No. MD059751             Date 25Mar22             *
+      *                 MD059742             Date 23Mar22             *
       *                 MD058089             Date 01Sep21             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060271 - UDF tables are reported but should be ignored     *
       *  MD059751 - SQL view statement change is not detected by aDBU *
       *  MD059742 - Cope with change in Alternative field name        *
       *  MD058089 - Deliverable Data Split for SM and UP              *
@@ -343,6 +345,7 @@
 
      C                   If        RcdCount > 0
      C                             and WDESC = 'Rmv field'
+     C                             or RcdCount > 0 and WDESC = 'New field'                  MD060271
       * also ignore the following attributes: WHDFTL, WHDFT and WHSQLT
      C                             or RcdCount > 0 and WFLDA = 'WHDFTL'
      C                             or RcdCount > 0 and WFLDA = 'WHDFT '

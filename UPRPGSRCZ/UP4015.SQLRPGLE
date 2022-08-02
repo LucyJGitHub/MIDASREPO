@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD060271             Date 21Jul22             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060271 - Dashed line appeared trimmed                      *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -64,6 +66,11 @@
      D UPZUPD_S      E DS                  EXTNAME(UPZUPDTD)
      D                                     PREFIX(S_)
 
+     D C_DOTL          C                   Const('--------------------------                MD060271
+     D                                     -----------------------------------              MD060271
+     D                                     -----------------------------------              MD060271
+     D                                     -----------------------------------              MD060271
+     D                                     -----------------------------------')            MD060271
      D/COPY ZACPYSRC,PSDS
       *****************************************************************
 
@@ -446,6 +453,7 @@
       * Set off indicators *IN30 to *IN40
      C                   eval      %Subarr(*IN : 30 : 40) = *OFF
      C                   eval      V_TOTF = 0
+     C                   eval      ##DOTL = C_DOTL                                          MD060271
       * Set off error indication *in99
      C                   setoff                                       99
 

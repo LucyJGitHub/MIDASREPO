@@ -4,14 +4,15 @@
 /*EXI *  TEXT('Midas LE Fees Settled/Adjusted Today')                 *
      F*****************************************************************
      F*                                                               *
-     F*  Midas Customer Lending Module
+     F*  Midas Customer Lending Module                                *
      F*                                                               *
      F*  LER170 - Fees Settled/Adjusted Today Report                  *
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD053375           Date 11Oct19               *
-      *  Prev Amend No. MD055481           Date 04Sep20               *
+      *  Last Amend No. MD060000           Date 08Jul22               *
+      *  Prev Amend No. MD053375           Date 11Oct19               *
+      *                 MD055481           Date 04Sep20               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 MD055481           Date 04Sep20               *
@@ -66,6 +67,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060000 - Current condition on writing HEADP2 could not     *
+      *             handle more than 23  fee records where in all     *
+      *             require 2 lines.                                  *
+      *           - Enhance condition on writing HEADP2, consider     *
+      *             if DIFLN is less than or equal to 2 and the fee   *
+      *             to be written requires 2 lines then write new     *
+      *             header.                                           *
       *  MD053375 - Incorrect fee settlement amount in LER170 report. *
       *             Use new files LEFECPPD and LEFECPL0. Include      *
       *             backvalued fee payment in the report.             *
@@ -651,6 +659,13 @@
      C           WOPNP2    IFEQ 'Y'                                       152181
      C           OFLLN2    SUB  PRTLN2    DIFLN2  30                      152181
      C           DIFLN2    IFLE 1                                         152181
+      *                                                                                     MD060000
+      ** Consider in condition when a loan is part purchased and there                      MD060000
+      ** are only 2 lines left in the spool, if yes then write new                          MD060000
+      ** header.                                                                            MD060000
+      *                                                                                     MD060000
+     C           *IN56     OREQ '1'                                                         MD060000
+     C           DIFLN2    ANDLE2                                                           MD060000
      C                     WRITEHEADP2                                    152181
      C                     ENDIF                                          152181
      C                     ENDIF                                          152181
@@ -767,6 +782,11 @@
      C                     ENDIF                                          152181
      C                     ADD  1         @REP
      C                     SETOF                     06                   CLE005
+      *                                                                                     MD060000
+      ** Set off *IN56 because retrieval of original borrower detail                        MD060000
+      ** is only done on settlements.                                                       MD060000
+      *                                                                                     MD060000
+     C                     SETOF                     56                                     MD060000
       *
      C           AEXIT     TAG
       *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD056557           Date 31Aug20               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD056557           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 CER050             Date 16Jun19               *
@@ -87,6 +88,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance.                     *
+      *           - Apply CLE138 original design of SDFACTX0 to store *
+      *             facility classes. (Recompile)                     *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD056557 - Deliverable Data Split for Pulldown               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

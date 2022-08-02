@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060268           Date 27Jul22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
@@ -35,6 +36,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060268 - Aggregate history and main extension files are    *
+      *             not updated after CC event. Correct the retrieval *
+      *             of the new class code from the aggregate facility *
+      *             amendment file when event code is 'CC'.           *
       *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -252,6 +257,7 @@
      D  WZWK2          S              4  0
      D  WZWK3          S             15  0
      D  WZNEGD         S              5
+     D  NewFCLS        S              4                                                     MD060268
       *
      C/TITLE Main Processing
       *================================================================
@@ -299,8 +305,10 @@
       *                                                                                       CLE138
      C                   IF        PRTCD = *BLANK                                             CLE138
      C                   MOVE      'Y'           CLE138            1                          CLE138
+     C                   EVAL      *IN40 = '1'                                              MD060268
      C                   ELSE                                                                 CLE138
      C                   MOVE      'N'           CLE138                                       CLE138
+     C                   EVAL      *IN40 = '0'                                              MD060268
      C                   ENDIF                                                                CLE138
       *                                                                                       CLE138
      C     KFCTYB        KLIST                                                                CLE138
@@ -312,6 +320,8 @@
      C                   KFLD                    WCust                                        CLE138
      C                   KFLD                    WFACTN            3 0                        CLE138
      C                   KFLD                    WFCNON            2 0                        CLE138
+     C                   KFLD                    VLDT                                       MD060268
+     C                   KFLD                    SQNO                                       MD060268
 
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number.
@@ -446,21 +456,26 @@
      C                   ENDIF
      C/COPY WNCPYSRC,LEH00395
       *                                                                                       CLE138
+     C                   EVAL      NewFCLS = *BLANKS                                        MD060268
      C                   IF        CLE138 = 'Y'                                               CLE138
-     C                   IF        FATP <> 'CC'                                               CLE138
+     C**********         IF        FATP <> 'CC'                                      CLE138 MD060268
+     C                   MOVE      WFType        WFACTX                                     MD060268
+     C                   MOVE      WFSeq         WFCNOX                                     MD060268
      C     KFCTYB        CHAIN     LEAGFCL7                           90                      CLE138
      C                   IF        *IN90 = *OFF                                               CLE138
      C                   MOVE      ABFCXCLS      RFCLS                                        CLE138
      C                   ENDIF                                                                CLE138
-     C                   ELSE                                                                 CLE138
+     C**********         ELSE                                                        CLE138 MD060268
       *                                                                                       CLE138
       ** Get Class from extension file                                                        CLE138
       *                                                                                       CLE138
+     C                   IF        FATP = 'CC'                                              MD060268
      C                   EVAL      WFACTN = FACT                                              CLE138
      C                   EVAL      WFCNON = FCNO                                              CLE138
      C     KAGAQ         CHAIN     LEAGAQL0                           90                      CLE138
      C                   IF        *IN90 = *OFF                                               CLE138
-     C                   MOVE      FACLAS        RFCLS                                        CLE138
+     C**********         MOVE      FACLAS        RFCLS                               CLE138 MD060268
+     C                   EVAL      NewFCLS = FACLAS                                         MD060268
      C                   ENDIF                                                                CLE138
      C                   ENDIF                                                                CLE138
      C                   ENDIF                                                                CLE138
@@ -574,13 +589,14 @@
 
      C/COPY WNCPYSRC,LEH00384
      C                   MOVE      *BLANKS       AIFCLS                                       CLE138
-     C                   MOVE      WFType        WFACTX                                       CLE138
-     C                   MOVE      WFSeq         WFCNOX                                       CLE138
+     C**********         MOVE      WFType        WFACTX                              CLE138 MD060268
+     C**********         MOVE      WFSeq         WFCNOX                              CLE138 MD060268
      C                   IF        CLE138 = 'Y' AND FATP = 'CC'                               CLE138
-     C     KFCTYB        CHAIN     LEAGFCL7                           90                      CLE138
-     C                   IF        *IN90 = *OFF                                               CLE138
-     C                   MOVE      ABFCXCLS      AIFCLS                                       CLE138
-     C                   ENDIF                                                                CLE138
+     C*****KFCTYB        CHAIN     LEAGFCL7                           90             CLE138 MD060268
+     C**********         IF        *IN90 = *OFF                                      CLE138 MD060268
+     C**********         MOVE      ABFCXCLS      AIFCLS                              CLE138 MD060268
+     C**********         ENDIF                                                       CLE138 MD060268
+     C                   EVAL      AIFCLS = NewFCLS                                         MD060268
      C                   ENDIF                                                                CLE138
      C                   WRITE     LEAGHSD0
 
@@ -917,7 +933,8 @@
      C/COPY WNCPYSRC,LEH00387
       *                                                                                       CLE138
      C                   IF        FATP = 'CC'                                                CLE138
-     C                   EVAL      RDTLS = 'NEW CLASS: ' + ABFCXCLS                           CLE138
+     C**********         EVAL      RDTLS = 'NEW CLASS: ' + ABFCXCLS                  CLE138 MD060268
+     C                   EVAL      RDTLS = 'NEW CLASS: ' + NewFCLS                          MD060268
      C                   ENDIF                                                                CLE138
 
 

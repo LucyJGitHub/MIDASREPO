@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CIR020             Date 02Aug21              */
-/*       Prev Amend No. MD058673           Date 10Sep21              */
+/*       Last Amend No. MD060020           Date 21Jun22              */
+/*       Prev Amend No. CIR020             Date 02Aug21              */
+/*                      MD058673           Date 10Sep21              */
 /*                      MD058331           Date 05Jul21              */
 /*                      CDL102             Date 01Jun21              */
 /*                      CLE172             Date 01Oct20              */
@@ -18,6 +19,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060020 - Fusion Midas ARR Adapter: Expired Token          */
+/*                  prevents ARR requests. Add checking to U1 job    */
+/*                  switch to capture if there are exceptions and    */
+/*                  fail component during *COB.                      */
 /*       CIR020 - LIBOR Deregulation - FRA/IRS                       */
 /*       MD058673 - Only benchmark rate is applied on deal on day1   */
 /*                  of its valuation. For deal with FLID = Y, call a */
@@ -50,6 +55,8 @@
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           2020')
 
+             CHGJOB     SWS(0XXXXXXX)                                                   /*MD060020*/
+                                                                                        /*MD060020*/
 /** Global monitor message */
 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
@@ -283,6 +290,13 @@ CONTINUE:
                                                                                           /*CIR020*/
              ENDDO                                                                        /*CDL102*/
                                                                                           /*CDL102*/
+/** Error when Exceptions reported */                                                   /*MD060020*/
+             IF         COND(&MODE *EQ '*COB') THEN(DO)                                 /*MD060020*/
+             IF         COND(%SWITCH(1XXXXXXX)) THEN(DO)                                /*MD060020*/
+                GOTO       CMDLBL(ERROR)                                                /*MD060020*/
+             ENDDO                                                                      /*MD060020*/
+             ENDDO                                                                      /*MD060020*/
+                                                                                        /*MD060020*/
 /** If sucessful completion, update status file to Completed */
 
              CALL       PGM(SD000118) PARM('C')

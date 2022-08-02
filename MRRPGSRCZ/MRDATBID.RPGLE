@@ -17,16 +17,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. DAI103             Date 25Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CMR001  *CREATE    Date 16Aug04               *
+      *                 CMR001  *CREATE    Date 16Aug04               *
       *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI103 - Upgraded MPlus TAICFIX to FB 2.1                    *
+      *  TAICFIX- Schedule dates                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CMR001 - MidasPlus Reporting                                 *
       *                                                               *
@@ -132,6 +135,8 @@
      D  WDatYY                 1      4S 0
      D  WDatMM                 5      6S 0
      D  WDatDD                 7      8S 0
+                                                                                             TAICFIX
+     D  LastDatDD      S              2  0                                                   TAICFIX
  
       ** Input parameters from calling program
      D PDateSch        S              1  0
@@ -202,61 +207,71 @@
      C                   SELECT
      C                   WHEN      PDateSch = 0
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch0:1:ArrMax0)
+     C**********                   = %LOOKUPGE(PSchDate:DArrSch0:1:ArrMax0)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch0:1:ArrMax0)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch0(WArrNum)
      C                   ENDIF
      C                   WHEN      PDateSch = 1
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch1:1:ArrMax1)
+     C*********                    = %LOOKUPGE(PSchDate:DArrSch1:1:ArrMax1)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch1:1:ArrMax1)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch1(WArrNum)
      C                   ENDIF
      C                   WHEN      PDateSch = 2
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch2:1:ArrMax2)
+     C**********                   = %LOOKUPGE(PSchDate:DArrSch2:1:ArrMax2)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch2:1:ArrMax2)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch2(WArrNum)
      C                   ENDIF
      C                   WHEN      PDateSch = 3
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch3:1:ArrMax3)
+     C**********                   = %LOOKUPGE(PSchDate:DArrSch3:1:ArrMax3)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch3:1:ArrMax3)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch3(WArrNum)
      C                   ENDIF
      C                   WHEN      PDateSch = 4
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch4:1:ArrMax4)
+     C*********                    = %LOOKUPGE(PSchDate:DArrSch4:1:ArrMax4)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch4:1:ArrMax4)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch4(WArrNum)
      C                   ENDIF
      C                   WHEN      PDateSch = 5
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch5:1:ArrMax5)
+     C*********                    = %LOOKUPGE(PSchDate:DArrSch5:1:ArrMax5)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch5:1:ArrMax5)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch5(WArrNum)
      C                   ENDIF
      C                   WHEN      PDateSch = 6
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch6:1:ArrMax6)
+     C**********                   = %LOOKUPGE(PSchDate:DArrSch6:1:ArrMax6)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch6:1:ArrMax6)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch6(WArrNum)
      C                   ENDIF
      C                   WHEN      PDateSch = 7
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch7:1:ArrMax7)
+     C**********                   = %LOOKUPGE(PSchDate:DArrSch7:1:ArrMax7)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch7:1:ArrMax7)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch7(WArrNum)
      C                   ENDIF
      C                   WHEN      PDateSch = 8
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch8:1:ArrMax8)
+     C**********                   = %LOOKUPGE(PSchDate:DArrSch8:1:ArrMax8)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch8:1:ArrMax8)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch8(WArrNum)
      C                   ENDIF
      C                   WHEN      PDateSch = 9
      C                   EVAL      WArrNum
-     C                             = %LOOKUPGE(PSchDate:DArrSch9:1:ArrMax9)
+     C**********                   = %LOOKUPGE(PSchDate:DArrSch9:1:ArrMax9)                  TAICFIX
+     C                             = %LOOKUPGT(PSchDate:DArrSch9:1:ArrMax9)                  TAICFIX
      C                   IF        WArrNum <> 0
      C                   EVAL      PBckCde = BArrSch9(WArrNum)
      C                   ENDIF
@@ -381,16 +396,25 @@
      C                   WHEN      WDatMM = 2
      C                   EVAL      WRemMM2 = %REM(WDatYY:4)
      C                   IF        WRemMM2 = 0
-     C                   EVAL      WDatDD = 29
+     C*******************EVAL      WDatDD = 29                                               TAICFIX
+     C                   EVAL      LastDatDD = 29                                            TAICFIX
      C                   ELSE
-     C                   EVAL      WDatDD = 28
+     C*******************EVAL      WDatDD = 28                                               TAICFIX
+     C                   EVAL      LastDatDD = 28                                            TAICFIX
      C                   ENDIF
      C                   WHEN      WDatMM = 4 OR WDatMM = 6 OR
      C                             WDatMM = 9 OR WDatMM = 11
-     C                   EVAL      WDatDD = 30
+     C*******************EVAL      WDatDD = 30                                               TAICFIX
+     C                   EVAL      LastDatDD = 30                                            TAICFIX
      C                   Other
-     C                   EVAL      WDatDD = 31
+     C*******************EVAL      WDatDD = 31                                               TAICFIX
+     C                   EVAL      LastDatDD = 31                                            TAICFIX
      C                   ENDSL
+ 
+     C                   MOVE      PDatYMD       WDatDD                                      TAICFIX
+     C                   IF        WDatDD > LastDatDD                                        TAICFIX
+     C                   EVAL      WDatDD = LastDatDD                                        TAICFIX
+     C                   ENDIF                                                               TAICFIX
  
      C                   ENDSR
       *****************************************************************

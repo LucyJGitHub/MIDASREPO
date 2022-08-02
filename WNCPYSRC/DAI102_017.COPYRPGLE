@@ -1,0 +1,60 @@
+      *****************************************************************                       DAI102
+      *                                                               *                       DAI102
+      *  Last Amend No. DAI102             Date 18Jun19               *                       DAI102
+      *                                                               *                       DAI102
+      *---------------------------------------------------------------*                       DAI102
+      *                                                               *                       DAI102
+      *  DAI102 - TI Posting Narrative Enhancement                    *                       DAI102
+      *           Include "Issuing Bank Reference" for LC postings    *                       DAI102
+      *           Upgrade to FBMidas 2.1.                             *                       DAI102
+      *                                                               *                       DAI102
+      *****************************************************************                       DAI102
+      *                                                                                       DAI102
+      *                                                                                       DAI102
+      *  If DAI102 exists                                                                     DAI102
+      *                                                                                       DAI102
+     C     DAI102        IFEQ      'Y'                                                        DAI102
+      *                                                                                       DAI102
+     C                   MOVEL     TIDLBR        TIDLBRX                                      DAI102
+     C                   MOVEL     TIDLRF        TIDLRFX                                      DAI102
+     C                   MOVEL     TIDLTP        TIDLTPX                                      DAI102
+     C                   Z-ADD     TISEQN        TISEQNX                                      DAI102
+     C                   Z-ADD     TIVALD        TIVALDX                                      DAI102
+      *                                                                                       DAI102
+     C     K#POST1       CHAIN     XXPOSTD1                           86                      DAI102
+      *                                                                                       DAI102
+      ** If not found, delay for 1 second and try again                                       DAI102
+      *                                                                                       DAI102
+     C     *IN86         IFEQ      '1'                                                        DAI102
+      *                                                                                       DAI102
+      ** Use QCMDEXC to issue a DLYW                                                          DAI102
+      *                                                                                       DAI102
+     C                   MOVEL     CMDARRAY(1)   @CMD             15                          DAI102
+     C                   CALL      'QCMDEXC'                            99                    DAI102
+      *                                                                                       DAI102
+     c                   PARM                    @CMD                                         DAI102
+     C                   PARM      15            @CMDLEN          15 5                        DAI102
+      *                                                                                       DAI102
+     C                   IF        *IN99 = *On                                                DAI102
+     C                   Z-ADD     15            DBASE                                        DAI102
+     C                   MOVEL     *Blanks       DBFILE                                       DAI102
+     C                   MOVEL     'QCMDEXC'     DBKEY                                        DAI102
+     C                   EXSR      *PSSR                                                      DAI102
+     C                   ENDIF                                                                DAI102
+      *                                                                                       DAI102
+      ** Try Again                                                                            DAI102
+      *                                                                                       DAI102
+     C     K#POST1       CHAIN     XXPOSTD1                           86                      DAI102
+      *                                                                                       DAI102
+     C                   ENDIF                                                                DAI102
+      *                                                                                       DAI102
+      ** If found and issuing bank reference is not blank                                     DAI102
+      *                                                                                       DAI102
+     C     *IN86         IFEQ      '0'                                                        DAI102
+     C     TIOPR         ANDNE     *BLANKS                                                    DAI102
+     C                   MOVEL     '/'           WRK21            21                          DAI102
+     C                   MOVE      TIOPR         WRK21                                        DAI102
+     C                   MOVE      WRK21         BTNRDC                                       DAI102
+     C                   ENDIF                                                                DAI102
+      *                                                                                       DAI102
+     C                   ENDIF                                                                DAI102

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260909             Date 04Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 254407             Date 07Nov16               *
+      *  Prev Amend No. 260909             Date 04Apr19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254407 - I/O error CPF5157 was detected in file SECEO.       *
+      *           Applied fix 233155. Applied for MD042108            *
       *  260909 - Security Trade calculates wrong consideration on MBS*
       *         - Applied for MD-51447                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -55,7 +58,7 @@
       *****************************************************************
      FSECEO     IF   E           K DISK                                                       200459
      F                                     RENAME(SEDEVDF:SEDEVDO)                            200459
- 
+     F                                     RENAME(SNDEVDF:SNDEVDO)                            254407
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦

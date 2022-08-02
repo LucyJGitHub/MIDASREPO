@@ -6,8 +6,10 @@
 /*                                                                             */
 /*       (c) Finastra International Limited 2003                               */
 /*                                                                             */
-/*       Last Amend No. CSD103             Date 10Aug20                        */
-/*       Prev Amend No. MD046248           Date 27Oct17                        */
+/*       Last Amend No. 263958             Date 23Feb10                        */
+/*       Prev Amend No. 263986             Date 23Feb10                        */
+/*                      CSD103             Date 10Aug20                        */
+/*                      MD046248           Date 27Oct17                        */
 /*                      AR1040005          Date 07Feb13                        */
 /*                      CSF011             Date 12Sep11                        */
 /*                      CER059             Date 19Jul10                        */
@@ -41,6 +43,9 @@
 /*                                                                             */
 /*-----------------------------------------------------------------------------*/
 /*                                                                             */
+/*       263958 - Added nominal Decimal Places field from GPPOSNPD to format   */
+/*                the Nominal Amount.                                          */
+/*       263986 - Suppressed transactions with zero nominal amounts            */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data (Recompile)  */
 /*       MD046248 - Finastra Rebranding                                        */
 /*       AR1040005 - Management Limit is not getting reversed for Expired LC   */
@@ -84,7 +89,8 @@
         GPTRAP.*,                                                               :
 ********CUST.CUSGLOB*AS*CUGRSCT*************************************************:BUG1703
 ********CUST.CUSGLOB*AS*CUGRSCT,P_NOML***CURR1.SCALING*AS*NOMLAMT,**************:BUG1703BUG2915
-        CUST.CUGCUS AS CUGRSCT,P_NOML * CURR1.SCALING AS NOMLAMT,               :BUG2915
+********CUST.CUGCUS*AS*CUGRSCT,P_NOML***CURR1.SCALING*AS*NOMLAMT,***************:     BUG2915 263958
+        CUST.CUGCUS AS CUGRSCT,P_NOML * POWER(10,-P_NMDP) AS NOMLAMT,           :             263958
         T_MKVL / 10**T_VCDP AS MKTVALUE                                         :BUG1703
         FROM V_GPTRAPPD GPTRAP                                                  :
 *************INNER*JOIN*V_MLCUST*CUST*******************************************:BUG2915
@@ -98,7 +104,9 @@
 ********ON*GPTRAP.P_CCY*=*CURR1.CCY;********************************************:  BUG1703 AR1040005
         ON GPTRAP.P_CCY = CURR1.CCY                                             :          AR1040005
         LEFT OUTER JOIN GZSDBANKPD ON CGZONE = BJZONE                           :          AR1040005
-        WHERE (T_EDAT = 0 OR T_EDAT >= BJRDNB);                                 :          AR1040005
+********WHERE**T_EDAT*=*0*OR*T_EDAT*>=*BJRDNB);*********************************:   AR1040005 263986
+        WHERE (T_EDAT = 0 OR T_EDAT >= BJRDNB)                                  :             263986
+        AND P_NOML != 0;                                                        :             263986 
 /*******************************************************************************/
  ;                                                                              :
   label on table     **********/**********                                      :

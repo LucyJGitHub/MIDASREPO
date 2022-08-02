@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CMG003             Date 04Oct12               *
+      *  Last Amend No. AR687791           Date 19Apr11               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CMG003             Date 04Oct12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,6 +38,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR687791 - Generate MT395 after specified hours from the     *
+      *             original MT3* message's generation time.          *
+      *             (Child: AR687792)                                 *     
       *  MD046248 - Finastra Rebranding                               *
       *  CMG003 - SWIFT MT600 Message Generation                      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -88,6 +92,7 @@
      E                    COM     1   2 43
      E                    TABMON 12  12  3   TABMM   2
      E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE1Z1                                                                 AR687791
       *
      ILDA         DS                            256
      I                                      134 141 DBFILE
@@ -144,6 +149,35 @@
      IDSFDY     E DSDSFDY                                                                     CMG003
       ** First DS for Access Programs, Short Data Structure                                   CMG003
       *                                                                                       CMG003
+     IGETTIM      DS                                                                        AR687791
+     I                                        1   60TIMEDS                                  AR687791
+     I                                        1   20TMHOUR                                  AR687791
+     I                                        3   40TMMINS                                  AR687791
+     I                                        5   60TMSECS                                  AR687791
+      **  Get Time                                                                          AR687791
+      *                                                                                     AR687791
+     IGETYYF      DS                                                                        AR687791
+     I                                        1   60MSGYYF                                  AR687791
+     I                                        1   20YYFYY                                   AR687791
+     I                                        3   40YYFMM                                   AR687791
+     I                                        5   60YYFDD                                   AR687791
+      **  Get Generation date                                                               AR687791
+      *                                                                                     AR687791
+     IPUTDDF      DS                                                                        AR687791
+     I                                        1   60MSGDDF                                  AR687791
+     I                                        1   20DDFDD                                   AR687791
+     I                                        3   40DDFMM                                   AR687791
+     I                                        5   60DDFYY                                   AR687791
+      **  Generation date in DDMMYY                                                         AR687791
+      *                                                                                     AR687791
+     I            DS                                                                        AR687791
+     I                                        1  20 WPARM                                   AR687791
+     I                                        1   5 WPARM1                                  AR687791
+     I                                        6  10 WPARM2                                  AR687791
+     I                                       11  15 WPARM3                                  AR687791
+     I                                       16  20 WPARM4                                  AR687791
+      **  Datastructure to hold input parameter for AOSVALR0                                AR687791
+      *                                                                                     AR687791      
       *****************************************************************
       *                   Index to subroutines                        *
       *   main process                                                *
@@ -172,7 +206,10 @@
      C           CHSN      ANDNE'Y'
      C           IMRF      CHAINMGOREFL0             30
      C                     MOVE TRNO      STRNO  16
+     C                     EXSR CHKHRS                                                      AR687791
+     C           TIMDIF    IFGE WAITCF                                                      AR687791
      C                     EXSR CHAS
+     C                     ENDIF                                                            AR687791
      C                     END                                       E2
       *
       **  Read next feedback record
@@ -280,6 +317,49 @@
      C                     MOVE 'Y'       CMG003                                              CMG003
      C                     ENDIF                                                              CMG003
       *
+      ** Check System Date Format, DDMMYY OR MMDDYY.                                        AR687791
+      *                                                                                     AR687791
+     C                     MOVE '0'       *IN98                                             AR687791
+     C           BJDFIN    IFEQ 'M'                                                         AR687791
+     C                     MOVE '1'       *IN98                                             AR687791
+     C                     ENDIF                                                            AR687791
+      *                                                                                     AR687791
+      ** Check system value for delay time on Chasers                                       AR687791
+      *                                                                                     AR687791
+     C                     Z-ADD0         WAITCF  20                                        AR687791
+     C                     MOVE *BLANKS   WPARM                                             AR687791
+     C                     MOVEL'Chase'   WPARM1                                            AR687791
+     C                     MOVEL'rsHRS'   WPARM2                                            AR687791
+     C                     MOVEL'Delay'   WPARM3                                            AR687791
+     C                     MOVEL'    '    WPARM4                                            AR687791
+     C                     MOVELWPARM     SVALK1                                            AR687791
+      ** Call Access object:                                                                AR687791
+     C                     CALL 'AOSVALR0'                                                  AR687791
+     C                     PARM           RTNCDE  7                                         AR687791
+     C                     PARM           SVALK1 20                                         AR687791
+     C                     PARM           SVAL1 200                                         AR687791
+     C                     PARM           SVALK2 20                                         AR687791
+     C                     PARM           SVAL2 200                                         AR687791
+     C                     PARM           SVALK3 20                                         AR687791
+     C                     PARM           SVAL3 200                                         AR687791
+     C                     PARM           SVALK4 20                                         AR687791
+     C                     PARM           SVAL4 200                                         AR687791
+     C                     PARM           SVALK5 20                                         AR687791
+     C                     PARM           SVAL5 200                                         AR687791
+     C                     PARM           SVALK6 20                                         AR687791
+     C                     PARM           SVAL6 200                                         AR687791
+     C                     PARM           SVALK7 20                                         AR687791
+     C                     PARM           SVAL7 200                                         AR687791
+     C                     PARM           SVALK8 20                                         AR687791
+     C                     PARM           SVAL8 200                                         AR687791
+     C                     PARM           SVALK9 20                                         AR687791
+     C                     PARM           SVAL9 200                                         AR687791
+     C                     PARM           SVALK0 20                                         AR687791
+     C                     PARM           SVAL10200                                         AR687791
+     C           RTNCDE    IFEQ '        '                                                  AR687791
+     C                     MOVELSVAL1     WAITCF                                            AR687791
+     C                     ENDIF                                                            AR687791
+      *                                                                                     AR687791
      C                     ENDSR
      C/EJECT
       *****************************************************************
@@ -507,6 +587,70 @@
       *
      C                     ENDSR
      C/EJECT
+      *****************************************************************                     AR687791
+      *   CHKHRS - Check Delay for Chasers Generation                 *                     AR687791
+      *   Calls - ZDATE1                                              *                     AR687791
+      *   Called by Main Process                                      *                     AR687791
+      *****************************************************************                     AR687791
+      *                                                                                     AR687791
+     C           CHKHRS    BEGSR                                                            AR687791
+      *                                                                                     AR687791
+      ** Get current time                                                                   AR687791
+      *                                                                                     AR687791
+     C                     TIME           TIMEDS                                            AR687791
+     C                     Z-ADDTMHOUR    TIMEIN  42                                        AR687791
+     C                     Z-ADDTMMINS    WRKMIN  42                                        AR687791
+     C                     Z-ADDTMSECS    WRKSEC  42                                        AR687791
+     C           WRKSEC    DIV  60        WRKSEC                                            AR687791
+     C           WRKMIN    ADD  WRKSEC    WRKMIN                                            AR687791
+     C           WRKMIN    DIV  60        WRKMIN                                            AR687791
+     C           WRKMIN    ADD  TIMEIN    TIMEIN                                            AR687791
+      *                                                                                     AR687791
+      ** Get message generation time                                                        AR687791
+      *                                                                                     AR687791
+     C                     Z-ADDMGTM      TIMEDS                                            AR687791
+     C                     Z-ADDTMHOUR    TIMEOT  42                                        AR687791
+     C                     Z-ADDTMMINS    WRKMIN                                            AR687791
+     C                     Z-ADDTMSECS    WRKSEC                                            AR687791
+     C           WRKSEC    DIV  60        WRKSEC                                            AR687791
+     C           WRKMIN    ADD  WRKSEC    WRKMIN                                            AR687791
+     C           WRKMIN    DIV  60        WRKMIN                                            AR687791
+     C           WRKMIN    ADD  TIMEOT    TIMEOT                                            AR687791
+      *                                                                                     AR687791
+      ** Convert Generation date to Day Number                                              AR687791
+      *                                                                                     AR687791
+     C                     Z-ADDMGDE      MSGYYF                                            AR687791
+     C                     Z-ADDYYFYY     DDFYY                                             AR687791
+     C                     Z-ADDYYFMM     DDFMM                                             AR687791
+     C                     Z-ADDYYFDD     DDFDD                                             AR687791
+     C                     MOVE MSGDDF    ZDATE                                             AR687791
+     C                     EXSR ZDATE1                                                      AR687791
+     C                     Z-ADDZDAYNO    GENDAT  50                                        AR687791
+      *                                                                                     AR687791
+      ** Check system date against generation date                                          AR687791
+      *                                                                                     AR687791
+     C           BJRDNB    SUB  GENDAT    DATDIF  30                                        AR687791
+     C                     Z-ADD0         TIMDIF  30                                        AR687791
+      *                                                                                     AR687791
+     C           DATDIF    IFEQ 0                                                           AR687791
+      *                                                                                     AR687791
+     C           TIMEIN    SUB  TIMEOT    TIMDIF                                            AR687791
+      *                                                                                     AR687791
+     C                     ENDIF                                                            AR687791
+      *                                                                                     AR687791
+     C           DATDIF    IFGT 0                                                           AR687791
+     C           DATDIF    SUB  1         DAYDIF  30                                        AR687791
+     C           DAYDIF    MULT 24        DAYDIF                                            AR687791
+     C           24        SUB  TIMEOT    TIMDIF                                            AR687791
+     C           TIMDIF    ADD  DAYDIF    TIMDIF                                            AR687791
+     C           TIMDIF    ADD  TIMEIN    TIMDIF                                            AR687791
+     C                     ENDIF                                                            AR687791
+      *                                                                                     AR687791
+      *                                                                                     AR687791
+     C                     ENDSR                                                            AR687791
+     C/EJECT                                                                                AR687791
+      *****************************************************************                     AR687791
+     C/COPY ZSRSRC,ZDATE1Z2                                                                 AR687791
       *****************************************************************
       *  *PSSR - Error processing                                     *
       *****************************************************************
@@ -529,3 +673,7 @@ SNDMSG MSG('CHASER NOT GENERATED FOR XXXXXXXXXXXXXXXX
 JAN01FEB02MAR03APR04MAY05JUN06JUL07AUG08SEP09OCT10NOV11DEC12
 **  Object copyright
 (c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                                        AR687791
+0366073110961461                                                                            AR687791
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                                          AR687791
+000031059090120151181212243273304334365                                                     AR687791

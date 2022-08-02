@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
-/*STD *  RPGBASEBND                                                   *
+/*S*D ***RPGBASEBND****************************************************                     MD041126
+/*STD *  RPGBASEMOD                                                   *                     MD041126
 /*EXI *  TEXT('Midas SD Validate MQ Queue Name')                      *
       *****************************************************************
       *                                                               *
@@ -11,11 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSC054  *CREATE    Date 23Feb12               *
+      *  Last Amend No. MD041126           Date 08Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSC054  *CREATE    Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD055451.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC054 - Period End Adjustments                              *
       *                                                               *
@@ -74,11 +78,13 @@
  
       **  Declare MQI structures needed
       * MQI Constants
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
  
       ** Object Descriptor
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D****/COPY*QMQM/QRPGLESRC,CMQODR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
  
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
@@ -107,12 +113,17 @@
       ** Array of error message IDs
      D MsgIDXArr       S                   DIM(99) LIKE(ErrMsgId)
  
-     D P@CID           S              9P 0
-     D P@Conn          S              9P 0
-     D P@In            S              9P 0
-     D P@Opts          S              9P 0
-     D P@Code          S              9P 0
-     D P@Resn          S              9P 0
+     D***P@CID**         S              9P 0                                                MD041126
+     D***P@Conn*         S              9P 0                                                MD041126
+     D***P@In***         S              9P 0                                                MD041126
+     D***P@Opts*         S              9P 0                                                MD041126
+     D***P@Code*         S              9P 0                                                MD041126
+     D***P@Resn*         S              9P 0                                                MD041126
+     D P@Conn          S             10I 0                                                  MD041126
+     D P@In            S             10I 0                                                  MD041126
+     D P@Opts          S             10I 0                                                  MD041126
+     D P@Code          S             10I 0                                                  MD041126
+     D P@Resn          S             10I 0                                                  MD041126
      D P@MQMgr         S             48A
  
      D P@OP01          S             20
@@ -182,13 +193,16 @@
      C                   EVAL      P@CONN = HCDEFH
  
      C                   EVAL      ODMN = P@MQMgr
-     C                   EVAL      P@CID = MQCONN
-     C                   CALL      'QMQM'
-     C                   PARM                    P@CID
-     C                   PARM                    P@MQMgr
-     C                   PARM                    P@CONN
-     C                   PARM                    P@CODE
-     C                   PARM                    P@RESN
+     C**********         EVAL      P@CID = MQCONN                                           MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    P@CID                                      MD041126
+     C**********         PARM                    P@MQMgr                                    MD041126
+     C**********         PARM                    P@CONN                                     MD041126
+     C**********         PARM                    P@CODE                                     MD041126
+     C**********         PARM                    P@RESN                                     MD041126
+                                                                                            MD041126
+     C                   CALLP     MQCONN( P@MQMgr : P@CONN :                               MD041126
+     C                                     P@CODE : P@RESN )                                MD041126
      C
      C                   IF        P@CODE =  CCFAIL
      C                   EVAL      GenError = 'Y'
@@ -206,16 +220,19 @@
  
       ** Open queue
  
-     C                   EVAL      P@CID = MQOPEN
- 
-     C                   CALL      'QMQM'
-     C                   PARM                    P@CID
-     C                   PARM                    P@Conn
-     C                   PARM                    MQOD
-     C                   PARM                    P@Opts
-     C                   PARM                    P@In
-     C                   PARM                    P@Code
-     C                   PARM                    P@Resn
+     C**********         EVAL      P@CID = MQOPEN                                           MD041126
+      **********                                                                            MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    P@CID                                      MD041126
+     C**********         PARM                    P@Conn                                     MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    P@Opts                                     MD041126
+     C**********         PARM                    P@In                                       MD041126
+     C**********         PARM                    P@Code                                     MD041126
+     C**********         PARM                    P@Resn                                     MD041126
+                                                                                            MD041126
+     C                   CALLP     MQOPEN( P@CONN : MQOD : P@OPTS :                         MD041126
+     C                                     P@IN : P@CODE : P@RESN )                         MD041126
  
       ** If open queue failed, indicate abnormal end
  
@@ -241,15 +258,18 @@
  
       ** Close queue
  
-     C                   EVAL      P@CID = MQCLOS
- 
-     C                   CALL      'QMQM'
-     C                   PARM                    P@CID
-     C                   PARM                    P@Conn
-     C                   PARM                    P@In
-     C                   PARM                    P@Opts
-     C                   PARM                    P@Code
-     C                   PARM                    P@Resn
+     C**********         EVAL      P@CID = MQCLOS                                           MD041126
+      **********                                                                            MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    P@CID                                      MD041126
+     C**********         PARM                    P@Conn                                     MD041126
+     C**********         PARM                    P@In                                       MD041126
+     C**********         PARM                    P@Opts                                     MD041126
+     C**********         PARM                    P@Code                                     MD041126
+     C**********         PARM                    P@Resn                                     MD041126
+                                                                                            MD041126
+     C                   CALLP     MQCLOSE( P@CONN : P@IN : P@OPTS :                        MD041126
+     C                                      P@CODE : P@RESN )                               MD041126
  
       ** If close queue failed, indicate abnormal end
  

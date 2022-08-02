@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250113             Date 24Jun22               *
-      *  Prev Amend No. 250391             Date 22Jun22               *
+      *  Last Amend No. 250590             Date 02Aug22               *
+      *  Prev Amend No. 250113             Date 24Jun22               *
+      *                 250391             Date 22Jun22               *
       *                 MD059608           Date 18Feb22               *
       *                 AR635013           Date 17Feb22               *
       *                 260748             Date 17Feb22               *
@@ -105,6 +106,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250590 - System does not accept valid loan no. range when    *
+      *           entering loan type/subtype.                         *
       *  250113 - Condition Internal Loan Participation Class (CLE042)*
       *           on Syndications being switched on as well           *
       *           Recompile because of changes to SD0281R#            *
@@ -2156,7 +2159,8 @@
      C                   END                                                    *FI
       * Zalign Loan range Number - Loan Number Ranges  *
      C*
-     C                   MOVE      WUZASF        WURGNB
+     C**********         MOVE      WUZASF        WURGNB                                       250590
+     C                   MOVE      #1RANG        WURGNB                                       250590
      C*
      C*
       * Check Loan Number Range - Loan Number Ranges  *

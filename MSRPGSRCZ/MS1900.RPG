@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. 262906             Date 01Jun20               *
-     F*  Prev Amend No. 253970             Date 22May20               *
+      *  Last Amend No. MD060279           Date 01Aug22               *
+      *  PreV Amend No. 262906             Date 01Jun20               *
+      *                 253970             Date 22May20               *
       *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CFT135             Date 20Feb13               *
@@ -57,6 +58,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *   MD060279 - NIPS STP payments being processed with incorrect *
+      *              tag info.                                        *
+      *              Reversed fix 262906 and ensure system handles    *
+      *              incoming message with or without Block 5 details.*
       *   262906 - Ignore block 5. Apply fix 256903.                  *
       *   253970 - If delimiter for block data in block 4 cannot be   *
       *            found, use an alternative delimiter (CR/LF) format *
@@ -845,6 +850,7 @@
       *  Process Block Identifier 5:
       *
      C**********           EXSR SRBLK5                                                        262906
+     C                     EXSR SRBLK5                                                      MD060279
       *
       *  Process Block Identifier S:
       *
@@ -2012,16 +2018,21 @@
      C                     MOVEL'5:'      BLKID
      C                     EXSR SRBLOK
       *
-      * If no Block 1: found process for database error
+      **If*no*Block*1:*found*process*for*database*error****************                     MD060279
+      *
+      ** If no Block 5: found, skip the processing without sending                          MD060279
+      ** database error. Note that 5: block is optional.                                    MD060279
       *
      C           WKTAG     IFEQ *BLANKS
-     C                     MOVEL'ME1020  'W0FILE
-     C                     MOVELWKDATA    W0KEY            ***************
-     C                     Z-ADD7         W0ERNB           * DB ERROR 07 *
-     C                     MOVEL'MIN0093' W0MSGD           ***************
-     C                     MOVEL'MEMSG  ' W0MSGF
-     C                     EXSR SRERR
-     C                     END
+     C**********           MOVEL'ME1020  'W0FILE                                            MD060279
+     C**********           MOVELWKDATA    W0KEY            ***************                  MD060279
+     C**********           Z-ADD7         W0ERNB           * DB ERROR 07 *                  MD060279
+     C**********           MOVEL'MIN0093' W0MSGD           ***************                  MD060279
+     C**********           MOVEL'MEMSG  ' W0MSGF                                            MD060279
+     C**********           EXSR SRERR                                                       MD060279
+     C**********           END                                                              MD060279
+     C                     GOTO EXBLK5                                                      MD060279
+     C                     ENDIF                                                            MD060279
       *
       *  Set flag to denote first line of tag
       *

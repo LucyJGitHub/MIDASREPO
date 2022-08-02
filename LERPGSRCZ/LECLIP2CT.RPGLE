@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057950           Date 29Jun22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -50,6 +51,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057950 - Amending a loan gets error 45021352 due to rate/  *
+      *             spread cannot be amended. Reverse fix MD034449.   *
+      *             Use %TRIM and %EDITW instead of %CHAR when        *
+      *             converting a negative RTSP to screen format.      *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -216,6 +221,7 @@
      D WWBadj          S             11P 7                                                    CLE172
      D WWFlor          S             11P 7                                                    CLE172
                                                                                               CLE035
+     D RTSPCharFmt     C                   CONST('  0 .       -')                           MD057950
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -305,10 +311,12 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZDEC
      C                   ELSE                                                                 CRE073
-     C                   MOVEL     *BLANKS       ZFIELD12         12                        MD034449
+     C**********         MOVEL     *BLANKS       ZFIELD12         12               MD034449 MD057950
      C**********         EVAL      ZFIELD = %CHAR(RTSP)                              CRE073 MD034449
-     C                   EVAL      ZFIELD12 = %CHAR(RTSP)                                   MD034449
-     C                   MOVE      ZFIELD12      ZFIELD                                     MD034449
+     C**********         EVAL      ZFIELD12 = %CHAR(RTSP)                          MD034449 MD057950
+     C**********         MOVE      ZFIELD12      ZFIELD                            MD034449 MD057950
+     C                   MOVEL     *BLANKS       ZFIELD                                     MD057950
+     C                   EVALR     ZFIELD = %TRIM(%EDITW(RTSP:RTSPCharFmt))                 MD057950
      C                   ENDIF                                                                CRE073
      C**********         MOVE      ZFIELD        DDRTSP                              BUG9491 BUG9720
      C**********         IF        CLE036 = 'Y'                                      BUG9491 BUG9720

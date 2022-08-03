@@ -33,7 +33,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 250592             Date 21Jul22               *
+      *  Last Amend No. MDSC38665          Date 21Jul22               *
       *  Prev Amend No. MD058285           Date 22Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
@@ -78,8 +78,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  250592 - Make Issue Date a mandatory input field for all     *
-      *           complete securities.                                *
+      *  MDSC38665 - Make Issue Date a mandatory input field for all  *
+      *              complete securities.                             *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -3284,14 +3284,14 @@
       *
      C                   MOVE      DDSPDS        S1SPDS
       *
-      ** Default value of issue date to initial date if issue date              250592
-      ** was not entered and security is Complete                               250592
-      *                                                                         250592
-     C                   If        S1ISSD = *Zeros and                          250592
-     C                             DDINCS = 'C' and DDACTN = 'A'                250592
-     C                   Z-Add     S1ITLD        S1ISSD                         250592
-     C                   Endif                                                  250592
-      *                                                                         250592
+      ** Default value of issue date to initial date if issue date              MDSC38665
+      ** was not entered and security is Complete                               MDSC38665
+      *                                                                         MDSC38665
+     C                   If        S1ISSD = *Zeros and                          MDSC38665
+     C                             DDINCS = 'C' and DDACTN = 'A'                MDSC38665
+     C                   Z-Add     S1ITLD        S1ISSD                         MDSC38665
+     C                   Endif                                                  MDSC38665
+      *                                                                         MDSC38665
      C                   ENDIF
       *
       ** Last change type.

@@ -79,7 +79,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MDSC38665 - Make Issue Date a mandatory input field for all  *
-      *              complete securities.                             *
+      *              complete securities (re-design of SC250592)      *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *

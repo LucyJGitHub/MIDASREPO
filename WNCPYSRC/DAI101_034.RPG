@@ -1,0 +1,126 @@
+      *****************************************************************                       DAI101
+      *                                                               *                       DAI101
+      *  Midas - General Ledger Module                                *                       DAI101
+      *                                                               *                       DAI101
+      *  DAI101_034 - Midas GL Amount accrual input - initial/enq scr *                       DAI101
+      *                                                               *                       DAI101
+      *  (c) Finastra Systems Technology, Inc. 2019                   *                       DAI101
+      *                                                               *                       DAI101
+      *  Last Amend No. MD059595           Date 02Mar22               *
+      *  Prev Amend No. DAI101B            Date 28May20               *                      DAI101B
+      *                 DAI101  *CREATE    Date 17May19               *                       DAI101
+      *                                                               *                       DAI101
+      *---------------------------------------------------------------*                       DAI101
+      *                                                               *                       DAI101
+      *  MD059595 -  Amount Accrual. Missing DAI101B changes.         *                     MD059595
+      *              Redeliver /copy DAI101_034.                      *                     MD059595
+      *  DAI101B  - Allow Amend of Unauthorised Input                 *                      DAI101B
+      *  DAI101 - Upgrade to FB Midas                                 *                       DAI101
+      *                                                               *                       DAI101
+      *****************************************************************                       DAI101
+      *                                                                                       DAI101
+     C           DAI101    IFEQ 'Y'                                                           DAI101
+     C           SACTN     IFEQ 'I'                                                           DAI101
+     C           SACTN     OREQ 'A'                                                           DAI101
+      *                                                                                      DAI101B
+      * Allow Amend of an Unauthorised Input                                                 DAI101B
+     C           FBCHTP    ANDNE'I'                                                          DAI101B
+     C           SACTN     OREQ 'D'                                                           DAI101
+     C           *IN22     IFEQ *OFF                                                          DAI101
+     C                     EXSR SUBSF                                                         DAI101
+     C                     SETOF                     88                                       DAI101
+     C           S         ADD  1         S                                                   DAI101
+     C                     MOVE ' 922'    ERCD,S                                              DAI101
+     C                     MOVE ERCM,22   ERMSG                                               DAI101
+     C                     GOTO END                                                           DAI101
+     C                     ENDIF                                                              DAI101
+     C                     ENDIF                                                              DAI101
+      *                                                                                       DAI101
+      * Error if Amending User of an unauthorised Amount Accrual is not                      DAI101B
+      * the same as the input user                                                           DAI101B
+     C           SACTN     IFEQ 'A'                                                          DAI101B
+     C           FBCHTP    ANDEQ'I'                                                          DAI101B
+     C           FBLCUS    ANDNEUSRID                                                        DAI101B
+     C                     EXSR SUBSF                                                        DAI101B
+     C                     SETOF                     88                                      DAI101B
+     C           S         ADD  1         S                                                  DAI101B
+     C                     MOVE ' 926'    ERCD,S                                             DAI101B
+     C                     MOVE ERCM,26   ERMSG                                              DAI101B
+     C                     GOTO END                                                          DAI101B
+     C                     ENDIF                                                             DAI101B
+     C           SACTN     IFEQ 'A'                                                          DAI101B
+     C           FBCHTP    ANDEQ'I'                                                          DAI101B
+     C                     MOVE FBRECI    MRECI                                              DAI101B
+     C                     MOVE FBREF     MREFN                                              DAI101B
+     C                     MOVE FBTYP     MREFT                                              DAI101B
+     C                     MOVE FBTNLU    MTNLU                                              DAI101B
+     C                     MOVE FBORED    MORED                                              DAI101B
+     C                     MOVE FBLCD     MLCD                                               DAI101B
+     C                     MOVE FBCHTP    MCHTP                                              DAI101B
+     C                     MOVE FBCHTP    LCHTP                                              DAI101B
+     C                     MOVE FBCHTP    #1CHTP                                             DAI101B
+     C                     MOVE FBAMNT    MHASH                                              DAI101B
+     C                     MOVE FBAMNT    MAMNT                                              DAI101B
+     C                     MOVE FBCCY     MCCY                                               DAI101B
+     C                     MOVE FBSTDT    MSDAT                                              DAI101B
+     C                     MOVE FBMDAT    MMDAT                                              DAI101B
+     C                     MOVE FBDRCO    MDRAC                                              DAI101B
+     C                     MOVE FBDRCN    MDRCN                                              DAI101B
+     C                     MOVE FBCRCO    MCRAC                                              DAI101B
+     C                     MOVE FBCRCN    MCRCN                                              DAI101B
+     C                     MOVE FBPNAR    MNARR                                              DAI101B
+     C                     MOVE FBFAPD    MAMPD                                              DAI101B
+     C                     MOVE FBDRSQ    MDRSQ                                              DAI101B
+     C                     MOVE FBCRSQ    MCRSQ                                              DAI101B
+     C                     MOVE FBPRFC    MPRFC                                              DAI101B
+     C                     MOVE FBBRCA    MBRCA                                              DAI101B
+     C                     MOVE FBAPFQ    MAPFQ                                              DAI101B
+     C                     MOVE FBFDAY    MFDAY                                              DAI101B
+     C                     MOVE FBAPDA    MAPDA                                              DAI101B
+     C                     MOVE FBASOC    MASOC                                              DAI101B
+     C                     MOVE 'INSERT'  SATXT                                              DAI101B
+     C                     EXSR SUBSI                                                        DAI101B
+     C                     EXSR FORMT                                                        DAI101B
+     C                     GOTO END                                                          DAI101B
+     C                     ENDIF                                                             DAI101B
+     C           SACTN     IFEQ 'X'                                                           DAI101
+     C           *IN22     ANDEQ*OFF                                                          DAI101
+     C           MBIN      IFEQ 'Y'                                                           DAI101
+     C                     MOVE SACTN     W@ACTN                                              DAI101
+     C                     MOVE FBBRCA    W@BRCA                                              DAI101
+     C                     EXSR MBACTN                                                        DAI101
+     C                     ELSE                                                               DAI101
+     C                     MOVE SACTN     W@ACTN                                              DAI101
+     C                     EXSR SGACTN                                                        DAI101
+     C                     ENDIF                                                              DAI101
+     C           W@ERR     IFNE 0                                                             DAI101
+     C                     EXSR SPFERR                                                        DAI101
+     C                     GOTO END                                                           DAI101
+     C                     ENDIF                                                              DAI101
+     C           FBLCUS    IFEQ USRID                                                         DAI101
+     C                     EXSR SUBSF                                                         DAI101
+     C                     SETOF                     88                                       DAI101
+     C           S         ADD  1         S                                                   DAI101
+     C           FBCHTP    IFEQ 'I'                                                           DAI101
+     C                     MOVE ' 923'    ERCD,S                                              DAI101
+     C                     MOVE ERCM,23   ERMSG                                               DAI101
+     C                     ELSE                                                               DAI101
+     C           FBCHTP    IFEQ 'A'                                                           DAI101
+     C                     MOVE ' 924'    ERCD,S                                              DAI101
+     C                     MOVE ERCM,24   ERMSG                                               DAI101
+     C                     ELSE                                                               DAI101
+     C           FBCHTP    IFEQ 'D'                                                           DAI101
+     C                     MOVE ' 925'    ERCD,S                                              DAI101
+     C                     MOVE ERCM,25   ERMSG                                               DAI101
+     C                     ENDIF                                                              DAI101
+     C                     ENDIF                                                              DAI101
+     C                     ENDIF                                                              DAI101
+     C                     GOTO END                                                           DAI101
+     C                     ENDIF                                                              DAI101
+     C                     GOTO AUTH                                                          DAI101
+     C                     ENDIF                                                              DAI101
+      *                                                                                       DAI101
+     C                     ENDIF                                                              DAI101
+      *****************************************************************                       DAI101
+      * End of /COPY DAI101_034                                       *                       DAI101
+      *****************************************************************                       DAI101

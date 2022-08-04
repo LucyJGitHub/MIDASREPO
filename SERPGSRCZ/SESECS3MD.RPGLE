@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 17May13               *
+      *  Last Amend No. MD041694           Date 28Oct16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 17May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041694 - Fee Currency field not amendable error during API *
+      *             amend when Fee Currency is blank. Skipped valida- *
+      *             tion when input of Fee Currency Field is blank.   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
@@ -393,6 +397,7 @@
       *
       ** Fee Currency is not amendable.
      C                   IF        ADDFECY <> DDFECY
+     C                             And ADDFECY <> ' '                                       MD041694
      C                   EVAL      IDx = IDx + 1
      C                   EVAL      FldNameArr(IDx) = 'DDFECY'
      C                   EVAL      MsgIdArr(IDx)  = 'SEA0249'

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR818983           Date 23Aug11               *
+      *  Last Amend No. AR1048337A         Date 09Nov12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR818983           Date 23Aug11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -22,6 +23,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1048337A - GOC0120 was stopped for 5 mins during COB.      *
+      *             - Reduce the wait time to 1 minute and to         *
+      *               manually submit the RECEIVED message if there   *
+      *               is still no response from DTAQ.                 *
+      *             - Applied fix for MD08577.                        *
       *  MD046248 - Finastra Rebranding                               *
       *  AR818983 - GOC0122 taking a long time.  Properly convert     *
       *             system value COBDtaQWait from alpha to numeric    *
@@ -160,6 +166,7 @@
      C                   EVAL      DtqLen = 1000
      C**********         MOVEL     PSysVal1      DtqWait                                    AR818983
      C                   EVAL      DtqWait = %DEC(PSysVal1:5:0)                             AR818983
+     C                   EVAL      DtqWait= 60                                            AR1048337A
  
       ** Wait for data queue return prompt
      C                   CALL      'QRCVDTAQ'
@@ -169,6 +176,11 @@
      C                   PARM                    DtqRsp           10
      C                   PARM                    DtqWait           5 0
  
+      *                                                                                   AR1048337A
+     C     DtqRsp        IFNE      'GO'                                                   AR1048337A
+     C                   EVAL      DtqRsp = 'GO'                                          AR1048337A
+     C                   EndIf                                                            AR1048337A
+      *                                                                                   AR1048337A
       ** Check for error
      C     DtqRsp        IFNE      'GO'
      C                   ExSr      *Pssr

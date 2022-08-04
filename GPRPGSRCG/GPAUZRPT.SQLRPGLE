@@ -159,6 +159,9 @@
 
      D GPAUIP        E DS                  EXTNAME(GPAUIJW0)                                MD056611
      D X_INPT          S              4                                                     MD056611
+     D SDSBNK        E DS                  EXTNAME(SDSBNKTD)                                MD058951
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD058951
+     D LDA           E DS           256    EXTNAME(LDA)                                     MD058951
      IGPAUCHD0
      I                                          AHBRCA        L2
      I                                          AHINPT        L1

@@ -11,11 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060201           Date 30Jun22               *
-      *  Prev Amend No. CLE138  *CREATE    Date 02Nov21               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. MD060201           Date 30Jun22               *
+      *                 CLE138  *CREATE    Date 02Nov21               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance. Apply CLE138        *
+      *             design of SDFACTX0 to store facility classes.     *
       *  MD060201 - LE00500AU report has incorrect value on ACKEYAL   *
       *           - initialize count14 instead of count6              *
       *  CLE138 - Class Codes for Facilities.                         *
@@ -171,10 +175,13 @@
                    exsr initialiseLEFEED;
 
                    //Call subroutine to initialise Midas SD Table File - Facility Types
-                   exsr initialiseTABLETQ;
+                   //exsr initialiseTABLETQ;                                                MD060092
 
                    //Call subroutine to initialise Midas SD Facility Type Class
-                   exsr initialiseSDFACTPD;
+                   //exsr initialiseSDFACTPD;                                               MD060092
+
+                   //Call subroutine to initialise Midas SD Facility Type Class
+                   exsr initialiseSDFACTX0;                                                 MD060092
 
                    //Call subroutine to initialise Midas LE Facilities Extension File
                    exsr initialiseLEFCLTQD;
@@ -402,10 +409,89 @@
        //                                                            *
        //*************************************************************
 
-       begsr initialiseSDFACTPD;
+       //begsr initialiseSDFACTPD;                                                          MD060092
+       //                                                                                   MD060092
+       //                  //Update SDFACTPD                                                MD060092
+       //                  wSqlStr = 'update SDFACTPD A SET ' +                             MD060092
+       //                            'A.AMCLAS = ' + QUO + DefaultClass + QUO +             MD060092
+       //                            ' where A.AMCLAS =  ' + QUO + BLK_CLASS                MD060092
+       //                              +  QUO;                                              MD060092
+       //                  exec sql                                                         MD060092
+       //                  execute immediate :wSqlStr;                                      MD060092
+       //                  Count12 = SQLER3;                                                MD060092
+       //                  if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD                    MD060092
+       //                     and sqlCod <> NO_COLUMN                                       MD060092
+       //                     and sqlCod <> DUPLICATE;                                      MD060092
+       //                     dBase    = 007;                                               MD060092
+       //                     dBfile   = 'SDFACTPD';                                        MD060092
+       //                     dBkey    = *blanks;                                           MD060092
+       //                     dBpgm    = 'LE005000';                                        MD060092
+       //                     exsr *pssr;                                                   MD060092
+       //                  endif;                                                           MD060092
+       //                                                                                   MD060092
+       //                   if sqlCod = NO_COLUMN;                                          MD060092
+       //                     COL12 = 'AMCLAS';                                             MD060092
+       //                     ERRMSG12 = 'COLUMN DOES NOT EXIST';                           MD060092
+       //                     leavesr;                                                      MD060092
+       //                  endif;                                                           MD060092
+       //                                                                                   MD060092
+       //endsr;                                                                             MD060092
+                                                                                            MD060092
+       //*************************************************************                      MD060092
+       /EJECT                                                                               MD060092
+       //*************************************************************                      MD060092
+       //                                                            *                      MD060092
+       // initialiseTABLETQ                                          *                      MD060092
+       //                                                            *                      MD060092
+       // Called by: startInitialisation                             *                      MD060092
+       //                                                            *                      MD060092
+       //  Calls: none                                               *                      MD060092
+       //                                                            *                      MD060092
+       //*************************************************************                      MD060092
+                                                                                            MD060092
+       //begsr initialiseTABLETQ;                                                           MD060092
+       //                                                                                   MD060092
+       //                //Update TABLETQ                                                   MD060092
+       //                wSqlStr = 'update TABLETQ A SET ' +                                MD060092
+       //                          'A.FCLS = ' + QUO + DefaultClass + QUO +                 MD060092
+       //                          ' where A.FCLS =  ' + QUO + BLK_CLASS                    MD060092
+       //                            +  QUO;                                                MD060092
+       //                exec sql                                                           MD060092
+       //                execute immediate :wSqlStr;                                        MD060092
+       //                Count13 = SQLER3;                                                  MD060092
+       //                if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD                      MD060092
+       //                   and sqlCod <> NO_COLUMN;                                        MD060092
+       //                   dBase    = 007;                                                 MD060092
+       //                   dBfile   = 'SDFACTPD';                                          MD060092
+       //                   dBkey    = *blanks;                                             MD060092
+       //                   dBpgm    = 'LE005000';                                          MD060092
+       //                   exsr *pssr;                                                     MD060092
+       //                endif;                                                             MD060092
+       //                                                                                   MD060092
+       //                 if sqlCod = NO_COLUMN;                                            MD060092
+       //                   COL13 = 'AMCLAS';                                               MD060092
+       //                   ERRMSG13 = 'COLUMN DOES NOT EXIST';                             MD060092
+       //                   leavesr;                                                        MD060092
+       //                endif;                                                             MD060092
+       //                                                                                   MD060092
+       //endsr;                                                                             MD060092
+                                                                                            MD060092
+       //*************************************************************                      MD060092
+       /EJECT                                                                               MD060092
+       //*************************************************************                      MD060092
+       //                                                            *                      MD060092
+       // initialiseSDFACTX0                                         *                      MD060092
+       //                                                            *                      MD060092
+       // Called by: startInitialisation                             *                      MD060092
+       //                                                            *                      MD060092
+       //  Calls: none                                               *                      MD060092
+       //                                                            *                      MD060092
+       //*************************************************************                      MD060092
+                                                                                            MD060092
+       begsr initialiseSDFACTX0;                                                            MD060092
 
-                         //Update SDFACTPD
-                         wSqlStr = 'update SDFACTPD A SET ' +
+                         //Update SDFACTX0;
+                         wSqlStr = 'update SDFACTX0 A SET ' +
                                    'A.AMCLAS = ' + QUO + DefaultClass + QUO +
                                    ' where A.AMCLAS =  ' + QUO + BLK_CLASS
                                      +  QUO;
@@ -413,10 +499,9 @@
                          execute immediate :wSqlStr;
                          Count12 = SQLER3;
                          if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
-                            and sqlCod <> NO_COLUMN
-                            and sqlCod <> DUPLICATE;
+                            and sqlCod <> NO_COLUMN;
                             dBase    = 007;
-                            dBfile   = 'SDFACTPD';
+                            dBfile   = 'SDFACTX0';
                             dBkey    = *blanks;
                             dBpgm    = 'LE005000';
                             exsr *pssr;
@@ -428,46 +513,7 @@
                             leavesr;
                          endif;
 
-       endsr;
-
-       //*************************************************************
-       /EJECT
-       //*************************************************************
-       //                                                            *
-       // initialiseTABLETQ                                          *
-       //                                                            *
-       // Called by: startInitialisation                             *
-       //                                                            *
-       //  Calls: none                                               *
-       //                                                            *
-       //*************************************************************
-
-       begsr initialiseTABLETQ;
-
-                         //Update TABLETQ
-                         wSqlStr = 'update TABLETQ A SET ' +
-                                   'A.FCLS = ' + QUO + DefaultClass + QUO +
-                                   ' where A.FCLS =  ' + QUO + BLK_CLASS
-                                     +  QUO;
-                         exec sql
-                         execute immediate :wSqlStr;
-                         Count13 = SQLER3;
-                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
-                            and sqlCod <> NO_COLUMN;
-                            dBase    = 007;
-                            dBfile   = 'SDFACTPD';
-                            dBkey    = *blanks;
-                            dBpgm    = 'LE005000';
-                            exsr *pssr;
-                         endif;
-
-                          if sqlCod = NO_COLUMN;
-                            COL13 = 'AMCLAS';
-                            ERRMSG13 = 'COLUMN DOES NOT EXIST';
-                            leavesr;
-                         endif;
-
-       endsr;
+       endsr;                                                                               MD060092
 
        //*************************************************************
        /EJECT

@@ -753,7 +753,7 @@
                      If Sqlcod <> 0 and Sqlcod <> 100;
                           In *Lock Lda;
        //                 DbKey = @@FACL + ' ' + @CLASS;                           //CLE138 MD060092
-                          DbKey = @@FAC;                                                  //MD060092
+                          DbKey = @@FACL;                                                  //MD06009
                           DbFile = 'SDFACTPD';
                           Dbase = 007;
                           DbPgm  = 'LE000507';

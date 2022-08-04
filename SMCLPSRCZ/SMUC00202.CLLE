@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Process CAR migration - standard CL-3')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00202 - Process CAR migration                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD060092 *CREATE   Date 01Aug22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*          MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0   */
+/*                     and SD Facility Type Maintenance. Apply       */
+/*                     CLE138 design of SDFACTX0 to store            */
+/*                     facility classes.                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PARM)
+
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(06)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TMPLIB) TYPE(*CHAR) LEN(10) VALUE('#.')
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2022')
+
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))
+             CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT &ZONEID)
+             CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT 'DMLIB')
+
+             DLTF       FILE(QTEMP/FILE3)
+             MONMSG     MSGID(CPF2105)
+
+             CPYF       FROMFILE(&TMPLIB/FILE3) TOFILE(QTEMP/FILE3) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+
+/* Call program to perform migration. */
+
+             CALL       PGM(SMU00202)  PARM(&PARM)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(ENDPGM)
+
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+
+ ENDPGM:
+             ENDPGM

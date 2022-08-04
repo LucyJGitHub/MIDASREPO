@@ -712,14 +712,14 @@
      C     WKeyList2     KLIST
      C                   KFLD                    FH_FACNUM
      C                   KFLD                    FH_FAFCTY
-      *                                                                                       CLE138
-      ** Key fields for LE Facility Extension File LEFCLTLG                                   CLE138
-      *                                                                                       CLE138
-     C     WKeyList3     KLIST                                                                CLE138
-     C                   KFLD                    K_BRCA                                       CLE138
-     C                   KFLD                    K_CNUM                                       CLE138
-     C                   KFLD                    K_FACT                                       CLE138
-     C                   KFLD                    K_FCNO                                       CLE138
+      ****************************************************************               CLE138 MD060092
+      ***Key*fields*for*LE*Facility*Extension*File*LEFCLTLG***********               CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
+     C*****WKeyList3     KLIST                                                       CLE138 MD060092
+     C**********         KFLD                    K_BRCA                              CLE138 MD060092
+     C**********         KFLD                    K_CNUM                              CLE138 MD060092
+     C**********         KFLD                    K_FACT                              CLE138 MD060092
+     C**********         KFLD                    K_FCNO                              CLE138 MD060092
 
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

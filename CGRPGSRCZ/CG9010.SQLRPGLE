@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059080           Date 15Oct21               *
-      *  Prev Amend No. MD057512           Date 08Feb21               *
+      *  Last Amend No. MD058069           Date 11May21               *
+      *  Prev Amend No. MD059080           Date 15Oct21               *
+      *                 MD057512           Date 08Feb21               *
       *                 MD056543           Date 15Sep20               *
       *                 MD054955           Date 16Dec19               *
       *                 MD054011           Date 19Aug19               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  MD059080 - CGC2050 00002 fails when retail account is used.  *
       *  MD057512 - CGC2050 00001 component loops during COB          *
       *           - Amended program CG9010 in sr/SRSECO + sr/SRCSEC   *
@@ -136,8 +138,8 @@
      F*CGCSCHL2* IF   E           K DISK                                         087283     MD054955
      F**********                           INFSR(SRFILE)                        087283      MD054955
      F*GPSCHL0IF  E           K        DISK                               084316
-     FCGPSCHL1  IF   E           K DISK                                         084316
-     F                                     INFSR(SRFILE)
+     F*CGPSCHL1* IF   E           K DISK                                         084316     MD058069
+     F**********                           INFSR(SRFILE)                                    MD058069
      FCGUDCRL0  IF   E           K DISK                                         082705
      F                                     INFSR(SRFILE)                        082705
      FCGUDCRPD  O    E           K DISK    USROPN
@@ -267,7 +269,7 @@
      D  ##NFC               1273   1273
       ** Occur data structure for stored reads                            087283
       *                                                                   087283
-     D CGPSCH        E DS                  EXTNAME(CGPSCHPD)                    087283
+     D*CGPSCH***     E DS                  EXTNAME(CGPSCHPD)                    087283      MD058069
       ** External DS for Correspondent Details                            087283
       *                                                                   087283
      D PSTORE          DS           256    OCCURS(10)                           087283
@@ -300,6 +302,7 @@
      D C#SEPO          C                   CONST('SEC_POS_CF')
      D C#SEBS          C                   CONST('BUY_SELL')                                      MD
      D CGCSCH        E DS                  EXTNAME(CGCSHJW0)                                MD054955
+     D CGPSCH        E DS                  EXTNAME(CGPSHJW0)                                MD058069
       *COPY*CGCPYSRC,SRERRI                                                                 MD054955
       /EJECT
       *****************************************************************
@@ -1147,7 +1150,18 @@
       * Schedule not in store so chain to find details                    087283
       *                                                                   087283
      C                   ELSE                                                                  08728
-     C     Z#PSCH        CHAIN     CGPSCHL1                           52                       08431
+     C*****Z#PSCH        CHAIN     CGPSCHL1                           52              08431 MD058069
+     C/EXEC SQL                                                                             MD058069
+     C+ SELECT *                                                                            MD058069
+     C+ into :CGPSCH                                                                        MD058069
+     C+ from CGPSHJW0                                                                       MD058069
+     C+ where STPSCH = :Z#PSCH                                                              MD058069
+     C/END-EXEC                                                                             MD058069
+     C                   SETOFF                                       52                    MD058069
+     C                   If        SQLCODE = 100                                            MD058069
+     C                   SETON                                        52                    MD058069
+     C                   ENDIF                                                              MD058069
+                                                                                            MD058069
       *                                                                   087283
       * Set up new off set, move contents into array                      087283
       *                                                                   087283

@@ -21,8 +21,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058069           Date 11May21               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,6 +38,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
      F*  BUG2330- CG programs looking at wrong dataarea for CSC022    *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
@@ -125,7 +127,7 @@
      F*CGGSETL1* IF   E           K DISK    INFSR(SRFILE)                                   MD054955
      F* Group set definition -- retrieval index
      F*-------------------------------------------------------------------
-     FCGPATHL2  IF   E           K DISK    INFSR(SRFILE)
+     F*CGPATHL2* IF   E           K DISK    INFSR(SRFILE)                                   MD058069
      F* Path by group sets:
      F*-------------------------------------------------------------------
      D/EJECT
@@ -246,6 +248,17 @@
      D X#FIL2          C                   CONST('EXUDT2PD  ')
      D X#FIL3          C                   CONST('EXUDT3PD  ')
      D X#FILA          C                   CONST('EXUDTAPD  ')
+     D  EPLEV1                 1      6                                                     MD058069
+     D  EPLEV2                 1      6                                                     MD058069
+     D  EPLEV3                 1      6                                                     MD058069
+     D  EPLEV4                 1      6                                                     MD058069
+     D  EPLEV5                 1      6                                                     MD058069
+     D  EPLEV6                 1      6                                                     MD058069
+     D  EPLEV7                 1      6                                                     MD058069
+     D  EPLEV8                 1      6                                                     MD058069
+     D  EPLEV9                 1      6                                                     MD058069
+     D  EPLEV0                 1      6                                                     MD058069
+     D  EPPATH                 1      6                                                     MD058069
      I********************************************************************
      C/EJECT
      C********************************************************************
@@ -626,15 +639,15 @@
      C*
      C* Read path:
      C*
-     C     KPGRPS        CHAIN     CGPATHL2                           90
+     C*****KPGRPS        CHAIN     CGPATHL2                           90                    MD058069
      C*
      C* If path not found, move "NoPath" text:
      C*
-     C     *IN90         IFEQ      *ON
+     C******IN90         IFEQ      *ON                                                      MD058069
      C                   MOVE      ##NOPT        W@RPTH            6
-     C                   ELSE
-     C                   MOVE      EPPATH        W@RPTH            6
-     C                   ENDIF
+     C**********         ELSE                                                               MD058069
+     C**********         MOVE      EPPATH        W@RPTH            6                        MD058069
+     C**********         ENDIF                                                              MD058069
      C*
      C* Reset Path group set fields:
      C*
@@ -687,15 +700,15 @@
      C*
      C* Read path for Non-Repeating Group:
      C*
-     C     KPGRPS        CHAIN     CGPATHL2                           90
+     C*****KPGRPS        CHAIN     CGPATHL2                           90                    MD058069
      C*
      C* If path not found, move "NoPath" text:
      C*
-     C     *IN90         IFEQ      *ON
+     C******IN90         IFEQ      *ON                                                      MD058069
      C                   MOVE      ##NOPT        W@NPTH            6
-     C                   ELSE
-     C                   MOVE      EPPATH        W@NPTH
-     C                   ENDIF
+     C**********         ELSE                                                               MD058069
+     C**********         MOVE      EPPATH        W@NPTH                                     MD058069
+     C**********         ENDIF                                                              MD058069
      C*
      C* Unwind subroutine stack:
      C*

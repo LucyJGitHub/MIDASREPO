@@ -13,12 +13,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -101,9 +103,9 @@
      F                                              KINFSR *PSSR
       * RTV : Midas SD Profit centres retrieval
       *
-     FSDBROKL1IF  E           K        DISK                           UC
-     F                                              KINFDS ID0005
-     F                                              KINFSR *PSSR
+     F*SDBROKL1IF  E           K        DISK                           UC                   MD058085
+     F**********                                    KINFDS ID0005                           MD058085
+     F**********                                    KINFSR *PSSR                            MD058085
       * RTV : Midas SD Broker codes retrieval
       *
      FSDMMODL1IF  E           K        DISK                           UC
@@ -171,6 +173,7 @@
       * UPD : Midas SD Futures and options ICD update
       * Current/previous master file format fields for change control
       *
+     ISDBROK    E DSSDBROKPD                                                                MD058085
      I***#1DBRC*     DS                             52                                        CGL029
      I#1DBRC      DS                           9999                                           CGL029
       * Stored master file format fields
@@ -178,6 +181,7 @@
       *
      I***YARDCS*     DS                             52                                        CGL029
      IYARDCS      DS                           9999                                           CGL029
+     IDSFDY     E DSDSFDY                                                                   MD058085
      IQSDFC1    E DSSDFCTLL0
       * UPD : Midas SD Standing data controls update
      IYBRDCS      DS                             22
@@ -1822,8 +1826,14 @@
      C                     KFLD           A9BROK           Broker Code
       * Move fields to key list
      C                     MOVELWUBROK    A9BROK           Broker Code
-     C           KRSSE     CHAIN@A9REBC              90    *
-     C           *IN90     IFEQ '1'
+     C********** KRSSE     CHAIN@A9REBC              90    *                                MD058085
+     C                     CALL 'AOBROKR0'                                                  MD058085
+     C                     PARM *BLANKS   W@RTCD  7                                         MD058085
+     C                     PARM '*KEY'    W@OPTN  7                                         MD058085
+     C                     PARM A9BROK    W@BROK  4                                         MD058085
+     C           SDBROK    PARM SDBROK    DSFDY                                             MD058085
+     C           W@RTCD    IFNE *BLANKS                                                     MD058085
+     C********** *IN90     IFEQ '1'                                                         MD058085
       * Data record not found
      C                     MOVEL'USR0077' W0RTN   7
       * USER: Processing if Data record not found
@@ -2764,7 +2774,7 @@
      C                     OPEN SDBOOKL1
      C                     OPEN SDDLSTL1
      C                     OPEN SDPRFCL1
-     C                     OPEN SDBROKL1
+     C**********           OPEN SDBROKL1                                                    MD058085
      C                     OPEN SDMMODL1
      C                     OPEN SDGELRL1
      C                     OPEN SDFODAL0

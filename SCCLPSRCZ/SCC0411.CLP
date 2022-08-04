@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CMC004             Date 13Jul18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058085           Date 11May21              */
+/*       Prev Amend No. CMC004             Date 13Jul18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD029791           Date 25Aug14              */
 /*                      MD029611           Date 08Aug14              */
 /*                      MD021155           Date 11Jul13              */
@@ -83,6 +84,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058085 - Deliverable Data Split for Standing Data         */
 /*       CMC004 - Update MC Control groups after FC Transfer         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD029791 - Remove calling of EMC09 and move it in SCC41119  */
@@ -320,8 +322,14 @@ TAGI:                                                                           
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                                                /*BUG21251*/
              IF         COND(&CSW208 *EQ 'Y') THEN(DO)                                  /*BUG21251*/
-             CPYF       FROMFILE(SDDSTCPD) TOFILE(QTEMP/XSDDSTCPD) +
-                           MBROPT(*REPLACE) CRTFILE(*YES)                               /*BUG21251*/
+/**********  CPYF       FROMFILE(SDDSTCPD) TOFILE(QTEMP/XSDDSTCPD) +
+                           MBROPT(*REPLACE) CRTFILE(*YES) */                 /*BUG21251* *MD058085*/
+             CPYF       FROMFILE(SDDSTCTD) TOFILE(QTEMP/XSDDSTCTD) +
+                           MBROPT(*REPLACE) CRTFILE(*YES)                               /*MD058085*/
+             CPYF       FROMFILE(SDDSTBTD) TOFILE(QTEMP/XSDDSTBTD) +
+                           MBROPT(*REPLACE) CRTFILE(*YES)                               /*MD058085*/
+             CPYF       FROMFILE(SDDSTXTD) TOFILE(QTEMP/XSDDSTXTD) +
+                           MBROPT(*REPLACE) CRTFILE(*YES)                               /*MD058085*/
              CPYF       FROMFILE(SDBRCHPD) TOFILE(QTEMP/XSDBRCHPD) +
                            MBROPT(*REPLACE) CRTFILE(*YES)                               /*BUG21251*/
              CALL       PGM(SD001007)                                                     /*CSW208*/
@@ -401,8 +409,14 @@ DBETAG:
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                           TOMSGQ(MOPERQ)
              IF         COND(&CSW208 *EQ 'Y') THEN(DO)                                  /*BUG21251*/
-             CPYF       FROMFILE(XSDDSTCPD) TOFILE(SDDSTCPD) +
-                           MBROPT(*REPLACE)                                             /*BUG21251*/
+/**********  CPYF       FROMFILE(XSDDSTCPD) TOFILE(SDDSTCPD) +
+                           MBROPT(*REPLACE)*/                                /*BUG21251* *MD058085*/
+             CPYF       FROMFILE(XSDDSTCTD) TOFILE(SDDSTCTD) +
+                           MBROPT(*REPLACE)                                             /*MD058085*/
+             CPYF       FROMFILE(XSDDSTBTD) TOFILE(SDDSTBTD) +
+                           MBROPT(*REPLACE)                                             /*MD058085*/
+             CPYF       FROMFILE(XSDDSTXTD) TOFILE(SDDSTXTD) +
+                           MBROPT(*REPLACE)                                             /*MD058085*/
              CPYF       FROMFILE(XSDBRCHPD) TOFILE(SDBRCHPD) +
                            MBROPT(*REPLACE)                                             /*BUG21251*/
              ENDDO                                                                      /*BUG21251*/

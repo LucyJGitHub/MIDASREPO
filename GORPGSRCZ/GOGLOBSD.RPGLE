@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD058085           Date 11May21               *
       *  Prev Amend No. MD056557           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
@@ -87,7 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE138 - Class Codes for Facilities (Recompile)              *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD056557 - Deliverable Data Split for Pulldown               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -281,7 +281,10 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDBISTPD'    GLOB_SDBISTPD                                CER045
      C     PFLNAME       CASEQ     'SDBOOKPD'    GLOB_SDBOOKPD
      C     PFLNAME       CASEQ     'SDBRCHPD'    GLOB_SDBRCHPD
-     C     PFLNAME       CASEQ     'SDBROKPD'    GLOB_SDBROKPD
+     C*****PFLNAME       CASEQ     'SDBROKPD'    GLOB_SDBROKPD                              MD058085
+     C     PFLNAME       CASEQ     'SDBRKCTD'    GLOB_SDPDWHPD                              MD058085
+     C     PFLNAME       CASEQ     'SDBRKBTD'    GLOB_SDPDWHPD                              MD058085
+     C     PFLNAME       CASEQ     'SDBRKXTD'    GLOB_SDPDWHPD                              MD058085
      C     PFLNAME       CASEQ     'SDBSCCPD'    GLOB_SDBSCCPD                                CER045
      C     PFLNAME       CASEQ     'SDBSRTPD'    GLOB_SDBSRTPD
      C     PFLNAME       CASEQ     'SDBUCLPD'    GLOB_SDBUCLPD                                CER045

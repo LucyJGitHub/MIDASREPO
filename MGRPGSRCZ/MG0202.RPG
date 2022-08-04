@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056607           Date 06Oct20               *
+      *  Last Amend No. AR783001           Date 03Aug22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056607           Date 06Oct20               *
       *                 MD051760           Date 22Aug18               *
       *                 MD050973           Date 18May18               *
       *                 MD050972           Date 17May18               *
@@ -115,12 +116,15 @@
      F*                                                               *
       *****************************************************************
       *                                                               *
+      *  AR783001 - Reverse fix 210796 to remove tag 53 and condition *
+      *             MGBENA of tag 58 when transaction type is 'PC'.   *
+      *             (Child: AR783002)                                 *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056607 - Field tag 53 is duplicated in MT202               *
       *           - Format tag 53 (MD-35921) when CMG001 is OFF.      *
       *  MD051760 - UETR field (tag 121) should not be included in    *
-      *             MT203 messages                                    *      
+      *             MT203 messages                                    *
       *  MD050973 - Field tag 58 is missing in MT202                  *
       *  MD050972 - Field tag 32A has a blank Value Date for LDNI     *
       *  MD050936 - Field tag 53B has a defaulted value of '/'        *
@@ -3012,38 +3016,39 @@
      C/COPY WNCPYSRC,MGH00056
       *
       **  Field 53  Sender's correspondent
-     C           MGTTYP    IFEQ 'PC'                                                          210796
-     C                     MOVELMGCCY     WCCY                                                210796
-     C                     MOVELMGPONS    WLPR                                                210796
+     C********** MGTTYP    IFEQ 'PC'                                                 210796 AR783001
+     C**********           MOVELMGCCY     WCCY                                       210796 AR783001
+     C**********           MOVELMGPONS    WLPR                                       210796 AR783001
+      **********                                                                     210796 AR783001
+     C********** KCLS      CHAINSDNOSTL8             80                              210796 AR783001
+      **********                                                                     210796 AR783001
+      ** If dummy nostro is not found, database error.                               210796 AR783001
+     C********** *IN80     IFEQ *ON                                                  210796 AR783001
+     C********** *LOCK     IN   LDA                                                  210796 AR783001
+     C**********           MOVEL'SDNOSTL8'DBFILE                                     210796 AR783001
+     C**********           Z-ADD032       DBASE                                      210796 AR783001
+     C********** MGCCY     CAT  MGPONS:0  DBKEY                                      210796 AR783001
+     C**********           OUT  LDA                                                  210796 AR783001
+     C**********           EXSR *PSSR                                                210796 AR783001
+      **********                                                                     210796 AR783001
+     C**********           ELSE                                                      210796 AR783001
+      **********                                                                     210796 AR783001
+     C********** A7OACN    IFNE *BLANK                                               210796 AR783001
+     C**********           ADD  1         X                                          210796 AR783001
+     C********** X         OCUR MULT                                                 210796 AR783001
+     C**********           MOVE ':53B:'   MTAG                                       210796 AR783001
+     C********** 1         SUBSTA7OACN:1  WSLSH   1                                MD036542 AR783001
+     C********** WSLSH     IFEQ '/'                                                MD036542 AR783001
+     C**********           MOVELA7OACN    MFLD                                     MD036542 AR783001
+     C**********           ELSE                                                    MD036542 AR783001
+     C********** '/'       CAT  A7OACN:0  MFLD                                       210796 AR783001
+     C**********           ENDIF                                                   MD036542 AR783001
+     C**********           END                                                       210796 AR783001
+     C**********           END                                                       210796 AR783001
+      **********                                                                     210796 AR783001
+     C**********           ELSE                                                      210796 AR783001
       *                                                                                       210796
-     C           KCLS      CHAINSDNOSTL8             80                                       210796
-      *                                                                                       210796
-      ** If dummy nostro is not found, database error.                                        210796
-     C           *IN80     IFEQ *ON                                                           210796
-     C           *LOCK     IN   LDA                                                           210796
-     C                     MOVEL'SDNOSTL8'DBFILE                                              210796
-     C                     Z-ADD032       DBASE                                               210796
-     C           MGCCY     CAT  MGPONS:0  DBKEY                                               210796
-     C                     OUT  LDA                                                           210796
-     C                     EXSR *PSSR                                                         210796
-      *                                                                                       210796
-     C                     ELSE                                                               210796
-      *                                                                                       210796
-     C           A7OACN    IFNE *BLANK                                                        210796
-     C                     ADD  1         X                                                   210796
-     C           X         OCUR MULT                                                          210796
-     C                     MOVE ':53B:'   MTAG                                                210796
-     C           1         SUBSTA7OACN:1  WSLSH   1                                         MD036542
-     C           WSLSH     IFEQ '/'                                                         MD036542
-     C                     MOVELA7OACN    MFLD                                              MD036542
-     C                     ELSE                                                             MD036542
-     C           '/'       CAT  A7OACN:0  MFLD                                                210796
-     C                     ENDIF                                                            MD036542
-     C                     END                                                                210796
-     C                     END                                                                210796
-      *                                                                                       210796
-     C                     ELSE                                                               210796
-      *                                                                                       210796
+     C           MGTTYP    IFNE 'PC'                                                        AR783001
      C           MGRVNO    IFEQ *BLANKS                                                     MD035921
      C                     MOVELMGCCY     WCCY                                              MD035921
      C                     MOVELMGPONS    WLPR                                              MD035921
@@ -3173,7 +3178,8 @@
      C                     END                             Nostro exist
       *
      C                     END
-     C                     END                                                                210796
+     C                     ENDIF                                                            AR783001
+     C**********           END                                                       210796 AR783001
       *                                                                   S01408
      C/COPY WNCPYSRC,MG0202CCP9                                           S01408
       *                                                                   S01408
@@ -3486,7 +3492,12 @@
      C           MGBENN    IFNE *BLANKS
      C/COPY WNCPYSRC,MG0202C065
      C                     MOVELMGBENN    ZDEST
+     C           MGTTYP    IFEQ 'PC'                                                        AR783001
+     C           MGBENA    ANDNE*BLANK                                                      AR783001
+     C           '/'       CAT  MGBENA:0  ACLINE                                            AR783001
+     C                     ELSE                                                             AR783001
      C                     MOVELMGBENA    ACLINE
+     C                     ENDIF                                                            AR783001
      C                     ELSE
      C                     MOVELMGCNUM    ZDEST
      C                     MOVE *BLANKS   ACLINE

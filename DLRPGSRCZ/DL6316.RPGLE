@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR905057           Date 13Jul22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR783001           Date 03Aug22               *
+      *  Prev Amend No. AR905057           Date 13Jul22               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR783001 - Move Our Account No. at Nostro to MGBENA to       *
+      *             reflect in tag 58 of MT202. (Child: AR783002)     *
       *  AR905057 - Amend the structure of TRNO by dropping the CLS   *
       *             Sequence number and extending the value date to   *
       *             include the Year. (Child: AR905058)               *
@@ -650,6 +653,9 @@
       *
       ** Beneficiary number
       *
+      ** Our Account No at Nostro                                                           AR783001
+      *                                                                                     AR783001
+     C                   MOVE      A7OACN        MGBENA                                     AR783001
      C                   MOVE      A7CLSM        MGBENN
       *
       ** Account with bank number

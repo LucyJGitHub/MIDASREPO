@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250371             Date 06Jun22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. 263549             Date 05Aug22               *
+      *  Prev Amend No. 250371             Date 06Jun22               *
+      *                 CLE138             Date 02Nov21               *
       *                 257879             Date 12May22               *
       *                 MD059275           Date 23May22               *
       *                 MD058815           Date 28Sep21               *
@@ -435,6 +436,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263549 - Remove 254385 (reinstate 247263)                    *
+      *         - NY specific fix.                                    *
       *  250371 - Funding accrual account keys are incorrect.         *
       *           'HBA45T   I0000'                                    *
       *           'HBA45F   I0000'                                    *
@@ -14203,6 +14206,7 @@ L118 I                             P   72   77 7RTSPL
 1765 C**   CHECK FOR GREATER OF ACCRUED/PAID AND POST AMOUNT NOT POSTED
 1766 C**
      C********** VDAT      IFEQ MDAT                                                   247263 254075
+     C     VDAT          IFEQ      MDAT                                                       263549
 1767 C     IPRD          ADD       ICTD          WRK13
 1768 C     WRK13         ADD       IWOD          WRK13
 1769 C     AITC          ADD       AIAP          WRK13A           13 0
@@ -14393,6 +14397,7 @@ L118 I                             P   72   77 7RTSPL
 1791 C     AIPD          ADD       WRK13         AIPD
      C                   ENDIF
      C**********           ENDIF                                                       247263 254075
+     C                   ENDIF                                                                263549
       *                                                                   CAC001
      C     BGN0ST        IFEQ      'Y'                                                         CAC00
      C     FPRCL         ANDNE     *BLANKS                                                     CAC00

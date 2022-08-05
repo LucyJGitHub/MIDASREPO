@@ -73,6 +73,7 @@
      D Count1          s              5  0 inz(*zeros)
      D Count2          s              5  0 inz(*zeros)
      D Prefix          s              2a
+     D workLib         s             10a
      D wSqlStr         s           2000a   inz(*blanks)
      D thisFile        s             20a
      D thatFile        s             20a
@@ -128,8 +129,8 @@
 
        begsr processGLOBAL;
 
-                  // Copy distinct GZSDFACTPD type, class and zone to QTEMP/file1
-                  thisFile = 'QTEMP/FILE1';
+                  // Copy distinct GZSDFACTPD type, class and zone to QTEMP/SMFACTF1
+                  thisFile = 'QTEMP/SMFACTF1';
                   thatFile = 'GZSDFACTPD';
 
                    wSqlStr = 'INSERT INTO ' + %TRIM(thisFile) +
@@ -164,7 +165,7 @@
                       exsr *pssr;
                    endif;
 
-                   //delete records from GZSDFACTPD which does not exist in file1
+                   //delete records from GZSDFACTPD which does not exist in SMFACTF1
                    wSqlStr = 'DELETE FROM ' + %TRIM(thatFile) +
                               ' A WHERE NOT EXISTS (' +
                                'SELECT * FROM ' + %TRIM(thisFile) +
@@ -199,6 +200,8 @@
 
                   exsr copySDFACT_to_File2;
 
+                  exsr createSMFACTF3;
+
                   exsr copySDFACT_to_File3;
 
                   exsr deleteSDFACTPD;
@@ -223,7 +226,7 @@
 
        begsr copySDFACT_to_File2;
 
-                  thisFile = 'QTEMP/FILE2';
+                  thisFile = 'QTEMP/SMFACTF2';
                   wSqlStr = 'INSERT INTO ' + %TRIM(thisFile) +
                               ' SELECT ' +
                                ' AMFCTY, ' +
@@ -270,7 +273,7 @@
 
        begsr copySDFACT_to_File3;
 
-                  thisFile = 'QTEMP/FILE3';
+                  thisFile = 'QTEMP/SMFACTF3';
                   thatFile = 'SDFACTPD';
 
                   wSqlStr = 'INSERT INTO ' + %TRIM(thisFile) +
@@ -296,6 +299,30 @@
        /EJECT
        //*************************************************************
        //                                                            *
+       //   createSMFACTF3;                                          *
+       //                                                            *
+       //   Called By: processZONEDL                                 *
+       //                                                            *
+       //*************************************************************
+
+       begsr createSMFACTF3;
+
+                    workLib =  'QTEMP';
+                    wSqlStr = ('create table ' +
+                               %trim(workLib) +
+                              '/SMFACTF3 +
+                               ( AMFCTY CHAR(3) ,   +
+                                 AMCLAS CHAR(4) +
+                               )'
+                               );
+                   exec sql
+                   execute immediate :wSqlStr;
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
        //   deletSDFACTPD;                                           *
        //                                                            *
        //   Called By: processZONEDL                                 *
@@ -304,10 +331,10 @@
 
        begsr deleteSDFACTPD;
 
-                   thisFile = 'QTEMP/FILE2';
+                   thisFile = 'QTEMP/SMFACTF2';
                    thatFile = 'SDFACTPD';
 
-                   //delete records from SDFACTPD which does not exist in file2
+                   //delete records from SDFACTPD which does not exist in SMFACTF2
 
                    wSqlStr = 'DELETE FROM ' + %TRIM(thatFile) +
                               ' A WHERE NOT EXISTS (' +
@@ -341,10 +368,10 @@
 
        begsr deleteTABLETQ;
 
-                   thisFile = 'QTEMP/FILE2';
+                   thisFile = 'QTEMP/SMFACTF2';
                    thatFile = 'TABLETQ';
 
-                   //delete records from TABLETQ which does not exist in file2
+                   //delete records from TABLETQ which does not exist in SMFACTF2
                    wSqlStr = 'DELETE FROM ' + %TRIM(thatFile) +
                               ' A WHERE NOT EXISTS (' +
                                'SELECT * FROM ' + %TRIM(thisFile) +
@@ -376,7 +403,7 @@
 
        begsr updateSDFCTLPA;
 
-                   thisFile = 'QTEMP/FILE2';
+                   thisFile = 'QTEMP/SMFACTF2';
                    thatFile = 'SDFCTLPA';
 
                    // Retrieve value of AHNORC in SDFCTLPA
@@ -427,7 +454,7 @@
 
        begsr updateTABLETX;
 
-                   thisFile = 'QTEMP/FILE2';
+                   thisFile = 'QTEMP/SMFACTF2';
                    thatFile = 'TABLETX';
 
                    // Retrieve value of NREC field from TABLETX
@@ -476,7 +503,7 @@
 
        begsr processZONEPT;
 
-                  thisFile = 'QTEMP/FILE3';
+                  thisFile = 'QTEMP/SMFACTF3';
                   thatFile = 'SDFACTX0';
 
                   wSqlStr = 'INSERT INTO ' + %TRIM(thatFile) +

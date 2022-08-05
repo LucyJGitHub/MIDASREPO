@@ -68,6 +68,10 @@
       ** SDFACTPD
      D SDFACTPDDS    e ds                  extname(SDFACTPD)
      D dsFACTPD        ds                  likeds(SDFACTPDDS)
+      ** SDFACTX0
+     D SDFACTX0DS    e ds                  extname(SDFACTX0)
+     D                                     prefix(X_)
+     D dsFACTX0        ds                  likeds(SDFACTX0DS)
       ** ACKEYAL
      D ACKEYALDS     e ds                  extname(ACKEYAL)
      D dsACKEYAL       ds                  likeds(ACKEYALDS)
@@ -103,6 +107,7 @@
      D pOption         s              7a
      D DefaultClass    s              4a
      D processRecord   s               n
+     D recordExist     s               n                                                    MD060092
      D currentAKEY     s             14a
      D newAKEY         s             14a
      D facilityClass   s              4a
@@ -181,7 +186,7 @@
                    //exsr initialiseSDFACTPD;                                               MD060092
 
                    //Call subroutine to initialise Midas SD Facility Type Class
-                   exsr initialiseSDFACTX0;                                                 MD060092
+                   exsr initialiseSDFACTX0;
 
                    //Call subroutine to initialise Midas LE Facilities Extension File
                    exsr initialiseLEFCLTQD;
@@ -488,32 +493,90 @@
        //                                                            *                      MD060092
        //*************************************************************                      MD060092
                                                                                             MD060092
-       begsr initialiseSDFACTX0;                                                            MD060092
+       begsr initialiseSDFACTX0;
+                   wSQLStr = 'select * from SDFACTPD';
+                   Count12= 0;
+                   exec sql prepare P5 from :wSQLStr;
+                   exec sql declare P5 cursor for P5;
+                   exec sql open P5;
+                   exec sql fetch next from P5 into :dsFACTPD;
 
-                         //Update SDFACTX0;
-                         wSqlStr = 'update SDFACTX0 A SET ' +
-                                   'A.AMCLAS = ' + QUO + DefaultClass + QUO +
-                                   ' where A.AMCLAS =  ' + QUO + BLK_CLASS
-                                     +  QUO;
-                         exec sql
-                         execute immediate :wSqlStr;
-                         Count12 = SQLER3;
-                         if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
-                            and sqlCod <> NO_COLUMN;
-                            dBase    = 007;
-                            dBfile   = 'SDFACTX0';
-                            dBkey    = *blanks;
-                            dBpgm    = 'LE005000';
-                            exsr *pssr;
-                         endif;
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                      and SqlCod <> NO_COLUMN;
+                      dBkey = *Blanks;
+                      dBFile = 'SDFACTPD';
+                      dBase = 020;
+                      dBPgm  = 'LE005000';
+                      exsr *pssr;
+                   endif;
 
-                          if sqlCod = NO_COLUMN;
-                            COL12 = 'AMCLAS';
-                            ERRMSG12 = 'COLUMN DOES NOT EXIST';
-                            leavesr;
-                         endif;
+                   if sqlCod = NO_COLUMN;
+                      COL12= 'AKEY';
+                      ERRMSG12= 'COLUMN DOES NOT EXIST';
+                      leavesr;
+                   endif;
 
-       endsr;                                                                               MD060092
+                   recordExist   = *Off;
+                   CurFacTyp =dsFACTPD.AMFCTY;
+                   exsr checkExist;
+                   if not(recordExist);
+                      exsr insertRecord;
+                   endif;
+
+                   dow sqlCod = NO_ERROR;
+
+                      exec sql fetch next from P5 into :dsFACTPD;
+
+                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
+                         and sqlCod <> NO_COLUMN;
+                         dBkey = *Blanks;
+                         dBFile = 'SDFACTPD';
+                         dBase = 021;
+                         dBPgm  = 'LE005000';
+                         exsr *pssr;
+                       endif;
+
+                       if sqlCod = NO_COLUMN;
+                          COL12= 'AKEY';
+                          ERRMSG12= 'COLUMN DOES NOT EXIST';
+                          leavesr;
+                       endif;
+
+                       recordExist   = *Off;
+                       CurFacTyp =dsFACTPD.AMFCTY;
+                       exsr checkExist;
+                       if not(recordExist);
+                          exsr insertRecord;
+                       endif;
+                   enddo;
+
+       endsr;
+       //*************************************************************                      MD060092
+       /EJECT                                                                               MD060092
+       //*************************************************************                      MD060092
+       //                                                            *                      MD060092
+       // insertRecord;                                              *                      MD060092
+       //                                                            *                      MD060092
+       // Called by: initialiseSDFACTX0                              *                      MD060092
+       //                                                            *                      MD060092
+       //  Calls: none                                               *                      MD060092
+       //                                                            *                      MD060092
+       //*************************************************************                      MD060092
+                                                                                            MD060092
+       begsr insertRecord;
+                      dsFACTX0.X_AMFCTY = dsFACTPD.AMFCTY;
+                      dsFACTX0.X_AMCLAS = DefaultClass;
+                      exec sql insert into SDFACTX0
+                          values (:dsFACTX0);
+                          if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                             dBase    = 023;
+                             dBfile   = 'SDFACTX0';
+                             dBkey    = *blanks;
+                             dBpgm    = 'LE005000';
+                             exsr *pssr;
+                          endif;
+                      Count12 = Count12 + 1;
+       endsr;
 
        //*************************************************************
        /EJECT
@@ -984,6 +1047,47 @@
                   exec sql close P3;
                   SQLCOD = PrevSQLCod;
        endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // checkExist;                                                *
+       //                                                            *
+       // Called by: initialiseSDFACTX0;                             *
+       //                                                            *
+       //  Calls: none                                               *
+       //                                                            *
+       //*************************************************************
+
+       begsr checkExist;
+                   PrevSQLCod = SQLCOD;
+                   wSQLStr = 'select * from SDFACTX0 A' +
+                             ' where A.AMFCTY = ' + QUO +
+                             CurFacTyp + QUO;
+
+                   exec sql prepare P6 from :wSQLStr;
+                   exec sql declare P6 cursor for P6;
+                   exec sql open P6;
+                   exec sql fetch next from P6 into :dsFACTX0;
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      dBase    = 022;
+                      dBfile   = 'SDFACTX0';
+                      dBkey    = *blanks;
+                      dBpgm    = 'LE005000';
+                      exsr *pssr;
+                   endif;
+
+                  if sqlCod =  NO_RECORD;
+                     recordExist   = *Off;
+                  else;
+                     recordExist   = *On;
+                  endif;
+                  exec sql close P6;
+                  SQLCOD = PrevSQLCod;
+       endsr;
+
 
        //*************************************************************
        /EJECT

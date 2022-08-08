@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056611           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR958473           Date 16Oct12               *
+      *  Prev Amend No. MD056611           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 249904             Date 08Jun06               *
@@ -24,6 +25,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR958473 - Incorrect values in GPAUCHPD, field AHUSER.       *
+      *             Pass the journal timestamp entry to be used       *
+      *             to retrieve the correct transaction.              *
+      *             (Child: AR958477)                                 *
       *  MD056611 - Deliverable Data Split for Audit Reporting        *
       *  MD046248 - Finastra Rebranding                               *
       *  249904 - Recompiled to correct signature violation error     *
@@ -36,6 +41,10 @@
      FGPAUJIPD  IF   E           K DISK    INFSR(*PSSR)
      FGZSDBANKL1IF   E           K DISK    INFSR(*PSSR)
 
+      *                                                                                     AR958473
+      ** Field declaration for Journal Timestamp.                                           AR958473
+      *                                                                                     AR958473
+     DI#TIMZ           S               Z                                                    AR958473
 
       * File Details
      D*GPAUFL***     E DS                  EXTNAME(GPAUFLPD)                                MD056611
@@ -255,11 +264,13 @@
       * INPUT
       * Zone
       * Journal Sequence Number
-      * Journal Date
+      * Journal Timestamp Entry                                                             AR958473
+      **Journal*Date**************************************************                      AR958473
       * Journal Entry Type
      C                   PARM                    I#ZONE           10
      C                   PARM      JOSEQN        I#SEQN           10 0
-     C                   PARM      JODATE        I#DATE            6
+     C                   PARM      JOTSTP        I#TIMZ                                     AR958473
+     C**********         PARM      JODATE        I#DATE            6                        AR958473
      C                   PARM      JOENTT        I#ENTT            2
       * Field Attributes
       * Field Shortnames
@@ -319,8 +330,9 @@
       * Journal File
       * Journal Job Number
       * Journal Program
-      * Journal Date
-      * Journal Time
+      * Journal TimeStamp                                                                   AR958473
+      **Journal*Date**************************************************                      AR958473
+      **Journal*Time**************************************************                      AR958473
       * Journal Commit ID
      C                   PARM      JOENTT        I#ENTT            2
      C                   PARM      JOUSER        I#USER           10
@@ -328,8 +340,9 @@
      C                   PARM      JOOBJ         I#FILE           10
      C                   PARM      JONBR         I#JNBR            6 0
      C                   PARM      JOPGM         I#PGM            10
-     C                   PARM      JODATE        I#DATE            6
-     C                   PARM      JOTIME        I#TIME            6 0
+     C                   PARM      JOTSTP        I#TIMZ                                     AR958473
+     C**********         PARM      JODATE        I#DATE            6                        AR958473
+     C**********         PARM      JOTIME        I#TIME            6 0                      AR958473
      C                   PARM      JOCCID        I#CCID           10 0
       * Rollback
      C                   PARM      Rollback      I#RLBK            1

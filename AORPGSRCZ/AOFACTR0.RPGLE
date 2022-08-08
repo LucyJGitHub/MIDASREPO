@@ -35,7 +35,7 @@
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
-      *  CLE138 - Class Codes for Facilities                          *
+      *  CLE138 - Class Codes for Facilities.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *

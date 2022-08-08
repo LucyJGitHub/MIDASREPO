@@ -11,18 +11,22 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR958473           Date 16Oct12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGP009             Date 22Dec04               *
       *                 BUG3420            Date 28Jun04               *
       *                 CGP004  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR958473 - Incorrect values in GPAUCHPD, field AHUSER.       *
+      *             Add timestamp to be used as key instead of date   *
+      *             and time only. (Child: AR958477)                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGP009 - Local Zone Time Difference (Recompile)              *
@@ -84,6 +88,11 @@
      C                   MOVEL     I#UPYN        AIUPYN
      C                   MOVEL     I#TRID        AITRID
      C                   MOVEL     I#BUFF        AIBUFF
+      *                                                                                     AR958473
+      ** Write also the timestamp                                                           AR958473
+      *                                                                                     AR958473
+     C                   EVAL      AITIMZ = %TIMESTAMP                                      AR958473
+      *                                                                                     AR958473
      C                   WRITE     GPAUUID0
  
      C                   RETURN

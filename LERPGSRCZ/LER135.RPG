@@ -22,11 +22,8 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249820             Date 29Jul22               *
-      *  Prev Amend No. MD060223           Date 05Jul22               *
-      *                 MD060225           Date 05Jul22               *
-      *                 CLE138             Date 02Nov21               *
-      *                 MD058815           Date 28Sep21               *
+      *  Last Amend No. AR988274           Date 05Aug22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
       *                 MD059600           Date 17Feb22               *
       *                 MD058499           Date 09Sep21               *
       *                 MD057939           Date 17May21               *
@@ -314,13 +311,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
-      *  249820 - Problem with R4 migrated fees which have past due   *
-      *           amts                                                *
-      *  MD060223 - Incorrect loan class code is reflected on report. *
-      *             Use a new class variable report field in LER135P2.*
-      *  MD060225 - Fee entries on APOSTPD and LEFEED are not updated *
-      *             with new Class code.                              *
-      *  CLE138 - Class Codes of Facilities                           *
+      *  AR988274 - Facility fee adjustment incorrect in LER135P2.    *
+      *             Remove extra line that adds ADJTOT to WSOA0 as    *
+      *             this doubles the adjustment amount for the fee.   *
+      *             (Child: AR988275)                                 *
+      *           - Applied for MD039533                              *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -433,7 +428,7 @@
       *  MD054318 - Back-valued repayment does not generate a reversal*
       *             for accrual. Applied fix MD-52410                 *
       *  MD053946 - Cross ccy settlement entries not generated for    *
-      *             calculated loan fee, auto settle ‘C’ and settled  *
+      *             calculated loan fee, auto settle C and settled  *
       *             against nostro account                            *
       *  MD051883 - CLE031: Changes to Value Date Account Keys        *
       *  261205A - Incorrect lending fee accrual for calc basis 6.    *
@@ -1207,8 +1202,7 @@
      E**********          TABACC  1  22  2   TABACN 26   FACILITY ACTIONS              CLE023 CLE028
      E/COPY WNCPYSRC,LER135E002
      E**********          TABACC  1  24  2   TABACN 26   FACILITY ACTIONS              CLE028 258414
-     E**********          TABACC  1  25  2   TABACN 26   FACILITY ACTIONS              258414 CLE138
-     E                    TABACC  1  26  2   TABACN 26   FACILITY ACTIONS                     CLE138
+     E                    TABACC  1  25  2   TABACN 26   FACILITY ACTIONS                     258414
      E/COPY WNCPYSRC,LER135E003
      E                    POWER   1   7  7 3             POWER ARRAY
      E/COPY WNCPYSRC,LEH00667
@@ -2544,7 +2538,6 @@
      C                     Z-ADD0         WLOANA 130                                        MD055069
      C                     Z-ADD0         FEPOST                                            MD047522
      C                     MOVEL*BLANK    WPAYTD  1                                         MD052216
-     C                     MOVE *BLANK    WCLSP2  4                                         MD060223
       *                                                                                     MD055481
      C                     SETOF                     36                                     MD055481
      C           FELOAN    IFNE *BLANKS                                                     MD055481
@@ -2759,10 +2752,6 @@
      C                     OUT  LDA                        ************
      C                     EXSR *PSSR
      C                     END
-      *                                                                                     MD060223
-     C           CLE138    IFEQ 'Y'                                                         MD060223
-     C                     MOVE FHFCLS    WCLSP2                                            MD060223
-     C                     ENDIF                                                            MD060223
       *                                                                                     MD026969
       ** Check if the associated facility had movements                                     MD026969
       ** Facility date should be backvalued and *LT FELPDT                                  MD026969
@@ -2829,10 +2818,6 @@
      C                     OUT  LDA                                                           CLE073
      C                     EXSR *PSSR                                                         CLE073
      C                     ENDIF                                                              CLE073
-      *                                                                                     MD060223
-     C           CLE042    IFEQ 'Y'                                                         MD060223
-     C                     MOVE FECLAS    WCLSP2                                            MD060223
-     C                     ENDIF                                                            MD060223
       * set currency                                                                          CLE073
       * (CCYP is from HISTSHP which is only processed for type 97)                            CLE073
       * (CCYP is used for conversion to fee currency)                                         CLE073
@@ -5157,12 +5142,7 @@
       *                                                                   CLE005
      C           CLE005    IFEQ 'Y'                                       CLE005
      C           FEINDC    ANDNE'Y'                                       141453
-      * Need to do this for R4 migrated fees that are past due                                249820
-     C           CLE005    OREQ 'Y'                                                           249820
-     C           FEINDC    ANDEQ'Y'                                                           249820
-     C           FELPAM    ANDLT0                                                             249820
      C                     Z-ADDFEPSTD    STDATE                          CLE005
-     C                     Z-ADDSTDATE    WSTDTE                                              249820
      C                     ELSE                                           CLE005
      C*                                                                   102005
      C**********           Z-ADDFELADT    STDATE                   BH3480 123004
@@ -7704,8 +7684,6 @@
      C                     MOVEAFECLAS    AKY,11                                            AR745249
       *
      C/COPY WNCPYSRC,LEH00379
-      *                                                                                       CLE138
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY
      C**********           Z-ADDFECNUM    LKCNUM                                              CSD027
      C                     MOVE FECNUM    LKCNUM                                              CSD027
@@ -8224,7 +8202,6 @@
      C           WRKPRC    IFEQ 'Y'                                                         MD051883
      C           AKY,4     ANDEQ'R'                                                         MD051883
      C                     MOVE 'V'       AKY,10                                            MD051883
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                            MD051883
      C                     ENDIF                                                            MD051883
      C                     WRITELKEYFEDF                                                    AR217562
@@ -8234,7 +8211,6 @@
      C           WRKPRC    IFEQ 'Y'                                                         MD051883
      C           AKY,4     ANDEQ'R'                                                         MD051883
      C                     MOVE 'V'       AKY,10                                            MD051883
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                            MD051883
      C                     ENDIF                                                            MD051883
      C                     WRITELKEYFEDF
@@ -9486,7 +9462,7 @@
      C**********           ENDIF                                          153736              204467
       *                                                                                       204467
      C***********          ADD  ADJTOT    WOSA0                                        243496 245803
-     C                     ADD  ADJTOT    WOSA0                                              243496B
+     C**********           ADD  ADJTOT    WOSA0                                     243496B AR988274
      C           WFEE      SUB  FELPAM    DIFF1  130                                          258597
      C           DIFF1     IFEQ 1                                                             258597
      C                     SUB  1         WOSA0                                               258597
@@ -9621,52 +9597,6 @@
       ** Set up copyright statement
      C                     MOVEACPY@      BIS@   80
      C/COPY WNCPYSRC,LER135CCP1                                           S01408
-      *                                                                                       CLE138
-     C                     CALL 'AOSARDR0'                                                    CLE138
-     C                     PARM *BLANKS   WRTCD                                               CLE138
-     C                     PARM '*VERIFY' WOPTN                                               CLE138
-     C                     PARM 'CLE138'  WSARD                                               CLE138
-     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
-      *                                                                                       CLE138
-     C           WRTCD     IFEQ *BLANKS                                                       CLE138
-     C                     MOVE 'Y'       CLE138  1                                           CLE138
-     C                     MOVE *ON       *IN12                                               CLE138
-     C                     ELSE                                                               CLE138
-     C                     MOVE 'N'       CLE138                                              CLE138
-     C                     MOVE *OFF      *IN12                                               CLE138
-     C                     END                                                                CLE138
-      *                                                                                       CLE138
-     C           WRTCD     IFNE *BLANKS                                                       CLE138
-     C           WRTCD     ANDNE'*NRF  '                                                      CLE138
-     C           *LOCK     IN   LDA                                                           CLE138
-     C                     MOVEL'LER135'  DBPGM                                               CLE138
-     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
-     C                     Z-ADD900       DBASE                                               CLE138
-     C                     OUT  LDA                                                           CLE138
-     C                     EXSR *PSSR                                                         CLE138
-     C                     END                                                                CLE138
-      *                                                                                       CLE138
-     C                     CALL 'AOSARDR0'                                                    CLE138
-     C                     PARM *BLANKS   WRTCD                                               CLE138
-     C                     PARM '*VERIFY' WOPTN                                               CLE138
-     C                     PARM 'CLE042'  WSARD                                               CLE138
-     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
-      *                                                                                       CLE138
-     C           WRTCD     IFEQ *BLANKS                                                       CLE138
-     C                     MOVE 'Y'       CLE042  1                                           CLE138
-     C                     ELSE                                                               CLE138
-     C                     MOVE 'N'       CLE042                                              CLE138
-     C                     END                                                                CLE138
-      *                                                                                       CLE138
-     C           WRTCD     IFNE *BLANKS                                                       CLE138
-     C           WRTCD     ANDNE'*NRF  '                                                      CLE138
-     C           *LOCK     IN   LDA                                                           CLE138
-     C                     MOVEL'LER135'  DBPGM                                               CLE138
-     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
-     C                     Z-ADD901       DBASE                                               CLE138
-     C                     OUT  LDA                                                           CLE138
-     C                     EXSR *PSSR                                                         CLE138
-     C                     END                                                                CLE138
       *
       ** Define LDA
      C           *NAMVAR   DEFN           LDA
@@ -11187,10 +11117,6 @@
      C                     MOVE *BLANK    SUTP                            CLE009
      C                     MOVE *BLANK    CLAS                                                CLE042
      C/COPY WNCPYSRC,LEH00380
-      *                                                                                       CLE138
-     C           CLE138    IFEQ 'Y'                                                           CLE138
-     C                     MOVE FECLAS    CLAS                                                CLE138
-     C                     ENDIF                                                              CLE138
      C                     Z-ADD*ZEROS    PTYP                            CLE009
      C                     MOVE FABRCA    BRCA                            CLE009
      C                     MOVE FACNUM    CNUM                            CLE009
@@ -12006,7 +11932,6 @@
       *                                                                                       CLE031
      C                     Z-ADDSALAMT    LKOTHA                                            MD056223
      C                     MOVELWRKSCY    LKOTHC                                            MD056223
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                              CLE031
      C                     WRITELKEYFEDF                                                      CLE031
      C                     EXSR PRTEVT                                                        CLE031
@@ -12042,7 +11967,6 @@
       *                                                                                       CLE031
       ** Write to account keys file                                                           CLE031
       *                                                                                       CLE031
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                              CLE031
      C                     Z-ADDPURAMT    LKOTHA                                            MD056223
      C                     MOVELWRKPCY    LKOTHC                                            MD056223
@@ -12061,7 +11985,6 @@
      C                     ENDIF                                                            MD051883
      C                     MOVE ' '       AKY,7                                             MD051883
      C                     MOVE 'J'       AKY,10                                            MD051883
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                            MD051883
      C                     Z-ADD0         LKOTHA                                            MD056223
      C                     MOVEL*BLANKS   LKOTHC                                            MD056223
@@ -12118,7 +12041,6 @@
       *                                                                                       CLE031
       ** Write to account keys file                                                           CLE031
       *                                                                                       CLE031
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                              CLE031
      C                     Z-ADDSALAMT    LKOTHA                                            MD056223
      C                     MOVELWRKSCY    LKOTHC                                            MD056223
@@ -12150,7 +12072,6 @@
       *                                                                                       CLE031
       ** Write to account keys file                                                           CLE031
       *                                                                                       CLE031
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                              CLE031
      C                     Z-ADDPURAMT    LKOTHA                                            MD056223
      C                     MOVELWRKPCY    LKOTHC                                            MD056223
@@ -13514,7 +13435,6 @@
       *                                                                                     AR745249
      C                     MOVEAFECLAS    AKY,11                                            AR745249
       *                                                                                       CLE073
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                              CLE073
      C                     MOVE FECNUM    LKCNUM                                              CLE073
      C                     MOVE FEFCCY    LKECCY                                              CLE073
@@ -13903,7 +13823,6 @@
      C           WRKPRC    IFEQ 'Y'                                                         MD051883
      C           AKY,3     ANDEQ'R'                                                         MD051883
      C                     MOVE 'V'       AKY,10                                            MD051883
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                            MD051883
      C                     ENDIF                                                            MD051883
      C                     WRITELKEYFEDF                                                    AR217562
@@ -13912,7 +13831,6 @@
      C           WRKPRC    IFEQ 'Y'                                                         MD051883
      C           AKY,3     ANDEQ'R'                                                         MD051883
      C                     MOVE 'V'       AKY,10                                            MD051883
-     C                     EXSR SRSETC                                                        CLE138
      C                     MOVEAAKY       LKAKEY                                            MD051883
      C                     ENDIF                                                            MD051883
      C                     WRITELKEYFEDF                                                      CLE073
@@ -14481,30 +14399,6 @@
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
      C                     ENDSR                                                              CLE073
-      ********************************************************************                    CLE138
-      *                                                                                       CLE138
-      * SRSETC - SET FEE CLASS                                                                CLE138
-      *                                                                                       CLE138
-      *  CALLED FROM: VARIOUS                                                                 CLE138
-      *                                                                                       CLE138
-      *  CALLS: NONE                                                                          CLE138
-      *                                                                                       CLE138
-      ********************************************************************                    CLE138
-      *                                                                                       CLE138
-     C           SRSETC    BEGSR                                                              CLE138
-     C                     MOVEL*BLANKS   WKCLAS                                              CLE138
-     C           CLE138    IFEQ 'Y'                                                           CLE138
-     C           FELOAN    ANDEQ*BLANKS                                                     MD060225
-     C                     MOVE FHFCLS    FECLAS                                            MD060225
-     C                     MOVEAFECLAS    AKY,11                                              CLE138
-     C                     ENDIF                                                              CLE138
-     C           FELOAN    IFNE *BLANKS                                                       CLE138
-     C           CLE042    ANDEQ'Y'                                                           CLE138
-     C           CLE138    OREQ 'Y'                                                           CLE138
-     C           FELOAN    ANDEQ*BLANKS                                                       CLE138
-     C                     MOVE FECLAS    WKCLAS                                              CLE138
-     C                     ENDIF                                                              CLE138
-     C                     ENDSR                                                              CLE138
       *                                                                                       CLE073
       *****************************************************************                       CLE073
       /EJECT                                                                                  CLE073
@@ -15283,7 +15177,6 @@ ROROLLOVER - FCLTY EXCH RATE                                                    
 CHCHARGES ADDED-ON                                                                            CLE028
 IAINTEREST ADDED-ON                                                                           CLE028
 RDRATE CHANGE                                                                                 258414
-CCFACILITY CLASS CHANGE                                                              CLE138 MD060223
      X/COPY WNCPYSRC,LEH00381
 **  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
 0000001

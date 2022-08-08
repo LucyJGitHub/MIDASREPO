@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2021')
+     H COPYRIGHT('(c) Finastra International Limited 2022')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Facility Type Class Enquiry')                 *

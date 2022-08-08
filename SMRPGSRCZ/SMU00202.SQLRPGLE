@@ -2,12 +2,12 @@
      H COPYRIGHT('(c) Finastra International Limited 2022')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas CAR Migration Proggram for (CLE138)')            *
+/*EXI *  TEXT('Midas SM Update SDFACTPD')                             *
       *****************************************************************
       *                                                               *
       *  Midas - Midas CAR Migration Program                          *
       *                                                               *
-      *  SMU00202 - Midas Process CAR Migration Program               *
+      *  SMU00202 - Midas SM Update SDFACTPD Program                  *
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *

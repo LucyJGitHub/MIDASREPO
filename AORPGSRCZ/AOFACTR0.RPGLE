@@ -217,15 +217,14 @@
      C     P@RTC2        COMP      *BLANK                             97          No selection
      C     *IN97         CABEQ     '1'           T@SKIP                           No selection
      C     *IN98         CABEQ     '1'           T@SKIP                           Program error
-     C                   END
-     C     P@FCTY        CHAIN     @AMRECU                            9590                  MD060092
-     C*****P@OPTN        IFEQ      '*KEY   '                                         CLE138 MD060092
-     C*****P@FCTY        CHAIN     @AMRECU                            9590           CLE138 MD060092
-     C*****P@KEY         CHAIN     @AMRECU                            9590           CLE138 MD060092
-     C**********         ELSE                                                        CLE138 MD060092
-     C*****P@FCTY        SETLL     @AMRECU                              90           CLE138 MD060092
-     C*****P@FCTY        READE     @AMRECU                              9095         CLE138 MD060092
-     C**********         ENDIF                                                       CLE138 MD060092
+     C                   END                                                    FI 8
+     C     P@OPTN        IFEQ      '*KEY   '                                                  CLE138
+     C*****P@FCTY        CHAIN     @AMRECU                            9590        Get record  CLE138
+     C     P@KEY         CHAIN     @AMRECU                            9590                    CLE138
+     C                   ELSE                                                                 CLE138
+     C     P@FCTY        SETLL     @AMRECU                              90                    CLE138
+     C     P@FCTY        READE     @AMRECU                              9095                  CLE138
+     C                   ENDIF                                                                CLE138
      C     *IN95         CABEQ     '1'           T@SKIP                           No rec found
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   END                                                    FI 7

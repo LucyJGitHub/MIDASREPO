@@ -308,7 +308,7 @@
      FLEFEDNL0  UF A E           K DISK    COMMIT                                           MD030700
                                                                                             MD030700
      F/COPY WNCPYSRC,LEH00155
-     F***LEFCLTLH  IF   E           K DISK                                           CLE138 MD060092
+     FLEFCLTLH  IF   E           K DISK                                                       CLE138
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -1113,17 +1113,17 @@
      C                   MOVE      *BLANKS       FESUTP
      C                   MOVE      *BLANKS       FECLAS                                       CLE042
      C/COPY WNCPYSRC,LEH00156
-      ****************************************************************               CLE138 MD060092
-     C*****CLE138        IFEQ      'Y'                                               CLE138 MD060092
-     C**********         MOVE      WCNUM         @WCNUM                              CLE138 MD060092
-     C**********         MOVE      WFAC03        @WFAC03                             CLE138 MD060092
-     C**********         MOVE      WFAC02        @WFAC02                             CLE138 MD060092
-     C*****KFCLTLH       CHAIN     LEFCLTLH                           85             CLE138 MD060092
-     C******IN85         IFEQ      *OFF                                              CLE138 MD060092
-     C**********         MOVE      FCXCLS        FECLAS                              CLE138 MD060092
-     C**********         ENDIF                                                       CLE138 MD060092
-     C**********         ENDIF                                                       CLE138 MD060092
-      ****************************************************************               CLE138 MD060092
+      *                                                                                       CLE138
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C                   MOVE      WCNUM         @WCNUM                                       CLE138
+     C                   MOVE      WFAC03        @WFAC03                                      CLE138
+     C                   MOVE      WFAC02        @WFAC02                                      CLE138
+     C     KFCLTLH       CHAIN     LEFCLTLH                           85                      CLE138
+     C     *IN85         IFEQ      *OFF                                                       CLE138
+     C                   MOVE      FCXCLS        FECLAS                                       CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
      C                   ELSE
      C                   MOVE      VFLTYP        FELTYP
      C                   MOVE      VFSUTP        FESUTP
@@ -1585,18 +1585,18 @@
      C                   EVAL      FEAUTH = VFAUTH                                            CAP086
      C                   ENDIF                                                                CAP086
      C/COPY WNCPYSRC,LEH00157
-      ****************************************************************               CLE138 MD060092
-     C*****CLE138        IFEQ      'Y'                                               CLE138 MD060092
-     C*****FELOAN        ANDEQ     *BLANKS                                           CLE138 MD060092
-     C**********         MOVE      WCNUM         @WCNUM                              CLE138 MD060092
-     C**********         MOVE      WFAC03        @WFAC03                             CLE138 MD060092
-     C**********         MOVE      WFAC02        @WFAC02                             CLE138 MD060092
-     C*****KFCLTLH       CHAIN     LEFCLTLH                           85             CLE138 MD060092
-     C******IN85         IFEQ      *OFF                                              CLE138 MD060092
-     C**********         MOVE      FCXCLS        FECLAS                              CLE138 MD060092
-     C**********         ENDIF                                                       CLE138 MD060092
-     C**********         ENDIF                                                       CLE138 MD060092
-      ****************************************************************               CLE138 MD060092
+      *                                                                                       CLE138
+     C     CLE138        IFEQ      'Y'                                                        CLE138
+     C     FELOAN        ANDEQ     *BLANKS                                                    CLE138
+     C                   MOVE      WCNUM         @WCNUM                                       CLE138
+     C                   MOVE      WFAC03        @WFAC03                                      CLE138
+     C                   MOVE      WFAC02        @WFAC02                                      CLE138
+     C     KFCLTLH       CHAIN     LEFCLTLH                           85                      CLE138
+     C     *IN85         IFEQ      *OFF                                                       CLE138
+     C                   MOVE      FCXCLS        FECLAS                                       CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
      C                   IF        CLE134      = 'Y'           AND                            CLE134
      C                             FEXRFI      = *BLANKS       AND                            CLE134
      C                             FEXRFN      = 0                                            CLE134
@@ -3758,24 +3758,24 @@
      C                   ENDIF                                                              AR943686
      C                   ENDIF                                                              AR943686
      C/COPY WNCPYSRC,LEH00158
-      ****************************************************************               CLE138 MD060092
-     C**********         CALL      'AOSARDR0'                                        CLE138 MD060092
-     C**********         PARM      *BLANKS       PRtCd                               CLE138 MD060092
-     C**********         PARM      '*VERIFY'     POptn                               CLE138 MD060092
-     C**********         PARM      'CLE138'      PSARD                               CLE138 MD060092
-     C*****SCSARD        PARM      SCSARD        DSFDY                               CLE138 MD060092
-      ****************************************************************               CLE138 MD060092
-     C**********         IF        PRtCd = *BLANKS                                   CLE138 MD060092
-     C**********         EVAL      CLE138 = 'Y'                                      CLE138 MD060092
-     C**********         ELSE                                                        CLE138 MD060092
-     C**********         MOVE      'N'           CLE138            1                 CLE138 MD060092
-     C**********         ENDIF                                                       CLE138 MD060092
-      ****************************************************************               CLE138 MD060092
-     C*****KFCLTLH       KLIST                                                       CLE138 MD060092
-     C**********         KFLD                    @WCNUM            6                 CLE138 MD060092
-     C**********         KFLD                    @WFAC03           3                 CLE138 MD060092
-     C**********         KFLD                    @WFAC02           2                 CLE138 MD060092
-      ****************************************************************               CLE138 MD060092
+      *                                                                                       CLE138
+     C                   CALL      'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       PRtCd                                        CLE138
+     C                   PARM      '*VERIFY'     POptn                                        CLE138
+     C                   PARM      'CLE138'      PSARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+                                                                                              CLE138
+     C                   IF        PRtCd = *BLANKS                                            CLE138
+     C                   EVAL      CLE138 = 'Y'                                               CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      'N'           CLE138            1                          CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
+     C     KFCLTLH       KLIST                                                                CLE138
+     C                   KFLD                    @WCNUM            6                          CLE138
+     C                   KFLD                    @WFAC03           3                          CLE138
+     C                   KFLD                    @WFAC02           2                          CLE138
+      *                                                                                       CLE138
       *
      C                   MOVEL     *BLANKS       @RTCD
      C                   MOVEL     '*FIRST '     @OPTN

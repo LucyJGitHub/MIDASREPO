@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. 246192             Date 13May22               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 246192             Date 13May22               *
       *                 AR574541           Date 25Apr22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -169,6 +170,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance. Apply CLE138        *
+      *             design of SDFACTX0 to store facility classes.     *
       *  CLE138 - Class Codes for Facilities                          *
       *  246192 - Insert validation for auto-generated loan.          *
       *           if PCRF string (pos 12-15) contains '0001'          *
@@ -603,8 +607,8 @@
       ** API: Midas LE LOANS TRAILER (CLONE)                                                MD025467
       *                                                                                     MD025467
      FCLOANZI0  IF   E           K DISK                                                       CLE164
-      ** Midas LE Facilities Ext File by Facility                                             CLE138
-     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
+      ***Midas*LE*Facilities*Ext*File*by*Facility*********************               CLE138 MD060092
+     F***LEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                           CLE138 MD060092
      F/COPY WNCPYSRC,LECLIPPF01
       *****************************************************************
       ** +--------------------------------------+
@@ -9020,17 +9024,17 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CDE005
      C                   MOVE      'Y'           CDE005                                       CDE005
      C                   ENDIF                                                                CDE005
-      *                                                                                       CLE138
-      ***  Determine if CLE138 is installed                                                   CLE138
-      *                                                                                       CLE138
-     C                   MOVEL     'N'           CLE138            1                          CLE138
-     C                   CALLB     'AOSARDR0'                                                 CLE138
-     C                   PARM      *BLANKS       @RTCD                                        CLE138
-     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
-     C                   PARM      'CLE138'      @SARD                                        CLE138
-     C     @RTCD         IFEQ      *BLANKS                                                    CLE138
-     C                   MOVE      'Y'           CLE138                                       CLE138
-     C                   ENDIF                                                                CLE138
+      **********************************************************                     CLE138 MD060092
+      *****Determine*if*CLE138*is*installed***************************               CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
+     C**********         MOVEL     'N'           CLE138            1                 CLE138 MD060092
+     C**********         CALLB     'AOSARDR0'                                        CLE138 MD060092
+     C**********         PARM      *BLANKS       @RTCD                               CLE138 MD060092
+     C**********         PARM      '*VERIFY'     @OPTN                               CLE138 MD060092
+     C**********         PARM      'CLE138'      @SARD                               CLE138 MD060092
+     C*****@RTCD         IFEQ      *BLANKS                                           CLE138 MD060092
+     C**********         MOVE      'Y'           CLE138                              CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
       *
      C                   MOVE      'N'           CLE005            1
      C                   CALLB     'AOSARDR0'
@@ -10072,31 +10076,31 @@
                                                                                               CLE134
       ** Retrieve Record.                                                                     CLE134
                                                                                               CLE134
-      *                                                                                       CLE138
-      ** Access facility extension record to retrieve facility class                          CLE138
-      *                                                                                       CLE138
-     C     KFCLQ         KLIST                                                                CLE138
-     C                   KFLD                    @CUST                                        CLE138
-     C                   KFLD                    @FACT                                        CLE138
-     C                   KFLD                    @SEQN                                        CLE138
-     C                   EVAL      WCXCLS = *Blanks                                           CLE138
-     C                   IF        CLE138 = 'Y'                                               CLE138
-     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
-     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
-     C                   MOVEL     @RTCD         @@RTCD                                       CLE138
-     C                   EVAL      DBFILE      = 'SDFACTPD'                                   CLE138
-     C                   EVAL      DBKEY       = @FACT                                        CLE138
-     C                   EVAL      DBASE       = 207                                          CLE138
-     C                   EXSR      *PSSR                                                      CLE138
-     C                   ENDIF                                                                CLE138
-     C                   EVAL      WCXCLS = FCXCLS                                            CLE138
-     C                   ENDIF                                                                CLE138
-                                                                                              CLE138
+      ****************************************************************                        CLE138
+      ***Access*facility*extension*record*to*retrieve*facility*class**                        CLE138
+      ****************************************************************                        CLE138
+     C*****KFCLQ         KLIST                                                                CLE138
+     C**********         KFLD                    @CUST                                        CLE138
+     C**********         KFLD                    @FACT                                        CLE138
+     C**********         KFLD                    @SEQN                                        CLE138
+     C**********         EVAL      WCXCLS = *Blanks                                           CLE138
+     C**********         IF        CLE138 = 'Y'                                               CLE138
+     C*****KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
+     C**********         IF        NOT %FOUND(LEFCLTLH)                                       CLE138
+     C**********         MOVEL     @RTCD         @@RTCD                                       CLE138
+     C**********         EVAL      DBFILE      = 'SDFACTPD'                                   CLE138
+     C**********         EVAL      DBKEY       = @FACT                                        CLE138
+     C**********         EVAL      DBASE       = 207                                          CLE138
+     C**********         EXSR      *PSSR                                                      CLE138
+     C**********         ENDIF                                                                CLE138
+     C**********         EVAL      WCXCLS = FCXCLS                                            CLE138
+     C**********         ENDIF                                                                CLE138
+      ****************************************************************                        CLE138
      C                   CALLB     'AOFACTR0'                                                 CLE134
      C                   PARM      '*BLANKS'     @RTCD             7                          CLE134
      C                   PARM      '*KEY   '     @OPTN             7                          CLE134
      C                   PARM                    @FACT             3                          CLE134
-     C                   PARM                    WCXCLS            4                          CLE138
+     C**********         PARM                    WCXCLS            4                 CLE138 MD060092
      C     SDFACT        PARM      SDFACT        DSFDY                                        CLE134
                                                                                               CLE134
      C                   IF        @RTCD      <> *BLANKS                                      CLE134
@@ -10362,10 +10366,10 @@
                                                                                               CLE164
      C**********         EVAL      @FACT = %EDITC(FTYP:'3')                          CLE164 MD032052
      C                   MOVE      FTYP          @FACT                                      MD032052
-     C                   IF        CLE138 = 'Y'                                               CLE138
-     C                   MOVE      FCUS          @CUST             6                          CLE138
-     C                   MOVE      FSEQ          @SEQN             2                          CLE138
-     C                   ENDIF                                                                CLE138
+     C**********         IF        CLE138 = 'Y'                                      CLE138 MD060092
+     C**********         MOVE      FCUS          @CUST             6                 CLE138 MD060092
+     C**********         MOVE      FSEQ          @SEQN             2                 CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
      C                   EVAL      AMPGID = *BLANKS                                           CLE164
      C                   EXSR      XrFact                                                     CLE164
      C                   EVAL      wFTPDPGrpID = AMPGID                                       CLE164

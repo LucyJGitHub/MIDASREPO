@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -33,6 +34,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance.                     *
+      *           - Apply CLE138 original design of SDFACTX0 to store *
+      *             facility classes. (Recompile)                     *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *

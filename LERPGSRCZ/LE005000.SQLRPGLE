@@ -1042,7 +1042,9 @@
                      processRecord = *Off;
                   else;
                      processRecord = *On;
-                     facilityClass =   dsFACTPD.AMCLAS;
+                     exsr checkExist;
+                     //facilityClass =   dsFACTPD.AMCLAS;                                   MD060092
+                       facilityClass =   dsFACTX0.X_AMCLAS;
                   endif;
                   exec sql close P3;
                   SQLCOD = PrevSQLCod;

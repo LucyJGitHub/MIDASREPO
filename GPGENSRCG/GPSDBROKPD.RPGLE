@@ -43,7 +43,7 @@ O    D G_SDBROKPD    E DS                  EXTNAME(GZSDBROKPD) PREFIX(G_)
      D SDBROKX         DS                                                                   MD058085
      D  ABROK                  1      4                                                     MD058085
      D  ABRCY                  5      7                                                     MD058085
-     D  ALCD                   8     10P 0
+     D  ALCD                   8     10P 0                                                  MD058085
      D  ATYLC                 11     11                                                     MD058085
      D  ABKNM                 12     41                                                     MD058085
      D  ABRTN                 42     51                                                     MD058085

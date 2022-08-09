@@ -175,7 +175,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  263448 - When CSW025 is on, ISO message should be generated. *
+      *  263448 - When CSW025 is on, ISO message should be generated  *
       *  255465 - Reprint confirmations in Correspondence Manager     *
       *  255150 - Amendment confirmation for adding maturity date to  *
       *           a call deal was not produced from Correspondence    *

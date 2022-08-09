@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD056611           Date 20Sep20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR958473           Date 16Oct12              */
+/*       Prev Amend No. MD056611           Date 20Sep20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 02Jun08              */
@@ -20,6 +21,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR958473 - Incorrect values in GPAUCHPD, field AHUSER.      */
+/*                  Changed the OUTFILFMT parameter in DSPJRN to     */
+/*                  *TYPE3, to include timestamp of the transaction. */
+/*                  This will be used to check retrieve the correct  */
+/*                  user in GPAUUIL0. (Child: AR958477)              */
 /*       MD056611 - Deliverable Data Split for Audit Reporting       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
@@ -91,8 +97,11 @@
 
  MAIN:       CHGVAR     VAR(&DJ) VALUE(&DJ *BCAT ') JRNCDE(R)' *BCAT +
                           'ENTDTALEN(' *TCAT &LGTH *TCAT ') +
-                          OUTPUT(*OUTFILE)' *BCAT 'OUTFILE(' *TCAT +
-                          'QTEMP/GPAUJIPD) OUTMBR(*FIRST *REPLACE)')
+                          OUTPUT(*OUTFILE)' *BCAT 'OUTFILFMT(' *TCAT +
+                          '*TYPE3)' *BCAT 'OUTFILE(' *TCAT +
+                          'QTEMP/GPAUJIPD) OUTMBR(*FIRST *REPLACE)')                    /*AR958473*/
+/**********               OUTPUT(*OUTFILE)' *BCAT 'OUTFILE(' *TCAT + */                 /*AR958473*/
+/**********               'QTEMP/GPAUJIPD) OUTMBR(*FIRST *REPLACE)') */                 /*AR958473*/
 
 /* If no files to be analysed do no further processing */
 

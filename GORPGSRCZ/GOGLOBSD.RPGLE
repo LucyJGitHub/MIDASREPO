@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD056557           Date 31Aug20               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD056557           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 CER050             Date 16Jun19               *
@@ -88,6 +89,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD058085 - Deliverable Data Split for Standing Data          *
+      *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD056557 - Deliverable Data Split for Pulldown               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

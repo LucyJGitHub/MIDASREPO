@@ -14,18 +14,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CSD003             Date 01Jul99               *
+      *                 CSD003             Date 01Jul99               *
       *                 S01459             Date 01Jul99               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD003 - Synon Closedown Project (SD):                       *
       *           - Program removed from SD model.                    *

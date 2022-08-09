@@ -12,13 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUT017             Date 17Mar20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CUP044             Date 22May22               *
+      *  Prev Amend No. CUT017             Date 17Mar20               *
+      *                 MD046248           Date 27Oct17               *
       *                 BUG27790 *CREATE   Date 02Jul10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CUP044 - One Touch Bridge Automation Changes - Release/      *
+      *           Patch Upgrade                                       *
       *  CUT017 - Adaptive Database Upgrade                           *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27790 - New utility                                       *
@@ -26,6 +29,7 @@
       *****************************************************************
      FUT000022DFCF   E             WORKSTN
      F                                     SFILE(SUBFLREC:RRN)
+     F                                     USROPN                                             CUP044
      FUT000022F IF   E             DISK    USROPN
      FUTFLDDPD  UF A E           K DISK
      FUTFLDDL2  IF   E           K DISK    RENAME(UTFLDDD0:FLDDF)
@@ -88,6 +92,11 @@
      C                   PARM                    FDFILE
      C                   PARM                    MODE
       *
+      * Open DSPF is mode is not 'X'                                                         CUP044
+     C                   IF        MODE <> 'X'                                               CUP044
+     C                   OPEN      UT000022DF                                                CUP044
+     C                   ENDIF                                                               CUP044
+      *                                                                                      CUP044
      C     FLDDXP        CHAIN     FLDDF                              99
      C     *IN99         IFEQ      '1'
      C                   EXSR      DETMSK

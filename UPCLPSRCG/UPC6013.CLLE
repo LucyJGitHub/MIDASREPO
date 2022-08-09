@@ -1,0 +1,85 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTU INZ component')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC6013 - OTU INZ component                                 */
+/*                                                                   */
+/*       Function: This program performs the initialization of the   */
+/*                 upgrade by calling UPC0000376.                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP044   *CREATE   Date 22May22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP044 - One Touch Bridge Automation Changes - Release/     */
+/*                Patch Upgrade                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&GPRFX &LYRPFX &BRGBRGLIB &RETURN)
+
+             DCL        VAR(&GPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LYRPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPL) TYPE(*CHAR) LEN(50) VALUE('COMPLETE')
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(50) VALUE('FAIL')
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10) VALUE('UP_OTB_SVR')
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CMPN) TYPE(*DEC) LEN(2 0) VALUE(03)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC6013')
+
+/* Update monitor */
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG3' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Log */
+             CALL UP6002 (&LYRPFX &CMPN &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Check if layer is global or not and set *LIBL */
+             IF         COND(&GPRFX *EQ &LYRPFX) THEN(DO)
+/*           CALL       PGM(GPC000016) PARM(&LYRPFX) */
+             CALL       PGM(UPC0000376) PARM('*GLOBAL')
+             ENDDO
+             ELSE CMD(DO)
+             CALL       PGM(UPC0014) PARM(&LYRPFX)
+             CALL       PGM(UPC0000376) PARM('*ZONE')
+             ENDDO
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+
+/* Send back DTAQ COMPLETE message to server job */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &CMPL)
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+/* Send FAIL message to server */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &FAIL)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+ END:        ENDPGM

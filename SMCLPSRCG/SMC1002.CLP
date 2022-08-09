@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CUP044             Date 22May22              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR911540           Date 13Jan12              */
 /*                      CSC043             Date 18Jun10              */
 /*                      BUG27793           Date 04Jun10              */
@@ -26,6 +27,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CUP044 - One Touch Bridge Automation Changes - Release/     */
+/*                Patch Upgrade                                      */
+/*                Avoid command prompt                               */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR911540 - Make subsystem description name unique for       */
@@ -55,6 +59,9 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
+             DCL        VAR(&PGMED) TYPE(*CHAR) LEN(10) VALUE('SMC1002')                  /*CUP044*/
+             DCL        VAR(&KEYVR) TYPE(*CHAR) LEN(4)                                    /*CUP044*/
+             DCL        VAR(&SNDER) TYPE(*CHAR) LEN(80)                                   /*CUP044*/
 
 /**********  DCLF       FILE(UPGSVALJ0) */                                      /*CUP033* MD054605*/
              DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)                                   /*MD054605*/
@@ -175,9 +182,23 @@ VALIDATE:                                                                       
                              TIMESLICE(2000) PURGE(*YES) TEXT('Midas +
                              Interactive cls for implementation')
              ENDDO
+/* remove prompting when subsystem is created for One Touch Bridge */                     /*CUP044*/
+             SNDPGMMSG  MSG('CHECK') TOPGMQ(*PRV (&PGMED)) +
+                          MSGTYPE(*RQS) KEYVAR(&KEYVR)                                    /*CUP044*/
+             RCVMSG   PGMQ(*PRV &PGMED)  MSGKEY(&KEYVR)  SENDER(&SNDER)                   /*CUP044*/
+             IF         COND((%SST(&SNDER 56 10) *EQ 'UPC6000   ') +
+                          *OR (%SST(&SNDER 56 10) *EQ 'UPC7000   +
+                          ')) THEN(DO)                                                    /*CUP044*/
+             CHGCLS     CLS(&PTFUPG/SMCLSI) RUNPTY(20) +
+                          TIMESLICE(2000)                                                 /*CUP044*/
+             MONMSG     MSGID(CPF6801)                                                    /*CUP044*/
+             ENDDO                                                                        /*CUP044*/
+             ELSE       CMD(DO)                                                           /*CUP044*/
+                                                                                          /*CUP044*/
              CHGCLS     CLS(&PTFUPG/SMCLSI) ??RUNPTY(20) +
                           ??TIMESLICE(2000)
              MONMSG     MSGID(CPF6801)
+             ENDDO                                                                        /*CUP044*/
 
 /* Add job queue entry. */
 /**********  RMVJOBQE   SBSD(&PTFUPG/SETUP) JOBQ(SMJOBQ)                             */ /*AR911540*/

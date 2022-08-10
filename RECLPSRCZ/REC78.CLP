@@ -72,7 +72,7 @@
              GOTO       CMDLBL(END)                                                       /*CRE020*/
              ENDDO                                                                        /*CRE020*/
                                                                                           /*CRE020*/
-/*           IF         COND(&RTNCDE *EQ '       ') THEN(GOTO CMDLBL(END)) */    /*CRE020 MD043695*/
+/**********  IF         COND(&RTNCDE *EQ '       ') THEN(GOTO CMDLBL(END)) */    /*CRE020 MD043695*/
                                                                                           /*CRE020*/
              SNDPGMMSG MSG('REC78 - Retail Advices Print') TOMSGQ(MRUNQ)
 /**/

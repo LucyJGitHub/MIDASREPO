@@ -4,10 +4,13 @@
 /*                                                                   */
 /*       DRI006_002 - MIDAS GL Declare DRI006 Variables              */
 /*                                                                   */
-/*       Last Ament No. DRI006  *CREATE    DATE 01Jun21              */
+/*       Last Ament No. MD059701           DATE 03Jun23              */
+/*       Prev Ament No. DRI006  *CREATE    DATE 01Jun21              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059701 - Ensure ACCNTAB is deleted before copying so as to*/
+/*                  avoid any failure due to format differences.     */
 /*       DRI006 - ACCNTAB COB save at monthend                       */
 /*                                                                   */
 /*********************************************************************/
@@ -51,6 +54,8 @@
                                                                                       /*DRI006*/
                    IF         COND(&EOM *EQ 'Y' *AND &ERROR *EQ ' ') THEN(DO) /*DRI006*/
                                                                                       /*DRI006*/
+                      DLTF       FILE(&SVALLIB/ACCNTAB)                                /*MD059701*/
+                      MONMSG     MSGID(CPF2105)                                        /*MD059701*/
                       CPYF       FROMFILE(&DMLIB/ACCNTAB) TOFILE(&SVALLIB/ACCNTAB) +
                                    MBROPT(*REPLACE) CRTFILE(*YES) /*DRI006*/
                                                                                       /*DRI006*/

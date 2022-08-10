@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059753           Date 03Jun22               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059753 - COB Component GOC0100 00118 Failed in SIT SP2021.C*
+      *           - PGM is not recompiled.                            *
+      *             Applied for MD-60337 (Recompile)                  *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

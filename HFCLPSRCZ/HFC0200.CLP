@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 250676             Date 15Jul22              */
-/*       Prev Amend No. 253037             Date 01Jun20              */
+/*       Last Amend No. CGP018             Date 15Oct12              */
+/*       Prev Amend No. 250676             Date 15Jul22              */
+/*                      253037             Date 01Jun20              */
 /*                      249112             Date 01Jun20              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -36,6 +37,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CGP018 - Midas User Info                                    */
 /*       250676 - &LGTH is returned as blank from HF0201. Use *CALC. */
 /*       253037 - Suppress generation of program dump when NDSUJR    */
 /*                record is not found in SCJSEQPD.                   */
@@ -103,6 +105,11 @@
              DCL        VAR(&STRRCV) TYPE(*CHAR) LEN(10)                                  /*CSC020*/
              DCL        VAR(&STRSEQ) TYPE(*DEC) LEN(10 0)                                 /*CSC020*/
              DCL        VAR(&STRSEQA) TYPE(*CHAR) LEN(10)                                 /*CSC020*/
+             DCL        VAR(&RTNC) TYPE(*CHAR) LEN(7)                                     /*CGP018*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CGP018*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CGP018*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CGP018*/
+             DCL        VAR(&CGP018) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CGP018*/
              DCL        VAR(&TXT) TYPE(*CHAR) LEN(50)                                     /*249112*/
              DCL        VAR(&YRL) TYPE(*CHAR) LEN(5)                                      /*249112*/
              DCL        VAR(&RCOD) TYPE(*CHAR) LEN(1)                                     /*249112*/
@@ -116,6 +123,19 @@
                                                                      /*099185*/
 /* Change Date Format to be DDMMYY, which is the format used by HAF.  *099185*/
              CHGJOB     DATFMT(*DMY)                                 /*099185*/
+                                                                                          /*CGP018*/
+/* Check if CGP018 - Midas User Info is ON */                                             /*CGP018*/
+                                                                                          /*CGP018*/
+             CHGVAR     VAR(&RTNC) VALUE('       ')                                       /*CGP018*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CGP018*/
+             CHGVAR     VAR(&SAR) VALUE('CGP018')                                         /*CGP018*/
+             CALL       PGM(AOSARDR0) PARM(&RTNC &OPTN &SAR &SCSARD)                      /*CGP018*/
+                                                                                          /*CGP018*/
+             IF         COND(&RTNC *EQ '       ') THEN(DO)                                /*CGP018*/
+             CHGVAR     VAR(&CGP018) VALUE('Y')                                           /*CGP018*/
+             ENDDO                                                                        /*CGP018*/
+                                                                                          /*CGP018*/
+             CHGVAR     VAR(&RTNC) VALUE('       ')                                       /*CGP018*/
 /**/                                                                  /*088064*/
 /* RETRIEVE MAX LENGTH FOR DSPJRN */                                  /*088064*/
 /**/                                                                  /*088064*/
@@ -374,6 +394,11 @@ RETRY2:                                                      /*091505*/
              DLTF       FILE(&HFLIB/XX2)                              /*088064*/
              ENDDO                                                    /*088064*/
              ENDDO                                                    /*088064*/
+                                                                                          /*CGP018*/
+/* Update Midas User Info if CGP018 is ON */                                              /*CGP018*/
+             IF         ((&CGP018 *EQ 'Y')) THEN(DO)                                      /*CGP018*/
+             CALL       PGM(HFC0419) PARM('HFC0200')                                      /*CGP018*/
+             ENDDO                                                                        /*CGP018*/
 
 /* */
 /* Delete entries that are superfluous */

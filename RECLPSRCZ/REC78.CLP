@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD043695           Date 10Aug22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CRE020             Date 20Jan04              */
+/*                      CRE020             Date 20Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD043695 - Still run if CRE020 On to allow Rate advice.     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
 /*       115787 - Include Historic Deals.                            */
@@ -70,7 +72,7 @@
              GOTO       CMDLBL(END)                                                       /*CRE020*/
              ENDDO                                                                        /*CRE020*/
                                                                                           /*CRE020*/
-             IF         COND(&RTNCDE *EQ '       ') THEN(GOTO CMDLBL(END))                /*CRE020*/
+/*           IF         COND(&RTNCDE *EQ '       ') THEN(GOTO CMDLBL(END)) */    /*CRE020 MD043695*/
                                                                                           /*CRE020*/
              SNDPGMMSG MSG('REC78 - Retail Advices Print') TOMSGQ(MRUNQ)
 /**/

@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CGP018             Date 15Oct12              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG7286            Date 23May05              */
+/*                      BUG7286            Date 23May05              */
 /*                      CSC020             Date 31Mar04              */
 /*                      223027             DATE 13Nov03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CGP018 - Midas User Info                                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG7286 - Error in SCRTVJEVT command                        */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
@@ -40,13 +42,13 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCLF       FILE(HFFILEPD)
- 
+
              DCL        VAR(&JNSEQ) TYPE(*DEC) LEN(10 0) VALUE(1)
              DCL        VAR(&JNSEQX) TYPE(*CHAR) LEN(10)
 /**********  DCL        VAR(&FIRST) TYPE(*DEC) LEN(1 0) VALUE(0)      /*081777*/
@@ -65,13 +67,31 @@
 /************DCL********VAR(&FMT) TYPE(*CHAR) LEN(19)***************************************223027*/
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*223027*/
              DCL        VAR(&JRCV) TYPE(*CHAR) LEN(10)                                   /*BUG7286*/
- 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CGP018*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CGP018*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CGP018*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CGP018*/
+             DCL        VAR(&CGP018) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CGP018*/
+
 /* */
 /** GLOBAL MONITOR MESSAGE */
 /* */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
+                                                                                          /*CGP018*/
+/* Check if CGP018 - Midas User Info is ON */                                             /*CGP018*/
+                                                                                          /*CGP018*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CGP018*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CGP018*/
+             CHGVAR     VAR(&SAR) VALUE('CGP018')                                         /*CGP018*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CGP018*/
+                                                                                          /*CGP018*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CGP018*/
+             CHGVAR     VAR(&CGP018) VALUE('Y')                                           /*CGP018*/
+             ENDDO                                                                        /*CGP018*/
+                                                                                          /*CGP018*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CGP018*/
 /*                                                                                          CSC020*/
 /*  Determine journal sequence number of next day set up.                                   CSC020*/
 /*  (Equivalent to beginning of ICRCV001 in previous releases)                              CSC020*/
@@ -91,8 +111,8 @@
 /* */
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LID)
              CHGVAR     VAR(&HFLIB) VALUE(&LID *CAT 'HFLIB')
- 
- 
+
+
 /* */
 /* Allocate the data area HFLOCK. If this is locked program is */
 /* already active and therefore this program should terminate */
@@ -100,7 +120,7 @@
 /*********** ALCOBJ     OBJ((HFLOCK *DTAARA *EXCL)) */                /*085993*/
              ALCOBJ     OBJ((HFLOCK *DTAARA *EXCL)) WAIT(0)           /*085993*/
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))
- 
+
 /* Get wait time from HAF ICD */                                      /*081777*/
                                                                       /*081777*/
              CHGVAR     VAR(&OPTN) VALUE('*FIRST')                    /*081777*/
@@ -111,8 +131,8 @@
              CHGVAR     VAR(&WAITN) VALUE(&WAIT)                      /*081777*/
              MONMSG     MSGID(CPF0000)                                /*081777*/
              ENDDO                                                    /*081777*/
- 
- 
+
+
 /* */
 /* Delete and recreate the data area JTNBAT in QTEMP which will */
 /* contain the last used journal sequence number */
@@ -125,8 +145,8 @@
              CRTDTAARA  DTAARA(QTEMP/JRNBAT) TYPE(*CHAR) LEN(10) +
                           VALUE(&JNSEQX) TEXT('Last used +
                           journal sequence number')                                       /*CSC020*/
- 
- 
+
+
 /* */
 /* Delete and recreate the data area JTNBATO in QTEMP which will */
 /* contain the journal sequence number of the last time the */
@@ -140,8 +160,8 @@
              CRTDTAARA  DTAARA(QTEMP/JRNBATO) TYPE(*CHAR) LEN(10) +
                           VALUE(&JNSEQX) TEXT('Penultimate jrn +
                           seq number')                                                    /*CSC020*/
- 
- 
+
+
 /* */
 /* Delete and recreate the data area JTNMOD in QTEMP which will */
 /* contain the run mode */
@@ -150,8 +170,8 @@
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/JRNMOD) TYPE(*CHAR) LEN(6) +
                           VALUE('IPCBAT') TEXT('Mode of run')
- 
- 
+
+
 /* */
 /* Delete and recreate the data area JRN2 in QTEMP which will */
 /* be used by other programs */
@@ -159,57 +179,57 @@
              DLTDTAARA  DTAARA(QTEMP/JRN2)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/JRN2) TYPE(*CHAR) LEN(256)
- 
+
 /* */
 /* Read all records on file */
 /* */
  LOOP:       RCVF
- 
+
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(SUITE))
- 
+
 /* */
 /* Only process selected files */
 /* */
 /************IF         COND(&HEADER *NE '0') THEN(GOTO CMDLBL(LOOP))   099430*/
- 
+
 /*  Ignore deleted items. If an item is deleted, &HFJOB will            099430*/
 /*   contain the name of the job which deleted it.                      099430*/
              IF         COND(&HEADER *NE '0' *OR &HFJOB *NE ' ') +
                           THEN(GOTO CMDLBL(LOOP))                     /*099430*/
- 
+
 /* */
 /* Clear members JRNBATCH in files */
 /* */
              RMVM       FILE(&HFLIB/&FFILE) MBR(JRNBATCH)
              MONMSG     MSGID(CPF0000)
              ADDPFM     FILE(&HFLIB/&FFILE) MBR(JRNBATCH)
- 
+
 /* */
 /* Read next record */
 /* */
              GOTO       CMDLBL(LOOP)
- 
+
 SUITE:
- 
- 
+
+
 /* */
 /* If dataarea HFCOB contains STOP then this program should end */
 /* */
              RTVDTAARA  DTAARA(HFCOB (1 4)) RTNVAR(&STOPREQ)
              IF         COND(&STOPREQ *EQ 'STOP') THEN(GOTO +
                           CMDLBL(END))
- 
- 
+
+
 /* */
 /* Update the contents of JRNBATO with the contents of JRNBAT */
 /* */
              RTVDTAARA  DTAARA(JRNBAT (1 10)) RTNVAR(&JNSEQX)
              CHGDTAARA  DTAARA(JRNBATO (1 10)) VALUE(&JNSEQX)
- 
- 
+
+
 /**********  IF         COND(&FIRST *EQ 0) THEN(DO) **/               /*081777*/
              IF         COND(&FIRST *EQ 'N') THEN(DO)                 /*081777*/
- 
+
 /* */
 /* First time through */
                                                                       /*081777*/
@@ -218,9 +238,9 @@ SUITE:
              CHGVAR     VAR(&FIRST) VALUE('Y')                        /*081777*/
                                                                       /*081777*/
 /* Call HFC0410 to build command string */
- 
+
              CALL       PGM(HFC0410) PARM(&X &Y &JNSEQ &XOLD &CHGOLD)
- 
+
 /* */
 /* Call QCMDEXEC to execute the string */
 /* */
@@ -228,39 +248,39 @@ SUITE:
 /**********  MONMSG   MSGID(CPF7062 CPF7054) EXEC(GOTO CMDLBL(SUITE)) /*081777*/
              MONMSG     MSGID(CPF7062 CPF7054) EXEC(GOTO +
                           CMDLBL(DELAY))                              /*081777*/
- 
+
                                                                       /*081777*/
 /***/                                                                 /*081777*/
 /**Set*variable*to*show*that*first*pass*has*executed**/               /*081777*/
 /***/                                                                 /*081777*/
 /**********  CHGVAR     VAR(&FIRST) VALUE(1) **/                      /*081777*/
- 
+
 /* */
 /* Goto end of section */
 /* */
              GOTO       CMDLBL(OK)
- 
+
              ENDDO
- 
+
 /* */
 /* Get sequence number from JRNBAT */
 /* */
              RTVDTAARA  DTAARA(JRNBAT (1 10)) RTNVAR(&JNSEQX)
              CHGVAR     VAR(&JNSEQ) VALUE(&JNSEQX)
              CHGVAR     VAR(&JNSEQ) VALUE(&JNSEQ + 1)
- 
+
 /* */
 /* Call HFC0410 to build command string */
 /* */
              CALL       PGM(HFC0410) PARM(&X &Y &JNSEQ &XOLD &CHGOLD)
- 
+
 /* */
 /* Call QCMDEXEC to execute the string */
 /* */
              CALL       PGM(QCMDEXC) PARM(&Y 5000)
- 
+
              MONMSG     MSGID(CPF7062 CPF7054) EXEC(DO)
- 
+
 /* */
 /* Wait if there are no more entries */
 /* */
@@ -276,37 +296,44 @@ SUITE:
  DELAY:                                                               /*081777*/
                                                                       /*081777*/
              DLYJOB     DLY(&WAIT)
- 
+
 /* */
 /* If HFWAIT is not initailised correctly then set default of 30 secs */
 /* */
              MONMSG     MSGID(CPF0000) EXEC(DLYJOB DLY(30))
- 
+
 /* */
 /* Start all over again */
 /* */
              GOTO       CMDLBL(SUITE)
- 
+
              ENDDO
- 
+
+OK:                                                                                       /*CGP018*/
+/* Update Midas User Info if CGP018 is ON */                                              /*CGP018*/
+/*                                                                                         *CGP018*/
+             IF         ((&CGP018 *EQ 'Y')) THEN(DO)                                      /*CGP018*/
+             CALL       PGM(HFC0419) PARM('HFC0400')                                      /*CGP018*/
+             ENDDO                                                                        /*CGP018*/
 /* */
 /* Send extracted records to the correct place */
 /* */
-OK:          CALL       PGM(HFC0420)
- 
+/*OK:******    CALL       PGM(HFC0420) */                                                 /*CGP018*/
+             CALL       PGM(HFC0420)                                                      /*CGP018*/
+
 /* */
 /* Start all over again */
 /* */
              GOTO       CMDLBL(SUITE)
- 
+
 /* */
 /** ABNORMAL ERROR PROCESSING                                      */
 /* */
  ABNOR:      SNDPGMMSG  MSG('PROGRAM HFC0400 ENDED ABNORMALLY') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

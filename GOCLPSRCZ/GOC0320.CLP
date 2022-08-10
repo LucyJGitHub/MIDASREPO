@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB023B            Date 06Aug12              */
+/*       Last Amend No. AR958473           Date 16Oct12              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB023B            Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 02Jun08              */
@@ -20,6 +21,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR958473 - Incorrect values in GPAUCHPD, field AHUSER.      */
+/*                  Recompile due to changes in GPAUUIPD.            */
+/*                  (Child: AR958477)                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB023B - COB Restructure - Input Cycle Termination         */
 /*                 Restructuring                                     */

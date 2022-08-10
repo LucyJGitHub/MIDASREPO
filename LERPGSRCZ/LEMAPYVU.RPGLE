@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. AR669649           Date 18Jun15               *      
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055652           Date 13Jul20               *
       *                 CER050             Date 16Jun19               *
@@ -102,6 +103,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR669649 - Missing settlement details for part sold loan.    *
+      *             Initialise ##PPAY during settlement validation.   *
+      *             Pattern after fix AR582890. (Child: AR669650)     *
+      *           - Applied for MD030394                              *      
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1814,6 +1819,24 @@
       *****************************************************************
 
      C     ValidateSt    BEGSR
+      *                                                                                     AR669649
+      ** Detemine type of Loan.                                                             AR669649
+      *                                                                                     AR669649
+     C                   MOVE      *BLANKS       PTYPE             4                        AR669649
+     C     WRKLNPTYP     IFEQ      66                                                       AR669649
+     C     WRKLNPTYP     OREQ      67                                                       AR669649
+     C     WRKLNPTYP     OREQ      69                                                       AR669649
+     C     WRKLNPTYP     OREQ      72                                                       AR669649
+     C                   MOVE      'PTSO'        PTYPE                                      AR669649
+     C                   ENDIF                                                              AR669649
+      *                                                                                     AR669649
+     C     DDACTN        IFEQ      'X'                                                      AR669649
+     C                   IF        PTYPE = 'PTSO'                                           AR669649
+     C                   MOVEL     'Y'           ##PPAY                                     AR669649
+     C                   ELSE                                                               AR669649
+     C                   MOVEL     'Y'           ##PREC                                     AR669649
+     C                   ENDIF                                                              AR669649
+     C                   ENDIF                                                              AR669649
 
       ** Set up date of receipt, and date of payment
      C                   EVAL      ##DATR = *ZEROS

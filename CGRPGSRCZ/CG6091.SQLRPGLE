@@ -15,12 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059564           Date 14Feb22               *
-      *  Prev Amend No. MD059552           Date 08Feb22               *
+      *  Last Amend No. MD059601           Date 18Feb22               *
+      *  Prev Amend No. MD059564           Date 14Feb22               *
+      *                 MD059552           Date 08Feb22               *
       *                 MD059320 *CREATE   Date 06Dec21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059601 - Adding extract for repayment amount               *
+      *             And adding principal for each repeating data      *
       *  MD059564 - Adding extract for Next Repay Date and Loan       *
       *             Narrative fields                                  *
       *             And correct error with AllInRate                  *
@@ -235,6 +238,8 @@
      D W#PS14          C                   CONST('GUAR ISSUE')
 
      D XINTA           S             13  0
+     D XPRAM           S             13  0                                                  MD059601
+     D XCPAM           S             13  0                                                  MD059601
      D XCINPDT         S              5  0
      D XALLINR         S             17p12                                                  MD059552
 
@@ -1225,6 +1230,7 @@
       **  Interest Amount
       **  If loan is matured get INTA from MA record
      C                   eval      XINTA = 0
+     C                   eval      XPRAM = 0
      C                   if        ##RECI = 'M'
      C/EXEC SQL
      C+ SELECT INTA into :XINTA
@@ -1240,6 +1246,12 @@
      C+ from HISTSHP
      C+ where AMTP = 'IN' and LNRF = :XXLNRF and VDAT = :BJRDNB
      C/END-EXEC
+      **  extract repayment (if any)                                                        MD059601
+     C/EXEC SQL                                                                             MD059601
+     C+ SELECT PRAM into :XPRAM                                                             MD059601
+     C+ from HISTSHP                                                                        MD059601
+     C+ where AMTP = 'RE' and LNRF = :XXLNRF and VDAT = :BJRDNB                             MD059601
+     C/END-EXEC                                                                             MD059601
      C                   else
      C/EXEC SQL
      C+ SELECT INTA into :XINTA
@@ -1265,6 +1277,22 @@
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
 
+     C                   ADD       1             R1                                         MD059601
+     C                   CLEAR                   R#DATA                                     MD059601
+     C                   CLEAR                   R#DEFN                                     MD059601
+     C                   CLEAR                   #@RDE                                      MD059601
+     C                   MOVEL     'REPAY AM'    #@RDE                                      MD059601
+     C                   MOVE      'NT'          #@RDE                                      MD059601
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059601
+     C                   MOVEL     XPRAM         ##DATA                                     MD059601
+     C                   MOVEL     'Amount'      ##RDEC                                     MD059601
+     C                   MOVEL     'L'           ##RDET                                     MD059601
+     C                   MOVEL     ##CCY1        ##CCY                                      MD059601
+     C                   EXSR      SRDCDT                                                   MD059601
+     C                   MOVEL     A6NBDP        ##DCPA                                     MD059601
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059601
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059601
+                                                                                            MD059601
      C**  Accumulate RDEs and associated data and output to PF/CGUDTPD.
 
      C                   EXSR      SRADTA
@@ -1689,6 +1717,31 @@
      C                   MOVEL     R#DATA        ##D(R1)                                    MD059552
      C                   MOVEL     R#DEFN        ##R(R1)                                    MD059552
                                                                                             MD059552
+      ** Extract principal from HISTSHQ 'BR' record using Interest Period Date              MD059601
+     C                   eval      XCPAM = 0                                                MD059601
+     C/EXEC SQL                                                                             MD059601
+     C+ SELECT CPAM into :XCPAM                                                             MD059601
+     C+ from HISTSHQ                                                                        MD059601
+     C+ where AMTP = 'BR' and LNRF = :XXLNRF and VDAT = :Dintd                              MD059601
+     C/END-EXEC                                                                             MD059601
+                                                                                            MD059601
+     C                   ADD       1             R1                                         MD059601
+     C                   CLEAR                   R#DATA                                     MD059601
+     C                   CLEAR                   R#DEFN                                     MD059601
+     C                   CLEAR                   #@RDE                                      MD059601
+     C                   MOVEL     'PRINCIPA'    #@RDE                                      MD059601
+     C                   MOVE      'L '          #@RDE                                      MD059601
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059601
+     C                   MOVEL     XCPAM         ##DATA                                     MD059601
+     C                   MOVEL     'Amount'      ##RDEC                                     MD059601
+     C                   MOVEL     'L'           ##RDET                                     MD059601
+     C                   MOVEL     ##CCY1        ##CCY                                      MD059601
+     C                   EXSR      SRDCDT                                                   MD059601
+     C                   MOVEL     A6NBDP        ##DCPA                                     MD059601
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059601
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059601
+                                                                                            MD059601
+                                                                                            MD059601
       **  Accumulate RDEs and associated data and output to PF/CGUDTPD.
 
      C                   EXSR      SRADTA

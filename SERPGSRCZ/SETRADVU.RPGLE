@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057753           Date 07Jul21               *
-      *  Prev Amend No. MD057789           Date 19May21               *
+      *  Last Amend No. MD054680           Date 16Nov21               *      
+      *  Prev Amend No. MD057753           Date 07Jul21               *
+      *                 MD057789           Date 19May21               *
       *                 258901             Date 22May20               *
       *                 247907             Date 22May20               *
       *                 247524             Date 22May20               *
@@ -130,6 +131,9 @@
       *                 CAP084  *CREATE    Date 14Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD054680 - Allow defaulting of settlement details even with  *
+      *             Clearance Type DDCLTY2 sent for Kondor            *
+      *           - Applied fix for MD059168                          *      
       *  MD057753 - Associated Front Office ID missing after amendment*
       *             of trade.                                         *
       *           - When Associated Front Office ID is not blanks     *
@@ -390,6 +394,9 @@
      D TranInExch    E DS                  EXTNAME(SETREXPD)
      D TranInSett    E DS                  EXTNAME(SETRSTPD)
      D DDCLTY2       E                     EXTFLD(DDCLTY)
+     D TranInSeWoCLT E DS                  EXTNAME(SETRSTPD)                                MD054680
+     D                                     PREFIX(W_)                                       MD054680
+     D DDCLTY3               537    537                                                     MD054680
      D TranInChCm    E DS                  EXTNAME(SETRCCPD)
      D  TranInChC2             1    216                                                     MD057789
      D TranInSwfA    E DS                  EXTNAME(SETRSWPD)
@@ -3907,6 +3914,8 @@
      C********           END                                                                BUG10021
 
       ** SETTLEMENT INSTRUCTION DEFAULTING
+     C                   MOVEL     TranInSett    TranInSeWoCLT                              MD054680
+     C                   MOVE      ' '           DDCLTY3           1                        MD054680
      C**********         IF        TranInSett = *BLANKS                            MD049746 MD056627
       *                                                                                     MD056627
       ** Exclude validation of Origin branch (DDORBR) and Profit centre                     MD056627
@@ -3960,6 +3969,8 @@
      C                             and DDPRYC = *blanks                                     MD056627
      C                             and DDPCOD = *blanks                                     MD056627
      C                             and DDAUTS = *blanks)                                    MD056627
+     C                             or (TranInSett <> *BLANKS                                MD054680
+     C                             And TranInSeWoCLT = *BLANKS)                             MD054680
 
      C     DDACTN        IFEQ      'I'
 

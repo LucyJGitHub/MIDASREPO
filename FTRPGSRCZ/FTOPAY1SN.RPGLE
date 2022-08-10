@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW122             Date 04Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR700716           Date 07Mar11               *      
+      *  Prev Amend No. CSW122             Date 04Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD054131           Date 13Sep19               *
@@ -175,6 +176,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR700716 - Missing GEMS 262792 after SWIFT 2010.             *
+      *             Redeliver FTOPAY1SN source. (Child : AR700717)    *
+      *  262792 - Handle Database error on FTMG routing.              *
+      *         - Default Book Code FT                                *      
       *  CSW122 - SWIFT ISO 20022                                     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -6570,6 +6575,12 @@
       ***Default*in*BOOK*CODE.                                                                195063
      C**********         MOVE      'FT'          OTBOKC                                       195063
      C**********         MOVE      'FT'          SBOKC                                        195063
+      *                                                                                       262792
+     C                   MOVE      'FT'          OTBOKC                                       262792
+     C                   MOVE      'FT'          SBOKC                                        262792
+     C                   MOVE      '08'          SSTTP                                        262792
+     C                   MOVE      'F1'          SPYST                                        262792
+      *                                                                                       262792     
       *  Default in PAY CURRENCY
      C     @CFT012       IFEQ      'N'                                          CFT012
      C                   MOVE      SSMCY         OTPCCY

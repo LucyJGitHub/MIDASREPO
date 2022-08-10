@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD059690           Date 14Mar22               *
-      *  Prev Amend No. MD059369           Date 24Dec21               *
+      *  Last Amend No. MD059624           Date 20Jul22               *
+      *  Prev Amend No. MD059690           Date 14Mar22               *
+      *                 MD059369           Date 24Dec21               *
       *                 MD059367           Date 24Dec21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057051           Date 28Oct20               *
@@ -172,6 +173,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059369 - LIBOR fields must be extracted for both sides     *
       *  MD059369 - CIR020 - LIBOR IRS - Correspondence Manager       *
       *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *
@@ -548,8 +550,10 @@
      D*##RDEA***       S             22    DIM(482) ALT(##GRP)                       CER050 MD059369
      D*##GRP****       S             10    DIM(492) CTDATA PERRCD(1)               MD059369 MD059690
      D*##RDEA***       S             22    DIM(492) ALT(##GRP)                     MD059369 MD059690
-     D ##GRP           S             10    DIM(512) CTDATA PERRCD(1)                        MD059690
-     D ##RDEA          S             22    DIM(512) ALT(##GRP)                              MD059690
+     D*** ##GRP           S             10    DIM(512) CTDATA PERRCD(1)            MD059690 MD059624
+     D*** ##RDEA          S             22    DIM(512) ALT(##GRP)                  MD059690 MD059624
+     D ##GRP           S             10    DIM(514) CTDATA PERRCD(1)                     MD059624
+     D ##RDEA          S             22    DIM(514) ALT(##GRP)                           MD059624
      D*                                                                                       S01408
      D/COPY WNCPYSRC,CG4010EEP1                                                               S01408
      D*                                                                                       S01408
@@ -8313,6 +8317,19 @@
      C     DTYP          OREQ      'TI'                                                     MD059367
      C     DTYP          OREQ      'IL'                                                     MD059367
      C     DTYP          OREQ      'ID'                                                     MD059367
+      ** Get rounding precision from SDLIBRTD                                               MD059624
+     C                   CALL      'ZAGETRDAPL'                                             MD059624
+     C                   PARM                    RFRR                                       MD059624
+     C                   PARM      'N'           isRndApplies      1                        MD059624
+     C                   IF        isRndApplies = 'Y'                                       MD059624
+     C                   MOVEL     'Y'           CCRRA             1                        MD059624
+     C                   MOVEL     RRDP          CCRRP             2 0                      MD059624
+     C                   Z-ADD     *ZEROS        CCRRD             2 0                      MD059624
+     C                   ELSE                                                               MD059624
+     C                   MOVEL     'N'           CCRRA                                      MD059624
+     C                   MOVEL     RRDP          CCRRD                                      MD059624
+     C                   Z-ADD     *ZEROS        CCRRP                                      MD059624
+     C                   ENDIF                                                              MD059624
       **  Benchmark Adjustment                                                              MD059367
      C                   MOVEL     BADJ          ##D(9)                                     MD059367
       *                                                                                     MD059367
@@ -8338,10 +8355,15 @@
      C                   MOVEL     RTKN          ##D(16)                                    MD059367
       *                                                                                     MD059367
       **  Rate rounding decimals                                                            MD059367
-     C                   MOVEL     RRDP          ##D(17)                                    MD059367
+     C**********         MOVEL     RRDP          ##D(17)                           MD059367 MD059624
+     C                   MOVEL     CCRRD         ##D(17)                                    MD059624
       *                                                                                     MD059367
       **  Calculation Method                                                                MD059367
      C                   MOVEL     CALM          ##D(18)                                    MD059367
+      ** ccr Rounding Applies                                                               MD059624
+     C                   MOVEL     CCRRA         ##D(19)                                    MD059624
+      ** ccr Rounding Precision                                                             MD059624
+     C                   MOVEL     CCRRP         ##D(20)                                    MD059624
       *                                                                                     MD059367
      C                   ENDIF                                                              MD059367
      C                   ENDIF                                                              MD059367
@@ -15794,6 +15816,8 @@ D_OTH10015 RSK FREERT                                                           
 D_OTH10016 RT KNW IND                                                                       MD059369
 D_OTH10017 RT RDNG DC                                                                       MD059369
 D_OTH10018 CALC METHD                                                                       MD059369
+D_OTH10019 CCR RD APL                                                                       MD059624
+D_OTH10020 CCR RD PRC                                                                       MD059624
 CGSTAX0001 SEC_TAXA   AmountL                                                                 CER048
 CGSTAX0002 SEC_TAXB                                                                           CER048
 CGSTAX0003 SEC_TXAC                                                                           CER048

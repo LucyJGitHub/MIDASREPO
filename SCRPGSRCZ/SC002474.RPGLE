@@ -17,7 +17,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *  MD046248 - Finastra Rebranding                               *
       *  242614 - Remove unneccesary DUMP so as not to cause SCC0405  *
       *           to fail during COB.                                 *
@@ -52,33 +54,33 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D SVALKK          C                   CONST('ReceiverRetainDays')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** External DS for Bank Details
@@ -185,7 +187,7 @@
      C                   PARM                    SVAL10          200
       *
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     SVAL10        IFEQ      '*NRF'
      C                   MOVE      SVALK0        DBKEY
      C                   ENDIF
@@ -216,7 +218,7 @@
      C     SVAL1         IFEQ      '*NRF'
      C                   MOVE      SVALK1        DBKEY
      C                   ENDIF
- 
+
      C     *LOCK         IN        LDA
      C                   MOVEL     '002'         DBASE
      C                   MOVE      'SDSVALPD'    DBFILE
@@ -382,6 +384,9 @@
       * Since the following code would be duplicated in the main
       * sub-routine, it is put in a separate one for clarity.
       *
+      * Save original value of ZDAYNO                                           249385
+     C                   Z-ADD     ZDAYNO        ZCZDAY            5 0          249385
+      *                                                                         249385
       * If no. of working days required is zero and input date is a
       * holiday, then change required no. of days to one.
       *
@@ -443,6 +448,9 @@
       *
      C                   end                                                    ENW 1
       *
+      * Restore original value of dayno                                         249385
+     C                   Z-ADD     ZCZDAY        ZDAYNO            5 0          249385
+      *                                                                         249385
      C                   endsr
       *****************************************************************
       /EJECT
@@ -567,17 +575,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WDUMP = *BLANKS
      C                   MOVE      'Y'           WDUMP             1
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   DUMP
- 
+
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
      C****************************************************************
 **  CPY@

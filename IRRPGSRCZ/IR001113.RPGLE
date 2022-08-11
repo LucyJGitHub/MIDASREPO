@@ -17,11 +17,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059362           Date 27Dec21               *
-      *  Prev Amend No. MD059253 *CREATE   Date 19Nov21               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD059362           Date 27Dec21               *
+      *                 MD059253 *CREATE   Date 19Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD059362 - Calculator incorrectly processed deals under      *
       *             monthly frequency due to THEIR next rate change   *
       *             date is incorrectly computed. Use correct field   *

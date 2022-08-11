@@ -628,7 +628,11 @@
       **  Update subfile record/fld display attributes
       *
      C                   EVAL      #1CLAS = CLSARR(C)                                       MD060330
+     C                   IF        #1CLAS <> ' '                                            MD060330
      C                   EVAL      #1CDSC = CDSARR(C)
+     C                   ELSE                                                               MD060330
+     C                   EVAL      #1CDSC = ' '                                             MD060330
+     C                   ENDIF                                                              MD060330
      C                   UPDATE    #SFLRCD
      C                   ENDIF
       *

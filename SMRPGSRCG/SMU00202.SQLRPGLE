@@ -49,8 +49,6 @@
       ** +--------------------------------------+
       ** +--------------------------------------+
       *
-      ** Core data structures
-     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA
 
       ** +--------------------------------------+
       ** ¦ Constants declaration                ¦
@@ -72,7 +70,6 @@
 
      D Count1          s              5  0 inz(*zeros)
      D Count2          s              5  0 inz(*zeros)
-     D Prefix          s              2a
      D workLib         s             10a
      D wSqlStr         s           2000a   inz(*blanks)
      D thisFile        s             20a
@@ -538,9 +535,6 @@
        //*************************************************************
 
        begsr *inzsr;
-
-                   in Sdstat;
-                   Prefix= LIBR;
 
        endsr;
 

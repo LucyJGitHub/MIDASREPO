@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD020957A          Date 10Aug22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 233690             Date 11Jul05              */
+/*                      233690             Date 11Jul05              */
 /*                      CRE020             Date 20Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CCG015             Date 09Aug01              */
@@ -24,6 +25,12 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD020957A - Interest Capitalisation Advice not being gene-  */
+/*                   rated. Int Cap is not included in CRE020 so ge- */
+/*                   nerate the advice regardless of CRE020. This is */
+/*                   not a reopen issue but a different error repor- */
+/*                   ted under the same case.                        */
+/*                 - Applied for MD-43695.                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       233690 - Add OVRDBF to avoid DBASE004 in CG3615.            */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
@@ -61,13 +68,13 @@
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CRE020*/
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CRE020*/
                                                                                           /*CRE020*/
- 
+
 /* */
 /* Global Monitor Message */
 /* */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
- 
+
                                                                                           /*CRE020*/
 /* Check if enhancement CRE020 in installed */                                            /*CRE020*/
                                                                                           /*CRE020*/
@@ -80,8 +87,8 @@
              GOTO       CMDLBL(ENDCLPGM)                                                  /*CRE020*/
              ENDDO                                                                        /*CRE020*/
                                                                                           /*CRE020*/
-             IF         COND(&RTN_CODE *EQ '       ') THEN(GOTO +
-                          CMDLBL(ENDCLPGM))                                               /*CRE020*/
+/**********  IF         COND(&RTN_CODE *EQ '       ') THEN(GOTO + */                   /*MD020957A*/
+/**********               CMDLBL(ENDCLPGM)) */                                  /*CRE020 MD020957A*/
                                                                                           /*CRE020*/
 /* */
 /* Send Message to MRUNQ and standard processing parameters */
@@ -89,15 +96,15 @@
              SNDPGMMSG  MSG('CGC2170 - End Of Day Retail Advices') +
                           TOMSGQ(MRUNQ)
              CHGJOB     SWS(XXXXX000)
- 
+
              CHGVAR     VAR(&RTN_CODE) VALUE(' ')
- 
+
 /* */
 /* Create data LDA in QTEMP  */
 /* */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
                         MONMSG     MSGID(CPF1023)
- 
+
                                                                                           /*CCG015*/
 /** Call Extract File Instance Management */                                              /*CCG015*/
              CHGVAR     VAR(&ACTION) VALUE('*PREPARE')                                    /*CCG015*/
@@ -114,7 +121,7 @@
              CALL       PGM(CG4800) PARM(&RTN_CODE &COMMIT_OPT)
              ROLLBACK
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /* */
 /* Check for Database errors trapped by program */
 /* */
@@ -144,7 +151,7 @@
              CLOF       OPNID(EXCGUDCRPD)                                                 /*233690*/
              DLTOVR     FILE(CGUDCRL0)                                                    /*233690*/
              GOTO       CMDLBL(ENDCLPGM)
- 
+
 /* */
 /* Report Database errors trapped by program */
 /* */
@@ -152,7 +159,7 @@
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
- 
+
 /**/
 /* Abnormal termination processing                       */
 /**/
@@ -172,7 +179,7 @@ ABNORMAL:
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           CGC2170 ended abnormally') MSGTYPE(*ESCAPE)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /**/
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055442           Date 01Jun20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 255619             Date 11Aug22               *
+      *  Prev Amend No. MD055442           Date 01Jun20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD027486           Date 23Jun15               *
       *                 CSD053A            Date 14Dec12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255619 - Applied fix 252870.                                 *
+      *  252870 - Zero-byte file transferred by CM.                   *
       *  MD055442 - Correspondence manager - pick up Czech CCSID 870. *
       *           - Replace & with &amp; instead of using CDATA.      *
       *             Also replace < with &lt; and > with &gt;          *
@@ -53,7 +56,8 @@
       * ¦ File declaration ¦
       * +------------------+
       *  XML Merged Data by Item Reference (Current)
-     FCGUXMLL0  IF   E           K DISK
+     F***CGUXMLL0  IF   E           K DISK                                                    252870
+     FCGUXMLL0  IF   E           K DISK    USROPN                                             252870
 
       *  XML Merged Data by Item Reference (Archive)
      FCGXXMLL0  IF   E           K DISK
@@ -271,17 +275,27 @@
       *  Write header only if details line exists
       *  This situation may happen if Correspondence Manager
       *  is installed with former UDC extract files (CGUDT*)
+      ** Wait for a while and check if the UXML records are available.                        252870
+      *                                                                                       252870
+     C                   DOU       *IN50 = *ON                                                252870
+      *                                                                                       252870
      C                   IF        #@ARCH = 'A'
-     C     B2ITEM        SETLL     CGXXMLL0
-     C                   IF        NOT %EQUAL
-     C                   LEAVESR
-     C                   ENDIF
+     C*****B2ITEM        SETLL     CGXXMLL0                                                   252870
+     C**********         IF        NOT %EQUAL                                                 252870
+     C**********         LEAVESR                                                              252870
+     C**********         ENDIF                                                                252870
+     C     B2ITEM        SETLL     CGXXMLL0                               50                  252870
      C                   ELSE
-     C     B2ITEM        SETLL     CGUXMLL0
-     C                   IF        NOT %EQUAL
-     C                   LEAVESR
+     C*****B2ITEM        SETLL     CGUXMLL0                                                   252870
+     C**********         IF        NOT %EQUAL                                                 252870
+     C**********         LEAVESR                                                              252870
+     C**********         ENDIF                                                                252870
+     C                   OPEN      CGUXMLL0                                                   252870
+     C     B2ITEM        SETLL     CGUXMLL0                               50                  252870
+     C                   CLOSE     CGUXMLL0                                                   252870
      C                   ENDIF
-     C                   ENDIF
+      *                                                                                       252870
+     C                   ENDDO                                                                252870
 
       *  Format Byte Order Mark (Unicode Big Endian = x'FEFF')                                CSD053
      C                   IF        AllowDBCS = 'Y'                                           CSD053A
@@ -450,6 +464,7 @@
      C     B2ITEM        SETLL     CGXXMLL0
      C     B2ITEM        READE     CGXXMLL0
      C                   ELSE
+     C                   OPEN      CGUXMLL0                                                   252870
      C     B2ITEM        SETLL     CGUXMLL0
      C     B2ITEM        READE     CGUXMLL0
      C                   ENDIF
@@ -534,6 +549,10 @@
      C                   ENDIF
 
      C                   ENDDO
+      *                                                                                       252870
+     C                   IF        #@ARCH <> 'A'                                              252870
+     C                   CLOSE     CGUXMLL0                                                   252870
+     C                   ENDIF                                                                252870
 
      C                   ENDSR
 

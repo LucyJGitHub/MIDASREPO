@@ -282,7 +282,8 @@
 
                    exec sql
                    execute immediate :wSqlStr;
-                   if sqlCod <> NO_ERROR;
+                   if sqlCod <> NO_ERROR
+                      and   sqlCod <> NO_RECORD;
                       dBase    = 003;
                       dBfile   = 'SDFACTPD';
                       dBkey    = *blanks;
@@ -511,7 +512,8 @@
 
                    exec sql
                    execute immediate :wSqlStr;
-                   if sqlCod <> NO_ERROR;
+                   if sqlCod <> NO_ERROR
+                      and   sqlCod <> NO_RECORD;
                       dBase    = 009;
                       dBfile   = 'SDFACTX0';
                       dBkey    = *blanks;

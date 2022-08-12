@@ -13,11 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD060246           Date 21Jul22               *
-      *  Prev Amend No. CSW122 *CREATE     Date 04Oct21               *
+      *  Last Amend No. MD060246A          Date 04Aug22               *
+      *  Prev Amend No. MD060246           Date 21Jul22               *
+      *                 CSW122 *CREATE     Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060246A- Increase field length value for MX Element Value  *
+      *             changed from 120A to 500A.                        *
       *  MD060246 - Increase field length value for MX Element Value  *
       *             changed from 120A to 500A. (Recompile)            *
       *  CSW122 - SWIFT ISO 20022                                     *
@@ -95,7 +98,8 @@
      D WElement        S            220A
      D WEqPos          S              3S 0
      D WEName          S            100A
-     D WEValue         S            120A
+     D*WEValue**       S            120A                                                   MD060246A
+     D WEValue         S            500A                                                   MD060246A
      D WrkLen          S              3S 0
       /EJECT
       *****************************************************************

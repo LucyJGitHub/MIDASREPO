@@ -96,7 +96,6 @@
      FMSIXISOL3 IF   E           K DISK    INFSR(*PSSR)                                     MD060250
      F                                     RENAME(MSIXISD0:MSIXISOCL3)                      MD060250
      F                                     PREFIX(C3)                                       MD060250
-     
 
       ** Logical File for retrieving Incoming Message Transaction Number
      FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)
@@ -340,7 +339,6 @@
      D WMTUETR         S             36A                                                    MD060250
      D WMXUETR         S             36A                                                    MD060250
      D WMXFlg          S              1A                                                    MD060250
-
 
       ** Variables for getting SWIFT BIC of destination
      D WDstT           S              1A

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1012196          Date 14Jan13              */
+/*       Last Amend No. MD060124           Date 02Aug22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1012196          Date 14Jan13              */
 /*                      CER049             Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27658           Date 13May10              */
@@ -38,6 +39,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060124 - Retail history postings correction.              */
+/*                  Utility to create postings to GEXZPPD with the   */
+/*                  discrepant amount. Patterned fix to MD-53040.    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1012196 - GE-TX postings is not included in postings      */
 /*                   file merge. Reverse BUG27658. (CHILD:AR1012197) */
@@ -101,7 +105,7 @@
              RTVDTAARA  DTAARA(MMOD *ALL) RTNVAR(&MMOD)
              RTVDTAARA  DTAARA(CPSTAT) RTNVAR(&CPSTAT)                /*S01427*/
 /**/
- 
+
              SNDPGMMSG  MSG('REC3065 - Retail Accounts Posting Merge +
                           -Daily Postings') TOMSGQ(MRUNQ)
 /**/
@@ -189,6 +193,13 @@
                           FMTOPT(*MAP *DROP)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(GOTO +
                           CMDLBL(EXIT1))
+/**/                                                                                    /*MD060124*/
+               CHKOBJ     OBJ(GEXZPPD) OBJTYPE(*FILE)                                   /*MD060124*/
+               MONMSG     MSGID(CPF0000)                                                /*MD060124*/
+               CHGVAR     VAR(&FRF) VALUE('GEXZPPD')                                    /*MD060124*/
+               CPYF       FROMFILE(&FRF) TOFILE(&TOF) MBROPT(*ADD) FMTOPT(*MAP +
+                            *DROP)                                                      /*MD060124*/
+               MONMSG     MSGID(CPF0000)                                                /*MD060124*/
              ENDDO
 /**/
              IF         COND(%SST(&MMOD 2 1) = 'Y') THEN(DO)
@@ -348,7 +359,7 @@
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(GOTO +
                           CMDLBL(EXIT1))                              /*CMC001*/
              ENDDO                                                    /*CMC001*/
- 
+
 /* Copy postings from Generic Posting Interface */                                        /*CGL047*/
              CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CGL047' +
                           &AOFMT)                                                         /*CGL047*/
@@ -456,5 +467,8 @@ EXIT3:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 ENDCL:
+/**/                                                                                    /*MD060124*/
+             CLRPFM     FILE(GEXZPPD)                                                   /*MD060124*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060124*/
 /**/
              ENDPGM

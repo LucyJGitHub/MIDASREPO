@@ -13,7 +13,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. 257879             Date 12May22               *
+      *  Prev Amend No. 263549             Date 05Aug22               *
+      *                 250371             Date 06Jun22               *
+      *                 CLE138             Date 02Nov21               *
+      *                 257879             Date 12May22               *
       *                 MD059275           Date 23May22               *
       *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
@@ -436,6 +439,13 @@
       *                                                               *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
+      *  263549 - Remove 254385 (reinstate 247263)                    *
+      *         - NY specific fix.                                    *
+      *  250371 - Funding accrual account keys are incorrect.         *
+      *           'HBA45T   I0000'                                    *
+      *           'HBA45F   I0000'                                    *
+      *           Need to re-initialise work field WK13N to zero      *
+      *  CLE138 - Class Codes for Facilities                          *
       *  257879 - Use profit centre account keys with 'S' in position *
       *           8 for syndicated loans.                             *
       *  MD059275 - Incorrect action type on LE0497P1. Populate F1FPCT*
@@ -1419,6 +1429,10 @@
      FCLOANL4   IF   E           K DISK    INFSR(*PSSR)                                       CLE164
      F                                     PREFIX(F4_)                                        CLE164
      F                                     RENAME(CLOANCLF:CLOANCLF4)                         CLE164
+      *                                                                                       CLE138
+      ** LE Facilities Extension File by branch                                               CLE138
+     FLEFCLTLG  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
+     F                                     USROPN                                             CLE138
      F*                                                                   S01408
      F** Core hook for externalisation.                                   S01408
      F/COPY WNCPYSRC,LE0450FFPG                                           S01408
@@ -1701,6 +1715,13 @@
      D***WSET            S             18A                                         MD046080 MD049078
      D***WWCCY           S              3A                                         MD046080 MD049078
      D WCLE134         S              1A                                                    MD049078
+      *                                                                                       CLE138
+      ** Key Fields                                                                           CLE138
+     D K_BRCA          S              3A                                                      CLE138
+     D K_CNUM          S              6A                                                      CLE138
+     D K_FACT          S              3A                                                      CLE138
+     D K_FCNO          S              2A                                                      CLE138
+     D @FCLS           S              4A                                                      CLE138
                                                                                               CLE164
       ** CLE164 Enhancement F variables for LE000801                                          CLE164
                                                                                               CLE164
@@ -4572,6 +4593,14 @@ L118 I                             P   72   77 7RTSPL
      C                   KFLD                    YKACOD
      C                   KFLD                    YKACSQ
      C                   KFLD                    YKBRCA
+      *                                                                                       CLE138
+      ** Key fields for LE Facility Extension File LEFCLTLG                                   CLE138
+      *                                                                                       CLE138
+     C     KFCLT         KLIST                                                                CLE138
+     C                   KFLD                    K_BRCA                                       CLE138
+     C                   KFLD                    K_CNUM                                       CLE138
+     C                   KFLD                    K_FACT                                       CLE138
+     C                   KFLD                    K_FCNO                                       CLE138
       *                                                                                       CLE134
      C                   MOVE      *BLANKS       KACCK            14
       *                                                                                       CLE134
@@ -5696,6 +5725,30 @@ L118 I                             P   72   77 7RTSPL
      C                   GOTO      ENDDBE                                                     CLE172
      C                   ENDIF                                                                CLE172
      C                   ENDIF                                                                CLE172
+      *                                                                                       CLE138
+      ** Access SAR details to check if CLE138 is installed                                   CLE138
+      *                                                                                       CLE138
+     C                   MOVE      'N'           CLE138            1                          CLE138
+     C                   CALL      'AOSARDR0'                                                 CLE138
+     C                   PARM      *BLANKS       @RTCD                                        CLE138
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
+     C                   PARM      'CLE138'      @SARD                                        CLE138
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
+      *                                                                                       CLE138
+     C     @RTCD         IFEQ      *BLANK                                                     CLE138
+     C                   MOVE      'Y'           CLE138                                       CLE138
+     C                   OPEN      LEFCLTLG                                                   CLE138
+     C                   ELSE                                                                 CLE138
+     C     @RTCD         IFNE      '*NRF   '                                                  CLE138
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CLE138
+     C                   MOVEL     'CLE138 '     DBKEY                                        CLE138
+     C                   Z-ADD     43            DBASE                                        CLE138
+     C                   MOVE      *ON           *INU7                                        CLE138
+     C                   MOVE      *ON           *INU8                                        CLE138
+     C                   MOVE      *ON           *INLR                                        CLE138
+     C                   GOTO      ENDDBE                                                     CLE138
+     C                   ENDIF                                                                CLE138
+     C                   ENDIF                                                                CLE138
       *
      C**********         MOVE      'N'           CFC006            1              AR1097176 MD020563
      C**********         CALL      'AOSARDR0'                                     AR1097176 MD020563
@@ -14156,6 +14209,7 @@ L118 I                             P   72   77 7RTSPL
 1765 C**   CHECK FOR GREATER OF ACCRUED/PAID AND POST AMOUNT NOT POSTED
 1766 C**
      C********** VDAT      IFEQ MDAT                                                   247263 254075
+     C     VDAT          IFEQ      MDAT                                                       263549
 1767 C     IPRD          ADD       ICTD          WRK13
 1768 C     WRK13         ADD       IWOD          WRK13
 1769 C     AITC          ADD       AIAP          WRK13A           13 0
@@ -14346,6 +14400,7 @@ L118 I                             P   72   77 7RTSPL
 1791 C     AIPD          ADD       WRK13         AIPD
      C                   ENDIF
      C**********           ENDIF                                                       247263 254075
+     C                   ENDIF                                                                263549
       *                                                                   CAC001
      C     BGN0ST        IFEQ      'Y'                                                         CAC00
      C     FPRCL         ANDNE     *BLANKS                                                     CAC00
@@ -16626,6 +16681,10 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
      C                   ADD       WK13N         ACPD                                          CAC00
       *                                                                   CAC001
+      *                                                                                       250371
+      **  Re-initialize after a/c output for internal funding                                 250371
+      *                                                                                       250371
+     C                   Z-ADD     0             WK13N                                        250371
      C                   ENDIF                                                  - BGN0ST       CAC00
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
@@ -20768,10 +20827,25 @@ C    C                   ENDIF                                                  
      C                   PARM                    @CLAS                                        CLE164
      C     SDLOAN1       PARM      SDLOAN        DSSDY                                        CLE164
      C                                                                                        CLE164
+      *                                                                                       CLE138
+      ** Get facility class from the extension file                                           CLE138
+      *                                                                                       CLE138
+     C                   IF        CLE138 = 'Y'                                               CLE138
+     C                   MOVE      FCLB          K_BRCA                                       CLE138
+     C                   MOVE      FCUS          K_CNUM                                       CLE138
+     C                   MOVE      FTYP          K_FACT                                       CLE138
+     C                   MOVE      FSEQ          K_FCNO                                       CLE138
+     C     KFCLT         CHAIN     LEFCLTLG                           31                      CLE138
+     C                   MOVE      FCXCLS        @FCLS                                        CLE138
+     C                   ELSE                                                                 CLE138
+     C                   MOVE      *BLANKS       @FCLS                                        CLE138
+     C                   ENDIF                                                                CLE138
+      *                                                                                       CLE138
      C                   CALL      'AOFACTR0'                                                 CLE164
      C                   PARM      *BLANK        PRTCD                                        CLE164
      C                   PARM      '*KEY'        POPTN                                        CLE164
      C                   PARM                    @FTYP                                        CLE164
+     C                   PARM                    @FCLS                                        CLE138
      C     SDFACT1       PARM      SDFACT1       DSSDY                                        CLE164
      C                                                                                        CLE164
      C                   EVAL      wLSPDPGrpID = LN_AYPGID                                    CLE164

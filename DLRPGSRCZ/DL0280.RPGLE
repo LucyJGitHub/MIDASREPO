@@ -11,19 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001.                     *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *                                                               *
-      *****************************************************************
-      *                                                               *
-      *  249385 - Ensure input fields ZDAYNO keeps original value     *
-      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *                                                               *
       *****************************************************************
       *** Code Stripped ***                                           *
       /COPY DLCPYSRC,DL0280FHD5                                                             RT937392
       /COPY DLCPYSRC,DL0280FHD3                                                            BUG27027A
       /COPY DLCPYSRC,DL0280FHD1
-      *** Code Stripped ***                                           *
+      *** Code Stripped ***
       /COPY DLCPYSRC,DL0280FHD6                                                             RT937392
       /COPY DLCPYSRC,DL0280FHD4                                                            BUG27027A
       /COPY DLCPYSRC,DL0280FHD2

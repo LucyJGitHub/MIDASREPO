@@ -59,7 +59,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
-      *            (Recompiled due to changes in ZBKDT)               *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -1235,6 +1234,9 @@
       * Since the following code would be duplicated in the main                              220859
       * sub-routine, it is put in a separate one for clarity.                                 220859
       *                                                                                       220859
+      * Save original value of ZDAYNO                                                         249385
+     C                   Z-ADD     ZDAYNO        ZCZDAY            5 0                        249385
+      *                                                                                       249385
       * If no. of working days required is zero and input date is a                           220859
       * holiday, then change required no. of days to one.                                     220859
       *                                                                                       220859
@@ -1295,6 +1297,9 @@
      C                   END                                                     FI 1         220859
       *                                                                                       220859
      C                   END                                                    ENW 1         220859
+      * Restore original value of dayno                                                       249385
+     C                   Z-ADD     ZCZDAY        ZDAYNO            5 0                        249385
+      *                                                                                       249385
       *                                                                                       220859
      C                   ENDSR                                                                220859
       /EJECT

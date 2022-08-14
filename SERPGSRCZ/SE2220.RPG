@@ -33,7 +33,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. 250593             Date 15Mar22               *
+      *  Prev Amend No. 232763             Date 30Jul22               *
+      *                 250593             Date 15Mar22               *
       *                 MD035436           Date 26May22               *
       *                 MD058285           Date 22Jun21               *
       *                 MD046998A          Date 15Apr21               *
@@ -301,6 +302,7 @@
       *                                                               *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
+      *  232763 - Wrong Profit Center is posted to SEKEYD             *
       *  250593 - Average price change not processed for type CD1     *
       *  MD035436 - Failed component - SEC0605. Do not write a new    *
       *             Historic Book Position Header record and only     *
@@ -2192,6 +2194,9 @@
      C************LIKE     DEFN LCPN      WSTDT                           E14616
      C           *LIKE     DEFN CFCT      WBCCF                           052254
      C                     MOVE *BLANK    BCKEYP
+     C                     MOVE *BLANK    PPRFCX  4                                           232763
+     C                     MOVE *BLANK    BVSEPX  4                                           232763
+     C                     MOVE *BLANK    PCBKX   4                                           232763
      C                     MOVE *ZEROS    KBCAD   50
      C                     Z-ADD0         ICREC   50
      C                     Z-ADD0         IXREC   50                      E29207
@@ -2518,6 +2523,19 @@
      C           ICLD      ANDGEKBCAD                                     E22957
      C           DYBS      ANDNE'4'                                       E22957
      C                     Z-ADDICLD      BCAD                            E22957
+     C           *IN89     IFEQ '0'                                                           232763
+     C           CAC005    IFEQ 'Y'                                                           232763
+     C                     MOVE PPRFCX    PPRFC                                               232763
+     C                     ELSE                                                               232763
+      *                                                                                       232763
+     C           BGN0ST    IFEQ 'Y'                                                           232763
+     C           PCBKX     ANDEQ*BLANKS                                                       232763
+     C                     MOVE BVSEPX    BVSEPC                                              232763
+     C                     ELSE                                                               232763
+     C                     MOVE PCBKX     PCBK                                                232763
+     C                     ENDIF                                                              232763
+     C                     ENDIF                                                              232763
+     C                     ENDIF                                                              232763
      C*                                                                   E22957
      C*   ACCRUE INTEREST ON THIS POSITION IF REQUIRED                    E22957
      C*                                                                   E22957
@@ -2683,6 +2701,18 @@
      C***********          Z-ADD0         XBCPL  130                      E19485
      C*
      C                     MOVE BCKEY     BCKEYP
+      *                                                                                       232763
+     C           CAC005    IFEQ 'Y'                                                           232763
+     C                     MOVE PPRFC     PPRFCX                                              232763
+     C                     ELSE                                                               232763
+     C           BGN0ST    IFEQ 'Y'                                                           232763
+     C           PCBK      ANDEQ*BLANKS                                                       232763
+     C                     MOVE BVSEPC    BVSEPX                                              232763
+     C                     ELSE                                                               232763
+     C                     MOVE PCBK      PCBKX                                               232763
+     C                     ENDIF                                                              232763
+     C                     ENDIF                                                              232763
+      *                                                                                       232763
      C                     Z-ADDBCAD      KBCAD
      C*
      C                     EXSR BKHCHN

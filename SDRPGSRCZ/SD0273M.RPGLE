@@ -14,15 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060330           Date 09Aug22               *
-      *  Prev Amend No. MD060092*CREATE    Date 01Aug22               *
+      *  Last Amend No. MD060092*CREATE    Date 01Aug22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060330 - Duplicate class code is defined on same facility  *
-      *             type when selected via '?' option                 *
-      *           - transfer the validation of class code after       *
-      *             AOTCLSR0                                          *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance.                     *
       *           - Apply CLE138 original design of SDFACTX0 to store *
@@ -572,19 +567,6 @@
       *
      C                   IF        CLSARR(C) <> *BLANKS
       *
-     C**********         EVAL      K1FCTY = W0FCTY                                          MD060330
-     C**********         EVAL      K1CLAS = CLSARR(C)                                       MD060330
-      **********                                                                            MD060330
-     C*****@KCLASF       CHAIN     SDFACTY1      F                    92                    MD060330
-     C**********         IF        *IN92 = *OFF                                             MD060330
-     C**********         EVAL      #ERROR = 'Y'                                             MD060330
-     C**********         EVAL      *IN33 = *ON                                              MD060330
-      ***Error:*Class already exists                                                        MD060330
-     C**********         CALL      'ZA0340'                                                 MD060330
-     C**********         PARM      'SDUSRMSG'    ZAMSGF                                     MD060330
-     C**********         PARM      'CLE1386'     ZAMSID                                     MD060330
-     C**********         ENDIF                                                              MD060330
-      *
      C                   CALL      'AOTCLSR0'
      C                   PARM      *BLANK        @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -608,18 +590,18 @@
      C                   PARM      'CLE1392'     ZAMSID
      C                   Endif
       *
-     C                   EVAL      K1FCTY = W0FCTY                                          MD060330
-     C                   EVAL      K1CLAS = CLSARR(C)                                       MD060330
-      *                                                                                     MD060330
-     C     @KCLASF       CHAIN     SDFACTY1                           92                    MD060330
-     C                   IF        *IN92 = *OFF                                             MD060330
-     C                   EVAL      #ERROR = 'Y'                                             MD060330
-     C                   EVAL      *IN33 = *ON                                              MD060330
-      ** Error: Class already exists                                                        MD060330
-     C                   CALL      'ZA0340'                                                 MD060330
-     C                   PARM      'SDUSRMSG'    ZAMSGF                                     MD060330
-     C                   PARM      'CLE1386'     ZAMSID                                     MD060330
-     C                   ENDIF                                                              MD060330
+     C                   EVAL      K1FCTY = W0FCTY
+     C                   EVAL      K1CLAS = CLSARR(C)
+      *
+     C     @KCLASF       CHAIN     SDFACTY1                           92
+     C                   IF        *IN92 = *OFF
+     C                   EVAL      #ERROR = 'Y'
+     C                   EVAL      *IN33 = *ON
+      ** Error: Class already exists
+     C                   CALL      'ZA0340'
+     C                   PARM      'SDUSRMSG'    ZAMSGF
+     C                   PARM      'CLE1386'     ZAMSID
+     C                   ENDIF
      C                   ENDIF
       *
      C     C             CHAIN     #SFLRCD                            99
@@ -627,12 +609,12 @@
       *
       **  Update subfile record/fld display attributes
       *
-     C                   EVAL      #1CLAS = CLSARR(C)                                       MD060330
-     C                   IF        #1CLAS <> ' '                                            MD060330
+     C                   EVAL      #1CLAS = CLSARR(C)
+     C                   IF        #1CLAS <> ' '
      C                   EVAL      #1CDSC = CDSARR(C)
-     C                   ELSE                                                               MD060330
-     C                   EVAL      #1CDSC = ' '                                             MD060330
-     C                   ENDIF                                                              MD060330
+     C                   ELSE
+     C                   EVAL      #1CDSC = ' '
+     C                   ENDIF
      C                   UPDATE    #SFLRCD
      C                   ENDIF
       *

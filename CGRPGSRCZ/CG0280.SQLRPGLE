@@ -21,8 +21,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059906           Date 06May22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058069           Date 11May21               *
+      *  Prev Amend No. MD059906           Date 06May22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
       *                 MD055928           Date 02Jun20               *
       *                 MD054955           Date 16Dec19               *
@@ -64,6 +65,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  MD059906 - Correct CGPTYJW0 access as field GARECI does      *
       *             not exist                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -142,8 +144,8 @@
      F**********                           INFSR(SRFILE)                                    MD054955
       * RTV : Print Item Type/Sub-Type  Retrieval index
       *
-     FCGPSCHL1  IF   E           K DISK
-     F                                     INFSR(SRFILE)
+     F*CGPSCHL1* IF   E           K DISK                                                    MD058069
+     F**********                           INFSR(SRFILE)                                    MD058069
       * RTV : Print Schedule Types      Retrieval index
       *
      FCGCORRL1  IF   E           K DISK
@@ -177,6 +179,7 @@
       *                                                                                       CSC022
      D CGCSCH        E DS                  EXTNAME(CGCSHJW0)                                MD054955
      D CGPTYP        E DS                  EXTNAME(CGPTYJW0)                                MD054955
+     D CGPSCH        E DS                  EXTNAME(CGPSHJW0)                                MD058069
      D*COPY*CGCPYSRC,SRERRI                                                                 MD054955
      D*
      D*  End of Program Error Processing copysource
@@ -3525,7 +3528,18 @@
      C                   KFLD                    STPSCH                         Print Schedule
       * Setup key
      C                   MOVEL     #1PSCH        STPSCH                         Print Schedule
-     C     KLVBST        CHAIN     @PSCHL1                            9091      *
+     C*****KLVBST        CHAIN     @PSCHL1                            9091      *           MD058069
+     C/EXEC SQL                                                                             MD058069
+     C+ SELECT *                                                                            MD058069
+     C+ into :CGPSCH                                                                        MD058069
+     C+ from CGPSHJW0                                                                       MD058069
+     C+ where STPSCH = :#1PSCH                                                              MD058069
+     C/END-EXEC                                                                             MD058069
+     C                   SETOFF                                       90                    MD058069
+     C                   If        SQLCODE = 100                                            MD058069
+     C                   SETON                                        90                    MD058069
+     C                   ENDIF                                                              MD058069
+                                                                                            MD058069
      C     *IN90         IFEQ      '0'
       * Record found - move back any virtuals
      C                   GOTO      VBEXIT

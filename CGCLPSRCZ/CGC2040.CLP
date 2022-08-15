@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058069           Date 11May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 228542             Date 05Aug04              */
+/*                      228542             Date 05Aug04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CPK014             Date 04Oct01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058069 - Deliverable Data Split for Correspondence Mgr 2  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       CPK014 - Release 4 packaging:                               */
@@ -51,7 +53,8 @@
 /* File containing UDC files to be journaled */
 /* */
 /**********  DCLF       FILE(SCJRNCG) */                                                  /*CPK014*/
-             DCLF       FILE(CGFRGZPD)                                                    /*CPK014*/
+/**********  DCLF       FILE(CGFRGZPD) */                                      /*CPK014* *MD058069*/
+             DCLF       FILE(CGRGZJW0)                                                  /*MD058069*/
 /* */
 /* Global Monitor Message */
 /* */

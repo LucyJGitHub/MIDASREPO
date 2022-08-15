@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE125             Date 02Nov21               *
-      *  Prev Amend No. MD057739           Date 28Apr22               *
+      *  Last Amend No. 257949             Date 05Jul22               *
+      *  Prev Amend No. 256362             Date 09Jun22               *
+      *                 CLE125             Date 02Nov21               *
+      *                 MD057739           Date 28Apr22               *
       *                 MD026384           Date 28Apr22               *
       *                 MD058307           Date 06Aug21               *
       *                 CLE172             Date 01Oct20               *
@@ -107,6 +109,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  257949 - Loan subtype amendment not accepted by system       *
+      *           Apply fix 256984.                                   *
+      *  256362 - Modified validation for multi-currency rollover to  *
+      *           exclude non-multi-currency loans. (SVNCCY = '   ')  *
       *  CLE125 - Amendment to LE Authorization Rules                 *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
       *             field buffers.                                    *
@@ -1032,6 +1038,8 @@
 
      C     RLDT          IFNE      *ZEROS
      C     SVCCY         ANDNE     SVNCCY
+     C     SVNCCY        ANDNE     *BLANKS                                                    256362
+     C     SVMCRA        ANDEQ     'Y'                                                        256362
       *
      C                   CALLB     'ZFWDT'
      C                   PARM      RLDT          ZDAYNO            5 0
@@ -3886,9 +3894,32 @@
      C                   ENDDO
                                                                                               CAS011
      C                   IF        CAS009 = 'Y'                                               CAS011
+      *                                                                                       257949
+      ** Ensure type/sub-type for correct loan is accessed.                                   257949
+     C     P#SUTP        IFNE      *BLANKS                                                    257949
+     C     N#SUTP        ORNE      *BLANKS                                                    257949
      C                   EVAL      ATCD = AM_LTYP                                             CAS011
      C                   EVAL      AUCD = AM_SUTP                                             CAS011
      C                   EVAL      AUCL = AM_CLAS                                             CLE042
+      *                                                                                       257949
+     C                   ELSE                                                                 257949
+     C                   MOVE      'A'           WRCDT                                        257949
+     C     KLKEY         CHAIN     CLOANCLF                           99                      257949
+      *                                                                                       257949
+     C     *IN99         IFEQ      '1'                                                        257949
+     C     *LOCK         IN        LDA                                                        257949
+     C                   MOVEL     WKLNR         DBKey                                        257949
+     C                   MOVEL     'CLOANCL '    DBFile                                       257949
+     C                   Z-ADD     912           DBase                                        257949
+     C                   OUT       LDA                                                        257949
+     C                   EXSR      *PSSR                                                      257949
+     C                   ENDIF                                                                257949
+      *                                                                                       257949
+     C                   EVAL      ATCD = LTYP                                                257949
+     C                   EVAL      AUCD = SUTP                                                257949
+     C                   EVAL      AUCL = CLAS                                                257949
+     C                   ENDIF                                                                257949
+      *                                                                                       257949
      C                   CALL      'AOLOANR0'                                                 CAS011
      C                   PARM      '*BLANKS'     PRTCD                                        CAS011
      C                   PARM      '*KEY'        POPTN                                        CAS011
@@ -3952,6 +3983,9 @@
       ** as or after the non-linear amortisation cut-off date.                                CAS011
       ** Loan's value date saved in VDAT in SRVALI.                                           CAS011
                                                                                               CAS011
+      ** Amortised Cost Accounting Ind must be the same for the new                           257949
+      ** and the current loan sub-types.                                                      257949
+                                                                                              257949
      C                   IF        (CAS009 = 'Y' AND WSVACAI <> AYACAI)                       CAS011
      C                             AND (VDAT >= FSNLAC)                                       CAS011
      C                   MOVE      'N'           DDSTYPOK                                     CAS011

@@ -14,14 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG21168           Date 22Sep08               *
+      *                 BUG21168           Date 22Sep08               *
       *                 CSW208             Date 15Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG21168 - SDC541P 10095 failed in COB                       *
       *  CSW208 - SWIFT 2008 Changes                                  *
@@ -74,7 +76,8 @@
       *
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
-     D SDTIZO        E DS                  EXTNAME(SDTIZOPD)
+     D*SDTIZO***     E DS                  EXTNAME(SDTIZOPD)                                MD058085
+     D SDTIZO        E DS                  EXTNAME(SDTIZJW0)                                MD058085
      D YEAR            S              4S 0
      D PTzld           S              1A   Inz(*Blanks)
      D PBranch         S              3A

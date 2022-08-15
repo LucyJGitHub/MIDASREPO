@@ -11,21 +11,23 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 BG26993            Date 26Jan10               *
       *                 122060  *CREATE    Date 29Feb00               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program S12206001.                         *
       *                                                               *
       *****************************************************************
      F*
-     FSDBAICL0  UF   E           K DISK
+     F*SDBAICL0* UF   E           K DISK                                                    MD058085
      F** BAI Configuration file
      F*
      FSDBAIIPD  UF   E             DISK
@@ -47,14 +49,14 @@
      C                   MOVEL     'RE4144'      WPGM1
      C                   MOVE      'DRI'         WPGM2
      C*
-     C     *LOVAL        SETLL     SDBAICL0
-     C     WPGM          CHAIN     SDBAICL0                           70
-     C     *IN70         DOWEQ     '0'
-     C                   MOVE      *BLANKS       CFPGPM
-     C                   MOVEA     WQUOTE        CFPGPM
-     C                   UPDATE    @BAICL0
-     C     WPGM          READE     SDBAICL0                               70
-     C                   ENDDO
+     C******LOVAL        SETLL     SDBAICL0                                                 MD058085
+     C*****WPGM*         CHAIN     SDBAICL0                           70                    MD058085
+     C******IN70         DOWEQ     '0'                                                      MD058085
+     C**********         MOVE      *BLANKS       CFPGPM                                     MD058085
+     C**********         MOVEA     WQUOTE        CFPGPM                                     MD058085
+     C**********         UPDATE    @BAICL0                                                  MD058085
+     C*****WPGM*         READE     SDBAICL0                               70                MD058085
+     C**********         ENDDO                                                              MD058085
      C*
      C** Update BAI Installation Control Data.
      C*

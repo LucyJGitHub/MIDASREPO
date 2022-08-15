@@ -16,14 +16,16 @@
       *                                                               *
       *  Called By: SCTRIGGER                                         *
       *                                                               *
+      *  Last Amend No. MD058085           Date 11May21               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BG3697  *CREATE    Date 23May04               *
+      *  Prev Amend No. BG3697  *CREATE    Date 23May04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  BG3697 - Convert TI SQL triggers to RPG                      *
       *                                                               *
       *****************************************************************
@@ -51,7 +53,8 @@
      D  LENG                   1      4B 0
 
       * DS to define TI account fields
-     DTIACFormat     E DS                  ExtName(SDTIACPD)
+     D*TIACFormat     E DS                  ExtName(SDTIACPD)                               MD058085
+     DTIACFormat     E DS                  ExtName(SDTIAJW0)                                MD058085
 
       * 'Before' variables for SQL key details and update checking
      DBTIACNo          S             10

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060121           Date 18Jun22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. DAI104             Date 29Jul19               *      
+      *  Prev Amend No. MD060121           Date 18Jun22               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD034146           Date 17May22               *
       *                 AR928430           Date 17May22
       *                 CLE125             Date 02Nov21               *
@@ -77,6 +78,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI104 - Extend Customer De-Activation (CSD025) to LE        *
+      *           Use of core hook LEH00266                           *
+      *           Addition of hook DAI104_007                         *
+      *           Addition of hook DAI104_008                         *
+      *           Addition of hook DAI104_009                         *
+      *           Addition of hook DAI104_010                         *
+      *           Addition of hook DAI104_011                         *      
       *  MD060121 - Serious Midas error in FCIP enquiry for agg fac.  *
       *             Added access to aggregate fac file aside from     *
       *             facilties extension file                          *
@@ -357,6 +365,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D/COPY WNCPYSRC,DAI104_011                                                               DAI104
 
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(FC_)
@@ -713,12 +722,14 @@
 
       ** Customer number must refer to a valid customer
 
+     C/COPY WNCPYSRC,DAI104_009                                                               DAI104
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM      DDCSSN        @KEY1            10
      C                   PARM                    @KYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
+     C/COPY WNCPYSRC,DAI104_010                                                               DAI104
       *
      C     @RTCD         IFNE      *BLANK
      C     @RTCD         ANDNE     '*CUSCLS'                                                MD036924
@@ -731,8 +742,10 @@
      C                   MOVEL     'LEF0214'     MsgIdArr(Ix)
      C                   ELSE
 
+     C/COPY WNCPYSRC,DAI104_007                                                               DAI104
      C                   MOVEL     *BLANK        DDCSSN
      C                   MOVEL     BBCUST        DDCSSN
+     C/COPY WNCPYSRC,DAI104_008                                                               DAI104
      C                   ENDIF
 
      C                   ENDIF

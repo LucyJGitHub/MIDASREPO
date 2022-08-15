@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE125             Date 02Nov21               *
-      *  Prev Amend No. MD057739           Date 28Apr22               *
+      *  Last Amend No. AR573985           Date 31Aug10               *      
+      *  Prev Amend No. CLE125             Date 02Nov21               *
+      *                 MD057739           Date 28Apr22               *
       *                 MD026384           Date 28Apr22               *
       *                 MD058307           Date 06Aug21               *
       *                 CLE172             Date 01Oct20               *
@@ -107,6 +108,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR573985 - System allows the reversal of Past Due even there *
+      *             there is a Manual Rapayment referring to it.      *
+      *             Added condition such that the reversal of Past Due*
+      *             will not be allowed if there is a repayment       *
+      *             attached to it. Applied fix for AR316158.         *      
       *  CLE125 - Amendment to LE Authorization Rules                 *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
       *             field buffers.                                    *
@@ -1504,15 +1510,37 @@
      C                   ENDIF
       *
       ** If amendment type is PD and action code is reversal and
-      ** repayment was inserted against it (TAMT is less than or equal
-      ** to zero), do not allow reversal of PD record.
+      ** repayment was inserted against it, do not allow the                                AR573985
+      ** reversal of Past Due record.                                                       AR573985
+      ***repayment*was*inserted*against*it*(TAMT*is*less*than*or*equal*                     AR573985
+      ***to*zero),*do*not*allow*reversal*of*PD*record.*****************                     AR573985
+      *                                                                                     AR573985
+     C                   CALLB     'ZDATE1'                                                 AR573985
+     C                   PARM      DDVDAT        ZDATEA                                     AR573985
+     C                   PARM                    ZDAYNO                                     AR573985
+     C                   PARM      BJDFIN        DateFmt                                    AR573985
+     C                   PARM                    ErrorFlag                                  AR573985
+     C                   Z-ADD     ZDAYNO        ZDAYPD            5 0                      AR573985
+      *                                                                                     AR573985
+     C                   MOVE      DDLOAN        WKLNRF            6                        AR573985
+     C                   MOVE      DDSEQN        WKLSEQ            3 0                      AR573985
      C     DDATYP        IFEQ      'PD'
      C     DDACTN        ANDEQ     'R'
-     C     CAM_TAMT      ANDLE     0
+     C*****CAM_TAMT      ANDLE     0                                                        AR573985
+     C     WKLNRF        SETLL     LOAMSDKF                                                 AR573985
+     C     WKLNRF        READE     LOAMSDKF                               99                AR573985
+     C     *IN99         DOWEQ     '0'                                                      AR573985
+     C     AM_RECI       IFEQ      'D'                                                      AR573985
+     C     AM_AMTP       ANDEQ     'MR'                                                     AR573985
+     C     ZDAYPD        ANDEQ     AM_XAVD                                                  AR573985
+     C     WKLSEQ        ANDEQ     AM_XASQ                                                  AR573985
      C                   MOVE      'N'           DDATYPOK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDATYP'
      C                   MOVEL     'LEA1041'     MsgIdArr(Idx)
+     C                   ENDIF                                                              AR573985
+     C     WKLNRF        READE     LOAMSDKF                               99                AR573985
+     C                   ENDDO                                                              AR573985
      C                   ENDIF
       *
       ** If amendment type is repayment schedule, output error message

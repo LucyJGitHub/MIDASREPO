@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR700044           Date 04Mar22               *
-      *  Prev Amend No. CGL077             Date 02Nov21               *
+      *  Last Amend No. AR686094           Date 21Jun19               *      
+      *  Prev Amend No. AR700044           Date 04Mar22               *
+      *                 CGL077             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055785           Date 20May20               *
       *                 MD055784           Date 19May20               *
@@ -195,13 +196,19 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR686094 - Non retail account opened by system with default  *
+      *             account frequency 'Y' for yearly has a next       *
+      *             statement date not equal to end of year date.Amend*
+      *             program such that system generated accounts will  *
+      *             always have next statement date equal to end of   *
+      *             year date if the default frequency is equal to 'Y'*
+      *             Apply fix 196061 (Child: AR686095)                *      
       *  AR700044 - GL-uncorrectly initialized field FEEPCT. Amended  *
       *             program to correctly initialize this field by     *
       *             placing '0' on position 52 to signify that this   *
       *             field is numeric and not character.               *
       *             (Child: AR700323)                                 *
       *           - Applied for MD058198.                             *
-
       *  CGL077 - Account opening date on Batch Posting.              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055785 - Initialise K24C for new GL account.               *
@@ -1840,7 +1847,13 @@
      C                   EXSR      ZFREQS
      C                   Z-ADD     ZDAYNO        NSTD
      C                   ENDIF
-
+      *                                                                                     AR686094
+      ** If BKDSFC is 'Y',set NSTD to End of Year Date                                      AR686094
+      *                                                                                     AR686094
+     C     BKDSFC        IFEQ      'Y'                                                      AR686094
+     C                   Z-ADD     BJEYD         NSTD                                       AR686094
+     C                   ENDIF                                                              AR686094
+      *                                                                                     AR686094
      C/COPY WNCPYSRC,GL0600CP18
 
      C                   BITOFF    '01234567'    GLBT

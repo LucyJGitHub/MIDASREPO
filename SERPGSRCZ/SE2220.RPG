@@ -32,8 +32,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250593             Date 15Mar22               *
-      *  Prev Amend No. MD035436           Date 26May22               *
+      *  Last Amend No. AR1044705          Date 24Jun19               *
+      *  Prev Amend No. 260858             Date 24Jun19               *
+      *                 230816             Date 24Jun19               *
+      *                 252779             Date 24Jun19               *
+      *                 239166             Date 24Jun19               *
+      *                 260712             Date 24Jun19               *
+      *                 AR813371           Date 20Jun19               *      
+      *                 250593             Date 15Mar22               *
+      *                 MD035436           Date 26May22               *
       *                 MD058285           Date 22Jun21               *
       *                 MD046998A          Date 15Apr21               *
       *                 248698             Date 01Jun20               *
@@ -298,6 +305,29 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1044705 - Incorrect Amortised Cost for Securities with     *
+      *              backvalued IR event. Average price used is wrong *
+      *              causing the incorrect postings. Program amended  *
+      *              to retrieve proper Latest Average Price.         *
+      *              (Child: AR1044707)                               *
+      *  260858 - Incorrect coupon rate used for discount securities. *
+      *           Initialised working field WPCPNR with CPNR value.   *
+      *         - Applied for AR1044705 (Child: AR1044707).           *
+      *  230816 - Realised results incorrect when premium has been    *
+      *           amortized at once.                                  *
+      *         - Applied for AR1044705 (Child: AR1044707).           *
+      *  252779 - SEC0605 is stuck. Remove SETGT operation in AAMORB  *
+      *           such that program will not loop when records are    *
+      *           read in SEDEVDF.                                    *
+      *         - Applied for AR1044705 (Child: AR1044707).           *
+      *  239166 - Refer to Diary Events file when required records    *
+      *           in Historic Book Position file are already dropped. *
+      *         - Applied for AR1044705 (Child: AR1044707).           *
+      *  260712 - No amortisation should take place if average price  *
+      *           is 100. Applied for AR1065466 (Child: AR1065467).   *
+      *  AR813371 - Value date postings with Posting Reference '2'    *
+      *             does not pick up the settlement details of the    *
+      *             transaction. (Child: AR813372)                    *      
       *  250593 - Average price change not processed for type CD1     *
       *  MD035436 - Failed component - SEC0605. Do not write a new    *
       *             Historic Book Position Header record and only     *
@@ -1111,6 +1141,7 @@
       *   13  -  BPACCD READ )                                        *   S01129
       *   14  -  BPACBD READ ) FROM HTRACBX                           *   S01129
       *   15  -  BPACHD READ )                                        *   S01129
+      *   16  -  BKPHHD RECORD PRESENT                                *                    AR1044705
       *   19  -  TRADE ACTIONS HAVE BEEN PROCESSED ON THIS POSITION   *   S01129
       *   20  -  ACTION HAS BEEN PROCESSED                            *
       *   21  -  TRADE ACTIONS HAVE BEEN PROCESSED ON THIS POSITION   *
@@ -1240,6 +1271,7 @@
       *  INVCHN - CHAINS TO INVESTMENTS FILE                          *
       *  CLICHN - CHAINS TO CLIENT FILE                               *
       *  TABCHN - CHAINS TO TABTG10 FILE                              *
+      *  BKPHHC - CHAINS TO HISTORIC BOOK POSITION HEADER             *                    AR1044705
       *                                                               *
       ***XDATE3*-*WORKS OUT A NUMBER OF WORKING DAYS BACKWARDS *   S01232 S01117
       *  ZBKDT  - WORKS OUT A NUMBER OF WORKING DAYS BACKWARDS *   S01232 S01117
@@ -2007,6 +2039,14 @@
      C                     KFLD           KBCBO
      C                     KFLD           KBCMK
      C                     KFLD           KBCTV
+      *                                                                                    AR1044705
+     C           BHHKY2    KLIST                                                           AR1044705
+     C                     KFLD           KBCSS                                            AR1044705
+     C                     KFLD           KBCBA                                            AR1044705
+     C                     KFLD           KBCBO                                            AR1044705
+     C                     KFLD           KBCMK                                            AR1044705
+     C                     KFLD           KBCTV                                            AR1044705
+     C                     KFLD           KBCAD                                            AR1044705
      C*
      C           BHHKEY    KLIST                                                            MD035436
      C                     KFLD           BHSC                                              MD035436
@@ -2682,6 +2722,31 @@
      C                     MOVE BCKEY     BCKEYP
      C                     Z-ADDBCAD      KBCAD
      C*
+     C                     Z-ADD0         HLAVP  158                                       AR1044705
+     C                     Z-ADD0         HLAVN  158                                       AR1044705
+     C                     Z-ADD0         HDPAP  130                                       AR1044705
+     C                     Z-ADD0         PDPAP  130                                       AR1044705
+     C                     Z-ADD0         HBUDU  130                                       AR1044705
+     C                     Z-ADD0         HLAVN  158                                       AR1044705
+     C                     Z-ADD0         HDPAN  130                                       AR1044705
+     C                     Z-ADD0         HBUDN  130                                       AR1044705
+     C                     Z-ADD0         HINDN  130                                       AR1044705
+      *                                                                                    AR1044705
+      ** Store HISTORIC LAVP                                                               AR1044705
+      *                                                                                    AR1044705
+     C                     EXSR BKPHHC                                                     AR1044705
+      *                                                                                    AR1044705
+     C           *IN16     IFEQ '1'                                                        AR1044705
+     C                     Z-ADDLAVP      HLAVP                                            AR1044705
+     C                     Z-ADDLAVN      HLAVN                                            AR1044705
+     C                     Z-ADDDPAP      HDPAP                                            AR1044705
+     C                     Z-ADDBUDU      HBUDU                                            AR1044705
+     C                     Z-ADDLAVN      HLAVN                                            AR1044705
+     C                     Z-ADDDPAN      HDPAN                                            AR1044705
+     C                     Z-ADDBUDN      HBUDN                                            AR1044705
+     C                     Z-ADDINDN      HINDN                                            AR1044705
+     C                     ENDIF                                                           AR1044705
+      *                                                                                    AR1044705
      C                     EXSR BKHCHN
      C           *IN10     IFEQ '1'
      C*
@@ -3470,6 +3535,23 @@
      C***********          END                                     E15965 E20232
      C***********          END                                     E15965 E22957
      C*                                                                   E15965
+      *                                                                                    AR1044705
+     C                     MOVE 'N'       WFLAG   1                                        AR1044705
+     C           LPSD      IFLT LPCD                                                       AR1044705
+     C           LATD      ANDNE0                                                          AR1044705
+     C           LATD      ANDGTBCAD                                                       AR1044705
+     C           BCTP      ANDEQ'IR'                                                       AR1044705
+     C           *IN16     ANDEQ'1'                                                        AR1044705
+     C                     MOVE 'Y'       WFLAG                                            AR1044705
+     C                     Z-ADDDPAP      PDPAP                                            AR1044705
+     C                     Z-ADDHDPAP     DPAP                                             AR1044705
+     C                     Z-ADDHBUDU     BUDU                                             AR1044705
+     C                     Z-ADDHLAVN     LAVN                                             AR1044705
+     C                     Z-ADDHDPAN     DPAN                                             AR1044705
+     C                     Z-ADDHBUDN     BUDN                                             AR1044705
+     C                     Z-ADDHINDN     INDN                                             AR1044705
+     C                     ENDIF                                                           AR1044705
+      *                                                                                    AR1044705
      C                     END
      C*
      C* IF NO BOOK POSITION READ - SET FIELDS FROM ACTION VALUES OR TO
@@ -3574,7 +3656,12 @@
      C** AP NUMERATOR EQUALS  APNC FROM BKPOSN + AMORTISED DISCOUNT       E22957
      C***************+*BHPP*FROM*BKPHDD*(RESET*ON*O/P*TO*BKPOSD)***E29236 099591
      C*                                                                   E22957
+      ** Don't add amortized premium when amortized premium has been                          230816
+      ** amortized at once                                                                    230816
+      *                                                                                       230816
+     C           BUDU      IFNE *ZERO                                                         230816
      C                     ADD  DPAP      APNC                            E22957
+     C                     ENDIF                                                              230816
      C***********          ADD  BHPP      APNC                     E29236 099591
      C*                                                                   CPM004
      C** RESET BOOK COST IN PORTFOLIO CURRENCY                            CPM004
@@ -7017,6 +7104,7 @@
      C           SYBS      ANDNE*BLANK                                    CSE032
      C           NPSN      ANDNE0                                         CSE032
      C           LAMDAT    ANDLTBCAD                                      CSE032
+     C           LAVP      ANDNE100                                                           260712
      C*                                                                   CSE032
      C* AMORTIZE PREM/DISC ON YIELD CURVE BASIS FOR AUSTRALIA.            CSE032
      C* -IF YIELD CURVE BASIS                                             CSE032
@@ -7158,7 +7246,18 @@
      C                     MOVE *ZEROS    TRFR                            CSE032
      C**********           Z-ADDISSR      CSTN                                         CSE032 CSD027
      C                     MOVE ISSR      CSTN                                                CSD027
+      *                                                                                    AR1044705
+     C           WFLAG     IFEQ 'Y'                                                        AR1044705
+     C                     Z-ADDWADP      PWADP  130                                       AR1044705
+     C                     SUB  PDPAP     WADP                                             AR1044705
+     C                     ENDIF                                                           AR1044705
+      *                                                                                    AR1044705
      C                     Z-ADDWADP      EVAM                            CSE032
+      *                                                                                    AR1044705
+     C           WFLAG     IFEQ 'Y'                                                        AR1044705
+     C                     Z-ADDPWADP     WADP                                             AR1044705
+     C                     MOVE 'N'       WFLAG                                            AR1044705
+     C                     ENDIF                                                           AR1044705
      C*                                                                   CSE032
      C** - Reverse sign on Premiums, because different key                CSE032
      C*                                                                   CSE032
@@ -7924,18 +8023,34 @@
       ** Save the present coupon rate and get the prevailing rate for the period.             230115
       *                                                                                       230115
      C                     Z-ADDCPNR      WSCPNR 117                                          230115
+     C                     Z-ADDCPNR      WPCPNR                                              260858
      C                     MOVE 'IR'      SDET                                                230115
      C                     Z-ADD0         ZDCSDT                                              230115
+     C                     Z-ADD0         WSDED   50                                          239166
      C           KZSEDF    SETLLSEDEVDF                                                       230115
      C           SESN      READESEDEVDF                  71                                   230115
      C           *IN71     DOWEQ'0'                                                           230115
-     C           SDED      ANDLELAMDAT                                                        230115
+     C********** SDED      ANDLELAMDAT                                                 230115 239166
+     C           SDED      ANDLTBCAD                                                          239166
      C           SDET      IFEQ 'IR'                                                          230115
+     C           SDED      IFLE LAMDAT                                                        239166
      C                     Z-ADDSDNC      WPCPNR 117                                          230115
+     C                     Z-ADDSDED      WPSDED  50                                          239166
+     C                     ENDIF                                                              239166
+     C                     Z-ADDSDED      WSDED                                               239166
      C                     ENDIF                                                              230115
+      *                                                                                       239166
      C           SESN      READESEDEVDF                  71                                   230115
      C                     ENDDO                                                              230115
       *                                                                                       230115
+      *                                                                                    AR1044705
+     C           LPSD      IFLT LPCD                                                       AR1044705
+     C           LAMDAT    ANDEQLPSD                                                       AR1044705
+     C           *IN16     ANDEQ'1'                                                        AR1044705
+     C                     Z-ADDHLAVP     LAVP                                             AR1044705
+     C                     Z-ADDHLAVN     LAVN                                             AR1044705
+     C                     ENDIF                                                           AR1044705
+      *                                                                                    AR1044705
      C                     Z-ADDWPCPNR    CPNR                                                230115
      C                     Z-ADDLAVP      ZPRICE                          S01233
      C                     Z-ADDLAMDAT    ZFDATE                          S01233
@@ -7944,6 +8059,13 @@
      C                     MOVE *BLANK    ZACLT                           102506
      C                     EXSR ZPRCO                                     S01233
      C                     Z-ADDZPRCOT    YLDPRC                          S01233
+      *                                                                                       239166
+      ** Check if IR events exist after event date LAMDAT                                     239166
+      *                                                                                       239166
+     C           WSDED     IFGT LAMDAT                                                        239166
+     C           WSDED     ANDLTBCAD                                                          239166
+     C                     EXSR AAMORB                                                        239166
+     C                     ENDIF                                                              239166
       *                                                                                       230115
       ** Restore current coupon rate.                                                         230115
       *                                                                                       230115
@@ -8234,6 +8356,59 @@
      C                     ENDSR                                                              CSE065
       *                                                                   S01233
       *****************************************************************   S01233
+      /EJECT                                                                                  239166
+      *****************************************************************                       239166
+      *                                                               *                       239166
+      *  AAMORB - Perform Yield to Price conversion or vice versa     *                       239166
+      *                                                               *                       239166
+      *****************************************************************                       239166
+      *                                                                                       239166
+     C           AAMORB    BEGSR                           *** AAMORB ***                     239166
+      *                                                                                       239166
+     C                     MOVE 'IR'      SDET                                                239166
+     C                     Z-ADDWPSDED    ZDCSDT                                              239166
+     C           KZSEDF    SETGTSEDEVDF                                                       239166
+     C           SESN      READESEDEVDF                  71                                   239166
+      *                                                                                       239166
+     C           *IN71     DOWEQ'0'                                                           239166
+     C           SDED      ANDLTBCAD                                                          239166
+      *                                                                                       239166
+     C           SDET      IFEQ 'IR'                                                          239166
+      *                                                                                       239166
+      ** Calculate Price from Yield                                                           239166
+      *                                                                                       239166
+     C                     Z-ADD0         WRKPI                                               239166
+     C                     Z-ADDWPCPNR    CPNR                                                239166
+     C                     Z-ADDYLDPRC    ZPRCIN                                              239166
+     C                     Z-ADDSDED      ZFDATE                                              239166
+     C                     Z-ADDWNOML     ZNOML                                               239166
+     C                     Z-ADD0         ZIDNAT                                              239166
+     C                     MOVE 'Y'       ZACLT                                               239166
+     C                     EXSR ZPRCI                                                         239166
+     C                     Z-ADDZODNAT    DNAT                                                239166
+      *                                                                                       239166
+      ** Calculate Yield from Price                                                           239166
+      *                                                                                       239166
+     C                     Z-ADD0         WRKPI                                               239166
+     C                     Z-ADDSDNC      CPNR                                                239166
+     C                     Z-ADDZPRCOT    ZPRICE                                              239166
+     C                     Z-ADDSDED      ZFDATE                                              239166
+     C                     Z-ADDWNOML     ZNOML                                               239166
+     C                     Z-ADDLAMDNA    ZIDNAT                                              239166
+     C                     MOVE *BLANK    ZACLT                                               239166
+     C                     EXSR ZPRCO                                                         239166
+     C                     Z-ADDZPRCOT    YLDPRC                                              239166
+     C                     Z-ADDSDNC      WPCPNR                                              239166
+      *                                                                                       239166
+     C                     Z-ADDSDED      ZDCSDT                                              239166
+     C                     ENDIF                                                              239166
+      *                                                                                       239166
+     C********** KZSEDF    SETGTSEDEVDF                                                239166 252779
+     C           SESN      READESEDEVDF                  71                                   239166
+     C                     ENDDO                                                              239166
+      *                                                                                       239166
+     C                     ENDSR                                                              239166
+      *****************************************************************                       239166
       /EJECT
       *****************************************************************                       CAS006
       *                                                               *                       CAS006
@@ -14352,6 +14527,20 @@
      C           FCPORS    IFEQ 'B'                                       CPM004
      C                     EXSR SETPTF                                    CPM004
      C                     END                                            CPM004
+      *                                                                                     AR813371
+     C           BCTR      CHAINTRADS                81                                     AR813371
+     C           *IN81     IFEQ '0'                                                         AR813371
+     C           TRECI     ANDNE'*'                                                         AR813371
+     C                     MOVE SMTH      STLT                                              AR813371
+     C*                                                                                     AR813371
+     C           TDTP      IFEQ 'TP'                                                        AR813371
+     C                     MOVE PYFM      STLA                                              AR813371
+     C                     MOVE PYFA      SEBR                                              AR813371
+     C                     ELSE                                                             AR813371
+     C                     MOVE PAYT      STLA                                              AR813371
+     C                     MOVE PYTA      SEBR                                              AR813371
+     C                     ENDIF                                                            AR813371
+     C                     ENDIF                                                            AR813371
      C*
      C/COPY WNCPYSRC,SE2220C167
      C                     WRITESEKEYDF
@@ -15574,6 +15763,32 @@
      C*
       *****************************************************************
       /SPACE 3
+      *****************************************************************                    AR1044705
+      *                                                               *                    AR1044705
+      *  BKPHHC - Subroutine to chain to historic book positions      *                    AR1044705
+      *           header file.                                        *                    AR1044705
+      *                                                               *                    AR1044705
+      *****************************************************************                    AR1044705
+      *                                                                                    AR1044705
+     C           BKPHHC    BEGSR                           *** BKPHHC ***                  AR1044705
+      *                                                                                    AR1044705
+     C                     MOVE '0'       *IN16                                            AR1044705
+     C           BHHKY2    SETGTBKPHH                                                      AR1044705
+     C                     READPBKPHH                    80                                AR1044705
+     C           *IN80     IFEQ '0'                                                        AR1044705
+     C           BHSC      ANDEQKBCSS                                                      AR1044705
+     C           BHBA      ANDEQKBCBA                                                      AR1044705
+     C           BHBK      ANDEQKBCBO                                                      AR1044705
+     C           BHMK      ANDEQKBCMK                                                      AR1044705
+     C           BHTV      ANDEQKBCTV                                                      AR1044705
+     C                     MOVE '1'       *IN16                                            AR1044705
+     C                     ENDIF                                                           AR1044705
+      *                                                                                    AR1044705
+     C                     ENDSR                                                           AR1044705
+      *                                                                                    AR1044705
+      *****************************************************************                    AR1044705
+      /SPACE 3                                                                             AR1044705
+      *                                                                                    AR1044705
      C***************************************************************     E14616
      C*                                                                   E20085
      C*  REDUNDANT CODE HAS BEEN REMOVED BY E20085                        E20085

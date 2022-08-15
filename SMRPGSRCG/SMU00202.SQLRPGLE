@@ -284,7 +284,7 @@
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR
                       and   sqlCod <> NO_RECORD;
-                      dBase    = 003;
+                      dBase    = 004;
                       dBfile   = 'SDFACTPD';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -344,7 +344,7 @@
                    exec sql
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 004;
+                      dBase    = 005;
                       dBfile   = 'SDFACTPD';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -380,7 +380,7 @@
                    exec sql
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 004;
+                      dBase    = 006;
                       dBfile   = 'SDFACTPD';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -415,7 +415,7 @@
                    exec sql fetch next From P0 into :wkAHNORC;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 005;
+                      dBase    = 007;
                       dBfile   = 'SDFCTLPA';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -431,7 +431,7 @@
                    exec sql
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 006;
+                      dBase    = 008;
                       dBfile   = 'SDFCTLPA';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -466,7 +466,7 @@
                    exec sql fetch next From P1 into :wkNREC;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 007;
+                      dBase    = 009;
                       dBfile   = 'TABLETX';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -481,7 +481,7 @@
                    exec sql
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 008;
+                      dBase    = 010;
                       dBfile   = 'TABLETX';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -514,7 +514,7 @@
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR
                       and   sqlCod <> NO_RECORD;
-                      dBase    = 009;
+                      dBase    = 011;
                       dBfile   = 'SDFACTX0';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';

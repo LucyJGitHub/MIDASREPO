@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD058079           Date 11May21               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD058079           Date 11May21               *
       *                 MD058285           Date 22Jun21               *
       *                 MD056888           Date 20Sep20               *
       *                 CLE172             Date 01Oct20               *
@@ -158,6 +159,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance. Apply CLE138        *
+      *             design of SDFACTX0 to store facility classes.     *
       *  CLE138 - Class Codes for Facilities                          *
       *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
@@ -3320,7 +3324,7 @@
      C                   PARM      '*MSG'        WWRTCD            7
      C                   PARM      '*FIRST'      WWOPTN            7
      C                   PARM      *BLANK        WWKY3             3
-     C                   PARM      *BLANK        WWKY4             4                          CLE138
+     C**********         PARM      *BLANK        WWKY4             4                 CLE138 MD060092
      C     SDFACT        PARM      SDFACT        DSFDY
       *   Error?
      C     WWRTCD        IFNE      *BLANKS
@@ -3992,7 +3996,7 @@
      C                   PARM      '*MSG'        WWRTCD            7
      C                   PARM      '*NEXT '      WWOPTN            7
      C                   PARM      *BLANK        WWKY3             3
-     C                   PARM      *BLANK        WWKY4                                        CLE138
+     C**********         PARM      *BLANK        WWKY4                               CLE138 MD060092
      C     SDFACT        PARM      SDFACT        DSFDY
       *   Error?
      C     WWRTCD        IFNE      *BLANKS

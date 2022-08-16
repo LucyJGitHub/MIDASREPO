@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052075           Date 07Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD055649           Date 16Aug22               *
+      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD048370           Date 29Nov17               *
       *                 MD043023           Date 25Jul17               *
@@ -95,6 +96,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055649 - Authorised corrective batch was not copied to     *
+      *             PEA system. Introduced New Field BPAUTH           *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -722,6 +725,7 @@
      C                                           + PEADetail                                  CSC054
       /COPY OFCPYSRCZ,CGL135_080                                                             CGL135A
      C                                           + VDFLTF                                   MD052075
+     C                                           + BPAUTH                                   MD055649
      C                                           + RegData                                    CER001
      C                                           + PExtData
       *                                                                                       CER001
@@ -804,6 +808,7 @@
      C                                           + PEADetail                                AR994584
       /COPY OFCPYSRCZ,CGL135_081                                                            MD023635
      C                                           + VDFLTF                                   MD052075
+     C                                           + BPAUTH                                   MD055649
      C                                           + RegData                                    CER001
      C                                           + PExtData
       *
@@ -1415,6 +1420,7 @@
      C                   Z-ADD     0             BRHDCC                                    AR1029481
      C                   Z-ADD     0             BRHINC                                    AR1029481
      C                   EVAL      BRBTSF = 'A'                                            AR1029481
+     C                   EVAL      BPAUTH = BRBTSF                                          MD055649
      C                   EVAL      BRIBCF = *BLANKS                                        AR1029481
      C                   EVAL      BRBHAI = 'A'                                            AR1029481
      C                   EVAL      BRTMST = PTimeStamp                                     AR1029481
@@ -1464,6 +1470,7 @@
      C/COPY OFCPYSRCZ,CGL135_077                                                             CGL135A
       ** CGL150 Default Value Date 'Y'                                                      MD052075
      C                   PARM                    VDFLTF            1                        MD052075
+     C                   PARM                    BPAUTH            1                        MD055649
      C                   PARM                    RegData500                                   CER001
      C                   PARM                    PExtData500
      C                   PARM                    FldNameArr

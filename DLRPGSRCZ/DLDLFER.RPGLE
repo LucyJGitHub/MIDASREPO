@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 260290             Date 16Aug22               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -35,6 +36,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260290 - Amended program so that system will pass what kind  *
+      *           of deal is the transaction to know which settlement *
+      *           tab is to be shown on java screen.                  *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -138,6 +142,7 @@
 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
+     D LONDEP          S              1                                                       260290
 
      D PRtCd           S              7A
      D POptn           S              7A
@@ -217,6 +222,14 @@
      C                   MOVEL     PDLRED        PDDLNO
      C                   MOVEL     PSQRED        DDFSEQ
      C                   EXSR      SRDLFERTV
+      *                                                                                       260290
+     C                   MOVEL     ' '           LONDEP                                       260290
+     C                   IF        C_DTYP = 'IT' OR C_DTYP = 'TD'                             260290
+     C                             OR C_DTYP = 'CI' OR C_DTYP = 'CD'                          260290
+     C                   MOVEL     'D'           LONDEP                                       260290
+     C                   ELSE                                                                 260290
+     C                   MOVEL     'L'           LONDEP                                       260290
+     C                   ENDIF                                                                260290
 
       ** Convert retrieved dealing fee details to screen format
      C                   IF        Idx = *ZERO
@@ -233,7 +246,8 @@
      C                   ENDIF
 
       ** Build buffer with required output
-     C                   EVAL      PBuffer = DLFEScnFmt
+     C**********         EVAL      PBuffer = DLFEScnFmt                                       260290
+     C                   EVAL      PBuffer = DLFEScnFmt + LONDEP                              260290
      C*                                     + ##RECS + ##PAYS
      C                                      + ##RECS + ##PAYS                                CSF011A
 
@@ -414,6 +428,8 @@
      C                   PARM      *BLANKS       ##FRIS
      C                   PARM      DDFCCY        InRCCY                                      CSF011A
      C                   PARM      DDFCCY        InPCCY                                      CSF011A
+     C     DFROBN        IFEQ      '0'                                                        260290
+     C                   MOVEL     *BLANKS       DDROBN                                       260290
 
      C                   ENDSR
       *****************************************************************

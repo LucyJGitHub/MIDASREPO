@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *  Last Amend No. AR584498           Date 02Jun22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 MD055733           Date 03Jul20               *
       *                 MD036924           Date 06Nov19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD050139           Date 23Mar18               *
@@ -81,6 +82,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR584498 - Balance greater than 999,999,999.99 is not        *
+      *             displayed. Adjusted SLNAR to 2A and SCPAM to 18A  *
+      *             to display amount up to 99,999,999,999.99.        *
+      *             (Child: AR584499)                                 *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -437,6 +442,7 @@
       *                                                                   147830
      I              99999999              C         WMAX1                 147830
      I              99999999999           C         WMAX2                 147830
+     I              9999999999999         C         WMAX3                                   AR584498
       *                                                                   147830
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      I*
@@ -2367,19 +2373,23 @@
       *                                                                   147830
      C           LPFI      WHEQ 'I'                                       147830
      C**********           MOVE 'Intnl'   SLNAR                                        147830 CLE042
-     C                     MOVEL'Intl'    SLNAR                                               CLE042
+     C**********           MOVEL'Intl'    SLNAR                                      CLE042 AR584498
+     C                     MOVEL'In'      SLNAR                                             AR584498
       *                                                                   147830
      C           LPFI      WHEQ 'P'                                       147830
      C**********           MOVE 'Part.'   SLNAR                                        147830 CLE042
-     C                     MOVEL'Part'    SLNAR                                               CLE042
+     C**********           MOVEL'Part'    SLNAR                                      CLE042 AR584498
+     C                     MOVEL'Pa'      SLNAR                                             AR584498
       *                                                                   147830
      C           LPFI      WHEQ 'R'                                       147830
      C**********           MOVE 'Risk '   SLNAR                                        147830 CLE042
-     C                     MOVEL'Risk'    SLNAR                                               CLE042
+     C**********           MOVEL'Risk'    SLNAR                                      CLE042 AR584498
+     C                     MOVEL'Ri'      SLNAR                                             AR584498
       *                                                                   147830
      C           LPFI      WHEQ 'S'                                                           CLE106
      C**********           MOVE 'SubPt'   SLNAR                                        CLE106 CLE042
-     C                     MOVEL'SubP'    SLNAR                                               CLE042
+     C**********           MOVEL'SubP'    SLNAR                                      CLE042 AR584498
+     C                     MOVEL'Su'      SLNAR                                             AR584498
       *                                                                                       CLE106
      C                     OTHER                                          147830
       *                                                                   147830
@@ -2398,9 +2408,10 @@
      C           *IN70     IFEQ *OFF                                      147830
      C           SYIN      ANDEQ'Y'                                       147830
      C***********          MOVE 'Prime'   SLNAR                    147830 155147
-     C                     MOVE 'Prmry'   SLNAR                           155147
+     C**********           MOVE 'Prmry'   SLNAR                                      155147 AR584498
      C**********           MOVE 'Prmry'   SLNAR                                        155147 CLE042
-     C                     MOVEL'Prmy'    SLNAR                                               CLE042
+     C**********           MOVEL'Prmy'    SLNAR                                      CLE042 AR584498
+     C                     MOVEL'Pr'      SLNAR                                             AR584498
      C                     ENDIF                                          147830
       *                                                                   147830
       ** Restore customer number                                          147830
@@ -2414,6 +2425,7 @@
      C* INITIALIZE SCREEN AMOUNT FIELDS
      C*
      C                     MOVE *BLANKS   SCPAM
+     C                     MOVE *BLANKS   SCPAM1                                            AR584498
      C                     MOVE *BLANKS   SDINT
      C                     MOVE *BLANKS   SAINT
      C*
@@ -2423,7 +2435,8 @@
       ** If current principal is greater than size allowed on sfl         147830
       ** display then show as ***************.                            147830
       *                                                                   147830
-     C           CPAM      IFGT WMAX2                                     147830
+     C********** CPAM      IFGT WMAX2                                                147830 AR584498
+     C           CPAM      IFGT WMAX3                                                       AR584498
      C                     MOVE *ON       *IN23                           147830
      C                     ELSE                                           147830
      C                     MOVE *OFF      *IN23                           147830
@@ -2452,7 +2465,11 @@
      C                     ENDIF                                                              CLE028
       *                                                                                       CLE028
      C                     EXSR ZSEDIT
+     C           *IN55     IFEQ *OFF                                                        AR584498
      C                     MOVE ZOUT21    SCPAM
+     C                     ELSE                                                             AR584498
+     C                     MOVE ZOUT21    SCPAM1                                            AR584498
+     C                     ENDIF                                                            AR584498
       *                                                                   147830
      C                     ENDIF                                          147830
      C*

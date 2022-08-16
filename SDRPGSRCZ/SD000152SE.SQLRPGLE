@@ -16,14 +16,17 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD054178           Date 15Oct19               *
-      *  Prev Amend No. MD052107           Date 02Jul19               *
+      *  Last Amend No. MD060224           Date 28Jul22               *
+      *  Prev Amend No. MD054178           Date 15Oct19               *
+      *                 MD052107           Date 02Jul19               *
       *                 MD042142           Date 08May18               *
       *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060224 - Cant close Nostro. Only Live and Reverse POSET    *
+      *             records can block Nostro closure.
       *  MD054178 - Add Reversed Transactions as blocker to nostro    *
       *             account closure.                                  *
       *  MD052107  - Reformat Nostro Account Activity Report Layout   *
@@ -284,7 +287,9 @@
      C+ declare SELIST2 cursor for
      C+ select PSSH, PEVT from POSETD
      C+ where PSCU = :YyCcy and
-     C+       PSEA = :XxNost
+     C********PSEA = :XxNost                                                                MD060224
+     C+       PSEA = :XxNost and                                                            MD060224
+     C+       RECI in ('D', 'R')                                                            MD060224
      C+ order by
      C+       PSSH
      C/end-exec

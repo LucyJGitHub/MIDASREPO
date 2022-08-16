@@ -593,7 +593,9 @@
      C                   ADD       13            Z                              CAP734
      C                   SUB       1             Y                              CAP734
      C                   Z-ADD     0             V                 5 0          CAP734
-     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP734
+     C**********         Eval      V = %SCAN('   ':WMSGBF4)                          CAP734 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF4))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP734
      C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP734
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP734
@@ -604,7 +606,9 @@
      C     X             ADD       13            Z                              CAP734
      C     X             SUB       1             Y                              CAP734
      C                   Z-ADD     0             V                 5 0          CAP734
-     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP734
+     C**********         Eval      V = %SCAN('   ':WMSGBF4)                          CAP734 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF4))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP734
      C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP734
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP734
@@ -626,7 +630,9 @@
      C                   ADD       11            Z                              CAP734
      C                   SUB       1             Y                              CAP734
      C                   Z-ADD     0             V                 5 0          CAP734
-     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP734
+     C**********         Eval      V = %SCAN('   ':WMSGBF7)                          CAP734 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF7))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP734
      C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP734
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP734
@@ -637,7 +643,9 @@
      C     X             ADD       11            Z                              CAP734
      C     X             SUB       1             Y                              CAP734
      C                   Z-ADD     0             V                 5 0          CAP734
-     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP734
+     C**********         Eval      V = %SCAN('   ':WMSGBF7)                          CAP734 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF7))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP734
      C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP734
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP734
@@ -648,7 +656,9 @@
       *                                                                         CAP734
       *                                                                         CAP734
      C                   Z-ADD     0             H                 5 0          CAP734
-     C                   Eval      H = %SCAN('   ':WMSGBF10)                    CAP734
+     C**********         Eval      H = %SCAN('   ':WMSGBF10)                         CAP734 MD060088
+     C                   Eval      H = %LEN(%TRIM(WMSGBF10))                                MD060088
+     C                   Eval      H+=1                                                     MD060088
       *                                                                         CAP734
      C                   MOVEL     *BLANKS       WMSGBF        32000            CAP734
      C                   Eval      WMSGBF = %TRIM(%Subst(WMSGBF2:1:D))+         CAP734
@@ -716,9 +726,7 @@
      C                   Z-ADD     0             B                 5 0          CAP735
      C                   Z-ADD     0             C                 5 0          CAP735
      C                   Z-ADD     0             D                 5 0          CAP735
-     C**********         Eval      F = %SCAN('   ':APXML)                            CAP735 MD060088
-     C                   Eval      F = %LEN(%TRIM(APXML))                                   MD060088
-     C                   Eval      F+=1                                                     MD060088
+     C                   Eval      A = %SCAN('   ':PMsgBuf)                     CAP735
      C                   MOVEL     *BLANKS       WMSGBF1       32000            CAP735
      C                   MOVEL     *BLANKS       WMSGBF2       32000            CAP735
      C                   Z-ADD     24            B                              CAP735
@@ -732,7 +740,9 @@
      C                   Z-ADD     0             F                 5 0          CAP735
      C                   Z-ADD     0             G                 5 0          CAP735
      C                   Z-ADD     0             H                 5 0          CAP735
-     C                   Eval      F = %SCAN('   ':APXML)                       CAP735
+     C**********         Eval      F = %SCAN('   ':APXML)                            CAP735 MD060088
+     C                   Eval      F = %LEN(%TRIM(APXML))                                   MD060088
+     C                   Eval      F+=1                                                     MD060088
      C                   MOVEL     *BLANKS       WMSGBF3       32000            CAP735
      C                   MOVEL     *BLANKS       WMSGBF4       32000            CAP735
      C                   Z-ADD     24            E                 5 0          CAP735
@@ -763,7 +773,9 @@
      C                   ADD       13            Z                              CAP735
      C                   SUB       1             Y                              CAP735
      C                   Z-ADD     0             V                 5 0          CAP735
-     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP735
+     C**********         Eval      V = %SCAN('   ':WMSGBF4)                          CAP735 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF4))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP735
      C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP735
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP735
@@ -774,7 +786,9 @@
      C     X             ADD       13            Z                              CAP735
      C     X             SUB       1             Y                              CAP735
      C                   Z-ADD     0             V                 5 0          CAP735
-     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP735
+     C**********         Eval      V = %SCAN('   ':WMSGBF4)                          CAP735 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF4))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP735
      C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP735
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP735
@@ -796,7 +810,9 @@
      C                   ADD       11            Z                              CAP735
      C                   SUB       1             Y                              CAP735
      C                   Z-ADD     0             V                 5 0          CAP735
-     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP735
+     C**********         Eval      V = %SCAN('   ':WMSGBF7)                          CAP735 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF7))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP735
      C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP735
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP735
@@ -807,7 +823,9 @@
      C     X             ADD       11            Z                              CAP735
      C     X             SUB       1             Y                              CAP735
      C                   Z-ADD     0             V                 5 0          CAP735
-     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP735
+     C**********         Eval      V = %SCAN('   ':WMSGBF7)                          CAP735 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF7))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP735
      C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP735
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP735
@@ -817,7 +835,9 @@
      C                   ENDIF                                                  CAP735
       *                                                                         CAP735
      C                   Z-ADD     0             H                 5 0          CAP735
-     C                   Eval      H = %SCAN('   ':WMSGBF10)                    CAP735
+     C**********         Eval      H = %SCAN('   ':WMSGBF10)                         CAP735 MD060088
+     C                   Eval      H = %LEN(%TRIM(WMSGBF10))                                MD060088
+     C                   Eval      H+=1                                                     MD060088
       *                                                                         CAP735
      C                   MOVEL     *BLANKS       WMSGBF        32000            CAP735
      C                   Eval      WMSGBF = %TRIM(%Subst(WMSGBF2:1:D))+         CAP735
@@ -933,7 +953,9 @@
      C                   ADD       13            Z                              CAP773
      C                   SUB       1             Y                              CAP773
      C                   Z-ADD     0             V                 5 0          CAP773
-     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP773
+     C**********         Eval      V = %SCAN('   ':WMSGBF4)                          CAP773 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF4))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP773
      C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP773
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP773
@@ -944,7 +966,9 @@
      C     X             ADD       13            Z                              CAP773
      C     X             SUB       1             Y                              CAP773
      C                   Z-ADD     0             V                 5 0          CAP773
-     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP773
+     C**********         Eval      V = %SCAN('   ':WMSGBF4)                          CAP773 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF4))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP773
      C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP773
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP773
@@ -966,7 +990,9 @@
      C                   ADD       11            Z                              CAP773
      C                   SUB       1             Y                              CAP773
      C                   Z-ADD     0             V                 5 0          CAP773
-     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP773
+     C**********         Eval      V = %SCAN('   ':WMSGBF7)                          CAP773 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF7))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP773
      C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP773
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP773
@@ -977,7 +1003,9 @@
      C     X             ADD       11            Z                              CAP773
      C     X             SUB       1             Y                              CAP773
      C                   Z-ADD     0             V                 5 0          CAP773
-     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP773
+     C**********         Eval      V = %SCAN('   ':WMSGBF7)                          CAP773 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF7))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP773
      C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP773
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP773
@@ -988,7 +1016,9 @@
       *                                                                         CAP773
       *                                                                         CAP773
      C                   Z-ADD     0             H                 5 0          CAP773
-     C                   Eval      H = %SCAN('   ':WMSGBF10)                    CAP773
+     C**********         Eval      H = %SCAN('   ':WMSGBF10)                         CAP773 MD060088
+     C                   Eval      H = %LEN(%TRIM(WMSGBF10))                                MD060088
+     C                   Eval      H+=1                                                     MD060088
       *                                                                         CAP773
      C                   MOVEL     *BLANKS       WMSGBF        32000            CAP773
      C                   Eval      WMSGBF = %TRIM(%Subst(WMSGBF2:1:D))+         CAP773
@@ -1104,7 +1134,9 @@
      C                   ADD       13            Z                              CAP774
      C                   SUB       1             Y                              CAP774
      C                   Z-ADD     0             V                 5 0          CAP774
-     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP774
+     C**********         Eval      V = %SCAN('   ':WMSGBF4)                          CAP774 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF4))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP774
      C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP774
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP774
@@ -1115,7 +1147,9 @@
      C     X             ADD       13            Z                              CAP774
      C     X             SUB       1             Y                              CAP774
      C                   Z-ADD     0             V                 5 0          CAP774
-     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP774
+     C**********         Eval      V = %SCAN('   ':WMSGBF4)                          CAP774 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF4))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP774
      C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP774
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP774
@@ -1137,7 +1171,9 @@
      C                   ADD       11            Z                              CAP774
      C                   SUB       1             Y                              CAP774
      C                   Z-ADD     0             V                 5 0          CAP774
-     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP774
+     C**********         Eval      V = %SCAN('   ':WMSGBF7)                          CAP774 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF7))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP774
      C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP774
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP774
@@ -1148,7 +1184,9 @@
      C     X             ADD       11            Z                              CAP774
      C     X             SUB       1             Y                              CAP774
      C                   Z-ADD     0             V                 5 0          CAP774
-     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP774
+     C**********         Eval      V = %SCAN('   ':WMSGBF7)                          CAP774 MD060088
+     C                   Eval      V = %LEN(%TRIM(WMSGBF7))                                 MD060088
+     C                   Eval      V+=1                                                     MD060088
      C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP774
      C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP774
      C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP774
@@ -1179,7 +1217,9 @@
      C                               %TRIM(WMSGBF13)                                        MD059046
       *                                                                         CAP774
      C                   Z-ADD     0             H                 5 0          CAP774
-     C                   Eval      H = %SCAN('   ':WMSGBF10)                    CAP774
+     C**********         Eval      H = %SCAN('   ':WMSGBF10)                         CAP774 MD060088
+     C                   Eval      H = %LEN(%TRIM(WMSGBF10))                                MD060088
+     C                   Eval      H+=1                                                     MD060088
       *                                                                         CAP774
      C                   MOVEL     *BLANKS       WMSGBF        32000            CAP774
      C                   Eval      WMSGBF = %TRIM(%Subst(WMSGBF2:1:D))+         CAP774

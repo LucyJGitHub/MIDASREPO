@@ -8932,7 +8932,7 @@
 1956 CANN68              GOTO      EOJ
 1957 C   47              MOVEL     NEV(7)        NARREV
 1958 C*
-1959 C*****    GENERATE ACCRUAL DATE PROFIT/LOSS ACCOUNT KEY.
+1959 C*****    GENERATE ACCRUAL DATE PROFIT/LOSS ACCOUNT KEY
 1960 C*
 1961 C                   MOVEA     '   '         AKY(6)
 1962 C                   MOVEA     DLST          AKY(4)

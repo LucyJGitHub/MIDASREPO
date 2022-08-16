@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250747             Date 22Jul22               *
-      *  Prev Amend No. 255899A            Date 21Jun22               *
+      *  Last Amend No. 262807             Date 02Aug22               *
+      *  Prev Amend No. 250747             Date 22Jul22               *
+      *                 255899A            Date 21Jun22               *
       *                 263173             Date 20Jun22               *
       *                 AR637449           Date 16Jun22               *
       *                 MD058379           Date 12Jul21               *
@@ -110,6 +111,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262807 - When base rates are amended prior to maturity, base *
+      *           rate field takes on the new value instead of the old*
+      *           resulting to a discrepancy with the front office    *
+      *           record. Apply fix 237326.                           *
       *  250747 - Default CI deal customer with internal branch cust  *
       *  255899A - Remove the CSW050 condition when checking for      *
       *            confo request                                      *
@@ -743,6 +748,17 @@
      C**********         SUB       IKSPRD        WINTR            11 7               229360 MD026719
      C**********         ENDIF                                                       229360 MD026719
       **********                                                                     229360 MD026719
+      *                                                                                       262807
+     C     IKIIRT        IFEQ      *ZERO                                                      262807
+      *                                                                                       262807
+     C     IKINTR        IFLT      *ZERO                                                      262807
+     C                   Z-SUB     IKINTR        WINTR                                        262807
+     C                   ELSE                                                                 262807
+     C                   Z-ADD     IKINTR        WINTR                                        262807
+     C                   ENDIF                                                                262807
+      *                                                                                       262807
+     C                   SUB       IKSPRD        WINTR            11 7                        262807
+     C                   ENDIF                                                                262807
       ** Use current or next rate according to deal value date
       *
      C     IKDVSD        IFLT      BAVDNR
@@ -754,6 +770,13 @@
      C**********         ENDIF                                                       229360 MD026719
      C**********         ENDIF                                                       229360 MD026719
       **********                                                                     229360 MD026719
+      *                                                                                       262807
+     C     IKIIRT        IFEQ      *ZERO                                                      262807
+     C     WINTR         IFNE      BACBSR                                                     262807
+     C                   Z-ADD     WINTR         BRTE                                         262807
+     C                   ENDIF                                                                262807
+     C                   ENDIF                                                                262807
+      *                                                                                       262807
      C                   ELSE
      C                   Z-ADD     BANBRT        BRTE
       **********                                                                     229360 MD026719
@@ -763,6 +786,13 @@
      C**********         ENDIF                                                       229360 MD026719
      C**********         ENDIF                                                       229360 MD026719
       **********                                                                     229360 MD026719
+      *                                                                                       262807
+     C     IKIIRT        IFEQ      *ZERO                                                      262807
+     C     WINTR         IFNE      BANBRT                                                     262807
+     C                   Z-ADD     WINTR         BRTE                                         262807
+     C                   ENDIF                                                                262807
+     C                   ENDIF                                                                262807
+      *                                                                                       262807
      C                   END
       *
      C     CDL020        IFEQ      'Y'                                                       BUG5169

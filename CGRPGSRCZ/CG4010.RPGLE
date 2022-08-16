@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 255465             Date 05Jul22               *
-      *  Prev Amend No  255150             Date 22Jun22               *
+      *  Last Amend No. 263448             Date 08Aug08               *
+      *  Prev Amend No. 255465             Date 05Jul22               *
+      *                 255150             Date 22Jun22               *
       *                 MD059690           Date 14Mar22               *
       *                 MD059369           Date 24Dec21               *
       *                 MD059367           Date 24Dec21               *
@@ -174,6 +175,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263448 - When CSW025 is on, ISO message should be generated  *
       *  255465 - Reprint confirmations in Correspondence Manager     *
       *  255150 - Amendment confirmation for adding maturity date to  *
       *           a call deal was not produced from Correspondence    *
@@ -10150,6 +10152,7 @@
      C     ##NETW        IFNE      'PAPER '                                     * NETWORK
      C     ##NETW        OREQ      'PAPER '                                     * NETWORK
      C     ENFFCR        ANDNE     'Y'                                          * FREE FMT CFS RQ
+     C     CSW025        OREQ      'Y'                                                        263448
      C                   MOVEL     'Y'           ##AUTO
      C                   END
       *
@@ -13169,6 +13172,29 @@
      C                   ELSE                                                               BUG11112
      C                   MOVEL     'N'           CDL033                                     BUG11112
      C                   END                                                                BUG11112
+      *                                                                                       263448
+      ** Check if CSW025 is installed                                                         263448
+      *                                                                                       263448
+     C                   MOVE      'N'           CSW025            1                          263448
+     C                   CALL      'AOSARDR0'                                                 263448
+     C                   PARM      *BLANKS       PRTCD                                        263448
+     C                   PARM      '*VERIFY'     POPTN                                        263448
+     C                   PARM      'CSW025'      PSARD                                        263448
+     C     SCSARD        PARM      SCSARD        DSFDY                                        263448
+      *                                                                                       263448
+     C     PRTCD         IFNE      *BLANKS                                                    263448
+     C     PRTCD         ANDNE     '*NRF   '                                                  263448
+     C                   MOVEL     'SCSARDPD'    W0FILE                                       263448
+     C                   Z-ADD     44            W0ERNB                                       263448
+     C                   MOVEL     'CSW025'      W0KEY                                        263448
+     C                   MOVEL     'MEM5003'     W0MSGD                                       263448
+     C                   MOVEL     'MIDAS  '     W0MSGF                                       263448
+     C                   EXSR      SRERR                                                      263448
+     C                   ENDIF                                                                263448
+      *                                                                                       263448
+     C     PRTCD         IFEQ      *BLANKS                                                    263448
+     C                   MOVE      'Y'           CSW025                                       263448
+     C                   ENDIF                                                                263448
       *                                                                                       CDL081
       ** Check if CDL081 is installed                                                         CDL081
       *                                                                                       CDL081

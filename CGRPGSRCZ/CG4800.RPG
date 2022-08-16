@@ -5,7 +5,7 @@
 /*OVRF*: OVRDBF (File in program) (file on system)                  : *
      F*****************************************************************
      F*                                                               *
-     F*  Midas - User Defined Correspondence                      *
+     F*  Midas - User Defined Correspondence                          *
      F*                                                               *
      F*  CG4800 - COB retail advices - Driver                         *
      F*                                                               *
@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD020957A          Date 10Aug22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
       *                 AR863952           Date 15Nov11               *
       *                 CER049             Date 06Dec10               *
@@ -46,6 +47,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD020957 - Interest Capitalisation Advice is not being gene- *
+      *             rated. Int Cap is not included in CRE020 so ge-   *
+      *             nerate the advice regardless of CRE020. This is   *
+      *             not a reopen issue but a different error repor-   *
+      *             ted under the same case number.                   *
+      *           - Applied for MD-43695.                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
@@ -388,6 +395,7 @@
       ** COB Retail standing orders
       *
      C           *IN01     IFEQ *ON
+     C           CRE020    ANDNE'Y'                                                        MD020957A
      C                     EXSR SRSORD                     Standing orders
      C                     ENDIF
       *
@@ -420,18 +428,21 @@
       ** COB Retail Currency exchanges
       *
      C           *IN04     IFEQ *ON
+     C           CRE020    ANDNE'Y'                                                        MD020957A
      C                     EXSR SRCURE                     COB rate change type
      C                     ENDIF
       *
       ** COB Retail Lending Generated entries.
       *
      C           *IN82     IFEQ *ON
+     C           CRE020    ANDNE'Y'                                                        MD020957A
      C                     EXSR SRLGEN                     COB Lending gen entrs
      C                     ENDIF
       *
       ** COB Retail Dealing Generated postings.
       *
      C           *IN05     IFEQ *ON
+     C           CRE020    ANDNE'Y'                                                        MD020957A
      C                     EXSR SRDEAL                     COB Dealing generated
      C                     ENDIF
       *                                                                                       CAP204
@@ -1449,6 +1460,28 @@
       *                                                                                       CER049
      C                     ENDIF                                                              CER049
       *                                                                                       CER049
+      ** Access SAR details file to determine if CRE020 is installed                       MD020957A
+      *                                                                                    MD020957A
+     C                     CALL 'AOSARDR0'                                                 MD020957A
+     C                     PARM *BLANKS   PRTCD                                            MD020957A
+     C                     PARM '*VERIFY' POPTN                                            MD020957A
+     C                     PARM 'CRE020'  PSARD                                            MD020957A
+     C           SCSARD    PARM SCSARD    DSFDY                                            MD020957A
+      *                                                                                    MD020957A
+     C                     MOVEL'N'       CRE020  1                                        MD020957A
+     C           PRTCD     IFNE *BLANK                                                     MD020957A
+     C           PRTCD     ANDNE'*NRF   '                                                  MD020957A
+     C                     MOVEL'SCSARDPD'W0FILE                                           MD020957A
+     C                     MOVEL'*CALL'   W0KEY                                            MD020957A
+     C                     Z-ADD23        W0ERNB                                           MD020957A
+     C                     MOVEL'MEM5003' W0MSGD                                           MD020957A
+     C                     MOVEL'MIDAS  ' W0MSGF                                           MD020957A
+     C                     EXSR SRERR                                                      MD020957A
+     C                     ENDIF                                                           MD020957A
+      *                                                                                    MD020957A
+     C           PRTCD     IFEQ *BLANKS                                                    MD020957A
+     C                     MOVE 'Y'       CRE020                                           MD020957A
+     C                     ENDIF                                                           MD020957A
       *................................................................
       *
      C/COPY WNCPYSRC,CG4800C003

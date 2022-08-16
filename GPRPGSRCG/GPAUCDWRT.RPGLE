@@ -11,15 +11,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR958473           Date 16Oct12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGP004  *CREATE    Date 23May03               *
+      *                 CGP004  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR958473 - Incorrect values in GPAUCHPD, field AHUSER.       *
+      *             Parameters changed in GPAUEXT. Use the timestamp  *
+      *             field to retrieve the correct transaction.        *
+      *             (Child: AR958477)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP004 - Audit Reporting                                     *
       *                                                               *
@@ -27,6 +32,21 @@
  
      FGPAUCDPD  O    E             DISK    INFSR(*PSSR)
  
+      *                                                                                     AR958473
+      ** Field declaration for Date and time operations.                                    AR958473
+      *                                                                                     AR958473
+     DI#TIMZ           S               Z                                                    AR958473
+     DJ#YEAR           S              4  0                                                  AR958473
+     DConv_InDATE      S              6  0                                                  AR958473
+     D                 DS                                                                   AR958473
+     D YYYY                    1      4                                                     AR958473
+     D YY1                     1      2  0                                                  AR958473
+     D YY2                     3      4  0                                                  AR958473
+     D                 DS                                                                   AR958473
+     D YYMMDD                  1      6                                                     AR958473
+     D YY                      1      2  0                                                  AR958473
+     D MM                      3      4  0                                                  AR958473
+     D DD                      5      6  0                                                  AR958473
  
       * Field Attributes
       * Field Shortnames
@@ -74,9 +94,16 @@
      C                   Clear                   REFSF
      C                   Clear                   REFSFSZ
  
-      * Convert In Date to YYMMDD format
+      *                                                                                     AR958473
+      ** Extract date from the journal timestamp field                                      AR958473
+      ** The CONVERT_INDAT SR will not be used anymore since                                AR958473
+      ** conversion is also done in EXTRCT_DATE SR.                                         AR958473
+      *                                                                                     AR958473
+     C                   EXSR      EXTRCT_DATE                                              AR958473
+     C*                                                                                     AR958473
+      **Convert*In*Date*to*YYMMDD*format******************************                      AR958473
  
-     C                   EXSR      CONVERT_INDAT
+     C**********         EXSR      CONVERT_INDAT                                            AR958473
  
       * Zone
      C                   MOVEL     I#ZONE        ADZONE
@@ -134,22 +161,22 @@
  
      C/SPACE 5
       ********************************************************************
-      * Convert In Date to YYMMDD format
-      * (In Date is in DDMMYY format)
-      ********************************************************************
-     C     CONVERT_INDAT BEGSR
- 
-     C                   MOVEL     I#DATE        Work40            4 0
-     C                   MOVEL     Work40        Day               2 0
-     C                   MOVE      Work40        Month             2 0
-     C                   MOVEL     Month         Work40
-     C                   MOVE      Day           Work40
-     C                   MOVE      Work40        Conv_InDATE       6 0
- 
-     C                   MOVE      I#DATE        Year              2 0
-     C                   MOVEL     Year          Conv_InDATE
- 
-     C                   ENDSR
+      **Convert*In*Date*to*YYMMDD*format******************************                      AR958473
+      **(In*Date*is*in*DDMMYY*format)*********************************                      AR958473
+      ********************************************************************                  AR958473
+     C*****CONVERT_INDAT BEGSR                                                              AR958473
+      **********                                                                            AR958473
+     C**********         MOVEL     I#DATE        Work40            4 0                      AR958473
+     C**********         MOVEL     Work40        Day               2 0                      AR958473
+     C**********         MOVE      Work40        Month             2 0                      AR958473
+     C**********         MOVEL     Month         Work40                                     AR958473
+     C**********         MOVE      Day           Work40                                     AR958473
+     C**********         MOVE      Work40        Conv_InDATE       6 0                      AR958473
+      **********                                                                            AR958473
+     C**********         MOVE      I#DATE        Year              2 0                      AR958473
+     C**********         MOVEL     Year          Conv_InDATE                                AR958473
+      **********                                                                            AR958473
+     C**********         ENDSR                                                              AR958473
       ********************************************************************
      C/SPACE 5
       ****************************************************************
@@ -479,6 +506,21 @@
      C                   ENDSR
       ********************************************************************
       /SPACE 5
+      ********************************************************************                  AR958473
+      * Extract Year, Month and Day portion from journal Timestamp                          AR958473
+      ********************************************************************                  AR958473
+     C     EXTRCT_DATE   BEGSR                                                              AR958473
+      *                                                                                     AR958473
+     C                   EVAL      J#YEAR = %SUBDT(I#TIMZ:*Y)                               AR958473
+     C                   MOVE      J#YEAR        YYYY                                       AR958473
+     C                   EVAL      YY = %REM(%SUBDT(I#TIMZ:*Y):100)                         AR958473
+     C                   EVAL      MM = %SUBDT(I#TIMZ:*M)                                   AR958473
+     C                   EVAL      DD = %SUBDT(I#TIMZ:*D)                                   AR958473
+     C                   MOVE      YYMMDD        Conv_InDATE                                AR958473
+      *                                                                                     AR958473
+     C                   ENDSR                                                              AR958473
+      ********************************************************************                  AR958473
+      /SPACE 5                                                                              AR958473
       ********************************************************************
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
@@ -490,11 +532,13 @@
       * INPUT
       * Zone
       * Journal Sequence Number
-      * Journal Date
+      * Journal Timestamp                                                                   AR958473
+      **Journal*Date**************************************************                      AR958473
       * Journal Entry Type
      C                   PARM                    I#ZONE           10
      C                   PARM                    I#SEQN           10 0
-     C                   PARM                    I#DATE            6
+     C                   PARM                    I#TIMZ                                     AR958473
+     C**********         PARM                    I#DATE            6                        AR958473
      C                   PARM                    I#ENTT            2
       * Field Attributes
       * Field Shortnames

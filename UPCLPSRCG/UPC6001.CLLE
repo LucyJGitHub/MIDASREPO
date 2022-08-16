@@ -1,0 +1,574 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTU server program')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC6001 - OTU server program                                */
+/*                                                                   */
+/*       Function: This program is the main server program that      */
+/*                 submits all components for the upgrade.           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP044   *CREATE   Date 22May22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP044 - One Touch Bridge Automation Changes - Release/     */
+/*                Patch Upgrade                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM       PARM(&GPRFX &BRGBRGLIB)
+
+             DCL        VAR(&GPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LYRPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10) VALUE('UP_OTB_SVR')
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC6001')
+
+/* Retrieve layers for update */
+             CHGVAR     VAR(&LYRPFX) VALUE('  ')
+
+/* Add library */
+             RMVLIBLE   LIB(&BRGBRGLIB)
+             MONMSG     MSGID(CPF2104)
+             ADDLIBLE   LIB(&BRGBRGLIB)
+
+/* for each layer, run the components */
+START:
+/* Retrieve layers for update */
+             CALL UP6003 (&LYRPFX &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* If blank, no layer to update */
+             IF         COND(&LYRPFX *EQ '  ') THEN(GOTO NEXT)
+
+/* update active layer */
+             CHGVAR     VAR(&FLDVAL) VALUE(&LYRPFX)
+             CALL UP6001 ('*UPDATE   ' ' '   'DACTVL' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             IF         COND(&GPRFX *EQ &LYRPFX) THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('*GLOBAL')
+             CALL UP6001 ('*UPDATE   ' ' '   'DACTNR' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+             ELSE CMD(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('*ZONE')
+             CALL UP6001 ('*UPDATE   ' ' '   'DACTNR' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+
+/********* Compoment 1 *********/
+ COMPONENT1:
+
+/* update start time */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DSTRG1' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* submit component */
+             SBMJOB     CMD(CALL PGM(UPC6011) PARM(&GPRFX &LYRPFX +
+                          &BRGBRGLIB &RETURN )) JOB(OTB_SVALVC) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+/* wait for the component to be completed */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+/* If component ran ok, update status and end time */
+             IF         COND(&MSGDATA *EQ 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'Complete' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG1' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG1' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('+')
+             CALL UP6001 ('*UPDATE   ' ' '   'DNOCMC' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             GOTO       CMDLBL(COMPONENT2)
+             ENDDO
+
+/* If component did not run ok, update status and end time */
+             IF         COND(&MSGDATA *NE 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'FAIL' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG1' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('F')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG1' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* and wait for the component to be restarted */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'CONTINUE') THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('           ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG1' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE(' ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG1' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+             GOTO       CMDLBL(COMPONENT1)
+             ENDDO
+             ELSE CMD(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/********* Compoment 2 *********/
+ COMPONENT2:
+
+/* update start time */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DSTRG2' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* submit component */
+             SBMJOB     CMD(CALL PGM(UPC6012) PARM(&GPRFX &LYRPFX +
+                          &BRGBRGLIB &RETURN )) JOB(OTB_CPYS) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+/* wait for the component to be completed */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+/* If component ran ok, update status and end time */
+             IF         COND(&MSGDATA *EQ 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'Complete' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG2' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG2' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('+')
+             CALL UP6001 ('*UPDATE   ' ' '   'DNOCMC' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             GOTO       CMDLBL(COMPONENT3)
+             ENDDO
+
+/* If component did not run ok, update status and end time */
+             IF         COND(&MSGDATA *NE 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'FAIL' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG2' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('F')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG2' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* and wait for the component to be restarted */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'CONTINUE') THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('           ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG2' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE(' ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG2' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+             GOTO       CMDLBL(COMPONENT2)
+             ENDDO
+             ELSE CMD(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/********* Compoment 3 *********/
+ COMPONENT3:
+
+/* update start time */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DSTRG3' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* submit component */
+             SBMJOB     CMD(CALL PGM(UPC6013) PARM(&GPRFX &LYRPFX +
+                          &BRGBRGLIB &RETURN )) JOB(OTB_INZ) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+/* wait for the component to be completed */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+/* If component ran ok, update status and end time */
+             IF         COND(&MSGDATA *EQ 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'Complete' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG3' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG3' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('+')
+             CALL UP6001 ('*UPDATE   ' ' '   'DNOCMC' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             GOTO       CMDLBL(COMPONENT4)
+             ENDDO
+
+/* If component did not run ok, update status and end time */
+             IF         COND(&MSGDATA *NE 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'FAIL' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG3' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('F')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG3' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* and wait for the component to be restarted */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'CONTINUE') THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('           ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG3' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE(' ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG3' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+             GOTO       CMDLBL(COMPONENT3)
+             ENDDO
+             ELSE CMD(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/********* Compoment 4 *********/
+ COMPONENT4:
+
+/* update start time */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DSTRG4' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* submit component */
+             SBMJOB     CMD(CALL PGM(UPC6014) PARM(&GPRFX &LYRPFX +
+                          &BRGBRGLIB &RETURN )) JOB(OTB_DBU) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+/* wait for the component to be completed */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+/* If component ran ok, update status and end time */
+             IF         COND(&MSGDATA *EQ 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'Complete' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG4' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG4' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('+')
+             CALL UP6001 ('*UPDATE   ' ' '   'DNOCMC' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             GOTO       CMDLBL(COMPONENT5)
+             ENDDO
+
+/* If component did not run ok, update status and end time */
+             IF         COND(&MSGDATA *NE 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'FAIL' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG4' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('F')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG4' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* and wait for the component to be restarted */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'CONTINUE') THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('           ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG4' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE(' ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG4' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+             GOTO       CMDLBL(COMPONENT4)
+             ENDDO
+             ELSE CMD(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/********* Compoment 5 *********/
+ COMPONENT5:
+
+/* update start time */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DSTRG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* submit component */
+             SBMJOB     CMD(CALL PGM(UPC6015) PARM(&GPRFX &LYRPFX +
+                          &BRGBRGLIB &RETURN )) JOB(OTB_CFTA) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+/* wait for the component to be completed */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+/* If component ran ok, update status and end time */
+             IF         COND(&MSGDATA *EQ 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'Complete' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('+')
+             CALL UP6001 ('*UPDATE   ' ' '   'DNOCMC' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             GOTO       CMDLBL(COMPONENT6)
+             ENDDO
+
+/* If component did not run ok, update status and end time */
+             IF         COND(&MSGDATA *NE 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'FAIL' or 'CONFLICT'*/
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             IF         COND(&MSGDATA *EQ 'CONFLICT') THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('W')
+             ENDDO
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('F')
+             ENDDO
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* and wait for the component to be restarted */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'CONTINUE') THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('           ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE(' ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+             GOTO       CMDLBL(COMPONENT5)
+             ENDDO
+             ELSE CMD(DO)
+/* if IGNORE, then process with next component */
+             IF         COND(&MSGDATA *EQ 'IGNORE') THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('+')
+             CALL UP6001 ('*UPDATE   ' ' '   'DNOCMC' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             GOTO       CMDLBL(COMPONENT6)
+             ENDDO
+             ELSE CMD(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+             ENDDO
+
+/********* Compoment 6 *********/
+ COMPONENT6:
+
+/* update start time */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DSTRG6' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* submit component */
+             SBMJOB     CMD(CALL PGM(UPC6016) PARM(&GPRFX &LYRPFX +
+                          &BRGBRGLIB &RETURN )) JOB(OTB_PRCA) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+/* wait for the component to be completed */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+/* If component ran ok, update status and end time */
+             IF         COND(&MSGDATA *EQ 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'Complete' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG6' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG6' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('+')
+             CALL UP6001 ('*UPDATE   ' ' '   'DNOCMC' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             GOTO       CMDLBL(COMPONENT7)
+             ENDDO
+
+/* If component did not run ok, update status and end time */
+             IF         COND(&MSGDATA *NE 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'FAIL' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG6' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('F')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG6' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* and wait for the component to be restarted */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'CONTINUE') THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('           ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG6' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE(' ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG6' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+             GOTO       CMDLBL(COMPONENT6)
+             ENDDO
+             ELSE CMD(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/********* Compoment 7 *********/
+ COMPONENT7:
+
+/* update start time */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DSTRG7' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* submit component */
+             SBMJOB     CMD(CALL PGM(UPC6017) PARM(&GPRFX &LYRPFX +
+                          &BRGBRGLIB &RETURN )) JOB(OTB_PST) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+/* wait for the component to be completed */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+/* If component ran ok, update status and end time */
+             IF         COND(&MSGDATA *EQ 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'Complete' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG7' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG7' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('+')
+             CALL UP6001 ('*UPDATE   ' ' '   'DNOCMC' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             GOTO       CMDLBL(START)
+             ENDDO
+
+/* If component did not run ok, update status and end time */
+             IF         COND(&MSGDATA *NE 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'FAIL' */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG7' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE('F')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG7' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* and wait for the component to be restarted */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'CONTINUE') THEN(DO)
+             CHGVAR     VAR(&FLDVAL) VALUE('           ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDG7' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             CHGVAR     VAR(&FLDVAL) VALUE(' ')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG7' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+             GOTO       CMDLBL(COMPONENT7)
+             ENDDO
+             ELSE CMD(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+
+
+ NEXT:
+/* Update end time */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UP6001 ('*UPDATE   ' ' '   'DENDED' &FLDVAL &ERROR)
+
+/* Delete now the DTAQ */
+             DLTDTAQ    DTAQ(&BRGBRGLIB/&DTQN)
+             MONMSG     MSGID(CPF0000)
+
+
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+
+ ERROR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             DLTDTAQ    DTAQ(&BRGBRGLIB/&DTQN)
+             MONMSG     MSGID(CPF2105)
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program UPC6001 ended +
+                          ERRORmally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+ END:        ENDPGM
+

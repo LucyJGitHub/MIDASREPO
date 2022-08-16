@@ -1,0 +1,101 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTU CFTA component')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC6015 - OTU CFTA component                                */
+/*                                                                   */
+/*       Function: This program checks for conflicts for deliverable */
+/*                 data by calling UPC0080026/UPC80026.              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP044   *CREATE   Date 22May22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP044 - One Touch Bridge Automation Changes - Release/     */
+/*                Patch Upgrade                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&GPRFX &LYRPFX &BRGBRGLIB &RETURN)
+
+             DCL        VAR(&GPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LYRPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPL) TYPE(*CHAR) LEN(50) VALUE('COMPLETE')
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(50) VALUE('FAIL')
+             DCL        VAR(&CFLT) TYPE(*CHAR) LEN(50) VALUE('CONFLICT')
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10) VALUE('UP_OTB_SVR')
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CMPN) TYPE(*DEC) LEN(2 0) VALUE(05)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC6015')
+
+/* Update monitor */
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             CALL UP6001 ('*UPDATE   ' ' '   'DCMPG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Log */
+             CALL UP6002 (&LYRPFX &CMPN &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Check if layer is global or not and set *LIBL */
+             IF         COND(&GPRFX *EQ &LYRPFX) THEN(DO)
+             CALL       PGM(UPC0080026) PARM('*CONFLICT' +
+                          'BrgMidasGlobalPrefix' +
+                          'BrgDeliveredBrgLib' 'BrgDeliveredDtaLib' +
+                          '*GLOBAL')
+             ENDDO
+             ELSE CMD(DO)
+             CALL       PGM(UPC0014) PARM(&LYRPFX)
+             CALL       PGM(UPC80026) PARM('*CONFLICT' +
+                          'BrgMidasSystemPrefix' +
+                          'BrgDeliveredBrgLib' 'BrgDeliveredDtaLib' +
+                          '*ZONE')
+             ENDDO
+
+/* In case of conflict */
+             IF         COND(%SWITCH(XX1XXXxx)) THEN(DO)
+/* Send back DTAQ COMPLETE message to server job */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &CFLT)
+             GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(DO)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+
+/* Send back DTAQ COMPLETE message to server job */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &CMPL)
+
+             GOTO       CMDLBL(END)
+             ENDDO
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+/* Send FAIL message to server */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &FAIL)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+ END:        ENDPGM

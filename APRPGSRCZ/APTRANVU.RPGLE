@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057739           Date 28Apr22               *
-      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *  Last Amend No. 260290             Date 16Aug22               *
+      *  Prev Amend No. MD057739           Date 28Apr22               *
+      *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
       *                 MD058991           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -239,7 +240,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260290 - Amended program so that system will pass what kind  *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *           of deal is the transaction to know which settlement *
+      *           tab is to be shown on java screen.                  *
       *             field buffers.                                    *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records.                  *
@@ -4424,6 +4428,8 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CAS011
      C     DLFELn        SUBST     BUFFER:Bfp    TRANS1                                       CAS011
      C                   ADD       DLFELn        Bfp                                          CAS011
+     C     1             SUBST     BUFFER:Bfp    LONDEP                                       260290
+     C                   ADD       1             Bfp                                          260290
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt                                     CAS011
      C                   ADD       ESSRLn        Bfp                                          CAS011
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt                                     CAS011
@@ -4448,6 +4454,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN                                     CAS011
      C                   PARM                    Buffer                                       CAS011
      C                   PARM                    APIRetc                                      CAS011
+     C                   PARM                    LONDEP                                       260290
                                                                                              BUG6417
       * Cash Management Hierarchy Validation                                                 BUG6417
                                                                                              BUG6417

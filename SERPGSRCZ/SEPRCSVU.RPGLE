@@ -54,8 +54,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060294 - Front Office ID missing in the listview and       *
-      *             PRICED file for SOAP PRCS transactions            *
+      *  MD060294 - Front Office ID is not displayed in the PRCS list *
+      *             view.                                             *
+      *             Move Front Office ID and Associate Front Office ID*
+      *             to corresponding fields in valid file so it can be*
+      *             written in PRICED file during update (Recompile)  *
       *  HUT121 - Alloww SE Price Input for Non-working day           *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD102 - Password Length Extension (Recompile)               *

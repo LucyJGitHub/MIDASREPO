@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSW122A            Date 04May22               *
-      *  Prev Amend No. MD057056           Date 19May21               *
+      *  Last Amend No. MD060263           Date 20Jul22               *
+      *  Prev Amend No. MD060250           Date 11Jul22               *      
+      *                 CSW122A            Date 04May22               *
+      *                 MD057056           Date 19May21               *
       *                 MD056683           Date 14Sep20               *
       *                 MD056303           Date 18Jul20               *
       *                 MD056187           Date 02Jul20               *
@@ -24,6 +26,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060263 - MT199 REJT field tag 79 Line 4 TREF value should  *
+      *             not include further trailing info.                *
+      *  MD060250 - Not translated Incoming MT is generating MTn99    *
+      *             REJT.                                             *
       *  CSW122A  - SWIFT ISO 20022 CCR1 Generation of MTn99          *
       *  MD057056 - SWIFT: F21 in MT199 is truncated                  *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
@@ -85,6 +91,11 @@
                                                                                              CSW122A
       ** Logical File for Message Incoming Details by Message Tag                            CSW122A
      FMEIN35L0  IF   E           K DISK    INFSR(*PSSR)                                      CSW122A
+                                                                                            MD060250
+      ** Logical File for Midas MS Incoming MX messages file                                MD060250
+     FMSIXISOL3 IF   E           K DISK    INFSR(*PSSR)                                     MD060250
+     F                                     RENAME(MSIXISD0:MSIXISOCL3)                      MD060250
+     F                                     PREFIX(C3)                                       MD060250
 
       ** Logical File for retrieving Incoming Message Transaction Number
      FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)
@@ -268,6 +279,7 @@
       *
      D KFMsgR          S              8P 0
      D KFMtag          S              5A
+     D KFMXUETR        S             36A                                                    MD060250
 
       *
       ** Variables for storing the final value of tags
@@ -305,6 +317,7 @@
      D WReceiverA      S             12A                                                     CSW122A
      D WROC            S              3S 0                                                   CSW122A
      D WROCL           S              3S 0                                                   CSW122A
+     D WROCA           S              3S 0                                                  MD060263
      D WTag20a         S              8A
      D WTag20b         S              6A
      D***WTag79L3a       S             14A                                                  MD056303
@@ -323,6 +336,9 @@
      D WTag79L3ac      S              6A                                                    CSW122A
      D WTag79L3bc      S             16A                                                    CSW122A
      D WMtpy           S              3A                                                    CSW122A
+     D WMTUETR         S             36A                                                    MD060250
+     D WMXUETR         S             36A                                                    MD060250
+     D WMXFlg          S              1A                                                    MD060250
 
       ** Variables for getting SWIFT BIC of destination
      D WDstT           S              1A
@@ -779,6 +795,11 @@
       ** If CSW122 is switched on, do processing for MT199REJT.                              CSW122A
       *                                                                                      CSW122A
      C                   IF        CSW122 = 'Y'                                              CSW122A
+      *                                                                                     MD060250
+      ** Check if Incoming MT Message is Translated to MX Message                           MD060250
+      *                                                                                     MD060250
+     C                   EXSR      SrChkIfMX                                                MD060250
+     C                   IF        WMXFlg = 'Y'                                             MD060250
       *                                                                                      CSW122A
       ** Check for system value GenMTn99OnIgnore or GenMTn99OnSTPIgnore                      CSW122A
       ** status REJT.                                                                        CSW122A
@@ -794,6 +815,8 @@
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
      C                   ENDIF                                                               CSW122A
+      *                                                                                     MD060250
+     C                   ENDIF                                                              MD060250
       *                                                                                      CSW122A
      C                   ENDIF                                                               CSW122A
       *                                                                                      CSW122A
@@ -2006,7 +2029,7 @@
      C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)                     CSW122A
      C                   EVAL      WTag20ValA = 'P' + WTag20a + WTag20b + 'A'                CSW122A
      C                   EVAL      WTRNoA = WTag20ValA                                       CSW122A
-
+                                                                                             CSW122A
      C                   ADD       1             Q                                           CSW122A
      C     Q             OCCUR     MULT                                                      CSW122A
      C                   MOVEL     ':20:'        MTAG                                        CSW122A
@@ -2094,7 +2117,10 @@
      C                   IF        WROC <> 0                                                 CSW122A
      C                   EVAL      WROCL = %SCAN('/':WTag70ALL:WROC+5)                       CSW122A
      C                   IF        WROCL <> 0                                                CSW122A
-     C                   EVAL      WTag70ValA = %SUBST(WTag70ALL:WROC+5:WROCL-6)             CSW122A
+     C                   EVAL      WROCA = WROC + 5                                         MD060263
+     C**********         EVAL      WTag70ValA = %SUBST(WTag70ALL:WROC+5:WROCL-6)    CSW122A MD060263
+     C                   EVAL      WTag70ValA =                                             MD060263
+     C                                       %SUBST(WTag70ALL:WROCA:WROCL-WROCA)            MD060263
      C                   ELSE                                                                CSW122A
      C                   EVAL      WTag70ValA = %SUBST(WTag70ALL:WROC+5)                     CSW122A
      C                   ENDIF                                                               CSW122A
@@ -2325,6 +2351,45 @@
      C                   CLEAR     *ALL          MULT                                        CSW122A
      C                   EVAL      Q = 0                                                     CSW122A
      C                   ENDSR                                                               CSW122A
+      *****************************************************************                     MD060250
+     C/EJECT                                                                                MD060250
+      *****************************************************************                     MD060250
+      *                                                               *                     MD060250
+      *  SrChkIfMX - Check if incoming message is translated MT       *                     MD060250
+      *  Called by: SrRdIncMsg                                        *                     MD060250
+      *                                                               *                     MD060250
+      *  Calls    : None                                              *                     MD060250
+      *                                                               *                     MD060250
+      *****************************************************************                     MD060250
+     C     SrChkIfMX     BEGSR                                                              MD060250
+      *                                                                                     MD060250
+      ** Get tag 121                                                                        MD060250
+      *                                                                                     MD060250
+     C                   EVAL      KFMtag = '121:'                                          MD060250
+     C     KLIncMsg      CHAIN     MEINDTL0                                                 MD060250
+     C                   IF        %FOUND                                                   MD060250
+     C                   EVAL      WMTUETR = DTMFLD                                         MD060250
+     C                   EVAL      WMXUETR = WMTUETR                                        MD060250
+     C                   EVAL      KFMXUETR = WMXUETR                                       MD060250
+      *                                                                                     MD060250
+     C     KFMXUETR      CHAIN     MSIXISOL3                                                MD060250
+     C                   IF        %FOUND                                                   MD060250
+     C                   EVAL      WMXFlg = 'Y'                                             MD060250
+     C                   ELSE                                                               MD060250
+     C                   EVAL      WMXFlg = 'N'                                             MD060250
+     C                   ENDIF                                                              MD060250
+      *                                                                                     MD060250
+     C                   ELSE                                                               MD060250
+     C     *LOCK         IN        LDA                                                      MD060250
+     C                   MOVE      '040'         DBASE                                      MD060250
+     C                   MOVEL     'KLIncMsg'    DBKEY                                      MD060250
+     C                   MOVEL     'MEINDTL0'    DBFILE                                     MD060250
+     C                   OUT       LDA                                                      MD060250
+     C                   EXSR      *PSSR                                                    MD060250
+      *                                                                                     MD060250
+     C                   ENDIF                                                              MD060250
+      *                                                                                     MD060250
+     C                   ENDSR                                                              MD060250
       *****************************************************************
      C/EJECT
       *****************************************************************

@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL063             Date 02Nov21               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LCI001             Date 27Jul20               *
+      *  Prev Amend No. CDL063             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -47,6 +48,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LCI001 - MM Deals Validation - Deal Type against Customer    *
+      *           Add hooks LCI001_001, LCI001_002, LCI001_003,       *
+      *            LCI001_004                                         *      
       *  CDL063 - Allow non-bank/bank counterparty on certain         *
       *           deal types                                          *
       *  MD046248 - Finastra Rebranding                               *
@@ -173,6 +177,7 @@
       ** Customer Shortname field passed as a parameter
      D IKCSNM          S             10A
       **
+     D/COPY WNCPYSRC,LCI001_001
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -268,11 +273,13 @@
       ** If CDL063 is on, bypass the validation for non-bank                                  CDL063
       *                                                                                       CDL063
      C     CDL063        IFNE      'Y'                                                        CDL063
+     C/COPY WNCPYSRC,LCI001_003     
      C     DDTYPE        IFEQ      'IP'
      C     DDTYPE        OREQ      'IT'
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM1065'     Msgid2
      C                   END
+     C/COPY WNCPYSRC,LCI001_004
      C                   ENDIF                                                                CDL063
      C                   END
  
@@ -347,6 +354,7 @@
      C                   EVAL      CDL063 = 'Y'                                               CDL063
      C                   ENDIF                                                                CDL063
       *                                                                                       CDL063
+     C/COPY WNCPYSRC,LCI001_002 
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as

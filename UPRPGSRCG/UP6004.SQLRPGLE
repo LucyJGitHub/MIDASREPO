@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CUP044 *CREATE     Date 22May22               *
+      *  Last Amend No. MD060351           Date 17Aug22               *
+      *  Prev Amend No. CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060351 - Compilation error with multilanguage              *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
       *           Patch Upgrade                                       *
       *                                                               *
@@ -48,6 +50,12 @@
      D Command         S             80
      D CommandLen      S             15  5 INZ(80)
 
+     D C_DOTL          C                   Const('--------------------------                MD060351
+     D                                     -----------------------------------              MD060351
+     D                                     -----------------------------------              MD060351
+     D                                     -----------------------------------              MD060351
+     D                                     -----------------------------------')            MD060351
+                                                                                            MD060351
      DRtnCode          S             10
      DObjName          S             10
      DObjLib           S             10
@@ -217,6 +225,7 @@
      C                   eval      ##STS5 = *blanks
      C                   eval      ##STS6 = *blanks
      C                   eval      ##STS7 = *blanks
+     C                   eval      ##DOTL = C_DOTL                                          MD060351
 
       * GLOBAL
      C                   eval      ##PRFX = DGPRFX

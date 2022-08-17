@@ -18,8 +18,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. AR927286A          Date 12Aug22               *
+      *  Prev Amend No. AR927286           Date 12Aug22               *
+      *                 261074             Date 12Aug22               *
+      *                 255502             Date 12Aug22               *
+      *                 CLE138             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055950           Date 23Jun20               *
       *                 MD025528           Date 06Nov19               *
@@ -111,6 +115,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR927286A - Compilation failed due to different description  *
+      *              of QQDFAC. Fix is to rename QQDFAC in SDBRCHPD.  *
+      *  AR927286 - Display the correct Action narrative for dropped  *
+      *             amendments in LE0461P2. (Child: AR927287)         *
+      *  261074 - Change fix 255502 to drop all amendment types not   *
+      *           only 'FI'.                                          *
+      *  255502 - LEC0609D failed due to database error in FCLTYFM.   *
+      *           Drop future amendments when facility expires.       *
+      *           Introduce LE0461P2 to report the dropped amendments.*
+      *           Include the number of dropped records in LE0461AU.  *
+      *         - Applied for AR927286                                *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -287,7 +302,8 @@
      F**  ADDITION OF FEES MASTER FILE                                    0119
      FLEFEEDL1IF  E           K        DISK                               0119
      F*                                                                   0119
-     FLEFCAML0IF  E           K        DISK                               CLE005
+     F***LEFCAML0IF  E           K        DISK                                         CLE005 255502
+     FLEFCAML0UF  E           K        DISK                                                   255502
       *                                                                   CLE005
      FLEPARTL3IF  E           K        DISK                               120277
      F            LEPARTD0                          KRENAMELEPART3                          AR787849
@@ -313,6 +329,7 @@
      F            ACCNTABF                          KRENAMEACCNTADF                        AR1008182
      F/COPY WNCPYSRC,LE0461F002
      FLE0461AUO   E                    PRINTER      KINFDS SPOOLU
+     FLE0461P2O   E                    PRINTER      KINFDS SPOOL1     UC                      255502
      F/EJECT
      F*****************************************************************
      F*                                                               *
@@ -324,6 +341,9 @@
      F*   25  - For CHAIN To FCLTYL15                                 *                     BUG28069
      F*   27  - Month end                                             *   E30572
      F*   28  - Year end                                              *   E30572
+      *   30  - Facility Increase                                     *                     AR927286
+      *   31  - Facility Decrease                                     *                     AR927286
+      *   32  - Revolving Credit Change                               *                     AR927286
       *   49  - LEFCAML0 end-of-file                                  *   CLE005
      F*   50  - First Cycle Indicator                                 *
      F*   60  - READ of LEFEEDL1                                      *
@@ -348,12 +368,18 @@
      F*           Appropriate                                         *
      F*  EXPARR - To Update Dates for Availability Array              *
      F*  TERM   - To put out audit report                             *
+      *  FADROP - Drops future amendments of expiring facilities      *                       255502
+      *  FAREPT - Print report of dropped amendments                  *                       255502
+      *  WP1REC - Subroutine to Write a Detail record to the Report   *                       255502
+      *  WP1END - Subroutine to Write End of Report                   *                       255502
+      *  SRIFLD - Reinitialise report fields                          *                       255502
      F*  INIT   - First Cycle Calcs                                   *
      F*  GLZADD - To Add an Amount (ZZAMT) to the Total (ZZTOTI,ZZTOTD)
      F*  GLZSUM - To Carry Out the Addition for GLZADD                *
      F*  ZDATE1 - To Validate Dates Submitted and Convert to a Number *
      F*           of Days                                             *
      F*  ZDATE2 - To Convert a Day Number to Date Formats             *
+      *  ZFRPED - Format an Amount                                    *                       255502
      F*  ZACCH  - To access a holiday record for a particular currency*
      F*  ZFWDT  - To calculate Nth working day forward from given date*
      F*  *PSSR  - To Handle Abnormal Error Conditions                 *
@@ -367,6 +393,7 @@
      E                    CPY@    1   1 80
      E/COPY ZSRSRC,ZDATE2Z1
      E/COPY ZSRSRC,ZHOLE
+     E/COPY ZSRSRC,ZFRPEDZ1                                                                   255502
      E/EJECT
      I*
       * Rename CLOANCL fields to prevent overwrite on FCUPD files         062690
@@ -774,6 +801,15 @@
      I**
      I                                       83  92 SFILEU
      I                                    B 123 1240SFNUMU
+      *                                                                                       255502
+     ISPOOL1      DS                                                                          255502
+      ** File Information Data Structure for LE0461P2                                         255502
+      *                                                                                       255502
+     I                                        9   9 OPEN1                                     255502
+     I                                       83  92 SFILE1                                    255502
+     I                                    B 123 1240SFNUM1                                    255502
+     I                                    B 188 1890OFLLN1                                    255502
+     I                                    B 367 3680PRTLN1                                    255502
       **
      IPSDS       SDS
      I** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
@@ -813,6 +849,17 @@
      ISCSARD    E DSSCSARDPD                                              CLE005
       ** SAR File Details Accessed via Access Program AOSARDR0            CLE005
       *                                                                   CLE005
+     ISDBRCH    E DSSDBRCHPD                                                                  255502
+      ** Branch Details                                                                       255502
+     I              QQDFAC                          BQDFAC                                 AR927286A
+      *                                                                                       255502
+     ISDCURR    E DSSDCURRPD                                                                  255502
+      ** Currency Details                                                                     255502
+      *                                                                                       255502
+     ISDCUST    E DSSDCUSTPD                                                                  255502
+      ** Customer Details                                                                     255502
+      *                                                                                       255502
+     I/COPY ZSRSRC,ZFRPEDZ2                                                                   255502
      I/COPY WNCPYSRC,LE0461I001
      C*                                                                                     MD033997
      C           *ENTRY    PLIST                                                            MD033997
@@ -954,6 +1001,12 @@
      C                     Z-ADD2         NFCUPD           FCLTY UPD.FILE
      C                     END
      C*
+     C           OPEN1     IFEQ '1'                                                           255502
+     C                     EXSR WP1END                                                        255502
+     C                     ENDIF                                                              255502
+      *                                                                                       255502
+     C                     Z-ADDWCNTR     RDROP                                               255502
+      *                                                                                       255502
      C                     END
      C*
      C*** OUTPUT AUDIT REPORT
@@ -1255,6 +1308,7 @@
      C           CLE134    OREQ 'Y'                                                         MD050829
      C           WNCOB     ANDEQ'NEWCOB'                                                    MD033997
      C                     MOVE 'E'       RECI
+     C                     EXSR FADROP                                                        255502
      C/COPY WNCPYSRC,LE0461C012
       *                                                                                     MD025528
       ** Blank out review details on expiry if 'Y' on SystemValues                          MD025528
@@ -1483,6 +1537,267 @@
      C                     RETRN
      C*
      C                     ENDSR
+      *****************************************************************                       255502
+      /TITLE SR/FADROP                                                                        255502
+      *****************************************************************                       255502
+      *  FADROP - Drops future amendments of facilities expiring      *                       255502
+      *  Called By: PREVF                                             *                       255502
+      *  Calls    : FAREPT                                            *                       255502
+      *****************************************************************                       255502
+      *                                                                                       255502
+     C           FADROP    BEGSR                           ** FADROP **                       255502
+      *                                                                                       255502
+      ** Drop from file orphaned amendments                                                   255502
+      *                                                                                       255502
+     C                     MOVE BRCA      WBRCA                                               255502
+     C                     MOVE CNUM      WCNUM                                               255502
+     C                     Z-ADDFACT      WFACT                                               255502
+     C                     Z-ADDFCNO      WFCNO                                               255502
+      *                                                                                       255502
+     C           FCMKEY    SETLLLEFCAML0                                                      255502
+     C                     READ LEFCAML0                 49                                   255502
+      *                                                                                       255502
+     C           *IN49     DOWEQ*OFF                                                          255502
+     C           WCNUM     ANDEQACNUM                                                         255502
+     C           WFACT     ANDEQAFACT                                                         255502
+     C           WFCNO     ANDEQAFCNO                                                         255502
+      *                                                                                       255502
+     C           ARECI     IFEQ 'D'                                                           255502
+     C           VLDT      ANDGTDTEX                                                          255502
+     C********** FATP      ANDEQ'FI'                                                   255502 261074
+     C                     EXSR FAREPT                                                        255502
+     C                     DELETLEFCAMPF                                                      255502
+     C                     ENDIF                                                              255502
+      *                                                                                       255502
+     C                     READ LEFCAML0                 49                                   255502
+      *                                                                                       255502
+     C                     ENDDO                                                              255502
+      *                                                                                       255502
+     C                     ENDSR                                                              255502
+      *                                                                                       255502
+      *****************************************************************                       255502
+      /TITLE SR/FAREPT                                                                        255502
+      *****************************************************************                       255502
+      *  FAREPT - Print report of dropped amendments                  *                       255502
+      *  Called By: FADROP                                            *                       255502
+      *  Calls    : WP1END, WP1REC, AOBRCHR0, *PSSR                   *                       255502
+      *****************************************************************                       255502
+      *                                                                                       255502
+     C           FAREPT    BEGSR                           ** FAREPT **                       255502
+      *                                                                                       255502
+      ** Check if there is change of branch                                                   255502
+      *                                                                                       255502
+     C           ABRCA     IFNE WPBRCA                                                        255502
+     C           MBIN      ANDEQ'Y'                                                           255502
+     C           OPEN1     ORNE '1'                                                           255502
+     C           MBIN      ANDEQ'N'                                                           255502
+      *                                                                                       255502
+     C           OPEN1     IFEQ '1'                                                           255502
+     C                     EXSR WP1END                                                        255502
+     C                     ENDIF                                                              255502
+      *                                                                                       255502
+      ** Close, then open                                                                     255502
+      *                                                                                       255502
+     C                     MOVE ABRCA     WPBRCA  3                                           255502
+     C                     CLOSELE0461P2                                                      255502
+     C                     OPEN LE0461P2                                                      255502
+      *                                                                                       255502
+      ** Get the branch description then write report header                                  255502
+      *                                                                                       255502
+     C                     CALL 'AOBRCHR0'                                                    255502
+     C                     PARM *BLANKS   WRTCD   7                                           255502
+     C                     PARM '*KEY   ' WOPTN   7                                           255502
+     C           RBRCA     PARM ABRCA     WBRCA   3                                           255502
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               255502
+     C           WRTCD     IFNE *BLANKS                                                       255502
+     C           *LOCK     IN   LDA                                                           255502
+     C                     MOVEL'SDBRCHPD'DBFILE           ************                       255502
+     C                     Z-ADD9         DBASE            * DBERR 09 *                       255502
+     C                     MOVELWBRCA     DBKEY            ************                       255502
+     C                     OUT  LDA                                                           255502
+     C                     EXSR *PSSR                                                         255502
+     C                     ENDIF                                                              255502
+     C                     WRITEHEADP1                                                        255502
+     C                     ENDIF                                                              255502
+      *                                                                                       255502
+      ** Move action fields to report fields and write details to                             255502
+      ** report                                                                               255502
+      *                                                                                       255502
+     C                     EXSR WP1REC                                                        255502
+      *                                                                                       255502
+     C                     ADD  1         WCNTR                                               255502
+      *                                                                                       255502
+     C                     ENDSR                                                              255502
+      *                                                                                       255502
+      *****************************************************************                       255502
+      /TITLE SR/WP1REC                                                                        255502
+      *****************************************************************                       255502
+      *  WP1REC - Subroutine to Write a Detail record to the Report   *                       255502
+      *  Called By: FAREPT                                            *                       255502
+      *  Calls: SRIFLD, ZDATE2, ZFRPED, SRNBDP, AOCUSTR0, *PSSR       *                       255502
+      *****************************************************************                       255502
+      *                                                                                       255502
+     C           WP1REC    BEGSR                           ** WP1REC **                       255502
+      *                                                                                       255502
+      ** Reinitialise Report fields                                                           255502
+      *                                                                                       255502
+     C                     EXSR SRIFLD                                                        255502
+      *                                                                                       255502
+      ** Move key fields to report fields                                                     255502
+      *                                                                                       255502
+     C                     MOVE ACNUM     RCNUM                                               255502
+     C                     MOVE AFACT     RFACT                                               255502
+     C                     MOVE AFCNO     RFCNO                                               255502
+      *                                                                                       255502
+      ** Format Value Date                                                                    255502
+      *                                                                                       255502
+     C           VLDT      IFEQ 0                                                             255502
+     C                     MOVE *BLANKS   RVDAT                                               255502
+     C                     ELSE                                                               255502
+     C                     MOVE VLDT      ZDAYNO                                              255502
+     C                     EXSR ZDATE2                                                        255502
+     C                     MOVE ZADATE    RVDAT                                               255502
+     C                     ENDIF                                                              255502
+      *                                                                                       255502
+      ** Get Customer Name                                                                    255502
+      *                                                                                       255502
+     C                     MOVELACNUM     WCUST                                               255502
+     C                     CALL 'AOCUSTR0'                                                    255502
+     C                     PARM *BLANKS   WRTCD                                               255502
+     C                     PARM '*KEY   ' WOPTN                                               255502
+     C                     PARM           WCUST  10                                           255502
+     C                     PARM *BLANKS   PKYST   7                                           255502
+     C           SDCUST    PARM SDCUST    DSSDY                                               255502
+     C           WRTCD     IFNE *BLANKS                                                       255502
+     C           *LOCK     IN   LDA                                                           255502
+     C                     MOVEL'SDCUSTPD'DBFILE           ************                       255502
+     C                     Z-ADD010       DBASE            * DBERR 10 *                       255502
+     C                     MOVELACNUM     DBKEY            ************                       255502
+     C                     OUT  LDA                                                           255502
+     C                     EXSR *PSSR                                                         255502
+     C                     ELSE                                                               255502
+     C                     MOVELBBCRNM    RCNAM                                               255502
+     C                     ENDIF                                                              255502
+      *                                                                                       255502
+      ** Move amendment currency to report field                                              255502
+      *                                                                                       255502
+     C                     MOVE ACCY      RHCCY                                               255502
+      *                                                                                     AR927286
+      ** Get Action narrative                                                               AR927286
+      *                                                                                     AR927286
+     C                     SELEC                                                            AR927286
+     C           FATP      WHEQ 'FI'                                                        AR927286
+     C                     MOVE '1'       *IN30                                             AR927286
+     C           FATP      WHEQ 'FD'                                                        AR927286
+     C                     MOVE '1'       *IN31                                             AR927286
+     C           FATP      WHEQ 'RC'                                                        AR927286
+     C                     MOVE '1'       *IN32                                             AR927286
+     C                     ENDSL                                                            AR927286
+      *                                                                                       255502
+      ** Get the number of decimal places for use in formatting                               255502
+      ** the action amount                                                                    255502
+      *                                                                                       255502
+     C                     MOVE RHCCY     WCURR                                               255502
+     C                     EXSR SRNBDP                                                        255502
+     C                     Z-ADDWNBDP     ZDECS                                               255502
+      *                                                                                       255502
+      ** Format amount                                                                        255502
+      *                                                                                       255502
+     C                     MOVE *BLANKS   ZFLD15                                              255502
+     C                     Z-ADDAAMT      ZFLD15                                              255502
+     C                     EXSR ZFRPED                                                        255502
+     C                     MOVE ZOUT1     RHAMT                                               255502
+      *                                                                                       255502
+      ** Check that sufficient lines remain for the Format. If not,                           255502
+      ** write out the Main Headings on a new page.                                           255502
+      *                                                                                       255502
+     C                     Z-ADD2         RQDLN1                                              255502
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              255502
+     C           DIFLN1    IFLE RQDLN1                                                        255502
+     C                     WRITEHEADP1                                                        255502
+     C                     ENDIF                                                              255502
+      *                                                                                       255502
+      ** Write out Detail Record                                                              255502
+      *                                                                                       255502
+     C                     WRITEDETAL1                                                        255502
+      *                                                                                       255502
+     C                     ENDSR                                                              255502
+      *                                                                                       255502
+      *****************************************************************                       255502
+      /TITLE SR/WP1END                                                                        255502
+      *****************************************************************                       255502
+      *  WP1END - Subroutine to Write End of Report                   *                       255502
+      *  Called By: FAREPT                                            *                       255502
+      *  Calls    : None                                              *                       255502
+      *****************************************************************                       255502
+      *                                                                                       255502
+     C           WP1END    BEGSR                           ** WP1END **                       255502
+      *                                                                                       255502
+      ** Check that sufficient lines remain for the Format. If not,                           255502
+      ** write out the Main Headings on a new page.                                           255502
+      *                                                                                       255502
+     C                     Z-ADD4         RQDLN1                                              255502
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              255502
+     C           DIFLN1    IFLE RQDLN1                                                        255502
+     C                     WRITEHEADP1                                                        255502
+     C                     ENDIF                                                              255502
+      *                                                                                       255502
+      ** Write out Total Format                                                               255502
+      *                                                                                       255502
+     C                     WRITETRAILP1                                                       255502
+      *                                                                                       255502
+     C                     ENDSR                                                              255502
+      *                                                                                       255502
+      *****************************************************************                       255502
+      /TITLE SR/SRIFLD                                                                        255502
+      *****************************************************************                       255502
+      *  SRIFLD - Reinitialise report fields                          *                       255502
+      *  Called By: WP1REC                                            *                       255502
+      *  Calls    : None                                              *                       255502
+      *****************************************************************                       255502
+      *                                                                                       255502
+     C           SRIFLD    BEGSR                           ** SRIFLD **                       255502
+      *                                                                                       255502
+     C                     MOVE *BLANKS   RCNUM                                               255502
+     C                     MOVE *BLANKS   RCNAM                                               255502
+     C                     MOVE *BLANKS   RFACT                                               255502
+     C                     MOVE *BLANKS   RFCNO                                               255502
+     C                     MOVE *BLANKS   RHCCY                                               255502
+     C                     MOVE *BLANKS   RVDAT                                               255502
+     C                     MOVE *BLANKS   RHAMT                                               255502
+      *                                                                                       255502
+     C                     MOVEA'000'     *IN,30                                            AR927286
+      *                                                                                     AR927286
+     C                     ENDSR                                                              255502
+      *                                                                                       255502
+      *****************************************************************                       255502
+      /TITLE SR/SRNBDP                                                                        255502
+      *****************************************************************                       255502
+      *  SRNBDP - Get the currency's number of decimal places         *                       255502
+      *  Called By: WP1REC                                            *                       255502
+      *  Calls    : AOCURRR0, *PSSR                                   *                       255502
+      *****************************************************************                       255502
+      *                                                                                       255502
+     C           SRNBDP    BEGSR                           ** SRNBDP **                       255502
+      *                                                                                       255502
+     C                     CALL 'AOCURRR0'                                                    255502
+     C                     PARM '*BLANK ' WRTCD                                               255502
+     C                     PARM '*KEY   ' WOPTN                                               255502
+     C                     PARM           WCURR   3                                           255502
+     C           SDCURR    PARM SDCURR    DSSDY                                               255502
+     C           WRTCD     IFNE *BLANKS                                                       255502
+     C           *LOCK     IN   LDA                                                           255502
+     C                     MOVEL'SDCURRPD'DBFILE           ************                       255502
+     C                     Z-ADD8         DBASE            * DBERR 08 *                       255502
+     C                     MOVELWCURR     DBKEY            ************                       255502
+     C                     OUT  LDA                                                           255502
+     C                     EXSR *PSSR                                                         255502
+     C                     ELSE                                                               255502
+     C                     Z-ADDA6NBDP    WNBDP   10                                          255502
+     C                     ENDIF                                                              255502
+      *                                                                                       255502
+     C                     ENDSR                                                              255502
+      *                                                                                       255502
      C********************************************************************
      C*
      C***  INIT SUBROUTINE - FIRST CYCLE CALCS
@@ -1496,6 +1811,10 @@
      C/COPY WNCPYSRC,LE0461C004
      C                     MOVE ' '       BLANKS 29        SET UP FIELDS
      C                     Z-ADD0         PACK11 110
+      *                                                                                       255502
+     C                     Z-ADD0         WCNTR   50                                          255502
+     C                     Z-ADD0         RQDLN1  30                                          255502
+     C                     Z-ADD0         DIFLN1  30                                          255502
      C*
      C***  IN THE DATAAREA RUNDAT
      C*
@@ -2101,6 +2420,8 @@
      C*
      C                     ENDSR                           ** *PSSR **
      C********************************************************************
+      /TITLE SR/ZFRPED                                                                        255502
+     C/COPY ZSRSRC,ZFRPEDZ3                                                                   255502
      C/EJECT
 ** CPY@   **      OBJECT COPYRIGHT
 (c) Finastra International Limited 2001

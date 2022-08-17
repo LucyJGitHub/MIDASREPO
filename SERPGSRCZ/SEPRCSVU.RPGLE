@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD060294           Date 03Aug22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -52,6 +53,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060294 - Front Office ID is not displayed in the PRCS list *
+      *             view.                                             *
+      *             Move Front Office ID and Associate Front Office ID*
+      *             to corresponding fields in valid file so it can be*
+      *             written in PRICED file during update              *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -703,6 +709,15 @@
      C                   MOVEL     @TimeStamp    V_PRTMESTMP                                 BUG4258
      C                   ENDIF                                                               BUG4258
                                                                                              BUG4258
+      ** Save Front Office ID and Associate Front Office ID                                 MD060294
+                                                                                            MD060294
+     C                   IF        APFOTRANID <> *BLANKS                                    MD060294
+     C                   EVAL      V_PRFRNT = APFOTRANID                                    MD060294
+     C                   ENDIF                                                              MD060294
+     C                   IF        APFOASOCID <> *BLANKS                                    MD060294
+     C                   EVAL      V_PRAFRT = APFOASOCID                                    MD060294
+     C                   ENDIF                                                              MD060294
+                                                                                            MD060294
      C                   CALLB     'SEPRCSUPD'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    ValidPRCS

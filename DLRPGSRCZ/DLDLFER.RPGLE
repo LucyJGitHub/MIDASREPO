@@ -430,6 +430,7 @@
      C                   PARM      DDFCCY        InPCCY                                      CSF011A
      C     DFROBN        IFEQ      '0'                                                        260290
      C                   MOVEL     *BLANKS       DDROBN                                       260290
+     C                   ENDIF                                                                260290
 
      C                   ENDSR
       *****************************************************************

@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059859           Date 11May22               *
-      *  Prev Amend No. MD059908           Date 11May22               *
+      *  Last Amend No. MD059859A          Date 28Jun22               *
+      *  Prev Amend No. MD059859           Date 11May22               *
+      *                 MD059908           Date 11May22               *
       *                 CCG025             Date 11May22               *
       *                 CGL193             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
@@ -69,8 +70,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059859A - Apply change to both credit and debit side.      *
+      *              If no entries prior to last posting date, check  *
+      *              for the first entry after last posting date.     *
       *  MD059859 - Initial rate should be zero if no interest is     *
       *             calculated. Pattern fix from MD057283.            *
+      *  MD059908 - Decimal data error in job GLC0064. Also correct   *
+      *             extract of debit rate change.                     *
+      *             Applied for MD-59859.                             *
       *  CCG025 - Tiered and Threshold Interest Details on Statements *
       *           Applied for MD-59859.                               *
       *  CGL193 - Transaction Type and GL Additional Info in CM GL    *
@@ -1595,6 +1602,15 @@
      C                   MOVEL     'Y'           FIRST             1                          CCG025
      C     ##ACDK        SETGT     REHRCJ                                                     CCG025
      C     ##ACKY        READPE    REHRCJ                                 55                  CCG025
+      *                                                                                    MD059859A
+      **  If there are no posting on or before the last statement date,                    MD059859A
+      **  check for the next posting after the last statement date                         MD059859A
+      *                                                                                    MD059859A
+     C                   IF        *IN55 = *ON                                             MD059859A
+     C                   SETOFF                                       55                   MD059859A
+     C     ##ACDK        SETGT     REHRCJ                                                  MD059859A
+     C     ##ACKY        READE     REHRCJ                                 55               MD059859A
+     C                   ENDIF                                                             MD059859A
       *                                                                                       CCG025
       **  For each rate change ...                                                            CCG025
      C     *IN55         DOWEQ     *OFF                                                       CCG025
@@ -1745,11 +1761,14 @@
      C                   MOVEL     RAT24         ##D(7)                                       CCG025
      C                   MOVEL     RAT25         ##D(8)                                       CCG025
      C                   MOVEL     RAT26         ##D(9)                                       CCG025
+     C                   IF        RAT3 =   *BLANKS                                         MD059908
+     C                   ELSE                                                               MD059908
      C                   MOVEL     RAT31         ##D(10)                                      CCG025
      C                   MOVEL     RAT32         ##D(11)                                      CCG025
      C                   MOVEL     RAT33         ##D(12)                                      CCG025
      C                   MOVEL     RAT34         ##D(13)                                      CCG025
      C                   MOVEL     RAT35         ##D(14)                                      CCG025
+     C                   ENDIF                                                              MD059908
       **  Set up Balances                                                                     CCG025
      C                   MOVEL     BAL21         ##D(16)                                      CCG025
      C                   MOVE      A6NBDP        ##D(16)                                      CCG025
@@ -1772,6 +1791,8 @@
       *                                                                                       CCG025
      C                   MOVEL     BAL26         ##D(1)                                       CCG025
      C                   MOVE      A6NBDP        ##D(1)                                       CCG025
+     C                   IF        BAL3 =   *BLANKS                                         MD059908
+     C                   ELSE                                                               MD059908
      C                   MOVEL     BAL31         ##D(2)                                       CCG025
      C                   MOVE      A6NBDP        ##D(2)                                       CCG025
      C                   MOVEL     BAL32         ##D(3)                                       CCG025
@@ -1782,6 +1803,7 @@
      C                   MOVE      A6NBDP        ##D(5)                                       CCG025
      C                   MOVEL     BAL35         ##D(6)                                       CCG025
      C                   MOVE      A6NBDP        ##D(6)                                       CCG025
+     C                   ENDIF                                                              MD059908
       *                                                                                       CCG025
       **  Set up Intial Threshold                                                             CCG025
      C                   MOVEL     INTH          ##D(8)                                       CCG025
@@ -1841,7 +1863,17 @@
      C                   Z-ADD     SDLSTD        ##PSTD                                       CCG025
      C                   MOVEL     'Y'           FIRST                                        CCG025
      C     ##ACDK        SETGT     REHRDJ                                                     CCG025
-     C     ##ACKY        READE     REHRDJ                                 55                  CCG025
+     C*****##ACKY        READE     REHRDJ                                 55         CCG025 MD059908
+     C     ##ACKY        READPE    REHRDJ                                 55                MD059908
+      *                                                                                    MD059859A
+      **  If there are no posting on or before the last statement date,                    MD059859A
+      **  check for the next posting after the last statement date                         MD059859A
+      *                                                                                    MD059859A
+     C                   IF        *IN55 = *ON                                             MD059859A
+     C                   SETOFF                                       55                   MD059859A
+     C     ##ACDK        SETGT     REHRDJ                                                  MD059859A
+     C     ##ACKY        READE     REHRDJ                                 55               MD059859A
+     C                   ENDIF                                                             MD059859A
       *                                                                                       CCG025
       **  For each rate change ...                                                            CCG025
      C     *IN55         DOWEQ     *OFF                                                       CCG025
@@ -1981,7 +2013,12 @@
      C                   MOVEL     INST          ##D(3)                                       CCG025
       *                                                                                       CCG025
       **  Set up Rates                                                                        CCG025
+     C     INTH          IFGT      BAL21                                                   MD059859A
+     C     WZERAT        ANDEQ     'Y'                                                     MD059859A
+     C                   MOVEL     '0'           ##D(4)                                    MD059859A
+     C                   ELSE                                                              MD059859A
      C                   MOVEL     RAT21         ##D(4)                                       CCG025
+     C                   ENDIF                                                             MD059859A
      C                   MOVEL     RAT22         ##D(5)                                       CCG025
      C                   MOVEL     RAT23         ##D(6)                                       CCG025
      C                   MOVEL     RAT24         ##D(7)                                       CCG025

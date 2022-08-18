@@ -18,11 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154  *CREATE    Date 13Oct14               *
+      *  Last Amend No. MD036011           Date 10Aug22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036011 - Syntax failure of Helaba XML file                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting                                     *
       *                                                               *
@@ -31,18 +33,18 @@
       * +------------------+
       * ¦ File declaration ¦
       * +------------------+
- 
+
       /EJECT
       * +--------------------------------------+
       * ¦ Prototypes required for the IFS APIs ¦
       * +--------------------------------------+
       /COPY CGCPYSRC,IFSPROTO
- 
+
       * +------------------------------------------------------+
       * ¦ READ API() definitions for oflag and mode parameters ¦
       * +------------------------------------------------------+
       /COPY CGCPYSRC,OPENDFN
- 
+
       * +-------------------------------------------------+
       * ¦ Variable declaration for the IFS APIs used here ¦
       * +-------------------------------------------------+
@@ -53,7 +55,7 @@
      D RC              S             10I 0
      D Codepage        C                   X'0333'
      D SysVal1         C                   'FATCAiSeriesPath'
- 
+
       * +-------------------------+
       * ¦ Other standalone fields ¦
       * +-------------------------+
@@ -64,7 +66,7 @@
      D PTimeStamp      S               Z
      D FileName        S             21A
      D IsPathName      S             75A
- 
+
       ** Parameter variables for AOSVALR0 string
      D SValK1          S             20
      D SVal1           S            200
@@ -88,7 +90,7 @@
      D SVal10          S            200
      D Rtcd            S              7    INZ(*BLANK)
      D Optn            S              7    INZ(*BLANK)
- 
+
       * +-----------------+
       * ¦ Named Constants ¦
       * +-----------------+
@@ -96,12 +98,12 @@
      D ExtCTL          C                   CONST('.CTL')
      D CRLF            C                   X'0D25'
      D Null            C                   X'00'
- 
+
       * +----------------------------------+
       * ¦ For *PSSR Error Handling routine ¦
       * +----------------------------------+
      D @RUN            S              1
- 
+
      D WTimeStamp      DS
      D Wyear                   1      4
      D WMonth                  6      7
@@ -110,12 +112,12 @@
      D WMinute                15     16
      D WSecond                18     19
      D WMsecond               21     26
- 
+
       * +-------------------------------------------------+
       * ¦ Variable declaration for the IFS APIs used here ¦
       * +-------------------------------------------------+
      D FileDesc        S             10I 0
- 
+
       * +-----------------------------------------------+
       * ¦ Variable declaration for *WRITE mode to *STMF ¦
       * +-----------------------------------------------+
@@ -126,7 +128,7 @@
      D PTagEnd         S                   LIKE(PTagName)
      D PFormat         S              3
      D  ConvValue      S            200    INZ(*BLANKS)
- 
+
       * +-------------------------+
       * ¦ Other standalone fields ¦
       * +-------------------------+
@@ -136,10 +138,11 @@
      D BigString       S           1000
      D i               S              3  0 INZ(0)
      D Pos             S              5  0
-     D Head            S            230
- 
+     D***Head***       S            230                                                     MD036011
+     D Head            S            250                                                     MD036011
+
      D RtnCode         S              7
- 
+
       * +----------------------------------------+
       * ¦ Variables for writing into Stream File ¦
       * +----------------------------------------+
@@ -147,17 +150,17 @@
      D CorrLine        S            184
      D SysLine         S            135
      D WFlag           S              1
- 
+
       * +-----------------+
       * ¦ Named Constants ¦
       * +-----------------+
      D XMLHead1        C                   'xml version="1.0" encoding="UTF-8"'
- 
+
       * +-----------------------------------------------+
       * ¦ Data Structure (long) used by Access Programs ¦
       * +-----------------------------------------------+
      D Dsldy         E DS                  EXTNAME(DSLDY)
- 
+
       * +------------------------------------------------------+
       * ¦ Local Data Area Structure for error handling routine ¦
       * +------------------------------------------------------+
@@ -173,56 +176,57 @@
       * ¦ PSDS.  They have meaningful names, prefixed by 'PS'.            ¦
       * +-----------------------------------------------------------------+
      D/COPY ZACPYSRC,PSDS
- 
+
       * +-------------------------------------------------------------+
       * ¦ Function to return formatted Tag Value field if it contains ¦
       * ¦ special characters in the text.                             ¦
       * +-------------------------------------------------------------+
-     DScanFld          PR            80
+     D***ScanFld          PR            80                                                  MD036011
+     DScanFld          PR           200                                                     MD036011
      D TagValue                            LIKE(PTagValue)
- 
+
       * +-------------------------------------------------------------+
       * ¦ Function to convert in Ascii characters according to the    ¦
       * ¦ conversion table ASCII.                                     ¦
       * +-------------------------------------------------------------+
      DConvertAscii     PR          1000
      DInputData                    1000
- 
+
       /EJECT
       * +------------------------------------------------------------------+
       * ¦ Main Routine                                                     ¦
       * +------------------------------------------------------------------+
       *
- 
+
      C                   SELECT
       *  Open the Streamfile
      C                   WHEN      ActionCode = '*CREATE'
      C                   EXSR      CREATESTMF
- 
+
       *  Write the Streamfile
      C                   WHEN      ActionCode = '*WRITE'
      C                   EXSR      WRITESTMF
- 
+
       *  Close the Streamfile .DAT
      C                   WHEN      ActionCode = '*CLOSE'
      C                   EXSR      CLOSESTMF
      C                   ENDSL
- 
+
      C                   EVAL      *INLR = *ON
       *  Terminate the program
      C                   RETURN
- 
+
       /EJECT
       * +------------------------------------------------------------------+
       * ¦ Subr/*INZSR - Initialisation subroutine                          ¦
       * +------------------------------------------------------------------+
      C     *INZSR        BEGSR
- 
+
       * List of program parameters :
       * --------------------------
       * a) RtnCode - normally *BLANK at entry
       * b) ActCode - should be either *OPEN, *WRITE or *CLOSE
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ActionCode
      C                   PARM                    PTagName
@@ -231,7 +235,7 @@
      C                   PARM                    PTagEnd
      C                   PARM                    PFormat
      C                   PARM                    RtnCode
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       Rtcd
      C                   PARM      SysVal1       SValK1
@@ -254,7 +258,7 @@
      C                   PARM                    SVal9
      C                   PARM                    SValK0
      C                   PARM                    SVal10
- 
+
      C                   IF        Rtcd <> *Blanks
      C                             AND Rtcd <> '*NRF   '
      C                   EVAL      DBFILE = 'SDSVALPD'
@@ -265,29 +269,29 @@
      C                   ELSE
      C                   EVAL      IsPathName = SVal1
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/CREATESTMF - Create streamfile (type *STMF) in         ¦
       * ¦                   exclusive mode.                           ¦
       * +-------------------------------------------------------------+
      C     CREATESTMF    BEGSR
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    PTimeStamp
      C                   MOVEL     PTimeStamp    WTimeStamp
      C                   EVAL      FileName = WYear + WMonth + WDay + '_' +
      C                               WHour + WMinute + WSecond + WMsecond
- 
+
       *  Define the streamfile name (FileName + '.DAT').
      C                   EVAL      StmfName = FileName + ExtDAT
- 
+
       *  Define the path using the Local Directory entry in ICD
      C                   EVAL      PathName =
      C                               %TRIM(IsPathName) + '/' + %TRIM(StmfName)
- 
+
       *  CREATE THE STREAM FILE
       *  ----------------------
       *  Set file status flag for creation of stream file where the file
@@ -298,11 +302,11 @@
       * Set file mode parameter
      C                   EVAL      mode = S_IRWXU + S_IRWXG +
      C                                    S_IROTH + S_IXOTH
- 
+
       * Create stream file
      C                   EVAL      FDescDat = OPEN(%TRIMR(PathName) :
      C                                      Oflag : mode : Codepage)
- 
+
       * If error creating the Streamfile
      C                   IF        FDescDat = -1
      C                   EVAL      DBFILE =  *BLANK
@@ -311,36 +315,48 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       * +-------------------------------------------------------------+
       * ¦ Subr/WRITESTMF - Write XML details                          ¦
       * ¦                into the stream file.                        ¦
       * +-------------------------------------------------------------+
      C     WRITESTMF     BEGSR
- 
+
       * Format the header if it's the first record read for a given
       * item number
      C                   SELECT
- 
+
+     C                   WHEN      PFormat = 'XML'                                          MD036011
+     C                   EVAL      Head = '<?xml version="1.0"'                             MD036011
+     C                             + ' encoding="UTF-8"?>'                                  MD036011
+     C                   EVAL      BigString = %TRIM(Head) + CRLF                           MD036011
+     C                   EVAL      Buffer = %TRIMR(ConvertAscii(BigString))                 MD036011
      C                   WHEN      PFormat = 'ROT'  and
      C                             %SUBST(PTagName:2:1) <> '/'
- 
+
      C                   EVAL      Head = %SUBST(PTagName:1:15)
-     C                             + ' ' + 'xmlns:ftc="ftc " xmlns:sfa="sfa " '
+     C**********                   + ' ' + 'xmlns:ftc="ftc " xmlns:sfa="sfa " '             MD036011
+     C                             + ' ' + 'xmlns:xsi="http://www.w3.org/2001/X-            MD036011
+     C                             MLSchema-instance"'                                      MD036011
+     C                             + ' ' + 'xmlns:ftc="urn:oecd:ties:fatca:v1"'             MD036011
+     C                             + ' ' + 'xmlns:iso="urn:oecd:ties:isofatcaty-            MD036011
+     C                             pes:v1"'                                                 MD036011
+     C                             + ' ' + 'xmlns:sfa="urn:oecd:ties:stffatcaty-            MD036011
+     C                             pes:v1" '                                                MD036011
      C                             + 'version="' + %TRIM(PTagvalue) + '">'
      C                   EVAL      BigString = %TRIM(Head) + CRLF
      C                   EVAL      Buffer = %TRIMR(ConvertAscii(BigString))
- 
+
      C                   WHEN      PFormat = 'ISB'
- 
+
      C                   EVAL      RecordData = %SUBST(PTagName:1:8) +
      C                               ' issuedBy="' + %TRIM(PTagValue2) +'">'
      C                               + %TRIM(PTagValue) + PTagEnd
      C                   EVAL      BigString = %TRIM(RecordData) + CRLF
      C                   EVAL      Buffer = %TRIMR(ConvertAscii(BigString))
- 
+
      C                   WHEN      PFormat = 'AMT'
      C                   EVAL      Pos = %SCAN('>':PTagName)
      C                   EVAL      RecordData = %SUBST(PTagName:1:Pos-1) +
@@ -348,36 +364,36 @@
      C                               + '">' + %TRIM(PTagValue) + PTagEnd
      C                   EVAL      BigString = %TRIM(RecordData) + CRLF
      C                   EVAL      Buffer = %TRIMR(ConvertAscii(BigString))
- 
+
      C                   OTHER
       *  Scan tag value for special characters (i.e. '&','<', '>'),
       *  if so, format field as '<!£CDATA£Tag Value]]>'.
      C                   EVAL      ConvValue = ScanFld(PTagValue)
- 
+
       *  Combine data into a single compressed field.
      C                   EVAL      RecordData = %TRIM(PTagName)+
      C                              %TRIM(ConvValue) + %TRIM(PTagEnd)
- 
+
       *  Attach CRLF at the end of each record line
      C                   EVAL      BigString = %TRIM(RecordData) + CRLF
      C                   EVAL      Buffer = %TRIMR(ConvertAscii(BigString))
      C                   ENDSL
- 
+
       * Write record to stream file
      C                   EVAL      RC = WRITE(FileDesc : pBuffer :
      C                                         %LEN(%TRIMR(Buffer)))
- 
+
       *  If error writing to stream file
      C                   IF        RC = -1
      C                   EVAL      DBFILE =  *BLANK
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   EVAL      DBASE  =  006
      C                   EVAL      DBMOD  =  PSProcMod
- 
+
      C                   EXSR      *PSSR
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
       /EJECT
       * +-------------------------------------------------------------+
@@ -386,10 +402,10 @@
       * ¦                  IFS API CLOSE()function.                   ¦
       * +-------------------------------------------------------------+
      C     CLOSESTMF     BEGSR
- 
+
       *  Now close the .DAT file
      C                   EVAL      RC = CLOSE(FDescDat)
- 
+
       *  If error closing the streamfile, process dbase error.
      C                   IF        RC = -1
      C                   EVAL      DBFILE =  *BLANK
@@ -398,11 +414,11 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
- 
+
       * +-------------------------------------------------------------+
       * ¦ Subr/*PSSR - Program Exception Error Handling Routine       ¦
       * ¦              Called automatically if a program error occurs,¦
@@ -410,28 +426,28 @@
       * ¦              This subroutine DUMPs the program just once.   ¦
       * +-------------------------------------------------------------+
      C     *PSSR         BEGSR
- 
+
       *  Dump the program
      C                   DUMP
- 
+
       *  Display Dbase Error screen
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
       * Set job switches
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   EVAL      RtnCode = '*ERROR*'
- 
+
       * End program
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       ****************************************************************
@@ -439,51 +455,162 @@
       *           and '>' and format field as necessary.             *
       ****************************************************************
      PScanFld          B
-     DScanFld          PI            80
+     D***ScanFld          PI            80                                                  MD036011
+     DScanFld          PI           200                                                     MD036011
      D  TagValue                           LIKE(PTagValue)
- 
-     D  SpcChar        S             10    INZ('&<>')
+
+     D**SpcChar*       S             10    INZ('&<>')                                       MD036011
+     D  SpcChar        S              6    INZ('&<>"-/')                                    MD036011
      D  SpcArr         S              1    DIM(10)
-     D  ConvValue      S             80    INZ(*BLANKS)
+     D**ConvValue      S             80    INZ(*BLANKS)                                     MD036011
+     D  ConvValue      S            200    INZ(*BLANKS)                                     MD036011
      D  X              S              3  0
      D  WFound         S              1    INZ('N')
- 
-      *  Load special chars to be scanned into a work array and
-      *  initialise array index.
-     C                   MOVEA     SpcChar       SpcArr
-     C                   EVAL      X = 1
- 
-      *  Search Tag Value field for each special character
-     C                   DOW       (X <= %ELEM(SpcArr)) AND
-     C                             (SpcArr(X) <> *BLANK)
- 
-     C     SpcArr(X)     SCAN      TagValue                               90
- 
-      *  If any of special character is found, format the Tag Value field.
+     D  ArrData        S              1A   DIM(200)                                         MD036011
+     D  WChar          S              1A                                                    MD036011
+     D  WX1            S              3S 0                                                  MD036011
+     D  WX2            S              3S 0                                                  MD036011
+     D  WX3            S              3S 0                                                  MD036011
+     D  WTagValue      S            200A                                                    MD036011
+
+      ***Load*special*chars*to*be*scanned*into*a*work*array*and                             MD036011
+      ***initialise*array*index.                                                            MD036011
+     C**********         MOVEA     SpcChar       SpcArr                                     MD036011
+     C**********         EVAL      X = 1                                                    MD036011
+
+      ***Search*Tag*Value*field*for*each*special*character                                  MD036011
+     C**********         DOW       (X <= %ELEM(SpcArr)) AND                                 MD036011
+     C**********                    (SpcArr(X) <> *BLANK)                                   MD036011
+
+     C******SpcArr(X)    SCAN      TagValue                               90                MD036011
+
+      ***If*any*of*special*character*is*found,*format*the*Tag*Value field.                  MD036011
       *+------------------------------------------------------------------+
-      *¦ NOTE : A problem is encountered if character '£' is FTPd to the  ¦
-      *¦        PC. '£' seems to be translated into '$'. We found that    ¦
-      *¦        '[' translates to '£' when FTPd. Hence was used here.     ¦
+      *¦*NOTE*:*A*problem*is*encountered*if*character*'£'*is*FTPd*to*the**¦                 MD036011
+      *¦********PC.*'£'*seems*to*be*translated*into*'$'.*We*found*that****¦                 MD036011
+      *¦********'['*translates*to*'£'*when*FTPd.*Hence*was*used*here.*****¦                 MD036011
       *+------------------------------------------------------------------+
-     C                   IF        *IN90 = *ON
-     C                   EVAL      WFound = 'Y'
-     C                   EVAL      ConvValue = '<!£CDATA£' +
-     C                               %TRIM(TagValue) + ']]>'
-     C                   LEAVE
-     C                   ENDIF
- 
-      *  Scan for next special character.
-     C                   EVAL      X = X + 1
-     C                   ENDDO
- 
-      *  If no special chars found in the field value, pass original
-      *  field to calling procedure.
-     C                   IF        WFound = 'N'
-     C                   EVAL      ConvValue = TagValue
-     C                   ENDIF
- 
+     C**********         IF        *IN90 = *ON                                              MD036011
+     C**********         EVAL      WFound = 'Y'                                             MD036011
+     C**********         EVAL      ConvValue = '<!£CDATA£' +                                MD036011
+     C**********                     %TRIM(TagValue) + ']]>'                                MD036011
+     C**********         LEAVE                                                              MD036011
+     C**********         ENDIF                                                              MD036011
+
+      ***If*no*special*chars*found*in*the*field*value,*pass*original                        MD036011
+      ***field*to*calling*procedure.                                                        MD036011
+     C**********         IF        WFound = 'N'                                             MD036011
+     C**********         EVAL      ConvValue = TagValue                                     MD036011
+     C**********         ENDIF                                                              MD036011
+     C                   IF        TagValue <> *BLANKS                                      MD036011
+     C                   EVAL      WTagValue = TagValue                                     MD036011
+     C                   EVAL      WX1 = 1                                                  MD036011
+     C                   EVAL      WX2 = 0                                                  MD036011
+     C                   EVAL      ArrData = *BLANKS                                        MD036011
+     C     ' '           CHECKR    TagValue      WX3                                        MD036011
+     C                   DOW       WX1 <= WX3                                               MD036011
+     C                   EVAL      WChar = %SUBST(WTagValue:WX1:1)                          MD036011
+                                                                                            MD036011
+      ** Check if special character                                                         MD036011
+     C     WChar         SCAN      SpcChar                                90                MD036011
+     C                   IF        *IN90 = *ON                                              MD036011
+     C                             OR WChar = ''''                                          MD036011
+     C                             OR WChar = '#'                                           MD036011
+                                                                                            MD036011
+     C                   IF        WChar = '&'                                              MD036011
+     C                             AND %SUBST(WTagValue:WX1+1:1) = '#'                      MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '  '          ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX1 += 1                                                 MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   ELSE                                                               MD036011
+                                                                                            MD036011
+     C                   IF        WChar = '/'                                              MD036011
+     C                             AND %SUBST(WTagValue:WX1+1:1) = '*'                      MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   IF        WX2 <= 200                                               MD036011
+     C                   MOVEA     '  '          ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX1 += 1                                                 MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   ENDIF                                                              MD036011
+     C                   ELSE                                                               MD036011
+                                                                                            MD036011
+     C                   IF        WChar = '-'                                              MD036011
+     C                             AND %SUBST(WTagValue:WX1+1:1) = ' '                      MD036011
+     C                             AND %SUBST(WTagValue:WX1+2:1) = '-'                      MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   IF        WX2 <= 200                                               MD036011
+     C                   MOVEA     '   '         ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX1 += 2                                                 MD036011
+     C                   EVAL      WX2 += 2                                                 MD036011
+     C                   ENDIF                                                              MD036011
+     C                   ELSE                                                               MD036011
+                                                                                            MD036011
+     C                   IF        WChar = '&'                                              MD036011
+     C                             OR WChar = '<'                                           MD036011
+     C                             OR WChar = '>'                                           MD036011
+     C                             OR WChar = ''''                                          MD036011
+     C                             OR WChar = '"'                                           MD036011
+     C                             OR WChar = '#'                                           MD036011
+                                                                                            MD036011
+     C                   SELECT                                                             MD036011
+     C                   WHEN      WChar = '&'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&amp;'       ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 4                                                 MD036011
+     C                   WHEN      WChar = '<'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&lt;'        ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 3                                                 MD036011
+     C                   WHEN      WChar = '>'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&gt;'        ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 3                                                 MD036011
+     C                   WHEN      WChar = ''''                                             MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&apos;'      ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 5                                                 MD036011
+     C                   WHEN      WChar = '"'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&quot;'      ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 5                                                 MD036011
+     C                   WHEN      WChar = '#'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   IF        WX2 <= 200                                               MD036011
+     C                   EVAL      ArrDATA(WX2) = ' '                                       MD036011
+     C                   EVAL      WX1 += 1                                                 MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   ENDIF                                                              MD036011
+     C                   ENDSL                                                              MD036011
+                                                                                            MD036011
+     C                   ELSE                                                               MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   EVAL      ArrDATA(WX2) = WChar                                     MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   ELSE                                                               MD036011
+      ** Valid character move to array                                                      MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   IF        WX2 <= 200                                               MD036011
+     C                   EVAL      ArrDATA(WX2) = WChar                                     MD036011
+     C                   ENDIF                                                              MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   EVAL      WX1 += 1                                                 MD036011
+     C                   ENDDO                                                              MD036011
+     C                   MOVEA     ArrDATA       TagValue                                   MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   EVAL      ConvValue = TagValue                                     MD036011
+
      C                   RETURN    ConvValue
- 
+
      P                 E
       ********************************************************************  **
       * Convert to ASCII                                                 *
@@ -512,4 +639,4 @@
      C                   RETURN    InputData
       *
      P                 E
- 
+

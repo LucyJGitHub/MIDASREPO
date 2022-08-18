@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 263549             Date 05Aug22               *
-      *  Prev Amend No. 250371             Date 06Jun22               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. 263549             Date 05Aug22               *
+      *                 250371             Date 06Jun22               *
       *                 CLE138             Date 02Nov21               *
       *                 257879             Date 12May22               *
       *                 MD059275           Date 23May22               *
@@ -436,6 +437,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  263549 - Remove 254385 (reinstate 247263)                    *
       *         - NY specific fix.                                    *
       *  250371 - Funding accrual account keys are incorrect.         *

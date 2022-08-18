@@ -11,13 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 BG26993            Date 26Jan10               *
       *                 172614 *C *CREATE  Date 26Feb01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program S17261402.                         *

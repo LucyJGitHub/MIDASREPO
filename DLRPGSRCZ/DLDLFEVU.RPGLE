@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 260290             Date 16Aug22               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -59,6 +60,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260290 - Amended program so that system will pass what kind  *
+      *           of deal is the transaction to know which settlement *
+      *           tab is to be shown on java screen.                  *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *           (Recompile)                                         *
@@ -382,6 +386,14 @@
      C                   IF        Idx <> *ZERO
      C                   GOTO      INVALID
      C                   ENDIF
+      *                                                                                       260290
+     C                   MOVEL     ' '           LONDEP                                       260290
+     C                   IF        C_DTYP = 'IT' OR C_DTYP = 'TD'                             260290
+     C                             OR C_DTYP = 'CI' OR C_DTYP = 'CD'                          260290
+     C                   MOVEL     'D'           LONDEP                                       260290
+     C                   ELSE                                                                 260290
+     C                   MOVEL     'L'           LONDEP                                       260290
+     C                   ENDIF                                                                260290
 
       ** Processing depends upon action code
      C                   SELECT
@@ -424,7 +436,9 @@
      C                   MOVE      *ON           *INLR
 
       ** Remerge buffer with all relevant data structures
-     C                   EVAL      PBuffer = DLFEScnFmt + ##RECS + ##PAYS
+     C**********         EVAL      PBuffer = DLFEScnFmt + ##RECS + ##PAYS                     260290
+     C                   EVAL      PBuffer = DLFEScnFmt + LONDEP                              260290
+     C                             + ##RECS + ##PAYS                                          260290
 
      C                   RETURN
 
@@ -1089,6 +1103,7 @@
 
       ** API return code
      C                   PARM                    PAPIRetCd
+     C                   PARM                    LONDEP            1                          260290
 
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages

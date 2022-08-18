@@ -13,7 +13,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. 263549             Date 05Aug22               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 263549             Date 05Aug22               *
       *                 250371             Date 06Jun22               *
       *                 CLE138             Date 02Nov21               *
       *                 257879             Date 12May22               *
@@ -440,6 +441,8 @@
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  263549 - Remove 254385 (reinstate 247263)                    *
       *         - NY specific fix.                                    *
       *  250371 - Funding accrual account keys are incorrect.         *

@@ -138,8 +138,8 @@
      D BigString       S           1000
      D i               S              3  0 INZ(0)
      D Pos             S              5  0
-     D***Head***       S            230                                          MD036011
-     D Head            S            250                                          MD036011
+     D***Head***       S            230                                                     MD036011
+     D Head            S            250                                                     MD036011
 
      D RtnCode         S              7
 

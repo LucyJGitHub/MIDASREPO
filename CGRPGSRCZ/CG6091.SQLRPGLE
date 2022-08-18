@@ -15,12 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059564           Date 14Feb22               *
-      *  Prev Amend No. MD059552           Date 08Feb22               *
+      *  Last Amend No. MD059624           Date 20Jul22               *
+      *  Prev Amend No. MD059564           Date 14Feb22               *
+      *                 MD059552           Date 08Feb22               *
       *                 MD059320 *CREATE   Date 06Dec21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059564 - Adding extract for Next Repay Date and Loan       *
       *             Narrative fields                                  *
       *             And correct error with AllInRate                  *
@@ -2574,6 +2576,19 @@
      C*****************************************************************
 
      C     L@IPY         BEGSR                                                  ** L@IPY  **
+      ** Get rounding precision from SDLIBRTD                                               MD059624
+     C                   CALL      'ZAGETRDAPL'                                             MD059624
+     C                   PARM                    RFRR                                       MD059624
+     C                   PARM      'N'           isRndApplies      1                        MD059624
+     C                   IF        isRndApplies = 'Y'                                       MD059624
+     C                   MOVEL     'Y'           CCRRA             1                        MD059624
+     C                   MOVEL     RRDP          CCRRP             2 0                      MD059624
+     C                   Z-ADD     *ZEROS        CCRRD             2 0                      MD059624
+     C                   ELSE                                                               MD059624
+     C                   MOVEL     'N'           CCRRA                                      MD059624
+     C                   MOVEL     RRDP          CCRRD                                      MD059624
+     C                   Z-ADD     *ZEROS        CCRRP                                      MD059624
+     C                   ENDIF                                                              MD059624
 
       **  Set up subroutine stack name.
 
@@ -2678,7 +2693,8 @@
      C                   MOVEL     'RT RDNG '    #@RDE
      C                   MOVE      'DC'          #@RDE
      C     ##RDE         CAT       #@RDE:1       ##RDE
-     C                   MOVEL     RRDP          ##DATA
+     C**********         MOVEL     RRDP          ##DATA                                     MD059624
+     C                   MOVEL     CCRRD         ##DATA                                     MD059624
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
 
@@ -2828,6 +2844,32 @@
      C                   MOVEL     R#DATA        ##D(R1)                                    MD059564
      C                   MOVEL     R#DEFN        ##R(R1)                                    MD059564
       *                                                                                     MD059564
+      **  ccr Rounding Applies                                                              MD059624
+      *                                                                                     MD059624
+     C                   ADD       1             R1                                         MD059624
+     C                   CLEAR                   R#DATA                                     MD059624
+     C                   CLEAR                   R#DEFN                                     MD059624
+     C                   CLEAR                   #@RDE                                      MD059624
+     C                   MOVEL     'CCR RD A'    #@RDE                                      MD059624
+     C                   MOVE      'PL'          #@RDE                                      MD059624
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059624
+     C                   MOVEL     CCRRA         R#DATA                                     MD059624
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059624
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059624
+      *                                                                                     MD059624
+      **  ccr Rounding Applies                                                              MD059624
+      *                                                                                     MD059624
+     C                   ADD       1             R1                                         MD059624
+     C                   CLEAR                   R#DATA                                     MD059624
+     C                   CLEAR                   R#DEFN                                     MD059624
+     C                   CLEAR                   #@RDE                                      MD059624
+     C                   MOVEL     'CCR RD P'    #@RDE                                      MD059624
+     C                   MOVE      'RC'          #@RDE                                      MD059624
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059624
+     C                   MOVEL     CCRRP         R#DATA                                     MD059624
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059624
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059624
+      *                                                                                     MD059624
      C     KLOAM         KLIST
      C                   KFLD                    WPLON
      C                   KFLD                    WSDAT

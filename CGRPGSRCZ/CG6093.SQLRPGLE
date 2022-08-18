@@ -971,7 +971,9 @@
       * Calls       :                                                 *
       *****************************************************************
      C     D@LADS        BEGSR
+      *                                                                                     MD059624
       ** Get rounding precision from SDLIBRTD                                               MD059624
+      *                                                                                     MD059624
      C                   CALL      'ZAGETRDAPL'                                             MD059624
      C                   PARM                    RFRR                                       MD059624
      C                   PARM      'N'           isRndApplies      1                        MD059624

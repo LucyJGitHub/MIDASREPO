@@ -2576,7 +2576,9 @@
      C*****************************************************************
 
      C     L@IPY         BEGSR                                                  ** L@IPY  **
+      *                                                                                     MD059624
       ** Get rounding precision from SDLIBRTD                                               MD059624
+      *                                                                                     MD059624
      C                   CALL      'ZAGETRDAPL'                                             MD059624
      C                   PARM                    RFRR                                       MD059624
      C                   PARM      'N'           isRndApplies      1                        MD059624
@@ -2857,7 +2859,7 @@
      C                   MOVEL     R#DATA        ##D(R1)                                    MD059624
      C                   MOVEL     R#DEFN        ##R(R1)                                    MD059624
       *                                                                                     MD059624
-      **  ccr Rounding Applies                                                              MD059624
+      **  ccr Rounding Precision                                                            MD059624
       *                                                                                     MD059624
      C                   ADD       1             R1                                         MD059624
      C                   CLEAR                   R#DATA                                     MD059624

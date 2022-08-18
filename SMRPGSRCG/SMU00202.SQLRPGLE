@@ -49,8 +49,6 @@
       ** +--------------------------------------+
       ** +--------------------------------------+
       *
-      ** Core data structures
-     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA
 
       ** +--------------------------------------+
       ** ¦ Constants declaration                ¦
@@ -72,7 +70,6 @@
 
      D Count1          s              5  0 inz(*zeros)
      D Count2          s              5  0 inz(*zeros)
-     D Prefix          s              2a
      D workLib         s             10a
      D wSqlStr         s           2000a   inz(*blanks)
      D thisFile        s             20a
@@ -285,8 +282,9 @@
 
                    exec sql
                    execute immediate :wSqlStr;
-                   if sqlCod <> NO_ERROR;
-                      dBase    = 003;
+                   if sqlCod <> NO_ERROR
+                      and   sqlCod <> NO_RECORD;
+                      dBase    = 004;
                       dBfile   = 'SDFACTPD';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -346,7 +344,7 @@
                    exec sql
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 004;
+                      dBase    = 005;
                       dBfile   = 'SDFACTPD';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -382,7 +380,7 @@
                    exec sql
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 004;
+                      dBase    = 006;
                       dBfile   = 'SDFACTPD';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -417,7 +415,7 @@
                    exec sql fetch next From P0 into :wkAHNORC;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 005;
+                      dBase    = 007;
                       dBfile   = 'SDFCTLPA';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -433,7 +431,7 @@
                    exec sql
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 006;
+                      dBase    = 008;
                       dBfile   = 'SDFCTLPA';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -468,7 +466,7 @@
                    exec sql fetch next From P1 into :wkNREC;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 007;
+                      dBase    = 009;
                       dBfile   = 'TABLETX';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -483,7 +481,7 @@
                    exec sql
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 008;
+                      dBase    = 010;
                       dBfile   = 'TABLETX';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -514,8 +512,9 @@
 
                    exec sql
                    execute immediate :wSqlStr;
-                   if sqlCod <> NO_ERROR;
-                      dBase    = 009;
+                   if sqlCod <> NO_ERROR
+                      and   sqlCod <> NO_RECORD;
+                      dBase    = 011;
                       dBfile   = 'SDFACTX0';
                       dBkey    = *blanks;
                       dBpgm    = 'SMU00202';
@@ -538,9 +537,6 @@
        //*************************************************************
 
        begsr *inzsr;
-
-                   in Sdstat;
-                   Prefix= LIBR;
 
        endsr;
 

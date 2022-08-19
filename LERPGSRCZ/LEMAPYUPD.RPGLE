@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 243329             Date 29Jun22               *
-      *  Prev Amend No. MD020027           Date 29Jun22               *
+      *  Last Amend No. MD052637           Date 08Aug22               *
+      *  Prev Amend No. AR760193           Date 08Aug22               *
+      *                 243329             Date 29Jun22               *
+      *                 MD020027           Date 29Jun22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD029248           Date 22Aug14               *
@@ -125,6 +127,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052637 - Database error is encountered when rejecting a    *
+      *             manual repayment input. Amend program to not call *
+      *             SR/SRNSEQ for Reverse action. Similarly, restrict *
+      *             creation of additional RE during Reject.          *
+      *  AR760193 - LE MAPY - Entering 2 matched MRs results in error *
+      *             ON SRNSEQ validate Value Date of record read      *
+      *             against Key Value Date. (Child: AR760194)         *
+      *             Applied for MD052637.                             *
       *  243329 - If no defined settlement details entered, default   *
       *           payment settlement details of the loan if PTYP is   *
       *           66, 67, 69, or 72. Pattern fix 242348.              *
@@ -2505,6 +2515,7 @@
       ***  Get next available sequence for Insert of related RE
 
      C                   IF        DDESEQ = 'LN '
+     C                             AND WWACTN = 'I'                                         MD052637
      C                   EXSR      SRNSEQ
      C                   MOVE      SLASN         XLASN
      C                   ENDIF
@@ -2644,6 +2655,7 @@
      C                   ENDIF                                                  End Past Due Rec.
       *
      C     DDESEQ        IFEQ      'LN '
+     C     WWACTN        ANDEQ     'I'                                                      MD052637
       ***  Principal  = Loan Repayment Amount - Manual Repayment Principal Amount
      C     RAMTS         SUB       PRAMR         PRAM
       *                                                                                    MD020445A
@@ -2674,6 +2686,7 @@
      C                   Z-ADD     TAMT          TAMTS            13 0
       *
      C     DDESEQ        IFEQ      'LN '
+     C     WWACTN        ANDEQ     'I'                                                      MD052637
      C                   BITOFF    '01234567'    BIT               1
      C                   MOVE      BIT           LAIN
      C                   TESTB     '3'           TLXI                     86
@@ -4763,7 +4776,8 @@
      C                   READ      LOAMD                                  50
      C     *IN50         DOWEQ     *OFF
      C     LNRFA         IFNE      MRLNRF
-     C     VDATA         ORNE      MRVDAT
+     C*****VDATA         ORNE      MRVDAT                                                   AR760193
+     C     VDATA         ORNE      WVALD                                                    AR760193
      C                   MOVE      *BLANKS       RECIA
      C                   MOVE      *BLANKS       CurrPD_LTYP
      C                   MOVE      *BLANKS       CurrPD_SUTP
@@ -5038,6 +5052,7 @@
       ***  If matched against CLOAN add for extra 'RE' record
 
      C     DDESEQ        IFEQ      'LN '
+     C     WWACTN        ANDEQ     'I'                                                      MD052637
      C     NORE          ADD       1             NORE
      C     NINS          ADD       1             NINS
      C     NLRA          ADD       1             NLRA
@@ -5068,6 +5083,7 @@
       ***  If matched against CLOAN add for extra 'RE' record
 
      C     DDESEQ        IFEQ      'LN '
+     C     WWACTN        ANDEQ     'I'                                                      MD052637
      C     TAMTS         DIV       1000          ZZAMT                  40
      C     *IN40         IFEQ      '1'                                          Negative amount
      C                   Z-SUB     ZZAMT         ZZAMT                           reverse sign
@@ -5176,6 +5192,7 @@
      C                   Z-ADD     ZZTOTD        VRRL
       *
      C     DDESEQ        IFEQ      'LN '
+     C     WWACTN        ANDEQ     'I'                                                      MD052637
      C     TAMTS         DIV       1000          ZZAMT                  40
      C     *IN40         IFEQ      '1'
      C                   Z-SUB     ZZAMT         ZZAMT

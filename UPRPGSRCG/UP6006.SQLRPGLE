@@ -14,10 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CUP044 *CREATE     Date 22May22               *
+      *  Last Amend No. MD060362           Date 19Aug22               *
+      *  Prev Amend No. CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060362 - DSPF does not compile                             *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
       *           Patch Upgrade                                       *
       *                                                               *
@@ -67,6 +69,12 @@
 
      D ZONE          E DS                  EXTNAME(GPZONEPD)
 
+     D C_DOTA          C                   Const('Enter library name where the-             MD060362
+     D                                     se save files are placed. Each save-             MD060362
+     D                                      file contains')                                 MD060362
+     D C_DOTB          C                   Const('one installation library tha-             MD060362
+     D                                     t will be restored:')                            MD060362
+                                                                                            MD060362
       ** Program data structure
      D MyPSDS         SDS
      D DFPGMQ                  1     10
@@ -338,6 +346,11 @@
       *****************************************************************
      C     Sr_LibInst    BEGSR
 
+     C                   eval      ##DOT1 = C_DOTA                                          MD060362
+     C                   eval      ##DOT2 = C_DOTB                                          MD060362
+     C                   eval      ##DOT3 = C_DOTA                                          MD060362
+     C                   eval      ##DOT4 = C_DOTB                                          MD060362
+                                                                                            MD060362
       * for non- cumulative package
      C                   If        XCUM = 'N'
 

@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058708A          Date 09Sep21               *
-      *  Prev Amend No. MD058708           Date 31Aug21               *
+      *  Last Amend No. MD059624           Date 20Jul22               *
+      *  Prev Amend No. MD058708A          Date 09Sep21               *
+      *                 MD058708           Date 31Aug21               *
       *                 CDL102  *CREATE    Date 01Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD058708A - Base Rate Code changed via BC deal amendment     *
       *              still not reflected on the report. Use BRTT from *
       *              the extract file SDBJEXPD. Fix for printer over- *
@@ -396,9 +398,27 @@
       *                                                                                    MD058708A
      C                   EVAL      DIFLNE = OFLINE - PRTLNE                                MD058708A
      C                   IF        DIFLNE <= RQDLNE                                        MD058708A
-     C                   WRITE     SD001110H1                                              MD058708A
+     C                   ADD       1             PGENUM                                     MD059624
+     C                   WRITE     SD001110H1                                               MD059624
+     C                   EVAL      *IN50 = '0'                                              MD059624
+     C**********         WRITE     SD001110H1                                     MD058708A MD059624
      C                   ENDIF                                                             MD058708A
       *                                                                                    MD058708A
+     C                   EVAL      isRndApplies = 'N'                                       MD059624
+     C                   IF        CALM = 'NCCR'                                            MD059624
+     C                   CALL      'ZAGETRDAPL'                                             MD059624
+     C                   PARM                    RFRR                                       MD059624
+     C                   PARM                    isRndApplies      1                        MD059624
+     C                   ENDIF                                                              MD059624
+     C                   IF        isRndApplies = 'Y'                                       MD059624
+     C                   EVAL      P1RAPL= 'Y'                                              MD059624
+     C                   EVAL      P1ROPR = RRDP                                            MD059624
+     C                   EVAL      P1RTRO = 0                                               MD059624
+     C                   ELSE                                                               MD059624
+     C                   EVAL      P1RAPL= 'N'                                              MD059624
+     C                   EVAL      P1ROPR = 0                                               MD059624
+     C                   EVAL      P1RTRO = RRDP                                            MD059624
+     C                   ENDIF                                                              MD059624
      C                   WRITE     SD001110D2
      C                   WRITE     SD001110H3
       *

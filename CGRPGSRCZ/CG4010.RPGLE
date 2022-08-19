@@ -552,8 +552,8 @@
      D*##RDEA***       S             22    DIM(492) ALT(##GRP)                     MD059369 MD059690
      D*** ##GRP           S             10    DIM(512) CTDATA PERRCD(1)            MD059690 MD059624
      D*** ##RDEA          S             22    DIM(512) ALT(##GRP)                  MD059690 MD059624
-     D ##GRP           S             10    DIM(514) CTDATA PERRCD(1)                     MD059624
-     D ##RDEA          S             22    DIM(514) ALT(##GRP)                           MD059624
+     D ##GRP           S             10    DIM(514) CTDATA PERRCD(1)                        MD059624
+     D ##RDEA          S             22    DIM(514) ALT(##GRP)                              MD059624
      D*                                                                                       S01408
      D/COPY WNCPYSRC,CG4010EEP1                                                               S01408
      D*                                                                                       S01408

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Copyright Finastra International Limited 2010            *
       *                                                               *
-      *  Last Amend No. MD060172           Date 25Jun22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. MD060172           Date 25Jun22               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD046248           Date 27Oct17               *
       *                 AR837609A          Date 15Nov11               *
       *                 AR837609           Date 09Nov11               *
@@ -19,6 +20,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance.                     *
+      *           - Apply CLE138 original design of SDFACTX0 to store *
+      *             facility classes. (Recompile)                     *
       *  MD060172 - Call AODEALR1 to get BNDCSP.                      *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *

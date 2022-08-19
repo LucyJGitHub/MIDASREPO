@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 250755A            Date 09Jul22               *
-      *  Prev Amend No. 250755             Date 09Jul22               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. 250755A            Date 09Jul22               *
+      *                 250755             Date 09Jul22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD021652           Date 13May22               *
       *                 CLE123             Date 02Nov21               *
@@ -90,6 +91,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance. Apply CLE138        *
+      *             design of SDFACTX0 to store facility classes.     *
       *  250755A - User wishes to amend expiry date prior to run date.*
       *            Re-application of fix is incorrect!                *
       *  250755  - User wishes to amend expiry date prior to run date.*
@@ -275,8 +279,8 @@
      F                                     RENAME(CLOANCLF:CLOANCL1)                          CLE147
      F                                     PREFIX(CL)                                         CLE147
                                                                                               CLE147
-      ** Midas LE Facilities Ext File by Facility                                             CLE138
-     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
+      ***Midas*LE*Facilities*Ext*File*by*Facility*********************               CLE138 MD060092
+     F***LEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                           CLE138 MD060092
       **  Compile time arrays
 
      D/COPY ZSRSRC,ZALIGNZ1LE
@@ -578,7 +582,7 @@
      D CLE034          S              1A                                                      CLE034
      D CLE106          S              1A                                                      CLE106
      D CLE147          S              1A                                                      CLE147
-     D CLE138          S              1A                                                      CLE138
+     D*** CLE138          S              1A                                          CLE138 MD060092
      D CLE160          S              1A                                                      CLE160
       *                                                                                       CLE160
      D DftCRInd        S              1A                                                      CLE160
@@ -2439,27 +2443,27 @@ E4   C                   ENDIF
       *
       **  Validate Credit Agreement Type
      C                   MOVE      DDCAFT        FKEY
-     C                   MOVE      *BLANKS       FCLS                                         CLE138
-     C                   IF        CLE138 = 'Y'                                               CLE138
-     C                   MOVE      DDCANM        @CUST             6                          CLE138
-     C                   MOVE      DDCAFN        @SEQN                                        CLE138
-     C     KFCLQ         KLIST                                                                CLE138
-     C                   KFLD                    @CUST             6                          CLE138
-     C                   KFLD                    FKEY                                         CLE138
-     C                   KFLD                    @SEQN             2                          CLE138
-     C     KFCLQ         CHAIN     LEFCLTLH                                                   CLE138
-     C                   IF        NOT %FOUND(LEFCLTLH)                                       CLE138
-     C     *LOCK         IN        LDA                                                        CLE138
-     C                   Z-ADD     5             DBASE                                        CLE138
-     C                   MOVEL     'LEFCLTLH'    DBFILE                                       CLE138
-     C                   MOVEL     'CLE138'      DBKEY                                        CLE138
-     C                   MOVEL     'LEFCIP1VL'   DBPGM                                        CLE138
-     C                   OUT       LDA                                                        CLE138
-     C                   EXSR      *PSSR                                                      CLE138
-     C                   ENDIF                                                                CLE138
-     C                   MOVE      FCXCLS        FCLS                                         CLE138
-     C                   ENDIF                                                                CLE138
-                                                                                              CLE138
+     C**********         MOVE      *BLANKS       FCLS                                CLE138 MD060092
+     C**********         IF        CLE138 = 'Y'                                      CLE138 MD060092
+     C**********         MOVE      DDCANM        @CUST             6                 CLE138 MD060092
+     C**********         MOVE      DDCAFN        @SEQN                               CLE138 MD060092
+     C*****KFCLQ         KLIST                                                       CLE138 MD060092
+     C**********         KFLD                    @CUST             6                 CLE138 MD060092
+     C**********         KFLD                    FKEY                                CLE138 MD060092
+     C**********         KFLD                    @SEQN             2                 CLE138 MD060092
+     C*****KFCLQ         CHAIN     LEFCLTLH                                          CLE138 MD060092
+     C**********         IF        NOT %FOUND(LEFCLTLH)                              CLE138 MD060092
+     C******LOCK         IN        LDA                                               CLE138 MD060092
+     C**********         Z-ADD     5             DBASE                               CLE138 MD060092
+     C**********         MOVEL     'LEFCLTLH'    DBFILE                              CLE138 MD060092
+     C**********         MOVEL     'CLE138'      DBKEY                               CLE138 MD060092
+     C**********         MOVEL     'LEFCIP1VL'   DBPGM                               CLE138 MD060092
+     C**********         OUT       LDA                                               CLE138 MD060092
+     C**********         EXSR      *PSSR                                             CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
+     C**********         MOVE      FCXCLS        FCLS                                CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
+                                                                                     CLE138 MD060092
      C                   CALLB     'AOFACTR0'    PLIST1
       *
      C     @RTCD         IFNE      *BLANKS
@@ -3523,19 +3527,19 @@ E4   C                   ENDIF
      C                   ELSE                                                                 CLE041
      C                   EVAL      CLE025 = 'N'                                               CLE041
      C                   ENDIF                                                                CLE041
-                                                                                              CLE138
-      ** Access Switchable SAR details for the existence of CLE138                            CLE138
-                                                                                              CLE138
-     C                   CALLB     'AOSARDR0'                                                 CLE138
-     C                   PARM      *BLANK        @RTCD                                        CLE138
-     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
-     C                   PARM      'CLE138'      @SARD                                        CLE138
-      *                                                                                       CLE138
-     C                   IF        @RTCD = *BLANK                                             CLE138
-     C                   EVAL      CLE138 = 'Y'                                               CLE138
-     C                   ELSE                                                                 CLE138
-     C                   EVAL      CLE138 = 'N'                                               CLE138
-     C                   ENDIF                                                                CLE138
+      ****************************************************************               CLE138 MD060092
+      ***Access*Switchable*SAR*details*for*the*existence*of*CLE138****               CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
+     C**********         CALLB     'AOSARDR0'                                        CLE138 MD060092
+     C**********         PARM      *BLANK        @RTCD                               CLE138 MD060092
+     C**********         PARM      '*VERIFY'     @OPTN                               CLE138 MD060092
+     C**********         PARM      'CLE138'      @SARD                               CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
+     C**********         IF        @RTCD = *BLANK                                    CLE138 MD060092
+     C**********         EVAL      CLE138 = 'Y'                                      CLE138 MD060092
+     C**********         ELSE                                                        CLE138 MD060092
+     C**********         EVAL      CLE138 = 'N'                                      CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
       *
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
@@ -3726,7 +3730,7 @@ E4   C                   ENDIF
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    FKEY              3
-     C                   PARM                    FCLS              4                          CLE138
+     C**********         PARM                    FCLS              4                 CLE138 MD060092
      C     SDFACT        PARM      SDFACT        DSFDY
 
      C     PLIST2        PLIST

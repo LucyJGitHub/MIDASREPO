@@ -22,8 +22,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. AR988274           Date 10Aug22               *
+      *  Last Amend No. MD060363           Date 19Aug22               *
+      *  Prev Amend No. 263943             Date 16Aug22               *
+      *                 249385             Date 01Aug22               *
+      *                 AR988274           Date 10Aug22               *
       *                 249820             Date 29Jul22               *
       *                 MD060223           Date 05Jul22               *
       *                 MD060225           Date 05Jul22               *
@@ -316,6 +318,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060363 - Header overlap issue on LER135P2 report.          *
+      *             (Recompile)                                       *
+      *  263943 - Extra accrual. Rate change was not considered on    *
+      *           calculation of repayments. Reinstate part of 258414 *
+      *           w/c reversed by 259392 to consider Fee Rate Change. *
+      *           Added additional code to prevent incomplete and     *
+      *           redundant repayment line on LER135P2 for backvalued *
+      *           fee with next repayment <= rundate.                 *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  AR988274 - Facility fee adjustment incorrect in LER135P2.    *
@@ -5569,6 +5579,8 @@
       *                                                                                      BUG8762
       ** Processing when CLE071 is Disabled                                                   CLE071
       *                                                                                       CLE071
+     C                     MOVEL'Y'       WKADDY                                              263943
+      *                                                                                       263943
      C           CLE071    IFEQ 'N'                                                           CLE071
       *                                                                                      BUG8762
       ** Move rates and amounts from LEFEED to working arrays.                               BUG8762
@@ -5711,7 +5723,12 @@
      C                     END                                                                258414
       *                                                                                       258414
      C           ENDATE    IFGE STDATE                                                        258414
-     C                     MOVEL'Y'       WKADDY                                              258414
+      *                                                                                       263943
+      ** Should not add 1 day for repayment due computation.                                  263943
+      ** Already done during daily accrual (ATYP=' ')                                         263943
+      *                                                                                       263943
+     C**********           MOVEL'Y'       WKADDY                                       258414 263943
+     C                     MOVEL'N'       WKADDY                                              263943
      C           HSAKY1    SETGTFACHSAL1                                                      258414
      C                     READPFACHSAL1                 20                                   258414
      C                     EXSR AMTAC3                                                        258414
@@ -5750,7 +5767,12 @@
      C                     END                                                                258414
       *                                                                                       258414
      C           ENDATE    IFGE STDATE                                                        258414
-     C                     MOVEL'Y'       WKADDY                                              258414
+      *                                                                                       263943
+      ** Should not add 1 day for repayment due computation.                                  263943
+      ** Already done during daily accrual (ATYP=' ')                                         263943
+      *                                                                                       263943
+     C**********           MOVEL'Y'       WKADDY                                       258414 263943
+     C                     MOVEL'N'       WKADDY                                              263943
      C           HSAKY1    SETGTFACHSAL1                                                      258414
      C                     READPFACHSAL1                 20                                   258414
      C                     EXSR AMTAC3                                                        258414
@@ -5875,6 +5897,7 @@
      C           NDAYS     IFGT 0                                                            BUG8762
      C           FEORED    IFEQ BJRDNB                                                       BUG8762
      C           FEPSTD    ANDLTMSTD                                                         BUG8762
+     C           *IN28     ANDEQ'0'                                                           263943
       *                                                                                      BUG8762
       ** Only perform calculation if not called from HISRED                                   CLE071
       *                                                                                       CLE071
@@ -13040,6 +13063,7 @@
      C           NDAYS     IFGT 0                                                           MD031473
      C           FEORED    IFEQ BJRDNB                                                      MD031473
      C           FEPSTD    ANDLTMSTD                                                        MD031473
+     C           *IN28     ANDEQ'0'                                                           263943
       *                                                                                     MD031473
       ** Only perform calculation if not called from HISREL                                   CLE071
       *                                                                                       CLE071

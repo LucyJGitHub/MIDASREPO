@@ -14,11 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060362           Date 19Aug22               *
-      *  Prev Amend No. CUP044 *CREATE     Date 22May22               *
+      *  Last Amend No. MD060386           Date 22Aug22               *
+      *  Prev Amend No. MD060362           Date 19Aug22               *
+      *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060386 - 1) monitor authority issues when restoring, 2)    *
+      *             correct library name for *U library               *
       *  MD060362 - DSPF does not compile                             *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
       *           Patch Upgrade                                       *
@@ -66,6 +69,8 @@
 
      D Cmd_String      S            200
      D Cmd_Len         S             15  5
+     D X_CHK           S              2                                                     MD060386
+     D pos             S              5  0                                                  MD060386
 
      D ZONE          E DS                  EXTNAME(GPZONEPD)
 
@@ -86,6 +91,11 @@
      D PSExcpType             40     42
       **  Exception number
      D PSExcpNo               43     46
+     **  Exception data
+     D PSExcpData             91    170                                                     MD060386
+                                                                                            MD060386
+      **  Exception Id                                                                      MD060386
+     D PSExcpID              171    174                                                     MD060386
        /EJECT
       *****************************************************************
 
@@ -1118,8 +1128,18 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD060386
+     C                   eval      X_CHK = *blanks                                          MD060386
+     C                   If        PSExcpNo = '3773'                                        MD060386
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD060386
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD060386
+     C                   ENDIF                                                              MD060386
+                                                                                            MD060386
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3707'                                   MD060386
+     C                             and PSExcpNo <> '3773'                                   MD060386
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD060386
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK) + 'B'
@@ -1176,7 +1196,8 @@
      C                   eval      PSExcpNo = '    '
      C                   EVAL      Cmd_String = 'RSTLIB SAVLIB(' +
      C                             %trimr(XPACK) + 'U) DEV(*SAVF) SAVF(' +
-     C                             %trim(#LIBSFQ) + '/' +
+     C**********                   %trim(#LIBSFQ) + '/' +                                   MD060386
+     C                             %trim(#LIBSFU) + '/' +                                   MD060386
      C                             %trimr(XPACK) + 'U) RSTLIB(' +
      C                             %trimr(XPACK) + 'U) OUTPUT(*PRINT)'
      C                   CALL      'QCMDEXC'                            20

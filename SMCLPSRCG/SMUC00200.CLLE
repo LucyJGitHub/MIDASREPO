@@ -1,0 +1,53 @@
+000100220823/*********************************************************************/
+000101220823/*STD    CLPBASEBND                                                  */
+000102220823/*EXI    TEXT('Midas SM Update SDFACTPD  CL 1')                      */
+000103220823/*********************************************************************/
+000104220823/*                                                                   */
+000105220823/*       Midas - Implementation module                               */
+000106220823/*                                                                   */
+000107220823/*       SMUC00200 - Midas SM Update SDFACTPD  CL 1                  */
+000108220823/*                                                                   */
+000109220823/*       (c) Finastra International Limited 2022                     */
+000110220823/*                                                                   */
+000111220823/*       Last Amend No. MD060092 *CREATE   Date 01Aug22              */
+000112220823/*                                                                   */
+000113220823/*********************************************************************/
+000114220823/*                                                                   */
+000115220823/*          MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0   */
+000116220823/*                     and SD Facility Type Maintenance. Apply       */
+000117220823/*                     CLE138 design of SDFACTX0 to store            */
+000118220823/*                     facility classes.                             */
+000119220823/*                                                                   */
+000120220823/*********************************************************************/
+000121220823             PGM        PARM(&PARM)
+000122220823
+000123220823             DCL        VAR(&PARM) TYPE(*CHAR) LEN(06)
+000124220823             COPYRIGHT  TEXT('(c) Finastra International Limited 2022')
+000125220823
+000126220823 /* Global monitor message */
+000127220823             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+000128220823                            CMDLBL(ERROR))
+000129220823
+000130220823             CHGJOB     SWS(XXXXXX00)
+000131220823
+000132220823             DLTF       FILE(QTEMP/SMFACTF1)
+000133220823             MONMSG     MSGID(CPF2105)
+000134220823
+000135220823             CPYF       FROMFILE(GZSDFACTPD) TOFILE(QTEMP/SMFACTF1) CRTFILE(*YES)
+000136220823             CLRPFM     FILE(QTEMP/SMFACTF1)
+000137220823
+000138220823/* Call program to perform migration. */
+000139220823
+000140220823             CALL       PGM(SMU00202)  PARM(&PARM)
+000141220823
+000142220823             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+000143220823                GOTO       CMDLBL(ERROR)
+000144220823             ENDDO
+000145220823
+000146220823             GOTO       CMDLBL(ENDPGM)
+000147220823
+000148220823 ERROR:
+000149220823             CHGJOB     SWS(XXXXXX11)
+000150220823
+000151220823 ENDPGM:
+000152220823             ENDPGM

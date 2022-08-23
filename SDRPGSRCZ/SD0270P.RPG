@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend no. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR787620           Date 10Jun11               *
@@ -29,6 +30,10 @@
      F*                                                                  *
      F********************************************************************
      F*                                                                  *S01117
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance.                     *
+      *           - Apply CLE138 original design of SDFACTX0 to store *
+      *             facility classes.                                 *
       *  CLE138 - Class Code for Facilities                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -82,6 +87,8 @@
       * UPD: Standing Data Controls    Update index
       *
      F/COPY WNCPYSRC,SDH00048
+     FSDFACTX0IF  E           K        DISK                                                 MD060092
+      * RTV : Facility Types Extension                                                      MD060092
      F*SD0270P$O   E             97     PRINTER                           S01117
      FSD0270PMO   E             97     PRINTER                            S01117
      F                                              KINFDS INFDS$
@@ -227,7 +234,7 @@
      C                     Z-ADDAMLCD     XRLCD            Last Change Dat
      C                     MOVELAMTYLC    XRTYLC           Type of Last Ch
      C                     MOVELAMFCTY    XRFCTY           Facility type
-     C                     MOVELAMCLAS    XRCLAS           Facility Class                     CLE138
+     C***********          MOVELAMCLAS    XRCLAS           Facility Class            CLE138 MD060092
      C                     MOVELAMFCNM    XRFCNM           Facility Name
      C                     MOVELAMPGID    XRPGID                                              CLE164
      C                     MOVEL*BLANK    XRACDT           alpha change da
@@ -321,7 +328,51 @@
       * Print detail line.
      C                     WRITEZZDTLRCD
      C/COPY WNCPYSRC,SDH00050
-     C                     END
+     C           CLE138    IFEQ 'Y'                                                         MD060092
+      *                                                                                     MD060092
+     C                     CLEARACL                                                         MD060092
+      *                                                                                     MD060092
+      ** RTV all Class CodeS for Facility                                                   MD060092
+      *                                                                                     MD060092
+     C           XRFCTY    SETLLSDFACTX0                                                    MD060092
+     C           XRFCTY    READESDFACTX0                 72                                 MD060092
+      *                                                                                     MD060092
+      ** If NO classes found                                                                MD060092
+     C           *IN72     IFEQ *ON                                                         MD060092
+     C                     WRITEZHCLE138                                                    MD060092
+      *                                                                                     MD060092
+     C                     ELSE                                                             MD060092
+     C                     WRITEZHCLE138                                                    MD060092
+     C                     Z-ADD1         C       30                                        MD060092
+      *                                                                                     MD060092
+      ** Process facility type classes                                                      MD060092
+     C           *IN72     DOWEQ*OFF                                                        MD060092
+      *                                                                                     MD060092
+     C                     MOVE AMCLAS    ACL,C                                             MD060092
+     C                     ADD  1         C                                                 MD060092
+      *                                                                                     MD060092
+      ** Write classes to report and reset fields                                           MD060092
+     C           C         IFGT 16                                                          MD060092
+     C                     MOVEAACL       XRCLAS                                            MD060092
+     C                     WRITEZDCLE138                                                    MD060092
+     C                     CLEARACL                                                         MD060092
+     C                     Z-ADD1         C       30                                        MD060092
+     C                     ENDIF                                                            MD060092
+      *                                                                                     MD060092
+     C           XRFCTY    READESDFACTX0                 72                                 MD060092
+     C                     ENDDO                                                            MD060092
+      *                                                                                     MD060092
+      ** Write to report remaining unwritten classes if any                                 MD060092
+     C           C         IFGT 1                                                           MD060092
+     C                     MOVEAACL       XRCLAS                                            MD060092
+     C                     WRITEZDCLE138                                                    MD060092
+     C                     CLEARACL                                                         MD060092
+     C                     ENDIF                                                            MD060092
+      *                                                                                     MD060092
+     C                     ENDIF                                                            MD060092
+      *                                                                                     MD060092
+     C                     ENDIF                                                            MD060092
+     C                     END                                                              MD060092
       *================================================================                                                         
      CSR         CAEXIT    ENDSR
       /EJECT

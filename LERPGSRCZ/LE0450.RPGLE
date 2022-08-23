@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. 257879             Date 12May22               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 257879             Date 12May22               *
       *                 MD059275           Date 23May22               *
       *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
@@ -434,6 +435,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance. Apply CLE138        *
+      *             design of SDFACTX0 to store facility classes.     *
       *  CLE138 - Class Codes for Facilities                          *
       *  257879 - Use profit centre account keys with 'S' in position *
       *           8 for syndicated loans.                             *
@@ -1418,10 +1422,10 @@
      FCLOANL4   IF   E           K DISK    INFSR(*PSSR)                                       CLE164
      F                                     PREFIX(F4_)                                        CLE164
      F                                     RENAME(CLOANCLF:CLOANCLF4)                         CLE164
-      *                                                                                       CLE138
-      ** LE Facilities Extension File by branch                                               CLE138
-     FLEFCLTLG  IF   E           K DISK    INFSR(*PSSR)                                       CLE138
-     F                                     USROPN                                             CLE138
+      ****************************************************************               CLE138 MD060092
+      ***LE*Facilities*Extension*File*by*branch***********************               CLE138 MD060092
+     F***LEFCLTLG  IF   E           K DISK    INFSR(*PSSR)                           CLE138 MD060092
+     F**********                           USROPN                                    CLE138 MD060092
      F*                                                                   S01408
      F** Core hook for externalisation.                                   S01408
      F/COPY WNCPYSRC,LE0450FFPG                                           S01408
@@ -1704,13 +1708,13 @@
      D***WSET            S             18A                                         MD046080 MD049078
      D***WWCCY           S              3A                                         MD046080 MD049078
      D WCLE134         S              1A                                                    MD049078
-      *                                                                                       CLE138
-      ** Key Fields                                                                           CLE138
-     D K_BRCA          S              3A                                                      CLE138
-     D K_CNUM          S              6A                                                      CLE138
-     D K_FACT          S              3A                                                      CLE138
-     D K_FCNO          S              2A                                                      CLE138
-     D @FCLS           S              4A                                                      CLE138
+      ****************************************************************               CLE138 MD060092
+      ** Key*Fields***************************************************               CLE138 MD060092
+     D*** K_BRCA          S              3A                                          CLE138 MD060092
+     D*** K_CNUM          S              6A                                          CLE138 MD060092
+     D*** K_FACT          S              3A                                          CLE138 MD060092
+     D*** K_FCNO          S              2A                                          CLE138 MD060092
+     D*** @FCLS           S              4A                                          CLE138 MD060092
                                                                                               CLE164
       ** CLE164 Enhancement F variables for LE000801                                          CLE164
                                                                                               CLE164
@@ -4582,14 +4586,14 @@ L118 I                             P   72   77 7RTSPL
      C                   KFLD                    YKACOD
      C                   KFLD                    YKACSQ
      C                   KFLD                    YKBRCA
-      *                                                                                       CLE138
-      ** Key fields for LE Facility Extension File LEFCLTLG                                   CLE138
-      *                                                                                       CLE138
-     C     KFCLT         KLIST                                                                CLE138
-     C                   KFLD                    K_BRCA                                       CLE138
-     C                   KFLD                    K_CNUM                                       CLE138
-     C                   KFLD                    K_FACT                                       CLE138
-     C                   KFLD                    K_FCNO                                       CLE138
+      ****************************************************************               CLE138 MD060092
+      ***Key*fields*for*LE*Facility*Extension*File*LEFCLTLG***********               CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
+     C*****KFCLT         KLIST                                                       CLE138 MD060092
+     C**********         KFLD                    K_BRCA                              CLE138 MD060092
+     C**********         KFLD                    K_CNUM                              CLE138 MD060092
+     C**********         KFLD                    K_FACT                              CLE138 MD060092
+     C**********         KFLD                    K_FCNO                              CLE138 MD060092
       *                                                                                       CLE134
      C                   MOVE      *BLANKS       KACCK            14
       *                                                                                       CLE134
@@ -5714,30 +5718,30 @@ L118 I                             P   72   77 7RTSPL
      C                   GOTO      ENDDBE                                                     CLE172
      C                   ENDIF                                                                CLE172
      C                   ENDIF                                                                CLE172
-      *                                                                                       CLE138
-      ** Access SAR details to check if CLE138 is installed                                   CLE138
-      *                                                                                       CLE138
-     C                   MOVE      'N'           CLE138            1                          CLE138
-     C                   CALL      'AOSARDR0'                                                 CLE138
-     C                   PARM      *BLANKS       @RTCD                                        CLE138
-     C                   PARM      '*VERIFY'     @OPTN                                        CLE138
-     C                   PARM      'CLE138'      @SARD                                        CLE138
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE138
-      *                                                                                       CLE138
-     C     @RTCD         IFEQ      *BLANK                                                     CLE138
-     C                   MOVE      'Y'           CLE138                                       CLE138
-     C                   OPEN      LEFCLTLG                                                   CLE138
-     C                   ELSE                                                                 CLE138
-     C     @RTCD         IFNE      '*NRF   '                                                  CLE138
-     C                   MOVEL     'SCSARDPD'    DBFILE                                       CLE138
-     C                   MOVEL     'CLE138 '     DBKEY                                        CLE138
-     C                   Z-ADD     43            DBASE                                        CLE138
-     C                   MOVE      *ON           *INU7                                        CLE138
-     C                   MOVE      *ON           *INU8                                        CLE138
-     C                   MOVE      *ON           *INLR                                        CLE138
-     C                   GOTO      ENDDBE                                                     CLE138
-     C                   ENDIF                                                                CLE138
-     C                   ENDIF                                                                CLE138
+      ****************************************************************               CLE138 MD060092
+      ***Access*SAR*details*to*check*if*CLE138*is*installed***********               CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
+     C**********         MOVE      'N'           CLE138            1                 CLE138 MD060092
+     C**********         CALL      'AOSARDR0'                                        CLE138 MD060092
+     C**********         PARM      *BLANKS       @RTCD                               CLE138 MD060092
+     C**********         PARM      '*VERIFY'     @OPTN                               CLE138 MD060092
+     C**********         PARM      'CLE138'      @SARD                               CLE138 MD060092
+     C*****SCSARD        PARM      SCSARD        DSFDY                               CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
+     C*****@RTCD         IFEQ      *BLANK                                            CLE138 MD060092
+     C**********         MOVE      'Y'           CLE138                              CLE138 MD060092
+     C**********         OPEN      LEFCLTLG                                          CLE138 MD060092
+     C**********         ELSE                                                        CLE138 MD060092
+     C*****@RTCD         IFNE      '*NRF   '                                         CLE138 MD060092
+     C**********         MOVEL     'SCSARDPD'    DBFILE                              CLE138 MD060092
+     C**********         MOVEL     'CLE138 '     DBKEY                               CLE138 MD060092
+     C**********         Z-ADD     43            DBASE                               CLE138 MD060092
+     C**********         MOVE      *ON           *INU7                               CLE138 MD060092
+     C**********         MOVE      *ON           *INU8                               CLE138 MD060092
+     C**********         MOVE      *ON           *INLR                               CLE138 MD060092
+     C**********         GOTO      ENDDBE                                            CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
       *
      C**********         MOVE      'N'           CFC006            1              AR1097176 MD020563
      C**********         CALL      'AOSARDR0'                                     AR1097176 MD020563
@@ -20810,25 +20814,25 @@ C    C                   ENDIF                                                  
      C                   PARM                    @CLAS                                        CLE164
      C     SDLOAN1       PARM      SDLOAN        DSSDY                                        CLE164
      C                                                                                        CLE164
-      *                                                                                       CLE138
-      ** Get facility class from the extension file                                           CLE138
-      *                                                                                       CLE138
-     C                   IF        CLE138 = 'Y'                                               CLE138
-     C                   MOVE      FCLB          K_BRCA                                       CLE138
-     C                   MOVE      FCUS          K_CNUM                                       CLE138
-     C                   MOVE      FTYP          K_FACT                                       CLE138
-     C                   MOVE      FSEQ          K_FCNO                                       CLE138
-     C     KFCLT         CHAIN     LEFCLTLG                           31                      CLE138
-     C                   MOVE      FCXCLS        @FCLS                                        CLE138
-     C                   ELSE                                                                 CLE138
-     C                   MOVE      *BLANKS       @FCLS                                        CLE138
-     C                   ENDIF                                                                CLE138
-      *                                                                                       CLE138
+      ****************************************************************               CLE138 MD060092
+      ** Get*facility*class*from*the*extension*file*******************               CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
+     C**********         IF        CLE138 = 'Y'                                      CLE138 MD060092
+     C**********         MOVE      FCLB          K_BRCA                              CLE138 MD060092
+     C**********         MOVE      FCUS          K_CNUM                              CLE138 MD060092
+     C**********         MOVE      FTYP          K_FACT                              CLE138 MD060092
+     C**********         MOVE      FSEQ          K_FCNO                              CLE138 MD060092
+     C*****KFCLT         CHAIN     LEFCLTLG                           31             CLE138 MD060092
+     C**********         MOVE      FCXCLS        @FCLS                               CLE138 MD060092
+     C**********         ELSE                                                        CLE138 MD060092
+     C**********         MOVE      *BLANKS       @FCLS                               CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
      C                   CALL      'AOFACTR0'                                                 CLE164
      C                   PARM      *BLANK        PRTCD                                        CLE164
      C                   PARM      '*KEY'        POPTN                                        CLE164
      C                   PARM                    @FTYP                                        CLE164
-     C                   PARM                    @FCLS                                        CLE138
+     C**********         PARM                    @FCLS                               CLE138 MD060092
      C     SDFACT1       PARM      SDFACT1       DSSDY                                        CLE164
      C                                                                                        CLE164
      C                   EVAL      wLSPDPGrpID = LN_AYPGID                                    CLE164

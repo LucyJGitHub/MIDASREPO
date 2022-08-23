@@ -1,0 +1,62 @@
+000001220823/*********************************************************************/
+000002220823/*STD    CLPBASEBND                                                  */
+000003220823/*EXI    TEXT('Midas SM Update SDFACTPD  CL 3')                      */
+000004220823/*********************************************************************/
+000005220823/*                                                                   */
+000006220823/*       Midas - Implementation module                               */
+000007220823/*                                                                   */
+000008220823/*       SMUC00202 - Midas SM Update SDFACTPD  CL 3                  */
+000009220823/*                                                                   */
+000010220823/*       (c) Finastra International Limited 2022                     */
+000011220823/*                                                                   */
+000012220823/*       Last Amend No. MD060092 *CREATE   Date 01Aug22              */
+000013220823/*                                                                   */
+000014220823/*********************************************************************/
+000015220823/*                                                                   */
+000016220823/*          MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0   */
+000017220823/*                     and SD Facility Type Maintenance. Apply       */
+000018220823/*                     CLE138 design of SDFACTX0 to store            */
+000019220823/*                     facility classes.                             */
+000020220823/*                                                                   */
+000021220823/*********************************************************************/
+000022220823             PGM        PARM(&PARM)
+000023220823
+000024220823             DCL        VAR(&PARM) TYPE(*CHAR) LEN(06)
+000025220823             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+000026220823             DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
+000027220823             DCL        VAR(&TMPLIB) TYPE(*CHAR) LEN(10) VALUE('#.')
+000028220823
+000029220823             COPYRIGHT  TEXT('(c) Finastra International Limited 2022')
+000030220823
+000031220823 /* Global monitor message */
+000032220823             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+000033220823                            CMDLBL(ERROR))
+000034220823
+000035220823             CHGJOB     SWS(XXXXXX00)
+000036220823
+000037220823             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+000038220823             CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))
+000039220823             CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT &ZONEID)
+000040220823             CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT 'DMLIB')
+000041220823
+000042220823             DLTF       FILE(QTEMP/SMFACTF3)
+000043220823             MONMSG     MSGID(CPF2105)
+000044220823
+000045220823             CPYF       FROMFILE(&TMPLIB/SMFACTF3) TOFILE(QTEMP/SMFACTF3) +
+000046220823                          MBROPT(*REPLACE) CRTFILE(*YES)
+000047220823
+000048220823/* Call program to perform migration. */
+000049220823
+000050220823             CALL       PGM(SMU00202)  PARM(&PARM)
+000051220823
+000052220823             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+000053220823                GOTO       CMDLBL(ERROR)
+000054220823             ENDDO
+000055220823
+000056220823             GOTO       CMDLBL(ENDPGM)
+000057220823
+000058220823 ERROR:
+000059220823             CHGJOB     SWS(XXXXXX11)
+000060220823
+000061220823 ENDPGM:
+000062220823             ENDPGM

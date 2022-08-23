@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +30,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance.                     *
+      *           - Apply CLE138 original design of SDFACTX0 to store *
+      *             facility classes.                                 *
       *  CLE138 - Class Code for Facilities                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -143,7 +148,7 @@
      D p_CmdLen        S             15  5 Inz(%Len(p_Cmd))
 
      D w_FcltyTyp      S                   Like(AMFCTY)
-     D w_FcltyCls      S                   Like(AMCLAS)                                       CLE138
+     D***w_FcltyCl     S                   Like(AMCLAS)                              CLE138 MD060092
      D w_Action        S              1A
 
      D v_Count         S              3  0
@@ -181,7 +186,7 @@
       *
      C                   EVAL      Ds_AcceptFile = PData
      C                   EVAL      w_FcltyTyp = AMFCTY
-     C                   EVAL      w_FcltyCls = AMCLAS                                        CLE138
+     C**********         EVAL      w_FcltyCls = AMCLAS                               CLE138 MD060092
       *
      C                   IF        AMAACC = c_Yes or
      C                             PProgram = 'SDC000061'
@@ -254,7 +259,8 @@
       **    until updates are successful
 
      C*****w_FcltyTyp    CHAIN(e)  @AMRECT                                                    CLE138
-     C     K_Fclty       CHAIN(e)  @AMRECT                                                    CLE138
+     C*****K_Fclty       CHAIN(e)  @AMRECT                                           CLE138 MD060092
+     C     w_FcltyTyp    CHAIN(e)  @AMRECT                                                  MD060092
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
@@ -366,7 +372,7 @@
      C                   CALL      'TABLETQ'
      C     W0RTN         PARM      W0RTN         WQ0007            7
      C                   PARM      AMFCTY        WQ0008            3
-     C                   PARM      AMCLAS        WQ0004            4                          CLE138
+     C**********         PARM      AMCLAS        WQ0004            4                 CLE138 MD060092
      C                   PARM      AMFCNM        WQ0009           30
      C                   PARM      AMTYLC        WQ0010            1
      C                   PARM      BJRDNB        WQ0011            5 0                        CSD031
@@ -425,7 +431,8 @@
       **    until updates are successful
 
      C*****w_FcltyTyp    CHAIN(e)  SDFACTD0                                                   CLE138
-     C     K_Fclty       CHAIN(e)  SDFACTD0                                                   CLE138
+     C*****K_Fclty       CHAIN(e)  SDFACTD0                                          CLE138 MD060092
+     C     w_FcltyTyp    CHAIN(e)  SDFACTD0                                                 MD060092
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
@@ -504,11 +511,11 @@
      C                   PARM                    PRetCode
      C                   PARM                    PProgram
 
-      ** Facility Type and Class key list                                                     CLE138
+      ***Facility*Type*and*Class*key*list                                            CLE138 MD060092
                                                                                               CLE138
-     C     K_Fclty       KLIST                                                                CLE138
-     C                   KFLD                    w_FcltyTyp                                   CLE138
-     C                   KFLD                    w_FcltyCls                                   CLE138
+     C*****K_Fclty       KLIST                                                       CLE138 MD060092
+     C**********         KFLD                    w_FcltyTyp                          CLE138 MD060092
+     C**********         KFLD                    w_FcltyCls                          CLE138 MD060092
                                                                                               CLE138
       ** Access Bank Details
 

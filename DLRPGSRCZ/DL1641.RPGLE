@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 241044             Date 17May22               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. 241044             Date 17May22               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD051713           Date 08Sep18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -58,6 +59,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  241044 - Applied fix 217509.
       *  217509 - Recalculate the number of applicable days when a    *
       *           rate record is amended, inserted or deleted.  No    *

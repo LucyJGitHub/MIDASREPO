@@ -17,8 +17,9 @@
       *                                                               *
       *  Calls    : GL000050 APR Calculation program                  *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD055733           Date 03Jul20               *
       *                 MD055146           Date 04Feb20               *
       *                 MD054544           Date 04Oct19               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *

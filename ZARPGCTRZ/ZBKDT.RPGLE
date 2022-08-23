@@ -30,18 +30,20 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CAP002  *CREATE    Date 21Apr98               *
+      *                 CAP002  *CREATE    Date 21Apr98               *
       *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
@@ -187,6 +189,9 @@
       * Since the following code would be duplicated in the main
       * sub-routine, it is put in a separate one for clarity.
       *
+      * Save original value of ZDAYNO                                           249385
+     C                   Z-ADD     ZDAYNO        ZCZDAY            5 0          249385
+      *                                                                         249385
       * If no. of working days required is zero and input date is a
       * holiday, then change required no. of days to one.
       *
@@ -248,6 +253,9 @@
       *
      C                   END                                                    ENW 1
       *
+      * Restore original value of dayno                                         249385
+     C                   Z-ADD     ZCZDAY        ZDAYNO            5 0          249385
+      *                                                                         249385
      C                   ENDSR
       *****************************************************************
       /EJECT

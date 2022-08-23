@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 256845             Date 08Jul22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -37,6 +38,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  256845 - Change to prevent database error 4 if the account   *
+      *           is not found in ACCNTAB. Instead put a message in   *
+      *           the account code name "** ACCOUNT NOT FOUND **".    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -826,16 +830,27 @@
      C                     PARM MCACCD    WWACOD 10                                           CGL029
      C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
      C*
-     C           WRTCD     IFNE *BLANK
-     C           *LOCK     IN   LDA
-     C                     MOVEL'MC0551  'DBPGM
-     C                     MOVEL'SDACODPD'DBFILE           ************
-     C                     MOVELMCACCD    DBKEY            * DBERR 04 *
-     C                     Z-ADD4         DBASE            ************
-     C                     OUT  LDA
-     C                     EXSR *PSSR
-     C                     ENDIF
+     C********** WRTCD     IFNE *BLANK                                    256845
+     C********** *LOCK     IN   LDA                                       256845
+     C**********           MOVEL'MC0551  'DBPGM                           256845
+     C**********           MOVEL'SDACODPD'DBFILE           ************   256845
+     C**********           MOVELMCACCD    DBKEY            * DBERR 04 *   256845
+     C**********           Z-ADD4         DBASE            ************   256845
+     C**********           OUT  LDA                                       256845
+     C**********           EXSR *PSSR                                     256845
+     C**********           ENDIF                                          256845
      C*
+      *                                                                   256845
+      ** If the account is not found, place a message to that effect      256845
+      ** in the account code name in the report rather than produce a     256845
+      ** datebase error.                                                  256845
+      *                                                                   256845
+     C           WRTCD     IFNE *BLANK                                    256845
+     C                     MOVEL*BLANK    WRTCD                           256845
+     C                     MOVEL*BLANKS   A5ACCN                          256845
+     C                     MOVELNOTFND    A5ACCN                          256845
+     C                     ENDIF                                          256845
+      *                                                                   256845
      C                     MOVELA5ACCD    RACOD
      C                     MOVELA5ACCN    RACCN
      C*

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059410           Date 21Dec21               *
-      *  Prev Amend No. MD059375           Date 20Dec21               *
+      *  Last Amend No. MD060069           Date 11Aug22               *
+      *  Prev Amend No. MD059410           Date 21Dec21               *
+      *                 MD059375           Date 20Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
@@ -82,6 +83,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060069 - DLC0602 00001 failed trying to divide by zero     *
+      *           - Do not update the UINFD and TINFD fields on Deals *
+      *             with ticked Average Rate Method.                  *
       *  MD059410 - Wrong rate is applied for the computation of int  *
       *  MD059375 - Rate change date should mark the start of the new *
       *             interest period and not the Interest Payment Date.*
@@ -2419,6 +2423,9 @@
      C                   IF        RPUBRTT = *BLANKS                                          CSD103
      C                   EVAL      UINFD = 0
      C                   ELSE
+                                                                                            MD060069
+     C                   TESTB     '3'           UDSTI                    50                MD060069
+     C                   IF        *IN50 = *OFF                                             MD060069
 
       **  Our interest fix date
 
@@ -2518,6 +2525,8 @@
 
      C                   ENDIF
 
+     C                   ENDIF                                                              MD060069
+      *                                                                                     MD060069
      C                   ENDIF
 
       ** Their Floating Rate Fix Days (Defaulting done in IRVRTFXDAY)
@@ -2526,6 +2535,9 @@
      C                   IF        RPTBRTT = *BLANKS                                          CSD103
      C                   EVAL      TINFD = *ZERO
      C                   ELSE
+                                                                                            MD060069
+     C                   TESTB     '3'           TDSTI                    50                MD060069
+     C                   IF        *IN50 = *OFF                                             MD060069
 
       ** User pays Fixed Rate, Counterparty pays Floating Rate
       ** Reset only, if Next Intr.Chg Date, or Rate Fix Days changed
@@ -2625,6 +2637,8 @@
 
      C                   ENDIF
 
+     C                   ENDIF                                                              MD060069
+      *                                                                                     MD060069
      C                   ENDIF
 
       ** Interest Rate Change Base Date

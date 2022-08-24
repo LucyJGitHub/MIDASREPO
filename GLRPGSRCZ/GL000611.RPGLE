@@ -900,7 +900,6 @@
                                                                                            MD048482A
      C                   DOW       NOT %EOF(DLDEALLF)                                      MD048482A
      C                   IF        V_MDAT = BJRDNB                                         MD048482A
-     C                   IF        V_MDAT = V_MDAT                                         MD048482A
      C                             AND V_PCPL = 0                                          MD048482A
      C                   MOVE      V_CNUM        Wcust                                     MD048482A
      C                   EVAL      Wdtyp = V_DTYP                                          MD048482A

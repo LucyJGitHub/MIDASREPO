@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055440           Date 18Mar20               *
+      *  Last Amend No. AR747068           Date 05Aug22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055440           Date 18Mar20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE098             Date 02Dec13               *
       *                 CRE075             Date 06Dec10               *
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR747068 - Deleted schedule entries should not be posted.    *
+      *             Applied fix 251359. (Child: AR747069)             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD055440 - CLS accounting entries are generated with a blank *
@@ -539,6 +542,10 @@
       ** Debit CLS Dummy Nostro with the Pay amount
 
      C     *IN03         DOWEQ     *OFF
+      *                                                                                     AR747068
+      ** Ignore deleted schedule entries                                                    AR747068
+      *                                                                                     AR747068
+     C                   IF        D_PYRECI = 'D'                                           AR747068
      C                   Z-ADD     D_PYAMT       WPostingAmt
      C                   EVAL      WDrCr = 0
      C                   EVAL      WDumNostro = 'Y'
@@ -563,6 +570,7 @@
 
       ** Determine if interbranch posings required for Pay
      C                   EXSR      SRPayIBP
+     C                   ENDIF                                                              AR747068
 
       ** Read next detail record for the same CLS schedule
      C     KEY1          READE     FXCLSPSDL0                             03

@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD020957A          Date 10Aug22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 233690             Date 11Jul05              */
+/*                      233690             Date 11Jul05              */
 /*                      CRE020             Date 20Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CCG015             Date 09Aug01              */
@@ -24,6 +25,12 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD020957A - Interest Capitalisation Advice not being gene-  */
+/*                   rated. Int Cap is not included in CRE020 so ge- */
+/*                   nerate the advice regardless of CRE020. This is */
+/*                   not a reopen issue but a different error repor- */
+/*                   ted under the same case.                        */
+/*                 - Applied for MD-43695.                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       233690 - Add OVRDBF to avoid DBASE004 in CG3615.            */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
@@ -80,8 +87,8 @@
              GOTO       CMDLBL(ENDCLPGM)                                                  /*CRE020*/
              ENDDO                                                                        /*CRE020*/
                                                                                           /*CRE020*/
-             IF         COND(&RTN_CODE *EQ '       ') THEN(GOTO +
-                          CMDLBL(ENDCLPGM))                                               /*CRE020*/
+/**********  IF         COND(&RTN_CODE *EQ '       ') THEN(GOTO + */                   /*MD020957A*/
+/**********               CMDLBL(ENDCLPGM)) */                                  /*CRE020 MD020957A*/
                                                                                           /*CRE020*/
 /* */
 /* Send Message to MRUNQ and standard processing parameters */

@@ -18,11 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154  *CREATE    Date 13Oct14               *
+      *  Last Amend No. MD036011           Date 10Aug22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036011 - Syntax failure of Helaba XML file                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting                                     *
       *                                                               *
@@ -136,7 +138,8 @@
      D BigString       S           1000
      D i               S              3  0 INZ(0)
      D Pos             S              5  0
-     D Head            S            230
+     D***Head***       S            230                                                     MD036011
+     D Head            S            250                                                     MD036011
  
      D RtnCode         S              7
  
@@ -178,7 +181,8 @@
       * ¦ Function to return formatted Tag Value field if it contains ¦
       * ¦ special characters in the text.                             ¦
       * +-------------------------------------------------------------+
-     DScanFld          PR            80
+     D***ScanFld          PR            80                                                  MD036011
+     DScanFld          PR           200                                                     MD036011
      D TagValue                            LIKE(PTagValue)
  
       * +-------------------------------------------------------------+
@@ -324,11 +328,23 @@
       * item number
      C                   SELECT
  
+     C                   WHEN      PFormat = 'XML'                                          MD036011
+     C                   EVAL      Head = '<?xml version="1.0"'                             MD036011
+     C                             + ' encoding="UTF-8"?>'                                  MD036011
+     C                   EVAL      BigString = %TRIM(Head) + CRLF                           MD036011
+     C                   EVAL      Buffer = %TRIMR(ConvertAscii(BigString))                 MD036011
      C                   WHEN      PFormat = 'ROT'  and
      C                             %SUBST(PTagName:2:1) <> '/'
  
      C                   EVAL      Head = %SUBST(PTagName:1:15)
-     C                             + ' ' + 'xmlns:ftc="ftc " xmlns:sfa="sfa " '
+     C**********                   + ' ' + 'xmlns:ftc="ftc " xmlns:sfa="sfa " '             MD036011
+     C                             + ' ' + 'xmlns:xsi="http://www.w3.org/2001/X-            MD036011
+     C                             MLSchema-instance"'                                      MD036011
+     C                             + ' ' + 'xmlns:ftc="urn:oecd:ties:fatca:v1"'             MD036011
+     C                             + ' ' + 'xmlns:iso="urn:oecd:ties:isofatcaty-            MD036011
+     C                             pes:v1"'                                                 MD036011
+     C                             + ' ' + 'xmlns:sfa="urn:oecd:ties:stffatcaty-            MD036011
+     C                             pes:v1" '                                                MD036011
      C                             + 'version="' + %TRIM(PTagvalue) + '">'
      C                   EVAL      BigString = %TRIM(Head) + CRLF
      C                   EVAL      Buffer = %TRIMR(ConvertAscii(BigString))
@@ -439,48 +455,159 @@
       *           and '>' and format field as necessary.             *
       ****************************************************************
      PScanFld          B
-     DScanFld          PI            80
+     D***ScanFld          PI            80                                                  MD036011
+     DScanFld          PI           200                                                     MD036011
      D  TagValue                           LIKE(PTagValue)
  
-     D  SpcChar        S             10    INZ('&<>')
+     D**SpcChar*       S             10    INZ('&<>')                                       MD036011
+     D  SpcChar        S              6    INZ('&<>"-/')                                    MD036011
      D  SpcArr         S              1    DIM(10)
-     D  ConvValue      S             80    INZ(*BLANKS)
+     D**ConvValue      S             80    INZ(*BLANKS)                                     MD036011
+     D  ConvValue      S            200    INZ(*BLANKS)                                     MD036011
      D  X              S              3  0
      D  WFound         S              1    INZ('N')
+     D  ArrData        S              1A   DIM(200)                                         MD036011
+     D  WChar          S              1A                                                    MD036011
+     D  WX1            S              3S 0                                                  MD036011
+     D  WX2            S              3S 0                                                  MD036011
+     D  WX3            S              3S 0                                                  MD036011
+     D  WTagValue      S            200A                                                    MD036011
  
-      *  Load special chars to be scanned into a work array and
-      *  initialise array index.
-     C                   MOVEA     SpcChar       SpcArr
-     C                   EVAL      X = 1
+      ***Load*special*chars*to*be*scanned*into*a*work*array*and                             MD036011
+      ***initialise*array*index.                                                            MD036011
+     C**********         MOVEA     SpcChar       SpcArr                                     MD036011
+     C**********         EVAL      X = 1                                                    MD036011
  
-      *  Search Tag Value field for each special character
-     C                   DOW       (X <= %ELEM(SpcArr)) AND
-     C                             (SpcArr(X) <> *BLANK)
+      ***Search*Tag*Value*field*for*each*special*character                                  MD036011
+     C**********         DOW       (X <= %ELEM(SpcArr)) AND                                 MD036011
+     C**********                    (SpcArr(X) <> *BLANK)                                   MD036011
  
-     C     SpcArr(X)     SCAN      TagValue                               90
+     C******SpcArr(X)    SCAN      TagValue                               90                MD036011
  
-      *  If any of special character is found, format the Tag Value field.
+      ***If*any*of*special*character*is*found,*format*the*Tag*Value field.                  MD036011
       *+------------------------------------------------------------------+
-      *¦ NOTE : A problem is encountered if character '£' is FTPd to the  ¦
-      *¦        PC. '£' seems to be translated into '$'. We found that    ¦
-      *¦        '[' translates to '£' when FTPd. Hence was used here.     ¦
+      *¦*NOTE*:*A*problem*is*encountered*if*character*'£'*is*FTPd*to*the**¦                 MD036011
+      *¦********PC.*'£'*seems*to*be*translated*into*'$'.*We*found*that****¦                 MD036011
+      *¦********'['*translates*to*'£'*when*FTPd.*Hence*was*used*here.*****¦                 MD036011
       *+------------------------------------------------------------------+
-     C                   IF        *IN90 = *ON
-     C                   EVAL      WFound = 'Y'
-     C                   EVAL      ConvValue = '<!£CDATA£' +
-     C                               %TRIM(TagValue) + ']]>'
-     C                   LEAVE
-     C                   ENDIF
+     C**********         IF        *IN90 = *ON                                              MD036011
+     C**********         EVAL      WFound = 'Y'                                             MD036011
+     C**********         EVAL      ConvValue = '<!£CDATA£' +                                MD036011
+     C**********                     %TRIM(TagValue) + ']]>'                                MD036011
+     C**********         LEAVE                                                              MD036011
+     C**********         ENDIF                                                              MD036011
  
-      *  Scan for next special character.
-     C                   EVAL      X = X + 1
-     C                   ENDDO
- 
-      *  If no special chars found in the field value, pass original
-      *  field to calling procedure.
-     C                   IF        WFound = 'N'
-     C                   EVAL      ConvValue = TagValue
-     C                   ENDIF
+      ***If*no*special*chars*found*in*the*field*value,*pass*original                        MD036011
+      ***field*to*calling*procedure.                                                        MD036011
+     C**********         IF        WFound = 'N'                                             MD036011
+     C**********         EVAL      ConvValue = TagValue                                     MD036011
+     C**********         ENDIF                                                              MD036011
+     C                   IF        TagValue <> *BLANKS                                      MD036011
+     C                   EVAL      WTagValue = TagValue                                     MD036011
+     C                   EVAL      WX1 = 1                                                  MD036011
+     C                   EVAL      WX2 = 0                                                  MD036011
+     C                   EVAL      ArrData = *BLANKS                                        MD036011
+     C     ' '           CHECKR    TagValue      WX3                                        MD036011
+     C                   DOW       WX1 <= WX3                                               MD036011
+     C                   EVAL      WChar = %SUBST(WTagValue:WX1:1)                          MD036011
+                                                                                            MD036011
+      ** Check if special character                                                         MD036011
+     C     WChar         SCAN      SpcChar                                90                MD036011
+     C                   IF        *IN90 = *ON                                              MD036011
+     C                             OR WChar = ''''                                          MD036011
+     C                             OR WChar = '#'                                           MD036011
+                                                                                            MD036011
+     C                   IF        WChar = '&'                                              MD036011
+     C                             AND %SUBST(WTagValue:WX1+1:1) = '#'                      MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '  '          ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX1 += 1                                                 MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   ELSE                                                               MD036011
+                                                                                            MD036011
+     C                   IF        WChar = '/'                                              MD036011
+     C                             AND %SUBST(WTagValue:WX1+1:1) = '*'                      MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   IF        WX2 <= 200                                               MD036011
+     C                   MOVEA     '  '          ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX1 += 1                                                 MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   ENDIF                                                              MD036011
+     C                   ELSE                                                               MD036011
+                                                                                            MD036011
+     C                   IF        WChar = '-'                                              MD036011
+     C                             AND %SUBST(WTagValue:WX1+1:1) = ' '                      MD036011
+     C                             AND %SUBST(WTagValue:WX1+2:1) = '-'                      MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   IF        WX2 <= 200                                               MD036011
+     C                   MOVEA     '   '         ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX1 += 2                                                 MD036011
+     C                   EVAL      WX2 += 2                                                 MD036011
+     C                   ENDIF                                                              MD036011
+     C                   ELSE                                                               MD036011
+                                                                                            MD036011
+     C                   IF        WChar = '&'                                              MD036011
+     C                             OR WChar = '<'                                           MD036011
+     C                             OR WChar = '>'                                           MD036011
+     C                             OR WChar = ''''                                          MD036011
+     C                             OR WChar = '"'                                           MD036011
+     C                             OR WChar = '#'                                           MD036011
+                                                                                            MD036011
+     C                   SELECT                                                             MD036011
+     C                   WHEN      WChar = '&'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&amp;'       ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 4                                                 MD036011
+     C                   WHEN      WChar = '<'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&lt;'        ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 3                                                 MD036011
+     C                   WHEN      WChar = '>'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&gt;'        ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 3                                                 MD036011
+     C                   WHEN      WChar = ''''                                             MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&apos;'      ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 5                                                 MD036011
+     C                   WHEN      WChar = '"'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   MOVEA     '&quot;'      ArrDATA(WX2)                               MD036011
+     C                   EVAL      WX2 += 5                                                 MD036011
+     C                   WHEN      WChar = '#'                                              MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   IF        WX2 <= 200                                               MD036011
+     C                   EVAL      ArrDATA(WX2) = ' '                                       MD036011
+     C                   EVAL      WX1 += 1                                                 MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   ENDIF                                                              MD036011
+     C                   ENDSL                                                              MD036011
+                                                                                            MD036011
+     C                   ELSE                                                               MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   EVAL      ArrDATA(WX2) = WChar                                     MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   ELSE                                                               MD036011
+      ** Valid character move to array                                                      MD036011
+     C                   EVAL      WX2 += 1                                                 MD036011
+     C                   IF        WX2 <= 200                                               MD036011
+     C                   EVAL      ArrDATA(WX2) = WChar                                     MD036011
+     C                   ENDIF                                                              MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   EVAL      WX1 += 1                                                 MD036011
+     C                   ENDDO                                                              MD036011
+     C                   MOVEA     ArrDATA       TagValue                                   MD036011
+     C                   ENDIF                                                              MD036011
+                                                                                            MD036011
+     C                   EVAL      ConvValue = TagValue                                     MD036011
  
      C                   RETURN    ConvValue
  

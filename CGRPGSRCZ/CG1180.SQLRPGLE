@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060404           Date 24Aug22               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060404 - Do not display 'More...' if end of file           *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -442,6 +444,10 @@
      C                   EXSR      ZASNMS
      C                   END                                                    FI ##RR = *ZERO
       *
+     C                   SETOFF                                       82                    MD060404
+     C                   IF        SQLCODE = 100                                            MD060404
+     C                   SETON                                        82                    MD060404
+     C                   ENDIF                                                              MD060404
       *................................................................
       * Save highest SFL record load can continue at end point
      C     ##RR          IFGT      ##RRMX

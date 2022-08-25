@@ -16,7 +16,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060319 - SMU01051 error handling issue                     *
+      *  MD060319 - Call new error handler for U8.                    *
       *  CUP041 - New Bridge methodology to combine menu options      *
       *                                                               *
       *****************************************************************

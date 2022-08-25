@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD057442           Date 24Aug22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 247526             Date 03May07              */
+/*                      247526             Date 03May07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CGL014             Date 20Oct03              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057442 - Several RPG objects for IRS module are redundant */
 /*       MD046248 - Finastra Rebranding                              */
 /*       247526 - Extend 240412 to repair processing.                */
 /*       CGL014 - Collaterals Processing                             */
@@ -41,7 +43,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PROG)
- 
+
              DCL        VAR(&PROG) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
@@ -51,7 +53,7 @@
              DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&NOREPLY) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10) /* +
                           Return code for call to ZAGETACTGP */
              DCL        VAR(&ACTGRP) TYPE(*CHAR) LEN(10) /* The +
@@ -65,9 +67,9 @@
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CRE020*/
              DCL        VAR(&PCMD) TYPE(*CHAR) LEN(50)                                    /*CRE020*/
              DCL        VAR(&CGL014) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CGL014*/
- 
+
              DCLF       FILE(SDMGMEPD)
- 
+
 /* Monitor for error messages not trapped in the rest of the */
 /* program. If they occur reclaim resources and exit.        */
              MONMSG     MSGID(CPF0000 CPA0000 MCH0000 RPG0000) +
@@ -107,18 +109,18 @@
 ERR:
              RCLACTGRP  ACTGRP(*ELIGIBLE)
              RCLRSC
- 
+
              RETURN
- 
+
 RUN:
- 
+
 /*  Reset job switches */
              CHGJOB     SWS(0XXXXX00)
- 
+
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
- 
+
 /*  Test for retail module  */
- 
+
              IF         COND((%SUBSTRING(&MMOD 23 1) = 'Y') *OR +
                           (%SUBSTRING(&MMOD 16 1) = 'Y')) THEN(DO)
                 CHGJOB     SWS(11XXXXXX)
@@ -130,9 +132,9 @@ RUN:
                   CRTDTAARA  DTAARA(QTEMP/DLUFBO) TYPE(*CHAR) LEN(50)                     /*CGL014*/
                   MONMSG     MSGID(CPF1023)                                               /*CGL014*/
              ENDDO                                                                        /*CGL014*/
- 
+
 /*  Call program             */
- 
+
                                                                                           /*247526*/
 /* Create copy of original file */                                                        /*247526*/
              IF         COND((&PROG = 'IRFRARPR' ) *OR +
@@ -146,7 +148,7 @@ RUN:
              ENDDO                                                                        /*247526*/
                                                                                           /*247526*/
              CALL       PGM(&PROG)
- 
+
 /** +
     Destroy the activation group used by the program, and ensure +
     that no files were left open in OPM programs called from it. +
@@ -154,21 +156,21 @@ RUN:
     program runs in. +
 **/
              CALL       PGM(ZAGETACTGP) PARM(&RETURNCODE &ACTGRP &PROG)
- 
+
              IF         COND(&RETURNCODE = ' ') THEN(DO)
                 RCLACTGRP  ACTGRP(&ACTGRP)
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              RCLRSC
- 
+
 /*  IF U7 AND U8 ARE ON SEND DATA BASE ERROR MESSAGE TO MOPERQ */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
- 
+
                 RTVDTAARA  DTAARA(*LDA (134 50)) RTNVAR(&MSG)
                 SNDPGMMSG  MSGID(DBM0001) MSGF(DRSMM) MSGDTA(&MSG) +
                           TOMSGQ(MOPERQ)
- 
+
 /*  CALL SCC0010 TO SEND ABNORMAL TERMINATION SCREEN  */
                 RTVMSG     MSGID(SCM0087) MSGF(MIDASMSG) MSG(&MESSAGE)
                 MONMSG     MSGID(CPF0000 MCH0000)
@@ -182,16 +184,16 @@ RUN:
                 MONMSG     MSGID(CPF0000 MCH0000)
                 CALL       PGM(SCC0010) PARM('DLC02A' 'ENTER' &NOREPLY)
                 MONMSG     MSGID(CPF0000 MCH0000)
- 
+
                 ROLLBACK
              ENDDO
- 
+
  /* PROCESSING FOR CONFIRMATIONS */
- 
+
        IF         COND(%SWITCH(XXXXX000)) THEN(DO)
- 
+
  /* DO CONFIRMATIONS IF FRA/IRS DEAL INPUT DONE */
- 
+
  /********IF         COND((&PROG *EQ 'IRFRASIN') +                                        /*195484*/
  /**********          *OR (&PROG *EQ 'IRSIRSSIN') +                                       /*195484*/
  /**********          *OR (&PROG *EQ 'IRCIRSSIN') +                                       /*195484*/
@@ -204,30 +206,36 @@ RUN:
  /**********          *OR (&PROG *EQ 'IRFRARPR') +          */                 /*195484*/ /*CAP055*/
  /**********          *OR (&PROG *EQ 'IRSIRSRPR') +         */                 /*195484*/ /*CAP055*/
  /**********          *OR (&PROG *EQ 'IRCIRSRPR')) THEN(DO) */                 /*195484*/ /*CAP055*/
+ /********IF         COND((&PROG *EQ 'IRFRASIN') +                                      /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRSIRSSIN') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRCIRSSIN') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRCACFSIN') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRFRARPR') +                                      /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRSIRSRPR') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRCIRSRPR') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRCACFRPR')) THEN(DO)                  /*CAP055*/ /*MD057442*/
           IF         COND((&PROG *EQ 'IRFRASIN') +
-                      *OR (&PROG *EQ 'IRSIRSSIN') +
-                      *OR (&PROG *EQ 'IRCIRSSIN') +
                       *OR (&PROG *EQ 'IRCACFSIN') +
                       *OR (&PROG *EQ 'IRFRARPR') +
                       *OR (&PROG *EQ 'IRSIRSRPR') +
                       *OR (&PROG *EQ 'IRCIRSRPR') +
-                      *OR (&PROG *EQ 'IRCACFRPR')) THEN(DO)                               /*CAP055*/
- 
+                      *OR (&PROG *EQ 'IRCACFRPR')) THEN(DO)                             /*MD057442*/
+
              IF         COND((%SST(&MMOD 25 1) *EQ 'Y') *OR  +
                            (%SST(&MMOD 33 1) *EQ 'Y')) THEN(DO)
- 
+
                 RTVDTAARA  DTAARA(DLSTAT) RTNVAR(&DLSTAT)
- 
+
  /* CHECK THAT CONFIRMATION PROCESS IS NOT ALREADY RUNNING */
- 
+
                 IF         COND(%SST(&DLSTAT 6 2) *EQ 'NN') THEN(DO)
- 
+
                    ALCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))
                    CHGDTAARA  DTAARA(DLSTAT (6 1)) VALUE('Y')
                    DLCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))
              SNDPGMMSG  MSG('MIDAS') TOMSGQ(MSTATUS) /* $µ */
 /*/COPY WNCPYSRC,DLC02A001                                           */
- 
+
 /************      SBMJOB     JOB(DLC0210A) JOBD(MBATCH) USER(*JOBD) +                    /*CSC023*/
 /************                   RTGDTA(*JOBD) RQSDTA('CALL   DLC0210A') +                 /*CSC023*/
 /************                   INLLIBL(*JOBD) MSGQ(MOPERQ)                               /*CSC023*/
@@ -241,9 +249,9 @@ RUN:
                                 RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
                                 INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)                   /*CSC023*/
 /*/COPY WNCPYSRC,DLC02A002                                           */
- 
+
                    RCVF
- 
+
                 ENDDO
              ENDDO
           ENDDO
@@ -258,12 +266,16 @@ RUN:
                                                                                           /*CRE020*/
              CHGVAR     VAR(&PARM) VALUE('          ')                                    /*CRE020*/
                                                                                           /*CRE020*/
+ /********IF         COND((&PROG *EQ 'IRCACFSIN') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRCIRSSIN') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRSIRSSIN') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRCACFRPR') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRSIRSRPR') +                                     /*MD057442*/
+ /**********          *OR (&PROG *EQ 'IRCIRSRPR')) THEN(DO)                             /*MD057442*/
           IF         COND((&PROG *EQ 'IRCACFSIN') +
-                      *OR (&PROG *EQ 'IRCIRSSIN') +
-                      *OR (&PROG *EQ 'IRSIRSSIN') +
                       *OR (&PROG *EQ 'IRCACFRPR') +
                       *OR (&PROG *EQ 'IRSIRSRPR') +
-                      *OR (&PROG *EQ 'IRCIRSRPR')) THEN(DO)
+                      *OR (&PROG *EQ 'IRCIRSRPR')) THEN(DO)                             /*MD057442*/
              CHGVAR     VAR(&PARM) VALUE(%SST(&PROG 1 6) *CAT 'UPD')                      /*CRE020*/
              ENDDO                                                                        /*CRE020*/
                                                                                           /*CRE020*/
@@ -284,7 +296,7 @@ RUN:
              ENDDO                                                                        /*CRE020*/
                                                                                           /*CRE020*/
              ENDDO                                                                        /*CRE020*/
- 
+
              RCLRSC
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

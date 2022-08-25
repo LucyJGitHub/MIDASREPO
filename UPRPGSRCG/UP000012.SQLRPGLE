@@ -11,11 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CUP041   *CREATE   Date 06Sep11               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD060319           Date 29Nov22               *
+      *  Prev Amend No. CUP041   *CREATE   Date 06Sep11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060319 - SMU01051 error handling issue                     *
       *  CUP041 - New Bridge methodology to combine menu options      *
       *                                                               *
       *****************************************************************
@@ -29,6 +30,7 @@
      D Status          S              1
      D Command         S             80
      D CommandLen      S             15  5 INZ(80)
+     D U8Rtcd          S              1                                                     MD060319
       *
      D/COPY GPCPYSRCG,PSDS
       *
@@ -85,9 +87,16 @@
      C                   CALL(e)   'QCMDEXC'
      C                   PARM                    Command
      C                   PARM                    CommandLen
+                                                                                            MD060319
+      * Call U8 Error handler                                                               MD060319
+     C                   IF        PSExcpNo = *BLANK                                        MD060319
+     C                   CALL(e)   'UPC000071'                                              MD060319
+     C                   PARM                    U8Rtcd                                     MD060319
+     C                   ENDIF                                                              MD060319
       * If the error switch is on then update status as failed.
      C                   IF        *INU8 = *ON or
      C                             PSExcpNo <> *blank
+     C                             or U8Rtcd = '1'                                          MD060319
      C                   EVAL      Status = 'F'
      C                   EVAL      *INU8 = *OFF
      C                   EVAL      PSExcpNo = *blank

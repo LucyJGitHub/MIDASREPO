@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD058089           Date 01Sep21              */
-/*       Prev Amend No. MD058079           Date 11May21              */
+/*       Last Amend No. MD059732           Date 18Aug22              */
+/*       Prev Amend No. MD058089           Date 01Sep21              */
+/*                      MD058079           Date 11May21              */
 /*                      MD058082           Date 11May21              */
 /*                      MD058068           Date 11May21              */
 /*                      MD058071           Date 11May21              */
@@ -61,6 +62,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059732 - DDS improvements, report conflict only           */
+/*                - Applied for MD-60291.                            */
 /*       MD058089 - Deliverable Data Split for SM  and UP            */
 /*       MD058079 - Deliverable Data Split for sundry files          */
 /*       MD058082 - Deliverable Data Split for FRS                   */
@@ -1689,19 +1692,29 @@
                                                                                         /*MD058089*/
 /* Run compare */
              IF         COND(&FILE *EQ &OLDFILE) THEN(DO)                               /*MD054955*/
+/**********  CMPF FILE1(&OLDFILE) FILE2(&BRGDTALIB/&FILE) TFILE(&FILE) KEYFLD(*FILE) +
+             OUTPUT(*PRINT) KEYF(&KEYFILE) */                                           /*MD059732*/
              CMPF FILE1(&OLDFILE) FILE2(&BRGDTALIB/&FILE) TFILE(&FILE) KEYFLD(*FILE) +
-             OUTPUT(*PRINT) KEYF(&KEYFILE)
+             OUTPUT(*PRINT) KEYF(&KEYFILE) RPTCFT(*YES)                                 /*MD059732*/
              RTVMBRD    FILE(QTEMP/UTCMPFPD) NBRCURRCD(&NBRCURRCD)                      /*MD059289*/
                 IF         COND(&NBRCURRCD *NE 0) THEN(DO)                              /*MD059289*/
                   CHGSPLFA   FILE(UT000023P1) SPLNBR(*LAST) USRDTA(&FILE)               /*MD059289*/
+/* Record number of conflicts */                                                        /*MD059732*/
+             CALL       PGM(UP4034) PARM(&FILE &NBRCURRCD)                              /*MD059732*/
+                                                                                        /*MD059732*/
                 ENDDO                                                                   /*MD059289*/
              ENDDO                                                                      /*MD054955*/
              ELSE       CMD(DO)                                                         /*MD054955*/
+/**********  CMPF FILE1(&SAVLIB/&OLDFILE) FILE2(&BRGDTALIB/&FILE) TFILE(&FILE)  +
+             KEYFLD(*FILE) OUTPUT(*PRINT) KEYF(&KEYFILE) */                   /*MD054955**MD059732*/
              CMPF FILE1(&SAVLIB/&OLDFILE) FILE2(&BRGDTALIB/&FILE) TFILE(&FILE)  +
-             KEYFLD(*FILE) OUTPUT(*PRINT) KEYF(&KEYFILE)                                /*MD054955*/
+             KEYFLD(*FILE) OUTPUT(*PRINT) KEYF(&KEYFILE) RPTCFT(*YES)                   /*MD059732*/
              RTVMBRD    FILE(QTEMP/UTCMPFPD) NBRCURRCD(&NBRCURRCD)                      /*MD059289*/
                 IF         COND(&NBRCURRCD *NE 0) THEN(DO)                              /*MD059289*/
                   CHGSPLFA   FILE(UT000023P1) SPLNBR(*LAST) USRDTA(&FILE)               /*MD059289*/
+/* Record number of conflicts */                                                        /*MD059732*/
+             CALL       PGM(UP4034) PARM(&FILE &NBRCURRCD)                              /*MD059732*/
+                                                                                        /*MD059732*/
                 ENDDO                                                                   /*MD059289*/
              ENDDO                                                                      /*MD054955*/
 

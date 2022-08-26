@@ -24,8 +24,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD036225           Date 22May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060298           Date 15Aug22               *
+      *  Prev Amend No. MD036225           Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -46,6 +47,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060298 - Amendment of deal is blocked due to error 45034067*
+      *           - Fix is to condition the validation of value date  *
+      *             against back value period in checking first if    *
+      *             DDACTN is 'I'.                                    *
       *  MD036225 - MM deals in Repair Q. Make sure validation for    *
       *             value date is only for retail accounts.           *
       *  MD046248 - Finastra Rebranding                               *
@@ -496,6 +501,8 @@
      C                   END
      C                   END
      C                   END
+      *                                                                                     MD060298
+     C     DDACTN        IFEQ      'I'                                                      MD060298
       *                                                                                     MD036225
       ** Check if value date is within back-value period & retail.                          MD036225
       ** If backvalue period is 999 it means *NOMAX and value date                          MD036225
@@ -536,6 +543,7 @@
      C                   EVAL      WarnFound  = 'Y'                                         MD036225
      C                   MOVEL     'MMM2626'     WMSGid1                                    MD036225
      C                   ENDIF                                                              MD036225
+     C                   ENDIF                                                              MD060298
      C*
      C**  Find whether the date is a holiday in the local currency.
      C*

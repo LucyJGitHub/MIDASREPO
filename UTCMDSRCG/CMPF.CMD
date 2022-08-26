@@ -11,13 +11,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021155           Date 03Jun13              */
+/*       Last Amend No. MD059732           Date 18Aug22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021155           Date 03Jun13              */
 /*                      A1076141           Date 11Jan13              */
 /*                      BUG27790  *CREATE  Date 17Jun10              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD059732 - DDS improvements, report conflict only           */
+/*                - Applied for MD-60291.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Allow compare where there is no unique key.      */
@@ -87,6 +90,10 @@
                           SPCVAL((*FIRST)) MIN(0) PMTCTL(PMTCTL3) +
                           PROMPT('Member to receive output' 15)
  
+             PARM       KWD(RPTCFT) TYPE(*CHAR) LEN(4) RSTD(*YES) +
+                          DFT(*NO) VALUES(*YES *NO) PROMPT('Report +
+                          conflict only ?' 16)                                          /*MD059732*/
+                                                                                        /*MD059732*/
  Q2:         QUAL       TYPE(*NAME) LEN(10) MIN(1)
              QUAL       TYPE(*NAME) LEN(10) SPCVAL((*LIBL)) +
                           PROMPT('Library')

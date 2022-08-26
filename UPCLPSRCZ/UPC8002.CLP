@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054955           Date 16Dec19              */
-/*       Prev Amend No. MD055056           Date 13Jan20              */
+/*       Last Amend No. MD059732           Date 18Aug22              */
+/*       Prev Amend No. MD054955           Date 16Dec19              */
+/*                      MD055056           Date 13Jan20              */
 /*                      MD054605           Date 17Oct19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CUP040             Date 04Mar13              */
@@ -27,6 +28,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059732 - DDS improvements, report conflict only           */
+/*                - Applied for MD-60291.                            */
 /*       MD054955 - Deliverable Data Split for Correspondence Mgr    */
 /*       MD055056 - Override not found at specified level.           */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
@@ -69,6 +72,7 @@
                           Finastra International Limited +
                           2003')
              DCL        VAR(&SAVLIB) TYPE(*CHAR) LEN(10)                                /*MD054955*/
+             DCL        VAR(&NBRCD) TYPE(*DEC) LEN(10 0)                                /*MD059732*/
 
 /************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
 /**********  DCLF       FILE(UPSVALJ0) */                                      /*CUP033* *MD054605*/
@@ -183,6 +187,12 @@ VALIDATE:                                                                       
                           CRTFILE(*YES) INCREL((*IF AUMBTP *EQ +
                           'DDSDATA') (*AND AUDTYP *EQ 'I') (*AND +
                           AUDTLB *EQ &LAYER))                                           /*MD054605*/
+                                                                                        /*MD059732*/
+/* Clear conflict summary file used for report */                                       /*MD059732*/
+             IF         COND(&MODE *EQ '*CONFLICT') THEN(DO)                            /*MD059732*/
+             CLRPFM     FILE(UPCFTNTD)                                                  /*MD059732*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059732*/
+             ENDDO                                                                      /*MD059732*/
                                                                                         /*MD054605*/
 /**********  CALL       PGM(UPC008004) PARM(&MODE &BRGDTALIB) */              /*MD054605* MD054955*/
              CHGVAR     VAR(&SAVLIB) VALUE('#.' *TCAT &SBSID +
@@ -197,6 +207,19 @@ VALIDATE:                                                                       
                 GOTO       CMDLBL(END)                                                  /*MD054605*/
              ENDDO                                                                      /*MD054605*/
                                                                                         /*MD054605*/
+/* Generate conflict summary report */                                                  /*MD059732*/
+             IF         COND(&MODE *EQ '*CONFLICT') THEN(DO)                            /*MD059732*/
+             CALL       PGM(UP4033) PARM(&LAYER)                                        /*MD059732*/
+             RTVMBRD    FILE(UPCFTNTD) NBRCURRCD(&NBRCD)                                /*MD059732*/
+             IF         COND(&NBRCD *NE 0) THEN(DO)                                     /*MD059732*/
+                RTVMSG     MSGID(UPM0100) MSGF(UTMSGF) +
+                          MSGDTA('UPC8002') MSG(&MESSAGE)                               /*MD059732*/
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                    /*MD059732*/
+                CALL       PGM(SCC0010) PARM('UPC8002' 'ENTER' 'Y')                     /*MD059732*/
+                GOTO       CMDLBL(END)                                                  /*MD059732*/
+             ENDDO                                                                      /*MD059732*/
+             ENDDO                                                                      /*MD059732*/
+                                                                                        /*MD059732*/
              GOTO       CMDLBL(END)
 
 ABNOR:

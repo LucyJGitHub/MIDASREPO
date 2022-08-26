@@ -10013,7 +10013,12 @@
      C** Sub 3 from total records as Header DAPCLH (NA parcels extract)   S01378
      C** is not in LF/DAMSX                                               S01378
      C**                                                                  LN0802
+      *                                                                                     MD060264
+      ** Perform deduct of 2 from TOTNRD only if transactions exist in DAMSX.               MD060264
+      *                                                                                     MD060264
+     CLR U1              IF        TOTNRD > 2                                               MD060264
      CLR U1TOTNRD        SUB       2             TOTNRD                                        S0137
+     CLR                 ENDIF                                                              MD060264
      CLRNU1TOTNRD        SUB       3             TOTNRD                                        S0137
 2081 CLR   TOTNRD        COMP      TOTDMS                             3737
 2082 CLR 37              SETON                                        U8

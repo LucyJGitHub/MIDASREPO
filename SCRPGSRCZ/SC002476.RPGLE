@@ -52,31 +52,31 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** External DS for Bank Details
@@ -299,9 +299,9 @@
       * Since the following code would be duplicated in the main
       * sub-routine, it is put in a separate one for clarity.
       *
-      * Save original value of ZDAYNO                                           249385
-     C                   Z-ADD     ZDAYNO        ZCZDAY            5 0          249385
-      *                                                                         249385
+      * Save original value of ZDAYNO                                                         249385
+     C                   Z-ADD     ZDAYNO        ZCZDAY            5 0                        249385
+      *                                                                                       249385
       * If no. of working days required is zero and input date is a
       * holiday, then change required no. of days to one.
       *
@@ -363,9 +363,9 @@
       *
      C                   end                                                    ENW 1
       *
-      * Restore original value of dayno                                         249385
-     C                   Z-ADD     ZCZDAY        ZDAYNO            5 0          249385
-      *                                                                         249385
+      * Restore original value of dayno                                                       249385
+     C                   Z-ADD     ZCZDAY        ZDAYNO            5 0                        249385
+      *                                                                                       249385
      C                   endsr
       *****************************************************************
       /EJECT
@@ -490,17 +490,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WDUMP = *BLANKS
      C                   MOVE      'Y'           WDUMP             1
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   DUMP
- 
+
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
      C****************************************************************
 **  CPY@

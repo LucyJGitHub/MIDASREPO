@@ -89,12 +89,14 @@
 
      IFormatZON     01
      I**********                                AMFCTY        L1M1                          MD060141
-     I                                          AMFCTY        L1M2                          MD060141
+     I**********                                AMFCTY        L1M2                 MD060141 MD060092
      I**********                                AMCLAS        L1M1                 MD060141 MD060092
+     I                                          AMFCTY        L1M1                          MD060092
      IFormatGLB     02
      I**********                                G_AMFCTY      L1M1                          MD060141
-     I                                          G_AMFCTY      L1M2                          MD060141
+     I**********                                G_AMFCTY      L1M2                 MD060141 MD060092
      I**********                                G_AMCLAS      L1M1                 MD060141 MD060092
+     I                                          G_AMFCTY      L1M1                          MD060092
 
      C     *INMR         IFEQ      *OFF
      C     *IN01         IFEQ      *ON

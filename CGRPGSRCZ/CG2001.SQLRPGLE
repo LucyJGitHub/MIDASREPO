@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *  Last Amend No. MD058069           Date 11May21               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD054955           Date 16Dec19               *
       *               . MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -73,7 +75,7 @@
       *****************************************************************
      FCGCORRL1  UP   E           K DISK    INFSR(SRFILE)
      F*CGCSCHL1* UF   E           K DISK    INFSR(SRFILE)                                   MD054955
-     FCGPSCHL0  IF   E           K DISK    INFSR(SRFILE)
+     F*CGPSCHL0* IF   E           K DISK    INFSR(SRFILE)                                   MD058069
       *
       **  Copyright array.
       *
@@ -118,6 +120,7 @@
      I**********    CPCACC                      CDCACC                          S01117
      I**********    CPACHG                      CDACHG                          S01117
      D CGCSCH        E DS                  EXTNAME(CGCSHJW0)                                MD054955
+     D CGPSCH        E DS                  EXTNAME(CGPSHJW0)                                MD058069
      I*COPY*CGCPYSRC,SRERRI                                                                 MD054955
       *
      C/SPACE 5
@@ -318,7 +321,18 @@
       *
       *          Fetch frequency
       *
-     C     CDDPRT        CHAIN     CGPSCHL0                           79         1
+     C*****CDDPRT        CHAIN     CGPSCHL0                           79         1          MD058069
+     C/EXEC SQL                                                                             MD058069
+     C+ SELECT *                                                                            MD058069
+     C+ into :CGPSCH                                                                        MD058069
+     C+ from CGPSHJW0                                                                       MD058069
+     C+ where STPSCH = :CDDPRT                                                              MD058069
+     C/END-EXEC                                                                             MD058069
+     C                   SETOFF                                       79                    MD058069
+     C                   If        SQLCODE = 100                                            MD058069
+     C                   SETON                                        79                    MD058069
+     C                   ENDIF                                                              MD058069
+                                                                                            MD058069
      C     *IN79         IFEQ      *ON                                          B2
      C                   MOVEL     'CGPSCHL0'    W0PREF                                        08378
      C**********           MOVEL'CG99FREQ'W0FILE           ***************083780

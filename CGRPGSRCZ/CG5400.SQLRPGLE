@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *  Last Amend No. MD058069           Date 11May21               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CCG024             Date 29Sep16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -106,12 +108,12 @@
      FCGCORRL4  IF   E           K DISK    INFSR(SRFILE)
      FCG5400DF  CF   E             WORKSTN
      F                                     INFSR(SRFILE)
-     FCGISTSL1  IF   E           K DISK
-     F                                     INFSR(SRFILE)
+     F*CGISTSL1* IF   E           K DISK                                                    MD058069
+     F**********                           INFSR(SRFILE)                                    MD058069
       * RTV : Print Item Status         Retrieval index
       *
-     FCGCTYPL0  IF   E           K DISK                                         086662
-     F                                     INFSR(SRFILE)                        086662
+     FCGCTYPL0  IF   E           K DISK                                                       086662
+     F                                     INFSR(SRFILE)                                      086662
       *
       /EJECT
       *
@@ -218,6 +220,7 @@
      D  SVALK1                 1     20    INZ('RecipientSpecialChar')
       *                                                                                       CCG024
      D CGPTYP        E DS                  EXTNAME(CGPTYJW0)                                MD054955
+     D CGISTS        E DS                  EXTNAME(CGISTJW0)                                MD058069
       *COPY*CGCPYSRC,SRERRI                                                                 MD054955
       /EJECT
       *****************************************************************
@@ -1022,7 +1025,17 @@
      C                   KFLD                    ISISTS                         Item Status
       * Setup key
      C                   MOVEL     ##STAT        ISISTS                         Item Status
-     C     KLSTAT        CHAIN     @ISTSL1                            9091      *
+     C*****KLSTAT        CHAIN     @ISTSL1                            9091      *           MD058069
+     C/EXEC SQL                                                                             MD058069
+     C+ SELECT *                                                                            MD058069
+     C+ into :CGISTS                                                                        MD058069
+     C+ from CGISTJW0                                                                       MD058069
+     C+ where ISISTS = :ISISTS and ISRECI = 'D'                                             MD058069
+     C/END-EXEC                                                                             MD058069
+     C                   SETOFF                                       90                    MD058069
+     C                   If        SQLCODE = 100                                            MD058069
+     C                   SETON                                        90                    MD058069
+     C                   ENDIF                                                              MD058069
      C     *IN90         IFEQ      '0'
       *
       **Item*status*may*not*be*deleted***                                                     227156

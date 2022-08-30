@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. MD058069           Date 11May21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056543           Date 15Sep20               *
       *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CCG024             Date 29Sep16               *
@@ -48,6 +49,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
@@ -84,8 +86,8 @@
       * RTV : Correspondent Details     Retrieval index
      FCGCORRL4  IF   E           K DISK    INFSR(SRFILE)
       *
-     FCGISTSL1  IF   E           K DISK
-     F                                     INFSR(SRFILE)
+     F*CGISTSL1* IF   E           K DISK                                                    MD058069
+     F**********                           INFSR(SRFILE)                                    MD058069
       * RTV : Print Item Status         Retrieval index
       *
      F*CGPTYPL1* IF   E           K DISK                                                    MD054955
@@ -116,6 +118,7 @@
       /COPY WNCPYSRC,CG5020DEPG
       /EJECT
      D CGPTYP        E DS                  EXTNAME(CGPTYJW0)                                MD054955
+     D CGISTS        E DS                  EXTNAME(CGISTJW0)                                MD058069
       *COPY*CGCPYSRC,SRERRI                                                                 MD054955
      D*  End of Program Error Processing copysource
      D*
@@ -807,7 +810,17 @@
      C                   KFLD                    ISISTS                         Item Status
       * Setup key
      C                   MOVEL     #1ISTS        ISISTS                         Item Status
-     C     KLVFIS        CHAIN     @ISTSL1                            9091      *
+     C*****KLVFIS        CHAIN     @ISTSL1                            9091      *           MD058069
+     C/EXEC SQL                                                                             MD058069
+     C+ SELECT *                                                                            MD058069
+     C+ into :CGISTS                                                                        MD058069
+     C+ from CGISTJW0                                                                       MD058069
+     C+ where ISISTS = :ISISTS and ISRECI = 'D'                                             MD058069
+     C/END-EXEC                                                                             MD058069
+     C                   SETOFF                                       90                    MD058069
+     C                   If        SQLCODE = 0                                              MD058069
+     C                   SETON                                        90                    MD058069
+     C                   ENDIF                                                              MD058069
      C     *IN90         IFEQ      '0'
       * Record found - move back any virtuals
      C                   GOTO      VFEXIT

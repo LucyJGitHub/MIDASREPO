@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD060284           Date 26Aug22               *
+      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD053472           Date 27Oct20               *
       *                 MD055318           Date 17Feb20               *
       *                 CSD102             Date 08Jan19               *
@@ -93,6 +94,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060284 - Deal amendment type "SC" is blocked by error      *
+      *             45049106.                                         *
+      *           - Make both settlement fields protected for deal    *
+      *             amendment type "SC".                              *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -1415,6 +1420,12 @@
      C                   MOVEL     '00'          DDRSTM                                      BUG6534
      C     CDL051        IFEQ      'Y'                                                        CDL051
      C                   EVAL      ##PREC = 'Y'                                               CDL051
+      *                                                                                     MD060284
+      ** For type "SC" both settlement field must be protected.                             MD060284
+      *                                                                                     MD060284
+     C     DDMTYP        IFEQ      'SC'                                                     MD060284
+     C                   EVAL      ##PPAY = 'Y'                                             MD060284
+     C                   ENDIF                                                              MD060284
      C                   ENDIF                                                                CDL051
       *                                                                                      BUG6534
       ** If Principal Decrease of Deposit Placed or Early Maturity of Deposit Placed         BUG6534
@@ -1438,6 +1449,12 @@
      C                   MOVEL     '00'          DDPSTM                                      BUG6534
      C     CDL051        IFEQ      'Y'                                                        CDL051
      C                   EVAL      ##PPAY = 'Y'                                               CDL051
+      *                                                                                     MD060284
+      ** For type "SC" both settlement field must be protected.                             MD060284
+      *                                                                                     MD060284
+     C     DDMTYP        IFEQ      'SC'                                                     MD060284
+     C                   EVAL      ##PREC = 'Y'                                             MD060284
+     C                   ENDIF                                                              MD060284
      C                   ENDIF                                                                CDL051
                                                                                              BUG6534
      C                   ENDIF                                                               BUG6534

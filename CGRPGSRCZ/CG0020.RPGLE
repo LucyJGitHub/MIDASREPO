@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060153           Date 23Aug22               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 238960             Date 03Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060153 - Unable to search using correspondent name in      *
+      *             correspondent enquiry. Pass the value of CDCORN to*
+      *             to a new alphanumeric variable XXCORN, then       *
+      *             instead of CDCORN, use XXCORN as parameter on     *
+      *             QCLSCAN API call.                                 *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD to readable  *
       *             unicode equivalent.                               *
@@ -712,8 +718,11 @@
      C                   END
      C     #2CORN        IFNE      *BLANK                                       Correspondent N
       * Scan for search string
+     C                   MOVE      *BLANKS       XXCORN           30                        MD060153
+     C                   EVAL      XXCORN =      CDCORN                                     MD060153
      C                   CALL      'QCLSCAN'
-     C                   PARM                    CDCORN                         Correspondent N
+     C**********         PARM                    CDCORN                     Correspondent N MD060153
+     C                   PARM                    XXCORN                                     MD060153
       * Length
      C                   PARM      30            WQA3N             3 0
       * Start

@@ -1,11 +1,11 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('CL Program to call UTDL0051A and UTDL0051B')          */
+/*EXI    TEXT('CL Program to call SMU00600A and SMU00600B')          */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Dealing Module                                      */
 /*                                                                   */
-/*       UTCDL051 - CL Program to call UTDL0051A and UTDL0051B in    */
+/*       UTCDL051 - CL Program to call SMU00600A and SMU00600B in    */
 /*                  AUDIT or UPDATE mode.                            */
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
@@ -17,7 +17,7 @@
 /*       255626 - Applied fix 242527                                 */
 /*       242527 - DL deal amendment is not shown on projected account*/
 /*                movements.Applied fix 213349.                      */
-/*                Calls UTDL0051A and UTDL0051B datapatch programs.  */
+/*                Calls SMU00600A and SMU00600B datapatch programs.  */
 /*                                                                   */
 /*                                                                   */
 /*********************************************************************/
@@ -58,10 +58,10 @@
 
              IF         COND((&MODE *EQ '*AUDIT') *OR +
                           (&MODE *EQ '*audit')) THEN(DO)
-                CALL       PGM(UTDL0051A) PARM('A')
+                CALL       PGM(SMU00600A) PARM('A')
                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                              CMDLBL(ABNOR))
-                CALL       PGM(UTDL0051B) PARM('A')
+                CALL       PGM(SMU00600B) PARM('A')
                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                              CMDLBL(ABNOR))
              ENDDO
@@ -96,10 +96,10 @@
                    GOTO       CMDLBL(END)
                 ENDDO
 
-                CALL       PGM(UTDL0051A) PARM('U')
+                CALL       PGM(SMU00600A) PARM('U')
                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))
-                CALL       PGM(UTDL0051B) PARM('U')
+                CALL       PGM(SMU00600B) PARM('U')
                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))
                 DLTF       FILE(&DILIB/DEALSDCBK)

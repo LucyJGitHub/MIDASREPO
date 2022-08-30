@@ -1,0 +1,226 @@
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP CUP044 installation')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       CUP044INS - One Touch Bridge installation                   */
+/*                                                                   */
+/*       Function: This program installs the deliverable for OTB     */
+/*                 from library FM2021FOTB.                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD060398           Date 25Aug22              */
+/*       Prev Amend No. CUP044   *CREATE   Date 22May22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD060398 - Monitor CPYF as pgm can accidentaly run more     */
+/*                  than once.                                       */
+/*       CUP044 - One Touch Bridge - upgrade                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&GG)
+
+             DCL        VAR(&GG) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZZ) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GGIRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GGINVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZZIRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GGGTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZZDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZZDMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GGGPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GGGMLIB) TYPE(*CHAR) LEN(10)                               /*MD060398*/
+             DCL        VAR(&GOWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GAUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGEID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)                                /*MD060398*/
+
+             DCLF       FILE(GPZONEPD)
+
+             CHGVAR     VAR(&GGIRLIB) VALUE(&GG *CAT 'GIRLIB')
+             CHGVAR     VAR(&GGINVLIB) VALUE(&GG *CAT 'GINVLIB')
+             CHGVAR     VAR(&GGGTALIB) VALUE(&GG *CAT 'GTALIB')
+             CHGVAR     VAR(&GGGPLIB) VALUE(&GG *CAT 'GPLIB')
+             CHGVAR     VAR(&GGGMLIB) VALUE(&GG *CAT 'GMLIB')                           /*MD060398*/
+             CHGVAR     VAR(&GOWNER) VALUE(&GG *CAT 'OWNER')
+             CHGVAR     VAR(&GAUTL) VALUE(&GG *CAT 'DATABASE')
+
+              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* GLOBAL */
+/* Restore objects */
+             RSTOBJ     OBJ(*ALL) SAVLIB(FM2021FOTB) DEV(*SAVF) +
+                          SAVF(FM2021FOTB/CUP044G) MBROPT(*ALL) +
+                          ALWOBJDIF(*ALL) RSTLIB(&GGIRLIB) +
+                          OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF3773) EXEC(DO)
+               RCVMSG     MSGTYPE(*EXCP) RMV(*KEEPEXCP) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGEID)
+               IF         COND(%BIN(&MSGDTA 5 4) *GT 0) +
+                          THEN(GOTO ERROR)
+             ENDDO
+
+             MRGMSGF    FROMMSGF(FM2021FOTB/GPUSRMSG) +
+                          TOMSGF(&GGGTALIB/GPUSRMSG)
+             MRGMSGF    FROMMSGF(FM2021FOTB/UTMSGF) +
+                          TOMSGF(&GGGTALIB/UTMSGF)
+
+/* Create a duplicate version of DSPF UP6000GF to avoid lock issue */
+/* during restore */
+             DLTOBJ OBJ(&GGINVLIB/UP6000GF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UP6000GF) FROMLIB(&GGIRLIB) +
+                          OBJTYPE(*FILE) TOLIB(&GGINVLIB)
+
+/* Merge MSGF */
+/**********  CPYF       FROMFILE(FM2021FOTB/UPAFCPPD) TOFILE(UPAFDVPD) +
+                          MBROPT(*REPLACE) */                                           /*MD060398*/
+             CPYF       FROMFILE(FM2021FOTB/UPAFCPPD) +
+                          TOFILE(&GGGPLIB/UPAFDVPD) MBROPT(*REPLACE)                    /*MD060398*/
+             ACTIONFILE MODE(*PRC) FILE(UTMENUPD)
+             MONMSG     MSGID(CPF0000)
+
+/* Update deliverable data */
+/* Delete first BrgDeliveredStrPrLib in case of pgm re-run */                           /*MD060398*/
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from ' *BCAT &GGGTALIB +
+                        *TCAT '/GPSVLCTD where GISVAL +
+                          =''BrgDeliveredStrPrLib''')                                   /*MD060398*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060398*/
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from ' *BCAT &GGGTALIB +
+                        *TCAT '/GPSVRCTD where GJSVAL +
+                          =''BrgDeliveredStrPrLib''')                                   /*MD060398*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060398*/
+
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from ' *BCAT &GGGMLIB +
+                        *TCAT '/GPSVLXTD where GISVAL +
+                          =''BrgDeliveredStrPrLib''')                                   /*MD060398*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060398*/
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from ' *BCAT &GGGMLIB +
+                        *TCAT '/GPSVRXTD where GJSVAL +
+                          =''BrgDeliveredStrPrLib''')                                   /*MD060398*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060398*/
+                                                                                        /*MD060398*/
+             CPYF       FROMFILE(FM2021FOTB/GPSVLCTD) +
+                          TOFILE(&GGGTALIB/GPSVLCTD) MBROPT(*ADD)
+             CPYF       FROMFILE(FM2021FOTB/GPSVLXTD) +
+                          TOFILE(&GGGMLIB/GPSVLXTD) MBROPT(*ADD)                        /*MD060398*/
+/**********  CALL       PGM(UP000701) PARM(' ' 'GPSVLCTD' &GGGTALIB) */                 /*MD060398*/
+             CPYF       FROMFILE(FM2021FOTB/GPSVRCTD) +
+                          TOFILE(&GGGTALIB/GPSVRCTD) MBROPT(*ADD)
+             CPYF       FROMFILE(FM2021FOTB/GPSVRXTD) +
+                          TOFILE(&GGGMLIB/GPSVRXTD) MBROPT(*ADD)                        /*MD060398*/
+/**********  CALL       PGM(UP000701) PARM(' ' 'GPSVRCTD' &GGGTALIB) */                 /*MD060398*/
+
+/* Install tables */
+             DLTF       FILE(&GGGPLIB/UPOPFXTD)                                         /*MD060398*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060398*/
+             CPYF       FROMFILE(FM2021FOTB/UPOPFXTD) +
+                          TOFILE(&GGGPLIB/UPOPFXTD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+/**********  STRJRNPF   FILE(UPOPFXTD) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO) */                                           /*MD060398*/
+/**********  CHGOBJOWN  OBJ(UPOPFXTD) OBJTYPE(*FILE) NEWOWN(&GOWNER)                    /*MD060398*/
+             CHGOBJOWN  OBJ(&GGGPLIB/UPOPFXTD) OBJTYPE(*FILE) NEWOWN(&GOWNER)           /*MD060398*/
+/**********  GRTOBJAUT  OBJ(UPOPFXTD) OBJTYPE(*FILE) AUTL(&GAUTL)                       /*MD060398*/
+             GRTOBJAUT  OBJ(&GGGPLIB/UPOPFXTD) OBJTYPE(*FILE) AUTL(&GAUTL)              /*MD060398*/
+
+             DLTF       FILE(&GGGPLIB/UPOTBLTD)                                         /*MD060398*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060398*/
+             CPYF       FROMFILE(FM2021FOTB/UPOTBLTD) +
+                          TOFILE(&GGGPLIB/UPOTBLTD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+/**********  STRJRNPF   FILE(UPOTBLTD) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO) */                                           /*MD060398*/
+/**********  CHGOBJOWN  OBJ(UPOTBLTD) OBJTYPE(*FILE) NEWOWN(&GOWNER) */                 /*MD060398*/
+             CHGOBJOWN  OBJ(&GGGPLIB/UPOTBLTD) OBJTYPE(*FILE) NEWOWN(&GOWNER)           /*MD060398*/
+/**********  GRTOBJAUT  OBJ(UPOTBLTD) OBJTYPE(*FILE) AUTL(&GAUTL) */                    /*MD060398*/
+             GRTOBJAUT  OBJ(&GGGPLIB/UPOTBLTD) OBJTYPE(*FILE) AUTL(&GAUTL)              /*MD060398*/
+
+             DLTF       FILE(&GGGPLIB/UPOTBMTD)                                         /*MD060398*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060398*/
+             CPYF       FROMFILE(FM2021FOTB/UPOTBMTD) +
+                          TOFILE(&GGGPLIB/UPOTBMTD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+/**********  STRJRNPF   FILE(UPOTBMTD) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO) */                                           /*MD060398*/
+/**********  CHGOBJOWN  OBJ(UPOTBMTD) OBJTYPE(*FILE) NEWOWN(&GOWNER) */                 /*MD060398*/
+             CHGOBJOWN  OBJ(&GGGPLIB/UPOTBMTD) OBJTYPE(*FILE) NEWOWN(&GOWNER)           /*MD060398*/
+/**********  GRTOBJAUT  OBJ(UPOTBMTD) OBJTYPE(*FILE) AUTL(&GAUTL) */                    /*MD060398*/
+             GRTOBJAUT  OBJ(&GGGPLIB/UPOTBMTD) OBJTYPE(*FILE) AUTL(&GAUTL)              /*MD060398*/
+
+             OVRDBF     FILE(GPZONEPD) TOFILE(&GGGMLIB/GPZONEPD)                        /*MD060398*/
+/* ZONE */
+READNXT:        RCVF       RCDFMT(GPZONED0)
+
+                MONMSG     MSGID(CPF0864) EXEC(DO)
+                           GOTO       CMDLBL(ENDPGM)
+                ENDDO
+
+             CHGVAR     VAR(&ZZIRLIB) VALUE(&ZOMSYS *CAT 'IRLIB')
+             CHGVAR     VAR(&ZZDMLIB) VALUE(&ZOMSYS *CAT 'DMLIB')
+             CHGVAR     VAR(&ZZDTALIB) VALUE(&ZOMSYS *CAT 'DTALIB')
+
+/* Restore objects */
+             RSTOBJ     OBJ(*ALL) SAVLIB(FM2021FOTB) DEV(*SAVF) +
+                          SAVF(FM2021FOTB/CUP044Z) MBROPT(*ALL) +
+                          ALWOBJDIF(*ALL) RSTLIB(&ZZIRLIB) +
+                          OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF3773) EXEC(DO)
+               RCVMSG     MSGTYPE(*EXCP) RMV(*KEEPEXCP) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGEID)
+               IF         COND(%BIN(&MSGDTA 5 4) *GT 0) +
+                          THEN(GOTO ERROR)
+             ENDDO
+
+/* Merge MSGF */
+             MRGMSGF    FROMMSGF(FM2021FOTB/GBSDUSRMSG) +
+                          TOMSGF(&ZZDTALIB/GBSDUSRMSG)
+
+/* Stop triggering on SDSVLXTD to avoid lock */
+             RMVPFTRG   FILE(&ZZDMLIB/SDSVLXTD)
+             MONMSG     MSGID(CPF0000)
+
+/* Update deliverable data */
+/* Delete first BrgDeliveredStrPrLib in case of pgm re-run */                           /*MD060398*/
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from ' *BCAT &ZZDTALIB +
+                        *TCAT '/SDSVLCTD where GISVAL +
+                          =''BrgDeliveredStrPrLib''')                                   /*MD060398*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060398*/
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from ' *BCAT &ZZDTALIB +
+                        *TCAT '/SDSVRCTD where GJSVAL +
+                          =''BrgDeliveredStrPrLib''')                                   /*MD060398*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060398*/
+
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from ' *BCAT &ZZDMLIB +
+                        *TCAT '/SDSVLXTD where GISVAL +
+                          =''BrgDeliveredStrPrLib''')                                   /*MD060398*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060398*/
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from ' *BCAT &ZZDMLIB +
+                        *TCAT '/SDSVRXTD where GJSVAL +
+                          =''BrgDeliveredStrPrLib''')                                   /*MD060398*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060398*/
+                                                                                        /*MD060398*/
+                                                                                        /*MD060398*/
+             CPYF       FROMFILE(FM2021FOTB/SDSVLCTD) +
+                          TOFILE(&ZZDTALIB/SDSVLCTD) MBROPT(*ADD)
+             CPYF       FROMFILE(FM2021FOTB/SDSVLXTD) +
+                          TOFILE(&ZZDMLIB/SDSVLXTD) MBROPT(*ADD)                        /*MD060398*/
+/**********  CALL       PGM(UP000701) PARM(' ' 'SDSVLCTD' &ZZDTALIB) */                 /*MD060398*/
+             CPYF       FROMFILE(FM2021FOTB/SDSVRCTD) +
+                          TOFILE(&ZZDTALIB/SDSVRCTD) MBROPT(*ADD)
+             CPYF       FROMFILE(FM2021FOTB/SDSVRXTD) +
+                          TOFILE(&ZZDMLIB/SDSVRXTD) MBROPT(*ADD)                        /*MD060398*/
+/**********  CALL       PGM(UP000701) PARM(' ' 'SDSVRCTD' &ZZDTALIB) */                 /*MD060398*/
+
+             GOTO       CMDLBL(READNXT)
+
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             DMPCLPGM
+ENDPGM:
+             ENDPGM

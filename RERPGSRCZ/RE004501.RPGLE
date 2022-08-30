@@ -30,9 +30,10 @@
       *                        Program Ctrl                           *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
-      *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                                                               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27243           Date 18Mar10               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -267,7 +269,7 @@
       **  Array containing SP Codes
       *
      D AOS             S             23    DIM(60)
- 
+
       *
      D AN1             S            235    DIM(4)
       **  Array containing Outgoing Nostro Block 1
@@ -1156,7 +1158,8 @@
      D SDTELD        E DS                  EXTNAME(SDTELDPD)
       **  Teller id
       *
-     D SDBAIT        E DS                  EXTNAME(SDBAITPD)
+     D*SDBAIT***     E DS                  EXTNAME(SDBAITPD)                                MD058085
+     D SDBAIT        E DS                  EXTNAME(SDBATJW0)                                MD058085
       **  Transaction types
       *
      D SDBAID        E DS                  EXTNAME(SDBAIDPD)
@@ -1195,12 +1198,12 @@
       **  Socket Functions Prototype Definitions (Service Program SP670RE01)
       *
      D opn_tcp         pr            10i 0
- 
+
      D bnd_tcp         pr            10i 0
      d                               10i 0 Const
      d                               10i 0 Const
      d                               10i 0 Const
- 
+
      D con_tcp         pr            10i 0
      d                               10i 0 Const
      d                               30
@@ -1211,18 +1214,18 @@
      d  time_sec                     10i 0
      d  wait_act                     10i 0
      d  rc                           10i 0
- 
+
      D snd_tcp         pr            10i 0
      d                               10i 0 Const
      d                             9911
- 
+
      D rcv_tcp         pr            10i 0
      d                               10i 0 Const
      d                             9911
- 
+
      D cls_tcp         pr            10i 0
      d                               10i 0 Const
- 
+
       **  Other variables
       *
      D ScktNum         S             10I 0
@@ -1235,7 +1238,7 @@
      d time_sec        S             10i 0
      d wait_act        S             10i 0
      d rc              S             10i 0
- 
+
      d brcae           S              3
      d usid            S             10
      d prfx            S              2

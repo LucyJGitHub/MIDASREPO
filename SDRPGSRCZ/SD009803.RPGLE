@@ -19,10 +19,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG20971           Date 03Sep08               *
+      *                 BUG20971           Date 03Sep08               *
       *                 BUG21093           Date 18Sep08               *
       *                 BUG19910           Date 28Jul08               *
       *                 BUG19758           Date 03Jul08               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG20971 - MIC Delete/SE Market is allowed                   *
       *  BUG21093 - Time Zone code is not accepted                    *
@@ -101,8 +103,8 @@
      F                                     RENAME(SDTZLHD0:SDTZLUPD)
       *
       ** DST Code Retrieval File
-     FSDDSTCL1  If   E           K DISK    INFSR(*PSSR)
-     F                                     RENAME(SDDSTCD0:@DSTCL1)
+     F*SDDSTCL1* If   E           K DISK    INFSR(*PSSR)                                    MD058085
+     F**********                           RENAME(SDDSTCD0:@DSTCL1)                         MD058085
      FSEMKC     IF   E           K DISK                                                     BUG20971
       *
       *
@@ -155,7 +157,8 @@
       ** DS SDBANK Based On SDBANKPD
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       *
-     D SDTIZO        E DS                  EXTNAME(SDTIZOPD)
+     D*SDTIZO***     E DS                  EXTNAME(SDTIZOPD)                                MD058085
+     D SDTIZO        E DS                  EXTNAME(SDTIZJW0)                                MD058085
       *
      D Indicators      DS                  BASED(IndPointer)
      D  Exit                   3      3

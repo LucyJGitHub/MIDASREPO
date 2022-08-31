@@ -1420,19 +1420,14 @@
      C                   MOVEL     '00'          DDRSTM                                      BUG6534
      C     CDL051        IFEQ      'Y'                                                        CDL051
      C                   EVAL      ##PREC = 'Y'                                               CDL051
-      *                                                                                     MD060284
-      ** For type "SC" both settlement field must be protected.                             MD060284
-      *                                                                                     MD060284
-     C     DDMTYP        IFEQ      'SC'                                                     MD060284
-     C                   EVAL      ##PPAY = 'Y'                                             MD060284
-     C                   ENDIF                                                              MD060284
      C                   ENDIF                                                                CDL051
+     C                   ENDIF                                                              MD060284
       *                                                                                      BUG6534
       ** If Principal Decrease of Deposit Placed or Early Maturity of Deposit Placed         BUG6534
       ** or Principal Increase of Deposit Taken or Base Rate or Capitalise Interest          BUG6534
       ** or Spread Change.                                                                   BUG6534
       **                                                                                     BUG6534
-     C                   ELSE                                                                BUG6534
+     C**********         ELSE                                                       BUG6534 MD060284
       *                                                                                      BUG6534
      C     DDMTYP        IFEQ      'PD'                                                      BUG6534
      C     LONDEP        ANDEQ     'L'                                                       BUG6534
@@ -1449,16 +1444,10 @@
      C                   MOVEL     '00'          DDPSTM                                      BUG6534
      C     CDL051        IFEQ      'Y'                                                        CDL051
      C                   EVAL      ##PPAY = 'Y'                                               CDL051
-      *                                                                                     MD060284
-      ** For type "SC" both settlement field must be protected.                             MD060284
-      *                                                                                     MD060284
-     C     DDMTYP        IFEQ      'SC'                                                     MD060284
-     C                   EVAL      ##PREC = 'Y'                                             MD060284
-     C                   ENDIF                                                              MD060284
      C                   ENDIF                                                                CDL051
                                                                                              BUG6534
      C                   ENDIF                                                               BUG6534
-     C                   ENDIF                                                               BUG6534
+     C**********         ENDIF                                                      BUG6534 MD060284
       *                                                                                      BUG6534
      C                   IF        DDACTN = 'A'                                             MD059304
      C                   EXSR      CHECKSSI                                                 MD059304

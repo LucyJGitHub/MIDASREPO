@@ -21,7 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060251 - GZSDALTNPD not synchronizing. Recompile.          *
+      *  MD060251 - GZSDALTNPD not synchronizing. Recompile           *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *

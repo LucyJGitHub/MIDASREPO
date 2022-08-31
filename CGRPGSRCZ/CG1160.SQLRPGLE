@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058069           Date 11May21               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
@@ -77,8 +79,8 @@
       *
       * RSQ : RDE Association Table     By Group/RDE/Order
       *
-     FCGPATHL2  IF   E           K DISK    USROPN
-     F                                     INFSR(SRFILE)
+     F*CGPATHL2* IF   E           K DISK    USROPN                                          MD058069
+     F**********                           INFSR(SRFILE)                                    MD058069
       *
       * RSQ : Path                      By Group sets
       *
@@ -197,6 +199,18 @@
      D  #MSTXA                 1    256
      D  #MSTXB               257    512
       *
+     D  EPLEV1                 1      6                                                     MD058069
+     D  EPLEV2                 1      6                                                     MD058069
+     D  EPLEV3                 1      6                                                     MD058069
+     D  EPLEV4                 1      6                                                     MD058069
+     D  EPLEV5                 1      6                                                     MD058069
+     D  EPLEV6                 1      6                                                     MD058069
+     D  EPLEV7                 1      6                                                     MD058069
+     D  EPLEV8                 1      6                                                     MD058069
+     D  EPLEV9                 1      6                                                     MD058069
+     D  EPLEV0                 1      6                                                     MD058069
+     D  EPPATH                 1      6                                                     MD058069
+     D  ##NOPT                 1      6                                                     MD058069
      I/EJECT
       *****************************************************************
       *                 M A I N L I N E
@@ -951,15 +965,15 @@
       *
       *  Read path
       *
-     C     KPGRPS        CHAIN     @PATHL2                            90
+     C*****KPGRPS        CHAIN     @PATHL2                            90                    MD058069
       *
       *  If path not found move 'No Path Text'
       *
-     C     *IN90         IFEQ      '1'
+     C******IN90         IFEQ      '1'
      C                   MOVEL     ##NOPT        D2RPTH
-     C                   ELSE
-     C                   MOVEL     EPPATH        D2RPTH
-     C                   END
+     C**********         ELSE                                                               MD058069
+     C**********         MOVEL     EPPATH        D2RPTH                                     MD058069
+     C**********         END                                                                MD058069
       *
       *  Reset Path group set fields
       *
@@ -1012,15 +1026,15 @@
       *
       *  Read path for Non-Repeating Group
       *
-     C     KPGRPS        CHAIN     @PATHL2                            90
+     C*****KPGRPS        CHAIN     @PATHL2                            90                    MD058069
       *
       *  If path not found add to database
       *
-     C     *IN90         IFEQ      '1'
+     C******IN90         IFEQ      '1'                                                      MD058069
      C                   MOVEL     ##NOPT        D2NPTH
-     C                   ELSE
-     C                   MOVEL     EPPATH        D2NPTH
-     C                   END
+     C**********         ELSE                                                               MD058069
+     C**********         MOVEL     EPPATH        D2NPTH                                     MD058069
+     C**********         END                                                                MD058069
       *
       *  Unwind subroutine stack name
       *
@@ -1296,7 +1310,7 @@
      C**********         OPEN      CGGSETL1                                                 MD054955
      C**********         OPEN      CGRDTAL1                                                 MD054955
      C**********         OPEN      CGRASCL2                                                 MD054955
-     C                   OPEN      CGPATHL2
+     C**********         OPEN      CGPATHL2                                                 MD058069
       *
       *  Get Rundate - Rundate
       *

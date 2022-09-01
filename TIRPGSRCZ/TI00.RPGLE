@@ -18,7 +18,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -47,7 +49,7 @@
       *
      FSDBRCHL0  UF   E             DISK
      FSDSYTMPD  O    E             DISK
-     FSDMEMOPD  O    E             DISK
+     F*SDMEMOPD* O    E             DISK                                                    MD058085
       *
       ********************************************************************
       *
@@ -143,22 +145,22 @@
       *
       * Write a new record to SDMEMOPD
       *
-     C                   MOVE      'TI'          EBMODI
-     C                   MOVEL     DESC          EBMODD
-     C                   Z-ADD     BJRDNB        EBLCD
-     C                   MOVE      'I'           EBTYLC
-      *
-     C                   WRITE     SDMEMOD0                             99
-      *
-     C     *IN99         IFEQ      '1'
-     C     *LOCK         IN        LDA
-     C                   SETON                                          U7U8
-     C                   Z-ADD     003           DBASE                          ***************
-     C                   MOVEL     'SDMEMOPD'    DBFILE                         *DB ERROR 003 *
-     C                   MOVEL     '        '    DBKEY                          ***************
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
+     C**********         MOVE      'TI'          EBMODI                                     MD058085
+     C**********         MOVEL     DESC          EBMODD                                     MD058085
+     C**********         Z-ADD     BJRDNB        EBLCD                                      MD058085
+     C**********         MOVE      'I'           EBTYLC                                     MD058085
+      **********                                                                            MD058085
+     C**********         WRITE     SDMEMOD0                             99                  MD058085
+      **********                                                                            MD058085
+     C******IN99         IFEQ      '1'                                                      MD058085
+     C******LOCK         IN        LDA                                                      MD058085
+     C**********         SETON                                          U7U8                MD058085
+     C**********         Z-ADD     003           DBASE                          ************MD058085
+     C**********         MOVEL     'SDMEMOPD'    DBFILE                         *DB ERROR 00MD058085
+     C**********         MOVEL     '        '    DBKEY                          ************MD058085
+     C**********         OUT       LDA                                                      MD058085
+     C**********         EXSR      *PSSR                                                    MD058085
+     C**********         ENDIF                                                              MD058085
       *
       * Update all blank TI Branch Numbers to '0000'
       *

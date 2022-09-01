@@ -15,8 +15,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD055914           Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD055914           Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD025682           Date 19Aug14               *
       *                 MD020569           Date 28May13               *
       *                  AR1089839             Date 19Feb13           *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD055914 - Incorrect TRLR menu processing in Bridge for      *
       *             SDCUSTPD. Replaced DOU condition with DOW NOT.    *
       *  MD046248 - Finastra Rebranding                               *
@@ -116,7 +118,8 @@
      C                   ENDDO
       *
       * Get number of records for SDBROKPD.
-     C                   EVAL      File = 'SDBROKPD'
+     C**********         EVAL      File = 'SDBROKPD'                                        MD058085
+     C                   EVAL      File = 'SDBRKXTD'                                        MD058085
      C                   EXSR      GetNoOfRecs
      C                   EVAL      BROKRecs = NoOfRecs
       *

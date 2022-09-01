@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD058085           Date 11May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -37,6 +38,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058085 - Deliverable Data Split for Standing Data         */
 /*       MD046248 - Finastra Rebranding                              */
 /*  CCB020 - COB Restructure - Secondary COB Infrastructure          */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
@@ -85,7 +87,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&RUNDATE)   TYPE(*CHAR) LEN(7)
              DCL        VAR(&TSDATE)    TYPE(*CHAR) LEN(7)
              DCL        VAR(&BLANK100)  TYPE(*CHAR) LEN(100)
@@ -147,16 +149,16 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
- 
+
+
 /* Global monitor messages */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) +
                           EXEC(GOTO ERROR)
- 
+
 /* Set up the TSM folder */                                 /* C1734 */
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LIB)   /* C1734 */
              CHGVAR     VAR(&TSM) VALUE('TSM' *CAT &LIB)    /* C1734 */
- 
+
 /* If AS400 is required to start processing but MIDAS is not in input +
 cycle, then terminate this program */                               /* 089491 */
              RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&PHASE)          /* 089491 */
@@ -167,7 +169,7 @@ cycle, then terminate this program */                               /* 089491 */
                           TODOC(QUITJRN.TSM) TOFLR(&TSM)            /* 089491 */
              GOTO       CMDLBL(END)                                 /* 089491 */
              ENDDO                                                  /* 089491 */
- 
+
 /* Must journal each file individually as multiple file journal +
 command may not journal all files if more than one are not      +
 journalled*/                                                        /* 089491 */
@@ -177,7 +179,7 @@ journalled*/                                                        /* 089491 */
              STRJRNPF   FILE(TRANSD) JRN(ICJRN) IMAGES(*BOTH) +
                           OMTJRNE(*OPNCLO)                          /* 089491 */
              MONMSG     MSGID(CPF0000)                              /* 089491 */
- 
+
 /* If program is already active then exit program */        /* C1734 */
 /************ALCOBJ     OBJ((TSACTIVE *DTAARA *EXCL))  /*C1734*127317*/
              ALCOBJ     OBJ((TSACTIVE *DTAARA *EXCL))  +
@@ -188,11 +190,11 @@ journalled*/                                                        /* 089491 */
                           TOMSGQ(MOPERQ)                    /* C1734 */
              GOTO       CMDLBL(END)                         /* C1734 */
              ENDDO                                          /* C1734 */
- 
+
 /*  Create TSMCLMPD from the join logical file SDCLLMJ0 */    /* C0562 */
              CHGVAR     VAR(&DPLIB) VALUE(&LIB *CAT 'DPLIB')  /* C0562 */
              CHGVAR     VAR(&DVLIB) VALUE(&LIB *CAT 'DVLIB')  /* C0562 */
- 
+
 /* Decide if release 10 libs exist */                       /* 092240 */
              CHKOBJ     OBJ(QSYS/&DVLIB) OBJTYPE(*LIB)      /* 092240 */
              MONMSG     MSGID(CPF0000) EXEC(DO)             /* 092240 */
@@ -245,7 +247,7 @@ journalled*/                                                        /* 089491 */
                  SNDMSG     MSG(&MSG) TOMSGQ(MOPERQ)          /* C0562 */
                  GOTO       CMDLBL(ERROR)                     /* C0562 */
              ENDDO                                            /* C0562 */
- 
+
                                                                      /* C1734 */
 /* Check if all elements exist upon start-up of this program. Create +
 elements if missing */
@@ -279,7 +281,7 @@ elements if missing */
                           TOMSGQ(MOPERQ)                             /* C1734 */
                  GOTO       CMDLBL(END)                              /* C1607 */
              ENDDO                                                   /* C1607 */
- 
+
 /************CHKDLO*****DLO(QUITJRN.TSM)*FLR(TSM)*OBJTYPE(*DOC)******** C1734 */
              CHKDLO     DLO(QUITJRN.TSM) FLR(&TSM) OBJTYPE(*DOC)     /* C1734 */
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(CHECKDOCS))
@@ -305,7 +307,7 @@ elements if missing */
                  ENDDO
                ENDDO
              ENDDO
- 
+
 /********************************************************************** C1734 */
 /**If*program*is*already*active*then*exit*program********************** C1734 */
 /************ALCOBJ*****OBJ((TSACTIVE**DTAARA**EXCL))****************** C1734 */
@@ -315,7 +317,7 @@ elements if missing */
 /*************************TOMSGQ(MOPERQ)******************************* C1734 */
 /************GOTO*******CMDLBL(END)************************************ C1734 */
 /************ENDDO***************************************************** C1734 */
- 
+
 /* Perform initialisation for program start or restart */
 /************STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))                /*CPK009*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
@@ -392,16 +394,16 @@ elements if missing */
                    TOENT(*LAST) ENTTYP(DL DR PT PX UP UR)                                 /*CSC020*/
                    MONMSG     MSGID(CPF7062)                                              /*178287*/
                 ENDDO                                                                     /*178287*/
- 
+
              ENDDO
- 
+
 /* If PC is downloading data then loop until STARTJRN document is +
    found */
 /************CHKDLO*****DLO(DOWNJRN.TSM)*FLR(TSM)*OBJTYPE(*DOC)******** C1734 */
              CHKDLO     DLO(DOWNJRN.TSM) FLR(&TSM) OBJTYPE(*DOC)     /* C1734 */
              MONMSG     MSGID(CPF0000) EXEC(GOTO CHECKSTOP)
              GOTO       CMDLBL(GETLOOP)
- 
+
 /* If a stop is required, then create a marker document for all the +
 files that have been updated. A flag corresponding to each file is +
 set on TSSTAT */
@@ -431,8 +433,8 @@ download data by renaming documents */
 /************RNMDLO*****DLO(STOPJRN.TSM)*NEWDLO(DOWNJRN.TSM)*FLR(TSM)** C1734 */
              RNMDLO     DLO(STOPJRN.TSM) NEWDLO(DOWNJRN.TSM) FLR(&TSM) /*C1734*/
              GOTO       CMDLBL(GETLOOP)                             /* 065418 */
- 
- 
+
+
 /*CHKSTJRN:***CHKDLO*****DLO(STARTJRN.TSM)*FLR(TSM)*OBJTYPE(*DOC)****** C1734 */
  CHKSTJRN:   CHKDLO     DLO(STARTJRN.TSM) FLR(&TSM) OBJTYPE(*DOC)    /* C1734 */
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(CHKRDJRN))
@@ -448,13 +450,13 @@ cycle, then terminate this program */
                           TODOC(QUITJRN.TSM) TOFLR(&TSM)             /* C1734 */
              GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Initialise flags to start reading data from journals */
 /************RNMDLO*****DLO(STARTJRN.TSM)*NEWDLO(READJRN.TSM)*FLR(TSM)* C1734 */
              RNMDLO     DLO(STARTJRN.TSM) NEWDLO(READJRN.TSM) +
                           FLR(&TSM) /* C1734 */
              CHGDTAARA  DTAARA(TSSTAT (1 100)) VALUE(&BLANK100)
- 
+
 /* Get the delay value and start reading journals */
  CHKRDJRN:   RTVDTAARA  DTAARA(TSSTAT (105 4)) RTNVAR(&RCVJDEL)
              CHGVAR     VAR(&RCVJDELAY) VALUE(&RCVJDEL)
@@ -465,7 +467,7 @@ cycle, then terminate this program */
 /************CHKDLO*****DLO(READJRN.TSM)*FLR(TSM)*OBJTYPE(*DOC)******** C1734 */
              CHKDLO     DLO(READJRN.TSM) FLR(&TSM) OBJTYPE(*DOC)     /* C1734 */
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(RETRYWAIT))
- 
+
 /**RETRYRCVJ:**RCVJRNE****JRN(ICJRN) EXITPGM(TS8550) FILE((ABDEALPP) +  C0562 */
 /*************************(SDBOOKPD) (SDBRCHPD) (SDBROKPD) +            C0562 */
 /*************************(SDBSRTPD) (FDCCYPPP) (SDCURRPD) +            C0562 */
@@ -563,14 +565,14 @@ cycle, then terminate this program */
                           UR) DELAY(&RCVJDELAY)                                           /*CSC020*/
 /*/COPY WNCPYSRC,TSC8550004                                          */
 /* C1790 END BLOCK */
- 
+
 /* If no entries found then pass control to PC and go into loop  +
    until PC passes control back again */
              MONMSG     MSGID(CPF7062) EXEC(GOTO CMDLBL(PASSCTL))
 /* If specified journal sequence number is not found on journal then +
    retry attemp to get another entry */
              MONMSG     MSGID(CPF7054) EXEC(GOTO CMDLBL(RETRYWAIT))
- 
+
 /* If the file is never journalled, then try to journal the file +
 once. On the second attempt to journal, abort the program as there +
 must be something fatally wrong */
@@ -701,11 +703,11 @@ command may not journal all files if more than one are not journalled*/
              CHGVAR     VAR(&TRYRCVJRN) VALUE('Y')
              GOTO       CMDLBL(RETRYRCVJ)
              ENDDO
- 
- 
+
+
 /* If no errors encountered then check if program is required to stop*/
              GOTO       CMDLBL(CHECKQUIT)
- 
+
 /* If no entries found then check if program is requested to stop +
    or terminate by PC. If program is to continue then perform delay +
    and attempt to get more journal entries. */
@@ -719,14 +721,14 @@ command may not journal all files if more than one are not journalled*/
              GOTO       CMDLBL(END)
  WAITABIT:   DLYJOB     DLY(&RCVJDELAY)
              GOTO       CMDLBL(RETRYRCVJ)
- 
+
 /* If this program is required to stop by PC then check for QUITJRN +
 created by PC and treminate if found */
 /*CHECKQUIT:***CHKDLO*****DLO(QUITJRN.TSM)*FLR(TSM)*OBJTYPE(*DOC)****** C1734 */
 CHECKQUIT:   CHKDLO     DLO(QUITJRN.TSM) FLR(&TSM) OBJTYPE(*DOC)     /* C1734 */
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(CRTMARKERS))
              GOTO       CMDLBL(END)
- 
+
 /* After delay has elapsed within RCVJRNE, create marker documents for+
 all files that have been updated. Rename STOPJRN document to inform +
 PC that it can take extracted data now. */
@@ -748,7 +750,7 @@ PC that it can take extracted data now. */
 /**********  IF         COND(&IDX *LE 30) THEN(GOTO CMDLBL(LOOP1))C1790092168 */
 /************IF*********COND(&IDX *LE 31) THEN(GOTO CMDLBL(LOOP1))092168090949*/
              IF         COND(&IDX *LE 36) THEN(GOTO CMDLBL(LOOP1))    /*090949*/
- 
+
 /* If STOPJRN is found, then pass control to PC by renaming STOPJRN  +
    to DOWNJRN and continue proccesing. If QUITJRN is found, then +
    jump to end of program ELSE assume error has occured within TS8550 +
@@ -764,7 +766,7 @@ PC that it can take extracted data now. */
  QUITNOW:    CHKDLO     DLO(QUITJRN.TSM) FLR(&TSM) OBJTYPE(*DOC)     /* C1734 */
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))
              GOTO       CMDLBL(END)
- 
+
 /* Loop until PC has finished download */
  GETLOOP:    RTVDTAARA  DTAARA(TSSTAT (109 4)) RTNVAR(&LOOPA)
              CHGVAR     VAR(&LOOP) VALUE(&LOOPA)
@@ -816,7 +818,7 @@ PC that it can take extracted data now. */
              CLRPFM     FILE(TSMLIMPD)                                /*090949*/
              CLRPFM     FILE(TSMSEDPD)                                /*090949*/
              GOTO       CMDLBL(CHKSTJRN)
- 
+
 /* Global error handling */
 /*ERROR:******CPYDOC*****FROMDOC(REFJRN.TSM)*FROMFLR(TSM)*+************ C1734 */
 /*************************TODOC(QUITJRN.TSM)*TOFLR(TSM)**************** C1734 */
@@ -824,7 +826,7 @@ PC that it can take extracted data now. */
                           TODOC(QUITJRN.TSM) TOFLR(&TSM)             /* C1734 */
              MONMSG     MSGID(CPF0000)
              DMPCLPGM
- 
+
  END:        ENDCMTCTL
              MONMSG     MSGID(CPF0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +

@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -53,6 +54,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -139,7 +141,7 @@
      FMUSER   IF  E           K        DISK
      FSDMMODPDIF  E                    DISK
      FSDBANKPDIF  E                    DISK
-     FSDMEMOL0IF  E           K        DISK
+     F*SDMEMOL0IF  E           K        DISK                                                MD058085
      FSDCURRL0IF  E           K        DISK
      FSDNOSTL0IF  E           K        DISK
      F/COPY WNCPYSRC,ME0540F001
@@ -300,6 +302,7 @@
      ISDMGME    E DSSDMGMEPD
      I** Message Management details.
      I*
+     ISDMEMO    E DSSDMMOJW0                                                                MD058085
      IDSFDY     E DSDSFDY
       *                                                                                       CGL029
      IDSSDY     E DSDSSDY                                                                     CGL029
@@ -603,7 +606,16 @@
       *
       **  If entered module must be on module file
      C           SMOD      IFNE *BLANKS                               1
-     C           SMOD      CHAINSDMEMOL0             86
+     C********** SMOD      CHAINSDMEMOL0             86                                     MD058085
+     C                     CALL 'AOMEMOR0'             99                                   MD058085
+     C                     PARM *BLANKS   @RTCD   7                                         MD058085
+     C                     PARM '*KEY'    @OPTN   7                                         MD058085
+     C           SMOD      PARM SMOD      @KEY    2                                         MD058085
+     C           SDMEMO    PARM SDMEMO    DSFDY                                             MD058085
+     C                     SETOF                     86                                     MD058085
+     C           @RTCD     IFNE *BLANKS                                                     MD058085
+     C                     SETON                     86                                     MD058085
+     C                     ENDIF                                                            MD058085
       *
      C           *IN86     IFEQ '1'                                   2
      C                     MOVEL'MEM1001' @MSGID

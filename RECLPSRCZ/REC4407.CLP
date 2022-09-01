@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058085           Date 11May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CRT008             Date 18Oct02              */
+/*                      CRT008             Date 18Oct02              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CPK015             Date 25Feb02              */
 /*                      CRT005             Date 09Aug01              */
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058085 - Deliverable Data Split for Standing Data         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRT008 - Cashier forwarding enhancement                     */
 /*       CPK015 - Move data queues fom XLIB to DPLIB.                */
@@ -40,7 +42,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -48,27 +50,28 @@
              DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)                /*CCI001*/
              DCL        VAR(&PREF)  TYPE(*CHAR) LEN(2)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
- 
+
              DCL        VAR(&SEQ)   TYPE(*DEC)  LEN(10 0)
              DCL        VAR(&RCV)   TYPE(*CHAR) LEN(10)
              DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7) VALUE(' ')                         /*CRT005*/
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)                                  /*CRT005*/
                                                                                           /*CRT005*/
- 
-             DCLF       FILE(SDBAITPD)
- 
+
+/**********  DCLF       FILE(SDBAITPD) */                                               /*MD058085*/
+             DCLF       FILE(SDBATJW0)                                                  /*MD058085*/
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /**/
 /**Get*System*Prefix*and*concat*to*DPLIB****************************/ /*CCI001*/
 /**/                                                                  /*CCI001*/
                                                                       /*CCI001*/
 /*********** RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)       */   /*CCI001*/
 /*********** CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')   */   /*CCI001*/
- 
+
 /**/                                                                  /*CCI001*/
 /* Get System Prefix and concat to XLIB */                            /*CCI001*/
 /**/                                                                  /*CCI001*/
@@ -76,9 +79,10 @@
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)            /*CCI001*/
              CHGVAR     VAR(&XLIB) VALUE(&PREF *TCAT 'XLIB')          /*CCI001*/
  READ:
-             RCVF       RCDFMT(SDBAITD0)
+/**********  RCVF       RCDFMT(SDBAITD0) */                                             /*MD058085*/
+             RCVF       RCDFMT(SDBATJT0)                                                /*MD058085*/
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
- 
+
              IF         COND(&FXDQLN *GT 0) THEN(DO)
 /********************** DLTDTAQ    DTAQ(&DPLIB/&FXDQNM) */            /*CCI001*/
 /************           DLTDTAQ    DTAQ(&XLIB/&FXDQNM)                         /*CCI001*/ /*CPK015*/
@@ -90,7 +94,7 @@
 /************           MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))                /*CPK015*/
                         CALL       PGM(QCLRDTAQ) PARM(&FXDQNM '*LIBL')                    /*CPK015*/
                         ENDDO
- 
+
              GOTO       CMDLBL(READ)
 EOF:
                                                                                           /*CRT005*/
@@ -102,7 +106,7 @@ EOF:
                 CALL       PGM(QCLRDTAQ) PARM('RE41220JE' '*LIBL ')                       /*CRT005*/
                 CALL       PGM(QCLRDTAQ) PARM('RE41220JF' '*LIBL ')                       /*CRT005*/
              ENDDO                                                                        /*CRT005*/
- 
+
 /**/
 /* Clear Cashier Interface  files */
 /**/
@@ -126,7 +130,7 @@ EOF:
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)              /*122060*/
                           GOTO CMDLBL(ABNOR)                          /*122060*/
              ENDDO                                                    /*122060*/
- 
+
 /**/
 /* Reset data areas */
 /**/
@@ -134,7 +138,7 @@ EOF:
              CHGDTAARA  DTAARA(CIREST (1 10)) VALUE('          ')
              CHGDTAARA  DTAARA(CITFSQ (1 6)) VALUE('000001')
              CHGDTAARA  DTAARA(CITFTS (1 2)) VALUE('01')
- 
+
 /**/
 /* Retrieve latest journal sequence and journal entry */
 /**/
@@ -142,32 +146,32 @@ EOF:
                           RTNSEQNBR(&SEQ) RTNRCV(&RCV)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /**/
 /* Update trickle feed header, reset branch status */
 /**/
              CALL       PGM(RE4407) PARM(&RCV &SEQ)
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                    RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                    SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                           TOMSGQ(MOPERQ)
                    GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           REC4407 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

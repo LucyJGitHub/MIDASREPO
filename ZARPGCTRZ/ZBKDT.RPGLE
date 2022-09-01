@@ -30,49 +30,51 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CAP002  *CREATE    Date 21Apr98               *
+      *                 CAP002  *CREATE    Date 21Apr98               *
       *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       ** +-----------------------------------------------------------------+
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
+
      D Holidays        DS
      D  ZHLField               1    366
      D  ZHL                    1    366
      D                                     DIM(366)                             CR01-12 ARRAY
- 
+
       * Working variables
      D @ZWRDY          S              2S 0
      D ZINDX           S              3S 0
- 
+
      D ZOPTN           S              7A
      D RTNCD           S              7A
      D DGJDNB          S              5P 0
      D DGDDNB          S              5P 0
- 
+
       ** +-----------------------------------------------------------------+
- 
+
       ** Execute the standard subroutine
      C                   EXSR      ZBKDT
- 
+
      C                   RETURN
- 
+
       ** +--- The converted ZBKDT starts here --------------------------+
       /EJECT
       *****************************************************************
@@ -187,6 +189,9 @@
       * Since the following code would be duplicated in the main
       * sub-routine, it is put in a separate one for clarity.
       *
+      * Save original value of ZDAYNO                                                         249385
+     C                   Z-ADD     ZDAYNO        ZCZDAY            5 0                        249385
+      *                                                                                       249385
       * If no. of working days required is zero and input date is a
       * holiday, then change required no. of days to one.
       *
@@ -248,10 +253,13 @@
       *
      C                   END                                                    ENW 1
       *
+      * Restore original value of dayno                                                       249385
+     C                   Z-ADD     ZCZDAY        ZDAYNO            5 0                        249385
+      *                                                                                       249385
      C                   ENDSR
       *****************************************************************
       /EJECT
- 
+
       ** +--- The converted ZBKDT ends here ----------------------------+
       /EJECT
       **********************************************************************
@@ -263,7 +271,7 @@
       *   the module that contains subroutine ZACCH                        *
       *                                                                    *
      C     ZACCH         BEGSR
- 
+
      C                   CALLB     'ZACCH'
       * Input
      C                   PARM                    ZDAYNO
@@ -276,7 +284,7 @@
      C                   PARM                    DGJDNB
      C                   PARM                    DGDDNB
      C                   PARM                    ZHLField                                      S0119
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -289,20 +297,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
      C                   PARM                    ZNRDYS
- 
+
       * OUTPUTS
      C                   PARM                    ZDYNBR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *

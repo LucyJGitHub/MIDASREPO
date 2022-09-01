@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055265           Date 10Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD031966           Date 27Jul15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -62,6 +63,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  MD031966 - BFM GL3572P1 issue                                *

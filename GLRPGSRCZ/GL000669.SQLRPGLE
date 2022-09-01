@@ -16,12 +16,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD056751           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD036011           Date 10Aug22               *
+      *  Prev Amend No. MD056751           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036011 - Syntax failure of Helaba XML file                 *
       *  MD056751 - Deliverable Data Split for GLFXMLPD and GLGXMLPD  *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting                                     *
@@ -139,6 +141,16 @@
       * +-------------------------------------------------------------+
      C     WriteSTMF     BEGSR
 
+      ** Insert XML header                                                                  MD036011
+     C                   CALL      'GL000670'                                               MD036011
+     C                   PARM      '*WRITE'      ActCode                                    MD036011
+     C                   PARM      *BLANKS       PTagName                                   MD036011
+     C                   PARM      *BLANKS       PTagValue                                  MD036011
+     C                   PARM      *BLANKS       PTagValue2                                 MD036011
+     C                   PARM      *BLANKS       PTagEnd                                    MD036011
+     C                   PARM      'XML'         PFormat                                    MD036011
+     C                   PARM      *BLANKS       RtnCode                                    MD036011
+                                                                                            MD036011
      C     1             SETLL     GLUXMLPD
      C                   READ      GLUXMLPD
      C                   DOW       NOT %EOF(GLUXMLPD)
@@ -397,6 +409,12 @@
      C     DIGITS        CHECK     Amount        AmtErr
      C                   IF        AmtErr = 0
      C                   MOVE      Amount        Zfield
+      ** Override Amount and Zfield fields from 0 to zeros,                                 MD036011
+      ** that causes 0._0 in XML                                                            MD036011
+     C                   IF        Amount = '              0'                               MD036011
+     C                   EVAL      Amount = *ALL'0'                                         MD036011
+     C                   EVAL      Zfield = *ALL'0'                                         MD036011
+     C                   ENDIF                                                              MD036011
      C                   CALLB     'ZEDIT'
      C                   PARM                    Zfield
      C                   PARM      DecPos        ZaDec

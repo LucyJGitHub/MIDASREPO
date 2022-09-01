@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060141           Date 20Jun22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. MD060141           Date 20Jun22               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CGP017             Date 06Aug12               *
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance.                     *
+      *           - Apply CLE138 original design of SDFACTX0 to store *
+      *             facility classes.                                 *
       *  MD060141 - Did not replicate the Class Code in GZSDFACTPD    *
       *             Include the Class Code in the key fields          *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
@@ -118,7 +123,7 @@ O
 O    C     K_GZSDFACTL1  KLIST
 O    C                   KFLD                    AMZONE
 O    C                   KFLD                    AMFCTY
-     C                   KFLD                    AMCLAS                                     MD060141
+     C**********         KFLD                    AMCLAS                            MD060141 MD060092
 
      C                   ENDSR
       ********************************************************************

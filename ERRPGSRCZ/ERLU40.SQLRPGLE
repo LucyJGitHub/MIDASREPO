@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2005                      *
      F*                                                                  *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD058079           Date 11May21               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD058079           Date 11May21               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,10 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance.                     *
+      *           - Apply CLE138 original design of SDFACTX0 to store *
+      *             facility classes. (Recompile)                     *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD046248 - Finastra Rebranding                               *

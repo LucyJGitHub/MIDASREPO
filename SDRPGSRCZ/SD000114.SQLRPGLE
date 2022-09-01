@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059424           Date 29Mar22               *
-      *  Prev Amend No. MD059375           Date 20Dec21               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD059424           Date 29Mar22               *
+      *                 MD059375           Date 20Dec21               *
       *                 MD059270           Date 16Dec21               *
       *                 MD059253           Date 19Nov21               *
       *                 CIR020             Date 02Aug21               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD059424 - Calculator returned rates for previous period of  *
       *             deal defined with forward rate prior to amending  *
       *             the rate into backward-looking. Pass the new      *

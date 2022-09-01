@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD048482A          Date 20Jun22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CGL185             Date 13Mar17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048482A - FATCA Account closed flag is wrong               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -81,6 +83,21 @@
       ** Midas DL Deals File
      FDLDLBBL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(W_)
+                                                                                           MD048482A
+      ** Midas DL Deals File                                                               MD048482A
+     FDLDEALLF  IF   E           K DISK    INFSR(*PSSR)                                    MD048482A
+     F                                     RENAME(DEALSDCF:DEALSDCF1)                      MD048482A
+     F                                     PREFIX(V_)                                      MD048482A
+                                                                                           MD048482A
+      ** Midas LE History Amount Details File                                              MD048482A
+     FHISTSL5   IF   E           K DISK    INFSR(*PSSR)                                    MD048482A
+     F                                     PREFIX(H_)                                      MD048482A
+                                                                                           MD048482A
+      ** Midas GL FATCA Closed Accounts Balances Detail                                    MD048482A
+     FGLFCABL2  IF   E           K DISK    INFSR(*PSSR)                                    MD048482A
+     F                                     PREFIX(CF_)                                     MD048482A
+     F                                     RENAME(GLFCABD0:GLFCABD2)                       MD048482A
+                                                                                           MD048482A
      FSDJACCL0  IF   E           K DISK    INFSR(*PSSR)
 
       ** Midas DL Deals
@@ -204,6 +221,10 @@
      D Wtrade          S              1
      D PPFTC           S              2                                                     MD043793
      D Wcusn           S              6A                                                      CGL185
+     D KCACCTYPE       S              5                                                    MD048482A
+     D KCACCTRNN       S             16                                                    MD048482A
+     D KCBTTYP         S              5                                                    MD048482A
+     D KCBTRNN         S             16                                                    MD048482A
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -841,6 +862,7 @@
      C                   EVAL      CACCJATP = *BLANKS                                       MD042828
      C                   IF        WCusn = Wcust                                              CGL185
      C                   EVAL      CACBAMNT = *Zero                                           CGL185
+     C                   EVAL      %SUBST(CACCTYPE:5:1) = '0'                              MD048482A
      C                   ENDIF                                                                CGL185
      C                   WRITE     GLFCABD0                                                 MD042828
                                                                                             MD042828
@@ -872,7 +894,70 @@
      C                   READ      DKEYSDP
 
      C                   ENDDO
-
+                                                                                           MD048482A
+     C     *LOVAL        SETLL     DLDEALLF                                                MD048482A
+     C                   READ      DLDEALLF                                                MD048482A
+                                                                                           MD048482A
+     C                   DOW       NOT %EOF(DLDEALLF)                                      MD048482A
+     C                   IF        V_MDAT = BJRDNB                                         MD048482A
+     C                             AND V_PCPL = 0                                          MD048482A
+     C                   MOVE      V_CNUM        Wcust                                     MD048482A
+     C                   EVAL      Wdtyp = V_DTYP                                          MD048482A
+     C                   EVAL      Wdlst = V_DLST                                          MD048482A
+     C                   MOVE      V_DLNO        Wdlno                                     MD048482A
+     C                   MOVE      V_PSTM        Wstyp                                     MD048482A
+     C                   MOVE      V_PONS        Wsacc                                     MD048482A
+     C                   EVAL      Wcurr = V_CCY                                           MD048482A
+     C                   EVAL      Wrevi = 1                                               MD048482A
+                                                                                           MD048482A
+     C                   EXSR      SrExtCust                                               MD048482A
+                                                                                           MD048482A
+     C                   IF        Wcust <> *BLANKS                                        MD048482A
+     C                             OR Wrevi = 1                                            MD048482A
+     C                   MOVE      V_CNUM        CACBCNUM                                  MD048482A
+     C                   EVAL      CACBCURR = V_CCY                                        MD048482A
+     C                   EVAL      CACBBRCH = V_BRCA                                       MD048482A
+     C                   EVAL      CACBACOD = *ZERO                                        MD048482A
+     C                   EVAL      CACBSEQ = *ZERO                                         MD048482A
+     C                   EVAL      CACBDACC = *ZERO                                        MD048482A
+     C                   EVAL      CACBAMNT = V_PCPL                                       MD048482A
+     C                   EVAL      CACCTYPE = 'MMMAT'                                      MD048482A
+     C                   EVAL      CACCTRNN = 'DL' + Wdlno                                 MD048482A
+     C                   EVAL      CACCJANO = *BLANKS                                      MD048482A
+     C                   EVAL      CACCACHL = Wcust                                        MD048482A
+     C                   EVAL      CACCACTY = 'CUST'                                       MD048482A
+     C                   EVAL      CACCJATP = *BLANKS                                      MD048482A
+     C                   IF        WCusn = Wcust                                           MD048482A
+     C                   EVAL      CACBAMNT = *Zero                                        MD048482A
+     C                   EVAL      %SUBST(CACCTYPE:5:1) = '0'                              MD048482A
+     C                   ENDIF                                                             MD048482A
+     C                   WRITE     GLFCABD0                                                MD048482A
+                                                                                           MD048482A
+     C                   MOVE      CACBCNUM      JCJANO                                    MD048482A
+     C     JCJANO        SETLL     SDJACCL0                                                MD048482A
+     C     JCJANO        READE     SDJACCL0                                                MD048482A
+                                                                                           MD048482A
+     C                   DOW       NOT %EOF(SDJACCL0)                                      MD048482A
+     C                   EVAL      CACCJANO = JCJANO                                       MD048482A
+     C                   MOVE      JCCUST        CACBCNUM                                  MD048482A
+     C                   IF        JCCUST <> *BLANKS                                       MD048482A
+     C                   EVAL      CACCACHL = JCCUST                                       MD048482A
+     C                   EVAL      CACCACTY = 'CUST'                                       MD048482A
+     C                   ELSE                                                              MD048482A
+     C                   EVAL      CACCACHL = JCNAHO                                       MD048482A
+     C                   EVAL      CACCACTY = 'NAHO'                                       MD048482A
+     C                   ENDIF                                                             MD048482A
+     C                   EVAL      CACCJATP = 'M'                                          MD048482A
+     C                   WRITE     GLFCABD0                                                MD048482A
+                                                                                           MD048482A
+                                                                                           MD048482A
+     C     JCJANO        READE     SDJACCL0                                                MD048482A
+     C                   ENDDO                                                             MD048482A
+     C                   ENDIF                                                             MD048482A
+     C                   ENDIF                                                             MD048482A
+     C                                                                                     MD048482A
+     C                   READ      DLDEALLF                                                MD048482A
+     C                   ENDDO                                                             MD048482A
      C                   ENDSR
 
       *****************************************************************
@@ -1006,6 +1091,10 @@
      C                   EVAL      CACCACHL = Wcust                                         MD043652
      C                   EVAL      CACCACTY = 'CUST'                                        MD043652
      C                   EVAL      CACCJATP = *BLANKS                                       MD042828
+     C                   IF        WCusn = Wcust                                           MD048482A
+     C                   EVAL      CACBAMNT = *Zero                                        MD048482A
+     C                   EVAL      %SUBST(CACCTYPE:5:1) = '0'                              MD048482A
+     C                   ENDIF                                                             MD048482A
      C                   WRITE     GLFCABD0                                                 MD042828
                                                                                             MD042828
      C                   EVAL      JCJANO = CACBCNUM                                        MD042828
@@ -1036,6 +1125,61 @@
      C                   READ      LKEY1DP
 
      C                   ENDDO
+                                                                                           MD048482A
+     C     *LOVAL        SETLL     HISTSL5                                                 MD048482A
+     C                   READ      HISTSL5                                                 MD048482A
+                                                                                           MD048482A
+     C                   DOW       NOT %EOF(HISTSL5)                                       MD048482A
+                                                                                           MD048482A
+     C                   IF        H_AMTP = 'MA'                                           MD048482A
+     C                             AND H_RECI = 'M'                                        MD048482A
+     C                             AND H_PRAM = 0                                          MD048482A
+     C                             AND H_LCD = BJRDNB                                      MD048482A
+     C                   MOVE      H_CNUM        Wcust                                     MD048482A
+     C                   EVAL      CACBCNUM = H_CNUM                                       MD048482A
+     C                   EVAL      CACBCURR = H_CCY                                        MD048482A
+     C                   EVAL      CACBBRCH = H_BRCA                                       MD048482A
+     C                   EVAL      CACBACOD = *ZERO                                        MD048482A
+     C                   EVAL      CACBSEQ = *ZERO                                         MD048482A
+     C                   EVAL      CACBDACC = *ZERO                                        MD048482A
+     C                   EVAL      CACBAMNT = H_PRAM                                       MD048482A
+     C                   EVAL      CACCTYPE = 'LEMAT'                                      MD048482A
+     C                   MOVE      H_LNRF        Wdlno                                     MD048482A
+     C                   EVAL      CACCTRNN = 'LE' + Wdlno                                 MD048482A
+     C                   EVAL      CACCJANO = *BLANKS                                      MD048482A
+     C                   EVAL      CACCACHL = Wcust                                        MD048482A
+     C                   EVAL      CACCACTY = 'CUST'                                       MD048482A
+     C                   EVAL      CACCJATP = *BLANKS                                      MD048482A
+     C                   EVAL      KCACCTYPE = CACCTYPE                                    MD048482A
+     C                   EVAL      KCACCTRNN = CACCTRNN                                    MD048482A
+     C     KFCAB         CHAIN     GLFCABL2                                                MD048482A
+     C                   IF        NOT %FOUND(GLFCABL2)                                    MD048482A
+     C                   WRITE     GLFCABD0                                                MD048482A
+                                                                                           MD048482A
+     C                   EVAL      JCJANO = Wcust                                          MD048482A
+     C     JCJANO        SETLL     SDJACCL0                                                MD048482A
+     C     JCJANO        READE     SDJACCL0                                                MD048482A
+                                                                                           MD048482A
+     C                   DOW       NOT %EOF(SDJACCL0)                                      MD048482A
+     C                   EVAL      CACCJANO = JCJANO                                       MD048482A
+     C                   MOVE      JCCUST        CACBCNUM                                  MD048482A
+     C                   IF        JCCUST <> *BLANKS                                       MD048482A
+     C                   EVAL      CACCACHL = JCCUST                                       MD048482A
+     C                   EVAL      CACCACTY = 'CUST'                                       MD048482A
+     C                   ELSE                                                              MD048482A
+     C                   EVAL      CACCACHL = JCNAHO                                       MD048482A
+     C                   EVAL      CACCACTY = 'NAHO'                                       MD048482A
+     C                   ENDIF                                                             MD048482A
+     C                   EVAL      CACCJATP = 'M'                                          MD048482A
+     C                   WRITE     GLFCABD0                                                MD048482A
+     C     JCJANO        READE     SDJACCL0                                                MD048482A
+     C                   ENDDO                                                             MD048482A
+                                                                                           MD048482A
+     C                   ENDIF                                                             MD048482A
+     C                   ENDIF                                                             MD048482A
+                                                                                           MD048482A
+     C                   READ      HISTSL5                                                 MD048482A
+     C                   ENDDO                                                             MD048482A
 
      C                   ENDSR
 
@@ -1165,6 +1309,10 @@
      C                   EVAL      CACCACHL = Wcust                                         MD043652
      C                   EVAL      CACCACTY = 'CUST'                                        MD043652
      C                   EVAL      CACCJATP = *BLANKS                                       MD042828
+     C                   IF        WCusn = Wcust                                           MD048482A
+     C                   EVAL      CACBAMNT = *Zero                                        MD048482A
+     C                   EVAL      %SUBST(CACCTYPE:5:1) = '0'                              MD048482A
+     C                   ENDIF                                                             MD048482A
      C                   WRITE     GLFCABD0                                                 MD042828
                                                                                             MD042828
      C                   EVAL      JCJANO = CACBCNUM                                        MD042828
@@ -1195,7 +1343,62 @@
      C                   READ      LKEY3DP
 
      C                   ENDDO
-
+                                                                                           MD048482A
+     C     *LOVAL        SETLL     HISTSL5                                                 MD048482A
+     C                   READ      HISTSL5                                                 MD048482A
+                                                                                           MD048482A
+     C                   DOW       NOT %EOF(HISTSL5)                                       MD048482A
+                                                                                           MD048482A
+     C                   IF        H_AMTP = 'MA'                                           MD048482A
+     C                             AND H_RECI = 'M'                                        MD048482A
+     C                             AND H_PRAM = 0                                          MD048482A
+     C                             AND H_LCD = BJRDNB                                      MD048482A
+     C                   MOVE      H_CNUM        Wcust                                     MD048482A
+     C                   EVAL      CACBCNUM = H_CNUM                                       MD048482A
+     C                   EVAL      CACBCURR = H_CCY                                        MD048482A
+     C                   EVAL      CACBBRCH = H_BRCA                                       MD048482A
+     C                   EVAL      CACBACOD = *ZERO                                        MD048482A
+     C                   EVAL      CACBSEQ = *ZERO                                         MD048482A
+     C                   EVAL      CACBDACC = *ZERO                                        MD048482A
+     C                   EVAL      CACBAMNT = H_PRAM                                       MD048482A
+     C                   EVAL      CACCTYPE = 'LEMAT'                                      MD048482A
+     C                   MOVE      H_LNRF        Wdlno                                     MD048482A
+     C                   EVAL      CACCTRNN = 'LE' + Wdlno                                 MD048482A
+     C                   EVAL      CACCJANO = *BLANKS                                      MD048482A
+     C                   EVAL      CACCACHL = Wcust                                        MD048482A
+     C                   EVAL      CACCACTY = 'CUST'                                       MD048482A
+     C                   EVAL      CACCJATP = *BLANKS                                      MD048482A
+     C                   EVAL      KCACCTYPE = CACCTYPE                                    MD048482A
+     C                   EVAL      KCACCTRNN = CACCTRNN                                    MD048482A
+     C     KFCAB         CHAIN     GLFCABL2                                                MD048482A
+     C                   IF        NOT %FOUND(GLFCABL2)                                    MD048482A
+     C                   WRITE     GLFCABD0                                                MD048482A
+                                                                                           MD048482A
+     C                   EVAL      JCJANO = Wcust                                          MD048482A
+     C     JCJANO        SETLL     SDJACCL0                                                MD048482A
+     C     JCJANO        READE     SDJACCL0                                                MD048482A
+                                                                                           MD048482A
+     C                   DOW       NOT %EOF(SDJACCL0)                                      MD048482A
+     C                   EVAL      CACCJANO = JCJANO                                       MD048482A
+     C                   MOVE      JCCUST        CACBCNUM                                  MD048482A
+     C                   IF        JCCUST <> *BLANKS                                       MD048482A
+     C                   EVAL      CACCACHL = JCCUST                                       MD048482A
+     C                   EVAL      CACCACTY = 'CUST'                                       MD048482A
+     C                   ELSE                                                              MD048482A
+     C                   EVAL      CACCACHL = JCNAHO                                       MD048482A
+     C                   EVAL      CACCACTY = 'NAHO'                                       MD048482A
+     C                   ENDIF                                                             MD048482A
+     C                   EVAL      CACCJATP = 'M'                                          MD048482A
+     C                   WRITE     GLFCABD0                                                MD048482A
+     C     JCJANO        READE     SDJACCL0                                                MD048482A
+     C                   ENDDO                                                             MD048482A
+                                                                                           MD048482A
+     C                   ENDIF                                                             MD048482A
+     C                   ENDIF                                                             MD048482A
+                                                                                           MD048482A
+     C                   READ      HISTSL5                                                 MD048482A
+     C                   ENDDO                                                             MD048482A
+                                                                                           MD048482A
      C                   ENDSR
 
 
@@ -1369,6 +1572,10 @@
      C                   EVAL      CACCACHL = Wcust                                         MD043652
      C                   EVAL      CACCACTY = 'CUST'                                        MD043652
      C                   EVAL      CACCJATP = *BLANKS                                       MD042828
+     C                   IF        WCusn = Wcust                                           MD048482A
+     C                   EVAL      CACBAMNT = *Zero                                        MD048482A
+     C                   EVAL      %SUBST(CACCTYPE:5:1) = '0'                              MD048482A
+     C                   ENDIF                                                             MD048482A
      C                   WRITE     GLFCABD0                                                 MD042828
                                                                                             MD042828
      C                   EVAL      JCJANO = CACBCNUM                                        MD042828
@@ -1520,30 +1727,30 @@
      C                   ENDIF
 
      C                   SELECT                                                               CGL185
-     C                   WHEN      Wstyp = 01                                                 CGL185
-     C                             OR Wstyp = 02                                              CGL185
-     C                             OR Wstyp = 07                                              CGL185
-     C                             OR Wstyp = 08                                              CGL185
-     C                             OR Wstyp = 12                                              CGL185
-                                                                                              CGL185
-     C                   CALLB     'AONOSTR0'                                                 CGL185
-     C                   PARM                    Prtcd                                        CGL185
-     C                   PARM      '*KEY   '     Poptn                                        CGL185
-     C                   PARM      *BLANKS       Pcnum                                        CGL185
-     C                   PARM      Wcurr         Pcycd                                        CGL185
-     C                   PARM      *BLANKS       Paccd                                        CGL185
-     C                   PARM      *BLANKS       Pacsq                                        CGL185
-     C                   PARM      Wsacc         Pnonb                                        CGL185
-     C                   PARM      *BLANKS       Pbrca                                        CGL185
-     C                   PARM      *BLANKS       Pcssn                                        CGL185
-     C                   PARM      *BLANKS       Ppnoi                                        CGL185
-     C     SDNOST        PARM      SDNOST        Dsfdy                                        CGL185
-                                                                                              CGL185
-     C                   IF        Prtcd = *BLANKS                                            CGL185
-     C                   EVAL      Wcusn = A7CUST                                             CGL185
-     C                   ELSE                                                                 CGL185
-     C                   EVAL      Wcusn = *BLANKS                                            CGL185
-     C                   ENDIF                                                                CGL185
+     C**********         WHEN      Wstyp = 01                                       CGL185 MD048482A
+     C**********                   OR Wstyp = 02                                    CGL185 MD048482A
+     C**********                   OR Wstyp = 07                                    CGL185 MD048482A
+     C**********                   OR Wstyp = 08                                    CGL185 MD048482A
+     C**********                   OR Wstyp = 12                                    CGL185 MD048482A
+      *****************************************************************             CGL185 MD048482A
+     C**********         CALLB     'AONOSTR0'                                       CGL185 MD048482A
+     C**********         PARM                    Prtcd                              CGL185 MD048482A
+     C**********         PARM      '*KEY   '     Poptn                              CGL185 MD048482A
+     C**********         PARM      *BLANKS       Pcnum                              CGL185 MD048482A
+     C**********         PARM      Wcurr         Pcycd                              CGL185 MD048482A
+     C**********         PARM      *BLANKS       Paccd                              CGL185 MD048482A
+     C**********         PARM      *BLANKS       Pacsq                              CGL185 MD048482A
+     C**********         PARM      Wsacc         Pnonb                              CGL185 MD048482A
+     C**********         PARM      *BLANKS       Pbrca                              CGL185 MD048482A
+     C**********         PARM      *BLANKS       Pcssn                              CGL185 MD048482A
+     C**********         PARM      *BLANKS       Ppnoi                              CGL185 MD048482A
+     C*****SDNOST        PARM      SDNOST        Dsfdy                              CGL185 MD048482A
+      *****************************************************************             CGL185 MD048482A
+     C**********         IF        Prtcd = *BLANKS                                  CGL185 MD048482A
+     C**********         EVAL      Wcusn = A7CUST                                   CGL185 MD048482A
+     C**********         ELSE                                                       CGL185 MD048482A
+     C**********         EVAL      Wcusn = *BLANKS                                  CGL185 MD048482A
+     C**********         ENDIF                                                      CGL185 MD048482A
                                                                                               CGL185
      C                   WHEN      Wstyp = 14                                                 CGL185
      C                   CALLB     'AOACCTR0'                                                 CGL185
@@ -1681,6 +1888,10 @@
      C     Kcapa         KLIST
      C                   KFLD                    Kpacno
      C                   KFLD                    Kppsta
+                                                                                           MD048482A
+     C     KFCAB         KLIST                                                             MD048482A
+     C                   KFLD                    KCACCTYPE                                 MD048482A
+     C                   KFLD                    KCACCTRNN                                 MD048482A
 
      C                   ENDSR
 

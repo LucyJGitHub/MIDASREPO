@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260883             Date 04Aug22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 MD046248           Date 27Oct17               *
       *                 252091             Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -32,6 +33,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260883 - The system did not display error code 'USR1102'     *
+      *           on a non existing transaction enquiry.              *
+      *           Also, the screen fileds not been cleard on the      *
+      *           subsequent non existing transaction enquiry.        *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -1187,6 +1192,7 @@
       ** enquiries
      C                   IF        #1ACTN = 'D' OR
      C                             #1ACTN = 'A'
+     C                             OR #1ACTN = 'E'                                            260883
      C                   IF        NOT %FOUND(GLAMRTL1) OR
      C                             %FOUND(GLAMRTL1) AND
      C                             A1RECI = 'C'OR

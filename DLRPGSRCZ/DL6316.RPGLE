@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR905057           Date 13Jul22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 217486             Date 06Jun06               *
+      *                 217486             Date 06Jun06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
@@ -48,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR905057 - Amend the structure of TRNO by dropping the CLS   *
+      *             Sequence number and extending the value date to   *
+      *             include the Year. (Child: AR905058)               *
       *  MD046248 - Finastra Rebranding                               *
       *  217486 - MT202/MT210 generated for a customer even though it *
       *           is setup not to.  Do not generate message if it is  *
@@ -243,7 +247,8 @@
      D WLeadHr         S              2S 0
      D WLeadMin        S              2S 0
      D WTotmm          S              3S 0
-     D WVDat           S              4A
+     D***WVDat**         S              4A                                                  AR905057
+     D WVDat           S              6A                                                    AR905057
      D WTrnSeq         S              2A
       *
       ** Pointer for the indicator array
@@ -456,7 +461,8 @@
      C                   MOVE      PYTSEQ        WTrnSeq                                      194019
      C***********        EVAL      MGTNUM = DCCY + DNOST + WVDat +                            190033
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           190033
-     C                             WSeqN + WTrnSeq                                            194019
+     C**********                   WSeqN + WTrnSeq                                   194019 AR905057
+     C                             WTrnSeq                                                  AR905057
      C***********                  WSeqN + '01'                                               194019
       *
       **  Determine if the TRN is unique                                                      194019
@@ -467,7 +473,8 @@
      C                   ADD       1             PYTSEQ                                       194019
      C                   MOVE      PYTSEQ        WTrnSeq                                      194019
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           194019
-     C                             WSeqN + WTrnSeq                                            194019
+     C**********                   WSeqN + WTrnSeq                                   194019 AR905057
+     C                             WTrnSeq                                                  AR905057
      C                   EVAL      TRNO = 'DL' + MGTNUM                                       194019
      C     TRNO          CHAIN     MGOREFD0                           11                      194019
      C                   END                                                                  194019
@@ -709,7 +716,8 @@
      C                   ENDIF                                                                196191
      C                   MOVE      PYTSEQ        WTrnSeq                                      194019
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           194019
-     C                             WSeqN + WTrnSeq                                            194019
+     C**********                   WSeqN + WTrnSeq                                   194019 AR905057
+     C                             WTrnSeq                                                  AR905057
      C                   EVAL      TRNO = 'DL' + MGTNUM                                       194019
      C     TRNO          CHAIN     MGOREFD0                           11                      194019
       *                                                                                       194019
@@ -717,7 +725,8 @@
      C                   ADD       1             PYTSEQ                                       194019
      C                   MOVE      PYTSEQ        WTrnSeq                                      194019
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           194019
-     C                             WSeqN + WTrnSeq                                            194019
+     C**********                   WSeqN + WTrnSeq                                   194019 AR905057
+     C                             WTrnSeq                                                  AR905057
      C                   EVAL      TRNO = 'DL' + MGTNUM                                       194019
      C     TRNO          CHAIN     MGOREFD0                           11                      194019
      C                   END                                                                  194019
@@ -738,7 +747,8 @@
  
      C***********        EVAL      MGTNUM = DCCY + DNOST + WVDat +                            190033
      C                   EVAL      MGTNUM = DCCY + A7NONB + WVDat +                           190033
-     C                             WSeqN + WTrnSeq
+     C**********                   WSeqN + WTrnSeq                                          AR905057
+     C                             WTrnSeq                                                  AR905057
       *
       ** Value date
       *

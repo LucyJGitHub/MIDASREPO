@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MDSC38665          Date 21Jul22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -77,6 +78,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MDSC38665 - Make Issue Date a Mandatory input field for all  *
+      *              complete securities (re-design of GEMS250592).   *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -3281,6 +3284,14 @@
       *
      C                   MOVE      DDSPDS        S1SPDS
       *
+      ** Default value of issue date to initial date if issue date              MDSC38665
+      ** was not entered and security is Complete                               MDSC38665
+      *                                                                         MDSC38665
+     C                   If        S1ISSD = *Zeros and                          MDSC38665
+     C                             DDINCS = 'C' and DDACTN = 'A'                MDSC38665
+     C                   Z-Add     S1ITLD        S1ISSD                         MDSC38665
+     C                   Endif                                                  MDSC38665
+      *                                                                         MDSC38665
      C                   ENDIF
       *
       ** Last change type.

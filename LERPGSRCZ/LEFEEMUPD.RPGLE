@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR375891B          Date 26Aug20               *
       *                 CER050             Date 16Jun19               *
@@ -87,6 +88,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance. Apply CLE138        *
+      *             design of SDFACTX0 to store facility classes.     *
       *  CLE138 - Class Codes for Facilities                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -2017,16 +2021,16 @@
       *****************************************************************                       CLE134
      C     xrFACT        BEGSR                                                                CLE134
                                                                                               CLE134
-     C                   IF        CLE138 = 'N'                                               CLE138
-     C                   EVAL      @FCLS = *Blanks                                            CLE138
-     C                   ENDIF                                                                CLE138
+     C**********         IF        CLE138 = 'N'                                      CLE138 MD060092
+     C**********         EVAL      @FCLS = *Blanks                                   CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
       ** Retrieve Record.                                                                     CLE134
                                                                                               CLE134
      C                   CALLB     'AOFACTR0'                                                 CLE134
      C                   PARM      '*BLANKS'     @RTCD             7                          CLE134
      C                   PARM      '*KEY   '     @OPTN             7                          CLE134
      C                   PARM                    @FACT             3                          CLE134
-     C                   PARM                    @FCLS             4                          CLE138
+     C**********         PARM                    @FCLS             4                 CLE138 MD060092
      C     SDFACT        PARM      SDFACT        DSFDY                                        CLE134
                                                                                               CLE134
      C                   IF        @RTCD      <> *BLANKS                                      CLE134
@@ -4732,7 +4736,7 @@
       ** Facility fees, retrieve SDFACTPD->PDP Group ID                                       CLE164
      C                   IF        FEFACL <> *ZEROS AND FELOAN = *BLANKS                      CLE164
      C                   MOVEL     FEFACL        @FACT                                        CLE164
-     C                   MOVEL     FECLAS        @FCLS                                        CLE138
+     C**********         MOVEL     FECLAS        @FCLS                               CLE138 MD060092
      C                   EXSR      XrFact                                                     CLE164
      C                   EVAL      wFTPDPGrpID = AMPGID                                       CLE164
      C                   EVAL      wLSPDPGrpID = '***'                                        CLE164
@@ -4752,17 +4756,17 @@
                                                                                               CLE164
       ** Loan Fees, retrieve SDFACTPD->PDP Group ID                                           CLE164
      C                   MOVEL     FTYP          @FACT                                        CLE164
-     C                   MOVE      *BLANKS       @FCLS                                        CLE138
-     C     CLE138        IFEQ      'Y'                                                        CLE138
-     C                   MOVE      FCUS          @WCNUM                                       CLE138
-     C                   MOVE      FTYP          @WFAC03                                      CLE138
-     C                   MOVE      FSEQ          @WFAC02                                      CLE138
-     C     KFCLTLH       CHAIN     LEFCLTLH                           85                      CLE138
-     C     *IN85         IFEQ      *OFF                                                       CLE138
-     C                   MOVE      FCXCLS        @FCLS                                        CLE138
-     C                   ENDIF                                                                CLE138
-     C                   ENDIF                                                                CLE138
-      *                                                                                       CLE138
+     C**********         MOVE      *BLANKS       @FCLS                               CLE138 MD060092
+     C*****CLE138        IFEQ      'Y'                                               CLE138 MD060092
+     C**********         MOVE      FCUS          @WCNUM                              CLE138 MD060092
+     C**********         MOVE      FTYP          @WFAC03                             CLE138 MD060092
+     C**********         MOVE      FSEQ          @WFAC02                             CLE138 MD060092
+     C*****KFCLTLH       CHAIN     LEFCLTLH                           85             CLE138 MD060092
+     C******IN85         IFEQ      *OFF                                              CLE138 MD060092
+     C**********         MOVE      FCXCLS        @FCLS                               CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
+     C**********         ENDIF                                                       CLE138 MD060092
+      ****************************************************************               CLE138 MD060092
      C                   EXSR      XrFact                                                     CLE164
      C                   EVAL      wFTPDPGrpID = AMPGID                                       CLE164
                                                                                               CLE164

@@ -21,12 +21,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CRE019             Date 12Jan04               *
       *                 CGL029             Date 01Sep03               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -520,7 +522,8 @@
      D SDTELD        E DS                  EXTNAME(SDTELDPD)
       **  Teller id
       *
-     D SDBAIT        E DS                  EXTNAME(SDBAITPD)
+     D*SDBAIT***     E DS                  EXTNAME(SDBAITPD)                                MD058085
+     D SDBAIT        E DS                  EXTNAME(SDBATJW0)                                MD058085
       **  Transaction types
       *
      D SDBAID        E DS                  EXTNAME(SDBAIDPD)
@@ -545,12 +548,12 @@
       **  Socket Functions Prototype Definitions (Service Program SP670RE01)
       *
      D opn_tcp         pr            10i 0
- 
+
      D bnd_tcp         pr            10i 0
      d                               10i 0 Const
      d                               10i 0 Const
      d                               10i 0 Const
- 
+
      D con_tcp         pr            10i 0
      d                               10i 0 Const
      d                               30
@@ -561,18 +564,18 @@
      d  time_sec                     10i 0
      d  wait_act                     10i 0
      d  rc                           10i 0
- 
+
      D snd_tcp         pr            10i 0
      d                               10i 0 Const
      d                             9911
- 
+
      D rcv_tcp         pr            10i 0
      d                               10i 0 Const
      d                             9911
- 
+
      D cls_tcp         pr            10i 0
      d                               10i 0 Const
- 
+
       **  Other variables
       *
      D ScktNum         S             10I 0

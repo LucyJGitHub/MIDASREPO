@@ -10,8 +10,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD058085           Date 11May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -35,6 +36,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD058085 - Deliverable Data Split for Standing Data         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       BUG10196 - Deal Type/Sub Type DB Error                      */
@@ -67,7 +69,7 @@
 /************PGM        PARM(&CODE)                                     ER_R10*/
 /*********** PGM                                                 ER_R10 ULU001*/
              PGM        PARM(&RTCODE &MODULE)                         /*ULU001*/
- 
+
              DCL        VAR(&RTCODE) TYPE(*CHAR) LEN(7)               /*ULU001*/
              DCL        VAR(&MODULE) TYPE(*CHAR) LEN(1)               /*ULU001*/
              DCL        VAR(&RTCD) TYPE(*DEC) LEN(1 0)                /*ULX004*/
@@ -85,7 +87,7 @@ DCL &MSGDTA *CHAR 52
 /************CHGDTAARA  DTAARA(ERRTXT (161 40)) VALUE('European +       ER_R10*/
 /************             Returns')                                     ER_R10*/
 /************MONMSG     MSGID(CPF0000)                                  ER_R10*/
- 
+
 /* CREATE XLIB OBJECTS IF NEEDED                                     */
 /**********  CHKOBJ     OBJ(ERJOBD) OBJTYPE(*JOBD)              */                        /*CER001*/
 /**********  MONMSG     MSGID(CPF9801) EXEC(CALL PGM(ERSBSD))   */                        /*CER001*/
@@ -112,7 +114,7 @@ DCL &MSGDTA *CHAR 52
                           RPLTRG(*YES)                                /*ULX024*/
                                                                       /*ULX024*/
 /*<<L1RAT<<*/
- 
+
              CHGJOB     SWS(00000000)
 /* Create local data area                                            */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
@@ -123,22 +125,22 @@ DCL &MSGDTA *CHAR 52
                                 CALL ER0000
              IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
                           CMDLBL(ERROR))
- 
- 
+
+
 CALL ER9100WG
- 
+
 CALL ERLU30WG
 CALL ERLU40WG
 CALL ERLU91WG
- 
+
 CALL ERDWNDWGLU
 CALL CADWNDWGLU                                                    /* ULX004 */
-OVRDBF     FILE(SDECOSPD) TOFILE(SDECOSLXPD)
-CALL SDECOSWGLU
-DLTOVR     FILE(SDECOSPD)
+/*OVRDBF     FILE(SDECOSPD) TOFILE(SDECOSLXPD) */                                       /*MD058085*/
+/*CALL SDECOSWGLU */                                                                    /*MD058085*/
+/*DLTOVR     FILE(SDECOSPD) */                                                          /*MD058085*/
 CALL SDNCOSWGLU                                                    /*ULX011*/
 CALL SDPROSWG
- 
+
 CALL ER0530WG                                                      /* ER0141 */
 /***CALL LE0020X4  */                                                    /* ER0141 */
 /***CALL LE0020X6  */
@@ -153,7 +155,7 @@ CALL SD0061X6
 CALL SD0252X6
 CALL SD0271X6
 CALL SD0281X6
- 
+
 CALL SE0020X6
 /***CALL SE0040X4  */
 /***CALL SE0040X6  */
@@ -161,14 +163,14 @@ CALL SE0020X6
 CALL SD0021X4
 CALL SD0311X4
 CALL SD9121X4
- 
+
 /***CALL LE0080X6    */                                                  /* ER0336 */
 CALL RE3271X6                                                      /* ER0336 */
 CALL SD0181X6                                                      /* ER0336 */
 CALL SD0311X6                                                      /* ER0336 */
- 
+
 CALL ERGURNX6                                                      /* ERL015 */
- 
+
 /**CALL*SDCGRP                                                 * ER0336 ER_R10*/
 /*64053 BEGIN*/
 /* CALL REATYP                                 REDUNDANT                ER_R10*/
@@ -178,7 +180,7 @@ CALL ERGURNX6                                                      /* ERL015 */
  CHGDTAARA DTAARA(ERSTAT (26 2)) VALUE('YY')
 /*64053 END*/
              CALL       PGM(ER0050X)                               /* ERL370 */
- 
+
 CALL SD0031X6                                                      /* ERL371 */
 /*CALL CL0030X6                                                       ER_R10 */
 CALL SD0090X6                                                      /* ER_R10 */
@@ -193,7 +195,7 @@ CALL FF0140X6   PARM(' ' &MODULE) /***  Setup of INTYPDX6 file.  ***/ /*ULX004*/
                                                                                         /*BUG10196*/
 CALL FD0652X6                                                                           /*BUG10196*/
                                                                                         /*BUG10196*/
- 
+
 /*>>L1RAT>>*/
 /**/
 /************CHGDTAARA  DTAARA(PRCDTA (&CODE 1)) VALUE('C')             ER_R10*/
@@ -204,7 +206,7 @@ CALL FD0652X6                                                                   
  MODE3:                                                                                 /*BUG10108*/
                                                                                         /*BUG10108*/
 GOTO EOJ
- 
+
  ERROR:      RTVDTAARA  DTAARA(LDA (132 52)) RTNVAR(&MSGDTA)
 /**********  SNDPGMMSG  MSGID(DBM0001) MSGF(GBCEUSRMSG) +
                           MSGDTA(&MSGDTA) TOMSGQ(MRUNQ MOPERQ)          ER_R10*/
@@ -220,5 +222,5 @@ GOTO EOJ
 /************CHGDTAARA  DTAARA(PRCDTA (&CODE 1)) VALUE('F')             ER_R10*/
 /************CHGDTAARA  DTAARA(ERRTXT (1 160)) VALUE(&TEXT)             ER_R10*/
 /*<<L1RAT<<*/
- 
+
 EOJ: ENDPGM

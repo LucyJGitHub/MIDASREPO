@@ -9,35 +9,37 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP004  *CREATE    Date 07Oct10              */
+/*       Last Amend No. MD058085           Date 11May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP004  *CREATE    Date 07Oct10              */
 /*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058085 - Deliverable Data Split for Standing Data         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP004 - New utility to replace SCBEGIN.                    */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PFX &ERRPGM)
- 
+
              DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&TILIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SQLSTR) TYPE(*CHAR) LEN(80)
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Check if Midas/TI is switched on - file SDMMODPD. */
              CALL       PGM(AOMMODR0) PARM(&RTNCODE '*FIRST' &FMT)
              IF         COND(&RTNCODE *NE ' ') THEN(DO)
@@ -48,29 +50,29 @@
                 CHGVAR     VAR(&ERRPGM) VALUE('*NOT ON')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              CHGVAR     VAR(&TILIB) VALUE(&PFX *TCAT 'TILIB')
- 
+
 /* Remove records from SDMEMOPD and SDSYTMPD. */
-             CHGVAR     VAR(&SQLSTR) VALUE('delete from SDMEMOPD +
+/**********  CHGVAR     VAR(&SQLSTR) VALUE('delete from SDMEMOPD +
                           where EBMODI =' *BCAT &QUOTE *TCAT 'TI' +
-                          *TCAT &QUOTE *TCAT ';')
-             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*CLEAR')
-             CHGVAR     VAR(&SQLSTR) VALUE('delete from SDSYTMPD +
+                          *TCAT &QUOTE *TCAT ';') */                                    /*MD058085*/
+/**********  CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*CLEAR') */                         /*MD058085*/
+/**********  CHGVAR     VAR(&SQLSTR) VALUE('delete from SDSYTMPD +
                           where ECSYTM = ' *BCAT &QUOTE *TCAT +
-                          'TI    ' *TCAT &QUOTE)
-             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*WRITE')
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*NONE)
-             MONMSG     MSGID(SQL9010)
- 
+                          'TI    ' *TCAT &QUOTE) */                                     /*MD058085*/
+/**********  CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*WRITE') */
+/**********  RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE) */                                              /*MD058085*/
+/**********  MONMSG     MSGID(SQL9010) */                                               /*MD058085*/
+
 /* Initialise headers / trailers. */
              CALL       PGM(TI00)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 CHGVAR     VAR(&ERRPGM) VALUE('TI00')
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Initialise data area TIDTA. */
              CHGDTAARA  DTAARA(TIDTA (1 10)) VALUE('   0000000')
              CHGDTAARA  DTAARA(TIDTA (11 10)) VALUE(&TILIB)
@@ -79,9 +81,9 @@
 /* Initialise data areas TI03*. */
              CHGDTAARA  DTAARA(TI0340) VALUE('START')
              CHGDTAARA  DTAARA(TI0350) VALUE('START')
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -89,6 +91,6 @@ ERROR:
                    CHGVAR     VAR(&ERRPGM) VALUE('SMC000108')
                 ENDDO
              ENDDO
- 
+
 ENDPGM:
              ENDPGM

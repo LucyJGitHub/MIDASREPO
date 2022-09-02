@@ -11,8 +11,9 @@
 0007 F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058085           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -38,6 +39,7 @@
      F*                                                                  *
 0012 F********************************************************************
 0010 F*                                                                  *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -72,7 +74,8 @@
      F*****************************************************************
 0013 FBROKG   IP  E           K        DISK
 0016 FSDCURRL0IF  E           K        DISK                               S01117
-0016 FSDBROKL1IF  E           K        DISK                               S01117
+0016 F*SDBROKL1IF  E           K        DISK                               S01117           MD058085
+0016 FSDBRKXTDIF  E                    DISK                                                 MD058085
 0014 F***TABLE   IF  F      96 12AI     2 DISK                            S01194
 0015 F***TABD    IF  F      96 12AI     2 DISK                            S01194
 0016 F*PRINT  O   F     132     OF     PRINTER                            S01124
@@ -149,6 +152,7 @@
 0066 E                    BRKA      999  4               BROKER CODE      E22731
 0067 E                    BKNA      999 30               BROKER NAME      E22731
 0068 E                    BKTA      999 10               BROKER TOWN      E22731
+0068 E                    ARR       999 44                                                  MD058085
 0069 E                    ZYDY    4   4  4 0             ZDATE2 SR.ARRAY
 0070 E                    ZMDY   13  13  3 0             ZDATE2 SR.ARRAY
 0071 E                    ZMNM   12  12  3               ZDATE2 SR.ARRAY
@@ -272,6 +276,11 @@
      I                                       83  92 SFILEU                S01117
      I                                    B 123 1240SFNUMU                S01117
      I**
+     IDSXX        DS                                                                        MD058085
+     I                                        1  44 DSXXA                                   MD058085
+     I                                        1   4 XRKA                                    MD058085
+     I                                        5  34 XKNA                                    MD058085
+     I                                       35  44 XKTA                                    MD058085
      I*                                                                   S01408
      I/COPY WNCPYSRC,DL1220IIP1                                           S01408
       *                                                                                       CGL029
@@ -363,24 +372,54 @@
 0239 C* SET UP BROKER DETAILS ARRAYS
 0240 C                     Z-ADD0         X       30
 0241 C*****      BKKEY     SETLLTABD                                      S01194
-0212 C           *LOVAL    SETLLSDBROKL1                                  S01194
+0212 C********** *LOVAL    SETLLSDBROKL1                                  S01194            MD058085
 0242 C           READ      TAG                             * READ TAG *
 0243 C*****                SETOF                     4209                 S01194
 0243 C                     SETOF                     42                   S01194
 0244 C*****                READ TABD                     42               S01194
-0244 C                     READ SDBROKL1                 42               S01194
+0244 C**********           READ SDBROKL1                 42               S01194            MD058085
+0244 C                     READ SDBRKXTD                 42               S01194            MD058085
 0245 C**N42*     RECT      COMP 80                   42                   S01194
 0246 C   42                GOTO CALCS
 0247 C**N09*               GOTO READ                                      S01194
+     C           A9BROK    IFEQ 'TELX'                                                      MD058085
+     C           A9BROK    OREQ 'MAIL'                                                      MD058085
+     C           A9BROK    OREQ 'PHON'                                                      MD058085
+     C           A9BROK    OREQ 'SWAP'                                                      MD058085
+     C                     GOTO READ                                                        MD058085
+     C                     END                                                              MD058085
 0248 C           X         ADD  1         X
 0249 C*****                MOVE BRKC      BRKA,X                          S01194
-0249 C                     MOVE A9BROK    BRKA,X                          S01194
+0249 C**********           MOVE A9BROK    BRKA,X                          S01194            MD058985
 0250 C*****                MOVE BKNM      BKNA,X                          S01194
-0250 C                     MOVE A9BKNM    BKNA,X                          S01194
+0250 C**********           MOVE A9BKNM    BKNA,X                          S01194            MD058085
 0251 C*****                MOVE BKTN      BKTA,X                          S01194
-0251 C                     MOVE A9BRTN    BKTA,X                          S01194
+0251 C**********           MOVE A9BRTN    BKTA,X                          S01194            MD058085
+     C                     MOVE A9BROK    XRKA                                              MD058985
+     C                     MOVE A9BKNM    XKNA                                              MD058085
+     C                     MOVE A9BRTN    XKTA                                              MD058085
+     C                     MOVE DSXXA     ARR,X                                             MD058085
 0252 C                     GOTO READ
 0253 C           CALCS     TAG                             * CALCS TAG *
+     C                     SORTAARR                                                         MD058085
+     C                     Z-ADD1         X                                                 MD058085
+     C                     Z-ADD0         Y       30                                        MD058085
+     C           CALCS2    TAG                                                              MD058085
+     C           X         IFEQ 0                                                           MD058085
+     C                     GOTO CALCS3                                                      MD058085
+     C                     ELSE                                                             MD058085
+     C           ARR,X     IFNE *BLANKS                                                     MD058085
+     C           Y         ADD  1         Y                                                 MD058085
+     C                     MOVE *BLANKS   DSXXA                                             MD058085
+     C                     MOVE ARR,X     DSXXA                                             MD058085
+     C                     MOVE XRKA      BRKA,Y                                            MD058985
+     C                     MOVE XKNA      BKNA,Y                                            MD058985
+     C                     MOVE XKTA      BKTA,Y                                            MD058985
+     C                     ENDIF                                                            MD058085
+     C           X         ADD  1         X                                                 MD058085
+     C                     GOTO CALCS2                                                      MD058085
+     C                     ENDIF                                                            MD058085
+     C           CALCS3    TAG                                                              MD058085
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1220CCP2                                           S01408
      C*                                                                   S01408

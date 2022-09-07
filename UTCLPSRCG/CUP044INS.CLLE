@@ -11,11 +11,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. MD060398           Date 25Aug22              */
-/*       Prev Amend No. CUP044   *CREATE   Date 22May22              */
+/*       Last Amend No. MD060476           Date 07Sep22              */
+/*       Prev Amend No. MD060398           Date 25Aug22              */
+/*                      CUP044   *CREATE   Date 22May22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060476 - ACTIONFILE fails as no library list is set. Also */
+/*                  remove triggers for BTD and CTD.                 */
 /*       MD060398 - Monitor CPYF as pgm can accidentaly run more     */
 /*                  than once.                                       */
 /*       CUP044 - One Touch Bridge - upgrade                         */
@@ -80,10 +83,13 @@
 /* Merge MSGF */
 /**********  CPYF       FROMFILE(FM2021FOTB/UPAFCPPD) TOFILE(UPAFDVPD) +
                           MBROPT(*REPLACE) */                                           /*MD060398*/
-             CPYF       FROMFILE(FM2021FOTB/UPAFCPPD) +
-                          TOFILE(&GGGPLIB/UPAFDVPD) MBROPT(*REPLACE)                    /*MD060398*/
-             ACTIONFILE MODE(*PRC) FILE(UTMENUPD)
-             MONMSG     MSGID(CPF0000)
+/* Replace ACTIONFILE by CPYF UTMENUPD */                                               /*MD060476*/
+/**********  CPYF       FROMFILE(FM2021FOTB/UPAFCPPD) +
+                          TOFILE(&GGGPLIB/UPAFDVPD) MBROPT(*REPLACE) */       /*MD060398**MD060476*/
+/**********  ACTIONFILE MODE(*PRC) FILE(UTMENUPD) */                                    /*MD060476*/
+/**********  MONMSG     MSGID(CPF0000) */                                               /*MD060476*/
+             CPYF       FROMFILE(FM2021FOTB/UTMENUPD) +
+                          TOFILE(&GGGTALIB/UTMENUPD) MBROPT(*REPLACE)                   /*MD060476*/
 
 /* Update deliverable data */
 /* Delete first BrgDeliveredStrPrLib in case of pgm re-run */                           /*MD060398*/
@@ -184,6 +190,10 @@ READNXT:        RCVF       RCDFMT(GPZONED0)
 /* Stop triggering on SDSVLXTD to avoid lock */
              RMVPFTRG   FILE(&ZZDMLIB/SDSVLXTD)
              MONMSG     MSGID(CPF0000)
+             RMVPFTRG   FILE(&ZZDMLIB/SDSVLBTD)                                         /*MD060476*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060476*/
+             RMVPFTRG   FILE(&ZZDTALIB/SDSVLCTD)                                        /*MD060476*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060476*/
 
 /* Update deliverable data */
 /* Delete first BrgDeliveredStrPrLib in case of pgm re-run */                           /*MD060398*/

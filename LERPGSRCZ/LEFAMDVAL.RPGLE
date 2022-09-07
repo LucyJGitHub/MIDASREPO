@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD058307           Date 06Aug21               *
+      *  Last Amend No. MD059725           Date 05Aug22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD058307           Date 06Aug21               *
       *                 MD027429           Date 26Jun14               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -42,6 +43,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059725 - Unable to insert a facility increase against a    *
+      *             tranche. Reverse part of fix MD027429 so non-live *
+      *             tranches are excluded in the computation of CA's  *
+      *             total tranches. Also, make LEF0144 as warning.    *
       *  CLE138 - Class Codes for Facilities                          *
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to add validation when overline % will      *
@@ -805,9 +810,9 @@
      C     KFctyP        READE     LEFCAML6                                                 MD027429
      C                   ENDDO                                                              MD027429
       *                                                                                     MD027429
-     C                   IF        WTRAmtX = 0                                              MD027429
-     C                   Z-ADD     TR_FAMT       WTRAmtX                                    MD027429
-     C                   ENDIF                                                              MD027429
+     C**********         IF        WTRAmtX = 0                                     MD027429 MD059725
+     C**********         Z-ADD     TR_FAMT       WTRAmtX                           MD027429 MD059725
+     C**********         ENDIF                                                     MD027429 MD059725
       *                                                                                     MD027429
      C                   IF        TR_FCCY = TR_CACY                                        MD027429
      C                   ADD       WTRAmtX       WTRAmt                                     MD027429
@@ -1031,16 +1036,20 @@
       ** Error message when below amendment type for type of facility                       MD027429
       ** will cause facility amount of TR's exceed the facility                             MD027429
       ** amount of Credit Agreement                                                         MD027429
+      ** Change LEF0144 as warning to make it an overridable message.                       MD059725
       *                                                                                     MD027429
      C                   IF        (FctrTRCA = 'TR' AND S#FATP = 'FI'                       MD027429
      C                             AND S#ACTN <> 'D') OR                                    MD027429
      C                             (FctrTRCA = 'CA' AND S#FATP = 'FD'                       MD027429
      C                             AND S#ACTN <> 'D')                                       MD027429
       *                                                                                     MD027429
-     C                   MOVE      'N'           S#AAMTok                                   MD027429
-     C                   Add       1             Ix                                         MD027429
-     C                   MOVEL     'S#AAMT'      FldNameArr(Ix)                             MD027429
-     C                   MOVEL     'LEF0144'     MsgIdArr(Ix)                               MD027429
+     C**********         MOVE      'N'           S#AAMTok                          MD027429 MD059725
+     C**********         Add       1             Ix                                MD027429 MD059725
+     C**********         MOVEL     'S#AAMT'      FldNameArr(Ix)                    MD027429 MD059725
+     C**********         MOVEL     'LEF0144'     MsgIdArr(Ix)                      MD027429 MD059725
+     C                   Add       1             Wx                                         MD059725
+     C                   MOVEL     'S#AAMT'      WFldNamArr(Wx)                             MD059725
+     C                   MOVEL     'LEF0144'     WMsgIdArr(Wx)                              MD059725
       *                                                                                     MD027429
      C                   ELSE                                                               MD027429
       *                                                                                     MD027429

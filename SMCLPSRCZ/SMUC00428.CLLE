@@ -5,8 +5,7 @@
 /*                                                                   */
 /*       Midas - Implementation Module                               */
 /*                                                                   */
-/*       SMUC00428 - Migration Program for BA3100                    */
-/*                   EML100_Target2Nostro to Target2Nostro           */
+/*       SMUC00428 - Generate XTD record of BA3100                   */
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
@@ -22,8 +21,10 @@
 
              PGM
 
-             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(120)
-
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2022')
 
@@ -35,75 +36,24 @@
 
              CHGJOB     SWS(XXXXXX00)
 
-/** Create and rename temporary source file for RUNSQLSTM. */
-             DLTF       FILE(QTEMP/RUNSQLSTM)
-             MONMSG     MSGID(CPF0000)
-             DLTF       FILE(QTEMP/RUNSQL)
-             MONMSG     MSGID(CPF0000)
-             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
-                          MBR(RUNSQLSTM) TEXT('Temporary source +
-                          file for SMUC00428')
-             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
-                          NEWOBJ(RUNSQL)
+/** Setup system prefix variable from SDSTAT data area. */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(&ERROR) VALUE('          ')
+
 
 /** Process migration program */
-             CHGVAR     VAR(&STM_STR) VALUE('insert into SCSRSXTD +
-                          (AXSARN, AXMODE) values(''BA3100'',''B'')')
+             CALL       PGM(SMU00428) PARM(&SYSID &ERROR)
 
-             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*NONE)
-             MONMSG     MSGID(SQL9010)
-
-             CHGVAR     VAR(&STM_STR) VALUE('insert into SCSRVXTD +
-                          (GSSVAL, GSSARN, GSAVAL, GSMODE) +
-                          values(''Target2Nostro'', ''BA3100'', ''Y'', ''B'')')
-
-             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*NONE)
-             MONMSG     MSGID(SQL9010)
-
-             CHGVAR     VAR(&STM_STR) VALUE('insert into SDSVLXTD +
-                          (GISVAL, GIVAL, GILCT, GIMODE) +
-                          values(''Target2Nostro'', ''01'', ''I'', ''B'')')
-
-             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*NONE)
-             MONMSG     MSGID(SQL9010)
-
-             CHGVAR     VAR(&STM_STR) VALUE('insert into SDSVRXTD +
-                          (GJRECI, GJSVAL, GJSEQ, GJVDTA) +
-                          values(''H'' ''Target2Nostro'', ''001'', ''*RANGE'')')
-
-             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*NONE)
-             MONMSG     MSGID(SQL9010)
-
-             CHGVAR     VAR(&STM_STR) VALUE('insert into SDSVRXTD +
-                          (GJRECI, GJSVAL, GJSEQ, GJVDTA) +
-                          values(''D'' ''Target2Nostro'', ''001'', ''01'')')
-
-             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*NONE)
-             MONMSG     MSGID(SQL9010)
-
-             CHGVAR     VAR(&STM_STR) VALUE('insert into SDSVRXTD +
-                          (GJRECI, GJSVAL, GJSEQ, GJVDTA) +
-                          values(''D'' ''Target2Nostro'', ''001'', ''99'')')
-
-             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*NONE)
-             MONMSG     MSGID(SQL9010)
+             IF         COND(&ERROR *EQ '*Error') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
 
              GOTO       CMDLBL(ENDPGM)
 
 ERROR:
-
 
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SMUC00428 ended abnormally - see joblog +

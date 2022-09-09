@@ -2,12 +2,12 @@
      H COPYRIGHT('(c) Finastra International 2022')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas UP - Deliverable Data Split sanity update')      *
+/*EXI *  TEXT('Midas Generate BTD and XTD record of BA3100')          *
       *****************************************************************
       *                                                               *
       *  Midas - Bridge                                               *
       *                                                               *
-      *  SMU00428 - Generate XTD record of BA3100                     *
+      *  SMU00428 - Generate BTD and XTD record of BA3100             *
       *                                                               *
       *  (c) Finastra International 2022                              *
       *                                                               *
@@ -192,8 +192,8 @@
 
      C                   EVAL      SQLDynStmt = 'insert into GPSECBTD '+
      C                               '(RECI, P@SARN, SEPASS, SEINTL, REMODE) '+
-     C                               'values(''C'', ''BA3100'', '+
-     C                               '''DHJBKDPNCMHBSANG'', ''N'', ''C'')'
+     C                               'values(''B', ''BA3100'', '+
+     C                               '''DHJBKDPNCMHBSANG'', ''N'', ''B')'
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt

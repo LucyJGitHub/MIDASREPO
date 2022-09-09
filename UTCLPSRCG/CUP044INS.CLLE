@@ -11,11 +11,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. MD060398           Date 25Aug22              */
-/*       Prev Amend No. CUP044   *CREATE   Date 22May22              */
+/*       Last Amend No. MD060488           Date 08Sep22              */
+/*       Prev Amend No. MD060476           Date 07Sep22              */
+/*                      MD060398           Date 25Aug22              */
+/*                      CUP044   *CREATE   Date 22May22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060488 - Deliverable Data Split for UTMENUPD              */
+/*       MD060476 - ACTIONFILE fails as no library list is set. Also */
+/*                  remove triggers for BTD and CTD.                 */
 /*       MD060398 - Monitor CPYF as pgm can accidentaly run more     */
 /*                  than once.                                       */
 /*       CUP044 - One Touch Bridge - upgrade                         */
@@ -33,6 +38,7 @@
              DCL        VAR(&ZZDMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GGGPLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GGGMLIB) TYPE(*CHAR) LEN(10)                               /*MD060398*/
+             DCL        VAR(&GGGVLIB) TYPE(*CHAR) LEN(10)                               /*MD060488*/
              DCL        VAR(&GOWNER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GAUTL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGEID) TYPE(*CHAR) LEN(7)
@@ -46,6 +52,7 @@
              CHGVAR     VAR(&GGGTALIB) VALUE(&GG *CAT 'GTALIB')
              CHGVAR     VAR(&GGGPLIB) VALUE(&GG *CAT 'GPLIB')
              CHGVAR     VAR(&GGGMLIB) VALUE(&GG *CAT 'GMLIB')                           /*MD060398*/
+             CHGVAR     VAR(&GGGVLIB) VALUE(&GG *CAT 'GVLIB')                           /*MD060398*/
              CHGVAR     VAR(&GOWNER) VALUE(&GG *CAT 'OWNER')
              CHGVAR     VAR(&GAUTL) VALUE(&GG *CAT 'DATABASE')
 
@@ -80,10 +87,67 @@
 /* Merge MSGF */
 /**********  CPYF       FROMFILE(FM2021FOTB/UPAFCPPD) TOFILE(UPAFDVPD) +
                           MBROPT(*REPLACE) */                                           /*MD060398*/
-             CPYF       FROMFILE(FM2021FOTB/UPAFCPPD) +
-                          TOFILE(&GGGPLIB/UPAFDVPD) MBROPT(*REPLACE)                    /*MD060398*/
-             ACTIONFILE MODE(*PRC) FILE(UTMENUPD)
-             MONMSG     MSGID(CPF0000)
+/* Replace ACTIONFILE by CPYF UTMENUPD */                                               /*MD060476*/
+/**********  CPYF       FROMFILE(FM2021FOTB/UPAFCPPD) +
+                          TOFILE(&GGGPLIB/UPAFDVPD) MBROPT(*REPLACE) */       /*MD060398**MD060476*/
+/**********  ACTIONFILE MODE(*PRC) FILE(UTMENUPD) */                                    /*MD060476*/
+/**********  MONMSG     MSGID(CPF0000) */                                               /*MD060476*/
+/**********  CPYF       FROMFILE(FM2021FOTB/UTMENUPD) +
+                          TOFILE(&GGGTALIB/UTMENUPD) MBROPT(*REPLACE) */      /*MD060476**MD060488*/
+/* Install new UTMNU* tables and views */                                               /*MD060488*/
+             DLTF       FILE(&GGGVLIB/UTMNUJW0)                                         /*MD060488*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060488*/
+             DLTF       FILE(&GGGVLIB/UTMNUUW0)                                         /*MD060488*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060488*/
+             DLTF       FILE(&GGGVLIB/UTMNUJI0)                                         /*MD060488*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060488*/
+             DLTF       FILE(&GGGMLIB/UTMNUXTD)                                         /*MD060488*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060488*/
+             DLTF       FILE(&GGGMLIB/UTMNUBTD)                                         /*MD060488*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060488*/
+             DLTF       FILE(&GGGTALIB/UTMNUCTD)                                        /*MD060488*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060488*/
+                                                                                        /*MD060488*/
+/* Duplicate all UTMNU into GTALIB first */                                             /*MD060488*/
+             CRTDUPOBJ  OBJ(UTMNUCTD) FROMLIB(FM2021FOTB) +
+                          OBJTYPE(*FILE) TOLIB(&GGGTALIB) DATA(*YES)                    /*MD060488*/
+             CRTDUPOBJ  OBJ(UTMNUBTD) FROMLIB(FM2021FOTB) +
+                          OBJTYPE(*FILE) TOLIB(&GGGTALIB) DATA(*YES)                    /*MD060488*/
+             CRTDUPOBJ  OBJ(UTMNUXTD) FROMLIB(FM2021FOTB) +
+                          OBJTYPE(*FILE) TOLIB(&GGGTALIB) DATA(*YES)                    /*MD060488*/
+             CRTDUPOBJ  OBJ(UTMNUJI0) FROMLIB(FM2021FOTB) +
+                          OBJTYPE(*FILE) TOLIB(&GGGTALIB) DATA(*YES)                    /*MD060488*/
+             CRTDUPOBJ  OBJ(UTMNUUW0) FROMLIB(FM2021FOTB) +
+                          OBJTYPE(*FILE) TOLIB(&GGGTALIB) DATA(*YES)                    /*MD060488*/
+             CRTDUPOBJ  OBJ(UTMNUJW0) FROMLIB(FM2021FOTB) +
+                          OBJTYPE(*FILE) TOLIB(&GGGTALIB) DATA(*YES)                    /*MD060488*/
+                                                                                        /*MD060488*/
+/* Set authorities */                                                                   /*MD060488*/
+             CHGOBJOWN  OBJ(&GGGTALIB/UTMNUCTD) OBJTYPE(*FILE) NEWOWN(&GOWNER)          /*MD060488*/
+             GRTOBJAUT  OBJ(&GGGTALIB/UTMNUCTD) OBJTYPE(*FILE) AUTL(&GAUTL)             /*MD060488*/
+             CHGOBJOWN  OBJ(&GGGTALIB/UTMNUBTD) OBJTYPE(*FILE) NEWOWN(&GOWNER)          /*MD060488*/
+             GRTOBJAUT  OBJ(&GGGTALIB/UTMNUBTD) OBJTYPE(*FILE) AUTL(&GAUTL)             /*MD060488*/
+             CHGOBJOWN  OBJ(&GGGTALIB/UTMNUXTD) OBJTYPE(*FILE) NEWOWN(&GOWNER)          /*MD060488*/
+             GRTOBJAUT  OBJ(&GGGTALIB/UTMNUXTD) OBJTYPE(*FILE) AUTL(&GAUTL)             /*MD060488*/
+             CHGOBJOWN  OBJ(&GGGTALIB/UTMNUJI0) OBJTYPE(*FILE) NEWOWN(&GOWNER)          /*MD060488*/
+             GRTOBJAUT  OBJ(&GGGTALIB/UTMNUJI0) OBJTYPE(*FILE) AUTL(&GAUTL)             /*MD060488*/
+             CHGOBJOWN  OBJ(&GGGTALIB/UTMNUUW0) OBJTYPE(*FILE) NEWOWN(&GOWNER)          /*MD060488*/
+             GRTOBJAUT  OBJ(&GGGTALIB/UTMNUUW0) OBJTYPE(*FILE) AUTL(&GAUTL)             /*MD060488*/
+             CHGOBJOWN  OBJ(&GGGTALIB/UTMNUJW0) OBJTYPE(*FILE) NEWOWN(&GOWNER)          /*MD060488*/
+             GRTOBJAUT  OBJ(&GGGTALIB/UTMNUJW0) OBJTYPE(*FILE) AUTL(&GAUTL)             /*MD060488*/
+                                                                                        /*MD060488*/
+/* Move objects to correct libraries */                                                 /*MD060488*/
+             MOVOBJ     OBJ(&GGGTALIB/UTMNUBTD) OBJTYPE(*FILE) +
+                          TOLIB(&GGGMLIB)                                               /*MD060488*/
+             MOVOBJ     OBJ(&GGGTALIB/UTMNUXTD) OBJTYPE(*FILE) +
+                          TOLIB(&GGGMLIB)                                               /*MD060488*/
+             MOVOBJ     OBJ(&GGGTALIB/UTMNUJI0) OBJTYPE(*FILE) +
+                          TOLIB(&GGGVLIB)                                               /*MD060488*/
+             MOVOBJ     OBJ(&GGGTALIB/UTMNUUW0) OBJTYPE(*FILE) +
+                          TOLIB(&GGGVLIB)                                               /*MD060488*/
+             MOVOBJ     OBJ(&GGGTALIB/UTMNUJW0) OBJTYPE(*FILE) +
+                          TOLIB(&GGGVLIB)                                               /*MD060488*/
+                                                                                        /*MD060488*/
 
 /* Update deliverable data */
 /* Delete first BrgDeliveredStrPrLib in case of pgm re-run */                           /*MD060398*/
@@ -184,6 +248,10 @@ READNXT:        RCVF       RCDFMT(GPZONED0)
 /* Stop triggering on SDSVLXTD to avoid lock */
              RMVPFTRG   FILE(&ZZDMLIB/SDSVLXTD)
              MONMSG     MSGID(CPF0000)
+             RMVPFTRG   FILE(&ZZDMLIB/SDSVLBTD)                                         /*MD060476*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060476*/
+             RMVPFTRG   FILE(&ZZDTALIB/SDSVLCTD)                                        /*MD060476*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060476*/
 
 /* Update deliverable data */
 /* Delete first BrgDeliveredStrPrLib in case of pgm re-run */                           /*MD060398*/

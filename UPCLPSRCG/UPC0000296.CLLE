@@ -12,10 +12,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP044   *CREATE   Date 22May22              */
+/*       Last Amend No. MD060488           Date 08Sep22              */
+/*       Prev Amend No. CUP044   *CREATE   Date 22May22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060488 - Deliverable Data Split for UTMENUPD              */
 /*       CUP044 - One Touch Bridge Automation Changes - Release/     */
 /*                Patch Upgrade                                      */
 /*                                                                   */
@@ -120,6 +122,20 @@
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                              COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
+                                                                                        /*MD060488*/
+/* Also remove reference to UPMNU* as these objects are locked*/                        /*MD060488*/
+             CHGVAR     VAR(&STM_STR) VALUE('delete ' *BCAT +
+                          &BRGBRGLIB *TCAT '/UPDLVCPD where AUMBNM +
+                          like ')                                                       /*MD060488*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                           /*MD060488*/
+             CHGVAR     VAR(&STM_STR) VALUE(&QUOTE *TCAT '%UTMNU%' *TCAT +
+                          &QUOTE *BCAT ' and AUMBTP <> ' *TCAT +
+                          &QUOTE *TCAT 'DDSDATA' *TCAT &QUOTE)                          /*MD060488*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)                                              /*MD060488*/
+             MONMSG     MSGID(SQL9010)                                                  /*MD060488*/
+                                                                                        /*MD060488*/
              ENDDO
 
 /* Set up variables for the program. */

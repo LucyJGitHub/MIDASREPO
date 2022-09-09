@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057577           Date 17Mar21               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. MD060488           Date 08Sep22               *
+      *  Prev Amend No. MD057577           Date 17Mar21               *
+      *                 MD054605           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060488 - Deliverable Data Split for UTMENUPD               *
       *  MD057577 - Enhance UTMENU to display last option used        *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
@@ -60,7 +62,7 @@
      F                                     MAXDEV(*FILE)
      F* Menu display file
      F*UTMENUL0IF*E           K        DISK                                                   CUP019
-     FUTMENUL1  IF   E           K DISK                                         CUP001
+     F*UTMENUL1* IF   E           K DISK                                         CUP001     MD060488
      F* Menu items file logical
      F*SDSVALL0* IF   E           K DISK    INFSR(*PSSR)                                    MD054605
      F**********                           USROPN                                           MD054605
@@ -121,6 +123,7 @@
      D********************************************************************
      D SDSVAL        E DS                  EXTNAME(SDSVLJW0)                                MD054605
      D NullInds        s              5i 0 dim(21)                                          MD054605
+     D UTMENU        E DS                  EXTNAME(UTMNUJW0)                                MD060488
      D**
      D**     Program status data structure
      D**
@@ -709,12 +712,34 @@
      C*
      C*  Read all records for the menu group
      C***********WKITEM    SETLLUTMENUL0             20                   CUP001
-     C     WKMITM        SETLL     UTMENUL1                           20                       CUP00
+     C*****WKMITM        SETLL     UTMENUL1                           20              CUP00 MD060488
+     C/EXEC SQL                                                                             MD060488
+     C+ close ACursor                                                                       MD060488
+     C/END-EXEC                                                                             MD060488
+                                                                                            MD060488
+     C/EXEC SQL                                                                             MD060488
+     C+ declare ACursor insensitive scroll cursor for                                       MD060488
+     C+ select * from UTMNUJW0                                                              MD060488
+     C+ where RECI = 'D' and MGRP = :WKMGRP                                                 MD060488
+     C+ order by MGRP, ISEQ, ICDE                                                           MD060488
+     C/END-EXEC                                                                             MD060488
+                                                                                            MD060488
+     C/EXEC SQL                                                                             MD060488
+     C+ open ACursor                                                                        MD060488
+     C/END-EXEC                                                                             MD060488
+                                                                                            MD060488
+     C                   SETOFF                                       20                    MD060488
      C*
      C     *IN20         DOWEQ     '0'                                          *** B10
      C*
      C***********WKMGRP    READEUTMENUL0                 20               CUP001
-     C     WKMGRP        READE     UTMENUL1                               20                   CUP00
+     C*****WKMGRP        READE     UTMENUL1                               20          CUP00 MD060488
+     C/EXEC SQL                                                                             MD060488
+     C+ fetch next from ACursor into :UTMENU                                                MD060488
+     C/END-EXEC                                                                             MD060488
+     C     SQLCODE       IFNE      0                                                        MD060488
+     C                   SETON                                        20                    MD060488
+     C                   ENDIF                                                              MD060488
      C*
      C     *IN20         IFNE      '1'                                          *** B20
      C*

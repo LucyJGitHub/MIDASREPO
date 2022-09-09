@@ -39,6 +39,180 @@
 
      C                   EVAL      KMSCHEMA = %SUBST(SYSID:1:2) + 'DMLIB'
 
+      ** Update BTD
+
+     C                   EVAL      SQLDynStmt = 'insert into SCSRSBTD '+
+     C                               '(AXSARN, AXSARD, AXPRIM, AXCEMI, '+
+     C                               'AXRELL, AXIREL, AXCLVL, '+
+     C                               'AXRSTS, AXDFLT, AXMNTB, '+
+     C                               'AXPROT, AXMODE) '+
+     C                               'values(''BA3100'', ''MT103 and MT202 '+
+     C                               'msg details changes Target2RTGS'', '+
+     C                               '''ME'', ''N'', ''BFV2R1'', ''00'', '+
+     C                               '''GEN'', ''R'', ''OFF'', ''C'', '+
+     C                               '''Y'', ''B'')'
+
+     C/EXEC SQL
+     C+ prepare DynSQLStmnt
+     C+ from :SQLDynStmt
+     C/END-EXEC
+
+     C/exec SQL
+     C+ execute DynSQLStmnt
+     C/end-exec
+
+     C                   IF        SQLCode <> 0
+     C                             and SQLCode <> 100
+     C                   EVAL      ERROR = '*Error'
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+
+     C                   EVAL      SQLDynStmt = 'insert into SCSRVBTD '+
+     C                               '(GSSVAL, GSSARN, GSAVAL, GSLCT, GSMODE)'+
+     C                               'values(''Target2Nostro'', ''BA3100'',' +
+     C                               '''Y'', ''I'', ''B'')'
+
+     C/EXEC SQL
+     C+ prepare DynSQLStmnt
+     C+ from :SQLDynStmt
+     C/END-EXEC
+
+     C/exec SQL
+     C+ execute DynSQLStmnt
+     C/end-exec
+
+     C                   IF        SQLCode <> 0
+     C                             and SQLCode <> 100
+     C                   EVAL      ERROR = '*Error'
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+
+     C                   EVAL      SQLDynStmt = 'insert into SDSVLBTD '+
+     C                               '(GISVAL, GIMMOD, GIMMSN, GIDESC, GIVAL, '+
+     C                               'GIDFT, GIHELP, GIATTR, GIDLEN, '+
+     C                               'GISUPP, GISWCH, GIALWB, GIJUST, GIEMSG, '+
+     C                               'GILCT, GIZONE, GIMODE)'+
+     C                               'values(''Target2Nostro'', ''ME'', '+
+     C                               '''MSGMGMT'', '+
+     C                               '''MT103 & MT202 Target2 Nostro'', '+
+     C                               '''01'', ''01'', ''Nostro Codes'', '+
+     C                               '''2A'', ''002'', '' '', '+
+     C                               '''BA3100'', ''N'', '+
+     C                               '''L'', ''USV0155'', '+
+     C                               ''' '', '' '', ''B'')'
+
+     C/EXEC SQL
+     C+ prepare DynSQLStmnt
+     C+ from :SQLDynStmt
+     C/END-EXEC
+
+     C/exec SQL
+     C+ execute DynSQLStmnt
+     C/end-exec
+     C                   IF        SQLCode <> 0
+     C                             and SQLCode <> 100
+     C                   EVAL      ERROR = '*Error'
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+
+     C                   EVAL      SQLDynStmt = 'insert into SDSVRBTD '+
+     C                               '(GJRECI, GJSVAL, GJSEQ, GJVDTA, '+
+     C                               'GJDESC, GJMODE) '+
+     C                               'values(''H'', ''Target2Nostro'', '+
+     C                               '''001'', ''*RANGE'','+
+     C                               '''MT103 & MT202 Target2 Nostro'', '+
+     C                               '''B'')'
+
+     C/EXEC SQL
+     C+ prepare DynSQLStmnt
+     C+ from :SQLDynStmt
+     C/END-EXEC
+
+     C/exec SQL
+     C+ execute DynSQLStmnt
+     C/end-exec
+
+     C                   IF        SQLCode <> 0
+     C                             and SQLCode <> 100
+     C                   EVAL      ERROR = '*Error'
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+
+     C                   EVAL      SQLDynStmt = 'insert into SDSVRBTD '+
+     C                               '(GJRECI, GJSVAL, GJSEQ, GJVDTA, '+
+     C                               'GJDESC, GJMODE) '+
+     C                               'values(''D'', ''Target2Nostro'', '+
+     C                               '''001'', ''01'','+
+     C                               '''MT103 & MT202 Target2 Nostro'', '+
+     C                               '''B'')'
+
+     C/EXEC SQL
+     C+ prepare DynSQLStmnt
+     C+ from :SQLDynStmt
+     C/END-EXEC
+
+     C/exec SQL
+     C+ execute DynSQLStmnt
+     C/end-exec
+
+     C                   IF        SQLCode <> 0
+     C                             and SQLCode <> 100
+     C                   EVAL      ERROR = '*Error'
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+
+     C                   EVAL      SQLDynStmt = 'insert into SDSVRBTD '+
+     C                               '(GJRECI, GJSVAL, GJSEQ, GJVDTA, '+
+     C                               'GJDESC, GJMODE) '+
+     C                               'values(''D'', ''Target2Nostro'', '+
+     C                               '''001'', ''99'','+
+     C                               '''MT103 & MT202 Target2 Nostro'', '+
+     C                               '''B'')'
+
+     C/EXEC SQL
+     C+ prepare DynSQLStmnt
+     C+ from :SQLDynStmt
+     C/END-EXEC
+
+     C/exec SQL
+     C+ execute DynSQLStmnt
+     C/end-exec
+
+     C                   IF        SQLCode <> 0
+     C                             and SQLCode <> 100
+     C                   EVAL      ERROR = '*Error'
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+
+     C                   EVAL      SQLDynStmt = 'insert into GPSECBTD '+
+     C                               '(RECI, P@SARN, SEPASS, SEINTL, REMODE) '+
+     C                               'values(''C'', ''BA3100'', '+
+     C                               '''DHJBKDPNCMHBSANG'', ''N'', ''C'')'
+
+     C/EXEC SQL
+     C+ prepare DynSQLStmnt
+     C+ from :SQLDynStmt
+     C/END-EXEC
+
+     C/exec SQL
+     C+ execute DynSQLStmnt
+     C/end-exec
+
+     C                   IF        SQLCode <> 0
+     C                             and SQLCode <> 100
+     C                   EVAL      ERROR = '*Error'
+     C                   DUMP
+     C                   RETURN
+     C                   ENDIF
+
+      ** Update XTD
+
      C                   EVAL      SQLDynStmt = 'insert into SCSRSXTD +
      C                               (AXSARN, AXMODE) values(''BA3100'',''B'')'
 
@@ -60,7 +234,7 @@
 
      C                   EVAL      SQLDynStmt = 'insert into SCSRVXTD '+
      C                               '(GSSVAL, GSSARN, GSAVAL, GSMODE)'+
-     C                               'values(''Target2Nostro'', ''BA3100'',' +
+     C                               'values(''Target2Nostro'', ''BA3100'','+
      C                               '''Y'', ''B'')'
 
      C/EXEC SQL
@@ -189,6 +363,7 @@
      C                   DUMP
      C                   RETURN
      C                   ENDIF
+
      C                   SETON                                        LR
       /EJECT
       *****************************************************************

@@ -7,7 +7,7 @@
       *                                                               *
       *  Midas - Bridge                                               *
       *                                                               *
-      *  SMU00428 - Migration Program for BA3100                      *
+      *  SMU00429 - Migration Program for BA3100                      *
       *             EML100_Target2Nostro to Target2Nostro             *
       *                                                               *
       *  (c) Finastra International 2022                              *

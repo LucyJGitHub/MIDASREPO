@@ -22,78 +22,88 @@
 
              PGM
 
-             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
-             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
-             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2022')
 
 /** Global monitor message.  */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
-                          CMDLBL(ENDPGM))
+                          CMDLBL(ERROR))
 
-             SNDPGMMSG  MSG('SMUC00428 - Migration Program for +
-                            BA3100') TOMSGQ(MRUNQ)
+             SNDPGMMSG  MSG('SMUC00428 - BA3100') TOMSGQ(MRUNQ)
 
              CHGJOB     SWS(XXXXXX00)
 
-/** Setup system prefix variable from SDSTAT data area. */
-
-             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
-             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
-             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
-             CHGVAR     VAR(&ERROR) VALUE('          ')
-
-             CPYF       FROMFILE(&DMLIB/SDSVRXTD) +
-                        TOFILE(&DPLIB/XSDSVRXTD) MBROPT(*REPLACE) +
-                        CRTFILE(*YES)
-
-             CPYF       FROMFILE(&DMLIB/SDSVRBTD) +
-                        TOFILE(&DPLIB/XSDSVRBTD) MBROPT(*REPLACE) +
-                        CRTFILE(*YES)
-
-             CPYF       FROMFILE(&DMLIB/SDSVLXTD) +
-                        TOFILE(&DPLIB/XSDSVLXTD) MBROPT(*REPLACE) +
-                        CRTFILE(*YES)
-
-             CPYF       FROMFILE(&DMLIB/SDSVLBTD) +
-                        TOFILE(&DPLIB/XSDSVLBTD) MBROPT(*REPLACE) +
-                        CRTFILE(*YES)
+/** Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for GPCDROPCOL')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
 
 /** Process migration program */
-             CALL       PGM(SMU00428) PARM(&SYSID &ERROR)
+             CHGVAR     VAR(&STM_STR) VALUE('insert into SCSRSXTD +
+                          (AXSARN, AXMODE) values(''BA3100'',''B'')')
 
-             IF         COND(&ERROR *EQ '*Error') THEN(DO)
-                GOTO       CMDLBL(ERROR)
-             ENDDO
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
 
-             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
-                GOTO       CMDLBL(ERROR)
-             ENDDO
+             CHGVAR     VAR(&STM_STR) VALUE('insert into SCSRVXTD +
+                          (GSSVAL, GSSARN, GSAVAL, GSMODE) +
+                          values(''Target2Nostro'', ''BA3100'', ''Y'', ''B'')')
+
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+
+             CHGVAR     VAR(&STM_STR) VALUE('insert into SDSVLXTD +
+                          (GISVAL, GIVAL, GILCT, GIMODE) +
+                          values(''Target2Nostro'', ''01'', ''I'', ''B'')')
+
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+
+             CHGVAR     VAR(&STM_STR) VALUE('insert into SDSVRXTD +
+                          (GJRECI, GJSVAL, GJSEQ, GJVDTA) +
+                          values(''H'' ''Target2Nostro'', ''001'', ''*RANGE'')')
+
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+
+             CHGVAR     VAR(&STM_STR) VALUE('insert into SDSVRXTD +
+                          (GJRECI, GJSVAL, GJSEQ, GJVDTA) +
+                          values(''D'' ''Target2Nostro'', ''001'', ''01'')')
+
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+
+             CHGVAR     VAR(&STM_STR) VALUE('insert into SDSVRXTD +
+                          (GJRECI, GJSVAL, GJSEQ, GJVDTA) +
+                          values(''D'' ''Target2Nostro'', ''001'', ''99'')')
+
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
 
              GOTO       CMDLBL(ENDPGM)
 
 ERROR:
 
-/* Restore data to update files */
-
-             CPYF       FROMFILE(&DPLIB/XSDSVRXTD) +
-                          TOFILE(&DMLIB/SDSVRXTD) MBROPT(*REPLACE)
-             MONMSG     MSGID(CPF2802 CPF2869 CPF2817 CPF3130 CPF2909)
-
-             CPYF       FROMFILE(&DPLIB/XSDSVRBTD) +
-                          TOFILE(&DMLIB/SDSVRBTD) MBROPT(*REPLACE)
-             MONMSG     MSGID(CPF2802 CPF2869 CPF2817 CPF3130 CPF2909)
-
-             CPYF       FROMFILE(&DPLIB/XSDSVLXTD) +
-                          TOFILE(&DMLIB/SDSVLXTD) MBROPT(*REPLACE)
-             MONMSG     MSGID(CPF2802 CPF2869 CPF2817 CPF3130 CPF2909)
-
-             CPYF       FROMFILE(&DPLIB/XSDSVLBTD) +
-                          TOFILE(&DMLIB/SDSVLBTD) MBROPT(*REPLACE)
-             MONMSG     MSGID(CPF2802 CPF2869 CPF2817 CPF3130 CPF2909)
 
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SMUC00428 ended abnormally - see joblog +
@@ -101,17 +111,6 @@ ERROR:
              CHGJOB     SWS(XXXXXX11)
 
 ENDPGM:
-             DLTF       FILE(&DPLIB/XSDSVRXTD)
-             MONMSG     MSGID(CPF2105)
-
-             DLTF       FILE(&DPLIB/XSDSVRBTD)
-             MONMSG     MSGID(CPF2105)
-
-             DLTF       FILE(&DPLIB/XSDSVLXTD)
-             MONMSG     MSGID(CPF2105)
-
-             DLTF       FILE(&DPLIB/XSDSVLBTD)
-             MONMSG     MSGID(CPF2105)
 
              ENDPGM
 

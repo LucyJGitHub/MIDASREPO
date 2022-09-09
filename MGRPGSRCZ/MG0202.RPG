@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056607           Date 06Oct20               *
+      *  Last Amend No. BA3100             Date 01Sep22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056607           Date 06Oct20               *
       *                 MD051760           Date 22Aug18               *
       *                 MD050973           Date 18May18               *
       *                 MD050972           Date 17May18               *
@@ -115,12 +116,14 @@
      F*                                                               *
       *****************************************************************
       *                                                               *
+      *  BA3100 - MT103 and MT202 message details changes for         *
+      *           Target 2 RTGS System                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056607 - Field tag 53 is duplicated in MT202               *
       *           - Format tag 53 (MD-35921) when CMG001 is OFF.      *
       *  MD051760 - UETR field (tag 121) should not be included in    *
-      *             MT203 messages                                    *      
+      *             MT203 messages                                    *
       *  MD050973 - Field tag 58 is missing in MT202                  *
       *  MD050972 - Field tag 32A has a blank Value Date for LDNI     *
       *  MD050936 - Field tag 53B has a defaulted value of '/'        *
@@ -546,6 +549,8 @@
      I I            'NotIncFld57IfSame58 '    1  20 SVALK1                                    140901
       *                                                                                       140901
      I              'MGC001802'           C         UIDPGM                                    CSW218
+      *                                                                                       BA3100
+     I              'Target2Nostro'       C         P@NOST                                    BA3100
       *                                                                   S01408
      I/COPY WNCPYSRC,MG0202IIPG                                           S01408
       *                                                                   S01408
@@ -778,6 +783,7 @@
       **  Matching criteria is met
      C           MATCH     IFEQ 'Y'
      C******     MGTTYP    ANDNE'PC'                                                  193524 227679
+     C           TARG      ANDNE'Y'                                                           BA3100
      C           CSW025    ANDNE'Y'                                                          BUG6076
      C           MATCH     OREQ 'Y'                                                           242622
      C           CSW025    ANDEQ'Y'                                                           242622
@@ -1219,6 +1225,35 @@
      C                     OUT  LDA                                                           140901
      C                     EXSR *PSSR                                                         140901
      C                     ENDIF                                                              140901
+      *                                                                                       BA3100
+      ** Access system value for Target2Nostro                                                BA3100
+      *                                                                                       BA3100
+     C                     CALL 'AOSVALR0'                                                    BA3100
+     C                     PARM *BLANKS   RTNCDE                                              BA3100
+     C                     PARM P@NOST    SVALK1                                              BA3100
+     C                     PARM *BLANKS   SVAL1                                               BA3100
+     C                     PARM *BLANKS   SVALK2                                              BA3100
+     C                     PARM *BLANKS   SVAL2                                               BA3100
+     C                     PARM *BLANKS   SVALK3                                              BA3100
+     C                     PARM *BLANKS   SVAL3                                               BA3100
+     C                     PARM *BLANKS   SVALK4                                              BA3100
+     C                     PARM *BLANKS   SVAL4                                               BA3100
+     C                     PARM *BLANKS   SVALK5                                              BA3100
+     C                     PARM *BLANKS   SVAL5                                               BA3100
+     C                     PARM *BLANKS   SVALK6                                              BA3100
+     C                     PARM *BLANKS   SVAL6                                               BA3100
+     C                     PARM *BLANKS   SVALK7                                              BA3100
+     C                     PARM *BLANKS   SVAL7                                               BA3100
+     C                     PARM *BLANKS   SVALK8                                              BA3100
+     C                     PARM *BLANKS   SVAL8                                               BA3100
+     C                     PARM *BLANKS   SVALK9                                              BA3100
+     C                     PARM *BLANKS   SVAL9                                               BA3100
+     C                     PARM *BLANKS   SVALK0                                              BA3100
+     C                     PARM *BLANKS   SVAL10                                              BA3100
+      *                                                                                       BA3100
+     C           RTNCDE    IFEQ *BLANK                                                        BA3100
+     C                     MOVELSVAL1     T@NOST  2                                           BA3100
+     C                     ENDIF                                                              BA3100
      C*                                                                   CEU003
       *  Access Switchable Feature Details                                CMG001
       *                                                                   CMG001
@@ -1251,6 +1286,32 @@
       *                                                                                       CDL099
      C/COPY WNCPYSRC,MG0202CCP6                                           S01408
       *                                                                   S01408
+      ** Access SAR file to determine if BA3100 is installed.                                 BA3100
+      *                                                                                       BA3100
+     C                     CALL 'AOSARDR0'                                                    BA3100
+     C                     PARM *BLANKS   PRTCD                                               BA3100
+     C                     PARM '*VERIFY' POPTN                                               BA3100
+     C                     PARM 'BA3100'  PSARD                                               BA3100
+     C           SCSARD    PARM SCSARD    DSFDY                                               BA3100
+      *                                                                                       BA3100
+      ** An NRF (No Record Found) return code is valid.                                       BA3100
+      ** Issue database error only for error return codes.                                    BA3100
+      *                                                                                       BA3100
+     C           PRTCD     IFNE *BLANKS                                                       BA3100
+     C           PRTCD     ANDNE'*NRF   '                                                     BA3100
+     C           *LOCK     IN   LDA                                                           BA3100
+     C                     MOVEL'      '  DBKEY                                               BA3100
+     C                     MOVEL'SCSARDPD'DBFILE                                              BA3100
+     C                     Z-ADD90        DBASE                                               BA3100
+     C                     OUT  LDA                                                           BA3100
+     C                     EXSR *PSSR                                                         BA3100
+     C                     ENDIF                                                              BA3100
+      *                                                                                       BA3100
+     C           PRTCD     IFEQ *BLANK                                                        BA3100
+     C                     MOVEL'Y'       BA3100  1                                           BA3100
+     C                     ELSE                                                               BA3100
+     C                     MOVEL'N'       BA3100                                              BA3100
+     C                     ENDIF                                                              BA3100
       *
       ** Check if the switchable feature CSW212 is on                                         CSW212
       *                                                                                       CSW212
@@ -1605,6 +1666,15 @@
      C           *LIKE     DEFN O@SPRS    SSPRS                           CSW096
      C                     MOVELO@SPRS    SSPRS                           CSW096
      C/COPY WNCPYSRC,MG0202C030
+     C           BA3100    IFEQ 'Y'                                                           BA3100
+     C                     MOVE 'N'       TARG    1                                           BA3100
+     C           MGCCY     IFEQ 'EUR'                                                         BA3100
+     C           MGSETP    ANDEQ8                                                             BA3100
+     C           MGPONS    ANDEQT@NOST                                                        BA3100
+     C                     MOVE 'Y'       TARG                                                BA3100
+      *                                                                                       BA3100
+     C                     ENDIF                                                              BA3100
+     C                     ENDIF                                                              BA3100
      C                     END                                            CSW096
       *                                                                                       CSW215
       ** Change the Network to 'PAPER' if the Precious Metal Indicator                        CSW215
@@ -2905,6 +2975,7 @@
       *
      C                     ELSE
      C           MATCH     IFEQ 'Y'
+     C           TARG      ANDNE'Y'                                                           BA3100
      C                     MOVE ':32B:'   MTAG
      C                     MOVE FLD3A     HOLD20 20
      C                     MOVELHOLD20    MFLD
@@ -3272,6 +3343,12 @@
      C                     MOVE ' '       TAG
      C                     MOVE '56'      FLDNO
      C                     EXSR FSWAD
+     C           BA3100    IFEQ 'Y'                                                           BA3100
+     C           TARG      IFEQ 'Y'                                                           BA3100
+     C                     MOVE *BLANKS   SAV56A 20                                           BA3100
+     C                     MOVELMFLD      SAV56A                                              BA3100
+     C                     ENDIF                                                              BA3100
+     C                     ENDIF                                                              BA3100
      C                     END
       *
      C                     ENDSR
@@ -3373,6 +3450,12 @@
      C                     MOVELDPCNB     SRPCNB
      C                     EXSR FSWADS
      C/COPY WNCPYSRC,MG0202C093
+     C           BA3100    IFEQ 'Y'                                                           BA3100
+     C           TARG      IFEQ 'Y'                                                           BA3100
+     C                     MOVE *BLANKS   SAV57A 20                                           BA3100
+     C                     MOVELMFLD      SAV57A                                              BA3100
+     C                     ENDIF                                                              BA3100
+     C                     ENDIF                                                              BA3100
      C                     END
       *
      C**********           END                                     078649 172477
@@ -3449,6 +3532,12 @@
      C                     MOVELAWCPNC    ZDEST                                               CSW201
      C                     MOVE ' '       TAG                                                 CSW201
      C                     EXSR FSWAD                                                         CSW201
+     C           BA3100    IFEQ 'Y'                                                           BA3100
+     C           TARG      IFEQ 'Y'                                                           BA3100
+     C                     MOVE *BLANKS   SAV57A                                              BA3100
+     C                     MOVELMFLD      SAV57A                                              BA3100
+     C                     ENDIF                                                              BA3100
+     C                     ENDIF                                                              BA3100
      C                     ENDIF                                                              CSW201
       *                                                                                       CSW201
      C           PCUST     IFEQ 'Y'                                                           CSW201
@@ -3457,6 +3546,12 @@
      C                     MOVELBBCUST    ZDEST                                               CSW201
      C                     MOVE ' '       TAG                                                 CSW201
      C                     EXSR FSWAD                                                         CSW201
+     C           BA3100    IFEQ 'Y'                                                           BA3100
+     C           TARG      IFEQ 'Y'                                                           BA3100
+     C                     MOVE *BLANKS   SAV57A                                              BA3100
+     C                     MOVELMFLD      SAV57A                                              BA3100
+     C                     ENDIF                                                              BA3100
+     C                     ENDIF                                                              BA3100
      C                     ENDIF                                                              CSW201
       *                                                                                       CSW201
      C                     ENDIF                                                              CSW201
@@ -3518,6 +3613,12 @@
      C                     EXSR FSWAD
       *                                                                   S01408
      C/COPY WNCPYSRC,MG0202CP11                                           S01408
+     C           BA3100    IFEQ 'Y'                                       BA3100
+     C           TARG      IFEQ 'Y'                                       BA3100
+     C                     MOVE *BLANKS   SAV58A 20                       BA3100
+     C                     MOVELMFLD      SAV58A                          BA3100
+     C                     ENDIF                                          BA3100
+     C                     ENDIF                                          BA3100
       *                                                                   S01408
       *
      C                     ENDSR
@@ -4013,6 +4114,21 @@
       *****************************************************************
       *
      C           OMSG      BEGSR
+      *                                                                                       BA3100
+      ** Set network to TARGET                                                                BA3100
+      *                                                                                       BA3100
+     C           BA3100    IFEQ 'Y'                                                           BA3100
+     C           TARG      ANDEQ'Y'                                                           BA3100
+     C           SAV56A    IFNE *BLANK                                                        BA3100
+     C                     MOVELSAV56A    NWDS                                                BA3100
+     C                     ELSE                                                               BA3100
+     C           SAV57A    IFNE *BLANK                                                        BA3100
+     C                     MOVELSAV57A    NWDS                                                BA3100
+     C                     ELSE                                                               BA3100
+     C                     MOVELSAV58A    NWDS                                                BA3100
+     C                     ENDIF                                                              BA3100
+     C                     ENDIF                                                              BA3100
+     C                     ENDIF                                                              BA3100
       *
       **  Write reference records for each part of the MT203
       *
@@ -4106,6 +4222,37 @@
      C           @ERR      IFNE 'Y'
      C                     ADD  1         X                                                 MD050973
      C           X         OCUR MULT                                                        MD050973
+      *                                                                                       BA3100
+      ** If message to be created is a MT202, write additional msg 103.                       BA3100
+      *                                                                                       BA3100
+     C           BA3100    IFEQ 'Y'                                                           BA3100
+     C           TARG      IFEQ 'Y'                                                           BA3100
+     C                     MOVEL*BLANK    STAG    5                                           BA3100
+     C                     MOVEL*BLANK    SFLD   50                                           BA3100
+     C                     MOVELMTAG      STAG                                                BA3100
+     C                     MOVELMFLD      SFLD                                                BA3100
+     C                     MOVEL*BLANK    MTAG                                                BA3100
+     C                     MOVEL*BLANK    MFLD                                                BA3100
+     C                     MOVEL':103:'   MTAG                                                BA3100
+     C                     MOVEL'TGT'     MFLD                                                BA3100
+     C                     WRITEMGOMSGD0               06                                     BA3100
+     C                     MOVEL*BLANK    MTAG                                                BA3100
+     C                     MOVEL*BLANK    MFLD                                                BA3100
+     C           *IN06     IFEQ *ON                                                           BA3100
+     C           *LOCK     IN   LDA                                                           BA3100
+     C                     Z-ADD30        DBASE                                               BA3100
+     C                     MOVEL'*WRITE ' DBKEY                                               BA3100
+     C                     MOVEL'MGOMSGPD'DBFILE                                              BA3100
+     C                     OUT  LDA                                                           BA3100
+     C                     EXSR *PSSR                                                         BA3100
+     C                     ENDIF                                                              BA3100
+      *                                                                                       BA3100
+      ** If message to be created is a MT202, write additional msg 113.                       BA3100
+      *                                                                                       BA3100
+     C                     MOVELSTAG      MTAG                                                BA3100
+     C                     MOVELSFLD      MFLD                                                BA3100
+     C                     ENDIF                                                              BA3100
+     C                     ENDIF                                                              BA3100
       *
       **  Write the message details to PF/MGOMSGPD
       *

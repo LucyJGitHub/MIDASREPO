@@ -193,7 +193,7 @@
      C                   EVAL      SQLDynStmt = 'insert into GPSECBTD '+
      C                               '(RECI, P@SARN, SEPASS, SEINTL, REMODE) '+
      C                               'values(''B'', ''BA3100'', '+
-     C                               '''DHJBKDPNCMHBSANG'', ''N'', ''B')'
+     C                               '''DHJBKDPNCMHBSANG'', ''N'', ''B'')'
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt

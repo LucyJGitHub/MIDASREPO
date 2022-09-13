@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057049           Date 03Nov20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. 222840             Date 22Aug22               *
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 AR784570           Date 21Feb17               *
@@ -103,6 +104,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  222840 - Always update TOTI regardless of the deal type.     *
+      *           Applied core fixes 218811 and 209760.               *
+      *         - Applied for MD060283.                               *
       *  MD057049 - Moved IKRRAT to FSRRAT                            *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
@@ -1527,6 +1531,7 @@
      C     IKMTYP        ANDNE     'LP'                                         CDL006
      C     CDL006        ANDEQ     'Y'                                          CDL006
      C                   BITON     '2'           DNSI
+     C                   ENDIF                                                                222840
      C     IKMTTI        IFLT      0
      C                   Z-SUB     IKMTTI        TOTI
      C                   ELSE
@@ -1539,7 +1544,7 @@
      C                   Z-ADD     IKTNTR        FSTOTN                                       CAS005
      C                   ENDIF                                                                CAS005
      C                   ENDIF                                                                CAS005
-     C                   END
+     C**********         END                                                                  222840
       *
       * MATURITY DATE
      C                   Z-ADD     MDAT          @@MDAT            5 0

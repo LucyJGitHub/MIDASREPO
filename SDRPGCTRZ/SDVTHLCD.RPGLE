@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2006            *
       *                                                               *
-      *  Last Amend No. LUC139             Date 22Dec20               *
-      *  Prev Amend No. BUG18898A          Date 12Feb09               *
+      *  Last Amend No. MD059377           Date 14Sep22               *
+      *  Prev Amend No. LUC139             Date 22Dec20               *
+      *                 BUG18898A          Date 12Feb09               *
       *                 CER009  *CREATE    Date 16Aug06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059377 - use PHlcd (CAB Code) instead of                   *
+      *             PHlck (CAB Code Check digit)                      *
       *  LUC139 - UCI Italian Returns Upgrade to FM2.1                *
       *  BUG18898A - Changes in APDUMP and APHEADPD (Recompile)       *
       *  CER009 - Puma II Upgrade to MidasPlus                        *
@@ -128,8 +131,8 @@
       ** CAB Code must not be blank if bank flag = 'Y' and
       ** residenza = 1
 
-     C                   IF        (PHlck = *BLANKS  OR
-     C                             PHlck =  '0') AND
+     C                   IF        (PHlcd = *BLANKS  OR                                     MD059377
+     C                             PHlcd =  '0') AND                                        MD059377
      C                             PBnbi = 'Y' AND
      C                             PResi = '1'
      C                   EVAL      RetCodeIn   =  'Error'

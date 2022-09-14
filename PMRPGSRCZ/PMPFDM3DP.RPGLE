@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT113             Date 01Apr20               *
-      *  Prev Amend No. MD057459           Date 23Feb21               *
+      *  Last Amend No. MD059838           Date 25Jul22               *
+      *  Prev Amend No. HUT113             Date 01Apr20               *
+      *                 MD057459           Date 23Feb21               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR689705           Date 03Jan11               *
@@ -41,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059838 - Portfolio Definition Maintenance - Field          *
+      *             Incorrectly Displayed. (Recompile)                *
+      *           - Recompile the display file with Multi-language    *
+      *             set to *NO.                                       *
       *  HUT113 - Full Private Banking Functionality in FM            *
       *           Applies fixes MD-54548 and MD-54322                 *
       *           Addition of hooks HUT113_015 to HUT113_026          *

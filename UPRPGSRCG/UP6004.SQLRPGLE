@@ -13,11 +13,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060351           Date 17Aug22               *
-      *  Prev Amend No. CUP044 *CREATE     Date 22May22               *
+      *  Last Amend No. MD060514           Date 14Sep22               *
+      *  Prev Amend No. MD060351           Date 17Aug22               *
+      *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060514 - Failed component can be restarted twice.          *
       *  MD060351 - Compilation error with multilanguage              *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
       *           Patch Upgrade                                       *
@@ -815,6 +817,45 @@
       *****************************************************************
      C     SR_RestartJob BEGSR
 
+      * If job is restarted, update its status here and reset indicator                     MD060514
+     C                   SELECT                                                             MD060514
+     C                   WHEN      *IN61 = '1'                                              MD060514
+     C/EXEC SQL                                                                             MD060514
+     C+ update UPOTBMTD set DCMPG1 = ' '                                                    MD060514
+     C/END-EXEC                                                                             MD060514
+     C                   SETOFF                                       61                    MD060514
+     C                   WHEN      *IN62 = '1'                                              MD060514
+     C/EXEC SQL                                                                             MD060514
+     C+ update UPOTBMTD set DCMPG2 = ' '                                                    MD060514
+     C/END-EXEC                                                                             MD060514
+     C                   SETOFF                                       62                    MD060514
+     C                   WHEN      *IN63 = '1'                                              MD060514
+     C/EXEC SQL                                                                             MD060514
+     C+ update UPOTBMTD set DCMPG3 = ' '                                                    MD060514
+     C/END-EXEC                                                                             MD060514
+     C                   SETOFF                                       63                    MD060514
+     C                   WHEN      *IN64 = '1'                                              MD060514
+     C/EXEC SQL                                                                             MD060514
+     C+ update UPOTBMTD set DCMPG4 = ' '                                                    MD060514
+     C/END-EXEC                                                                             MD060514
+     C                   SETOFF                                       64                    MD060514
+     C                   WHEN      *IN65 = '1'                                              MD060514
+     C/EXEC SQL                                                                             MD060514
+     C+ update UPOTBMTD set DCMPG5 = ' '                                                    MD060514
+     C/END-EXEC                                                                             MD060514
+     C                   SETOFF                                       65                    MD060514
+     C                   WHEN      *IN66 = '1'                                              MD060514
+     C/EXEC SQL                                                                             MD060514
+     C+ update UPOTBMTD set DCMPG6 = ' '                                                    MD060514
+     C/END-EXEC                                                                             MD060514
+     C                   SETOFF                                       66                    MD060514
+     C                   WHEN      *IN67 = '1'                                              MD060514
+     C/EXEC SQL                                                                             MD060514
+     C+ update UPOTBMTD set DCMPG7 = ' '                                                    MD060514
+     C/END-EXEC                                                                             MD060514
+     C                   SETOFF                                       67                    MD060514
+     C                   ENDSL                                                              MD060514
+     C                                                                                      MD060514
      C                   CALL      'QSNDDTAQ'
      C                   PARM      'UP_OTB_SVR'  DtqNam           10
      C                   PARM      BRIDGELIB     DtqLib           10

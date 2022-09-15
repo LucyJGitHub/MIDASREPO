@@ -419,9 +419,9 @@
      C                   PARM                    isRndApplies      1                        MD059624
      C                   ENDIF                                                              MD059624
      C                   IF        isRndApplies = 'Y'                                       MD059624
-     C                   EVAL      P1RAPL= 'Y'                                     MD059624 MD060524
-     C**********         EVAL      P1ROPR = RRDP                                            MD060524
-     C                   EVAL      P1ROPR = TRRRDP                                          MD059624
+     C                   EVAL      P1RAPL= 'Y'                                              MD059624
+     C**********         EVAL      P1ROPR = RRDP                                   MD059624 MD060524
+     C                   EVAL      P1ROPR = TRRRDP                                          MD060524
      C                   EVAL      P1RTRO = 0                                               MD059624
      C                   ELSE                                                               MD059624
      C                   EVAL      P1RAPL= 'N'                                              MD059624

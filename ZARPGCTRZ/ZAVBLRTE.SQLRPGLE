@@ -47,6 +47,8 @@
       *                                                               *
       *  MD060473 - Inconsistent behavior on BSRT Mnt when rate       *
       *             rounding decimal is 0 and 00                      *
+      *             Move the value of DDRRDP to a new variable and    *
+      *             test for zero value before defaulting             *
       *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059141 - SIRS Transaction accepting NCCR and SARR on       *
       *             'Their Details'                                   *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD058085             Date 11May21             *
-      *  Prev Amend No. MD058069             Date 11May21             *
+      *  Last Amend No. MD060488             Date 08Sep22             *
+      *  Prev Amend No. MD058085             Date 11May21             *
+      *                 MD058069             Date 11May21             *
       *                 MD058087             Date 11May21             *
       *                 MD058089             Date 01Sep21             *
       *                 MD058079             Date 11May21             *
@@ -88,6 +89,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060488 - Deliverable Data Split for UTMENUPD               *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  MD058087 - Deliverable Data Split for System Control         *
@@ -1264,6 +1266,7 @@
      C                             or ChkFile = 'SCMEXXTD'                                  MD058087
      C                             or ChkFile = 'SCRMVXTD'                                  MD058087
      C                             or ChkFile = 'SCSVPXTD'                                  MD058087
+     C                             or ChkFile = 'UTMNUXTD'                                  MD060488
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1408,6 +1411,7 @@
      C                             or Member = 'SMGNMCTD'                                   MD058089
      C                             or Member = 'SMINPCTD'                                   MD058089
      C                             or Member = 'SMCNUCTD'                                   MD058089
+     C                             or Member = 'UTMNUCTD'                                   MD060488
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264

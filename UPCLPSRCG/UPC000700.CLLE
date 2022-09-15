@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD060435           Date 31Aug22              */
-/*       Prev Amend No. MD058087           Date 11May21              */
+/*       Last Amend No. MD060488           Date 08Sep22              */
+/*       Prev Amend No. MD060435           Date 31Aug22              */
+/*                      MD058087           Date 11May21              */
 /*                      MD058085           Date 11May21              */
 /*                      MD058069           Date 11May21              */
 /*                      MD059822           Date 22Apr22              */
@@ -74,6 +75,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060488 - Deliverable Data Split for UTMENUPD              */
 /*       MD060435 - No data take-on for SDBROKPD                     */
 /*       MD058087 - Deliverable Data Split for System Control        */
 /*       MD058085 - Deliverable Data Split for Standing Data         */
@@ -154,6 +156,7 @@
              DCL        VAR(&RSTO) TYPE(*CHAR) LEN(1)                                   /*MD058982*/
              DCL        VAR(&XFILE) TYPE(*CHAR) LEN(10)                                 /*MD058672*/
              DCL        VAR(&BFILE) TYPE(*CHAR) LEN(10)                                 /*MD058672*/
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)                                 /*MD060488*/
 
 /* Parameters passed to UP008010. */
              DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10)  VALUE('UPC000700')
@@ -167,7 +170,21 @@
 
 /* Find out where the current deliverable data file is. */
              RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&OLDLIB)
-
+                                                                                        /*MD060488*/
+/* Reset flag for when UTMNUCTD is updated                                              /*MD060488*/
+                                                                                        /*MD060488*/
+             CHGDTAARA DTAARA(UPSTAT (55 1)) VALUE(' ')                                 /*MD060488*/
+                                                                                        /*MD060488*/
+             IF         COND(&FILE *EQ 'UTMNUCTD') THEN(DO)                             /*MD060488*/
+             CHGVAR     VAR(&GPLIB) VALUE(%SUBSTRING(&OLDLIB 1 2) *TCAT 'GPLIB')        /*MD060488*/
+             DLTF       FILE(&GPLIB/UTMNUCTDX)                                          /*MD060488*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060488*/
+             CPYF       FROMFILE(&NEWLIB/UTMNUCTD) +
+                          TOFILE(&GPLIB/UTMNUCTDX) CRTFILE(*YES)                        /*MD060488*/
+             CHGDTAARA DTAARA(UPSTAT (55 1)) VALUE('Y')                                 /*MD060488*/
+             GOTO CMDLBL(END)                                                           /*MD060488*/
+             ENDDO                                                                      /*MD060488*/
+                                                                                        /*MD060488*/
 /* Find out if file is empty. */
              RTVMBRD    FILE(&OLDLIB/&FILE) NBRCURRCD(&NBRCURRCD)
 

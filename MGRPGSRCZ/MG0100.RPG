@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. BA3100             Date 01Sep22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. BA3101             Date 12Sep22               *
+      *  Prev Amend No. BA3100             Date 01Sep22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055760           Date 09Mar20               *
       *                 MD054054           Date 07Nov19               *
       *                 MD052130           Date 27Mar19               *
@@ -112,6 +113,7 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  BA3101 - Output account in field 50K on MT103 for FX/MM deal *
       *  BA3100 - MT103 and MT202 message details changes for         *
       *           Target 2 RTGS System                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -302,6 +304,7 @@
      F            DEALSDEF                          KIGNORE                                   CDL099
      F            DEALSDGF                          KIGNORE                                   CDL099
      F            DEALSDFF                          KIGNORE                                   CDL099
+     FMGACCNL0IF  E           K        DISK         KINFSR *PSSR                              BA3101
      F*                                                                   S01408
      F/COPY WNCPYSRC,MG0100FFP1                                           S01408
      F*                                                                   S01408
@@ -3455,7 +3458,14 @@
      C                     ENDIF                                                              204225
      C           EXORC     TAG                                                                250600
       *                                                                                       204225
+     C           BA3101    IFEQ 'Y'                                                           BA3101
+     C           I@MTPY    ANDEQ'103'                                                         BA3101
+     C           MGMODI    ANDEQ'DL'                                                          BA3101
+     C           MTAG      ANDEQ':50K:'                                                       BA3101
+     C                     EXSR SRAC50                                                        BA3101
+     C                     ELSE                                                               BA3101
      C                     EXSR SWADF                                     CFT013
+     C                     ENDIF                                                              BA3101
      C                     MOVE *BLANKS   SAVMTG                                            BUG15037
      C                     EXSR SEXTN                                                       BUG15037
      C                     ENDIF                                          CFT013
@@ -5226,6 +5236,39 @@
      C                     ELSE                                                               BA3100
      C                     MOVEL'N'       BA3100                                              BA3100
      C                     ENDIF                                                              BA3100
+      *                                                                                       BA3101
+      ** Access SAR file to determine if BA3101 is installed.                                 BA3101
+      *                                                                                       BA3101
+     C                     CALL 'AOSARDR0'                                                    BA3101
+     C                     PARM *BLANKS   PRTCD                                               BA3101
+     C                     PARM '*VERIFY' POPTN                                               BA3101
+     C                     PARM 'BA3101'  PSARD                                               BA3101
+     C           SCSARD    PARM SCSARD    DSFDY                                               BA3101
+      *                                                                                       BA3101
+      ** An NRF (No Record Found) return code is valid.                                       BA3101
+      ** Issue database error only for error return codes.                                    BA3101
+      *                                                                                       BA3101
+     C           PRTCD     IFNE *BLANKS                                                       BA3101
+     C           PRTCD     ANDNE'*NRF   '                                                     BA3101
+     C           *LOCK     IN   LDA                                                           BA3101
+     C                     MOVEL'      '  DBKEY                                               BA3101
+     C                     MOVEL'SCSARDPD'DBFILE                                              BA3101
+     C                     Z-ADD45        DBASE                                               BA3101
+     C                     OUT  LDA                                                           BA3101
+     C                     EXSR *PSSR                                                         BA3101
+     C                     ENDIF                                                              BA3101
+      *                                                                                       BA3101
+     C           PRTCD     IFEQ *BLANK                                                        BA3101
+     C                     MOVEL'Y'       BA3101  1                                           BA3101
+     C                     ELSE                                                               BA3101
+     C                     MOVEL'N'       BA3101                                              BA3101
+     C                     ENDIF                                                              BA3101
+      **  KLIST AREA                                                                          BA3101
+     C           MGACC     KLIST                                                              BA3101
+     C                     KFLD           @BRCA   3                                           BA3101
+     C                     KFLD           @CNUM   6                                           BA3101
+     C                     KFLD           @CCY    3                                           BA3101
+     C                     KFLD           @ACSQ   20                                          BA3101
       *                                                                   CMG001
       *  Access Switchable Feature Details                                CMG001
       *                                                                   CMG001
@@ -5814,6 +5857,110 @@
      C                     ENDSR                                                              CSW215
       *****************************************************************                       CSW215
       /EJECT                                                                                  CSW215
+      *****************************************************************                       BA3101
+      *                                                               *                       BA3101
+      *  SRAC50 - Determine if Beneficiary is in 59F Format           *                       BA3101
+      *                                                               *                       BA3101
+      *****************************************************************                       BA3101
+      *                                                                                       BA3101
+     C           SRAC50    BEGSR                                                              BA3101
+      *                                                                                       BA3101
+     C                     MOVELMGBRCA    @BRCA                                               BA3101
+     C                     MOVEL'EUR'     @CCY                                                BA3101
+     C                     MOVELMGPOCN    @CNUM                                               BA3101
+     C                     Z-ADD0         @ACSQ                                               BA3101
+     C                     MOVE *BLANK    ACC5   34                                           BA3101
+     C                     MOVE *BLANK    ACC35  35                                           BA3101
+      *                                                                                       BA3101
+      ** Access account details                                                               BA3101
+      *                                                                                       BA3101
+     C           MGACC     SETLLMGACCNL0                                                      BA3101
+     C                     READ MGACCNL0                 90                                   BA3101
+      *                                                                                       BA3101
+     C           *IN90     DOWNE'1'                                                           BA3101
+     C           MABRCA    ANDEQMGBRCA                                                        BA3101
+     C           MACNUM    ANDEQMGPOCN                                                        BA3101
+     C           MACCY     ANDEQ'EUR'                                                         BA3101
+      *                                                                                       BA3101
+     C           MAIBAN    IFNE *BLANK                                                        BA3101
+     C                     MOVE *BLANK    ACC5                                                BA3101
+     C                     MOVELMAIBAN    ACC5                                                BA3101
+     C                     SETON                     90                                       BA3101
+     C                     ENDIF                                                              BA3101
+      *                                                                                       BA3101
+     C           *IN90     IFNE '1'                                                           BA3101
+     C           MAACNO    ANDNE0                                                             BA3101
+     C           ACC5      ANDEQ*BLANK                                                        BA3101
+     C                     MOVE *BLANK    ACC5                                                BA3101
+     C                     MOVELMAACNO    ACC5                                                BA3101
+     C                     ENDIF                                                              BA3101
+      *                                                                                       BA3101
+     C  N90                READ MGACCNL0                 90                                   BA3101
+      *                                                                                       BA3101
+     C                     ENDDO                                                              BA3101
+      *                                                                                       BA3101
+     C                     MOVE *BLANK    ACC35                                               BA3101
+     C           ACC5      IFNE *BLANK                                                        BA3101
+     C                     MOVE *BLANK    ACC35                                               BA3101
+     C                     MOVEL'/'       ACC35                                               BA3101
+     C                     MOVE ACC5      ACC35                                               BA3101
+     C                     ELSE                                                               BA3101
+     C                     MOVEL'/'       ACC7    7                                           BA3101
+     C                     MOVE MGPOCN    ACC7                                                BA3101
+     C                     MOVELACC7      ACC35                                               BA3101
+     C                     ENDIF                                                              BA3101
+      *                                                                                       BA3101
+     C                     EXSR SRFAD2                                                        BA3101
+      *                                                                                       BA3101
+     C                     ENDSR                                                              BA3101
+      *****************************************************************                       BA3101
+      /EJECT                                                                                  BA3101
+      *****************************************************************                       BA3101
+      *                                                               *                       BA3101
+      *  SRFAD2 - Format Address 1 to 4                               *                       BA3101
+      *                                                               *                       BA3101
+      *****************************************************************                       BA3101
+      *                                                                                       BA3101
+     C           SRFAD2    BEGSR                                                              BA3101
+      *                                                                                       BA3101
+     C           ACC35     IFNE *BLANK                                                        BA3101
+     C                     MOVELACC35     MFLD                                                BA3101
+     C                     ENDIF                                                              BA3101
+      *                                                                                       BA3101
+      **  Address 1                                                                           BA3101
+      *                                                                                       BA3101
+     C           ZSADD1    IFNE *BLANKS                                                       BA3101
+     C                     ADD  1         X                                                   BA3101
+     C           X         OCUR MULT                                                          BA3101
+     C                     MOVELZSADD1    MFLD                                                BA3101
+     C                     ENDIF                                                              BA3101
+      *                                                                                       BA3101
+      **  Address 2                                                                           BA3101
+      *                                                                                       BA3101
+     C           ZSADD2    IFNE *BLANKS                                                       BA3101
+     C                     ADD  1         X                                                   BA3101
+     C           X         OCUR MULT                                                          BA3101
+     C                     MOVELZSADD2    MFLD                                                BA3101
+     C                     ENDIF                                                              BA3101
+      *                                                                                       BA3101
+      **  Address 3                                                                           BA3101
+      *                                                                                       BA3101
+     C           ZSADD3    IFNE *BLANKS                                                       BA3101
+     C                     ADD  1         X                                                   BA3101
+     C           X         OCUR MULT                                                          BA3101
+     C                     MOVELZSADD3    MFLD                                                BA3101
+     C                     ENDIF                                                              BA3101
+      *                                                                                       BA3101
+      **  Address 4                                                                           BA3101
+      *                                                                                       BA3101
+     C           ZSADD4    IFNE *BLANKS                                                       BA3101
+     C                     ADD  1         X                                                   BA3101
+     C           X         OCUR MULT                                                          BA3101
+     C                     MOVELZSADD4    MFLD                                                BA3101
+     C                     ENDIF                                                              BA3101
+      *                                                                                       BA3101
+     C                     ENDSR                                                              BA3101
+      *                                                                                       BA3101
       *****************************************************************
       *   *PSSR - error handling                                      *
       *****************************************************************

@@ -1,0 +1,145 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTR DDS save')                               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC004030 - OTR DDS save                                    */
+/*                                                                   */
+/*       Function: This program saves all BTD and XTD tables from    */
+/*                 either GMLIB or DMLIB in a SAVF created in        */
+/*                 BrgDeliveredBrgLib.                               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP045   *CREATE   Date 01Jun22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP045 - One Touch Bridge - refresh                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &PRFX &BRGBRGLIB)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TLIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&SAVLIBL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CHECKSVAL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&RSVALRTNC) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USERSPACE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&OBJECTS) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OBJENT) TYPE(*CHAR) LEN(508)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(10) VALUE('*FILE     ')
+             DCL        VAR(&STARTLIST) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&STARTLISTN) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&NOOFENT) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&ENTRYLEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ENTRYLENN) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&GENHDR) TYPE(*CHAR) LEN(140)
+
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+
+/* Set library name for deliverable data */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&TLIB) VALUE(&PRFX *CAT 'GTALIB')
+             CALL       PGM(GPC000016) PARM(&PRFX)
+             ENDDO
+             ELSE CMD(DO)
+             CHGVAR     VAR(&TLIB) VALUE(&PRFX *CAT 'DTALIB')
+             CALL       PGM(UPC0014) PARM(&PRFX)
+             ENDDO
+
+/* Create file to be used to drive journaling process. */
+             DLTF       FILE(QTEMP/UPOBJCTPD)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPDBRLPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UPOBJCTPD)
+
+ LST_LIB:
+/* Create user space for list of objects. */
+             CRTUSRSPC  USRSPC(QTEMP/&TLIB) DELETE(*YES) +
+                          TEXT('Temporary user space for  +
+                          listing CTD tables')
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC004030')
+/* Create list of objects in library. */
+             CHGVAR     VAR(&USERSPACE) VALUE(&TLIB *CAT 'QTEMP     ')
+             CHGVAR     VAR(&FORMAT) VALUE('OBJL0100')
+             CHGVAR     VAR(&OBJECTS) VALUE('*ALL      ' *CAT &TLIB)
+             CALL       PGM(QUSLOBJ) PARM(&USERSPACE &FORMAT +
+                          &OBJECTS &OBJTYPE)
+
+/* Get generic header from user space using standard retrieval API. */
+             CALL       PGM(QUSRTVUS) PARM(&USERSPACE X'00000001' +
+                          X'0000008C' &GENHDR)
+             MONMSG     MSGID(CPF0000)
+
+/* Get the data from the header.  The start position of the actual data, */
+/* the number of entries and the length of each entry.                   */
+             RTVUSRSPCI USRSPC(QTEMP/&TLIB) STRPOS(&STARTLIST) +
+                          NBRENT(&NOOFENT) ENTLEN(&ENTRYLEN)
+             CHGVAR     VAR(&STARTLISTN) VALUE(%BIN(&STARTLIST))
+             CHGVAR     VAR(&ENTRYLENN) VALUE(%BIN(&ENTRYLEN))
+
+/* Loop until all objects have been processed. */
+ LST_OBJ:
+             IF         COND(&NOOFENT *EQ 0) THEN(DO)
+                GOTO       CMDLBL(END_OF_LST)
+             ENDDO
+             CALL       PGM(QUSRTVUS) PARM(&USERSPACE &STARTLIST +
+                          &ENTRYLEN &OBJENT)
+
+/* Get name of object and attribute and jorunal it. */
+             CHGVAR     VAR(&OBJ) VALUE(%SST(&OBJENT 1 10))
+
+             IF         COND(%SUBSTRING(&OBJ 6 3) *EQ 'CTD') +
+                          THEN(CALL PGM(UP4031) PARM(' ' &OBJ &OBJ))
+
+/* Increase the start position of the list by the length of a list */
+/* entry, and convert the new value to binary.                     */
+             CHGVAR     VAR(&STARTLISTN) VALUE(&STARTLISTN + &ENTRYLENN)
+             CHGVAR     VAR(%BIN(&STARTLIST)) VALUE(&STARTLISTN)
+/* Decrease the number of list entries. */
+             CHGVAR     VAR(&NOOFENT) VALUE(&NOOFENT - 1)
+
+             GOTO       CMDLBL(LST_OBJ)
+
+END_OF_LST:
+
+             CALL       PGM(UP004030)  PARM(&PRFX &LAYER &BRGBRGLIB &RTNFLAG)
+             IF         COND(&RTNFLAG *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+ENDPGM:
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             ENDDO
+
+             ENDPGM
+
+

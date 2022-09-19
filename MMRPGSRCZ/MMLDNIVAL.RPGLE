@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058540           Date 24Aug21               *
-      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *  Last Amend No. MD060283           Date 22Aug22               *
+      *  Prev Amend No. MD058540           Date 24Aug21               *
+      *                 MD057049           Date 03Nov20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD047719           Date 24Jul18               *
@@ -157,6 +158,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060283 - Error on Open Repo Confirmation - Maturity Event. *
+      *           - TOTI was double eventhough DDBSRC was blank or    *
+      *             not amended during REPO maturity date change.     *
       *  MD058540 - Removed excess parameters when calling ZAVSPRRATE *
       *  MD057049 - BNDCSP not passed to MMVLDRRAT                    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -2277,6 +2281,7 @@
                                                                                             MD037869
       ** Get old base rate when action is not insert                                        MD037869
      C                   IF        DDACTN <> 'I'                                            MD037869
+     C                             AND DDBSRC <> *BLANKS                                    MD060283
      C**********         EVAL      Baserate = IKINTR - @SPRD                      MD037869 MD037869A
      C                   EVAL      Baserate = IKINTR - IKSPRD                              MD037869A
      C                   ENDIF                                                              MD037869

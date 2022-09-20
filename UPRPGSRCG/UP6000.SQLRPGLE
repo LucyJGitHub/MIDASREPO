@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CUP044 *CREATE     Date 22May22               *
+      *  Last Amend No. MD060396           Date 20Sep22               *
+      *  Prev Amend No. CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060396 - Only X should be used to select layers            *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
       *           Patch Upgrade                                       *
       *                                                               *
@@ -517,6 +519,57 @@
      C                   EVAL      ZAMSID = 'UPM6000'
      C                   EVAL      ErrInd = 'Y'
      C                   EXSR      ZASNMS
+     C                   Else                                                               MD060396
+      * action code must be 'X'                                                             MD060396
+     C                   If        (XSELG <> *blanks and XSELG <> 'X')                      MD060396
+     C                   seton                                        30                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ1 <> *blanks and XSELZ1 <> 'X')                    MD060396
+     C                   seton                                        31                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ2 <> *blanks and XSELZ2 <> 'X')                    MD060396
+     C                   seton                                        32                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ3 <> *blanks and XSELZ3 <> 'X')                    MD060396
+     C                   seton                                        33                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ4 <> *blanks and XSELZ4 <> 'X')                    MD060396
+     C                   seton                                        34                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ5 <> *blanks and XSELZ5 <> 'X')                    MD060396
+     C                   seton                                        35                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ6 <> *blanks and XSELZ6 <> 'X')                    MD060396
+     C                   seton                                        36                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ7 <> *blanks and XSELZ7 <> 'X')                    MD060396
+     C                   seton                                        37                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ8 <> *blanks and XSELZ8 <> 'X')                    MD060396
+     C                   seton                                        38                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ9 <> *blanks and XSELZ9 <> 'X')                    MD060396
+     C                   seton                                        39                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ0 <> *blanks and XSELZ0 <> 'X')                    MD060396
+     C                   seton                                        40                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELG <> *blanks and XSELG <> 'X') or                   MD060396
+     C                             (XSELZ1 <> *blanks and XSELZ1 <> 'X') or                 MD060396
+     C                             (XSELZ2 <> *blanks and XSELZ2 <> 'X') or                 MD060396
+     C                             (XSELZ3 <> *blanks and XSELZ3 <> 'X') or                 MD060396
+     C                             (XSELZ4 <> *blanks and XSELZ4 <> 'X') or                 MD060396
+     C                             (XSELZ5 <> *blanks and XSELZ5 <> 'X') or                 MD060396
+     C                             (XSELZ6 <> *blanks and XSELZ6 <> 'X') or                 MD060396
+     C                             (XSELZ7 <> *blanks and XSELZ7 <> 'X') or                 MD060396
+     C                             (XSELZ8 <> *blanks and XSELZ8 <> 'X') or                 MD060396
+     C                             (XSELZ9 <> *blanks and XSELZ9 <> 'X') or                 MD060396
+     C                             (XSELZ0 <> *blanks and XSELZ0 <> 'X')                    MD060396
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD060396
+     C                   EVAL      ZAMSID = 'UPM6010'                                       MD060396
+     C                   EVAL      ErrInd = 'Y'                                             MD060396
+     C                   EXSR      ZASNMS                                                   MD060396
+     C                   Endif                                                              MD060396
      C                   ENDIF
 
      C                   DOW       *INKC = *OFF
@@ -529,6 +582,7 @@
      C                   EXFMT     UP6000F1
      C                   EXSR      CLEAR
      C                   EVAL      ErrInd = 'N'
+     C                   eval      %Subarr(*IN : 30 : 10) = *OFF                            MD060396
       * At least on layer has to be selected
      C                   If        XSELG = *blanks and XSELZ1 = *blanks
      C                             and XSELZ2 = *blanks and XSELZ3 = *blanks
@@ -540,6 +594,57 @@
      C                   EVAL      ZAMSID = 'UPM6000'
      C                   EVAL      ErrInd = 'Y'
      C                   EXSR      ZASNMS
+     C                   Else                                                               MD060396
+      * action code must be 'X'                                                             MD060396
+     C                   If        (XSELG <> *blanks and XSELG <> 'X')                      MD060396
+     C                   seton                                        30                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ1 <> *blanks and XSELZ1 <> 'X')                    MD060396
+     C                   seton                                        31                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ2 <> *blanks and XSELZ2 <> 'X')                    MD060396
+     C                   seton                                        32                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ3 <> *blanks and XSELZ3 <> 'X')                    MD060396
+     C                   seton                                        33                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ4 <> *blanks and XSELZ4 <> 'X')                    MD060396
+     C                   seton                                        34                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ5 <> *blanks and XSELZ5 <> 'X')                    MD060396
+     C                   seton                                        35                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ6 <> *blanks and XSELZ6 <> 'X')                    MD060396
+     C                   seton                                        36                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ7 <> *blanks and XSELZ7 <> 'X')                    MD060396
+     C                   seton                                        37                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ8 <> *blanks and XSELZ8 <> 'X')                    MD060396
+     C                   seton                                        38                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ9 <> *blanks and XSELZ9 <> 'X')                    MD060396
+     C                   seton                                        39                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELZ0 <> *blanks and XSELZ0 <> 'X')                    MD060396
+     C                   seton                                        40                    MD060396
+     C                   Endif                                                              MD060396
+     C                   If        (XSELG <> *blanks and XSELG <> 'X') or                   MD060396
+     C                             (XSELZ1 <> *blanks and XSELZ1 <> 'X') or                 MD060396
+     C                             (XSELZ2 <> *blanks and XSELZ2 <> 'X') or                 MD060396
+     C                             (XSELZ3 <> *blanks and XSELZ3 <> 'X') or                 MD060396
+     C                             (XSELZ4 <> *blanks and XSELZ4 <> 'X') or                 MD060396
+     C                             (XSELZ5 <> *blanks and XSELZ5 <> 'X') or                 MD060396
+     C                             (XSELZ6 <> *blanks and XSELZ6 <> 'X') or                 MD060396
+     C                             (XSELZ7 <> *blanks and XSELZ7 <> 'X') or                 MD060396
+     C                             (XSELZ8 <> *blanks and XSELZ8 <> 'X') or                 MD060396
+     C                             (XSELZ9 <> *blanks and XSELZ9 <> 'X') or                 MD060396
+     C                             (XSELZ0 <> *blanks and XSELZ0 <> 'X')                    MD060396
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD060396
+     C                   EVAL      ZAMSID = 'UPM6010'                                       MD060396
+     C                   EVAL      ErrInd = 'Y'                                             MD060396
+     C                   EXSR      ZASNMS                                                   MD060396
+     C                   Endif                                                              MD060396
      C                   ENDIF
 
      C                   ENDDO

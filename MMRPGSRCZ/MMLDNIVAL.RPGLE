@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059368           Date 18Dec21               *
-      *  Prev Amend No. MD058543A          Date 09Sep21               *
+      *  Last Amend No. MD060283           Date 22Aug22               *
+      *  Prev Amend No. MD059368           Date 18Dec21               *
+      *                 MD058543A          Date 09Sep21               *
       *                 MD058734           Date 03Sep21               *
       *                 MD058644           Date 31Aug21               *
       *                 MD058547           Date 10Aug21               *
@@ -166,6 +167,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060283 - Error on Open Repo Confirmation - Maturity Event. *
+      *           - TOTI was double eventhough DDBSRC was blank or    *
+      *             not amended during REPO maturity date change.     *
       *  MD059368 - Inhibit the LIBOR Deregulation fields if CDL102   *
       *             is switched off                                   *
       *  MD058543A - BADJ not included in DDAIR during amend of deal. *
@@ -2334,6 +2338,7 @@
                                                                                             MD037869
       ** Get old base rate when action is not insert                                        MD037869
      C                   IF        DDACTN <> 'I'                                            MD037869
+     C                             AND DDBSRC <> *BLANKS                                    MD060283
      C**********         EVAL      Baserate = IKINTR - @SPRD                      MD037869 MD037869A
      C                   EVAL      Baserate = IKINTR - IKSPRD                              MD037869A
      C                   ENDIF                                                              MD037869

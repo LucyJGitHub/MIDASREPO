@@ -13,12 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060514           Date 14Sep22               *
-      *  Prev Amend No. MD060351           Date 17Aug22               *
+      *  Last Amend No. MD060542           Date 20Sep22               *
+      *  Prev Amend No. MD060514           Date 14Sep22               *
+      *                 MD060351           Date 17Aug22               *
       *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060542 - View should only be displayed when available      *
       *  MD060514 - Failed component can be restarted twice.          *
       *  MD060351 - Compilation error with multilanguage              *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
@@ -128,10 +130,16 @@
      C                   endif
 
      C                   If        V_EXFMT = 'Y'
+                                                                                            MD060542
+     C                   If        ##LYRX = ' '                                             MD060542
+     C                   setoff                                       22                    MD060542
+     C                   Endif                                                              MD060542
+                                                                                            MD060542
      C                   EXFMT     RECFMT
 
       * If Layer is selected
      C                   If        ##LYRX <> ' '
+     C                   seton                                        19                    MD060542
      C                   exsr      SR_LoadLayer
      C                   Endif
 
@@ -260,6 +268,7 @@
      C                   eval      N_VAR = %DEC(DENDED:6:0)
      C                   eval      ##ENDT = %TIME(N_VAR:*HMS)
      C                   seton                                        18
+     C                   setoff                                       19                    MD060542
       * At this point, DTAQ is about to be deleted, so no more WRITE is needed
      C                   eval      V_EXFMT = 'Y'
      C                   endif

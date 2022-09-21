@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 199811             Date 08Jan01               *
+      *  Last Amend No. 255109             Date 07Sep22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 199811             Date 08Jan01               *
       *                 224411             Date 05Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
@@ -51,6 +52,11 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  255109 - GLC35A failed due to currency out of balance.       *
+      *           Split into multiple postings if the posting amount  *
+      *           is over 9,999,999,999,999 to prevent truncation     *
+      *           due to limited field length in post files.          *
+      *         - Applied for MD-58682.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  199811 - Do not allow Customer Numbers equal to 000000 or    *
@@ -243,6 +249,10 @@
       *
      IDSSDY     E DSDSSDY
       * Second DS for Access Programs, Long Data Structure
+      * Constants:                                                                            255109
+      *                                                                                       255109
+     I              9999999999999         C         PSTLIM                                    255109
+      *                                                                                       255109
       *
      I/COPY ZSRSRC,ZSEDITZ2
       *
@@ -398,6 +408,8 @@
       *
       **  Write Input Movement to appropriate Output Posting File
       *
+     C                     MOVE 'N'       EXIT    1                                           255109
+      *                                                                                       255109
      C                     SELEC
       *
       **  Write GEPCPD Generated Entry
@@ -405,20 +417,28 @@
      C           *IN21     WHEQ '1'
      C           2         OCUR CNTRL
      C                     EXSR HASHR
+     C           EXIT      DOWEQ'N'                                                           255109
+     C           2         OCUR CNTRL                                                         255109
+     C                     EXSR SPLIT                                                         255109
      C                     WRITEGEPC
      C                     WRITEPOST1
      C                     EXSR OVFW
      C                     WRITEDETAILP1
+     C                     ENDDO                                                              255109
       *
       **  Write GESRPD Generated Entry
       *
      C           *IN22     WHEQ '1'
      C           3         OCUR CNTRL
      C                     EXSR HASHR
+     C           EXIT      DOWEQ'N'                                                           255109
+     C           3         OCUR CNTRL                                                         255109
+     C                     EXSR SPLIT                                                         255109
      C                     WRITEGESR
      C                     WRITEPOST2
      C                     EXSR OVFW
      C                     WRITEDETAILP2
+     C                     ENDDO                                                              255109
       *
       **  Write GEXFPD Generated Entry
       *
@@ -426,10 +446,14 @@
      C           4         OCUR CNTRL
      C                     EXSR HASHR
      C/COPY WNCPYSRC,MC0340C001
+     C           EXIT      DOWEQ'N'                                                           255109
+     C           4         OCUR CNTRL                                                         255109
+     C                     EXSR SPLIT                                                         255109
      C                     WRITEGEXF
      C                     WRITEPOST2
      C                     EXSR OVFW
      C                     WRITEDETAILP3
+     C                     ENDDO                                                              255109
      C/COPY WNCPYSRC,MC0340C002
       *
       **  Write GEXBPD Generated Entry
@@ -460,10 +484,14 @@
      C                     MOVE FTUAPC    PRFC                                                199613
      C                     ENDIF                                                              199613
      C/COPY WNCPYSRC,MC0340C003
+     C           EXIT      DOWEQ'N'                                                           255109
+     C           5         OCUR CNTRL                                                         255109
+     C                     EXSR SPLIT                                                         255109
      C                     WRITEGEXB
      C                     WRITEPOST3
      C                     EXSR OVFW
      C                     WRITEDETAILP4
+     C                     ENDDO                                                              255109
      C/COPY WNCPYSRC,MC0340C004
       *
      C                     ENDSL
@@ -711,15 +739,19 @@
       *****************************************************************
       *
      C           FRMAT     BEGSR
+      *                                                                                       255109
+     C           *LIKE     DEFN PAMT      TMPPST                                              255109
       *
       **  Convert Movement Amount to Posting Amount
       *
      C           PAMT      IFLT 0
      C                     MOVE '1'       DRCR
      C                     Z-SUBPAMT      PSTA
+     C                     Z-SUBPAMT      TMPPST                                              255109
      C                     ELSE
      C                     MOVE '0'       DRCR
      C                     Z-ADDPAMT      PSTA
+     C                     Z-ADDPAMT      TMPPST                                              255109
      C                     END
       *
       **  Format Branch code for output
@@ -999,7 +1031,8 @@
       *
       **   Convert Posting Amount for Hash Totals
       *
-     C           PSTA      DIV  1000      ZZAMT  153
+     C********** PSTA      DIV  1000      ZZAMT  153                                          255109
+     C           TMPPST    DIV  1000      ZZAMT  153                                          255109
       *
       **   Accumulate Hash Total.
       *
@@ -1230,6 +1263,39 @@
      C                     END
       *
      C                     ENDSR                           ** OVFW  **
+      *                                                                                       255109
+      *****************************************************************                       255109
+      /EJECT                                                                                  255109
+      *****************************************************************                       255109
+      *                                                                                       255109
+      *  SPLIT --- Subroutine to split postings if amount is more than                        255109
+      *            9,999,999,999,999                                                          255109
+      *                                                                                       255109
+      *  CALLED FROM: Main Processing                                                         255109
+      *                                                                                       255109
+      *  CALLS: ZSEDIT                                                                        255109
+      *                                                                                       255109
+      *****************************************************************                       255109
+      *                                                                                       255109
+     C           SPLIT     BEGSR                                                              255109
+     C           TMPPST    IFGT PSTLIM                                                        255109
+     C                     Z-ADDPSTLIM    PSTA                                                255109
+     C                     SUB  PSTLIM    TMPPST                                              255109
+     C                     ADD  1         ZZRECS                                              255109
+     C           1         OCUR CNTRL                                                         255109
+     C                     ADD  1         ZZRECS                                              255109
+     C                     ELSE                                                               255109
+     C                     Z-ADDTMPPST    PSTA                                                255109
+     C                     MOVE 'Y'       EXIT                                                255109
+     C                     ENDIF                                                              255109
+      *                                                                                       255109
+      **  Format Posting Amount for printing                                                  255109
+      *                                                                                       255109
+     C                     Z-ADDPSTA      ZFLD15                                              255109
+     C                     EXSR ZSEDIT                                                        255109
+     C                     MOVE ZOUT21    DAMT                                                255109
+      *                                                                                       255109
+     C                     ENDSR                                                              255109
       *
       ********************************************************************
       /EJECT

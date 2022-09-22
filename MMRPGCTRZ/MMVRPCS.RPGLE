@@ -475,7 +475,7 @@
      C                   EXSR      *PSSR                                                    MD060528
      C                   ENDIF                                                              MD060528
                                                                                             MD060528
-      ** Setup tax amount rounding down indicators                                          MD060528
+      ** Setup AllowBankForTDTIDeal and AllowNonBankForIPIT system values                   MD060528
                                                                                             MD060528
      C                   EVAL      NBankIPIT = P@VL01                                       MD060528
      C                   EVAL      BankTDTI  = P@VL02                                       MD060528

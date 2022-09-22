@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. CUP044             Date 22May22              */
-/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*       Last Amend No. CUP046             Date 18Jul22              */
+/*       Prev Amend No. CUP044             Date 22May22              */
+/*                      MD054605           Date 17Oct19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      AR911540           Date 13Jan12              */
 /*                      CSC043             Date 18Jun10              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
 /*       CUP044 - One Touch Bridge Automation Changes - Release/     */
 /*                Patch Upgrade                                      */
 /*                Avoid command prompt                               */
@@ -186,9 +188,13 @@ VALIDATE:                                                                       
              SNDPGMMSG  MSG('CHECK') TOPGMQ(*PRV (&PGMED)) +
                           MSGTYPE(*RQS) KEYVAR(&KEYVR)                                    /*CUP044*/
              RCVMSG   PGMQ(*PRV &PGMED)  MSGKEY(&KEYVR)  SENDER(&SNDER)                   /*CUP044*/
-             IF         COND((%SST(&SNDER 56 10) *EQ 'UPC6000   ') +
+/**********  IF         COND((%SST(&SNDER 56 10) *EQ 'UPC6000   ') +
                           *OR (%SST(&SNDER 56 10) *EQ 'UPC7000   +
-                          ')) THEN(DO)                                                    /*CUP044*/
+                          ')) THEN(DO) */                                         /*CUP044**CUP046*/
+             IF         COND((%SST(&SNDER 56 10) *EQ 'UPC6000   ') +
+                          *OR (%SST(&SNDER 56 10) *EQ 'UPC7000  ') +
+                          *OR (%SST(&SNDER 56 10) *EQ 'UPC8010   +
+                          ')) THEN(DO)                                                    /*CUP046*/
              CHGCLS     CLS(&PTFUPG/SMCLSI) RUNPTY(20) +
                           TIMESLICE(2000)                                                 /*CUP044*/
              MONMSG     MSGID(CPF6801)                                                    /*CUP044*/

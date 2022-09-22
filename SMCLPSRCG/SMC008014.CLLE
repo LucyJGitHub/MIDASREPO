@@ -1,0 +1,76 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008014 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program resets auto-generated fields.        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RSTOPT) TYPE(*CHAR) LEN(7)
+
+             DCLF       FILE(UPAGFJW0)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             IF         COND(&LAYER *NE &IDLAYR *AND &LAYER *NE +
+                          '*ALL') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+             IF         COND(&IDDEL *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+
+                CHGVAR     VAR(&RSTOPT) VALUE(&IDMIG)
+
+             CHKOBJ     OBJ(&IDTBL) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+
+             RESETMAXID FILE(&IDTBL) RSTOPT(&RSTOPT)
+
+             GOTO       CMDLBL(READNEXT)
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

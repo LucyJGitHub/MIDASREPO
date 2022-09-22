@@ -1,0 +1,85 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008120 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program migrates the users                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+
+             DCLF       FILE(SMUSMGTD)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Create temporary file to hold error messages. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+
+/* read file */
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(DONE)
+             ENDDO
+             CALL       PGM(SMC008071) PARM(&T_USRP &T_FMSYS +
+                          &T_TOSYS &T_RTNCOD &T_RUSRP &T_MITEMDD +
+                          &T_USRTXT)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             GOTO       CMDLBL(READNEXT)
+
+DONE:
+/* Process is now similar to SMC001070 */
+/* Call program to drop non-existent or logically deleted menu items */
+/*  from MACBRDD if migration was between MidasPlus systems.         */
+             IF         COND(&T_MITEMDD *NE 'Y') THEN(DO)
+                CALL       PGM(SM001072)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+
+/* Call program SMC1074 to reconcile MUSERZZ with MUSERDD. */
+             CALL       PGM(SM001074)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

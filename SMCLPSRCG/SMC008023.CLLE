@@ -1,0 +1,142 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008023 - Shell to drop and create stored procedures      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &GPFXSVAL &BRGSVAL &SRCSVAL)
+
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SRCSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&COMPARE) TYPE(*CHAR) LEN(8)
+
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&GXPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+
+             DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+
+/* Create data area /MIDASMSG in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+
+
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+
+             IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+
+             IF         COND(&GISVAL *EQ &SRCSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PTFSRC) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+
+             GOTO       CMDLBL(VALIDATE)
+
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                CHGJOB     SWS(XXXXXX11)
+                DMPCLPGM
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/* Save library list. */
+             SAVLIBL    SAVDTL(SMC008023)
+
+/* Set up global layer library list. */
+             CALL       PGM(GPC000016) PARM(&GPSBSID)
+
+/* Delete the driving file in QTEMP if it already exists. */
+             DLTF       FILE(QTEMP/UPDLVC*)
+             MONMSG     MSGID(CPF0000)
+
+             RMVLIBLE   LIB(&PTFUPG)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&PTFUPG) POSITION(*FIRST)
+
+             CHGVAR     VAR(&GXPLIB) VALUE(&GPSBSID *TCAT 'GXPLIB')
+             CHGVAR     VAR(&COMPARE) VALUE('SQLSRCG ')
+
+
+             IF         COND(&MODE *EQ '*IMP') THEN(DO)
+/* Call program to build driving file for SQL procedures. */
+                CALL       PGM(UPC000002) PARM(&PTFSRC &COMPARE)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+                OVRDBF     FILE(UPDLVCPD) TOFILE(QTEMP/UPDLVCPD) +
+                             OVRSCOPE(*JOB)
+             ENDDO
+
+/* Call program to drop and create procedures. */
+             CALL       PGM(UPC000001) PARM(&GXPLIB &PTFSRC &COMPARE)
+             DLTOVR     FILE(UPDLVCPD) LVL(*JOB)
+             MONMSG     MSGID(CPF0000)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+ENDPGM:
+/* Restore original library list. */
+             RSTLIBL    SAVEDLIBL(SMC008023)
+             MONMSG     MSGID(CPF0000)
+
+             ENDPGM

@@ -1,0 +1,102 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008113 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program updates Trailer Files (SDFCTLPA and  */
+/*                 TABLETX.                                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FCTLEXIST) TYPE(*CHAR) LEN(1)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Retrieve old zone prefix */
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgOldZonePrefix' &SVAL1  +
+                             ' ' ' '  ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             CHGVAR     VAR(&OLDSBSID) VALUE(%SST(&SVAL1 1 2))
+
+/* Check for existence of SDFCTLPA in 'from' system and perform copies. */
+             CHGVAR     VAR(&FMLIB) VALUE(&OLDSBSID *TCAT 'DTALIB')
+             CHKOBJ     OBJ(&FMLIB/SDFCTLPA) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&FMLIB) VALUE(&OLDSBSID *TCAT 'DMLIB')
+                CHKOBJ     OBJ(&FMLIB/SDFCTLPA) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGVAR     VAR(&FCTLEXIST) VALUE('N')
+                   GOTO       CMDLBL(TABLETX)
+                ENDDO
+             ENDDO
+             CPYF       FROMFILE(&FMLIB/SDFCTLPA) TOFILE(SMFCTLPA) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+             CHGVAR     VAR(&FCTLEXIST) VALUE('Y')
+
+TABLETX:
+/* Check for existence of TABLETX in 'from' system and perform copies. */
+             CHGVAR     VAR(&FMLIB) VALUE(&OLDSBSID *TCAT 'DTALIB')
+             CHKOBJ     OBJ(&FMLIB/TABLETX) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&FMLIB) VALUE(&OLDSBSID *TCAT 'DMLIB')
+             ENDDO
+             DLTF       FILE(QTEMP/SMTBLXPDT)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(SMTBLXPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(SMTBLXPDT)
+             CPYF       FROMFILE(&FMLIB/TABLETX) TOFILE(SMTBLXPD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+             CPYF       FROMFILE(TABLETX) TOFILE(SMTBLXPDT) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+
+             OVRDBF     FILE(TBLTXT) TOFILE(SMTBLXPDT)
+             CALL       PGM(SM000007) PARM(&FCTLEXIST)
+             DLTOVR     FILE(TBLTXT)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             CPYF       FROMFILE(SMTBLXPDT) TOFILE(TABLETX) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

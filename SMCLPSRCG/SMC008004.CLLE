@@ -1,0 +1,98 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008004 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program run ACTIONFILE *CFT                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCLF       FILE(UPAFDVPD)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Copy delivered Action File to system copy. */
+             CPYF       FROMFILE(UPAFCPPD) TOFILE(UPAFDVPD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                CLRPFM     FILE(UPAFDVPD)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)
+                CLRPFM     FILE(UPAFDVPD)
+             ENDDO
+
+/* Keep records for the layer only */
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC008004')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+             CHGVAR     VAR(&STM_STR) VALUE('delete UPAFDVPD where +
+                          ATFILE in (select AABONF from UPACTFPD')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE('where AALAYR <>' *BCAT +
+                          &QUOTE *TCAT &LAYER *TCAT &QUOTE *BCAT ')')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+
+RCVF:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+/* If file has no members then read next record ... */
+             IF         COND(&PREV *NE &ATFILE) THEN(DO)
+                ACTIONFILE MODE(*CFT) FILE(&ATFILE)
+             CHGVAR     VAR(&PREV) VALUE(&ATFILE)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+             ENDDO
+
+             GOTO       CMDLBL(RCVF)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

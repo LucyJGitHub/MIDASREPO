@@ -1,0 +1,138 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008110 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program check system values and generates    */
+/*                 report.                                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&FDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FCMPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SCMPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FWHICHLIB) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Retrieve old zone prefix */
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgOldZonePrefix' &SVAL1  +
+                             ' ' ' '  ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             CHGVAR     VAR(&OLDSBSID) VALUE(%SST(&SVAL1 1 2))
+
+/* Set up file for SQL statements. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for UTC000001')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+
+/* Call program */
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')
+             CHGVAR     VAR(&SCMPLIB) VALUE(&ZONE *TCAT 'DVLIB')
+
+             IF         COND(&FWHICHLIB *EQ 'DV ') THEN(DO)
+                CHGVAR     VAR(&FCMPLIB) VALUE(&OLDSBSID *TCAT 'DVLIB')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&FCMPLIB) VALUE(&OLDSBSID *TCAT 'DTALIB')
+             ENDDO
+
+/* is SDSRPXTD present in the old system? */
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DMLIB')
+             CHKOBJ     OBJ(&FDTALIB/SCSRPXTD) OBJTYPE(*FILE)
+/* if no */
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')
+                CHGVAR     VAR(&FCMPLIB) VALUE(&ZONE *TCAT 'DMLIB')
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &FCMPLIB +
+                        *TCAT '/SCSRPXTD a set a.akprvc = ')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+             CHGVAR     VAR(&SQLSTM) VALUE('(select b.akprvc  +
+                        from '  *CAT &FDTALIB *TCAT '/SCSARPPD b where ')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE(' a.aksarn  +
+                         = b.aksarn and a.akpnam = b.akpnam)')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE(' where exists ( +
+                         select * from ' *CAT &FDTALIB *TCAT '/SCSARPPD b ')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE(' where   +
+                         a.aksarn = b.aksarn and a.akpnam = b.akpnam)')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             RUNSQLSTM  SRCFILE(RUNSQL) SRCMBR(RUNSQLSTM) COMMIT(*NONE)
+             GOTO       CMDLBL(END)
+             ENDDO
+/* if yes */
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DMLIB')
+             CHGVAR     VAR(&FCMPLIB) VALUE(&ZONE *TCAT 'DMLIB')
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &FCMPLIB +
+                        *TCAT '/SCSRPXTD a set a.akprvc = ')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+             CHGVAR     VAR(&SQLSTM) VALUE('(select b.akprvc  +
+                        from '  *CAT &FDTALIB *TCAT '/SCSRPXTD b where ')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE(' a.aksarn  +
+                         = b.aksarn and a.akpnam = b.akpnam)')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE(' where exists ( +
+                         select * from ' *CAT &FDTALIB *TCAT '/SCSRPXTD b ')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             CHGVAR     VAR(&SQLSTM) VALUE(' where   +
+                         a.aksarn = b.aksarn and a.akpnam = b.akpnam)')
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
+             RUNSQLSTM  SRCFILE(RUNSQL) SRCMBR(RUNSQLSTM) COMMIT(*NONE)
+             GOTO       CMDLBL(END)
+
+             DLTOVR     FILE(*ALL)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

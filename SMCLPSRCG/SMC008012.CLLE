@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008011 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program sets up authorities for Global layer.*/
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&USERNAME) TYPE(*CHAR) LEN(10) VALUE('*PUBLIC')
+
+             DCLF       FILE(UPIBMJW0) OPNID(A)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+
+READNEXT:
+             RCVF       OPNID(A)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             IF         COND(&A_IODEL *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+
+/* Check that object exists and that the user has authority. */
+             CHKOBJ     OBJ(&A_IOLIB/&A_IOIBMO) OBJTYPE(&A_IOTYPE) AUT(*ALL)
+/* Object/library combination does not exist. */
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+CHOOSE:
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+
+
+/* Authority is not enough. */
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             CHGVAR     VAR(&A_IOPROF) VALUE(&USERNAME)
+
+/* First, revoke all authority for requested object ... */
+             RVKOBJAUT  OBJ(&A_IOLIB/&A_IOIBMO) OBJTYPE(&A_IOTYPE) +
+                          USER(&A_IOPROF) AUT(*ALL)
+             MONMSG     MSGID(CPF2256)
+/* ... and then grant the required authority. */
+             GRTOBJAUT  OBJ(&A_IOLIB/&A_IOIBMO) OBJTYPE(&A_IOTYPE) +
+                          USER(&A_IOPROF) AUT(&A_IOAUT)
+
+             GOTO       CMDLBL(READNEXT)
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

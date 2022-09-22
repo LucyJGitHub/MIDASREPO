@@ -1,0 +1,195 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008103 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program runs update programs before zone     */
+/*                 migration.                                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&OLDRLVL) TYPE(*CHAR) LEN(22)
+             DCL        VAR(&PROD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRLS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(200)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&USTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+
+             DCLF       FILE(SMRLSLPD) OPNID(B)
+             DCLF       FILE(SMUPGJW0) OPNID(C)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC008103')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+
+/* Create data area MIDASMSG in QTEMP for error handling. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+
+/* Retrieve system value */
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgOldSystemRlsLvl' &SVAL1  +
+                             ' ' ' '  ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             CHGVAR     VAR(&OLDRLVL) VALUE(%SST(&SVAL1 1 22))
+
+/* Break down 'from' release level. */
+             CHGVAR     VAR(&PROD) VALUE(%SST(&OLDRLVL 1 10))
+             CHGVAR     VAR(&RLS) VALUE(%SST(&OLDRLVL 11 10))
+             CHGVAR     VAR(&SRLS) VALUE(%SST(&OLDRLVL 21 2))
+
+RELEASELVL:
+             RCVF       OPNID(B)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CALL)
+             ENDDO
+
+             IF         COND(&B_RLPROD *EQ &PROD *AND &B_RLRLS *EQ +
+                          &RLS *AND &B_RLSRLS *EQ &SRLS) THEN(DO)
+/* Set all statuses to 'C' apart from the release level that is required. */
+                CHGVAR     VAR(&STM_STR) VALUE('update SMUPGXTD set +
+                             AUUSTS =' *BCAT &QUOTE *TCAT 'C' *TCAT +
+                             &QUOTE *BCAT 'where AUPROJ <>' *BCAT +
+                             &QUOTE *TCAT &B_RLUPMB *TCAT &QUOTE)                       /*MD056103*/
+                CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+                RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)
+                MONMSG     MSGID(SQL9010)
+             ENDDO
+
+             GOTO       CMDLBL(RELEASELVL)
+
+CALL:
+             RCVF       OPNID(C)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ERRORCHK)
+             ENDDO
+             IF         COND((&C_AUUSTS *NE ' ') *AND (&C_AUUSTS *NE +
+                          'F')) THEN(DO)
+             GOTO       CMDLBL(CALL)                                                    /*MD056103*/
+             ENDDO                                                                      /*MD056103*/
+                                                                                        /*MD056103*/
+             IF         COND(&C_AUFMTO *NE '*BEFORE' *OR &C_AULAYR *NE +
+                          '*ZONE') THEN(DO)                                             /*MD056103*/
+             GOTO       CMDLBL(CALL)                                                    /*MD056103*/
+             ENDDO                                                                      /*MD056103*/
+                                                                                        /*MD056103*/
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&CMD) VALUE(' ')
+             CHGVAR     VAR(&CMD) VALUE('CALL PGM(' *TCAT &C_AUMBNM +
+                          *TCAT ')')
+             IF         COND(&C_AUEXIN *NE ' ') THEN(DO)
+                CHGVAR     VAR(&CMD) VALUE(&CMD *BCAT 'PARM(' *TCAT +
+                             &C_AUEXIN *TCAT ')')
+             ENDDO
+             CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
+             MONMSG     MSGID(CPF0001 CPF0006) EXEC(DO)
+                CHGVAR     VAR(&USTS) VALUE('F')
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(UPDATE)
+             ENDDO
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&USTS) VALUE('F')
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&USTS) VALUE('C')
+             ENDDO
+/* Update logical with status. */
+UPDATE:
+             CHGVAR     VAR(&STM_STR) VALUE(' ')                                        /*MD056103*/
+             CHGVAR     VAR(&STM_STR) VALUE('update SMUPGXTD set  +
+                            AUUSTS = ' *BCAT &QUOTE *TCAT &USTS +
+                           *TCAT &QUOTE *BCAT ' where   +
+                           AUMBNM = ')                                                  /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                           /*MD056103*/
+             CHGVAR     VAR(&STM_STR) VALUE(' ')                                        /*MD056103*/
+             CHGVAR     VAR(&STM_STR) VALUE(&QUOTE *TCAT &C_AUMBNM +
+                           *TCAT &QUOTE *BCAT ' and AUPROJ = ' +
+                           *TCAT &QUOTE *TCAT &C_AUPROJ *TCAT &QUOTE)                   /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')                           /*MD056103*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*MD056103*/
+             MONMSG     MSGID(SQL9010)                                                  /*MD056103*/
+
+             GOTO       CMDLBL(CALL)
+
+ERRORCHK:
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                   RUNQRY     QRY(*NONE) QRYFILE((SMUPGJW2))
+                   DSPJOBLOG  OUTPUT(*PRINT)
+                   GOTO       CMDLBL(ERROR)
+             ENDDO
+             ELSE       CMD(DO)
+/* If no errors then set statuses back to blank. */
+                CHGVAR     VAR(&STM_STR) VALUE('update SMUPGXTD set +
+                             AUUSTS =' *BCAT &QUOTE *BCAT &QUOTE)
+                CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+                RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)
+                MONMSG     MSGID(SQL9010)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

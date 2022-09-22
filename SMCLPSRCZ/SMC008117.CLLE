@@ -1,0 +1,169 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008117 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program initializes zone. Similar to         */
+/*                 SMC000035.                                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OGPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&MIGRATE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0) VALUE(0)
+             DCLF       FILE(GOZONETD)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Create LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+
+/* Receive file that was updated at start of the process */
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             CALL       PGM(GOC000020) PARM(&GOZONE &GOCODE &GODESC +
+                          &GORDAY)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Call program to perform simple initialisation on files and data */
+/*  areas.                                                         */
+             CALL       PGM(SMC000126)
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Call SM1094 to copy SDBRCHPD records from the new zone to GZSDBRCHPD. */
+             OVRDBF     FILE(GZSDBRCHL0) TOFILE(GZSDBRCHL0) +
+                          OVRSCOPE(*JOB)
+             CALL       PGM(SM1094) PARM(&ZONE)
+             DLTOVR     FILE(GZSDBRCHL0) LVL(*JOB)
+
+/* Call SMC000004 to intialise GPINSTXPD. */
+             CALL       PGM(SMC000004)
+             IF COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Call SM000025 to initialise AUTOAUTH profile. */
+             CALL       PGM(SM000025)
+             IF COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Call UPC000701 to initialize GPWIPBTD and GPWIPXTD. */
+/* Retrieve BrgOldGlobalPrefix */
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                          'BrgOldGlobalPrefix' &SVAL1 +
+                          ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ')
+             IF         COND(&RTNCDE *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             CHGVAR     VAR(&OGPFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&OLDLIB) VALUE(&OGPFX *TCAT 'GTALIB')
+/* Check that library exists */
+             CHKOBJ     OBJ(&OLDLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             CHGVAR     VAR(&MIGRATE) VALUE('N')
+                GOTO       CMDLBL(UP000711)
+             ENDDO
+/* If not blank, check that T_WIPCF File exist in the old system */
+             CHKOBJ     OBJ(&OLDLIB/T_WIPCF) OBJTYPE(*FILE)
+/* If not found, assume no migration */
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             CHGVAR     VAR(&MIGRATE) VALUE('N')
+                GOTO       CMDLBL(UP000711)
+             ENDDO
+
+             CHGVAR     VAR(&MIGRATE) VALUE('Y')
+
+UP000711:
+             CALL       PGM(UP000711) PARM(&ZONE &GLOB &MIGRATE +
+                        &OLDLIB &ERROR)
+             IF COND(&ERROR *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Call program to add currencies to GPCURRPD; all currencies on */
+/* SDCURRPD must be present.                                     */
+             CALL       PGM(SM000002)
+             IF COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Call UP000100 to initialise collateralised lending extension files. */
+             CALL       PGM(UP000100)
+             IF COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Call SD0061X6 to initialise SDBRX2PD. */
+             CALL       PGM(SD0061X6)
+             IF COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Call SDBRCHEX1 to initialise GPBRCHEXPD */
+             CALL       PGM(SDBRCHEX1)
+             IF COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Call GENFLDNOS to populate ZAFLDNPD. */
+             GENFLDNOS  APINAME(*ALL)
+
+/* Populate ACCNTBXC if required. */
+             RTVMBRD    FILE(ACCNTBXC) NBRCURRCD(&NBRCURRCD)
+             IF         COND(&NBRCURRCD *EQ 0) THEN(DO)
+                CALL       PGM(GL3271ZG)
+             ENDDO
+
+/* Call program to update zone System Values. */
+             CALL       PGM(SMC000077) PARM(&ZONE &GLOB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

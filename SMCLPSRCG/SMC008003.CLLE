@@ -1,0 +1,131 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008003 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program migrates the GMLIB.                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SUBMIT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ACTIVE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FAILED) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(4) VALUE('*NO')
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ORLVL) TYPE(*CHAR) LEN(22)
+
+             DCLF       FILE(SMEXCPTD)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* set lib variables for migration */
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                             'BrgOldGlobalPrefix' &SVAL1  +
+                             'BrgOldSystemRlsLvl' &SVAL2  ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                IF         COND(%SST(&SVAL2 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             CHGVAR     VAR(&FRLIB) VALUE(%SST(&SVAL1 1 2) *TCAT 'GMLIB')
+             CHGVAR     VAR(&TOLIB) VALUE(&GLOB *CAT 'GMLIB')
+             CHGVAR     VAR(&ORLVL) VALUE(%SST(&SVAL2 1 22))
+
+
+/* Check if migration has run previously */
+             RTVMBRD    FILE(SMCPYDPD) NBRCURRCD(&NBRCURRCD)
+/* If no record, run the upgrade */
+             IF         COND(&NBRCURRCD *GT 0) THEN(DO)
+                CHGVAR     VAR(&RERUN) VALUE('*YES')
+             ENDDO
+
+/* Store release information in temporary data area .*/
+             DLTDTAARA  DTAARA(&FRLIB/SMBRGMIGDA)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(&FRLIB/SMBRGMIGDA) TYPE(*CHAR) +
+                          LEN(100) TEXT('Temporary data area for +
+                          database migration')
+             CHGDTAARA  DTAARA(&FRLIB/SMBRGMIGDA (1 10)) +
+                          VALUE(%SST(&ORLVL 1 10))
+             CHGDTAARA  DTAARA(&FRLIB/SMBRGMIGDA (11 10)) +
+                          VALUE(%SST(&ORLVL 11 10))
+             CHGDTAARA  DTAARA(&FRLIB/SMBRGMIGDA (21 2)) +
+                          VALUE(%SST(&ORLVL 21 2))
+
+/* run migration */
+RCVF:
+             RCVF
+             IF         COND(&EXLAYR *EQ '*ZONE') THEN(GOTO RCVF)
+
+             MIGRATEG   FROMLIB(&FRLIB) TOLIB(&TOLIB) RERUN(&RERUN) +
+                          SYSPFX(*YES) EXCEPTION(&EXTYP1/&EXOBJ1 +
+                          &EXTYP2/&EXOBJ2 &EXTYP3/&EXOBJ3 +
+                          &EXTYP4/&EXOBJ4 &EXTYP5/&EXOBJ5 +
+                          &EXTYP6/&EXOBJ6 &EXTYP7/&EXOBJ7 +
+                          &EXTYP8/&EXOBJ8 &EXTYP9/&EXOBJ9 +
+                          &EXTYP10/&EXOBJ10 &EXTYP11/&EXOBJ11 +
+                          &EXTYP12/&EXOBJ12 &EXTYP13/&EXOBJ13 +
+                          &EXTYP14/&EXOBJ14 &EXTYP15/&EXOBJ15 +
+                          &EXTYP16/&EXOBJ16 &EXTYP17/&EXOBJ17 +
+                          &EXTYP18/&EXOBJ18 &EXTYP19/&EXOBJ19 +
+                          &EXTYP20/&EXOBJ20) THRESHOLD(&EXTHRE) JUMP(&EXJUMP)
+
+/* Now wait for all jobs to complete */
+WAIT:
+             DLYJOB     DLY(10)
+             CALL       PGM(SM800043) PARM(&SUBMIT &ACTIVE &FAILED)
+             IF         COND(&SUBMIT *NE '     0' *OR &ACTIVE *NE '  -
+   0') THEN(GOTO WAIT)
+             IF         COND(&FAILED *NE '     0') THEN(DO)
+             CALL       PGM(SM000013)
+/* Send FAIL message to server */
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Send back DTAQ COMPLETE message to server job */
+             CALL       PGM(SM000013)
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

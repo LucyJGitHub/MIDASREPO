@@ -1,0 +1,129 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*XBI    OVRDBF FILE(CLRDBLIBML) TOFILE(QAFDMBRL)                    */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008002 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program initializes the migration of the     */
+/*                 global or zone layer. It end susbsystem, stops    */
+/*                 journalling, triggering ,...                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+
+             DCLF       FILE(CLRDBLIBML)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Clear migration work file */
+             CLRPFM     FILE(SMCPYDPD)
+
+/* End subsystem. */
+ENDSBS:
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL       PGM(UPC000147) PARM(&LAYER &GLOB &RTNFLAG)
+                ENDDO
+                ELSE CMD(DO)
+                CALL       PGM(UPC000147) PARM(&LAYER &ZONE &RTNFLAG)
+                ENDDO
+                IF         COND(&RTNFLAG *EQ 'E') THEN(DO)
+                   DMPCLPGM
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+
+/* End triggering. */
+ENDTRG:
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL       PGM(UPC000148) PARM(&LAYER &GLOB &RTNFLAG)
+                ENDDO
+                ELSE CMD(DO)
+                CALL       PGM(UPC000148) PARM(&LAYER &ZONE &RTNFLAG)
+                ENDDO
+                IF         COND(&RTNFLAG *EQ 'E') THEN(DO)
+                   DMPCLPGM
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+
+/* End journalling */
+ENDJRN:
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('GPBEGINJRN')
+                CALL       PGM(GPBEGINJRN) PARM(&GLOB '*END')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SCBEGINJRN')
+                CALL       PGM(SCBEGINJRN) PARM(&ZONE '*END')
+             ENDDO
+
+/* Clear DB or GM LIB */
+/* Not for the zone */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+/**********  CHGVAR     VAR(&LIB) VALUE(&ZONE *CAT 'DMLIB') */
+             GOTO       CMDLBL(END)
+             ENDDO
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&GLOB *CAT 'GMLIB')
+             ENDDO
+
+/* Display member list of all PFs in library to outfile. */
+             DSPFD      FILE(&LIB/*ALL) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/CLRDBLIBML)
+
+NEXTMEMBER:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(UTC0031)
+             ENDDO
+
+/* If file has no members then read next record ... */
+             IF         COND(&MLNAME *EQ ' ') THEN(DO)
+                GOTO       CMDLBL(NEXTMEMBER)
+             ENDDO
+/* ... otherwise clear the file. */
+             CLRPFM     FILE(&LIB/&MLFILE) MBR(&MLNAME)
+
+             GOTO       CMDLBL(NEXTMEMBER)
+
+UTC0031:
+/* Call program to clear data areas and data queues. */
+             CALL       PGM(UTC0031) PARM(&LIB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

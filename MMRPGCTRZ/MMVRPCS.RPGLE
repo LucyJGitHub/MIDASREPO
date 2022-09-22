@@ -48,6 +48,8 @@
       *  MD060528 - CDL063 fix - Split system value AllowBankNBankCpty*
       *             into two - AllowBankForTDTIDeal and               *
       *             AllowNonBankForIPIT                               *
+      *           - CDL063 became non-switchable feature. It is       *
+      *             replaced by system value.                         *
       *  CDL063 - Allow non-bank, bank counterparty on certain deal   *
       *           types                                               *
       *  MD046248 - Finastra Rebranding                               *
@@ -178,8 +180,8 @@
      D P@OP10          S             20A                                                    MD060528
      D P@VL10          S            200A                                                    MD060528
                                                                                             MD060528
-     D W#BankDeal      C                   CONST('AllowNonBankForIPIT')                     MD060528
-     D W#NBnkDeal      C                   CONST('AllowBankForTDTIDeal')                    MD060528
+     D W#NBnkDeal      C                   CONST('AllowNonBankForIPIT')                     MD060528
+     D W#BankDeal      C                   CONST('AllowBankForTDTIDeal')                    MD060528
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -334,8 +336,8 @@
       *
       ** Customer is a bank
       *
-      ** If CDL063 is on, bypass the validation for bank                                      CDL063
-      *                                                                                       CDL063
+      ***If CDL063*is*on,*bypass*the*validation*for*bank                             CDL063 MD060528
+      **********                                                                     CDL063 MD060528
      C*****CDL063        IFNE      'Y'                                               CDL063 MD060528
      C     BankTDTI      IFNE      'Y'                                                      MD060528
      C     DDTYPE        IFEQ      'TD'
@@ -347,8 +349,8 @@
       *
      C                   ELSE
       *
-      ** If CDL063 is on, bypass the validation for non-bank                                  CDL063
-      *                                                                                       CDL063
+      ***If*CDL063*is*on,*bypass*the*validation*for*non-bank                         CDL063 MD060528
+      **********                                                                     CDL063 MD060528
      C*****CDL063        IFNE      'Y'                                               CDL063 MD060528
      C     NBankIPIT     IFNE      'Y'                                                      MD060528
      C     DDTYPE        IFEQ      'IP'
@@ -422,16 +424,16 @@
      C                   EVAL      CSD025 = 'Y'                                               CSD025
      C                   ENDIF                                                                CSD025
                                                                                               CSD025
-     C                   CALLB     'AOSARDR0'                                                 CDL063
-     C                   PARM      *BLANKS       PRtCd             7                          CDL063
-     C                   PARM      '*VERIFY'     POptn             7                          CDL063
-     C                   PARM      'CDL063'      PSARD             6                          CDL063
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL063
-                                                                                              CDL063
-     C                   MOVE      'N'           CDL063            1                          CDL063
-     C                   IF        PRtCd = *Blanks                                            CDL063
-     C                   EVAL      CDL063 = 'Y'                                               CDL063
-     C                   ENDIF                                                                CDL063
+     C**********         CALLB     'AOSARDR0'                                        CDL063 MD060528
+     C**********         PARM      *BLANKS       PRtCd             7                 CDL063 MD060528
+     C**********         PARM      '*VERIFY'     POptn             7                 CDL063 MD060528
+     C**********         PARM      'CDL063'      PSARD             6                 CDL063 MD060528
+     C*****SCSARD        PARM      SCSARD        DSFDY                               CDL063 MD060528
+      **********                                                                     CDL063 MD060528
+     C**********         MOVE      'N'           CDL063            1                 CDL063 MD060528
+     C**********         IF        PRtCd = *Blanks                                   CDL063 MD060528
+     C**********         EVAL      CDL063 = 'Y'                                      CDL063 MD060528
+     C**********         ENDIF                                                       CDL063 MD060528
       *                                                                                       CDL063
       ** Access Midas System values via access program                                      MD060528
       *                                                                                     MD060528

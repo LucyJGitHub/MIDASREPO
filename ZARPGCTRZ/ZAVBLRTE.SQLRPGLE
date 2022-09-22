@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059624           Date 20Jul22               *
-      *  Prev Amend No. MD059141           Date 26Oct21               *
+      *  Last Amend No. MD060473           Date 15Sep22               *
+      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *                 MD059141           Date 26Oct21               *
       *                 MD059065           Date 15Oct21               *
       *                 MD058988           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -44,6 +45,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060473 - Inconsistent behavior on BSRT Mnt when rate       *
+      *             rounding decimal is 0 and 00                      *
+      *             Move the value of DDRRDP to a new variable and    *
+      *             test for zero value before defaulting             *
       *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059141 - SIRS Transaction accepting NCCR and SARR on       *
       *             'Their Details'                                   *
@@ -1509,8 +1514,12 @@
      C                             isRndApplies = 'Y')                                      MD059624
                                                                                             MD059624
       ** Default value depending on where this program is called                            MD059624
+      *                                                                                     MD060473
+     C                   MOVE      DDRRDP        NURRDP            2 0                      MD060473
+      *                                                                                     MD060473
      C                   IF        DDRRDP = *BLANKS OR                                      MD059624
-     C                             DDRRDP = '00'                                            MD059624
+     C**********                   DDRRDP = '00'                                   MD059624 MD060473
+     C                             NURRDP = *ZEROS                                          MD060473
                                                                                             MD059624
      C                   SELECT                                                             MD059624
                                                                                             MD059624
@@ -1620,11 +1629,13 @@
      C                   ENDIF                                                              MD059624
      C                   ELSE                                                               MD059624
      C                   MOVE      '00'          WDAY
+     C                   MOVE      DDRRDP        NURRDP            2 0                      MD060473
 
       ** Default value depending on where this program is called
      C**********         IF        DDRRDP = *BLANKS                                         MD059065
      C                   IF        DDRRDP = *BLANKS OR                                      MD059065
-     C                             DDRRDP = '00'                                            MD059065
+     C**********                   DDRRDP = '00'                                   MD059065 MD060473
+     C                             NURRDP = *ZEROS                                          MD060473
 
      C                   SELECT
 

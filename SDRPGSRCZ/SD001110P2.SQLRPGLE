@@ -12,13 +12,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059624           Date 20Jul22               *
-      *  Prev Amend No. MD058708A          Date 09Sep21               *
+      *  Last Amend No. MD060524           Date 15Sep22               *
+      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *                 MD058708A          Date 09Sep21               *
       *                 MD058708           Date 31Aug21               *
       *                 CDL102  *CREATE    Date 01Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060524 - SD001110P2, CCR Rounding Precision did not take   *
+      *             into consideration the deal amendment made for    *
+      *             the rate rounding decimal places. The old value is*
+      *             displayed in the mentioned report for the field   *
+      *             CCR Rounding Precision                            *
+      *             Amend the program to use the field TRRRDP instead *
+      *             of RRDP                                           *
       *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD058708A - Base Rate Code changed via BC deal amendment     *
       *              still not reflected on the report. Use BRTT from *
@@ -412,12 +420,14 @@
      C                   ENDIF                                                              MD059624
      C                   IF        isRndApplies = 'Y'                                       MD059624
      C                   EVAL      P1RAPL= 'Y'                                              MD059624
-     C                   EVAL      P1ROPR = RRDP                                            MD059624
+     C**********         EVAL      P1ROPR = RRDP                                   MD059624 MD060524
+     C                   EVAL      P1ROPR = TRRRDP                                          MD060524
      C                   EVAL      P1RTRO = 0                                               MD059624
      C                   ELSE                                                               MD059624
      C                   EVAL      P1RAPL= 'N'                                              MD059624
      C                   EVAL      P1ROPR = 0                                               MD059624
-     C                   EVAL      P1RTRO = RRDP                                            MD059624
+     C**********         EVAL      P1RTRO = RRDP                                   MD059624 MD060524
+     C                   EVAL      P1RTRO = TRRRDP                                          MD060524
      C                   ENDIF                                                              MD059624
      C                   WRITE     SD001110D2
      C                   WRITE     SD001110H3

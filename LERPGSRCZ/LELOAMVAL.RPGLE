@@ -2659,7 +2659,7 @@
      C                   ENDIF                                                              MD057537
       *                                                                                     MD057537
      C                   ENDIF                                                              MD057537
-      *
+      *                                                                                     MD057537
       ** Check amount against the current principal amount of SVOLNO
       ** Only if amendment is against a participation sold
      C     SVPTYP        IFNE      64

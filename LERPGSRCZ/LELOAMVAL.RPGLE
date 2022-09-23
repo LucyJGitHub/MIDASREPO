@@ -119,7 +119,7 @@
       *           exclude non-multi-currency loans. (SVNCCY = '   ')  *
       *  CLE125 - Amendment to LE Authorization Rules                 *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
-      *             field buffers. REMOVE TEMP                        *
+      *             field buffers.                                    *
       *  MD026384 - Added generation by assignment processing.        *
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to use larger workfield for FA_FAMT and     *
@@ -3416,7 +3416,6 @@
       /EJECT
       *****************************************************************
       * SRTAMT - Accumulate total amount sold for the original loan   *
-
       *****************************************************************
      C     SRTAMT        BEGSR
       *
@@ -6161,7 +6160,6 @@
       ** Transaction information 2                                                          MD026384
       *                                                                                     MD026384
      C                   PARM                    LOAMBuffer                                 MD057739
-     C*
 
       ** Current loan amendment in file format from caller
      C                   PARM                    CurFilLoam

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051827           Date 03Mar22               *
-      *  Prev Amend No. MD058763           Date 08Nov21               *
+      *  Last Amend No. MD057537           Date 13Sep22               *
+      *  Prev Amend No. MD051827           Date 03Mar22               *
+      *                 MD058763           Date 08Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR918361           Date 02Apr12               *
@@ -175,6 +176,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057537 - Return a warning message when principal amount    *
+      *             exceeds one billion.                              *
       *  MD051827 - System allows maturity date of a parts purchased  *
       *             loan to be amended with an earlier date than loan *
       *             fee's end date. Instead of LEFEEDL2, use LEFEEDL6 *
@@ -669,6 +672,8 @@
      D PEAInd          C                   CONST('PEAIndicator')                              CSC054
      D RateFixDays     C                   Const('RateFixingDaysDfault')                      256579
      D FctyNoDaysFwd   C                   Const('FctyExceedNoDaysFwd')                       CLE158
+      *                                                                                     MD057537
+     D billion         C                   CONST(1000000000)                                MD057537
       *
       ** +--------------------------------------+
       ** | Arrays and Data Structures           |
@@ -3754,6 +3759,13 @@ E001 C                   ENDIF
      C                   ENDIF                                                                CLE106
      C                   ENDIF                                                                CLE106
       *
+     C     WSVAM         IFGT      billion                                                  MD057537
+     C                   MOVE      'W'           DDCPAMOK                                   MD057537
+     C                   ADD       1             WId                                        MD057537
+     C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)                             MD057537
+     C                   MOVEL     '5049550'     WMsgIDXAr(WId)                             MD057537
+     C                   ENDIF                                                              MD057537
+      *                                                                                     MD057537
      C     DDCPAMOK      IFNE      'N'
      C                   Z-ADD     WSVAM         CCLCPAM
      C                   ENDIF

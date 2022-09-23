@@ -120,10 +120,10 @@
       *  CLE125 - Amendment to LE Authorization Rules                 *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
       *             field buffers. REMOVE TEMP                        *
-      *  MD026384 - Added generation by assignment processing. RE TEMP*
-      *  MD058307 - COB: PDP LOAMs failed with dumps. RE TEMP         *
+      *  MD026384 - Added generation by assignment processing.        *
+      *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to use larger workfield for FA_FAMT and     *
-      *             CAF_FAMT. RE TEMP                                 *
+      *             CAF_FAMT.                                         *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
@@ -5585,11 +5585,11 @@
       *                                                                                     MD026384
       ** GASS should be 'A' if generated from assignment else 'P'                           MD026384
       *                                                                                     MD026384
-     C*    DDGASS        IFEQ      'A'                                                      MD026384
-     C*                  MOVE      DDGASS        LAGASS                                     MD026384
-     C*                  ELSE                                                               MD026384
+     C     DDGASS        IFEQ      'A'                                                      MD026384
+     C                   MOVE      DDGASS        LAGASS                                     MD026384
+     C                   ELSE                                                               MD026384
      C                   MOVE      'P'           LAGASS                                       CLE106
-     C*                  ENDIF                                                              MD026384
+     C                   ENDIF                                                              MD026384
       *
      C     DDATYP        IFEQ      'BC'
      C                   Z-ADD     BRTE          LABRTE
@@ -6160,7 +6160,7 @@
       *                                                                                     MD026384
       ** Transaction information 2                                                          MD026384
       *                                                                                     MD026384
-     C*                   PARM                    LOAMBuffer                                MD057739
+     C                   PARM                    LOAMBuffer                                 MD057739
      C*
 
       ** Current loan amendment in file format from caller

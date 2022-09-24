@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. 249680             Date 18May22               *
+      *  Last Amend No. MD057537           Date 13Sep22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 249680             Date 18May22               *
       *                 CLE126             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -215,6 +216,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057537 - When the value of BALSUS is greater than 13 digits*
+      *             the amount posted to GELEPD is wrong (0). Since   *
+      *             field PSTA cannot accomodate values greater than  *
+      *             13 digits because its length is only 13.          *
+      *           - Split BALSUS to two or more amounts when contains *
+      *             a number more than 13 digits.                     *
       *  CLE138 -  Facilities Class Codes (Recompile)                 *
       *  249680 - If account key is for a participant facility and    *
       *           posting reference 3, post to prime facility         *
@@ -2323,6 +2330,8 @@
       *                                                                                     MD020134
      I              'ValueDatePostingDate'C         W#AICV                                  MD020134
       *                                                                                     MD020134
+     I              9999999999999         C         BALSU1                                  MD057537
+      *                                                                                     MD057537
      C/EJECT
      C********************************************************************
      C**********           MOVEACPY@      BIS@   80                                           CSC042
@@ -2697,6 +2706,20 @@
       *                                                                                     MD002731
      CL2                   MOVE '0'       RINDS                                             MD002731
       *                                                                                     MD002731
+     CL2                   Z-ADDBALSUS    BALSHL 150                                        MD057537
+     CL2                   Z-ADD0         BALSUP 150                                        MD057537
+      *                                                                                     MD057537
+     CL2                   EXSR SRCNTR                                                      MD057537
+      *                                                                                     MD057537
+      ** Check if BALSUS is geater than 13 digits long. If so split into two or             MD057537
+      ** more amounts.                                                                      MD057537
+      *                                                                                     MD057537
+     CL2         DIG       IFGT 13                                                          MD057537
+     CL2                   Z-ADDBALSUS    BALSUP                                            MD057537
+     CL2                   Z-ADDBALSU1    BALSUS                                            MD057537
+     CL2                   SUB  BALSUS    BALSUP                                            MD057537
+     CL2                   ENDIF                                                            MD057537
+      *                                                                                     MD057537
      CL2                   EXCPTIMBAL                                     HK0000
       *                                                                                    AR1079479
       ** Move back the value of LE2 to 'L'.                                                AR1079479
@@ -2709,7 +2732,56 @@
      CL2                   Z-ADD1         Z                               S01100
      CL2                   Z-ADD2         S                               S01100
      CL2                   EXSR HASH                                      S01100
+      *                                                                                     MD057537
+      **                                                                                    MD057537
+      *                                                                                     MD057537
+     CL2         BALSUP    IFNE 0                           B003                            MD057537
+     CL2                   Z-ADDBALSUP    BALSHL                                            MD057537
+     CL2                   EXSR SRCNTR                                                      MD057537
+      *                                                                                     MD057537
+     CL2         DIG       IFLT 13                          B004                            MD057537
+     CL2         DIG       OREQ 13                                                          MD057537
+     CL2                   Z-ADDBALSUP    BALSUS                                            MD057537
+     CL2                   EXCPTIMBAL                                                       MD057537
+     CL2                   ADD  1         NRIT                                              MD057537
+     CL2         BALSUS    DIV  1000      ZZAMT                                             MD057537
+     CL2                   Z-ADD1         Z                                                 MD057537
+     CL2                   Z-ADD2         S                                                 MD057537
+     CL2                   EXSR HASH                                                        MD057537
+      *                                                                                     MD057537
+     CL2                   ELSE                                                             MD057537
+      *                                                                                     MD057537
+     CL2         DIG       DOWGT13                                                          MD057537
+     CL2                   Z-ADDBALSU1    BALSUS                                            MD057537
+     CL2                   EXCPTIMBAL                                                       MD057537
+     CL2                   ADD  1         NRIT                                              MD057537
+     CL2         BALSUS    DIV  1000      ZZAMT                                             MD057537
+     CL2                   Z-ADD1         Z                                                 MD057537
+     CL2                   Z-ADD2         S                                                 MD057537
+     CL2                   EXSR HASH                                                        MD057537
+      *                                                                                     MD057537
+     CL2                   SUB  BALSUS    BALSUP                                            MD057537
+     CL2                   Z-ADDBALSUP    BALSHL                                            MD057537
+     CL2                   EXSR SRCNTR                                                      MD057537
+      *                                                                                     MD057537
+     CL2         DIG       IFLT 13                                                          MD057537
+     CL2         DIG       OREQ 13                          B005                            MD057537
+     CL2                   Z-ADDBALSUP    BALSUS                                            MD057537
+     CL2                   EXCPTIMBAL                                                       MD057537
+     CL2                   ADD  1         NRIT                                              MD057537
+     CL2         DIG       DIV  1000      ZZAMT                                             MD057537
+     CL2                   Z-ADD1         Z                                                 MD057537
+     CL2                   Z-ADD2         S                                                 MD057537
+     CL2                   EXSR HASH                                                        MD057537
+     CL2                   ENDIF                            E005                            MD057537
+      *                                                                                     MD057537
+     CL2                   ENDDO                                                            MD057537
+      *                                                                                     MD057537
+     CL2                   ENDIF                            E004                            MD057537
+      *                                                                                     MD057537
+     CL2                   ENDIF                            E003                            MD057537
      CL2                   END                              E001          S01100
+      *
      CL3         AKSI      IFEQ 'Y'                         B001          S01117
      CL3         *INU7     ANDEQ'0'                                       S01117
      CL3         *IN46     IFEQ '0'                                       S01117
@@ -2788,6 +2860,21 @@
       *                                                                                     MD002731
      CL3                   MOVE '0'       RINDS                                             MD002731
       *                                                                                     MD002731
+     CL3                   Z-ADDBALSUS    BALSHL 150                                        MD057537
+     CL3                   Z-ADD0         BALSUP 150                                        MD057537
+      *                                                                                     MD057537
+     CL3                   EXSR SRCNTR                                                      MD057537
+      *                                                                                     MD057537
+      ** Check if BALSUS is geater than 13 digits long. If so split into two or more        MD057537
+      ** amounts.                                                                           MD057537
+      *                                                                                     MD057537
+     CL3         DIG       IFGT 13                                                          MD057537
+     CL3                   Z-ADDBALSUS    BALSUP                                            MD057537
+     CL3                   Z-ADDBALSU1    BALSUS                                            MD057537
+     CL3                   SUB  BALSUS    BALSUP                                            MD057537
+     CL3                   ENDIF                                                            MD057537
+      *                                                                                     MD057537
+      *
      CL3                   EXCPTIMBAL                                     156903
      CL3                   SETOF                     79                   156903
       *                                                                   156903
@@ -2796,6 +2883,54 @@
      CL3                   Z-ADD1         Z                               156903
      CL3                   Z-ADD2         S                               156903
      CL3                   EXSR HASH                                      156903
+      *                                                                                     MD057537
+      **                                                                                    MD057537
+      *                                                                                     MD057537
+     CL3         BALSUP    IFNE 0                           B003                            MD057537
+     CL3                   Z-ADDBALSUP    BALSHL                                            MD057537
+     CL3                   EXSR SRCNTR                                                      MD057537
+      *                                                                                     MD057537
+     CL3         DIG       IFGT 13                          B004                            MD057537
+     CL3         DIG       OREQ 13                                                          MD057537
+     CL3                   Z-ADDBALSUP    BALSUS                                            MD057537
+     CL3                   EXCPTIMBAL                                                       MD057537
+     CL3                   ADD  1         NRIT                                              MD057537
+     CL3         BALSUS    DIV  1000      ZZAMT                                             MD057537
+     CL3                   Z-ADD1         Z                                                 MD057537
+     CL3                   Z-ADD2         S                                                 MD057537
+     CL3                   EXSR HASH                                                        MD057537
+      *                                                                                     MD057537
+     CL3                   ELSE                                                             MD057537
+      *                                                                                     MD057537
+     CL3         DIG       DOWGT13                                                          MD057537
+     CL3                   Z-ADDBALSU1    BALSUS                                            MD057537
+     CL3                   EXCPTIMBAL                                                       MD057537
+     CL3                   ADD  1         NRIT                                              MD057537
+     CL3         BALSUS    DIV  1000      ZZAMT                                             MD057537
+     CL3                   Z-ADD1         Z                                                 MD057537
+     CL3                   Z-ADD2         S                                                 MD057537
+     CL3                   EXSR HASH                                                        MD057537
+      *                                                                                     MD057537
+     CL3                   SUB  BALSUS    BALSUP                                            MD057537
+     CL3                   Z-ADDBALSUP    BALSHL                                            MD057537
+     CL3                   EXSR SRCNTR                                                      MD057537
+      *                                                                                     MD057537
+     CL3         DIG       IFLT 13                                                          MD057537
+     CL3         DIG       OREQ 13                          B005                            MD057537
+     CL3                   Z-ADDBALSUP    BALSUS                                            MD057537
+     CL3                   EXCPTIMBAL                                                       MD057537
+     CL3                   ADD  1         NRIT                                              MD057537
+     CL3         BALSUS    DIV  1000      ZZAMT                                             MD057537
+     CL3                   Z-ADD1         Z                                                 MD057537
+     CL3                   Z-ADD2         S                                                 MD057537
+     CL3                   EXSR HASH                                                        MD057537
+     CL3                   ENDIF                            E005                            MD057537
+      *                                                                                     MD057537
+     CL3                   ENDDO                                                            MD057537
+      *                                                                                     MD057537
+     CL3                   ENDIF                            E004                            MD057537
+      *                                                                                     MD057537
+     CL3                   ENDIF                            E003                            MD057537
      CL3                   ENDIF                                          156903
       *                                                                   156903
      CL3                   Z-ADD0         BCRTO                           156903
@@ -8601,6 +8736,24 @@ A551 C*    ACCESS BRANCH CODE ARRAY FOR SETTLEMENT BRANCH TO OBTAIN       S01117
       *                                                                   S01117
      C           #ZZ9      ENDSR                                          S01117
       *                                                                   S01117
+     C/EJECT                                                                                MD057537
+      *****************************************************************                     MD057537
+      * SRCNTR  -  Subroutine to count number of digits in BALSUS     *                     MD057537
+      * Called by: Main                                               *                     MD057537
+      * Calls    :                                                    *                     MD057537
+      *****************************************************************                     MD057537
+     C           SRCNTR    BEGSR                                                            MD057537
+     C                     MOVE *BLANKS   BALS   15                                         MD057537
+     C                     MOVE *BLANKS   BALS1  15                                         MD057537
+     C                     MOVE BALSHL    BALS                                              MD057537
+     C           '0'       CHECKBALS      DIG     50                                        MD057537
+     C           DIG       IFGT 0                                                           MD057537
+     C                     SUBSTBALS:DIG  BALS1                                             MD057537
+     C           ' '       CHEKRBALS1     DIG                                               MD057537
+     C                     ENDIF                                                            MD057537
+     C                     Z-ADD0         BALSHL                                            MD057537
+     C                     ENDSR                                                            MD057537
+      *                                                                                     MD057537
      C********************************************************************S01117
      C/SPACE 3                                                            S01117
      C********************************************************************S01117

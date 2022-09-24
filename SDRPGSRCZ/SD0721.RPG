@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD058723           Date 06Sep22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG17355           Date 26Mar08               *
@@ -32,6 +33,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058723 - Collateral Register - change the margin value in  *
+      *             field "Margin" (CTMPCT) does not recalculate the  *
+      *             "Lending Value" (CDLAMT) for collateral type D.   *
+      *           - Issue error message "Default Margin Cover % is not*
+      *             required when Revaluation Method is automatic."   *
+      *             when Default Margin entry is greater than zero    *
+      *             while its Revaluation menthod is automatic.       *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  BUG17355 - Data mapping error on field CTTMST                *
@@ -1510,6 +1518,33 @@
      C                     EXSR ZASNMS                                                       BUG8090
      C                     ENDIF                                                             BUG8090
      C                     ENDIF                                                             BUG8090
+      *                                                                                     MD058723
+      ** Issue error message 'Default Margin Cover % is not required                        MD058723
+      ** when Revaluation Method is automatic.' when Default Margin                         MD058723
+      ** entered is greater than zero and its Revaluation menthod is                        MD058723
+      ** automatic of either value 'D', 'R', or 'P'.                                        MD058723
+      *                                                                                     MD058723
+     C           SCOPT     IFEQ 'A'                                                         MD058723
+     C           SRVLM     ANDEQ'D'                                                         MD058723
+     C           W#MPCT    ANDGT0                                                           MD058723
+     C           SCOPT     OREQ 'D'                                                         MD058723
+     C           SRVLM     ANDEQ'D'                                                         MD058723
+     C           W#MPCT    ANDGT0                                                           MD058723
+     C           SCOPT     OREQ 'G'                                                         MD058723
+     C           SRVLM     ANDEQ'R'                                                         MD058723
+     C           W#MPCT    ANDGT0                                                           MD058723
+     C           SCOPT     OREQ 'O'                                                         MD058723
+     C           SRVLM     ANDEQ'R'                                                         MD058723
+     C           W#MPCT    ANDGT0                                                           MD058723
+     C           SCOPT     OREQ 'P'                                                         MD058723
+     C           SRVLM     ANDEQ'P'                                                         MD058723
+     C           W#MPCT    ANDGT0                                                           MD058723
+     C                     MOVE 'Y'       W#EROR                                            MD058723
+     C                     MOVE '1'       *IN34                                             MD058723
+     C                     MOVEL'USR8868' ZAMSID                                            MD058723
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                            MD058723
+     C                     EXSR ZASNMS                                                      MD058723
+     C                     ENDIF                                                            MD058723
       *
       ** Validate Next Revaluation Date
       *

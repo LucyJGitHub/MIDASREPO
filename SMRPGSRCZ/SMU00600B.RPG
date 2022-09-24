@@ -1,0 +1,401 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Correct the value of fields NAAD and NASN.')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  SMU00600B - Datapatch to correct NAAD and NASN fields of     *
+      *              deal amendments file.                            *
+      *                                                               *
+      *  (c) Finastra International Limited 2022                      *
+      *                                                               *
+      *  Called by : UTCDL051                                         *
+      *                                                               *
+      *  Last Amend No. 255626 *CREATE     Date 25Jul22               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  255626 - Applied fix 242527                                  *
+      *  242527 - DL deal amendment is not shown on projected account *
+      *           movements.Applied fix 213349.                       *
+      *           Correct the values NAAD and NASN fields.            *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FSMU600L1UF  E           K        DISK
+     FSMU600P2O   E                    PRINTER
+     F                                              KINFDS PRINT
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+     E                    ZMNM   12  12  3
+      /SPACE 3
+     ILDA        UDS                            256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISDBANK    E DSSDBANKPD
+     IPRINT       DS
+     I                                    B 188 1890OFFLIN
+     I                                    B 367 3680CURLIN
+      *
+      ** Deal amendments file chaining keys
+      *
+     I            DS
+     I                                        1   60DAMKEY
+     I                                        1   60DLNO
+     IDSFDY     E DSDSFDY
+      *
+      ** MAIN PROGRAM
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** Get bank name from SDBANKPD.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'001'     DBASE
+     C                     MOVEL'SMU0060B'DBPGM
+     C                     MOVEL@OPTN     DBKEY  29
+     C                     OUT  LDA
+     C                     DUMP
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELBJURPT    TITLE
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Initialise variables
+      *
+     C                     MOVE '0'       *IN10
+     C                     Z-ADD0         CNTR    50
+     C                     Z-ADD0         TOTCTR  50
+     C                     Z-ADD0         DLNOP   60
+     C                     Z-ADD0         VDATP   50
+     C                     Z-ADD0         DASNP   30
+     C                     Z-ADD0         NAADC   50
+     C                     Z-ADD0         NASNC   30
+     C           MODE      IFEQ 'U'
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN31
+     C                     ELSE
+     C                     MOVE '1'       *IN30
+     C                     MOVE '0'       *IN31
+     C                     ENDIF
+      *
+      ** Write Header in Printer File
+      *
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITEDETHED
+     C                     MOVE '0'       *IN20
+      *
+     C                     READ SMU600L1                 10
+     C           *IN10     IFEQ '0'
+     C                     ADD  1         TOTCTR
+     C                     Z-ADDDLNO      DLNOP
+     C                     Z-ADDNAAD      VDATP
+     C                     Z-ADDNASN      DASNP
+     C                     ENDIF
+      *
+      ** Do until not E.O.F.
+      *
+     C           *IN10     DOUEQ'1'
+     C           DLNO      DOUNEDLNOP
+     C           *IN10     OREQ '1'
+     C                     READ SMU600L1                 10
+     C           *IN10     IFEQ '0'
+     C           DLNO      IFEQ DLNOP
+     C           DLNO      ORNE DLNOP
+     C           VDATP     ANDGT0
+      *
+      ** 1) If same deal no. and value date is not equal to previous
+      **    record's NAAD or
+      **    - sequence no. is not equal to previous
+      **    record's NASN, then print this record.
+      ** 2) If a new deal and the previous deal's NAAD is not equal
+      **    to zero, print this record.
+      *
+     C           VDAT      IFNE VDATP
+     C           DASN      ORNE DASNP
+     C           DLNO      ORNE DLNOP
+     C           VDATP     ANDGT0
+      *
+      ** Copy correct NAAD and NASN values to temporary variable.
+      *
+     C           DLNO      IFNE DLNOP
+     C           VDATP     ANDGT0
+     C                     Z-ADD0         NAADC
+     C                     Z-ADD0         NASNC
+     C                     ELSE
+     C                     Z-ADDVDAT      NAADC
+     C                     Z-ADDDASN      NASNC
+     C                     ENDIF
+     C                     READPSMU600L1                 10
+     C           *IN10     IFEQ '0'
+     C                     EXSR CHGFMT
+     C           NAADF     IFEQ *BLANKS
+     C                     MOVE '0000000' NAADF
+     C                     ENDIF
+     C           VDATF     IFEQ *BLANKS
+     C                     MOVE '0000000' VDATF
+     C                     ENDIF
+     C           VDATPF    IFEQ *BLANKS
+     C                     MOVE '0000000' VDATPF
+     C                     ENDIF
+     C                     WRITEDETINF
+     C                     ADD  1         CNTR
+     C                     ADD  1         CURLIN
+     C                     MOVE *BLANKS   NAADF
+     C                     MOVE *BLANKS   VDATPF
+      *
+      ** If UPDATE mode, move correct values to field and update
+      ** file.
+      *
+     C           MODE      IFEQ 'U'
+     C                     Z-ADDNAADC     NAAD
+     C                     Z-ADDNASNC     NASN
+     C                     UPDATDEAMSDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ SMU600L1                 10
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *IN10     IFEQ '0'
+     C                     Z-ADDDLNO      DLNOP
+     C                     Z-ADDNAAD      VDATP
+     C                     Z-ADDNASN      DASNP
+     C                     ADD  1         TOTCTR
+     C                     Z-ADD6         RQDLIN  10
+     C           OFFLIN    SUB  CURLIN    AVALIN  20
+      *
+     C           AVALIN    IFLE RQDLIN
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITEDETHED
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDDO
+     C                     READ SMU600L1                 10
+     C           *IN10     IFEQ '0'
+     C                     Z-ADDDLNO      DLNOP
+     C                     Z-ADDNAAD      VDATP
+     C                     Z-ADDNASN      DASNP
+     C                     ADD  1         TOTCTR
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Write trailer
+      *
+     C                     WRITETRAIL
+      *
+     C           LAST      TAG
+     C                     MOVE '1'       *INLR
+      *
+      *****************************************************************
+      **                                                              *
+      **  SR/CHGFMT - Change MIDAS day number to DDMMMYY format.      *
+      **                                                              *
+      *****************************************************************
+     C           CHGFMT    BEGSR
+     C                     Z-ADDNAAD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    NAADF   7
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    VDATF   7
+     C                     Z-ADDNAADC     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    VDATPF  7
+     C                     ENDSR
+      *****************************************************************
+      **                                                              *
+      **   SR/ZDATE2 - To convert a day number to date format.        *
+      **                                                              *
+      **   The year 2000, being divisible by 400, is a leap year.     *
+      **                                                              *
+      *****************************************************************
+     C           ZDATE2    BEGSR
+      *
+      **  Clear date fields.
+      *
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+      *
+      **  Calculation to define input day number.
+      *
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+      *
+      **  Determine year number.
+      **  Adjust day number in case last day of year.
+      *
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C           *IN99     IFEQ '1'
+     C                     GOTO ZDEND2
+     C                     ENDIF
+      *
+      **  Calculate number of 4 year span since 31/12/1971.
+      *
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1
+      *
+      **  Calculate number of remaining years.
+      *
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C           *IN90     IFEQ '0'
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     ENDIF
+     C           ZWRK2     SUB  1         ZWRK2          91
+      *
+      **  Decrease day no. by days in remaining years.
+     C           *IN91     IFEQ '0'
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     ENDIF
+      *
+      **  Calculate actual year number.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR
+      *
+      **  Determine month number.
+      **  Adjust day no. in case last day of leap year February.
+      *
+     C                     MOVE '0'       *IN92
+     C                     MOVE '0'       *IN93
+     C           *IN91     IFEQ '1'
+     C           ZDAYN1    COMP 59                     9293
+     C           *IN92     IFEQ '0'
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Calculate month number.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C           *IN94     IFEQ '0'
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     ENDIF
+     C           ZWRK2     SUB  1         ZWRK2
+      *
+     C                     Z-ADDZWRK2     ZMTH    20
+      *
+      **  Determine day of month.
+      **  Add back last day of year adjustment.
+      *
+     C           ZDAYN1    ADD  1         ZDAYN1
+      *
+      **  Calculate day of month.
+      *
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20
+      *
+      **  Add back leap year 29th february adjustment, if required.
+      *
+     C           *IN93     IFEQ '1'
+     C           ZDAY      ADD  1         ZDAY
+     C                     ENDIF
+      *
+      **  Format date, DDMMYY or MMDDYY.
+     C           *IN98     IFEQ '1'
+     C                     MOVE ZDAY      ZWRK4
+     C                     MOVELZMTH      ZWRK4
+     C                     ELSE
+     C                     MOVELZDAY      ZWRK4   40
+     C                     MOVE ZMTH      ZWRK4
+     C                     ENDIF
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+      *
+      **   FORMAT ALPHA DATE, DDMMMYY.
+      *
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C           *IN95     IFEQ '1'
+     C                     MOVEL' '       ZWRK5
+     C                     ENDIF
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+      *
+     C           ZDEND2    ENDSR
+      *****************************************************************
+      **                                                              *
+      **  SR/*PSSR  - Subroutine to handle abnormal error conditions  *
+      **                                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2022
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

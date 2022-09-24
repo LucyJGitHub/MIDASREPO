@@ -54,8 +54,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060095           Date 20Jun22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD060092           Date 01Aug22               *
+      *  Prev Amend No. MD060095           Date 20Jun22               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 AR787620           Date 10Jun11               *
@@ -86,6 +87,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
+      *             SD Facility Type Maintenance.                     *
+      *           - Apply CLE138 original design of SDFACTX0 to store *
+      *             facility classes.                                 *
       *  MD060095 - Class Code box should not be displayed if CLE138  *
       *             is switched off (Recompile)                       *
       *  CLE138 - Class Codes for Facilities                          *
@@ -135,6 +140,7 @@
       *
      FAK0046DFCF  E                    WORKSTN
       **  Contingent Facility Account Key Generator - DSPF
+     FSDFACTY0IF  E           K        DISK                                                 MD060092
      F/COPY WNCPYSRC,AKH00013
       *
       *****************************************************************
@@ -505,6 +511,13 @@
      C                     ENDIF                                                              CLE138
       *                                                                                       CLE138
      C/COPY WNCPYSRC,AKH00016
+      *                                                                                     MD060092
+      ** Define key list to access SDFACTY0                                                 MD060092
+      *                                                                                     MD060092
+     C           KFCLS     KLIST                                                            MD060092
+     C                     KFLD           SFTYPE                                            MD060092
+     C                     KFLD           SFFCLS                                            MD060092
+      *                                                                                     MD060092
      C                     ENDSR
       *
       *****************************************************************
@@ -582,12 +595,12 @@
      C                     PARM *BLANKS   @RTCD   7
      C                     PARM '*KEY    '@OPTN   7
      C                     PARM SFTYPE    @FCTY   3
-     C                     PARM SFFCLS    @FCLS   4                                           CLE138
+     C**********           PARM SFFCLS    @FCLS   4                                  CLE138 MD060092
      C           SDFACT    PARM SDFACT    DSFDY
       *
      C           @RTCD     IFEQ *BLANKS
      C                     MOVE AMFCTY    SFTYPE
-     C                     MOVE AMCLAS    SFFCLS                                              CLE138
+     C**********           MOVE AMCLAS    SFFCLS                                     CLE138 MD060092
      C                     ENDIF
      C                     ENDIF                                                              CLE138
       *
@@ -671,6 +684,24 @@
      C***********          ENDIF                                          146525
       *
      C/COPY WNCPYSRC,AKH00018
+      *                                                                                     MD060092
+     C           CLE138    IFEQ 'Y'                                                         MD060092
+      *                                                                                     MD060092
+     C           SFFCLS    IFEQ *BLANKS                                                     MD060092
+     C                     SETON                     1232                                   MD060092
+     C                     MOVEL'CLE1384' ZAMSID           Message id.                      MD060092
+     C                     EXSR ZASNMS                     Send message                     MD060092
+      *                                                                                     MD060092
+     C                     ELSE                                                             MD060092
+     C           KFCLS     CHAINSDFACTY0             80                                     MD060092
+     C           *IN80     IFEQ *ON                                                         MD060092
+     C                     SETON                     1232                                   MD060092
+     C                     MOVEL'CLE1385' ZAMSID           Message id.                      MD060092
+     C                     EXSR ZASNMS                     Send message                     MD060092
+     C                     ENDIF                                                            MD060092
+     C                     ENDIF                                                            MD060092
+      *                                                                                     MD060092
+     C                     ENDIF                                                            MD060092
      C                     ENDIF
       *
      C                     ENDSR

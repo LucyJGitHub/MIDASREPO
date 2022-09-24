@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR700044           Date 04Mar22               *
-      *  Prev Amend No. CGL077             Date 02Nov21               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. AR700044           Date 04Mar22               *
+      *                 CGL077             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055785           Date 20May20               *
       *                 MD055784           Date 19May20               *
@@ -195,6 +196,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  AR700044 - GL-uncorrectly initialized field FEEPCT. Amended  *
       *             program to correctly initialize this field by     *
       *             placing '0' on position 52 to signify that this   *

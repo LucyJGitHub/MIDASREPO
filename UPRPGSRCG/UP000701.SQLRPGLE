@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD059472             Date 19Jan22             *
-      *  Prev Amend No. MD058986             Date 11Oct21             *
+      *  Last Amend No. MD060477             Date 08Sep22             *
+      *  Prev Amend No. MD059472             Date 19Jan22             *
+      *                 MD058986             Date 11Oct21             *
       *                 MD058933             Date 28Sep21             *
       *                 MD058721             Date 28Aug21             *
       *                 MD058491             Date 28Jul21             *
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060477 - Issue with CBMEXCTD as XTD table does not get     *
+      *             correctly synchronized as DKMEUN field is not     *
+      *             part of the key.                                  *
       *  MD059472 - Introduce Logical Delete field                    *
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD058933 - For CBCMPCTD, field 'Execution parameters' needs  *
@@ -215,6 +219,14 @@
      C                   eval      WIdx = WIdx + 1
      C                   ENDDO
 
+      * Add DKMEUN for CBMEXCTD to allow deletiion of corresponding XTD records             MD060477
+     C                   IF        XINDEX = 'CBMEXCTD'                                      MD060477
+     C                   eval      WHERE = %trimr(WHERE) + ' and A.DKMEUN' +                MD060477
+     C                             ' = B.DKMEUN'                                            MD060477
+     C                   eval      WHEREX = %trimr(WHEREX) + ' and A.DKMEUN' +              MD060477
+     C                             ' = X.DKMEUN'                                            MD060477
+     C                   ENDIF                                                              MD060477
+                                                                                            MD060477
      C                   eval      SQLDynStmt = *BLANKS
      C**********         eval      SQLDynStmt = 'delete from ' + EXTINDEX +                 MD057288
      C                   eval      SQLDynStmt = 'delete from ' +                            MD057288

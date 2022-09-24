@@ -12,8 +12,9 @@
 0006 F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
 0010 F*                                                                  *
-      *  Last Amend No. MD055647           Date 18Jun20               *
-      *  Prev Amend No. MD054509           Date 15Oct19               *
+      *  Last Amend No. MD042753           Date 22Jul22               *
+      *  Prev Amend No. MD055647           Date 18Jun20               *
+      *                 MD054509           Date 15Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL127AO           Date 06Aug12               *
       *                 262907             Date 03Aug12               *
@@ -54,6 +55,8 @@
 0010 F*                                                                  *
 0011 F********************************************************************
       *                                                               *
+      *  MD042753 - Cash Management: GL0740P1 and GL0720P1 lack       *
+      *             breakdown of Retail accounts                      *
       *  MD055647 - GL0720P1 Reports Account Code Title Issue.        *
       *             Amend program to properly populate SDACOD DS.     *
       *  MD054509 - Print string 'CR' beside total net balance for    *
@@ -475,6 +478,8 @@
 0126 C*    GET DECIMAL PLACES AND BUILD ARRAY
 0127 C                     EXSR CCYARR
 0128 C*
+     C                     MOVE *ON       *IN76                                             MD042753
+      *                                                                                     MD042753
      C                     Z-ADD0         ##BNDX  40                                          CSC042
      C           *LIKE     DEFN ##BNDX    B                                                   CSC042
      C           *LIKE     DEFN ##BNDX    ##BSV                                               CSC042
@@ -536,6 +541,7 @@
       ***Initialize line counter.                                                     191861 BUG3633
       **********                                                                      191861 BUG3633
      C**********           Z-ADD25        LNCTR   20                                  191861 BUG3633
+     C                     Z-ADD25        LNCTR   20                                        MD042753
       *                                                                                      BUG3633
       ** Initialize WBRCH working field.                                                     BUG3633
       *                                                                                      BUG3633
@@ -1854,6 +1860,9 @@
      O**********       73      ACCNAR    61                                            CGL029 262907
      O                 73      ACCNAR    51                                                   262907
      O/COPY WNCPYSRC,GL0720O001
+      *                                                                                     MD042753
+     O*/OMITSTART                                                                           MD042753
+      *                                                                                     MD042753
 0529 O        D  1     01N41N40
      O/COPY WNCPYSRC,GL0720O002
      O       AND       75                                                 S01117
@@ -1924,14 +1933,92 @@
      O                 80               131 'CR'                                              262907
 0560 O*
 0561 O********TF 2     L1 41N40                                           E15058
-     O/COPY WNCPYSRC,GL0720O003
+     O/COPY WNCPYSRC,GL0720O003                                                             MD042753
+      *                                                                                     MD042753
+     O*/OMITEND                                                                             MD042753
+      *                                                                                     MD042753
+     O        D  1     01N41N40                                                             MD042753
+     O       AND       75N76                                                                MD042753
+     O                 49      BRCHNO     7                                                 MD042753
+     O                 49                 8 '-'                                             MD042753
+     O                         CUSTNO    14                                                 MD042753
+     O                                   15 '-'                                             MD042753
+     O                         ACCSEQ    17                                                 MD042753
+     O                         NAME      38                                                 MD042753
+     O                         TOWN      49                                                 MD042753
+     O*                                                                                     MD042753
+     O                 11 30             79 '0'                                             MD042753
+     O                 11 31             79 '0.0'                                           MD042753
+     O                 11 32             79 '0.00'                                          MD042753
+     O                 11 33             79 '0.000'                                         MD042753
+     O*                                                                                     MD042753
+     O                   N11 30NEWBAL    79 '   ,   ,   ,   ,   , 0 '                       MD042753
+     O                   N11 31NEWBAL    79 '  ,   ,   ,   ,   , 0 . '                      MD042753
+     O                   N11 32NEWBAL    79 ' ,   ,   ,   ,   , 0 .  '                      MD042753
+     O                   N11 33NEWBAL    79 '   ,   ,   ,   , 0 .   '                       MD042753
+     O*                                                                                     MD042753
+     O                 10 30            104 '0'                                             MD042753
+     O                 10 31            104 '0.0'                                           MD042753
+     O                 10 32            104 '0.00'                                          MD042753
+     O                 10 33            104 '0.000'                                         MD042753
+     O                   N10 30NEWBAL   104 '   ,   ,   ,   ,   , 0 '                       MD042753
+     O                   N10 31NEWBAL   104 '  ,   ,   ,   ,   , 0 . '                      MD042753
+     O                   N10 32NEWBAL   104 ' ,   ,   ,   ,   , 0 .  '                      MD042753
+     O                   N10 33NEWBAL   104 '   ,   ,   ,   , 0 .   '                       MD042753
+     O*                                                                                     MD042753
+     O                       30NEWBAL   129 '   ,   ,   ,   ,   , 0 '                       MD042753
+     O                       31NEWBAL   129 '  ,   ,   ,   ,   , 0 . '                      MD042753
+     O                       32NEWBAL   129 ' ,   ,   ,   ,   , 0 .  '                      MD042753
+     O                       33NEWBAL   129 '   ,   ,   ,   , 0 .   '                       MD042753
+     O                 80               131 'CR'                                            MD042753
+     O*                                                                                     MD042753
+      *                                                                                     MD042753
+     O        D  1     01N40 76                                                             MD042753
+     O       AND       75                                                                   MD042753
+     O                 49      BRCHNO     7                                                 MD042753
+     O                 49                 8 '-'                                             MD042753
+     O                         CUSTNO    14                                                 MD042753
+     O                                   15 '-'                                             MD042753
+     O                         ACCSEQ    17                                                 MD042753
+     O                         NAME      38                                                 MD042753
+     O                         TOWN      49                                                 MD042753
+     O*                                                                                     MD042753
+     O                 11 30             79 '0'                                             MD042753
+     O                 11 31             79 '0.0'                                           MD042753
+     O                 11 32             79 '0.00'                                          MD042753
+     O                 11 33             79 '0.000'                                         MD042753
+     O*                                                                                     MD042753
+     O                   N11 30NEWBAL    79 '   ,   ,   ,   ,   , 0 '                       MD042753
+     O                   N11 31NEWBAL    79 '  ,   ,   ,   ,   , 0 . '                      MD042753
+     O                   N11 32NEWBAL    79 ' ,   ,   ,   ,   , 0 .  '                      MD042753
+     O                   N11 33NEWBAL    79 '   ,   ,   ,   , 0 .   '                       MD042753
+     O*                                                                                     MD042753
+     O                 10 30            104 '0'                                             MD042753
+     O                 10 31            104 '0.0'                                           MD042753
+     O                 10 32            104 '0.00'                                          MD042753
+     O                 10 33            104 '0.000'                                         MD042753
+     O                   N10 30NEWBAL   104 '   ,   ,   ,   ,   , 0 '                       MD042753
+     O                   N10 31NEWBAL   104 '  ,   ,   ,   ,   , 0 . '                      MD042753
+     O                   N10 32NEWBAL   104 ' ,   ,   ,   ,   , 0 .  '                      MD042753
+     O                   N10 33NEWBAL   104 '   ,   ,   ,   , 0 .   '                       MD042753
+     O*                                                                                     MD042753
+     O                       30NEWBAL   129 '   ,   ,   ,   ,   , 0 '                       MD042753
+     O                       31NEWBAL   129 '  ,   ,   ,   ,   , 0 . '                      MD042753
+     O                       32NEWBAL   129 ' ,   ,   ,   ,   , 0 .  '                      MD042753
+     O                       33NEWBAL   129 '   ,   ,   ,   , 0 .   '                       MD042753
+     O                 81               131 'CR'                                            MD042753
+     O*                                                                                     MD042753
+     O*/OMITSTART                                                                           MD042753
+      *                                                                                     MD042753
      O        T  2     L1 41N40                                           E15058
 0562 O*******AND*     NLR                                                 S01117
-0562 O       AND      NLR 75                                              S01117
+0562 O*******AND      NLR 75                                                         S01117 MD042753
+     O       AND      NLR 75N76                                                             MD042753
      O/COPY WNCPYSRC,GLH00356
      O*******ORF       20 41N40                                           E15058
      O       OR        20 41N40                                           E15058
-     O       AND       75                                                 S01117
+     O*******AND       75                                                            S01117 MD042753
+     O       AND       75N76                                                                MD042753
      O/COPY WNCPYSRC,GLH00357
 0564 O**********                         45 'RETAIL ACCOUNTS'                                 262907
 0565 O**********             30RETBDR B  86 '   ,   ,   ,   , 0 '                             262907
@@ -1966,6 +2053,30 @@
      O                       33RETBAL B 129 '   ,   ,   ,   , 0 .   '                         262907
      O                 81               131 'CR'                                              262907
      O/COPY WNCPYSRC,GL0720O004
+      *                                                                                     MD042753
+     O*/OMITEND                                                                             MD042753
+      *                                                                                     MD042753
+     O        T  2     L1 41N40                                                             MD042753
+     O       AND      NLR 75N76                                                             MD042753
+     O       OR        20 41N40                                                             MD042753
+     O       AND       75N76                                                                MD042753
+     O                                   33 'RETAIL ACCOUNTS'                               MD042753
+     O                       30RETBDR B  79 '   ,   ,   ,   ,   , 0 '                       MD042753
+     O                       31RETBDR B  79 '  ,   ,   ,   ,   , 0 . '                      MD042753
+     O                       32RETBDR B  79 ' ,   ,   ,   ,   , 0 .  '                      MD042753
+     O                       33RETBDR B  79 '   ,   ,   ,   , 0 .   '                       MD042753
+      *                                                                                     MD042753
+     O                       30RETBCR B 104 '   ,   ,   ,   ,   , 0 '                       MD042753
+     O                       31RETBCR B 104 '  ,   ,   ,   ,   , 0 . '                      MD042753
+     O                       32RETBCR B 104 ' ,   ,   ,   ,   , 0 .  '                      MD042753
+     O                       33RETBCR B 104 '   ,   ,   ,   , 0 .   '                       MD042753
+      *                                                                                     MD042753
+     O                       30RETBAL B 129 '   ,   ,   ,   ,   , 0 '                       MD042753
+     O                       31RETBAL B 129 '  ,   ,   ,   ,   , 0 . '                      MD042753
+     O                       32RETBAL B 129 ' ,   ,   ,   ,   , 0 .  '                      MD042753
+     O                       33RETBAL B 129 '   ,   ,   ,   , 0 .   '                       MD042753
+     O                 81               131 'CR'                                            MD042753
+      *                                                                                     MD042753
 0579 O*
      O******* TF12     L1N40N22                                           E15058
      O*******ORF       20N40N22                                           E15058

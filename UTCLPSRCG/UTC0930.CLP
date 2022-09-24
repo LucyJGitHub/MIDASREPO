@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060488           Date 08Sep22              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -29,6 +30,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060488 - Deliverable Data Split for UTMENUPD              */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP024 - Replace UPUICDPD with System Values.               */
@@ -84,12 +86,16 @@
                                                                                           /*CUP006*/
              RTVDTAARA  DTAARA(UPSTAT (55 1)) RTNVAR(&UTPROC)                             /*CUP006*/
              IF         COND(&UTPROC *EQ 'Y') THEN(DO)                                    /*CUP006*/
-                CPYF       FROMFILE(QTEMP/UTMENUQT) TOFILE(UTMENUPD) +
-                             MBROPT(*REPLACE)                                             /*CUP006*/
-                MONMSG     MSGID(CPF2817) EXEC(DO)                                        /*CUP006*/
-                   CPYF       FROMFILE(@UTMENUPD) TOFILE(UTMENUPD) +
-                                MBROPT(*REPLACE)                                          /*CUP006*/
-                ENDDO                                                                     /*CUP006*/
+/**********     CPYF       FROMFILE(QTEMP/UTMENUQT) TOFILE(UTMENUPD) +
+                             MBROPT(*REPLACE) */                                /*CUP006**MD060488*/
+/**********     MONMSG     MSGID(CPF2817) EXEC(DO) */                           /*CUP006**MD060488*/
+/**********        CPYF       FROMFILE(@UTMENUPD) TOFILE(UTMENUPD) +
+                                MBROPT(*REPLACE) */                             /*CUP006**MD060488*/
+/**********     ENDDO */                                                        /*CUP006**MD060488*/
+             CPYF       FROMFILE(UTMNUCTDX) TOFILE(UTMNUCTD) +
+                          MBROPT(*REPLACE)                                              /*MD060488*/
+             CPYF       FROMFILE(UTMNUCTDX) TOFILE(UTMNUCTD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD060488*/
                 CHGDTAARA DTAARA(UPSTAT (55 1)) VALUE(' ')                                /*CUP006*/
              ENDDO                                                                        /*CUP006*/
                                                                                           /*CUP006*/

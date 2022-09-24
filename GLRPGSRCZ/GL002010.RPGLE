@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD045538           Date 06Jun17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD045538           Date 06Jun17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046682           Date 14Jul17               *
       *                 MD039988           Date 08Aug16               *
       *                 MD039702           Date 14Jul16               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD045538 - Batch duplicate view. Ensure that CLEARPD records *
       *             will only be shown once on screen.                *
       *  MD046248 - Finastra Rebranding                               *

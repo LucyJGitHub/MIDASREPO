@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD032119           Date 19Jul22               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD041709           Date 28Sep16               *
       *                 MD030151           Date 05Sep14               *
       *                 MD030165           Date 03Sep14               *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032119 - Wrong validation if birthdate is earlier than 1972*
+      *             Use E5DBTH instead of E5BRTH.                     *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041709 - Component SDC000716 failure. Adjusted customer    *
@@ -151,6 +154,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
+     D ARMNT           S              3    DIM(12) CTDATA PERRCD(12)                        MD032119
  
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -227,6 +231,10 @@
      D PDCCD           S              2
      D PCTRY           S              2
  
+     D BDAY            S              2                                                     MD032119
+     D BMON            S              2                                                     MD032119
+     D BMOND           S              2  0                                                  MD032119
+     D BYER            S              2                                                     MD032119
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1408,7 +1416,14 @@
      C                   IF        ZDATE > 0                                                MD025161
      C                   MOVEL     ZADATE        DDBRTH                                     MD025161
      C                   ELSE                                                               MD025161
-     C                   EVAL      DDBRTH = *BLANKS                                         MD025161
+     C**********         EVAL      DDBRTH = *BLANKS                                MD025161 MD032119
+     C                   IF        E5BRT1 <> *BLANKS                                        MD032119
+     C                   EVAL      BDAY = %SUBST(E5BRT1:1:2)                                MD032119
+     C                   EVAL      BMON = %SUBST(E5BRT1:3:2)                                MD032119
+     C                   EVAL      BYER = %SUBST(E5BRT1:5:2)                                MD032119
+     C                   MOVEL     BMON          BMOND                                      MD032119
+     C                   EVAL      DDBRTH = BDAY + ARMNT(BMOND) + BYER                      MD032119
+     C                   ENDIF                                                              MD032119
      C                   ENDIF                                                              MD025161
                                                                                             MD025161
      C                   EVAL      DDBTHT = E5BTHT                                          MD025161
@@ -1601,3 +1616,5 @@
       *****************************************************************
 ** CPY@
 (c) Finastra International Limited 2013
+** ARMNT - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

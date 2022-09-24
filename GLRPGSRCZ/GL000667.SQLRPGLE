@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD056751           Date 20Sep20               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. MD048482A          Date 20Jun22               *
+      *  Prev Amend No. MD056751           Date 20Sep20               *
+      *                 MD050212           Date 02Apr18               *
       *                 MD045308           Date 18Apr17               *
       *                 MD045261           Date 12Apr17               *
       *                 MD045251           Date 12Apr17               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048482A - FATCA Account closed flag is wrong               *
       *  MD056751 - Deliverable Data Split for GLFXMLPD and GLGXMLPD  *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD045308 - XML Account closed value is incorrect             *
@@ -7183,9 +7185,9 @@
      C                             OR EXTTYP = 'RSMAT'                                      MD045308
      C                             OR EXTTYP = 'RXMAT'                                      MD045308
      C                             OR EXTTYP = 'SEMVD'                                      MD045308
-     C                   IF        EXBALN <> 0                                              MD045308
+     C**********         IF        EXBALN <> 0                                    MD045308 MD048482A
      C                   EVAL      MGDATA = 'true'                                          MD045220
-     C                   ENDIF                                                                CGL185
+     C**********         ENDIF                                                      CGL185 MD048482A
      C                   ENDIF                                                                CGL185
      C                   EXSR      SRWrite                                                  MD045220
                                                                                               CGL185

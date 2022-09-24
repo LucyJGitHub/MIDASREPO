@@ -17,8 +17,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD059690           Date 14Mar22               *
-      *  Prev Amend No. MD059369           Date 24Dec21               *
+      *  Last Amend No. 255465             Date 05Jul22               *
+      *  Prev Amend No  255150             Date 22Jun22               *
+      *                 MD059690           Date 14Mar22               *
+      *                 MD059369           Date 24Dec21               *
       *                 MD059367           Date 24Dec21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057051           Date 28Oct20               *
@@ -172,6 +174,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  255465 - Reprint confirmations in Correspondence Manager     *
+      *  255150 - Amendment confirmation for adding maturity date to  *
+      *           a call deal was not produced from Correspondence    *
+      *           Manager. Reverse fix 235304                         *
       *  MD059369 - LIBOR fields must be extracted for both sides     *
       *  MD059369 - CIR020 - LIBOR IRS - Correspondence Manager       *
       *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *
@@ -961,6 +967,10 @@
      C     *IN99         ANDEQ     '0'
      C     RECI          OREQ      'R'                                                        088483
      C     *IN99         ANDEQ     '0'                                                        088483
+      *                                                                                       255465
+      ** For Reprint: Process deals even if confirmation has                                  255465
+      ** already been produced                                                                255465
+     C     *INU5         OREQ      '1'                                                        255465
       *
       **  Generate reference number by writing to PF/CGUDCRPD
       **  If no confirmation to be produced, then bypass
@@ -974,15 +984,15 @@
      C                   MOVEL     'N'           ##SPPS                                       087053
      C                   EXSR      SRAUTO                                                     087053
      C     ##SPPS        CABEQ     'Y'           EXMAIN                                       087053
-     C     DTCHTP        IFNE      'R'                                                        235304
-     C     DTYP          IFEQ      'CD'                                                       235304
-     C     MDAT          ANDNE     0                                                          235304
-     C     DTYP          OREQ      'CL'                                                       235304
-     C     MDAT          ANDNE     0                                                          235304
-     C                   MOVE      'X'           ##COPD                                       235304
-     C                   GOTO      EXMAIN                                                     235304
-     C                   END                                                                  235304
-     C                   END                                                                  235304
+     C*****DTCHTP        IFNE      'R'                                                 235304 255150
+     C*****DTYP*         IFEQ      'CD'                                                235304 255150
+     C*****MDAT*         ANDNE     0                                                   235304 255150
+     C*****DTYP*         OREQ      'CL'                                                235304 255150
+     C*****MDAT*         ANDNE     0                                                   235304 255150
+     C**********         MOVE      'X'           ##COPD                                235304 255150
+     C**********         GOTO      EXMAIN                                              235304 255150
+     C**********         END                                                           235304 255150
+     C**********         END                                                           235304 255150
      C                   EXSR      SRGENR
      C*                                                                                       S01408
      C/COPY WNCPYSRC,CG4010CP19                                                               S01408

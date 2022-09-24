@@ -17,10 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059190 *CREATE   Date 08Nov21               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD059190 *CREATE   Date 08Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD059190 - Create generic program to calculate loan          *
       *             next future interest due date.                    *
       *                                                               *

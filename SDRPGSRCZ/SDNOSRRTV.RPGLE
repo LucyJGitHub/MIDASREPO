@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037493           Date 28Nov16               *
+      *  Last Amend No. MD023962           Date 26Jul22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *               . MD037493           Date 28Nov16               *
       *                 CDL094             Date 01Sep14               *
       *                 MD027264           Date 25Jun14               *
       *                 MD000091           Date 03May13               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023962 - Nostro cannot be deleted after removal of         *
+      *             security module                                   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037493 - Nostro record cannot be deleted even after        *
       *             deletion of SSI                                   *
@@ -124,6 +127,9 @@
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
  
+     D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                MD023962
+      ** EXTERNAL DS FOR MIDAS MODULES DETAILS                                              MD023962
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
  
@@ -533,6 +539,7 @@
       *
       ** Add validation to SE Extended Settlements                                          MD037493
       *                                                                                     MD037493
+     C                   IF        BGSECS = 'Y'                                             MD023962
      C                   EVAL      *IN55 = *OFF                                             MD037493
      C     DDCYCD        SETLL     STDSEDCY                           55                    MD037493
      C     DDCYCD        READE     STDSEDCY                               55                MD037493
@@ -558,6 +565,7 @@
       *                                                                                     MD037493
      C     DDCYCD        READE     STDSEDCY                               55                MD037493
      C                   ENDDO                                                              MD037493
+     C                   ENDIF                                                              MD023962
       *                                                                                     MD037493
      C                   ENDIF
       *
@@ -660,6 +668,20 @@
      C                   EVAL      DBKEY = @OPTN                                 ************
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                     MD023962
+      ** Access Midas Module Details                                                        MD023962
+     C                   CALL      'AOMMODR0'                                               MD023962
+     C                   PARM      *BLANKS       @RTCD                                      MD023962
+     C                   PARM      '*FIRST '     @OPTN                                      MD023962
+     C     SDMMOD        PARM      SDMMOD        DSFDY                                      MD023962
+      *                                                                                     MD023962
+      * Database Error                                                                      MD023962
+     C                   IF        @RTCD <> *BLANKS                                         MD023962
+     C                   EVAL      DBFILE = 'SDMMODPD'                                      MD023962
+     C                   EVAL      DBASE  = 901                                 ************MD023962
+     C                   EVAL      DBKEY = @OPTN                                * DBERR 901 MD023962
+     C                   EXSR      *PSSR                                        ************MD023962
+     C                   ENDIF                                                              MD023962
  
       ** Access API ICD via access program
      C                   CALLB     'AOAPIR0'

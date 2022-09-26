@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD060411           Date 20Sep22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD058815           Date 28Sep21               *
       *                 MD059600           Date 17Feb22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -94,6 +95,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060411 - Correct the calculation of interest of Calculation*
+      *             basis 6                                           *
       *  CLE138 - Class Codes for Facilities                          *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
@@ -1615,6 +1618,7 @@
      C                     EXSR ZINTDY                                    CLE013
       *                                                                                       CLE073
      C           FECALC    IFEQ 6                                                             CLE073
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    WDAYS                                               CLE073
      C                     ELSE                                                               CLE073
       *                                                                                       CLE073
@@ -1711,6 +1715,7 @@
      C                     EXSR ZINTDY                                    CLE013
       *                                                                                       CLE073
      C           FECALC    IFEQ 6                                                             CLE073
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                               CLE073
      C                     ELSE                                                               CLE073
       *                                                                                       CLE073
@@ -1773,6 +1778,7 @@
      C                     EXSR ZINTDY                                    CLE013
       *                                                                                       CLE073
      C           FECALC    IFEQ 6                                                             CLE073
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                               CLE073
      C                     ELSE                                                               CLE073
       *                                                                                       CLE073
@@ -2074,9 +2080,17 @@
      C**********           MULT WDAYS     WTOT                                              MD046351
      C**********           DIV  WCBS      WTOT      H                                       MD046351
       *                                                                                     MD046351
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WTOT      MULT NLEAP     ZWK30A 309                                        MD060411
+     C           WTOT      MULT LEAP50    ZWK30B 309                                        MD060411
+     C           ZWK30A    DIV  36500     WTOT1  309                                        MD060411
+     C           ZWK30B    DIV  36600     WTOT2  309                                        MD060411
+     C           WTOT1     ADD  WTOT2     WTOT      H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WTOT      MULT WDAYS     ZWK309 309                                        MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD060411
       *
      C                     ENDIF
       *
@@ -2168,9 +2182,17 @@
      C********** WAMT      MULT WDAYS     WTOT                                              MD046351
      C**********           DIV  WCBS      WTOT      H                                       MD046351
       *                                                                                     MD046351
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WTOT      MULT NLEAP     ZWK30A                                            MD060411
+     C           WTOT      MULT LEAP50    ZWK30B                                            MD060411
+     C           ZWK30A    DIV  36500     WTOT1                                             MD060411
+     C           ZWK30B    DIV  36600     WTOT2                                             MD060411
+     C           WTOT1     ADD  WTOT2     WTOT      H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WAMT      MULT WDAYS     ZWK309                                            MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD060411
       *
      C                     ENDIF
       *
@@ -2189,10 +2211,20 @@
      C**********           MULT WDAYS     WTOT                                              MD046351
      C**********           DIV  WCBS      WTOT      H                                       MD046351
       *                                                                                     MD046351
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WAMT      MULT NLEAP     ZWK30A                                            MD060411
+     C                     MULT FRT,1     ZWK30A                                            MD060411
+     C           WAMT      MULT LEAP50    ZWK30B                                            MD060411
+     C                     MULT FRT,1     ZWK30B                                            MD060411
+     C           ZWK30A    DIV  36500     WTOT1                                             MD060411
+     C           ZWK30B    DIV  36600     WTOT2                                             MD060411
+     C           WTOT1     ADD  WTOT2     WTOT      H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WAMT      MULT FRT,1     ZWK309                                            MD046351
      C                     MULT WDAYS     ZWK309                                            MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
+     C                     ENDIF                                                            MD060411
       *
      C                     ENDIF
       *
@@ -2228,6 +2260,7 @@
      C                     MOVE FECALC    ZZCALC                                              CLE073
      C                     EXSR ZINTDY                                                        CLE073
      C           FECALC    IFEQ 6                                                             CLE073
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    WDAYS                                               CLE073
      C                     ELSE                                                               CLE073
      C**********           Z-ADDZZINDY    WDAYS   50                                 CLE073 MD037658
@@ -2329,12 +2362,20 @@
       **********                                                                     CLE073 MD046351
      C********** WTOT      IFNE 0                                                    CLE073 MD046351
      C**********           DIV  WCBS      WTOT      H                                CLE073 MD046351
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WTOT      MULT NLEAP     ZWK30A 309                                        MD060411
+     C           WTOT      MULT LEAP50    ZWK30B 309                                        MD060411
+     C           ZWK30A    DIV  36500     WTOT1  309                                        MD060411
+     C           ZWK30B    DIV  36600     WTOT2  309                                        MD060411
+     C           WTOT1     ADD  WTOT2     WTOT      H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WTOT      MULT WDAYS     ZWK309                                            MD046351
       *                                                                                     MD046351
      C           ZWK309    IFNE 0                                                           MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
      C                     ENDIF                                                              CLE073
+     C                     ENDIF                                                            MD060411
       *                                                                                       CLE073
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
@@ -2396,6 +2437,7 @@
      C                     MOVE FECALC    ZZCALC                                              CLE073
      C                     EXSR ZINTDY                                                        CLE073
      C           FECALC    IFEQ 6                                                             CLE073
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                               CLE073
      C                     ELSE                                                               CLE073
      C**********           Z-ADDZZINDY    NDAYS   50                                 CLE073 MD037658

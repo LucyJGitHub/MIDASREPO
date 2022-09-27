@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060473           Date 15Sep22               *
-      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *  Last Amend No. MD060474           Date 22Sep22               *
+      *  Prev Amend No. MD060473           Date 15Sep22               *
+      *                 MD059624           Date 20Jul22               *
       *                 MD059141           Date 26Oct21               *
       *                 MD059065           Date 15Oct21               *
       *                 MD058988           Date 06Oct21               *
@@ -45,6 +46,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060474 - Late defaulting and validation of rate rounding   *
+      *             decimal places.                                   *
+      *             Default rate rounding decimal places as follows   *
+      *             '04' when CCR rounding precision is true else     *
+      *             '05'. If risk free rate of trn is not equal to    *
+      *             risk free rate from base rates file.              *
       *  MD060473 - Inconsistent behavior on BSRT Mnt when rate       *
       *             rounding decimal is 0 and 00                      *
       *             Move the value of DDRRDP to a new variable and    *
@@ -1506,6 +1513,9 @@
       *  SRRRDP - Validate Rate Rounding Decimal Places               *
       *****************************************************************
      C     SRRRDP        BEGSR
+                                                                                            MD060474
+     C                   MOVE      '00'          WDAY                                       MD060474
+     C                   Z-ADD     0             @@ERCD                                     MD060474
 
       ** Validate rounding precision using CCR Rounding if NCCR                             MD059624
       *                                                                                     MD059624
@@ -1551,6 +1561,7 @@
      C                   ENDIF                                                              MD059624
                                                                                             MD059624
      C                   ENDSL                                                              MD059624
+     C                   EXSR      SRDFLT                                                   MD060474
                                                                                             MD059624
      C                   ELSE                                                               MD059624
                                                                                             MD059624
@@ -1669,6 +1680,7 @@
      C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL
+     C                   EXSR      SRDFLT                                                   MD060474
 
      C                   ELSE
 
@@ -2103,6 +2115,33 @@
                    exec sql close P2;                                                       //CDL102
       /end-free                                                                             //CDL102
      C                   ENDSR                                                                CDL102
+      *****************************************************************                     MD060474
+      /EJECT                                                                                MD060474
+      *****************************************************************                     MD060474
+      *  SRDFLT - Default rate rounding decimal places                *                     MD060474
+      *****************************************************************                     MD060474
+     C     SRDFLT        BEGSR                                                              MD060474
+      /free
+                  if (ddrfrr <> barfrr) and
+                     (apiname <> 'BSRT') and
+                     (ddcalm = 'NCCR') and
+                     (BSRTRecFound = 'Y');
+
+                     if ddrrdp = *blanks or
+                          nurrdp = *zeros;
+
+                          if ddcalm = 'NCCR' and
+                             isRndApplies = 'Y';
+                                wday = 4;
+                          else;
+                                wday = 5;
+                          endif;
+
+                     endif;
+
+                  endif;
+      /end-free                                                                             MD060474
+     C                   ENDSR                                                              MD060474
       *****************************************************************
       /EJECT
       *****************************************************************

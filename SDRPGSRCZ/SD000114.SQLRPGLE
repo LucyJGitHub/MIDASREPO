@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD059424           Date 29Mar22               *
+      *  Last Amend No. MD060033           Date 25Sep22               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD059424           Date 29Mar22               *
       *                 MD059375           Date 20Dec21               *
       *                 MD059270           Date 16Dec21               *
       *                 MD059253           Date 19Nov21               *
@@ -39,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060033 - Rates Known flag set a day late.  Add 1 day to    *
+      *             SumLBLO.  Introduce new system value              *
+      *             ARRUseSysOrMidasDate.                             *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD059424 - Calculator returned rates for previous period of  *
@@ -287,6 +291,8 @@
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
+     D SysDate         S               D   DATFMT(*ISO)                                     MD060033
+     D SysOrMidas      S              1A                                                    MD060033
 
       *****************************************************************
       /EJECT
@@ -995,7 +1001,8 @@
       ** Rates Known Date = Interest Period End Date minus
       ** (Lookback + Lockout) plus Publication Lag Days
      C                   EVAL      RTKNDate = 0
-     C                   EVAL      SumLBLO = TrLBDY + TrLODY
+     C**********         EVAL      SumLBLO = TrLBDY + TrLODY                                MD060033
+     C                   EVAL      SumLBLO = TrLBDY + TrLODY + 1                            MD060033
 
      C                   MOVEL     TrCCY         ZCCY              3
      C                   MOVEL     *BLANKS       ZLOC              3
@@ -1013,19 +1020,48 @@
      C                   EXSR      ZFWDT
 
      C                   EVAL      RTKNDate = ZDYNBR
-
-      ** Set the Rates Known flag if the computed Rates Known Date has
-      ** passed the system date and the reference rate publication time
+      *                                                                                     MD060033
+      ** Default MidasDay to Midas run date.                                                MD060033
+      ** If ARRUseSysOrMidasDate = S, set it to machine date.                               MD060033
+      *                                                                                     MD060033
+     C                   EVAL      MidasDay = BJRDNB                                        MD060033
+     C                   IF        SysOrMidas = 'S'                                         MD060033
+      ** Retrieve current system date and time                                              MD060033
+     C                   EVAL      SysDate = %date()                                        MD060033
+     C                   EVAL      CurrDate = %dec(SysDate:*MDY)                            MD060033
+      ** Convert to Midas Day                                                               MD060033
+     C                   CALL      'ZDATE1'                                                 MD060033
+     C                   PARM                    ReturnCde         7                        MD060033
+     C                   PARM                    CurrDate          6 0                      MD060033
+     C                   PARM      'M'           DatFmt            1                        MD060033
+     C                   PARM      *ZEROS        MidasDay          5 0                      MD060033
+     C                   ENDIF                                                              MD060033
+      *                                                                                     MD060033
+      ** Get current time.                                                                  MD060033
+      *                                                                                     MD060033
+     C                   EVAL      CurrTime = %char(%time():*HMS)                           MD060033
+      *                                                                                     MD060033
+      ***Set*the*Rates*Known*flag*if*the*computed*Rates*Known*Date*has**                    MD060033
+      ***passed*the*system*date*and*the*reference*rate*publication*time*                    MD060033
      C**********         IF        RTKNDate <= BJRDNB and                                   MD058040
-     C                   IF        RTKNDate <= EventCtrlDate and                            MD058040
-     C                             RTKNDate <> 0
-     C                   EVAL      RatesKnown = 'Y'
-     C                   EVAL      CurrTime = %char(%time():*HMS)
-     C                   IF        RTKNDate = BJRDNB and
-     C                             PublTime > CurrTime
-     C                   EVAL      RatesKnown = 'N'
-     C                   ENDIF
-     C                   ENDIF
+     C**********         IF        RTKNDate <= EventCtrlDate and                   MD058040 MD060033
+     C**********                   RTKNDate <> 0                                            MD060033
+     C**********         EVAL      RatesKnown = 'Y'                                         MD060033
+     C**********         EVAL      CurrTime = %char(%time():*HMS)                           MD060033
+     C**********         IF        RTKNDate = BJRDNB and                                    MD060033
+     C**********                   PublTime > CurrTime                                      MD060033
+     C**********         EVAL      RatesKnown = 'N'                                         MD060033
+     C**********         ENDIF                                                              MD060033
+     C**********         ENDIF                                                              MD060033
+      *                                                                                     MD060033
+      ** Set the Rates Known flag if the computed Rates Known Date has                      MD060033
+      ** passed MidasDay and the reference rate publication time.                           MD060033
+      *                                                                                     MD060033
+     C                   EVAL      RatesKnown = 'N'                                         MD060033
+     C                   IF        RTKNDate < MidasDay or                                   MD060033
+     C                             (RTKNDate = MidasDay and PublTime < CurrTime)            MD060033
+     C                   EVAL      RatesKnown = 'Y'                                         MD060033
+     C                   ENDIF                                                              MD060033
 
      C                   ENDSR
       *****************************************************************
@@ -1291,12 +1327,18 @@
       ** Get setting of system value ARR Calculation Frequency
      C                   EVAL      ARRCalcFreq = *BLANKS
      C                   EVAL      PSysVal01 = 'ARRCalculationFreq'
+      *                                                                                     MD060033
+      ** Get also the value of ARRUseSysOrMidasDate.                                        MD060033
+      *                                                                                     MD060033
+     C                   EVAL      SysOrMidas = *BLANKS                                     MD060033
+     C                   EVAL      PSysVal02 = 'ARRUseSysOrMidasDate'                       MD060033
 
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       RtnCode
      C                   PARM                    PSysVal01
      C                   PARM      *BLANKS       PCurSet01
-     C                   PARM      *BLANKS       PSysVal02
+     C**********         PARM      *BLANKS       PSysVal02                                  MD060033
+     C                   PARM                    PSysVal02                                  MD060033
      C                   PARM      *BLANKS       PCurSet02
      C                   PARM      *BLANKS       PSysVal03
      C                   PARM      *BLANKS       PCurSet03
@@ -1317,11 +1359,16 @@
      C
      C                   IF        RtnCode <> *BLANKS
      C                   EVAL      DBFILE = 'SDSVLCTD'
+     C                   IF        PCurSet01 = '*NRF'                                       MD060033
      C                   EVAL      DBKEY = PSysVal01
+     C                   ELSE                                                               MD060033
+     C                   EVAL      DBKEY = PSysVal02                                        MD060033
+     C                   ENDIF                                                              MD060033
      C                   EVAL      DBASE  = 003
      C                   EXSR      *PSSR
      C                   ELSE
      C                   MOVEL     PCurSet01     ARRCalcFreq
+     C                   MOVEL     PCurSet02     SysOrMidas                                 MD060033
      C                   ENDIF
 
       ** If ARRCalcFreq is M-Monthly, determine if End of month

@@ -1,0 +1,107 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM DDS migration')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008715 - Deliverable Data Split migration                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM( &MODE &PFXSVAL &OPFXSVAL &LAYER)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+
+             DCLF       FILE(UPSVALJ0) ALWNULL(*YES)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+
+/* Create temporary file to hold error messages. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+
+             IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+
+
+             GOTO       CMDLBL(VALIDATE)
+
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* Set up library list. */
+             CALL       PGM(UPC0014) PARM(&SBSID)
+
+
+             CHGVAR     VAR(&OLDLIB) VALUE(&OLDSBSID *TCAT 'DTALIB')
+             CHGVAR     VAR(&NEWLIB) VALUE(&SBSID *TCAT 'DTALIB')
+
+             CALL       PGM(SMC008716) PARM(&MODE &OLDLIB &NEWLIB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+END:
+
+             ENDPGM

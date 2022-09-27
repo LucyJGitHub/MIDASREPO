@@ -1,0 +1,83 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008000 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program is the core generic migration        */
+/*                 component. It calls the program specified is      */
+/*                 SMOTMJW0, updatels log table and uses DATQ to pass*/
+/*                 back status to the server job.                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &PGM &PARM &INCA &BRGBRGLIB &GLOB &ZONE &RETURN)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&INC) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&INCA) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPL) TYPE(*CHAR) LEN(50) VALUE('COMPLETE')
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(50) VALUE('FAIL')
+             DCL        VAR(&INVD) TYPE(*CHAR) LEN(50) VALUE('INVALID')
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10) VALUE('SM_OTB_SVR')
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CMPN) TYPE(*DEC) LEN(2 0) VALUE(01)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC8001')
+
+             CHGVAR     VAR(&INC) VALUE(&INCA)
+/* Log */
+             CALL SM8009 ('*WRITE' &INC ' ' &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Update time stamp of the monitor log file */
+             CALL SM8008 ('*UPDATE   ' &INC &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Call program for                               */
+             CALL       PGM(&PGM) PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &CMPL)
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+/* Send FAIL message to server */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &FAIL)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+END:        CALL SM8009 ('*END  ' &INC ' ' &ERROR)
+            ENDPGM
+

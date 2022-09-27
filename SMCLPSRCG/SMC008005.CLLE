@@ -1,0 +1,65 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008005 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program run ACTIONFILE *PRC                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREV) TYPE(*CHAR) LEN(10)
+             DCLF       FILE(UPAFDVPD)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+RCVF:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+/* If file has no members then read next record ... */
+             IF         COND(&PREV *NE &ATFILE) THEN(DO)
+                ACTIONFILE MODE(*PRC) FILE(&ATFILE)
+             CHGVAR     VAR(&PREV) VALUE(&ATFILE)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+             ENDDO
+
+             GOTO       CMDLBL(RCVF)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

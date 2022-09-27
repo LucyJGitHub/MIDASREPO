@@ -1,0 +1,175 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTM main server program')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC8001 - OTM main server program                           */
+/*                                                                   */
+/*       Function: This program runs the server job OTM_SERVER. It   */
+/*                 submits all the components and updates their      */
+/*                 status.                                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM       PARM(&GLOB &ZONE &BRGBRGLIB)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10) VALUE(SM_OTB_SVR)
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MIGL) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(4) VALUE('*NO')
+             DCL        VAR(&JOBNM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MIGSEQA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MIGINCA) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&HALT) TYPE(*CHAR) LEN(1)
+
+             DCLF       FILE(SMMIGRTD)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC8001')
+
+/* Set Library for the server */
+             RMVLIBLE   LIB(&BRGBRGLIB)
+             MONMSG     MSGID(CPF2104)
+             ADDLIBLE   LIB(&BRGBRGLIB)
+
+/********* Submit all components **********/
+ READ:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(NEXT)
+             ENDDO
+
+/* update the layer being migrated */
+             IF         COND(&LAYER *NE &MIGLYR) THEN(DO)
+                CHGVAR     VAR(&LAYER) VALUE(&MIGLYR)
+                IF         COND(&MIGLYR *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&MIGL) VALUE(1)
+                ENDDO
+                IF         COND(&MIGLYR *EQ '*ZONE ') THEN(DO)
+                CHGVAR     VAR(&MIGL) VALUE(2)
+                ENDDO
+                CALL SM8008 ('*LAYER    ' &MIGL &ERROR)
+                IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+
+ RESUBMIT:
+/* check if there is a halt set */
+             CALL       PGM(SM8006) PARM(&HALT &MIGINC)
+             IF         COND(&HALT = 'Y') THEN(DO)
+/* update halt in SMOTMMTD */
+             CALL SM8008 ('*HALT     ' &MIGINC &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+/* wait for the RESTART from the monitor screen */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+             IF         COND(&MSGDATA *NE 'RESTART') THEN(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+             ENDDO
+
+/* update start time, date and status */
+             CALL SM8008 ('*START    ' &MIGINC &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* submit component */
+             CHGVAR     VAR(&MIGSEQA) VALUE(&MIGSEQ)
+             CHGVAR     VAR(&MIGINCA) VALUE(&MIGINC)
+             CHGVAR     VAR(%SST(&MIGPAR 100 1)) VALUE('X')
+             CHGVAR     VAR(&JOBNM) VALUE('OTM_' *CAT &MIGSEQA)
+             SBMJOB     CMD(CALL PGM(&MIGCMP) PARM(&MIGLYR &MIGPGM +
+                          &MIGPAR &MIGINCA &BRGBRGLIB &GLOB &ZONE +
+                          &RETURN )) JOB(&JOBNM) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+/* wait for the component to be completed */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+/* If component ran ok, update status and end time */
+             IF         COND(&MSGDATA *EQ 'COMPLETE') THEN(DO)
+/* update endrt time, date and status */
+             CALL SM8008 ('*COMPLETE ' &MIGINC &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+             GOTO       CMDLBL(READ)
+             ENDDO
+
+/* If component did not run ok, update status and end time */
+             IF         COND(&MSGDATA *NE 'COMPLETE') THEN(DO)
+/* Update Script Work File job Status with 'FAIL' */
+             CALL SM8008 ('*FAIL     ' &MIGINC &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* and wait for the component to be restarted */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'CONTINUE') THEN(DO)
+             CALL SM8008 ('*RESTART  ' &MIGINC &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+             GOTO       CMDLBL(RESUBMIT)
+             ENDDO
+             ELSE CMD(DO)
+             IF         COND(&MSGDATA *EQ 'BYPASS') THEN(DO)
+             GOTO       CMDLBL(READ)
+             ENDDO
+             ELSE CMD(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+             ENDDO
+
+ NEXT:
+/* Update end time */
+             CALL SM8008 ('*FINISH   ' &MIGINC &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Delete now the DTAQ */
+             DLTDTAQ    DTAQ(&BRGBRGLIB/&DTQN)
+             MONMSG     MSGID(CPF0000)
+
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+
+ ERROR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             DLTDTAQ    DTAQ(&BRGBRGLIB/&DTQN)
+             MONMSG     MSGID(CPF2105)
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program SMC8001 ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+END:        ENDPGM
+

@@ -1,0 +1,104 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM users migration')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC008070 - Migrate Midas user data to new system files.    */
+/*                   This is a clone for program SMC001070.          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SBSID &OLDSBSID &RETURN)
+
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TDVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FDVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MITEMDD) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+
+/* Create temporary file to hold error messages. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+
+
+/* Check if MITEMDD exists in the "from" system to determine which program */
+/*  to call.                                                               */
+             CHGVAR     VAR(&FDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')
+             CHGVAR     VAR(&TDVLIB) VALUE(&SBSID *TCAT 'DVLIB')
+             CHGVAR     VAR(&FDVLIB) VALUE(&OLDSBSID *TCAT 'DVLIB')
+/* Check if the "from" system has MITEMDD and set flag. */
+             CHKOBJ     OBJ(&FDTALIB/MITEMDD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&MITEMDD) VALUE('N')
+             ENDDO
+
+/* Check that old DVLIB does exist. If not then no migration of user will take place*/
+             CHKOBJ     OBJ(&FDVLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/* Delete temporary file for users, if it exists. */
+             DLTF       FILE(QTEMP/MUSERQT)
+             MONMSG     MSGID(CPF0000)
+/* Copy the old version of MUSER to the latest version so that */
+/*  the format is standard.                                    */
+             CPYF       FROMFILE(&TDVLIB/MUSER) +
+                          TOFILE(QTEMP/MUSERQT) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             CPYF       FROMFILE(&FDVLIB/MUSER) +
+                          TOFILE(QTEMP/MUSERQT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+
+/* Call program SM001070 to add data to user files. */
+             OVRDBF     FILE(OLDUSER) TOFILE(QTEMP/MUSERQT) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(NEWUSER) TOFILE(&TDVLIB/MUSER) +
+                          OVRSCOPE(*JOB)
+
+             CALL       PGM(SM008070) PARM(&OLDSBSID &SBSID &MITEMDD)
+             DLTOVR     FILE(*ALL) LVL(*JOB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+
+             GOTO       CMDLBL(ENDPGM)
+
+ABNOR:
+             CHGVAR     VAR(&RETURN) VALUE('*ERROR')
+
+ENDPGM:
+             ENDPGM

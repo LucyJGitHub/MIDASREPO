@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008200 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program saves all BTD/XTD tables             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Retrieve Bridge library */
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                             'BrgDeliveredBrgLib' &SVAL1  +
+                             ' '  ' '  ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             CHGVAR     VAR(&BRGBRGLIB) VALUE(%SST(&SVAL1 1 10))
+
+/* Call program to save all BTD/XTD */
+             IF         COND(&LAYER = '*GLOBAL') THEN(DO)
+             CALL       PGM(UPC004030) PARM(&LAYER &GLOB &BRGBRGLIB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+             ENDDO
+
+             IF         COND(&LAYER = '*ZONE  ') THEN(DO)
+             CALL       PGM(UPC004030) PARM(&LAYER &ZONE &BRGBRGLIB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

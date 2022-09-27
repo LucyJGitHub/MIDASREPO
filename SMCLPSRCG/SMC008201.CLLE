@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM OTM generic migration program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC008201 - OTM generic migration component                 */
+/*                                                                   */
+/*       Function: This program restores all BTD/XTD tables          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RETURN &PARM &GLOB &ZONE)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&GLOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+/* Retrieve Bridge library */
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                             'BrgDeliveredBrgLib' &SVAL1  +
+                             ' '  ' '  ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             CHGVAR     VAR(&BRGBRGLIB) VALUE(%SST(&SVAL1 1 10))
+
+/* Set library name for deliverable data */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&MLIB) VALUE(&GLOB *CAT 'GMLIB')
+             CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR_G')
+             ENDDO
+             ELSE CMD(DO)
+             CHGVAR     VAR(&MLIB) VALUE(&ZONE *CAT 'DMLIB')
+             CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR1Z')
+             ENDDO
+
+/* Restore obj from SAVF */
+             CHKOBJ     OBJ(&BRGBRGLIB/&SAVF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             RSTOBJ     OBJ(*ALL) SAVLIB(&MLIB) DEV(*SAVF) +
+                          SAVF(&BRGBRGLIB/&SAVF) OUTPUT(*PRINT)
+
+/* If *ZONE, restore from thesecond SAVF as well provided that it exists */
+             IF         COND(&LAYER *EQ '*ZONE  ') THEN(DO)
+                CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR2Z')
+                CHKOBJ     OBJ(&BRGBRGLIB/&SAVF) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+
+                RSTOBJ     OBJ(*ALL) SAVLIB(&MLIB) DEV(*SAVF) +
+                          SAVF(&BRGBRGLIB/&SAVF) OUTPUT(*PRINT)
+                MONMSG     MSGID(CPF3707)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+END:        ENDPGM
+

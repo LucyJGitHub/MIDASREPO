@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059640           Date 21Mar22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060443           Date 26Sep22               *
+      *  Prev Amend No. MD059640           Date 21Mar22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037025           Date 10Feb16               *
       *                 MD029037           Date 25Jul14               *
@@ -49,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060443 - When opening GL accounts, on Complete the system  *
+      *             sends spurious Warning message. Amend error code  *
+      *             to send correct message.                          *
       *  MD059640  - Cannot change IBAN. Change RE72034 to be a       *
       *               warning message.                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -442,7 +446,8 @@
      C***********        MoveL     'RE71068'     WMsgIDXAr(1)                                 193178
      C                   Add       1             WIx                                          193178
      C                   Movel     'DDIBAN'      WFldNmXAr(WIx)                               193178
-     C                   Movel     'RE71068'     WMsgIdXAr(WIx)                               193178
+     C**********         Movel     'RE71068'     WMsgIdXAr(WIx)                      193178 MD060443
+     C                   Movel     'RE72028'     WMsgIdXAr(WIx)                             MD060443
      C                   EndIf
       *
      C     @RTCD         WHENEQ    '*UNIQUE'

@@ -124,6 +124,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059863 - UDF field position in CIRS or SIRS message type.  *
+      *           - Save Front Office ID for Amend mode.              *
       *  MD059410 - Wrong rate is applied for the computation of int  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
@@ -1641,6 +1643,7 @@
       * Class                                                                                 CDL038
       *                                                                                       CDL038
      C                   MOVEL     RSCLAS        CLAS                                         CDL038
+     C                   MOVEL     RSFRNT        FRNT                                       MD059863
       *
       * UPDATE DEAL
       *

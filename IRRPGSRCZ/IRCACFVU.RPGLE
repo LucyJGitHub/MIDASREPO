@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059314           Date 22Feb22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD059863           Date 28Sep22               *
+      *  Prev Amend No. MD059314           Date 22Feb22               *
+      *                 MD059304           Date 11Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
@@ -89,6 +90,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059863 - UDF field position in CIRS or SIRS message type.  *
+      *           - Move Front Office ID to RPFRNT, if not blanks.    *
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -2103,7 +2106,9 @@
                                                                                             AR314712
      C                   MOVEL     #0DLNO        RPDLNO
      C                   EVAL      RPCHTP = #0ACCD
+     C                   IF        APFOTranID <> *BLANKS                                    MD059863
      C                   EVAL      RPFRNT = APFOTranID
+     C                   ENDIF                                                              MD059863
 
       ** Update timestamp field
 

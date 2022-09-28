@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059410           Date 21Dec21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059863           Date 28Sep22               *
+      *  Prev Amend No. MD059410           Date 21Dec21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056655A          Date 09Oct20               *
@@ -127,6 +128,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059863 - UDF field position in CIRS or SIRS message type.  *
+      *           - Save Front Office ID for Amend mode.              *
       *  MD059410 - Wrong rate is applied for the computation of int  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
@@ -1838,6 +1841,7 @@
       * Class                                                                                 CDL038
       *                                                                                       CDL038
      C                   MOVEL     RXCLAS        CLAS                                         CDL038
+     C                   MOVEL     RXFRNT        FRNT                                       MD059863
       *
       * UPDATE DEAL
       *

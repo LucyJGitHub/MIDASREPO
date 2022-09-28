@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060069           Date 11Aug22               *
-      *  Prev Amend No. MD059410           Date 21Dec21               *
+      *  Last Amend No. MD059863           Date 28Sep22               *
+      *  Prev Amend No. MD060069           Date 11Aug22               *
+      *                 MD059410           Date 21Dec21               *
       *                 MD059375           Date 20Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
@@ -83,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059863 - UDF field position in CIRS or SIRS message type.  *
+      *           - Save Front Office ID for Amend mode.              *
       *  MD060069 - DLC0602 00001 failed trying to divide by zero     *
       *           - Do not update the UINFD and TINFD fields on Deals *
       *             with ticked Average Rate Method.                  *
@@ -1630,6 +1633,7 @@
                                                                                               CSD015
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
+     C                   EVAL      FRNT = RPFRNT                                            MD059863
       ** Update Deal record on the master file
 
      C                   UPDATE    DEALSDGF

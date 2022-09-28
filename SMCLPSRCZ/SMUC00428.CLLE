@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Generate BTD and XTD record of BA3100')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00428 - Generate BTD and XTD record of BA3100           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. BA3100  *CREATE     Date 01Sep22             */
+/*       Prev Amend No. nnnnnn              Date ddmmmyy             */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       BA3100 - MT103 and MT202 message details changes for        */
+/*                Target 2 RTGS System                               */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/** Global monitor message.  */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             SNDPGMMSG  MSG('SMUC00428 - BA3100') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Setup system prefix variable from SDSTAT data area. */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(&ERROR) VALUE('          ')
+
+
+/** Process program */
+             CALL       PGM(SMU00428) PARM(&SYSID &ERROR)
+
+             IF         COND(&ERROR *EQ '*Error') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(ENDPGM)
+
+ERROR:
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC00428 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+
+ENDPGM:
+
+             ENDPGM
+
+

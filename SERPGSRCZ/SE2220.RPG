@@ -32,8 +32,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059336           Date 20Dec21               *
-      *  Prev Amend No. 260712             Date 20Dec21               *
+      *  Last Amend No. 261031             Date 26Sep22               *
+      *  Prev Amend No. 260853             Date 26Sep22               *
+      *                 230843             Date 26Sep22               *
+      *                 ADEFIX             Date 26Sep22               *
+      *                 252779             Date 26Sep22               *
+      *                 239166             Date 26Sep22               *
+      *                 MD059336           Date 20Dec21               *
+      *                 260712             Date 20Dec21               *
       *                 260858             Date 04Oct21               *
       *                 MD033891           Date 07Jul15               *
       *                 AR1049910          Date 26Oct12               *
@@ -298,6 +304,25 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  261031 - Corrected convertion from Unamortized to AIBD.      *
+      *           Applied for MD-59913.                               *
+      *  260853 - Incorrect reversal in processing type '8'. Fix      *
+      *           patterned after 219968 and 249368                   *
+      *           Applied for MD-59913.                               *
+      *  230843 - Unrealized results must be calculated using the last*
+      *           average price updated by the discount or premium    *
+      *           amortization                                        *
+      *           Applied for MD-59913.                               *
+      *  ADEFIX - Compatibiliy CSE105 CSE032 CSE065 when issue date   *
+      *           greather then control date.                         *
+      *           Applied for MD-59913.                               *
+      *  252779 - SEC0605 is stuck.  Remove SETGT operation in AAMORB *
+      *           such that program will not loop when records are    *
+      *           read in SEDEVDF.                                    *
+      *           Applied for MD-59913.                               *
+      *  239166 - Refer to Diary Events file when required records    *
+      *           in Historic Book Position file are already dropped. *
+      *           Applied for MD-59913.                               *
       *  MD059336 - Field differnce in BKPOSD and BKPHDD              *
       *             BKPOSD - APPN; APNN                               *
       *             BKPHDD - LAVN; BUDN; DPAN                         *
@@ -2560,7 +2585,10 @@
      C           *INU1     ANDEQ'0'                                       E21531
      C*
      C           UPBS      IFEQ 'B'
-     C           UPBS      OREQ KBCTV
+     C********** UPBS      OREQ KBCTV                                                         230843
+     C           UPBS      OREQ 'V'                                                           230843
+     C           UPBS      OREQ 'T'                                                           230843
+     C           KBCTV     ANDEQ'V'                                                           230843
      C**********                                                                       091803 130814
      C*****Chain*to*SECTYD*FILE*EARLIER*WAS*REMOVED*BECAUSE*IT*WAS****                 091803 130814
      C*****DEEMED*POINTLESS,*BUT*THEN*WHEN*DOING*THE*UNRLPL*SUBR.*****                 091803 130814
@@ -6362,7 +6390,10 @@
      C/COPY WNCPYSRC,SE2220C137
      C*                                                                   E21531
      C           UPBS      IFEQ 'B'
-     C           UPBS      OREQ BCTV
+     C********** UPBS      OREQ BCTV                                                          230843
+     C           UPBS      OREQ 'V'                                                           230843
+     C           UPBS      OREQ 'T'                                                           230843
+     C           BCTV      ANDEQ'V'                                                           230843
      C                     MOVEL'Y'       PRCCHG  1                       E15965
      C/COPY WNCPYSRC,SE2220C201
      C                     EXSR UNRLPL
@@ -6610,6 +6641,7 @@
       *****************************************************************
       *
      C           AMORT     BEGSR                           *** AMORT  ***
+     C                     MOVE STBS      WWSTBS  1                                           230843
      C*                                                                   E15442
      C* ONLY AMORTIZE INTEREST-BEARING SECURITIES                         E15442
      C*                                                                   E15442
@@ -7046,11 +7078,23 @@
      C           FIFO      ANDNE'Y'                                       CSE032
      C********** PROT      ANDNE'6'                                                    CSE032 226138
      C           SYBS      ANDNE*BLANK                                    CSE032
+      *                                                                                       261031
+     C           STBS      IFEQ 'P'                                                           261031
+     C           SPBS      ANDEQ'P'                                                           261031
+     C           DPAP      ANDEQ*ZERO                                                         261031
+     C           BUDU      ANDEQ*ZERO                                                         261031
+     C                     Z-ADDNPSN      ZNOML                                               261031
+     C                     Z-ADD100       ZPRC                                                261031
+     C                     EXSR ZCNSD                                                         261031
+     C                     Z-ADDZCONS     BKVAL                                               261031
+     C           BKVAL     SUB  APNC      BUDU                                                261031
+     C                     ENDIF                                                              261031
      C*                                                                   CSE032
      C** Override trade basis to 'Y' as ZPRCI and ZPRCO standard          CSE032
      C** subroutines calculate yield for 'Y' trade basis only.            CSE032
      C*                                                                   CSE032
      C**********           MOVE STBS      WOTBS                                        229289 230033
+     C                     MOVE STBS      WWSTBS  1                                           230843
      C                     MOVEL'Y'       STBS                            CSE032
      C                     MOVE ' '       WAMORT  1                                           CSE065
       *                                                                                       CSE065
@@ -7284,6 +7328,10 @@
      C                     Z-ADD*ZERO     DNAT                            CSE032
      C                     END                                            CSE032
      C                     END                                            CSE032
+      ** Restore STBS                                                                         230843
+      *                                                                                       230843
+     C                     MOVELWWSTBS    STBS                                                230843
+      *                                                                                       230843
      C*
      C***********          ENDSR                                          E15442
      C           EAMORT    ENDSR                                          E15442
@@ -7822,7 +7870,16 @@
      C*                                                                   S01233
      C* If initial date has not been reached yet, then bypass             S01233
      C           ITLD      IFGT BCAD                                      S01233
-     C           CSE065    OREQ 'Y'                                                           CSE065
+     C           CSE065    IFEQ 'N'                                                           ADEFIX
+     C           CSE105    ANDEQ'Y'                                                           ADEFIX
+     C           CSE032    ANDEQ'Y'                                                           ADEFIX
+     C           BHTV      ANDEQ'T'                                                           ADEFIX
+     C                     ELSE                                                               ADEFIX
+     C                     GOTO AAEND                                     S01233              ADEFIX
+     C                     END                                            S01233              ADEFIX
+     C                     END                                            S01233              ADEFIX
+     C********** CSE065    OREQ 'Y'                                                    CSE065 ADEFIX
+     C           CSE065    IFEQ 'Y'                                                           ADEFIX
      C           ALDT      ANDLTRUND                                                          CSE065
      C           WAMORT    ANDNE' '                                                           CSE065
      C                     GOTO AAEND                                     S01233
@@ -7966,13 +8023,20 @@
      C                     Z-ADDCPNR      WPCPNR                                              260858
      C                     MOVE 'IR'      SDET                                                230115
      C                     Z-ADD0         ZDCSDT                                              230115
+     C                     Z-ADD0         WSDED   50                                          239166
      C           KZSEDF    SETLLSEDEVDF                                                       230115
      C           SESN      READESEDEVDF                  71                                   230115
      C           *IN71     DOWEQ'0'                                                           230115
-     C           SDED      ANDLELAMDAT                                                        230115
+     C           SDED      ANDLTBCAD                                                          239166
+     C********** SDED      ANDLELAMDAT                                                 230115 239166
      C           SDET      IFEQ 'IR'                                                          230115
+     C           SDED      IFLE LAMDAT                                                        239166
      C                     Z-ADDSDNC      WPCPNR 117                                          230115
+     C                     Z-ADDSDED      WPSDED  50                                          239166
+     C                     ENDIF                                                              239166
+     C                     Z-ADDSDED      WSDED                                               239166
      C                     ENDIF                                                              230115
+      *                                                                                       239166
      C           SESN      READESEDEVDF                  71                                   230115
      C                     ENDDO                                                              230115
       *                                                                                       230115
@@ -7984,6 +8048,13 @@
      C                     MOVE *BLANK    ZACLT                           102506
      C                     EXSR ZPRCO                                     S01233
      C                     Z-ADDZPRCOT    YLDPRC                          S01233
+      *                                                                                       239166
+      ** Check if IR events exist after event date LAMDAT                                     239166
+      *                                                                                       239166
+     C           WSDED     IFGT LAMDAT                                                        239166
+     C           WSDED     ANDLTBCAD                                                          239166
+     C                     EXSR AAMORB                                                        239166
+     C                     ENDIF                                                              239166
       *                                                                                       230115
       ** Restore current coupon rate.                                                         230115
       *                                                                                       230115
@@ -8274,6 +8345,59 @@
      C                     ENDSR                                                              CSE065
       *                                                                   S01233
       *****************************************************************   S01233
+      /EJECT                                                                                  239166
+      *****************************************************************                       239166
+      *                                                               *                       239166
+      *  AAMORB - Perform Yield to Price conversion or vice versa     *                       239166
+      *                                                               *                       239166
+      *****************************************************************                       239166
+      *                                                                                       239166
+     C           AAMORB    BEGSR                           *** AAMORB ***                     239166
+      *                                                                                       239166
+     C                     MOVE 'IR'      SDET                                                239166
+     C                     Z-ADDWPSDED    ZDCSDT                                              239166
+     C           KZSEDF    SETGTSEDEVDF                                                       239166
+     C           SESN      READESEDEVDF                  71                                   239166
+      *                                                                                       239166
+     C           *IN71     DOWEQ'0'                                                           239166
+     C           SDED      ANDLTBCAD                                                          239166
+      *                                                                                       239166
+     C           SDET      IFEQ 'IR'                                                          239166
+      *                                                                                       239166
+      ** Calculate Price from Yield                                                           239166
+      *                                                                                       239166
+     C                     Z-ADD0         WRKPI                                               239166
+     C                     Z-ADDWPCPNR    CPNR                                                239166
+     C                     Z-ADDYLDPRC    ZPRCIN                                              239166
+     C                     Z-ADDSDED      ZFDATE                                              239166
+     C                     Z-ADDWNOML     ZNOML                                               239166
+     C                     Z-ADD0         ZIDNAT                                              239166
+     C                     MOVE 'Y'       ZACLT                                               239166
+     C                     EXSR ZPRCI                                                         239166
+     C                     Z-ADDZODNAT    DNAT                                                239166
+      *                                                                                       239166
+      ** Calculate Yield from Price                                                           239166
+      *                                                                                       239166
+     C                     Z-ADD0         WRKPI                                               239166
+     C                     Z-ADDSDNC      CPNR                                                239166
+     C                     Z-ADDZPRCOT    ZPRICE                                              239166
+     C                     Z-ADDSDED      ZFDATE                                              239166
+     C                     Z-ADDWNOML     ZNOML                                               239166
+     C                     Z-ADDLAMDNA    ZIDNAT                                              239166
+     C                     MOVE *BLANK    ZACLT                                               239166
+     C                     EXSR ZPRCO                                                         239166
+     C                     Z-ADDZPRCOT    YLDPRC                                              239166
+     C                     Z-ADDSDNC      WPCPNR                                              239166
+      *                                                                                       239166
+     C                     Z-ADDSDED      ZDCSDT                                              239166
+     C                     ENDIF                                                              239166
+      *                                                                                       239166
+     C********** KZSEDF    SETGTSEDEVDF                                                239166 252779
+     C           SESN      READESEDEVDF                  71                                   239166
+     C                     ENDDO                                                              239166
+      *                                                                                       239166
+     C                     ENDSR                                                              239166
+      *****************************************************************                       239166
       /EJECT
       *****************************************************************                       CAS006
       *                                                               *                       CAS006
@@ -13892,6 +14016,12 @@
      C/COPY WNCPYSRC,SE2220C079
      C                     EXSR ZCNSD                                     E20232
      C                     Z-ADDZCONS     UPPT                            E20232
+      *                                                                                       260853
+      ** Adjust UPPT by the current factor                                                    260853
+      *                                                                                       260853
+     C           PROT      IFEQ '8'                                                           260853
+     C                     MULT AAPR      UPPT                                                260853
+     C                     ENDIF                                                              260853
      C*
      C***********SPBS      IFEQ 'P'                                       E20232
      C***********UPPT      DIV  100       UPPT      H                     E20232
@@ -13914,9 +14044,21 @@
       ***  has already been overwritten by the next BPACC record.         E19397
       *                                                                   E19397
      C           PRCCHG    IFEQ 'Y'                                       E19397
+      *                                                                                       230843
+     C           UPBS      IFEQ 'T'                                                           230843
+     C                     MOVE 'T'       PSBS                                                230843
+     C                     ELSE                                                               230843
      C                     MOVE BCTV      PSBS
+     C                     ENDIF                                                              230843
+      *                                                                                       230843
      C                     ELSE                                           E19397
+      *                                                                                       230843
+     C           UPBS      IFEQ 'T'                                                           230843
+     C                     MOVE 'T'       PSBS                                                230843
+     C                     ELSE                                                               230843
      C                     MOVE KBCTV     PSBS                            E19397
+     C                     ENDIF                                                              230843
+      *                                                                                       230843
      C                     END                                            E19397
       *                                                                   E19397
      C                     MOVE ' '       FILL
@@ -14040,12 +14182,12 @@
      C           EVAM      MULT -1        EVAM
      C                     END
       *                                                                   E20086
-      ***  Adjust posting amount by the Mortgage Current Factor.          E20086
+      *****Adjust*posting*amount*by*the*Mortgage*Current*Factor.*******                E20086 260853
       *                                                                   E20086
-     C           PROT      IFEQ '8'                                       E20086
+     C********** PROT      IFEQ '8'                                                    E20086 260853
      C/COPY WNCPYSRC,SE2220C162
-     C                     MULT AAPR      EVAM                            E20086
-     C                     END                                            E20086
+     C**********           MULT AAPR      EVAM                                         E20086 260853
+     C**********           END                                                         E20086 260853
      C*
      C           EVAM      IFNE 0
      C                     EXSR W01
@@ -14081,13 +14223,13 @@
      C                     Z-ADDPUPPT     EVAM
      C                     END
       *                                                                   E20086
-      ***  Adjust posting amount by the Mortgage Current Factor.          E20086
+      *****Adjust*posting*amount*by*the*Mortgage*Current Factor.*******                E20086 260853
       *                                                                   E20086
-     C           PROT      IFEQ '8'                                       E20086
-     C           CAS006    ANDNE'Y'                                                           CAS006
+     C********** PROT      IFEQ '8'                                                    E20086 260853
+     C********** CAS006    ANDNE'Y'                                                    CAS006 260853
      C/COPY WNCPYSRC,SE2220C163
-     C                     MULT AAPR      EVAM                            E20086
-     C                     END                                            E20086
+     C**********           MULT AAPR      EVAM                                         E20086 260853
+     C**********           END                                                         E20086 260853
      C*
      C           EVAM      IFNE 0
      C           AMCD      ANDEQ'UL'                                      174050
@@ -14123,12 +14265,12 @@
      C           EVAM      MULT -1        EVAM
      C                     END
       *                                                                   E20086
-      ***  Adjust posting amount by the Mortgage Current Factor.          E20086
+      *****Adjust*posting*amount*by*the*Mortgage*Current*Factor.*******                E20086 260853
       *                                                                   E20086
-     C           PROT      IFEQ '8'                                       E20086
+     C********** PROT      IFEQ '8'                                                    E20086 260853
      C/COPY WNCPYSRC,SE2220C164
-     C                     MULT AAPR      EVAM                            E20086
-     C                     END                                            E20086
+     C**********           MULT AAPR      EVAM                                         E20086 260853
+     C**********           END                                                         E20086 260853
       *                                                                                       CAS006
      C           CAS006    IFEQ 'Y'                                                           CAS006
      C           UPPT      IFGT 0                                                             CAS006

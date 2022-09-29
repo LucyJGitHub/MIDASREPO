@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 257949             Date 05Jul22               *
-      *  Prev Amend No. 256362             Date 09Jun22               *
+      *  Last Amend No. MD057537           Date 13Sep22               *
+      *  Prev Amend No. 257949             Date 05Jul22               *
+      *                 256362             Date 09Jun22               *
       *                 CLE125             Date 02Nov21               *
       *                 MD057739           Date 28Apr22               *
       *                 MD026384           Date 28Apr22               *
@@ -109,6 +110,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057537 - Return a warning message when the total of        *
+      *             principal amount and event amount exceeds one     *
+      *             billion.                                          *
       *  257949 - Loan subtype amendment not accepted by system       *
       *           Apply fix 256984.                                   *
       *  256362 - Modified validation for multi-currency rollover to  *
@@ -656,6 +660,8 @@
      D DDXRLT                  2      3                                                     MD057739
      D DDXRLS                  4      5                                                     MD057739
      D DDXRLC                  6      9                                                     MD057739
+      *                                                                                     MD057537
+     D billion         C                   CONST(1000000000)                                MD057537
       ** +--------------------------------------+
       ** | End of D-specs                       |
       ** | ==============                       |
@@ -2640,6 +2646,20 @@
      C                   MOVEL     'LEA0190'     MsgIdArr(Idx)
      C                   ENDIF
       *
+     C     DDATYP        IFEQ      'PI'                                                     MD057537
+      *                                                                                     MD057537
+     C                   Z-ADD     0             HLAMT            13 0                      MD057537
+     C     SVCPAM        ADD       WLAMT         HLAMT                                      MD057537
+      *                                                                                     MD057537
+     C     HLAMT         IFGT      billion                                                  MD057537
+     C                   MOVE      'W'           DDAMNTOK                                   MD057537
+     C                   ADD       1             WIdx                                       MD057537
+     C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'                              MD057537
+     C                   EVAL      WMsgIDArr(WIdx)  = '5049551'                             MD057537
+     C                   ENDIF                                                              MD057537
+      *                                                                                     MD057537
+     C                   ENDIF                                                              MD057537
+      *                                                                                     MD057537
       ** Check amount against the current principal amount of SVOLNO
       ** Only if amendment is against a participation sold
      C     SVPTYP        IFNE      64

@@ -130,8 +130,8 @@
       ** Validation
       ** CAB Code must not be blank if bank flag = 'Y' and
       ** residenza = 1
-     C**                 IF        (PHlck = *BLANKS  OR                                     MD059377
-     C**                           PHlck =  '0') AND                                        MD059377
+     C**********         IF        (PHlck = *BLANKS  OR                                     MD059377
+     C**********                   PHlck =  '0') AND                                        MD059377
      C                   IF        (PHlcd = *BLANKS  OR                                     MD059377
      C                             PHlcd =  '0') AND                                        MD059377
      C                             PBnbi = 'Y' AND

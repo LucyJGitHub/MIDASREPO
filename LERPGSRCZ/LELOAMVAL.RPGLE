@@ -661,7 +661,7 @@
      D DDXRLS                  4      5                                                     MD057739
      D DDXRLC                  6      9                                                     MD057739
       *                                                                                     MD057537
-     D billion         C                   CONST(1000000000)                                MD057537
+     D TenBillion      C                   CONST(10000000000)                               MD057537
       ** +--------------------------------------+
       ** | End of D-specs                       |
       ** | ==============                       |
@@ -2651,7 +2651,7 @@
      C                   Z-ADD     0             HLAMT            13 0                      MD057537
      C     SVCPAM        ADD       WLAMT         HLAMT                                      MD057537
       *                                                                                     MD057537
-     C     HLAMT         IFGT      billion                                                  MD057537
+     C     HLAMT         IFGT      TenBillion                                               MD057537
      C                   MOVE      'W'           DDAMNTOK                                   MD057537
      C                   ADD       1             WIdx                                       MD057537
      C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'                              MD057537

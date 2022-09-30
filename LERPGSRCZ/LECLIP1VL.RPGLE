@@ -177,7 +177,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD057537 - Return a warning message when principal amount    *
-      *             exceeds one billion.                              *
+      *             exceeds ten billion.                              *
       *  MD051827 - System allows maturity date of a parts purchased  *
       *             loan to be amended with an earlier date than loan *
       *             fee's end date. Instead of LEFEEDL2, use LEFEEDL6 *

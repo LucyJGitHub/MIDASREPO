@@ -111,7 +111,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD057537 - Return a warning message when the total of        *
-      *             principal amount and event amount exceeds one     *
+      *             principal amount and event amount exceeds ten     *
       *             billion.                                          *
       *  257949 - Loan subtype amendment not accepted by system       *
       *           Apply fix 256984.                                   *

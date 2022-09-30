@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059368           Date 18Dec21               *
-      *  Prev Amend No. MD058543A          Date 09Sep21               *
+      *  Last Amend No. MD060532           Date 27Sep22               *
+      *  Prev Amend No. MD059368           Date 18Dec21               *
+      *                 MD058543A          Date 09Sep21               *
       *                 MD058734           Date 03Sep21               *
       *                 MD058644           Date 31Aug21               *
       *                 MD058547           Date 10Aug21               *
@@ -166,6 +167,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060532 - Unable to insert MM deal. Error 45049506 occured. *
+      *             Amended validation Fixed Base Rate must be 'N' if *
+      *             Backward-Looking Rate is 'Y'.                     *
       *  MD059368 - Inhibit the LIBOR Deregulation fields if CDL102   *
       *             is switched off                                   *
       *  MD058543A - BADJ not included in DDAIR during amend of deal. *
@@ -4377,7 +4381,8 @@
       ** Fixed Base Rate must be 'N' if Backward-Looking Rate is 'Y'                          CDL102
                                                                                               CDL102
      C     DDBLRT        IFEQ      'Y'                                                        CDL102
-     C     DDFBRT        ANDNE     'N'                                                        CDL102
+     C*****DDFBRT        ANDNE     'N'                                               CDL102 MD060532
+     C     DDFBRT        ANDEQ     'Y'                                                      MD060532
      C                   MOVEL     'N'           DDFBRTOK                                     CDL102
      C                   ADD       1             Idx                                          CDL102
      C                   EVAL      FldNameArr(Idx) = 'DDFBRT'                                 CDL102

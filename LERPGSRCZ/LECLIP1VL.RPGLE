@@ -177,7 +177,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD057537 - Return a warning message when principal amount    *
-      *             exceeds one billion.                              *
+      *             exceeds ten billion.                              *
       *  MD051827 - System allows maturity date of a parts purchased  *
       *             loan to be amended with an earlier date than loan *
       *             fee's end date. Instead of LEFEEDL2, use LEFEEDL6 *
@@ -673,7 +673,7 @@
      D RateFixDays     C                   Const('RateFixingDaysDfault')                      256579
      D FctyNoDaysFwd   C                   Const('FctyExceedNoDaysFwd')                       CLE158
       *                                                                                     MD057537
-     D billion         C                   CONST(1000000000)                                MD057537
+     D TenBillion      C                   CONST(10000000000)                               MD057537
       *
       ** +--------------------------------------+
       ** | Arrays and Data Structures           |
@@ -3759,7 +3759,7 @@ E001 C                   ENDIF
      C                   ENDIF                                                                CLE106
      C                   ENDIF                                                                CLE106
       *
-     C     WSVAM         IFGT      billion                                                  MD057537
+     C     WSVAM         IFGT      TenBillion                                               MD057537
      C                   MOVE      'W'           DDCPAMOK                                   MD057537
      C                   ADD       1             WId                                        MD057537
      C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)                             MD057537

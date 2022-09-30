@@ -4387,7 +4387,7 @@
                                                                                               CDL102
      C     DDBLRT        IFEQ      'Y'                                                        CDL102
      C*****DDFBRT        ANDNE     'N'                                               CDL102 MD060532
-     C                   ANDEQ     'Y'                                                      MD060532
+     C     DDFBRT        ANDEQ     'Y'                                                      MD060532
      C                   MOVEL     'N'           DDFBRTOK                                     CDL102
      C                   ADD       1             Idx                                          CDL102
      C                   EVAL      FldNameArr(Idx) = 'DDFBRT'                                 CDL102

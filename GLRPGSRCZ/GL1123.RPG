@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD043887           Date 16Apr18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060448           Date 27Sep22               *
+      *  Prev Amend No. MD043887           Date 16Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD029265           Date 15Aug14               *
       *                 CGL141             Date 12Dec12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +30,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060448 - Amount Accrual amend screen has no validation for *
+      *             Associated Customer field. Patterned fix to CGL064*
+      *             changes in GL1122.                                *
       *  MD043887 - Amended GL1120FM to prevent the blank field from  *
       *             appearing on the screen when CGL064 is not        *
       *             switched on (Recompile)                           *
@@ -59,6 +63,7 @@
      E/COPY ZSRSRC,ZDATE2Z1
      E/COPY ZSRSRC,ZALIGNZ1
      E                    ERCD       19  4
+     E                    ERCM    1   2 79               ERROR MESSAGES                     MD060448
       *
      IGL1120F3    78
       ** Workstation file - format for Amend screen
@@ -99,7 +104,9 @@
      I                                      135 1440MDRAC                                     CGL029
      I                                      145 1540MCRAC                                     CGL029
      I**********                            135 200 WST200                                    CGL029
-     I                                      155 200 WST200                                    CGL029
+     I**********                            155 200 WST200                                    CGL029
+     I                                      155 160 WST160                                  MD060448
+     I                                      161 200 WST200                                  MD060448
      I                                      201 400 WST400
      I                                      401 600 WST600
      I                                      601 800 WST800
@@ -184,6 +191,13 @@
      ISCSARD    E DSSCSARDPD                                                                  CGL014
       ** Switchable features                                                                  CGL014
       *                                                                                       CGL014
+     ISDACOD    E DSSDACODPD                                                                MD060448
+      ** Account Code Details                                                               MD060448
+     I              QQACCD                          QQACCX                                  MD060448
+      *                                                                                     MD060448
+     ISDCUST    E DSSDCUSTPD                                                                MD060448
+      ** Customer Details                                                                   MD060448
+      *                                                                                     MD060448
      IDSFDY     E DSDSFDY
       ** First DS for access programs, short data structure
       *
@@ -249,6 +263,21 @@
      C                     ENDIF
       *
      C                     ENDIF
+      *
+      ** Check if enhancement CGL064 is ON                                                  MD060448
+      *                                                                                     MD060448
+     C                     CALL 'AOSARDR0'                                                  MD060448
+     C                     PARM *BLANKS   #RTCD                                             MD060448
+     C                     PARM '*VERIFY' #OPTN                                             MD060448
+     C                     PARM 'CGL064'  WSARD                                             MD060448
+      *                                                                                     MD060448
+     C           #RTCD     IFEQ *BLANK                                                      MD060448
+     C                     MOVE 'Y'       CGL064  1                                         MD060448
+     C                     MOVE *ON       *IN54                                             MD060448
+     C                     ELSE                                                             MD060448
+     C                     MOVE 'N'       CGL064                                            MD060448
+     C                     MOVE *OFF      *IN54                                             MD060448
+     C                     ENDIF                                                            MD060448
       *                                                                                       CGL014
       ** Check if enhancement CGL014 (Collaterals Processing) is on                           CGL014
       *                                                                                       CGL014
@@ -536,6 +565,7 @@
       *
      C           SRWSTR    BEGSR
       *
+     C                     MOVE SASOC     WST160                                            MD060448
      C                     MOVE *BLANKS   WST200
      C                     MOVE *BLANKS   WST400
      C                     MOVE *BLANKS   WST600
@@ -740,6 +770,74 @@
      C                     ENDIF
       *
      C                     ENDIF
+      *                                                                                    MD060448
+      ** Entry to associated customer field is optional. If entered,                       MD060448
+      ** it will be validated against the customer file.                                   MD060448
+      ** If this field is left blank, default with the debit or                            MD060448
+      ** credit customer from the first screen.                                            MD060448
+      ** To determine which customer, access the account codes file                        MD060448
+      ** using the debit account code. If account section is income                        MD060448
+      ** or expense, default to the debit customer.                                        MD060448
+      ** Otherwise, reaccess account codes file using the credit                           MD060448
+      ** account cod. If income or expense, default the associated                         MD060448
+      ** customer to credit customer.                                                      MD060448
+      *                                                                                    MD060448
+     C           CGL064    IFEQ 'Y'                                                        MD060448
+     C                     MOVE *OFF      *IN43                                            MD060448
+      *                                                                                    MD060448
+     C           SASOC     IFNE *BLANK                                                     MD060448
+      *                                                                                    MD060448
+     C                     MOVE SASOC     UASOC   6                                        MD060448
+     C                     CALL 'AOCUSTR0'                                                 MD060448
+     C                     PARM *BLANKS   @RTCD                                            MD060448
+     C                     PARM '*KEY   ' @OPTN                                            MD060448
+     C                     PARM UASOC     WKEY1  10                                        MD060448
+     C                     PARM *BLANKS   WKYST   7                                        MD060448
+     C           SDCUST    PARM SDCUST    DSSDY                                            MD060448
+      *                                                                                    MD060448
+     C           @RTCD     IFEQ *BLANKS                                                    MD060448
+     C                     MOVE BBCUST    SASOC                                            MD060448
+     C                     ELSE                                                            MD060448
+     C           S         ADD  1         S                                                MD060448
+     C                     MOVE *ON       *IN43                                            MD060448
+     C           @RTCD     IFEQ '*NOSEL'                                                   MD060448
+     C                     MOVE ERCM,1    ERMSG                                            MD060448
+     C                     ELSE                                                            MD060448
+     C                     MOVE ERCM,2    ERMSG                                            MD060448
+     C                     ENDIF                                                           MD060448
+     C                     ENDIF                                                           MD060448
+      *                                                                                    MD060448
+     C                     ELSE                                                            MD060448
+      *                                                                                    MD060448
+      ** If field is blank                                                                 MD060448
+      *                                                                                    MD060448
+     C                     CALL 'AOACODR0'                                                 MD060448
+     C                     PARM *BLANKS   @RTCD                                            MD060448
+     C                     PARM '*KEY    '@OPTN                                            MD060448
+     C                     PARM SDRCO     WACCD   6                                        MD060448
+     C           SDACOD    PARM SDACOD    DSFDY                                            MD060448
+      *                                                                                    MD060448
+     C           A5ACSC    IFEQ 'EX'                                                       MD060448
+     C           A5ACSC    OREQ 'IN'                                                       MD060448
+     C                     MOVE SDRCN     SASOC                                            MD060448
+     C                     GOTO VALASC                                                     MD060448
+     C                     ENDIF                                                           MD060448
+      *                                                                                    MD060448
+     C                     CALL 'AOACODR0'                                                 MD060448
+     C                     PARM *BLANKS   @RTCD                                            MD060448
+     C                     PARM '*KEY    '@OPTN                                            MD060448
+     C                     PARM SCRCO     WACCD                                            MD060448
+     C           SDACOD    PARM SDACOD    DSFDY                                            MD060448
+      *                                                                                    MD060448
+     C           A5ACSC    IFEQ 'EX'                                                       MD060448
+     C           A5ACSC    OREQ 'IN'                                                       MD060448
+     C                     MOVE SCRCN     SASOC                                            MD060448
+     C                     ENDIF                                                           MD060448
+      *                                                                                    MD060448
+     C                     ENDIF                                                           MD060448
+      *                                                                                    MD060448
+     C           VALASC    TAG                                                             MD060448
+     C                     ENDIF                                                           MD060448
       *
      C                     ENDSR
       *
@@ -851,3 +949,6 @@
 000031059090120151181212243273304334365
 **   ZMNM - MONTHS SHORT NAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ERROR MESSAGES                                                                         MD060448
+NO VALUE SELECTED                                                                           MD060448
+INVALID ENTRY                                                                               MD060448

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059334           Date 27Sep22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -43,6 +44,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059334 - Business day convention blank value should be     *
+      *             available with CSE005.                            *
+      *             Allow blank value of Business day convention when *
+      *             CSE005 is ON and CSE031 is OFF.                   *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -199,6 +204,7 @@
      C                   IF        DDBCNV <> 'F' AND
      C                             DDBCNV <> 'C' AND
      C                             DDBCNV <> 'M' AND
+     C                             DDBCNV <> ' ' AND                                        MD059334
      C*******                      PPROT = '3'                                                CSE031
      C                             PPROT = '3'   AND CSE031 = 'N'                             CSE031
      C                             OR                                                         CSE031

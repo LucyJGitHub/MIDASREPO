@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD026333           Date 29Apr14               *
+      *  Last Amend No. MD060084           Date 29Sep22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD026333           Date 29Apr14               *
       *                 MD046248           Date 27Oct17               *
       *                 MD021337           Date 25May16               *
       *                 CSW215             Date 06Apr15               *
@@ -67,6 +68,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060084 - Error is returned when using an account line in   *
+      *             line one and input is 6 characters which is an    *
+      *             invalid customer number in line 2                 *
+      *           - Allow enabling/disabling of validation of customer*
+      *             via system value                                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD026333 - Beneficiary field on Settlement screen allows     *
@@ -224,6 +230,9 @@
       ** String for System Values Array                                                     MD027201
      D SysValBEN2      C                   CONST('BeneField2Expand')                        MD027201
                                                                                             MD027201
+      ** String for System Values Array                                                     MD060084
+     D SysValENAB      C                   CONST('EnableCustValid')                         MD060084
+                                                                                            MD060084
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
 
@@ -562,6 +571,7 @@
      C     SDCUST        PARM      *BLANKS       DSLDY                                      MD026333
       *                                                                                     BUG13161
      C                   If        C#RTCD = '*NRF   '                                       BUG13161
+     C     ENABLECSV     IFEQ      'Y'                                                      MD060084
      C                   Move      'N'           OKBnc1                                     BUG13161
      C                   Add       1             Idx                                        BUG13161
      C                   MOVEL     'SBNC1 '      FldNamXAr(Idx)                             BUG13161
@@ -571,6 +581,7 @@
      C                   ELSE                                                               MD026333
      C                   Movel     'MMA1054'     MsgIdXAr(Idx)                              BUG13161
      C                   ENDIF                                                              MD026333
+     C                   ENDIF                                                              MD060084
      C                   Else                                                               BUG13161
       *                                                                                     BUG13161
 
@@ -591,6 +602,7 @@
 
      C                   Else
       *  Send error to screen
+     C     ENABLECSV     IFEQ      'Y'                                                      MD060084
      C                   If        ADSLSH <> '/'
      C                   Movel(P)  'N'           OKBnc1
      C                   Else
@@ -600,6 +612,7 @@
      C**********         Movel     'DDBnc'       FldNamXAr(Idx)                             BUG10107
      C                   MOVEL     'SBNC1 '      FldNamXAr(Idx)                             BUG10107
      C                   Movel     'MMA1054'     MsgIdXAr(Idx)
+     C                   END                                                                MD060084
      C                   End
      C                   End
       *
@@ -747,18 +760,20 @@
 
       *  First 10 characters should be key for SDCUST
       * Send error to screen
+     C     ENABLECSV     IFEQ      'Y'                                                      MD060084
      C                   Add       1             Idx
      C                   If        ADSLSH <> '/'
      C                             AND BEN1EXPND = 'Y'                                      MD027201
      C                             AND WIND1 = 'Y'                                          MD027201
      C                   Move      'N'           OKBnc1
-     C                   Movel     'SBNC1'       FldNamXAr(Idx)
+     C*                  Movel     'SBNC1'       FldNamXAr(Idx)
      C**********         Else                                                                BUG7778
      C**********         Move      'N'           OKBnc2                                      BUG7778
      C**********         Movel     'SBNC2'       FldNamXAr(Idx)                              BUG7778
      C**********         End                                                                 BUG7778
      C                   Movel     'MMA1054'     MsgIdXAr(Idx)
      C                   End                                                                 BUG7778
+     C                   END                                                                MD060084
 
      C                   Else
       * Validate as an address
@@ -1561,6 +1576,15 @@
      C                   MOVEL     'N'           BEN2EXPND                                  MD027201
      C                   ENDIF                                                              MD027201
       *                                                                                     MD027201
+     C                   MOVE      *BLANKS       SysValBEN        20                        MD060084
+     C                   MOVEL     SysValENAB    SysValBEN                                  MD060084
+     C                   EXSR      SRSysVal                                                 MD060084
+     C                   IF        P@VL01 = 'Y'                                             MD060084
+     C                   MOVEL     'Y'           ENABLECSV         1                        MD060084
+     C                   ELSE                                                               MD060084
+     C                   MOVEL     'N'           ENABLECSV                                  MD060084
+     C                   ENDIF                                                              MD060084
+      *                                                                                     MD060084
       ** Check if CSW215 is installed                                                         CSW215
       *                                                                                       CSW215
      C                   EVAL      CSW215 = 'N'                                               CSW215

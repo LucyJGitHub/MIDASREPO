@@ -766,7 +766,7 @@
      C                             AND BEN1EXPND = 'Y'                                      MD027201
      C                             AND WIND1 = 'Y'                                          MD027201
      C                   Move      'N'           OKBnc1
-     C*                  Movel     'SBNC1'       FldNamXAr(Idx)
+     C                   Movel     'SBNC1'       FldNamXAr(Idx)
      C**********         Else                                                                BUG7778
      C**********         Move      'N'           OKBnc2                                      BUG7778
      C**********         Movel     'SBNC2'       FldNamXAr(Idx)                              BUG7778

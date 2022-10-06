@@ -35,8 +35,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD047369A          Date 24Jan18               *
+      *  Last Amend No. MD060110           Date 15Sep22               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
       *                 MD025111           Date 24Feb14               *
@@ -85,9 +86,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060110 - Payments can be amended and authorised by the     *
+      *             same user. Use the MSWINPUSER value from T_MSWIP  *
+      *             to populate Input Officer 1 and Input Officer 2.  *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
-      *              beneficary customer account.                     *      
+      *              beneficary customer account.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
@@ -3653,7 +3657,12 @@
       *
       ** Input Officer 1.
       *
+     C                   IF        DDACTN = 'I'                                             MD060110
      C                   EVAL      IPINUSR1 = PSUser
+     C                   ELSE                                                               MD060110
+      ** Input Officer 2.                                                                   MD060110
+     C                   EVAL      IPINUSR2 = PSUser                                        MD060110
+     C                   ENDIF                                                              MD060110
       *
       ** Level 2 details have been processed.
       *
@@ -3661,7 +3670,7 @@
       *
       ** Input Officer 2.
       *
-     C                   EVAL      IPINUSR2 = PSUser
+     C**********         EVAL      IPINUSR2 = PSUser                                        MD060110
       *
       ** Level 2 Valid Indicator.
       *
@@ -4254,7 +4263,7 @@
      C                   Z-ADD     016           DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     PRTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CGL009            1
      C                   ELSE
@@ -4280,7 +4289,7 @@
      C                   Z-ADD     017           DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     PRTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CFT004            1
      C                   ELSE

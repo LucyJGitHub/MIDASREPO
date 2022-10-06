@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060111           Date 01Jul22               *
-      *  Prev Amend No. CSW122             Date 04Oct21               *
+      *  Last Amend No. MD060110           Date 15Sep22               *
+      *  Prev Amend No. MD060111           Date 01Jul22               *
+      *                 CSW122             Date 04Oct21               *
       *                 MD058498           Date 31Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 BUG7555            Date 16Feb21               *
@@ -111,6 +112,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060110 - Payments can be amended and authorised by the     *
+      *             same user. Use the MSWINPUSER value from T_MSWIP  *
+      *             to populate Input Officer 1 and Input Officer 2.  *
       *  MD060111 - IPAY processing failed being unable to allocate   *
       *             INPAYDA.                                          *
       *           - Condition lock of WINPAY if CFT151 is OFF.        *
@@ -8135,7 +8139,12 @@
       *
       ** Input Officer 1.
       *
+     C                   IF        DDACTN = 'I'                                             MD060110
      C                   EVAL      IPINUSR1 = PSUser
+     C                   ELSE                                                               MD060110
+      ** Input Officer 2.                                                                   MD060110
+     C                   EVAL      IPINUSR2 = PSUser                                        MD060110
+     C                   ENDIF                                                              MD060110
       *
       ** If entry point is Level 1 and Level 1 is linked with
       ** Level 2, or entry point is Level 1 and Incoming Payments
@@ -8150,7 +8159,7 @@
       *
       ** Input Officer 2.
       *
-     C                   EVAL      IPINUSR2 = PSUser
+     C**********         EVAL      IPINUSR2 = PSUser                                        MD060110
       *
       ** Level 2 Valid Indicator.
       *

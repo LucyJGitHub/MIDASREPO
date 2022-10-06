@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056972           Date 25Nov20               *
+      *  Last Amend No. MD059762           Date 20Apr22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056972           Date 25Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1097467B         Date 23Apr13               *
       *                 AR1097467A         Date 12Apr13               *
@@ -23,6 +24,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059762 - COB: GLC0570 failed due to variable overflow      *
+      *             Amend to change EVAL to ADD to accept value even  *
+      *             though field reached maximum.                     *
+      *             Applied for MD060567.                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056972 - SWIFT accounts not closed when accounts close     *
@@ -397,7 +402,8 @@ D     /EJECT
      C                   WRITE     ACDETAAF                                                 MD056972
                                                                                             MD056972
      C                   READ      ACCNTAC                                                  MD056972
-     C                   EVAL      AC_NORE = ACDETCount+ 2                                  MD056972
+     C**********         EVAL      AC_NORE = ACDETCount+ 2                         MD056972 MD059762
+     C     ACDETCount    ADD       2             AC_NORE                                    MD059762
      C                   WRITE     ACDETACF                                                 MD056972
      C                   ENDIF                                                              MD056972
 

@@ -19,11 +19,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059190           Date 08Nov21               *
-      *  Prev Amend No. CLE172  *CREATE    Date 01Oct20               *
+      *  Last Amend No. MD060591           Date 05Oct22               *
+      *  Prev Amend No. MD059190           Date 08Nov21               *
+      *                 CLE172  *CREATE    Date 01Oct20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060591 - No confirmation/extract generated on loan's       *
+      *             maturity date                                     *
+      *             Subtract 1 from end period if add ind is not 'B'  *
+      *             and date is not maturity date                     *
       *  MD059190 - Use current ARR parameters if:                    *
       *             1. interest and rollover date are input, equal and*
       *                less than next working date, BLRT is Y,        *

@@ -17,9 +17,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060591           Date 05Oct22               *
-      *  Prev Amend No. MD059424           Date 29Mar22               *
-      *                 MD059375           Date 20Dec21               *
+      *  Last Amend No. MD059424           Date 29Mar22               *
+      *  Prev Amend No. MD059375           Date 20Dec21               *
       *                 MD059270           Date 16Dec21               *
       *                 MD059253           Date 19Nov21               *
       *                 CIR020             Date 02Aug21               *
@@ -39,10 +38,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060591 - No confirmation/extract generated on loan's       *
-      *             maturity date                                     *
-      *             Subtract 1 from end period if add ind is not 'B'  *
-      *             and date is not maturity date                     *
       *  MD059424 - Calculator returned rates for previous period of  *
       *             deal defined with forward rate prior to amending  *
       *             the rate into backward-looking. Pass the new      *
@@ -1397,8 +1392,6 @@
      C                   CALL      'LE001113'                                               MD059190
      C                   PARM      'L'           PMode                                      MD059190
      C                   PARM                    TrTRAN                                     MD059190
-     C                   PARM                    TrADDI                                     MD060591
-     C                   PARM                    TrMDAT                                     MD060591
      C                   PARM      *ZEROS        WrkEndDate                                 MD059190
      C                   PARM      *ZEROS        WrkBasDate                                 MD059190
                                                                                             MD059190

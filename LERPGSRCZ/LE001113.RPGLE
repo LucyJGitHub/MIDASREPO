@@ -18,7 +18,8 @@
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
       *  Last Amend No. MD060591           Date 05Oct22               *
-      *  Prev Amend No. MD059190 *CREATE   Date 08Nov21               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD059190 *CREATE   Date 08Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -26,6 +27,8 @@
       *             maturity date                                     *
       *             Subtract 1 from end period if add ind is not 'B'  *
       *             and date is not maturity date                     *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD059190 - Create generic program to calculate loan          *
       *             next future interest due date.                    *
       *                                                               *
@@ -117,11 +120,10 @@
      D WRUN            S              1A
      D PCallMode       S              1A
      D PLoanRef        S              6A
-     D PAddInd         S              1A                                                    MD060591
-     D PMatDate        S              5P 0                                                  MD060591
      D PNextDate       S              5P 0
      D PBaseDate       S              5P 0
      D WBSDT           S              5P 0
+     D WMinusChk       S              1A                                                    MD060591
 
 
       *****************************************************************
@@ -132,20 +134,16 @@
 
      C                   EVAL      PNextDate = 0
      C                   EVAL      PBaseDate = 0
+     C                   EVAL      WMinusChk = *BLANKS                                      MD060591
 
      C     PLoanRef      CHAIN     LECLIPL2
 
      C                   SELECT
      C                   WHEN      L2_RLDT > 0 AND L2_NIPD > 0
      C                             AND L2_REPT = 2 AND L2_IPFR = ' '
-     C                   IF        (PAddInd = 'B' and                                       MD060591
-     C                             L2_NIPD = PMatDate)                                      MD060591
      C                   EVAL      PNextDate = L2_NIPD
      C                   EVAL      PBaseDate = L2_NIPD
-     C                   ELSE                                                               MD060591
-     C                   EVAL      PNextDate = L2_NIPD - 1                                  MD060591
-     C                   EVAL      PBaseDate = L2_NIPD - 1                                  MD060591
-     C                   ENDIF                                                              MD060591
+     C                   EVAL      WMinusChk = 'Y'                                          MD060591
 
      C                   WHEN      L2_IPFR = ' ' AND L2_REPT = 2
      C                             AND L2_MDAT = 0 AND PCallMode = 'L'
@@ -159,25 +157,15 @@
 
      C                   WHEN      L2_IPFR = ' ' AND L2_REPT = 2
      C                             AND L2_MDAT > 0
-     C                   IF        (PAddInd = 'B' and                                       MD060591
-     C                             L2_NIPD = PMatDate)                                      MD060591
      C                   EVAL      PNextDate = L2_MDAT
      C                   EVAL      PBaseDate = L2_MDAT
-     C                   ELSE                                                               MD060591
-     C                   EVAL      PNextDate = L2_MDAT - 1                                  MD060591
-     C                   EVAL      PBaseDate = L2_MDAT - 1                                  MD060591
-     C                   ENDIF                                                              MD060591
+     C                   EVAL      WMinusChk = 'Y'                                          MD060591
 
      C                   WHEN      L2_RFRQ = ' ' AND L2_REPT <> 2
      C                             AND L2_MDAT > 0
-     C                   IF        (PAddInd = 'B' and                                       MD060591
-     C                             L2_NIPD = PMatDate)                                      MD060591
      C                   EVAL      PNextDate = L2_MDAT
      C                   EVAL      PBaseDate = L2_MDAT
-     C                   ELSE                                                               MD060591
-     C                   EVAL      PNextDate = L2_MDAT - 1                                  MD060591
-     C                   EVAL      PBaseDate = L2_MDAT - 1                                  MD060591
-     C                   ENDIF                                                              MD060591
+     C                   EVAL      WMinusChk = 'Y'                                          MD060591
 
      C                   WHEN      (L2_NIDT > 0 AND L2_REPT = 2
      C                             AND L2_IPFR <> ' ')
@@ -189,6 +177,7 @@
      C                             OR (PNextDate <= L2_NRPD AND L2_REPT <>2 ))
      C                   EVAL      PNextDate = BJDNWD - 1
      C                   EVAL      PBaseDate = BJDNWD - 1
+     C                   EVAL      WMinusChk = *BLANKS                                      MD060591
      C                   ENDIF
 
      C                   OTHER
@@ -197,6 +186,14 @@
      C                   EVAL      PBaseDate = BJDNWD - 1
      C                   ENDIF
      C                   ENDSL
+                                                                                            MD060591
+     C                   IF        PCallMode = 'L' AND WMinusChk = 'Y'                      MD060591
+     C                   IF        L2_ADDI <> 'B' AND PNextDate = L2_MDAT                   MD060591
+     C                             OR PNextDate <> L2_MDAT                                  MD060591
+     C                   EVAL      PNextDate -= 1                                           MD060591
+     C                   EVAL      PBaseDate -= 1                                           MD060591
+     C                   ENDIF                                                              MD060591
+     C                   ENDIF                                                              MD060591
 
       ** End program
      C                   RETURN
@@ -321,6 +318,7 @@
      C                   EVAL      PNextDate = ZDYNBR
      C                   EVAL      PBaseDate = ZDAYNO
      C                   ENDIF
+     C                   EVAL      WMinusChk = 'Y'                                          MD060591
 
      C                   ENDSR
       *****************************************************************
@@ -373,8 +371,6 @@
      C     *ENTRY        PLIST
      C                   PARM                    PCallMode
      C                   PARM                    PLoanRef
-     C                   PARM                    PAddInd                                    MD060591
-     C                   PARM                    PMatDate                                   MD060591
      C                   PARM                    PNextDate
      C                   PARM                    PBaseDate
 

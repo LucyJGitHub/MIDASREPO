@@ -129,7 +129,8 @@
      C+ from CLOANCL
      C+ where RLDT <> 0 and RLDT < :BJDNWD and NBLRT = 'Y'
      C+   and LNRF not in (select * from LEWIPROLL)
-     C+   and (NIDT <> RLDT or (NRPD <> RLDT and REPT <> 2))                                MD059190
+     C****and (NIDT <> RLDT or (NRPD <> RLDT and REPT <> 2))                       MD059190 MD060591
+     C+   and ((NIDT <> RLDT and REPT = 2) or (NRPD <> RLDT and REPT <> 2))                 MD060591
      C/end-exec
 
      C                   IF        SQLCODE <> NO_ERROR and

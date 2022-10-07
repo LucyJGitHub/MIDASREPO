@@ -1449,7 +1449,8 @@
      C                   PARM      *BLANKS       PRetCode          7                        MD027201
      C                   PARM      SysValBEN     P@OP01           20                        MD027201
      C                   PARM      *BLANKS       P@VL01          200                        MD027201
-     C                   PARM      *BLANKS       P@OP02           20                        MD027201
+     C**********         PARM      *BLANKS       P@OP02           20                        MD027201
+     C                   PARM      SysEnCust     P@P02            20                        MD060084
      C                   PARM      *BLANKS       P@VL02          200                        MD027201
      C                   PARM      *BLANKS       P@OP03           20                        MD027201
      C                   PARM      *BLANKS       P@VL03          200                        MD027201
@@ -1558,6 +1559,7 @@
       *                                                                                     MD027201
       ** Access system value                                                                MD027201
       *                                                                                     MD027201
+     C                   MOVE      *BLANKS       SysEnCust        20                        MD060084
      C                   MOVE      *BLANKS       SysValBEN        20                        MD027201
      C                   MOVEL     SysValBEN1    SysValBEN                                  MD027201
      C                   EXSR      SRSysVal                                                 MD027201
@@ -1567,6 +1569,7 @@
      C                   MOVEL     'N'           BEN1EXPND                                  MD027201
      C                   ENDIF                                                              MD027201
       *                                                                                     MD027201
+     C                   MOVEL     SysValENAB    SysEnCust                                  MD060084
      C                   MOVE      *BLANKS       SysValBEN        20                        MD027201
      C                   MOVEL     SysValBEN2    SysValBEN                                  MD027201
      C                   EXSR      SRSysVal                                                 MD027201
@@ -1576,10 +1579,7 @@
      C                   MOVEL     'N'           BEN2EXPND                                  MD027201
      C                   ENDIF                                                              MD027201
       *                                                                                     MD027201
-     C                   MOVE      *BLANKS       SysValBEN        20                        MD060084
-     C                   MOVEL     SysValENAB    SysValBEN                                  MD060084
-     C                   EXSR      SRSysVal                                                 MD060084
-     C                   IF        P@VL01 = 'Y'                                             MD060084
+     C                   IF        P@VL02 = 'Y'                                             MD060084
      C                   MOVEL     'Y'           ENABLECSV         1                        MD060084
      C                   ELSE                                                               MD060084
      C                   MOVEL     'N'           ENABLECSV                                  MD060084

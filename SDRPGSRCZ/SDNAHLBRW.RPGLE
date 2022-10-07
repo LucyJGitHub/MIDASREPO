@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052599           Date 13Apr20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD059998           Date 03Oct22               *
+      *  Prev Amend No. MD052599           Date 13Apr20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD040639           Date 22Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
@@ -36,6 +37,12 @@
       *                 CGL032  *CREATE    Date 05Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD058889 - Non-account Holder Maintenance - Reference        *
+      *             search box.                                       *
+      *           - Move SENAHO to TNAHO and display after subfile    *
+      *             rebuild for SENAHO not blanks and enter key.      *
+      *           - Save SENAHO to TNAHO after Page down key and      *
+      *             clear SENAHO for next 13 records on SDNAHOL1.     *
       *  MD052599 - BFM2.1 Logically deleted Non-account Holder       *
       *             dropped from the Maintenance screen. Remove       *
       *             checking of NHCHTP, and add display of DELETE     *
@@ -458,19 +465,26 @@
      C                   WRITE     SDNAHLS1
      C                   MOVE      *Off          *In93
      C                   MOVE      *Off          *In91                                      MD052599
+     C                   MOVE      TNAHO         SENAHO                                     MD059998
      C                   WRITE     SDNAHLS0
+     C                   MOVE      *BLANK        TNAHO                                      MD059998
+     C                   MOVE      *BLANK        SENAHO                                     MD059998
      C                   ELSE
 
       **  write the subfile control record to the screen to display
       **  the subfile.
 
+     C                   MOVE      TNAHO         SENAHO                                     MD059998
      C                   WRITE     SDNAHLS0
+     C                   MOVE      *BLANK        TNAHO                                      MD059998
+     C                   MOVE      *BLANK        SENAHO                                     MD059998
      C                   ENDIF
 
       **  Read the subfile control record to determine whether records
       **  have been selected or whether ROLLUP is required.
 
      C                   READ      SDNAHLS0                               99
+     C                   MOVE      SENAHO        TNAHO            10                        MD059998
 
       ** Clear any messages before processing user input
 
@@ -502,6 +516,10 @@
       **  If Rollup, load sfl.
 
      C                   WHEN      *In98 = *On
+     C                   IF        SENAHO <>*BLANKS                                         MD059998
+     C                   EVAL      TNAHO = SENAHO                                           MD059998
+     C                   EVAL      SENAHO= *BLANKS                                          MD059998
+     C                   ENDIF                                                              MD059998
      C                   GOTO      Load1
                                                                                               CGL132
      C                   WHEN      *INKN = *ON                                                CGL132

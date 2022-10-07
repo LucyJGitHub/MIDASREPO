@@ -1449,7 +1449,7 @@
      C                   PARM      *BLANKS       PRetCode          7                        MD027201
      C                   PARM      SysValBEN     P@OP01           20                        MD027201
      C                   PARM      *BLANKS       P@VL01          200                        MD027201
-     C**********         PARM      *BLANKS       P@OP02           20                        MD027201
+     C**********         PARM      *BLANKS       P@OP02           20               MD027201 MD060084
      C                   PARM      SysEnCust     P@P02            20                        MD060084
      C                   PARM      *BLANKS       P@VL02          200                        MD027201
      C                   PARM      *BLANKS       P@OP03           20                        MD027201

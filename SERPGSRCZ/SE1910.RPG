@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056734           Date 07Oct20               *
-      *  Prev Amend No. 259607             Date 07Oct20               *
+      *  Last Amend No. MD060303           Date 05Oct22               *
+      *  Prev Amend No. MD056734           Date 07Oct20               *
+      *                 259607             Date 07Oct20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060303 - Enquire action on WITHHOLDING TAX - COUNTRY TAX   *
+      *             RATES MAINTENANCE                                 *
+      *           - remove the storing of 14th record to Review from  *
+      *             screen fields and replace it by storing the values*
+      *             on the key fields that will load the next subfile *
+      *             records.                                          *
       *  MD056734 -  Country tax rates maintenance - database error   *
       *              has occurred message. Reverse fix 259607 in this *
       *              program.                                         *
@@ -750,8 +757,12 @@
      C*
      C**   CHAIN TO SUBFILE TO GET FIRST CUSTOMER NUMBER/START DATE
      C           1         CHAINSE1910S5             59
-     C                     MOVELDD2COD    DD1RVF
-     C                     MOVELDD2BAN    DD1RVC
+      ** Do not save next value to review from screen fields                                MD060303
+     C**********           MOVELDD2COD    DD1RVF                                            MD060303
+     C**********           MOVELDD2BAN    DD1RVC                                            MD060303
+      ** Save next value to review from key fields                                          MD060303
+     C                     MOVELDD2COD    WWKCOD                                            MD060303
+     C                     MOVE DD2BAN    WWKBAN                                            MD060303
      C*
      C**   REBUILD SUBFILE
      C                     EXSR #ZB
@@ -1174,8 +1185,23 @@
      C********** *LOVAL    SETLLSECNTRLX                                             259607 MD056734
      C           *LOVAL    SETLLSECNTRL0                                                    MD056734
      C                     ELSE
+      ** If enter key is pressed and review from has value                                  MD060303
+      ** moved review from value from klist                                                 MD060303
+     C           *IN27     IFEQ '0'                                                         MD060303
+     C           DD1RVF    IFNE *BLANKS                                                     MD060303
      C                     MOVE DD1RVF    WWKCOD
+     C                     ELSE                                                             MD060303
+     C                     MOVE *BLANKS   WWKCOD
+     C                     ENDIF                                                            MD060303
+     C                     ENDIF                                                            MD060303
+     C           *IN27     IFEQ '0'                                                         MD060303
+     C           DD1RVC    IFNE *BLANKS                                                     MD060303
      C                     MOVE DD1RVC    WWKBAN
+     C                     ELSE                                                             MD060303
+     C                     Z-ADD0         WWKBAN
+     C                     ENDIF                                                            MD060303
+     C                     ENDIF                                                            MD060303
+      ** else use previous key list from below MD060303 changes                             MD060303
      C********** WWKEYS    SETLLSECNTRL0                                                      259607
      C********** WWKEYS    SETLLSECNTRLX                                             259607 MD056734
      C           WWKEYS    SETLLSECNTRL0                                                    MD056734
@@ -1227,8 +1253,15 @@
      C                     END
      C*
      C           *IN51     IFEQ '0'
-     C                     MOVELTXCTTA    DD1RVF
-     C                     MOVELTXTABD    DD1RVC
+      ** Do not save next values to review from screen fields                               MD060303
+     C**********           MOVELTXCTTA    DD1RVF                                            MD060303
+     C**********           MOVELTXTABD    DD1RVC                                            MD060303
+      ** Clear review from values                                                           MD060303
+     C                     MOVEL*BLANKS   DD1RVF                                            MD060303
+     C                     MOVEL*BLANKS   DD1RVC                                            MD060303
+      ** Save next value directly on review from key fields                                 MD060303
+     C                     MOVELTXCTTA    WWKCOD                                            MD060303
+     C                     MOVE TXTABD    WWKBAN                                            MD060303
      C                     EXCPTSECNTR
      C                     ELSE
      C                     MOVE '1'       *IN31

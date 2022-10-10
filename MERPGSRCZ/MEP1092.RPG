@@ -20,10 +20,12 @@
       *             In-house program does all the checks and decides  *
       *             if payment can be auto authorised                 *
       *                                                               *
-      *  Last Amend No. LUC111   *CREATE   Date 21Nov2017             *
+      *  Last Amend No. MD060572           Date 07Oct2022             *
+      *  Prev Amend No. LUC111   *CREATE   Date 21Nov2017             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060572 - Upgrade STP changes to FB Midas 2.1               *
       *  LUC111 - STP changes for in-house eBanking payment           *
       *         - Enhance to process message from other Ebanking      *
       *           source (e.g. EGate) and different payment type.     *
@@ -67,6 +69,10 @@
      I                                        1   5 WTAG1
      I                                       31  80 W#P23E
       *
+     IW#P59       DS                                                                        MD060572
+     I                                        1   5 WTAG2                                   MD060572
+     I                                       31  65 W#BEN                                   MD060572
+     I                                       66 256 REST2                                   MD060572
       *
       *
       *  Set up copyright statement
@@ -89,21 +95,29 @@
       *
       *** Reset working fields
      C                     MOVE *BLANKS   W#P23
+     C                     MOVE *BLANKS   W#P59                                             MD060572
       *
      C           PMTPY     IFEQ 'IN3'
      C           PMTPY     OREQ '103'
       *** Reset working fields
       *
      C                     MOVELP23E      W#P23
+     C                     MOVELP59       W#P59                                             MD060572
      C                     MOVEL'IN'      W#OPIN  2        Payment Type
       *
       ** Call In-house program
+      ** Beneficiary account is used to check if account is valid                           MD060572
+      ** Amount is checked against threshold amount for the Beneficiary customer            MD060572
       ** Field 23E is used to determin if charges structure for the message type is in place
       ** Field 32A is used to check if the pay amount is within set limit
-     C                     CALL 'CM1221'               9090
+     C**********           CALL 'CM1221'               9090                                 MD060572
+     C                     CALL 'CM1220'               9090                                 MD060572
      C                     PARM *BLANKS   W#RTN   7        Return code
      C                     PARM           W#CCY            Pay Currency
      C                     PARM           W#AMT            Pay Amount
+     C                     PARM           W#BEN            Beneficiary                      MD060572
+     C                     PARM *BLANKS   W#ACB1 35        Not relevant for IN              MD060572
+     C                     PARM *BLANKS   W#ACB2 35        Not relevant for IN              MD060572
      C                     PARM           W#P23E           Instruction Code
      C                     PARM           W#OPIN           Pay Type
      C                     PARM *BLANKS   W#AUT   1        Auto Authorise

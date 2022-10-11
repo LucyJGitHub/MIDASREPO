@@ -16,11 +16,16 @@
      F*                                                               *
       *  (c) Finastra International Limited 2021                      *
      F*                                                               *
-      *  Last Amend No. MD059624           Date 20Jul22               *
-      *  Prev Amend No. MD059367 *CREATE   Date 24Dec21               *
+      *  Last Amend No. MD060590           Date 04Oct22               *
+      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *                 MD059367 *CREATE   Date 24Dec21               *
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060590 - Incorrect ccr rounding applies and precision      *
+      *             values for loan defined with SONIA and SARR.      *
+      *             Check the calc method to be 'NCCR' before calling *
+      *             ZAGETRDAPL program                                *
       *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *
      F*                                                               *
@@ -974,9 +979,12 @@
       *                                                                                     MD059624
       ** Get rounding precision from SDLIBRTD                                               MD059624
       *                                                                                     MD059624
+     C                   EVAL      isRndApplies = ' '                                       MD060590
+     C                   IF        CALM = 'NCCR'                                            MD060590
      C                   CALL      'ZAGETRDAPL'                                             MD059624
      C                   PARM                    RFRR                                       MD059624
      C                   PARM      'N'           isRndApplies      1                        MD059624
+     C                   ENDIF                                                              MD060590
      C                   IF        isRndApplies = 'Y'                                       MD059624
      C                   MOVEL     'Y'           CCRRA             1                        MD059624
      C                   MOVEL     RRDP          CCRRP             2 0                      MD059624

@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
-      *  Last Amend No. MD031937           Date 13Jan15               *
-      *  Prev Amend No. AR856737           Date 06Oct2011             *
+      *  Last Amend No. MD059770           Date 21Sep22               *
+      *  Prev Amend No. MD031937           Date 13Jan15               *
+      *                 AR856737           Date 06Oct2011             *
       *                 HVB011   *CREATE   Date 06Oct2011             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059770 - ME_FT_IMM is in MSGW                              *
       *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
       *  AR856737 - Upgrade STP Enhancements to Midas Plus level.     *
       *  HVB011   - Target Balance Cash Pooling                       *
@@ -26,6 +28,8 @@
       *
      D GZAMAD        E DS                  ExtName(T_GZAMADEX) prefix(A_)
      D PAMAD           DS           100
+      *                                                                                     MD059770
+     D NULLINDS        S              5I 0 DIM(99)                                          MD059770
       *
      C     *ENTRY        PLIST
      C                   Parm                    PRTN              5
@@ -58,7 +62,8 @@
       *
      C/EXEC SQL
      c+ select  *
-     c+ into :GZAMAD
+     c***+*into*:GZAMAD                                                                     MD059770
+     c+ into :GZAMAD :NULLINDS                                                              MD059770
      c+ from T_GZAMADEX
      c+   where DDBRCA = :PBRCH
      c+   and   substr(DDCUSN,5,6) = :PCUST
@@ -69,9 +74,17 @@
       *
       *  Check for successful completion
       *
-     C                   If        (SQLCOD <> 0)
-     C                   Move      '*RNF'        PRTN
-     C                   If        (%SUBST(SQLSTATE:1:2) <> '02')
+     C**********         If        (SQLCOD <> 0)                                            MD059770
+     C**********         Move      '*RNF'        PRTN                                       MD059770
+     C**********         If        (%SUBST(SQLSTATE:1:2) <> '02')                           MD059770
+      *                                                                                     MD059770
+     C                   IF        SQLCOD = 100                                             MD059770
+     C                   EVAL      PRTN = '*RNF'                                            MD059770
+     C                   EXSR      *PSSR                                                    MD059770
+      *                                                                                     MD059770
+     C                   ELSE                                                               MD059770
+     C                   IF        SQLCOD < 0                                               MD059770
+     C                   EVAL      PRTN = '*ERR'                                            MD059770
      C                   ExSR      *PSSR
      C                   EndIf
      C                   EndIf
@@ -88,7 +101,7 @@
       *********************************************************************
      C     *PSSR         BEGSR
       *
-     C                   Move      '*ERROR'      PRTN
+     C**********         Move      '*ERROR'      PRTN                                       MD059770
       *
      C     RunBefore     IFEQ      *BLANKS
 

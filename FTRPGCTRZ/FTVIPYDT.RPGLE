@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036683A          Date 12Apr16               *
+      *  Last Amend No. CFT165             Date 12Oct22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036683A          Date 12Apr16               *
       *                 MD036683           Date 06Jan16               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT165 - Pay Value Date Defaulting in Incoming Payments      *
+      *         - CFT165 is non-switchable feature.                   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036683A - Validate the settlement value date against the   *
       *              DACO even if the value date is holiday.          *
@@ -204,6 +207,27 @@
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
       *
+     D PayDatDft       S              1A                                                      CFT165
+     D POP01           S             20A                                                      CFT165
+     D PVL01           S            200A                                                      CFT165
+     D POP02           S             20A                                                      CFT165
+     D PVL02           S            200A                                                      CFT165
+     D POP03           S             20A                                                      CFT165
+     D PVL03           S            200A                                                      CFT165
+     D POP04           S             20A                                                      CFT165
+     D PVL04           S            200A                                                      CFT165
+     D POP05           S             20A                                                      CFT165
+     D PVL05           S            200A                                                      CFT165
+     D POP06           S             20A                                                      CFT165
+     D PVL06           S            200A                                                      CFT165
+     D POP07           S             20A                                                      CFT165
+     D PVL07           S            200A                                                      CFT165
+     D POP08           S             20A                                                      CFT165
+     D PVL08           S            200A                                                      CFT165
+     D POP09           S             20A                                                      CFT165
+     D PVL09           S            200A                                                      CFT165
+     D POP10           S             20A                                                      CFT165
+     D PVL10           S            200A                                                      CFT165
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -327,6 +351,29 @@
      C                   MOVE      BJSLCD        ZLOC
      C                   ENDIF
       *
+                                                                                              CFT165
+      ** If PayDatDft is 'S', set default Pay Value Date equal to                             CFT165
+      ** Settlement Value Date                                                                CFT165
+                                                                                              CFT165
+     C                   IF        PayDatDft = 'S'                                            CFT165
+                                                                                              CFT165
+     C                   IF        DDSLDT = *BLANKS                                           CFT165
+     C                   EVAL      WPYDT = BJRDNB                                             CFT165
+     C                   CLEAR                   ZDATE                                        CFT165
+     C                   CALLB     'ZDATE2'                                                   CFT165
+     C                   PARM                    WPYDT                                        CFT165
+     C                   PARM      BJDFIN        PFMT              1                          CFT165
+     C                   PARM                    ZDATE             6 0                        CFT165
+     C                   PARM      *BLANKS       ZADATE            7                          CFT165
+                                                                                              CFT165
+     C                   MOVE      ZDATE         DDPYDT                                       CFT165
+     C                   ELSE                                                                 CFT165
+     C                   EVAL      DDPYDT = DDSLDT                                            CFT165
+     C                   EVAL      WPYDT = IPSLDT                                             CFT165
+     C                   ENDIF                                                                CFT165
+                                                                                              CFT165
+     C                   ELSE                                                                 CFT165
+                                                                                              CFT165
      C                   If        ZCCY = BJCYCD
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   Z-ADD     1             ZNRDYS
@@ -354,6 +401,8 @@
       *
      C                   Z-ADD     ZDYNBR        WPYDT
      C                   EndIf
+                                                                                              CFT165
+     C                   ENDIF                                                                CFT165
       *
      C                   ELSE
       *
@@ -610,6 +659,37 @@
       *
       ** Incoming Payments for file update - file format
      C                   PARM                    NwIPFilFmt
+                                                                                              CFT165
+     C                   EVAL      POP01 = 'IPAYPayValDatDefault'                             CFT165
+     C                   EVAL      PVL01 = *BLANKS                                            CFT165
+                                                                                              CFT165
+     C                   CALL      'AOSVALR0'                                                 CFT165
+     C                   PARM                    @RTCD                                        CFT165
+     C                   PARM                    POP01                                        CFT165
+     C                   PARM                    PVL01                                        CFT165
+     C                   PARM      *BLANKS       POP02                                        CFT165
+     C                   PARM      *BLANKS       PVL02                                        CFT165
+     C                   PARM      *BLANKS       POP03                                        CFT165
+     C                   PARM      *BLANKS       PVL03                                        CFT165
+     C                   PARM      *BLANKS       POP04                                        CFT165
+     C                   PARM      *BLANKS       PVL04                                        CFT165
+     C                   PARM      *BLANKS       POP05                                        CFT165
+     C                   PARM      *BLANKS       PVL05                                        CFT165
+     C                   PARM      *BLANKS       POP06                                        CFT165
+     C                   PARM      *BLANKS       PVL06                                        CFT165
+     C                   PARM      *BLANKS       POP07                                        CFT165
+     C                   PARM      *BLANKS       PVL07                                        CFT165
+     C                   PARM      *BLANKS       POP08                                        CFT165
+     C                   PARM      *BLANKS       PVL08                                        CFT165
+     C                   PARM      *BLANKS       POP09                                        CFT165
+     C                   PARM      *BLANKS       PVL09                                        CFT165
+     C                   PARM      *BLANKS       POP10                                        CFT165
+     C                   PARM      *BLANKS       PVL10                                        CFT165
+                                                                                              CFT165
+     C                   EVAL      PayDatDft = *BLANKS                                        CFT165
+     C                   IF        @RTCD = *BLANKS                                            CFT165
+     C                   MOVEL     PVL01         PayDatDft                                    CFT165
+     C                   ENDIF                                                                CFT165
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

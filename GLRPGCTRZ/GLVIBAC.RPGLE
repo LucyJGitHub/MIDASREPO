@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060443           Date 26Sep22               *
-      *  Prev Amend No. MD059640           Date 21Mar22               *
+      *  Last Amend No. CGL199             Date 10Oct22               *
+      *  Prev Amend No. MD060443           Date 26Sep22               *
+      *                 MD059640           Date 21Mar22               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037025           Date 10Feb16               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL199 - IBAN Extra validation                               *
       *  MD060443 - When opening GL accounts, on Complete the system  *
       *             sends spurious Warning message. Amend error code  *
       *             to send correct message.                          *
@@ -172,6 +174,7 @@
       ** ¦ =========================            ¦
       ** +--------------------------------------+
 
+     D SCSARD        E DS                  ExtName(SCSARDPD)                                  CGL199
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -668,6 +671,15 @@
       *
       *
       *
+      ** Positions 15 - 20 of IBAN must be equal to the customer number                       CGL199
+     C                   IF        CGL199 = 'Y' and                                           CGL199
+     C                             DDIBAN <> *BLANKS and                                      CGL199
+     C                             %SUBST(DDIBAN:15:6) <> DDCUSN                              CGL199
+     C                   MOVE      'N'           DDIBANOK                                     CGL199
+     C                   ADD       1             IDX                                          CGL199
+     C                   MOVEL     'DDIBAN'      FldNamXAr(Idx)                               CGL199
+     C                   MOVEL     'RE72039'     MsgIDXAr(Idx)                                CGL199
+     C                   ENDIF                                                                CGL199
       *
       ** If an error was found, set the return code appropriately
       *
@@ -740,6 +752,18 @@
 
      C/COPY ZACPYSRC,DBFIELDS
 
+      ** Check if CGL199 is enabled in System                                                 CGL199
+     C                   CALLB     'AOSARDR0'                                                 CGL199
+     C                   PARM      *BLANKS       @RTCD                                        CGL199
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL199
+     C                   PARM      'CGL199'      @SARD             6                          CGL199
+     C     SCSARD        PARM      SCSARD        DSSDY                                        CGL199
+      *                                                                                       CGL199
+     C                   IF        @RTCD = *BLANK                                             CGL199
+     C                   MOVEL     'Y'           CGL199            1                          CGL199
+     C                   ELSE                                                                 CGL199
+     C                   MOVEL     'N'           CGL199                                       CGL199
+     C                   ENDIF                                                                CGL199
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

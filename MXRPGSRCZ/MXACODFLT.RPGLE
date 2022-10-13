@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 259085             Date 27Jul12               *
+      *  Last Amend No. MD060543           Date 10Oct22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 259085             Date 27Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060543 - Possible fail of component MXC004803              *
       *  MD046248 - Finastra Rebranding                               *
       *  259085 - COB Performance Improvement in M+.                  *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -71,7 +73,8 @@
  
  
       * Maximum number of account codes
-     D MaxNoAcds       C                   CONST(8000)
+     D***MaxNoAcds       C                   CONST(8000)                                    MD060543
+     D MaxNoAcds       C                   CONST(9999)                                      MD060543
  
       * Number of account codes loaded                                                        259085
      D CurNoAcds       S             10S 0                                                    259085
@@ -222,6 +225,14 @@
      C                   ENDIF                                                  190783
      C                   ENDIF                                                  190783
                                                                                 190783
+      *                                                                                     MD060543
+      ** Do not load in array the Title Only Account Codes                                  MD060543
+      *                                                                                     MD060543
+     C     A5TOIN        IFEQ      'Y'                                                      MD060543
+     C     Select_Rcd    ANDEQ     'Y'                                                      MD060543
+     C                   MOVEL     'N'           Select_Rcd                                 MD060543
+     C                   ENDIF                                                              MD060543
+      *                                                                                     MD060543
      C     Select_Rcd    IFEQ      'Y'                                          190783
      C                   MOVEL     A5ACCD        #_ACCD(@I)                     *
      C                   MOVEL     A5ANC1        #_ANC1(@I)                     *

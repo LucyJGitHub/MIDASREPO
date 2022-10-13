@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD059942             Date 16May22             *
-      *  Prev Amend No. MD059554             Date 09Feb22             *
+      *  Last Amend No. MD060626             Date 13Oct22             *
+      *  Prev Amend No. MD059942             Date 16May22             *
+      *                 MD059554             Date 09Feb22             *
       *                 MD059572             Date 14Feb22             *
       *                 MD058986             Date 11Oct21             *
       *                 MD058933A            Date 20Oct21             *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060626 - CGC2030 fails when RGZPFM CGCSTRPD                *
       *  MD059942 - Ignore column DJLOGD                              *
       *  MD059554 - Need to remove old core deliverable that were     *
       *             'migrated' to the bespoke table.                  *
@@ -586,6 +588,21 @@
      C/END-EXEC                                                                             MD059554
      C                   Endif                                                              MD059554
                                                                                             MD059554
+     C                   If        XINDEX = 'CGRGZCTD'                                      MD060626
+     C/EXEC SQL                                                                             MD060626
+     C+ delete from CGRGZBTD  WHERE AAFILE = 'CGCSTRPD'                                     MD060626
+     C+ or AAFILE = 'CGCTYPPD' or   AAFILE = 'CGISTSPD'                                     MD060626
+     C+ or AAFILE = 'CGPATHPD' or   AAFILE = 'CGPRTPPD'                                     MD060626
+     C+ or AAFILE = 'CGPSCHPD'                                                              MD060626
+     C/END-EXEC                                                                             MD060626
+     C/EXEC SQL                                                                             MD060626
+     C+ delete from CGRGZXTD  WHERE AAFILE = 'CGCSTRPD'                                     MD060626
+     C+ or AAFILE = 'CGCTYPPD' or   AAFILE = 'CGISTSPD'                                     MD060626
+     C+ or AAFILE = 'CGPATHPD' or   AAFILE = 'CGPRTPPD'                                     MD060626
+     C+ or AAFILE = 'CGPSCHPD'                                                              MD060626
+     C/END-EXEC                                                                             MD060626
+     C                   Endif                                                              MD060626
+                                                                                            MD060626
      C                   ENDSR
 
       /EJECT

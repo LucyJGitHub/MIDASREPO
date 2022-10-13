@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 259085             Date 27Jul12               *
+      *  Last Amend No. MD060543           Date 10Oct22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 259085             Date 27Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060543 - Possible fail of component MXC004803              *
       *  MD046248 - Finastra Rebranding                               *
       *  259085 - COB Performance Improvement in M+.                  *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -37,11 +39,11 @@
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
- 
+
      FSDACODL0  IF   E           K DISK    INFSR(*PSSR)
      FMXACEXL0  IF   E           K DISK    INFSR(*PSSR)
      FMXDINCPD  IF   E           K DISK    INFSR(*PSSR)                         190783
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -59,20 +61,21 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
- 
+
+
       * Maximum number of account codes
-     D MaxNoAcds       C                   CONST(8000)
- 
+     D***MaxNoAcds       C                   CONST(8000)                                    MD060543
+     D MaxNoAcds       C                   CONST(9999)                                      MD060543
+
       * Number of account codes loaded                                                        259085
      D CurNoAcds       S             10S 0                                                    259085
       * A/C codes for export
@@ -84,10 +87,10 @@
      D #_ANC2          S              4    DIM(MaxNoAcds)
       * Account types of a/c codes for export
      D #_ATYP          S              1    DIM(MaxNoAcds)
- 
+
      D I#ACOD          S             10S 0                                                    CGL029
- 
- 
+
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -109,29 +112,29 @@
      C                   PARM                    A5ANC2            4
       * Account Type
      C                   PARM                    Acc_Type          1
- 
+
       * Load account codes for export
- 
+
      C     I#LD          IFEQ      'L'
      C                   EXSR      LOAD_ACCD
      C                   ELSE
- 
+
       * Determine if account code is to be included in the export
- 
+
      C     I#LD          IFEQ      'D'
      C                   EXSR      DET_EXP
      C                   ELSE
- 
+
       * Error
- 
+
      C                   EVAL      I#ERMS = 'NOT LOAD OR DETERMINE'
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
- 
+
+
       * Return
- 
+
      C                   RETURN
       *
       ********************************************************************
@@ -140,9 +143,9 @@
       * Load account codes for export
       ********************************************************************
      C     LOAD_ACCD     BEGSR
- 
+
       * Error
- 
+
      C     I#AC          IFNE      'C'
      C     I#AC          ANDNE     'A'
      C                   EVAL      I#ERMS = 'NOT CURRENT OR ACTIVITY'
@@ -158,12 +161,12 @@
      C     MXDINCK       CHAIN     MXDINCP0                           99        190783
      C   99              MOVEL     'Y'           DIDINC                         190783
      C                   ENDIF                                                  190783
- 
- 
+
+
      C                   Z-ADD     1             @I
      C                   READ      @A5UPA7                                99
      C     *IN99         DOWEQ     '0'
- 
+
      C*****A5ACCD********CHAIN     MXACEXP0                           99        CMX003
      C*******************MOVEL     *BLANK        A5COMI                  CMX003 190783
      C*****MXACEXK*******CHAIN     MXACEXP0                           99 CMX003 190783
@@ -181,7 +184,7 @@
      C*******************MOVEL     *BLANK        A5ANC2                         190783
      C*******************ENDIF                                           CMX003 190783
      C*******************ENDIF                                                  190783
- 
+
      C*****I#AC**********IFEQ      'C'                                          190783
      C*****A5ICUR********ANDEQ     'Y'                                          190783
      C*****I#AC**********OREQ      'A'                                          190783
@@ -222,6 +225,14 @@
      C                   ENDIF                                                  190783
      C                   ENDIF                                                  190783
                                                                                 190783
+      *                                                                                     MD060543
+      ** Do not load in array the Title Only Account Codes                                  MD060543
+      *                                                                                     MD060543
+     C     A5TOIN        IFEQ      'Y'                                                      MD060543
+     C     Select_Rcd    ANDEQ     'Y'                                                      MD060543
+     C                   MOVEL     'N'           Select_Rcd                                 MD060543
+     C                   ENDIF                                                              MD060543
+      *                                                                                     MD060543
      C     Select_Rcd    IFEQ      'Y'                                          190783
      C                   MOVEL     A5ACCD        #_ACCD(@I)                     *
      C                   MOVEL     A5ANC1        #_ANC1(@I)                     *
@@ -232,7 +243,7 @@
      C                   READ      @A5UPA7                                99
      C                   ENDDO
      C                   EVAL      CurNoAcds = @I - 1                                         259085
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -240,13 +251,13 @@
       * Determine if account code is to be included in the export
       ********************************************************************
      C     DET_EXP       BEGSR
- 
+
       * Look for account code in list of account codes for export
- 
+
      C                   Z-ADD     1             @I                6 0
      C*****I#ACOD        LOOKUP    #_ACCD(@I)                             99    *             259085
      C                   EVAL      @I = %Lookup(I#ACOD:#_ACCD:1:CurNoAcds)                    259085
- 
+
      C******IN99         IFEQ      '1'                                                        259085
      C                   IF        @I > 0                                                     259085
      C                   MOVEL     'Y'           Exp_ACOD
@@ -265,7 +276,7 @@
      C     MXDINCK       KLIST                                                  190783
      C                   KFLD                    DIFLTT                         190783
      C                   KFLD                    DICOMI                         190783
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5

@@ -12,13 +12,15 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD059702             Date 15Mar22             *
-      *  Prev Amend No. MD057231             Date 18Nov20             *
+      *  Last Amend No. MD060626             Date 13Oct22             *
+      *  Prev Amend No. MD059702             Date 15Mar22             *
+      *                 MD057231             Date 18Nov20             *
       *                 MD055681             Date 31Jul20             *
       *                 MD056103   *CREATE   Date 17Jun20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060626 - CGC2030 fails when RGZPFM CGCSTRPD                *
       *  MD059702 - Align UP000710 (migration) with UP000703 (upgrade)*
       *             And correct location of SCSAREPD                  *
       *  MD057231 - In case of error, add SETON LR and dump           *
@@ -583,6 +585,21 @@
      C/END-EXEC                                                                             MD059702
      C                   Endif                                                              MD059702
                                                                                             MD059702
+     C                   If        DDSFILE = 'CGRGZCTD'                                     MD060626
+     C/EXEC SQL                                                                             MD060626
+     C+ delete from CGRGZBTD  WHERE AAFILE = 'CGCSTRPD'                                     MD060626
+     C+ or AAFILE = 'CGCTYPPD' or   AAFILE = 'CGISTSPD'                                     MD060626
+     C+ or AAFILE = 'CGPATHPD' or   AAFILE = 'CGPRTPPD'                                     MD060626
+     C+ or AAFILE = 'CGPSCHPD'                                                              MD060626
+     C/END-EXEC                                                                             MD060626
+     C/EXEC SQL                                                                             MD060626
+     C+ delete from CGRGZXTD  WHERE AAFILE = 'CGCSTRPD'                                     MD060626
+     C+ or AAFILE = 'CGCTYPPD' or   AAFILE = 'CGISTSPD'                                     MD060626
+     C+ or AAFILE = 'CGPATHPD' or   AAFILE = 'CGPRTPPD'                                     MD060626
+     C+ or AAFILE = 'CGPSCHPD'                                                              MD060626
+     C/END-EXEC                                                                             MD060626
+     C                   Endif                                                              MD060626
+                                                                                            MD060626
      C                   ENDSR
 
       *****************************************************************

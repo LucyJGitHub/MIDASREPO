@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055785           Date 20May20               *
+      *  Last Amend No. MD059740           Date 10May22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055785           Date 20May20               *
       *                 MD055784           Date 19May20               *
       *                 MD055690           Date 06May20               *
       *                 247630             Date 05May20               *
@@ -193,6 +194,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059740 - LDBL field in ACCNTAB is not capable of handling  *
+      *             10T plus amount due to its size limitation (15,0).*
+      *             Save the first 9,999,999,999,999.99 balance of    *
+      *             Spot Value Equivalent account to a holding account*
+      *             (seq. 02).                                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055785 - Initialise K24C for new GL account.               *
       *  MD055784 - A5INTL (Internal Flag) not initialised correctly  *
@@ -635,6 +641,7 @@
      FGLACPOPD  UF   E             DISK                                                     MD021994
      FZACCNTAB  IF   F  687        DISK    RECNO(RRN)
      FSDBRCHL5  IF   E           K DISK                                                     MD055784
+     FSDCURRL0  IF   E           K DISK                                                     MD059740
      FACCBA     UF   E           K DISK
      F                                     RENAME(ACCNTABF:ACCBAABF)
      F                                     IGNORE(ACCNTAAF)
@@ -669,6 +676,9 @@
      F/COPY WNCPYSRC,GL0600F003
      F/COPY WNCPYSRC,GL0600F004
      FACCNTL0   UF A F  687    24AIDISK    COMMIT
+     FACCNTL20  UF A E           K DISK    COMMIT                                         MD059740
+     F                                     RENAME(ACCNTABF:ACCNTABF2)                     MD059740
+     F                                     PREFIX(H1_)                                    MD059740
      FGLACCTAC  UF A E             DISK    COMMIT
      FSYSOPAJ   O  A F   71        DISK
      F                                     COMMIT
@@ -703,6 +713,8 @@
      D False           C                   CONST(*OFF)                                      MD021994
      D ForceCommit     S               N   INZ(False)                                       MD021994
      D PrintHeader     S               N   INZ(True)                                        MD021994
+     D MXCBL           S             15S 0 INZ(-999999999999900)                            MD059740
+     D MXDBL           S             15S 0 INZ(999999999999900)                             MD059740
      D*INT******       S             15  0 DIM(14)                                          MD022971
      D INT             S             15  0 DIM(14) INZ(0)                                   MD022971
      D*DEC******       S              3  0 DIM(14)                                          MD022971
@@ -714,6 +726,7 @@
      D/COPY WNCPYSRC,GL0600E001
      D RTT             S              5    DIM(1000)
      D COI             S              1    DIM(1000)
+     D SPA             S             10  0 DIM(200)                                         MD059740
      D WRun            S              1A
 
       ** Standard local data area fields
@@ -1611,6 +1624,7 @@
      C                   SETOFF                                       3637
      C                   SETOFF                                       838485
      C                   SETOFF                                       86  88
+     C                   SETOFF                                       87                    MD059740
 
      C/COPY WNCPYSRC,GL0600CADO
 
@@ -1650,6 +1664,8 @@
      C     T1POST        TAG
 
      C                   SETOFF                                       767778
+     C                   Z-ADD     0             WLDBL            18 0                      MD059740
+     C                   Z-ADD     0             WCLBL            18 0                      MD059740
 
      C     DSCOMK        SETLL     SACPO
      C     DSCOMK        READE     SACPO                                  32
@@ -2051,6 +2067,25 @@
      C     PSTD          COMP      LMVD                               62
      C   62
      CAN 60              Z-ADD     PSTD          LMVD
+      *                                                                                     MD059740
+      ** If this a Spot Trade Account Equivalent posting                                    MD059740
+      ** check first if account balance will exceed 10 trillion                             MD059740
+      *                                                                                     MD059740
+     C     WLDBL         IFLT      MXDBL                                                    MD059740
+     C     WLDBL         ANDGE     *ZEROS                                                   MD059740
+     C     WLDBL         ORGT      MXCBL                                                    MD059740
+     C     WLDBL         ANDLE     *ZEROS                                                   MD059740
+     C                   Z-ADD     LDBL          WLDBL                                      MD059740
+     C                   Z-ADD     CLBL          WCLBL                                      MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   EXSR      CHKPST                                                   MD059740
+      *                                                                                     MD059740
+     C     WLDBL         IFLT      MXDBL                                                    MD059740
+     C     WLDBL         ANDGE     *ZEROS                                                   MD059740
+     C     WLDBL         ORGT      MXCBL                                                    MD059740
+     C     WLDBL         ANDLE     *ZEROS                                                   MD059740
+      *                                                                                     MD059740
      C   35              GOTO      T20
 
       ** Process debit
@@ -2145,6 +2180,9 @@
      C  N35              SETON                                        35
 
      C     T21           TAG
+      *                                                                                     MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
      C   05PSTA          DIV       1000          ZZAMT
      C   60
      CAN 05              EXSR      HASH
@@ -2405,10 +2443,24 @@
                                                                                             MD055690
      C                   ENDIF
      C                   ENDIF
+      *
+     C     WLDBL         IFGT      MXDBL                                                    MD059740
+     C     WLDBL         ORLT      MXCBL                                                    MD059740
+     C     *IN59         IFEQ      *ON                                                      MD059740
+     C                   EXSR      OPENAC                                                   MD059740
+     C                   EXSR      WRTSTMT                                                  MD059740
+     C                   ENDIF                                                              MD059740
+     C                   ENDIF                                                              MD059740
+     C                   SETOFF                                       59                    MD059740
 
       ** SYSOPAJ
 
      C     *IN85         IFEQ      *ON
+     C     *IN87         IFEQ      *ON                                                      MD059740
+     C                   Z-ADD     WACSQ2        ACSQOP            2 0                      MD059740
+     C                   ELSE                                                               MD059740
+     C                   Z-ADD     ACSQ          ACSQOP                                     MD059740
+     C                   ENDIF                                                              MD059740
      C                   EXCEPT    EXCPTA1
      C                   ENDIF
 
@@ -2445,6 +2497,7 @@
      C   99              GOTO      ENDPGM
 
      C                   SETOFF                                       0203
+     C                   SETOFF                                       50                    MD059740
                                                                                             MD021994
      C                   EVAL      REC_CTR = REC_CTR + 1                                    MD021994
      C                   IF        REC_CTR = CommitSize                                     MD021994
@@ -2930,7 +2983,325 @@
      C                   MOVE      'Y'           IMBLNC
      C                   ENDIF
 
+     C                   Z-ADD     1             R                 3 0                      MD059740
+     C                   MOVE      *BLANKS       LLIM              3                        MD059740
+      *                                                                                     MD059740
+     C     LLIM          SETLL     SDCURRL0                                                 MD059740
+     C                   READ      SDCURRL0                               42                MD059740
+     C     *IN42         DOWEQ     *OFF                                                     MD059740
+     C     A6CYCD        IFNE      BJCYCD                                                   MD059740
+     C                   MOVE      A6SPAE        SPA(R)                                     MD059740
+     C     R             ADD       1             R                                          MD059740
+     C                   ENDIF                                                              MD059740
+     C                   READ      SDCURRL0                               42                MD059740
+     C                   ENDDO                                                              MD059740
+      *                                                                                     MD059740
      C     ENDFST        ENDSR
+      *****************************************************************                     MD059740
+      /EJECT                                                                                MD059740
+      *****************************************************************                     MD059740
+      *                                                               *                     MD059740
+      *  CHKPST - Check posting and add to LDBL if it exceeds 10T     *                     MD059740
+      *                                                               *                     MD059740
+      *****************************************************************                     MD059740
+     C     CHKPST        BEGSR                                                              MD059740
+      *                                                                                     MD059740
+     C     *IN35         IFEQ      *OFF                                                     MD059740
+      *                                                                                     MD059740
+     C     *IN60         IFEQ      *ON                                                      MD059740
+     C     *IN05         ANDEQ     *ON                                                      MD059740
+     C     *IN27         ANDEQ     *OFF                                                     MD059740
+     C                   ADD       PSTA          WLDBL                                      MD059740
+     C                   ENDIF                                                              MD059740
+     C     *IN61         IFEQ      *ON                                                      MD059740
+     C     *IN05         ANDEQ     *ON                                                      MD059740
+     C     *IN27         ANDEQ     *OFF                                                     MD059740
+     C     *IN61         OREQ      *ON                                                      MD059740
+     C     *IN05         ANDEQ     *ON                                                      MD059740
+     C     *IN22         ANDEQ     *OFF                                                     MD059740
+     C                   ADD       PSTA          WCLBL                                      MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   ELSE                                                               MD059740
+      *                                                                                     MD059740
+     C     *IN60         IFEQ      *ON                                                      MD059740
+     C     *IN05         ANDEQ     *ON                                                      MD059740
+     C     *IN27         ANDEQ     *OFF                                                     MD059740
+     C                   SUB       PSTA          WLDBL                                      MD059740
+     C                   ENDIF                                                              MD059740
+     C     *IN61         IFEQ      *ON                                                      MD059740
+     C     *IN05         ANDEQ     *ON                                                      MD059740
+     C     *IN27         ANDEQ     *OFF                                                     MD059740
+     C     *IN61         OREQ      *ON                                                      MD059740
+     C     *IN05         ANDEQ     *ON                                                      MD059740
+     C     *IN22         ANDEQ     *OFF                                                     MD059740
+     C                   SUB       PSTA          WCLBL                                      MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   Z-ADD     1             RC                3 0                      MD059740
+      *                                                                                     MD059740
+      ** If it exceeds 10 trillion, excess balance will go to holding a/c                   MD059740
+      *                                                                                     MD059740
+     C     WLDBL         IFGT      MXDBL                                                    MD059740
+     C     WLDBL         ORLT      MXCBL                                                    MD059740
+      *                                                                                     MD059740
+     C     ACOD          LOOKUP    SPA(RC)                                59                MD059740
+     C     *IN59         IFEQ      *ON                                                      MD059740
+     C     CCY           ANDEQ     BJCYCD                                                   MD059740
+     C     ACSQ          ANDEQ     01                                                       MD059740
+      *                                                                                     MD059740
+     C     WLDBL         IFGT      MXDBL                                                    MD059740
+     C     WLDBL         SUB       MXDBL         LDBL01           15 0                      MD059740
+     C     WCLBL         SUB       MXDBL         CLBL01           15 0                      MD059740
+     C                   Z-ADD     LDBL01        OP_LDBL          15 0                      MD059740
+     C                   Z-ADD     CLBL01        OP_CLBL          15 0                      MD059740
+     C                   Z-ADD     MXDBL         LDBL                                       MD059740
+     C                   Z-ADD     MXDBL         CLBL                                       MD059740
+     C                   ENDIF                                                              MD059740
+     C     WLDBL         IFLT      MXCBL                                                    MD059740
+     C     WLDBL         SUB       MXCBL         LDBL01                                     MD059740
+     C     WCLBL         SUB       MXCBL         CLBL01                                     MD059740
+     C                   Z-ADD     LDBL01        OP_LDBL                                    MD059740
+     C                   Z-ADD     CLBL01        OP_CLBL                                    MD059740
+     C                   Z-ADD     MXCBL         LDBL                                       MD059740
+     C                   Z-ADD     MXCBL         CLBL                                       MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   ENDIF                                                              MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   ENDSR                                                              MD059740
+      *****************************************************************                     MD059740
+      /EJECT                                                                                MD059740
+      *****************************************************************                     MD059740
+      *                                                               *                     MD059740
+      *  OPENAC  - Check holding account sequence 02.                 *                     MD059740
+      *            Open the account if not yet existing in ACCNTAB.   *                     MD059740
+      *                                                               *                     MD059740
+      *****************************************************************                     MD059740
+     C     OPENAC        BEGSR                                                              MD059740
+      *                                                                                     MD059740
+     C     KEY02         KLIST                                                              MD059740
+     C                   KFLD                    CNUM                                       MD059740
+     C                   KFLD                    CCY                                        MD059740
+     C                   KFLD                    ACOD                                       MD059740
+     C                   KFLD                    WACSQ2                                     MD059740
+     C                   KFLD                    BRCA                                       MD059740
+      *                                                                                     MD059740
+     C                   Z-ADD     2             WACSQ2            2 0                      MD059740
+      *                                                                                     MD059740
+     C     KEY02         CHAIN     ACCNTL20                           50                    MD059740
+      *                                                                                     MD059740
+     C     *IN50         IFEQ      *ON                                                      MD059740
+      *                                                                                     MD059740
+     C                   CLEAR                   ACCNTABF2                                  MD059740
+      *                                                                                     MD059740
+     C/COPY ZSRSRC,DFTTSTAMPE                                                               MD059740
+      *                                                                                     MD059740
+     C                   MOVE      BRCA          H1_BRCA                                    MD059740
+     C                   MOVE      CNUM          H1_CNUM                                    MD059740
+     C                   MOVE      CCY           H1_CCY                                     MD059740
+     C                   Z-ADD     ACOD          H1_ACOD                                    MD059740
+     C                   Z-ADD     WACSQ2        H1_ACSQ                                    MD059740
+     C                   MOVE      *BLANKS       H1_ADREF1                                  MD059740
+     C                   MOVE      *BLANKS       H1_ADREF2                                  MD059740
+     C                   MOVEL     'B'           H1_ADREF1                                  MD059740
+     C                   MOVE      'D'           H1_RECI                                    MD059740
+     C                   MOVE      ' '           H1_ACST                                    MD059740
+     C                   Z-ADD     RUND          H1_DACO                                    MD059740
+     C                   MOVE      BKDSFC        H1_STFQ                                    MD059740
+     C                   Z-ADD     RUND          H1_LSTD                                    MD059740
+     C                   Z-ADD     OP_LDBL       H1_LDBL                                    MD059740
+     C                   Z-ADD     OP_CLBL       H1_CLBL                                    MD059740
+      *                                                                                     MD059740
+      ** Map Account Key field to have the correct Brch/Cust/Ccy/Acod/Seq                   MD059740
+      *                                                                                     MD059740
+     C                   MOVE      *BLANKS       W1ACKY           19                        MD059740
+     C                   MOVE      *BLANKS       W2ACKY           21                        MD059740
+     C                   MOVE      *BLANKS       W3ACKY           24                        MD059740
+     C                   MOVE      *BLANKS       H1_A5ACKY                                  MD059740
+                                                                                            MD059740
+     C                   MOVEL     WNOCC1        W1ACKY                                     MD059740
+     C                   MOVE      WACOD1        W1ACKY                                     MD059740
+     C                   MOVEL     W1ACKY        W2ACKY                                     MD059740
+     C                   MOVE      WACSQ2        W2ACKY                                     MD059740
+     C                   MOVEL     H1_BRCA       W3ACKY                                     MD059740
+     C                   MOVE      W2ACKY        W3ACKY                                     MD059740
+     C                   MOVEL     W3ACKY        H1_A5ACKY                                  MD059740
+      *                                                                                     MD059740
+      ** Initialise KWG flag for new GL Account                                             MD059740
+      *                                                                                     MD059740
+     C                   MOVEL     ' '           H1_K24C                                    MD059740
+      *                                                                                     MD059740
+      ** Setup Internal Flag                                                                MD059740
+      *                                                                                     MD059740
+     C                   EVAL      H1_A5INTL = 'N'                                          MD059740
+     C     CNUM          CHAIN     SDBRCHL5                           83                    MD059740
+     C                   IF        *IN83 = *OFF                                             MD059740
+     C                   EVAL      H1_A5INTL = 'Y'                                          MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   Z-ADD     BKAPDT        H1_NSTD                                    MD059740
+      *                                                                                     MD059740
+      ** Calculate next statement date if daily accruals                                    MD059740
+      *                                                                                     MD059740
+     C                   Z-ADD     RUND          ZDAYNO                                     MD059740
+     C                   MOVE      H1_STFQ       ZFREQ                                      MD059740
+     C                   MOVE      CCY           ZCCY                                       MD059740
+      *                                                                                     MD059740
+      ** Move the system location to the ZLOC field.                                        MD059740
+      *                                                                                     MD059740
+     C                   MOVE      BJSLCD        ZLOC                                       MD059740
+     C                   EXSR      ZFREQS                                                   MD059740
+      *                                                                                     MD059740
+     C     *IN99         IFEQ      '1'                                                      MD059740
+     C                   MOVE      '1'           *INLR                                      MD059740
+     C                   MOVE      '1'           *INU7                                      MD059740
+     C                   EXSR      *PSSR                                                    MD059740
+     C                   GOTO      END                                                      MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+      ** Set NSTD = RUND for STFQ = 'D'                                                     MD059740
+      *                                                                                     MD059740
+     C     H1_STFQ       IFEQ      'D'                                                      MD059740
+     C                   Z-ADD     RUND          H1_NSTD                                    MD059740
+     C                   ELSE                                                               MD059740
+     C                   Z-ADD     ZDAYNO        H1_NSTD                                    MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+      ** If not daily post and accrual date before DNWD, set NSTD to DNWD                   MD059740
+      *                                                                                     MD059740
+     C  NU1                                                                                 MD059740
+     CANN23BJDNWD        COMP      BKAPDT                             47                    MD059740
+      *                                                                                     MD059740
+     C     *INU1         IFEQ      '0'                                                      MD059740
+     C     *IN23         ANDEQ     '0'                                                      MD059740
+     C     *IN47         ANDEQ     '1'                                                      MD059740
+     C                   Z-ADD     BJDNWD        ZDAYNO                                     MD059740
+     C                   EXSR      ZFREQS                                                   MD059740
+     C                   Z-ADD     ZDAYNO        H1_NSTD                                    MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   BITOFF    '01234567'    H1_GLBT                                    MD059740
+     C                   BITOFF    '01234567'    H1_RETB                                    MD059740
+      *                                                                                     MD059740
+     C                   BITON     '2'           H1_GLBT                                    MD059740
+     C                   MOVE      ATYPP         H1_ATYP                                    MD059740
+     C                   Z-ADD     RUND          H1_LCD                                     MD059740
+     C                   Z-ADD     0             H1_LTAC                                    MD059740
+     C                   Z-ADD     0             H1_LTAS                                    MD059740
+     C                   Z-ADD     RUND          H1_ORED                                    MD059740
+     C                   Z-ADD     0             H1_DITM                                    MD059740
+     C                   Z-ADD     0             H1_CITM                                    MD059740
+     C                   Z-ADD     0             H1_DAIC                                    MD059740
+     C                   Z-ADD     0             H1_OLDR                                    MD059740
+     C                   Z-ADD     0             H1_CAIC                                    MD059740
+     C                   Z-ADD     0             H1_OLCR                                    MD059740
+     C                   Z-ADD     0             H1_ENOC                                    MD059740
+     C                   Z-ADD     0             H1_EPNO                                    MD059740
+     C                   Z-ADD     0             H1_ECFB                                    MD059740
+     C                   MOVE      'I'           H1_CHTP                                    MD059740
+      *                                                                                     MD059740
+     C                   MOVEL     *BLANK        H1_BRTCA                                   MD059740
+     C                   MOVEL     *BLANK        H1_NACSG                                   MD059740
+      *                                                                                     MD059740
+     C                   MOVEL     *BLANKS       H1_IBAN                                    MD059740
+     C                   MOVEL     *BLANKS       H1_IBSEQN                                  MD059740
+      *                                                                                     MD059740
+     C     TNAO          ADD       1             TNAO                                       MD059740
+     C     TNOA          ADD       1             TNOA                                       MD059740
+     C     TNRW          ADD       1             TNRW                                       MD059740
+      *                                                                                     MD059740
+      ** Initialise A/C subtype to blank when opening an account                            MD059740
+      *                                                                                     MD059740
+     C                   MOVE      *BLANKS       H1_STYP                                    MD059740
+      *                                                                                     MD059740
+     C  N35              Z-ADD     PSTA          PSTAOP           13 0                      MD059740
+     C   35              Z-SUB     PSTA          PSTAOP                                     MD059740
+      *                                                                                     MD059740
+      ** If Posting_Amount_Equal_Zeros_DONOT_Update_Last_Activity_Date                      MD059740
+      *                                                                                     MD059740
+     C     PSTA          IFNE      *ZEROS                                                   MD059740
+     C                   Z-ADD     RUND          H1_LACD                                    MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   Z-ADD     ACNOP         H1_ACNO                                    MD059740
+     C                   SETON                                        25                    MD059740
+      *                                                                                     MD059740
+      ** Obtain account name for new accounts from a/c codes file                           MD059740
+      *                                                                                     MD059740
+     C     *IN38         IFEQ      '0'                                                      MD059740
+     C                   MOVEL     ACOD          ACODX            10                        MD059740
+     C                   CALLB     'AOACODR0'                                               MD059740
+     C                   PARM      '*MSG   '     @RTCD                                      MD059740
+     C                   PARM      '*KEY   '     @OPTN                                      MD059740
+     C                   PARM      ACODX         @ACCD            10                        MD059740
+     C     SDACOD        PARM      SDACOD        DSSDY                                      MD059740
+     C     @RTCD         IFNE      *BLANKS                                                  MD059740
+     C                   SETON                                        U7U8LR                MD059740
+     C                   MOVE      *BLANKS       DBERR                                      MD059740
+     C                   MOVEL     'SDACODPD'    DBFILE                                     MD059740
+     C                   MOVEL     ACODX         DBKEY                                      MD059740
+     C                   MOVEL     '010'         DBASE                                      MD059740
+     C                   EXSR      *PSSR                                                    MD059740
+     C                   ENDIF                                                              MD059740
+     C                   MOVEL     ANAM          H1_ANAM                                    MD059740
+     C     ATYP          IFEQ      ' '                                                      MD059740
+     C                   MOVE      A5ACTY        H1_ATYP                                    MD059740
+     C                   ENDIF                                                              MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C     H1_STFQ       IFEQ      'Z'                                                      MD059740
+     C                   Z-ADD     *ZEROS        H1_NSTD                                    MD059740
+     C                   MOVE      *ON           *IN43                                      MD059740
+     C                   ENDIF                                                              MD059740
+     C                   WRITE     ACCNTABF2                                                MD059740
+      *                                                                                     MD059740
+      ** Account opened by system, set on *IN85                                             MD059740
+      ** Account opened is a holding account, set on *IN87                                  MD059740
+      *                                                                                     MD059740
+     C                   SETON                                        8587                  MD059740
+      *                                                                                     MD059740
+      ** When opening new accounts in ACCNTAB, write a corresponding                        MD059740
+      ** record in the account details extension file GLACNTQD                              MD059740
+      *                                                                                     MD059740
+     C                   MOVE      CNUM          F1CNUM                                     MD059740
+     C                   MOVE      CCY           F1CCY                                      MD059740
+     C                   Z-ADD     ACOD          F1ACOD                                     MD059740
+     C                   Z-ADD     WACSQ2        F1ACSQ                                     MD059740
+     C                   MOVE      BRCA          F1BRCA                                     MD059740
+      *                                                                                     MD059740
+     C     KGLACT        CHAIN     GLACNTD0                           82                    MD059740
+      *                                                                                     MD059740
+     C     *IN82         IFEQ      *ON                                                      MD059740
+     C                   Z-ADD     *ZEROS        F1FCHD                                     MD059740
+     C                   Z-ADD     *ZEROS        F1LFCD                                     MD059740
+     C                   Z-ADD     *ZEROS        F1ACBL                                     MD059740
+     C                   Z-ADD     *ZEROS        F1TEXO                                     MD059740
+     C                   Z-ADD     *ZEROS        F1TEOF                                     MD059740
+     C                   Z-ADD     *ZEROS        F1TEOC                                     MD059740
+     C                   Z-ADD     *ZEROS        F1DECD                                     MD059740
+     C                   Z-ADD     *ZEROS        F1DRFD                                     MD059740
+     C                   Z-ADD     *ZEROS        F1DNFD                                     MD059740
+     C                   Z-ADD     *ZEROS        F1DNFM                                     MD059740
+     C                   Z-ADD     *ZEROS        F1CRFD                                     MD059740
+     C                   Z-ADD     *ZEROS        F1CNFD                                     MD059740
+     C                   Z-ADD     *ZEROS        F1CNFM                                     MD059740
+     C                   WRITE     GLACNTD0                                                 MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   ELSE                                                               MD059740
+      *                                                                                     MD059740
+     C                   Z-ADD     OP_LDBL       H1_LDBL                                    MD059740
+     C                   Z-ADD     OP_CLBL       H1_CLBL                                    MD059740
+     C                   Z-ADD     RUND          H1_LACD                                    MD059740
+     C                   Z-ADD     RUND          H1_LMVD                                    MD059740
+     C                   UPDATE    ACCNTABF2                                                MD059740
+     C                   ENDIF                                                              MD059740
+      *                                                                                     MD059740
+     C                   ENDSR                                                              MD059740
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4180,7 +4551,8 @@
      O                       CNUM                10
      O                       CCY                 13
      O                       ACODQQ              17
-     O                       ACSQ                19
+     O**********             ACSQ                19                                         MD059740
+     O                       ACSQOP              19                                         MD059740
      O                       DACO                22P
      O                       DLNO                28
      O                       ATYP                29

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD054346           Date 18Jul21               *
-      *  Prev Amend No. MD057885           Date 13Apr21               *
+      *  Last Amend No. MD059471           Date 10Oct22               *
+      *  Prev Amend No. MD054346           Date 18Jul21               *
+      *                 MD057885           Date 13Apr21               *
       *                 MD056781           Date 20Sep20               *
       *                 MD055681           Date 31Jul20               *
       *                 MD055694           Date 09Mar20               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059471 - SWIFT Message Standards 2022                      *
+      *           - Applied for MD-60563                              *
       *  MD054346 - Switchable Features Password Encryption           *
       *  MD057885 - Remove CSW220 changes                             *
       *  MD056781 - Deliverable Data Split for MESWACPD               *
@@ -87,19 +90,23 @@
       ** +--------------------------------------+
       *
       ** Data Structure for Feature
-     D FeatDS          DS
-     D                                6    INZ('CSW219')
+     D*FeatDS***       DS                                                                   MD059471
+     D**********                      6    INZ('CSW219')                                    MD059471
      D**********                      6    INZ('CSW220')                           MD055694 MD057885
-     D                                6    INZ('CSW221')                                    MD055694
-     D Feat                           6    DIM(N) OVERLAY(FeatDS)
+     D**********                      6    INZ('CSW221')                           MD055694 MD059471
+     D*Feat*****                      6    DIM(N) OVERLAY(FeatDS)                           MD059471
       *
       ** Data Structure for Feature Password
-     D PWordDS         DS
-     D                               16    INZ('GALERA')
+     D*PWordDS**       DS                                                                   MD059471
+     D**********                     16    INZ('GALERA')                                    MD059471
      D**********                     16    INZ('CARMONA')                          MD055694 MD057885
-     D                               16    INZ('ABBEY ROAD')                                MD055694
-     D PWord                         16    DIM(N) OVERLAY(PWordDS)
+     D**********                     16    INZ('ABBEY ROAD')                       MD055694 MD059471
+     D*PWord****                     16    DIM(N) OVERLAY(PWordDS)                          MD059471
       *
+     D SQLDs           DS                                                                   MD059471
+     D  XXFeat                        6A                                                    MD059471
+     D  XXActDat                      5S 0                                                  MD059471
+      *                                                                                     MD059471
      D CacheDT       E DS                  EXTNAME(CACHEDT) DTAARA(CACHEDT)
       *
      D SDBank        E DS                  EXTNAME(SDBankpd)
@@ -125,7 +132,7 @@
      D Msg             S            100A
      D PRetCode        S              7A
      D POption         S              7A
-     D XXFeat          S              6A                                                    MD055681
+     D*XXFeat***       S              6A                                           MD055681 MD059471
      D P@SARN          S              6A                                                    MD054346
      D PASS            S             16A                                                    MD054346
      D PReturnCode     S              7A                                                    MD054346
@@ -142,6 +149,10 @@
      D Reset           C                   CONST('R')                                       MD054346
      D Delete          C                   CONST('D')                                       MD054346
      D Find            C                   CONST('F')                                       MD054346
+                                                                                            MD059471
+      ** SQL Statements.                                                                    MD059471
+                                                                                            MD059471
+     D GetKeySQLStmnt  S           2000A   INZ(*BLANKS)                                     MD059471
       *
       /EJECT
       *****************************************************************
@@ -164,9 +175,52 @@
       ** Process all available features, if it exist in file
       ** skip processing and proceed to the next feature.
       *
-     C                   FOR        I = 1 to N
+                                                                                            MD059471
+      *                                                                                     MD059471
+      ** Get key from MESWACTD for checking SCSRDJW0                                        MD059471
+      *                                                                                     MD059471
+     C                   EVAL      GetKeySQLStmnt = 'SELECT SWFEAT, SWACDT' +               MD059471
+     C                             ' FROM MESWACTD'                                         MD059471
+      *                                                                                     MD059471
+      ** PREPARE CURSOR TO FETCH RECORDS FROM THE FILE.                                     MD059471
+      *                                                                                     MD059471
+     C/EXEC SQL                                                                             MD059471
+     C+  PREPARE P1 FROM :GetKeySQLStmnt                                                    MD059471
+     C/END-EXEC                                                                             MD059471
+      *                                                                                     MD059471
+     C/EXEC SQL                                                                             MD059471
+     C+  DECLARE P1 CURSOR FOR P1                                                           MD059471
+     C/END-EXEC                                                                             MD059471
+      *                                                                                     MD059471
+     C/EXEC SQL                                                                             MD059471
+     C+  OPEN P1                                                                            MD059471
+     C/END-EXEC                                                                             MD059471
+      *                                                                                     MD059471
+     C/EXEC SQL                                                                             MD059471
+     C+  FETCH FROM P1 INTO :SQLDs                                                          MD059471
+     C/END-EXEC                                                                             MD059471
+      *                                                                                     MD059471
+      ** IF TABLE IS NOT OPEN, OPEN TABLE AND FETCH NEXT RECORD                             MD059471
+      ** Processing for Global/Zonal Layer                                                  MD059471
+      *                                                                                     MD059471
+     C                   IF        SQLCOD = -501                                            MD059471
+     C/EXEC SQL                                                                             MD059471
+     C+  OPEN P1                                                                            MD059471
+     C/END-EXEC                                                                             MD059471
+      *                                                                                     MD059471
+     C/EXEC SQL                                                                             MD059471
+     C+  FETCH NEXT FROM P1 INTO :SQLDs                                                     MD059471
+     C/END-EXEC                                                                             MD059471
+     C                   ENDIF                                                              MD059471
+      *                                                                                     MD059471
+      ** EXECUTE LOOP UNTIL RECORDS ARE FOUND.                                              MD059471
+      *                                                                                     MD059471
+     C                   DOW       SQLCOD = 0                                               MD059471
+      *                                                                                     MD059471
+     C**********         FOR        I = 1 to N                                              MD059471
+     C*
      C*****Feat(I)       CHAIN(N)  SCSARDL0                                                 MD055681
-     C                   EVAL      XXFeat = Feat(I)                                         MD055681
+     C**********         EVAL      XXFeat = Feat(I)                                MD055681 MD059471
      C/EXEC SQL                                                                             MD055681
      C+ SELECT *                                                                            MD055681
      C+ into :SCSARD                                                                        MD055681
@@ -175,6 +229,17 @@
      C/END-EXEC                                                                             MD055681
      C**********         IF        %FOUND(SCSARDL0)                                         MD055681
      C                   IF        SQLCODE = 0                                              MD055681
+      *                                                                                     MD059471
+      ** Fetch next record from file                                                        MD059471
+      *                                                                                     MD059471
+     C/EXEC SQL                                                                             MD059471
+     C+  FETCH NEXT FROM P1 INTO :SQLDs                                                     MD059471
+     C/END-EXEC                                                                             MD059471
+      *                                                                                     MD059471
+     C                   IF        SQLCOD <> 0 AND SQLCOD <> 100                            MD059471
+     C                   EXSR      *PSSR                                                    MD059471
+     C                   ENDIF                                                              MD059471
+      *                                                                                     MD059471
      C                   ITER
       *
      C                   ELSE
@@ -187,12 +252,27 @@
      C/END-EXEC                                                                             MD056781
      C**********         IF        %FOUND(MESWACL0) AND                                     MD056781
      C                   IF        SQLCODE = 0 AND                                          MD056781
-     C                             BJDNWD >= SWACDT
+     C**********                   BJDNWD >= SWACDT                                         MD059471
+     C                             BJDNWD >= XXActDat                                       MD059471
      C                   EXSR      SrWrite
      C                   ENDIF
+      *                                                                                     MD059471
+      ** Fetch next record from file                                                        MD059471
+      *                                                                                     MD059471
+     C/EXEC SQL                                                                             MD059471
+     C+  FETCH NEXT FROM P1 INTO :SQLDs                                                     MD059471
+     C/END-EXEC                                                                             MD059471
+      *                                                                                     MD059471
+     C                   IF        SQLCOD <> 0 AND SQLCOD <> 100                            MD059471
+     C                   EXSR      *PSSR                                                    MD059471
+     C                   ENDIF                                                              MD059471
       *
      C                   ENDIF
-     C                   ENDFOR
+     C**********         ENDFOR                                                             MD059471
+     C                   ENDDO                                                              MD059471
+     C/EXEC SQL                                                                             MD059471
+     C+ CLOSE P1                                                                            MD059471
+     C/END-EXEC                                                                             MD059471
       *
      C                   ENDSR
       *
@@ -207,7 +287,7 @@
      C                   CLEAR                   WriteFlag
       *
      C*****Feat(I)       CHAIN(N)  SCSARDL0                                                 MD055681
-     C                   EVAL      XXFeat = Feat(I)                                         MD055681
+     C*********          EVAL      XXFeat = Feat(I)                                MD055681 MD059471
      C/EXEC SQL                                                                             MD055681
      C+ SELECT *                                                                            MD055681
      C+ into :SCSARD                                                                        MD055681
@@ -252,7 +332,7 @@
      C**********         CLEAR                   @SARDL0                                    MD055681
      C                   MOVEL     *BLANKS       XXSARD           50                        MD055681
      C*****Feat(I)       CHAIN     SCSARSL1                                                 MD055681
-     C                   eval      XXFeat = Feat(I)                                         MD055681
+     C**********         eval      XXFeat = Feat(I)                                MD055681 MD059471
      C/EXEC SQL                                                                             MD055681
      C+ SELECT *                                                                            MD055681
      C+ into :SCSARS                                                                        MD055681
@@ -265,7 +345,7 @@
      C                   EVAL      XXSARD = AXSARD                                          MD055681
      C                   ENDIF
      C**********         EVAL      ABSARN = Feat(I)                                         MD055681
-     C                   EVAL      XXFeat = Feat(I)                                         MD055681
+     C**********         EVAL      XXFeat = Feat(I)                                MD055681 MD059471
      C**********         EVAL      ABTYLC = 'I'                                             MD055681
      C                   EVAL      WriteFlag = 'Y'
      C**********         WRITE(E)  @SARDL0                                                  MD055681
@@ -329,14 +409,17 @@
      C     SrWritePass   BEGSR
       *
      C**********         CLEAR                   SCPASSD0                                   MD054346
-     C                   EVAL      PASS = PWord(I)
-     C                   EVAL      P@SARN = Feat(I)
+     C**********         EVAL      PASS = PWord(I)                                          MD059471
+     C                   EXSR      SrGetPass                                                MD059471
+     C**********         EVAL      P@SARN = Feat(I)                                         MD059471
+     C                   EVAL      P@SARN = XXFeat                                          MD059471
      C**********         EVAL      WriteFlag = 'Y'                                          MD054346
      C**********         WRITE(E)  SCPASSD0                                                 MD054346
      C                   CALL      'UT000033'                                               MD054346
      C                   PARM      *Blanks       PReturnCode                                MD054346
      C                   PARM      Insert        PAction                                    MD054346
-     C                   PARM                    PValidList                                 MD054346
+     C**********         PARM                    PValidList                        MD054346 MD059471
+     C                   PARM      'SCFEATVL'    PValidList                                 MD059471
      C                   PARM                    PLibrary                                   MD054346
      C                   PARM      P@SARN        PIDName                                    MD054346
      C                   PARM      PASS          PPass1                                     MD054346
@@ -388,6 +471,31 @@
      C                   ENDSR
       *
       /EJECT
+      *****************************************************************                     MD059471
+      *                                                               *                     MD059471
+      *  SrGetPass - Retrieve Password from Validation List           *                     MD059471
+      *                                                               *                     MD059471
+      *****************************************************************                     MD059471
+     C     SrGetPass     BEGSR                                                              MD059471
+      *                                                                                     MD059471
+     C                   CALL      'UT000033'                                               MD059471
+     C                   PARM      *Blanks       PReturnCode                                MD059471
+     C                   PARM      Find          PAction                                    MD059471
+     C                   PARM      'SCSWPSVL'    PValidList                                 MD059471
+     C                   PARM                    PLibrary                                   MD059471
+     C                   PARM      XXFeat        PIDName                                    MD059471
+     C                   PARM                    PPass1                                     MD059471
+     C                   PARM                    PPass2                                     MD059471
+     C                   PARM      *Blanks       PDescr                                     MD059471
+      *                                                                                     MD059471
+     C     PReturnCode   IFNE      *Blanks                                                  MD059471
+     C                   ELSE                                                               MD059471
+     C                   EVAL      PASS = PPass1                                            MD059471
+     C                   ENDIF                                                              MD059471
+      *                                                                                     MD059471
+     C                   ENDSR                                                              MD059471
+      *                                                                                     MD059471
+      /EJECT                                                                                MD059471
       *****************************************************************
       *                                                               *
       *  *INZSR - Initialise                                          *

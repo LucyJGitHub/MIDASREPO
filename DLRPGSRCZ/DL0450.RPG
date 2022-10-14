@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0008 F*                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059740           Date 10May22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD025993           Date 19Aug14               *
       *                 MD020563           Date 21May13               *
       *                 AR1097176          Date 22Mar13               *
@@ -83,6 +84,10 @@
 0010 F*                                                                  *
 0010 F*----------------------------------------------------------------  *
 0010 F*                                                                  *
+      *  MD059740 - When getting the Spot Trade Equivalent Balance,   *
+      *             check sequence 01 and 02 accounts and combine the *
+      *             balance to EQBAL. Total Spot Revaluation and P/L  *
+      *             field is also adjusted to 17 to avoid truncation. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025993 - Total Spot Revaluation and Profit / Loss fields   *
@@ -1185,10 +1190,12 @@
 0422 C*
 0423 C*
 0424 C*    DEFINE SPOT VALUE,SPOVL
-0425 C                     Z-ADD0         SPOVL  150
+0425 C**********           Z-ADD0         SPOVL  150                                        MD059740
+0425 C                     Z-ADD0         SPOVL  180                                        MD059740
 0426 C*
 0427 C*    DEFINE EQUIV.BAL.,EQBAL1 TO4 WITH NO.OF DEC.POS. EQUAL BCDP
-0428 C                     Z-ADD0         EQBAL  150
+0428 C**********           Z-ADD0         EQBAL  150                                        MD059740
+0428 C                     Z-ADD0         EQBAL  180                                        MD059740
 0429 C*
 0430 C*    EXCEPT OUTPUT FOR HEADER FOR GESR
 0431 C*    SET ON IND.TO CONDITION EXCEPT OUTPUT & THEN SET OFF AGAIN
@@ -1621,7 +1628,8 @@
 0611 C*    THIS CURRENCY
 0612 C           CD,Y      COMP 1                      4445
 0613 C           CD,Y      COMP 2                    49  48
-0614 C                     Z-ADD0         POSBL  150
+0614 C**********           Z-ADD0         POSBL  150                                        MD059740
+0614 C                     Z-ADD0         POSBL  180                                        MD059740
      C                     MOVE *OFF      *IN23                           139568
 0615 C*
 0616 C*    ACCESS POSITION BALANCE(LEDGER BALANCE) FROM ACCNT
@@ -1657,6 +1665,18 @@
 0629 COR 53                Z-ADD0         LDBL
 0630 C*    REVERSE SIGN OF POS.BAL & PUT IT IN RELEVANT POSBL1 TO 4 FIELD
 0631 C                     Z-SUBLDBL      POSBL
+      *                                                                                     MD059740
+     C           *IN45     IFEQ *ON                                                         MD059740
+     C           POSBL     DIV  10        POSBL1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN48     IFEQ *ON                                                         MD059740
+     C           POSBL     DIV  100       POSBL2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN49     IFEQ *ON                                                         MD059740
+     C           POSBL     DIV  1000      POSBL3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
 0632 C*
 0633 C**** EQUIVALENT BALANCE **********
 0634 C*
@@ -1700,8 +1720,56 @@
 0654 C*    EQUIVALENT BAL.AVAILABLE),SET EQUIV.BAL.EQUAL ZERO.            S01194
 0655 C   63                                                               S01194
 0657 COR 54                Z-ADD0         LDBL                            S01194
+     C                     Z-ADDLDBL      TLDBL  180                                        MD059740
+     C                     SETOF                     3435                                   MD059740
+     C           EQ,Y      COMP 0                        36                                 MD059740
+      *                                                                                     MD059740
+      ** If equivalent A/C code exists, access Equivalent Balance from A/C                  MD059740
+      ** N.B. EQUIV.BAL.is also LDBL, but for chain with different key.                     MD059740
+      *                                                                                     MD059740
+     C           *IN36     IFEQ *OFF                                                        MD059740
+      *                                                                                     MD059740
+     C                     MOVELCM,X      WORK1                                             MD059740
+     C                     MOVE BJCYCD    WORK1                                             MD059740
+     C                     MOVELEQ,Y      WORK2                                             MD059740
+     C                     MOVE '02'      WORK2                                             MD059740
+      *                                                                                     MD059740
+     C                     MOVE BR,X      WORK3                                             MD059740
+     C                     MOVELWORK1     ACKEY                                             MD059740
+     C                     MOVELWORK2     WORK3                                             MD059740
+     C                     MOVE WORK3     ACKEY                                             MD059740
+      *                                                                                     MD059740
+     C           CEU011    IFEQ 'Y'                                                         MD059740
+     C           ACKEY     CHAINGLACNTL0             34                                     MD059740
+     C                     ELSE                                                             MD059740
+     C           ACKEY     CHAINACCNT                34                                     MD059740
+     C                     ENDIF                                                            MD059740
+      ** Check that REC. ID is 'D'. Set ON *IN55 if not.                                    MD059740
+     C           RECI      COMP 'D'                  3535                                   MD059740
+      *                                                                                     MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+      ** If no equivalent account code or chain failure (i.e. no equivalent                 MD059740
+      ** balance available), set Equivalent Balance equal to zero.                          MD059740
+      *                                                                                     MD059740
+     C   36                                                                                 MD059740
+     COR 34                Z-ADD0         LDBL                                              MD059740
+     C                     ADD  LDBL      TLDBL                                             MD059740
 0658 C*    MOVE EQ.BAL. TO EQBAL FIELDS
-0659 C                     MOVE LDBL      EQBAL
+0659 C**********           MOVE LDBL      EQBAL                                             MD059740
+     C                     Z-ADDTLDBL     EQBAL                                             MD059740
+      *                                                                                     MD059740
+     C           *IN59     IFEQ *ON                                                         MD059740
+     C           EQBAL     DIV  10        EQBAL1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN60     IFEQ *ON                                                         MD059740
+     C           EQBAL     DIV  100       EQBAL2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN68     IFEQ *ON                                                         MD059740
+     C           EQBAL     DIV  1000      EQBAL3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
 0660 C*
 0661 C*    IF EITHER POS.BAL.OR EQUIV.BAL.AVAILABLE,DO CALCS.& OUTPUT
 0662 C  N52N53                                             POS.BAL.AVAIL.
@@ -1814,6 +1882,18 @@
 0732 C  N70 88   POSBL     DIV  WK159     SPOVL     H
 0733 C  N70N88   SR,Y      DIV  POWERS,N  WK159
 0734 C  N70N88   POSBL     MULT WK159     SPOVL     H
+      *                                                                                     MD059740
+     C           *IN59     IFEQ *ON                                                         MD059740
+     C           SPOVL     DIV  10        SPOVL1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN60     IFEQ *ON                                                         MD059740
+     C           SPOVL     DIV  100       SPOVL2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN68     IFEQ *ON                                                         MD059740
+     C           SPOVL     DIV  1000      SPOVL3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
 0735 C*
      C/COPY WNCPYSRC,DL0450C014
 0588 C*                                                                   LN0330
@@ -1844,7 +1924,20 @@
 0736 C*    CALCULATE PROFIT/LOSS & SET IND. FOR PROFIT(72)OR LOSS(71)
      C                     Z-ADD0         PROLO                           139568
      C                     Z-ADD0         XPROLO                          139568
-0737 C           SPOVL     SUB  EQBAL     PROLO  150 727156
+0737 C********** SPOVL     SUB  EQBAL     PROLO  150 727156                                 MD059740
+     C           SPOVL     SUB  EQBAL     PROLO  180 727156                                 MD059740
+      *                                                                                     MD059740
+     C           *IN59     IFEQ *ON                                                         MD059740
+     C           PROLO     DIV  10        PROLO1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN60     IFEQ *ON                                                         MD059740
+     C           PROLO     DIV  100       PROLO2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN68     IFEQ *ON                                                         MD059740
+     C           PROLO     DIV  1000      PROLO3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
       *                                                                   CEU011
      C           CEU011    IFEQ 'Y'                                       CEU011
      C           BKEUCP    ANDNE*BLANKS                                   CEU011
@@ -1857,7 +1950,8 @@
      C           IN,Y      IFEQ 'Y'                                       CEU011
      C           CY,Y      ANDNEBKEURO                                    CEU011
       *                                                                   CEU011
-     C                     Z-ADDPOSBL     XPOSBL 150                      CEU011
+     C**********           Z-ADDPOSBL     XPOSBL 150                                 CEU011 MD059740
+     C                     Z-ADDPOSBL     XPOSBL 180                                        MD059740
       *                                                                   CEU011
      C                     MOVE *BLANKS   PRTCD   7                       CEU011
      C                     MOVE *BLANKS   PEXRT  159                      CEU011
@@ -1876,13 +1970,17 @@
      C                     PARM           PMDIN   1                       CEU011
       *                                                                   CEU011
      C                     Z-ADDPOUTA     XPOSBL                          CEU011
-     C                     Z-ADDXPOSBL    XEQBAL 150                      CEU011
-     C                     ADD  XPOSBL    WPOSBL 150                      CEU011
-     C                     ADD  XEQBAL    WEQBAL 150                      CEU011
+     C**********           Z-ADDXPOSBL    XEQBAL 150                                 CEU011 MD059740
+     C**********           ADD  XPOSBL    WPOSBL 150                                 CEU011 MD059740
+     C**********           ADD  XEQBAL    WEQBAL 150                                 CEU011 MD059740
+     C                     Z-ADDXPOSBL    XEQBAL 180                                        MD059740
+     C                     ADD  XPOSBL    WPOSBL 180                                        MD059740
+     C                     ADD  XEQBAL    WEQBAL 180                                        MD059740
       *                                                                   CEU011
       **  Convert Profit/Loss from Base Currency to Euro Currency         CEU011
       *                                                                   CEU011
-     C                     Z-ADDPROLO     XPROLO 150                      CEU011
+     C**********           Z-ADDPROLO     XPROLO 150                                 CEU011 MD059740
+     C                     Z-ADDPROLO     XPROLO 180                                        MD059740
      C***********XPROLO    IFNE 0                                  CEU011 139568
       *                                                                   CEU011
      C                     Z-ADD0         WBASE  159                      CEU011
@@ -1921,7 +2019,84 @@
      C                     ENDIF                                          CEU011
       *                                                                   CEU011
      C                     Z-ADDXEURO     XPROLO                          CEU011
-     C                     ADD  XPROLO    WPROLO 150                      CEU011
+     C**********           ADD  XPROLO    WPROLO 150                                 CEU011 MD059740
+     C                     ADD  XPROLO    WPROLO 180                                        MD059740
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XEQBAL    DIV  10        XEQBA1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XEQBAL    DIV  100       XEQBA2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XEQBAL    DIV  1000      XEQBA3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XPROLO    DIV  10        XPROL1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XPROLO    DIV  100       XPROL2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XPROLO    DIV  1000      XPROL3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPOSBL    DIV  10        WPOSB1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPOSBL    DIV  100       WPOSB2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPOSBL    DIV  1000      WPOSB3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WEQBAL    DIV  10        WEQBA1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WEQBAL    DIV  100       WEQBA2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WEQBAL    DIV  1000      WEQBA3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPROLO    DIV  10        WPROL1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPROLO    DIV  100       WPROL2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPROLO    DIV  1000      WPROL3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
      C                     ENDIF                                          CEU011
       *                                                                   CEU011
      C           CY,Y      IFEQ BKEURO                                    CEU011
@@ -1955,6 +2130,82 @@
       *                                                                   148829
      C                     ENDIF                                          CEU011
      C                     ADD  POSBL     WPOSBL                          CEU011
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XEQBAL    DIV  10        XEQBA1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XEQBAL    DIV  100       XEQBA2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XEQBAL    DIV  1000      XEQBA3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XPROLO    DIV  10        XPROL1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XPROLO    DIV  100       XPROL2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           XPROLO    DIV  1000      XPROL3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPOSBL    DIV  10        WPOSB1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPOSBL    DIV  100       WPOSB2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPOSBL    DIV  1000      WPOSB3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WEQBAL    DIV  10        WEQBA1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WEQBAL    DIV  100       WEQBA2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WEQBAL    DIV  1000      WEQBA3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN19     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPROLO    DIV  10        WPROL1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN21     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPROLO    DIV  100       WPROL2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN22     IFEQ *ON                                                         MD059740
+     C           *IN29     ANDEQ*ON                                                         MD059740
+     C           WPROLO    DIV  1000      WPROL3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
      C                     ENDIF                                          CEU011
      C                     ENDIF                                          139568
       *                                                                   CEU011
@@ -1995,7 +2246,20 @@
      C**   BRANCH TOTALS OF SPOT VALUES
      C**
      C********** SPOVL     ADD  BRSPV     BRSPV  150                                        MD025993
-     C           SPOVL     ADD  BRSPV     BRSPV  170                                        MD025993
+     C********** SPOVL     ADD  BRSPV     BRSPV  170                               MD025993 MD059740
+     C           SPOVL     ADD  BRSPV     BRSPV  180                                        MD059740
+      *
+     C           *IN59     IFEQ *ON                                                         MD059740
+     C           BRSPV     DIV  10        BRSPV1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN60     IFEQ *ON                                                         MD059740
+     C           BRSPV     DIV  100       BRSPV2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN68     IFEQ *ON                                                         MD059740
+     C           BRSPV     DIV  1000      BRSPV3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0450CCP5                                           S01408
      C*                                                                   S01408
@@ -2014,7 +2278,20 @@
 0744 C*    BRANCH TOTALS
 0745 C*    BRANCH TOTALS OF PROFIT/LOSS
 0746 C********** PROLO     ADD  BRPRL     BRPRL  150                                        MD025993
-     C           PROLO     ADD  BRPRL     BRPRL  170                                        MD025993
+     C********** PROLO     ADD  BRPRL     BRPRL  170                               MD025993 MD059740
+     C           PROLO     ADD  BRPRL     BRPRL  180                                        MD059740
+      *
+     C           *IN59     IFEQ *ON                                                         MD059740
+     C           BRPRL     DIV  10        BRPRL1 181                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN60     IFEQ *ON                                                         MD059740
+     C           BRPRL     DIV  100       BRPRL2 182                                        MD059740
+     C                     ENDIF                                                            MD059740
+      *                                                                                     MD059740
+     C           *IN68     IFEQ *ON                                                         MD059740
+     C           BRPRL     DIV  1000      BRPRL3 183                                        MD059740
+     C                     ENDIF                                                            MD059740
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0450CCP6                                           S01408
      C*                                                                   S01408
@@ -2118,14 +2395,16 @@
       *                                                                                       202042
      C           *IN71     IFEQ '1'                                                           202042
      C           WONCE     ANDEQ'N'                                                           202042
-     C                     Z-SUBPROLO     WPLMOD 150                                          202042
+     C**********           Z-SUBPROLO     WPLMOD 150                                 202042 MD059740
+     C                     Z-SUBPROLO     WPLMOD 180                                        MD059740
      C                     ENDIF                                                              202042
      C           *IN72     IFEQ '1'                                                           202042
      C           WONCE     ANDEQ'N'                                                           202042
      C                     Z-ADDPROLO     WPLMOD                                              202042
      C                     ENDIF                                                              202042
      C                     MOVE 'Y'       WONCE                                               202042
-     C                     Z-ADDWPLMOD    WPREVA 150                                          202042
+     C**********           Z-ADDWPLMOD    WPREVA 150                                 202042 MD059740
+     C                     Z-ADDWPLMOD    WPREVA                                            MD059740
      C           WPLMOD    SUB  WLMTPA    WPLMOD                                              202042
      C           WPLMOD    IFGT 0                                                             202042
      C           COUNT     ADD  1         COUNT                                               202042
@@ -2221,7 +2500,8 @@
      C*                                                                   S01408
 0814 C*
 0815 C*    REVERSE SIGN OF PROFIT/LOSS & PUT IN A NEW FIELD(PLREV1 TO 4)
-0816 C                     Z-SUBBRPRL     PLREV  150 787756
+0816 C**********           Z-SUBBRPRL     PLREV  150 787756                                 MD059740
+     C                     Z-SUBBRPRL     PLREV  180 787756                                 MD059740
 0817 C***56                GOTO BREND                                     E10886
 0817 C   56                GOTO BLBPL                                     E10886
 0818 C*
@@ -2275,10 +2555,12 @@
      C                     ENDIF                                                              202042
      C           *IN78     IFEQ '1'                                                           202042
      C           WONCE     ANDEQ'N'                                                           202042
-     C                     Z-ADDPLREV     WBPLA  150                                          202042
+     C**********           Z-ADDPLREV     WBPLA  150                                 202042 MD059740
+     C                     Z-ADDPLREV     WBPLA  180                                        MD059740
      C                     ENDIF                                                              202042
      C                     MOVE 'Y'       WONCE                                               202042
-     C                     Z-ADDWBPLA     WPREVA 150                                          202042
+     C**********           Z-ADDWBPLA     WPREVA 150                                 202042 MD059740
+     C                     Z-ADDWBPLA     WPREVA 180                                        MD059740
      C           WBPLA     SUB  WLMTPA    WBPLA                                               202042
      C           WBPLA     IFGT 0                                                             202042
      C           COUNT     ADD  1         COUNT                                               202042
@@ -2933,14 +3215,19 @@
 1051 O*    REPORT HEADINGS
 1052 ODL0450P1E  203   87                                                 S01124
 1053 O*****                              22 'REFERENCE DL0450'    *****   S01117
-1053 O                                   24 'REFERENCE DL0450P1'          S01117
+1053 O**********                         24 'REFERENCE DL0450P1'                     S01117 MD059740
+1053 O                                   21 'REFERENCE DL0450P1'                            MD059740
 1054 O*****                    TITL      89                       *****   S01194
 1054 O                         BJURPT    89                               S01194
-1055 O                                  104 'DATE'
+1055 O**********                        104 'DATE'                                          MD059740
+1055 O                                  107 'DATE'                                          MD059740
 1056 O*****                    RUNA     112                       *****   S01194
-1056 O                         BJMRDT   112                               S01194
-1057 O                                  122 'PAGE'
-1058 O                         PAGE  3  127
+1056 O**********               BJMRDT   112                                          S01194 MD059740
+1057 O**********                        122 'PAGE'                                          MD059740
+1058 O**********               PAGE  3  127                                                 MD059740
+1056 O                         BJMRDT   115                                                 MD059740
+1057 O                                  125 'PAGE'                                          MD059740
+1058 O                         PAGE  3  130                                                 MD059740
 1059 O        E  1     87
 1060 O*****                              61 'REVALUATION OF SPOT' *****   S01117
      O/COPY WNCPYSRC,DL0450O001
@@ -2959,9 +3246,12 @@
 1066 O                                   68 '----------------'            S01117
      O/COPY WNCPYSRC,DL0450O008
 1064 O        E  2     87
-1065 O                                   12 'BRANCH'                      S01117
-1065 O                         BR,X      16                               S01117
-1066 O                         BN,X      48                               S01117
+1065 O**********                         12 'BRANCH'                                 S01117 MD059740
+1065 O**********               BR,X      16                                          S01117 MD059740
+1066 O**********               BN,X      48                                          S01117 MD059740
+1065 O                                    9 'BRANCH'                                        MD059740
+1065 O                         BR,X      13                                                 MD059740
+1066 O                         BN,X      45                                                 MD059740
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0450OOP1                                           S01408
      O*                                                                   S01408
@@ -2976,22 +3266,28 @@
 1069 O        E        87
 1070 O**********                         18 'CCY'                                           MD025993
 1071 O**********                         40 'POSITION'                                      MD025993
-     O                                   12 'CCY'                                           MD025993
-     O                                   34 'POSITION'                                      MD025993
+     O**********                         12 'CCY'                                  MD025993 MD059740
+     O**********                         34 'POSITION'                             MD025993 MD059740
+     O                                    6 'CCY'                                           MD059740
+     O                                   29 'POSITION'                                      MD059740
 1072 O***********                        66 'EQUIVALENT'                  CEU011
      O**********      N29                66 'EQUIVALENT'                             CEU011 MD025993
      O**********       29                66 'EURO EQUIVALENT'                        CEU011 MD025993
 1073 O**********                         77 'RATE'                                          MD025993
 1074 O**********                        103 'SPOT VALUE'                                    MD025993
-     O                N29                60 'EQUIVALENT'                                    MD025993
-     O                 29                60 'EURO EQUIVALENT'                               MD025993
+     O**********      N29                60 'EQUIVALENT'                           MD025993 MD059740
+     O**********       29                60 'EURO EQUIVALENT'                      MD025993 MD059740
+     O                N29                56 'EQUIVALENT'                                    MD059740
+     O                 29                56 'EURO EQUIVALENT'                               MD059740
      O                                   71 'RATE'                                          MD025993
      O                                   97 'SPOT VALUE'                                    MD025993
 1075 O***********                       124 'PROFIT/LOSS'                 CEU011
      O**********      N29               124 'PROFIT/LOSS'                            CEU011 MD025993
      O**********       29               124 'EURO EQUIV. P/L'                        CEU011 MD025993
-     O                N29               118 'PROFIT/LOSS'                                   MD025993
-     O                 29               118 'EURO EQUIV. P/L'                               MD025993
+     O**********      N29               118 'PROFIT/LOSS'                          MD025993 MD059740
+     O**********       29               118 'EURO EQUIV. P/L'                      MD025993 MD059740
+     O                N29               126 'PROFIT/LOSS'                                   MD059740
+     O                 29               126 'EURO EQUIV. P/L'                               MD059740
 1076 O*
 1077 O*    REPORT DETAIL
 1078 O        E 2      74
@@ -3005,43 +3301,69 @@
 1086 O**********       60      EQBAL     66 ' ,   ,   ,   , 0 .  -'                         MD025993
 1087 O**********       68      EQBAL     67 '   ,   ,   , 0 .   -'                          MD025993
 1088 O**********               SR,Y  3   82                                                 MD025993
-     O                         CY,Y      12                                                 MD025993
-     O                 44      POSBL J   34                                                 MD025993
-     O                 45      POSBL     36 '  ,   ,   ,   , 0 . -'                         MD025993
-     O                 48      POSBL     37 ' ,   ,   ,   , 0 .  -'                         MD025993
-     O                 49      POSBL     38 '   ,   ,   , 0 .   -'                          MD025993
-     O                 58      EQBAL J   57                                                 MD025993
-     O                 59      EQBAL     59 '  ,   ,   ,   , 0 . -'                         MD025993
-     O                 60      EQBAL     60 ' ,   ,   ,   , 0 .  -'                         MD025993
-     O                 68      EQBAL     61 '   ,   ,   , 0 .   -'                          MD025993
-     O                         SR,Y  3   76                                                 MD025993
+     O**********               CY,Y      12                                        MD025993 MD059740
+     O**********       44      POSBL J   34                                        MD025993 MD059740
+     O**********       45      POSBL     36 '  ,   ,   ,   , 0 . -'                MD025993 MD059740
+     O**********       48      POSBL     37 ' ,   ,   ,   , 0 .  -'                MD025993 MD059740
+     O**********       49      POSBL     38 '   ,   ,   , 0 .   -'                 MD025993 MD059740
+     O**********       58      EQBAL J   57                                        MD025993 MD059740
+     O**********       59      EQBAL     59 '  ,   ,   ,   , 0 . -'                MD025993 MD059740
+     O**********       60      EQBAL     60 ' ,   ,   ,   , 0 .  -'                MD025993 MD059740
+     O**********       68      EQBAL     61 '   ,   ,   , 0 .   -'                 MD025993 MD059740
+     O**********               SR,Y  3   76                                        MD025993 MD059740
+     O                         CY,Y       6                                                 MD059740
+     O                 44      POSBL J   30                                                 MD059740
+     O                 45      POSBL1J   32                                                 MD059740
+     O                 48      POSBL2J   33                                                 MD059740
+     O                 49      POSBL3J   34                                                 MD059740
+     O                 58      EQBAL J   57                                                 MD059740
+     O                 59      EQBAL1J   59                                                 MD059740
+     O                 60      EQBAL2J   60                                                 MD059740
+     O                 68      EQBAL3J   61                                                 MD059740
+     O                         SR,Y  3   76                                                 MD059740
      O/COPY WNCPYSRC,DL0450O010
 1089 O**********       58      SPOVL J  103                                                 MD025993
 1090 O**********       59      SPOVL    105 '  ,   ,   ,   , 0 . -'                         MD025993
 1091 O**********       60      SPOVL    106 ' ,   ,   ,   , 0 .  -'                         MD025993
 1092 O**********       68      SPOVL    107 '   ,   ,   , 0 .   -'                          MD025993
-     O                 58      SPOVL J  100                                                 MD025993
-     O                 59      SPOVL    102 '  ,   ,   ,   , 0 . -'                         MD025993
-     O                 60      SPOVL    103 ' ,   ,   ,   , 0 .  -'                         MD025993
-     O                 68      SPOVL    104 '   ,   ,   , 0 .   -'                          MD025993
-1093 O                 58      PROLO J  124
-1094 O                 59      PROLO    126 '  ,   ,   ,   , 0 . -'
-1095 O                 60      PROLO    127 ' ,   ,   ,   , 0 .  -'
-1096 O                 68      PROLO    128 '   ,   ,   , 0 .   -'
+     O**********       58      SPOVL J  100                                        MD025993 MD059740
+     O**********       59      SPOVL    102 '  ,   ,   ,   , 0 . -'                MD025993 MD059740
+     O**********       60      SPOVL    103 ' ,   ,   ,   , 0 .  -'                MD025993 MD059740
+     O**********       68      SPOVL    104 '   ,   ,   , 0 .   -'                 MD025993 MD059740
+1093 O**********       58      PROLO J  124                                                 MD059740
+1094 O**********       59      PROLO    126 '  ,   ,   ,   , 0 . -'                         MD059740
+1095 O**********       60      PROLO    127 ' ,   ,   ,   , 0 .  -'                         MD059740
+1096 O**********       68      PROLO    128 '   ,   ,   , 0 .   -'                          MD059740
+     O                 58      SPOVL J  100                                                 MD059740
+     O                 59      SPOVL1J  102                                                 MD059740
+     O                 60      SPOVL2J  103                                                 MD059740
+     O                 68      SPOVL3J  104                                                 MD059740
+     O                 58      PROLO J  127                                                 MD059740
+     O                 59      PROLO1J  129                                                 MD059740
+     O                 60      PROLO2J  130                                                 MD059740
+     O                 68      PROLO3J  131                                                 MD059740
       *                                                                   CEU011
      O        E 1      74 23                                              CEU011
      O**********       18 29   XEQBALJ   63                                          CEU011 MD025993
      O**********       19 29   XEQBAL    65 '  ,   ,   ,   , 0 . -'                  CEU011 MD025993
      O**********       21 29   XEQBAL    66 ' ,   ,   ,   , 0 .  -'                  CEU011 MD025993
      O**********       22 29   XEQBAL    67 '   ,   ,   , 0 .   -'                   CEU011 MD025993
-     O                 18 29   XEQBALJ   57                                                 MD025993
-     O                 19 29   XEQBAL    59 '  ,   ,   ,   , 0 . -'                         MD025993
-     O                 21 29   XEQBAL    60 ' ,   ,   ,   , 0 .  -'                         MD025993
-     O                 22 29   XEQBAL    61 '   ,   ,   , 0 .   -'                          MD025993
-     O                 18 29   XPROLOJ  124                               CEU011
-     O                 19 29   XPROLO   126 '  ,   ,   ,   , 0 . -'       CEU011
-     O                 21 29   XPROLO   127 ' ,   ,   ,   , 0 .  -'       CEU011
-     O                 22 29   XPROLO   128 '   ,   ,   , 0 .   -'        CEU011
+     O**********       18 29   XEQBALJ   57                                        MD025993 MD059740
+     O**********       19 29   XEQBAL    59 '  ,   ,   ,   , 0 . -'                MD025993 MD059740
+     O**********       21 29   XEQBAL    60 ' ,   ,   ,   , 0 .  -'                MD025993 MD059740
+     O**********       22 29   XEQBAL    61 '   ,   ,   , 0 .   -'                 MD025993 MD059740
+     O**********       18 29   XPROLOJ  124                                          CEU011 MD059740
+     O**********       19 29   XPROLO   126 '  ,   ,   ,   , 0 . -'                  CEU011 MD059740
+     O**********       21 29   XPROLO   127 ' ,   ,   ,   , 0 .  -'                  CEU011 MD059740
+     O**********       22 29   XPROLO   128 '   ,   ,   , 0 .   -'                   CEU011 MD059740
+     O                 18 29   XEQBALJ   57                                                 MD059740
+     O                 19 29   XEQBA1J   59                                                 MD059740
+     O                 21 29   XEQBA2J   60                                                 MD059740
+     O                 22 29   XEQBA3J   61                                                 MD059740
+     O                 18 29   XPROLOJ  127                                                 MD059740
+     O                 19 29   XPROL1J  129                                                 MD059740
+     O                 21 29   XPROL2J  130                                                 MD059740
+     O                 22 29   XPROL3J  131                                                 MD059740
       *                                                                   CEU011
      O        E 2      76                                                 CEU011
      O**********          29   BKEUCP    18                                          CEU011 MD025993
@@ -3049,28 +3371,41 @@
      O**********       19 29   WPOSBL    42 '  ,   ,   ,   , 0 . -'                  CEU011 MD025993
      O**********       21 29   WPOSBL    43 ' ,   ,   ,   , 0 .  -'                  CEU011 MD025993
      O**********       22 29   WPOSBL    44 '   ,   ,   , 0 .   -'                   CEU011 MD025993
-     O                    29   BKEUCP    12                                                 MD025993
-     O                 18 29   WPOSBLJ   34                                                 MD025993
-     O                 19 29   WPOSBL    36 '  ,   ,   ,   , 0 . -'                         MD025993
-     O                 21 29   WPOSBL    37 ' ,   ,   ,   , 0 .  -'                         MD025993
-     O                 22 29   WPOSBL    38 '   ,   ,   , 0 .   -'                          MD025993
+     O**********          29   BKEUCP    12                                        MD025993 MD059740
+     O**********       18 29   WPOSBLJ   34                                        MD025993 MD059740
+     O**********       19 29   WPOSBL    36 '  ,   ,   ,   , 0 . -'                MD025993 MD059740
+     O**********       21 29   WPOSBL    37 ' ,   ,   ,   , 0 .  -'                MD025993 MD059740
+     O**********       22 29   WPOSBL    38 '   ,   ,   , 0 .   -'                 MD025993 MD059740
+     O                    29   BKEUCP     6                                                 MD059740
+     O                 18 29   WPOSBLJ   30                                                 MD059740
+     O                 19 29   WPOSB1J   32                                                 MD059740
+     O                 21 29   WPOSB2J   33                                                 MD059740
+     O                 22 29   WPOSB3J   37                                                 MD059740
       *                                                                   CEU011
      O**********       18 29   WEQBALJ   63                                          CEU011 MD025993
      O**********       19 29   WEQBAL    65 '  ,   ,   ,   , 0 . -'                  CEU011 MD025993
      O**********       21 29   WEQBAL    66 ' ,   ,   ,   , 0 .  -'                  CEU011 MD025993
      O**********       22 29   WEQBAL    67 '   ,   ,   , 0 .   -'                   CEU011 MD025993
-     O                 18 29   WEQBALJ   57                                                 MD025993
-     O                 19 29   WEQBAL    59 '  ,   ,   ,   , 0 . -'                         MD025993
-     O                 21 29   WEQBAL    60 ' ,   ,   ,   , 0 .  -'                         MD025993
-     O                 22 29   WEQBAL    61 '   ,   ,   , 0 .   -'                          MD025993
+     O**********       18 29   WEQBALJ   57                                        MD025993 MD059740
+     O**********       19 29   WEQBAL    59 '  ,   ,   ,   , 0 . -'                MD025993 MD059740
+     O**********       21 29   WEQBAL    60 ' ,   ,   ,   , 0 .  -'                MD025993 MD059740
+     O**********       22 29   WEQBAL    61 '   ,   ,   , 0 .   -'                 MD025993 MD059740
+     O                 18 29   WEQBALJ   57                                                 MD059740
+     O                 19 29   WEQBA1J   59                                                 MD059740
+     O                 21 29   WEQBA2J   60                                                 MD059740
+     O                 22 29   WEQBA3J   61                                                 MD059740
       *                                                                   CEU011
      O**********          29   WEXRT 3   82                                          CEU011 MD025993
      O                    29   WEXRT 3   76                                                 MD025993
       *                                                                   CEU011
-     O                 18 29   WPROLOJ  124                               CEU011
-     O                 19 29   WPROLO   126 '  ,   ,   ,   , 0 . -'       CEU011
-     O                 21 29   WPROLO   127 ' ,   ,   ,   , 0 .  -'       CEU011
-     O                 22 29   WPROLO   128 '   ,   ,   , 0 .   -'        CEU011
+     O**********       18 29   WPROLOJ  124                                          CEU011 MD059740
+     O**********       19 29   WPROLO   126 '  ,   ,   ,   , 0 . -'                  CEU011 MD059740
+     O**********       21 29   WPROLO   127 ' ,   ,   ,   , 0 .  -'                  CEU011 MD059740
+     O**********       22 29   WPROLO   128 '   ,   ,   , 0 .   -'                   CEU011 MD059740
+     O                 18 29   WPROLOJ  127                                                 MD059740
+     O                 19 29   WPROL1J  129                                                 MD059740
+     O                 21 29   WPROL2J  130                                                 MD059740
+     O                 22 29   WPROL3J  131                                                 MD059740
       *                                                                   CEU011
 1097 O*
 1098 O*    REPORT BRANCH TOTALS
@@ -3080,18 +3415,27 @@
 1102 O**********       59      BRSPV    105 '  ,   ,   ,   , 0 . -'                         MD025993
 1103 O**********       60      BRSPV    106 ' ,   ,   ,   , 0 .  -'                         MD025993
 1104 O**********       68      BRSPV    107 '   ,   ,   , 0 .   -'                          MD025993
-     O                                   77 'TOTAL'                                         MD025993
-     O                 58      BRSPV J  100                                                 MD025993
-     O                 59      BRSPV    102 ' ,   ,   ,   ,   . 0 . -'                      MD025993
-     O                 60      BRSPV    103 '   ,   ,   ,   , 0 .  -'                       MD025993
-     O                 68      BRSPV    104 '  ,   ,   ,   , 0 .   -'                       MD025993
-1105 O                 58      BRPRL J  124
+     O**********                         77 'TOTAL'                                MD025993 MD059740
+     O**********       58      BRSPV J  100                                        MD025993 MD059740
+     O**********       59      BRSPV    102 ' ,   ,   ,   ,   . 0 . -'             MD025993 MD059740
+     O**********       60      BRSPV    103 '   ,   ,   ,   , 0 .  -'              MD025993 MD059740
+     O**********       68      BRSPV    104 '  ,   ,   ,   , 0 .   -'              MD025993 MD059740
+     O                                   76 'TOTAL'                                         MD059740
+     O                 58      BRSPV J  100                                                 MD059740
+     O                 59      BRSPV1J  102                                                 MD059740
+     O                 60      BRSPV2J  103                                                 MD059740
+     O                 68      BRSPV3J  104                                                 MD059740
+1105 O**********       58      BRPRL J  124                                                 MD059740
 1106 O**********       59      BRPRL    126 '  ,   ,   ,   . 0 . -'                         MD025993
 1107 O**********       60      BRPRL    127 ' ,   ,   ,   , 0 .  -'                         MD025993
 1108 O**********       68      BRPRL    128 '   ,   ,   , 0 .   -'                          MD025993
-1106 O                 59      BRPRL    126 ' ,   ,   ,   ,   . 0 . -'                      MD025993
-1107 O                 60      BRPRL    127 '   ,   ,   ,   , 0 .  -'                       MD025993
-1108 O                 68      BRPRL    128 '  ,   ,   ,   , 0 .   -'                       MD025993
+1106 O**********       59      BRPRL    126 ' ,   ,   ,   ,   . 0 . -'             MD025993 MD059740
+1107 O**********       60      BRPRL    127 '   ,   ,   ,   , 0 .  -'              MD025993 MD059740
+1108 O**********       68      BRPRL    128 '  ,   ,   ,   , 0 .   -'              MD025993 MD059740
+1105 O                 58      BRPRL J  127                                                 MD059740
+1106 O                 59      BRPRL1J  129                                                 MD059740
+1107 O                 60      BRPRL2J  130                                                 MD059740
+1108 O                 68      BRPRL3J  131                                                 MD059740
 1097 O*
 1064 O        E 2      76                                                 S01117
 1065 O                                   58 '*** END OF REPORT'           S01117

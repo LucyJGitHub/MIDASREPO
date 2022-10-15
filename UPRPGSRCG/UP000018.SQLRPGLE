@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CUP041   *CREATE   Date 11Sep13               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD060639           Date 15Oct22               *
+      *  Prev Amend No. CUP041   *CREATE   Date 11Sep13               *
+      *                 xxxxxx             Date ddMmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD60639 - DBU loops with 'QT' source file.                   *
       *  CUP041 - New Bridge methodology to combine menu options      *
       *                                                               *
       *****************************************************************
@@ -82,8 +84,9 @@
      C                   DOW       SQLCODE = 0
       *
      C                   IF        %SUBST(SrcFile:9:2) = 'QT'
-     C                   ITER
-     C                   ENDIF
+     C**********         ITER                                                               MD060639
+     C**********         ENDIF                                                              MD060639
+     C                   ELSE                                                               MD060639
       *
      C                   IF        %SUBST(SrcFile:10:1) = 'T'
      C                   EVAL      ObjectLib = PPfx + %SUBST(SrcFile:9:2) +
@@ -123,6 +126,7 @@
      C+ where current of DLVC
      C/end-exec
       *
+     C                   ENDIF                                                              MD060639
      C/exec SQL
      C+ fetch next
      C+ from DLVC

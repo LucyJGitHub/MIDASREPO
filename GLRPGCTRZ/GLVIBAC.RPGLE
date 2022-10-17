@@ -674,7 +674,8 @@
       ** Positions 15 - 20 of IBAN must be equal to the customer number                       CGL199
      C                   IF        CGL199 = 'Y' and                                           CGL199
      C                             DDIBAN <> *BLANKS and                                      CGL199
-     C                             %SUBST(DDIBAN:15:6) <> DDCUSN                              CGL199
+     C                             %SUBST(DDIBAN:15:6) <> DDCUSN and                          CGL199
+     C                             IBNLGT >= 20                                               CGL199
      C                   MOVE      'N'           DDIBANOK                                     CGL199
      C                   ADD       1             IDX                                          CGL199
      C                   MOVEL     'DDIBAN'      FldNamXAr(Idx)                               CGL199

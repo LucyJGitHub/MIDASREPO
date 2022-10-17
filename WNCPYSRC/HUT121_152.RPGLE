@@ -6,7 +6,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  HUT121 -  Allow SE Price Input for Non-working day           *
+      *  HUT121 -  Allow SE Price Input for Non-working day.          *
       *                                                               *
       *****************************************************************
       ** Access Switchable feature HUT121                                                     HUT121

@@ -29,7 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  HUT121 -  Allow SE Price Input for Non-working day           *
+      *  HUT121 -  Allow SE Price Input for Non-working day.          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL031 - Taxation on Savings Income (Recompile)              *

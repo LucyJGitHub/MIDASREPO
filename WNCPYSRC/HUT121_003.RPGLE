@@ -6,7 +6,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  HUT121 -  Allow SE Price Input for Non-working day           *
+      *  HUT121 -  Allow SE Price Input for Non-working day.          *
       *                                                               *
       *****************************************************************
      C     @DDPVDT       PARM                    DDPVDT            6                          HUT121

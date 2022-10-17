@@ -85,7 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  HUT121 -  Allow SE Price Input for Non-working day           *
+      *  HUT121 -  Allow SE Price Input for Non-working day.          *
       *  260173 - Introduce new parameter in DEAM API to be used in   *
       *           the validation of action code during reversal       *
       *           authorization. Apply fix 258724.                    *

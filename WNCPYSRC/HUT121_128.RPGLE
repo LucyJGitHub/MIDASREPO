@@ -6,7 +6,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  HUT121 -  Allow SE Price Input for Non-working day           *
+      *  HUT121 -  Allow SE Price Input for Non-working day.          *
       *                                                               *
       *****************************************************************
      C                   EVAL      DDPVDT_In = %SUBST(TransID:33:6)                           HUT121

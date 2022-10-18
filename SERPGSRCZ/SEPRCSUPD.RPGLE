@@ -13,6 +13,7 @@
       *                                                               *
       *  Last Amend No. HUT121C            Date 05May22               *
       *  Prev Amend No. HUT121             Date 07Feb22               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD054998           Date 22Apr20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -53,6 +54,7 @@
       *                                                               *
       *  HUT121C - Changes to allow SE Price Input for non-working day*
       *  HUT121 -  Allow SE Price Input for Non-working day           *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD054998 - Security Prices sent to repair queue.             *
       *           - Specify 'N' (not locked) operation extender when  *
       *             reading file PRICEA and introduced new LF of      *

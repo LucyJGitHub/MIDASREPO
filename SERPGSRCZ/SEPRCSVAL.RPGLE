@@ -501,7 +501,7 @@
       * private banking                                                                       CAP060
      C                   PARM                    BGN4ST                                       CAP060
       *                                                                                       CAP060
-     C/COPY WNCPYSRC,HUT121_159                                                             HUT121C
+     C/COPY WNCPYSRC,HUT121_159                                                              HUT121C
       * OUTPUTS                                                                               CAP060
       *                                                                                       CAP060
       * Error fields/message IDs/message data (arrays) from/to caller                         CAP060

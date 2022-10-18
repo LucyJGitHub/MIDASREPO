@@ -2,7 +2,7 @@
       *                                                               *
       *  HUT121_156 - Midas /COPY for SEVVLDT01                       *
       *                                                               *
-      *  Last Amend No. HUT121C            Date 27Apr22               *
+      *  Last Amend No. HUT121C *CREATE    Date 27Apr22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *

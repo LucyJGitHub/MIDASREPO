@@ -17,6 +17,7 @@
       *                                                               *
       *  Last Amend No. HUT121A            Date 22Apr22               *
       *  Prev Amend No. HUT121             Date 07Feb22               *
+      *                 MD058285           Date 22Jun21               *
       *                 AR1075401          Date 01Jun20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047196           Date 08Aug17               *
@@ -61,6 +62,7 @@
       *                                                               *
       *  HUT121A - Recompiled due to changed HUT121_032 and HUT121_035*
       *  HUT121 -  Allow SE Price Input for Non-working day           *
+      *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  AR1075401 - Increase QANOML and QAOTNM length in PMCPOSPD.   *
       *              Recompiled. (Child: AR1075402)                   *
       *  MD046248 - Finastra Rebranding                               *

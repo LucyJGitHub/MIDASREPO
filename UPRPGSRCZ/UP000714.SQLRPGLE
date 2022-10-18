@@ -85,7 +85,7 @@
      D Error           S              7A
      D PASS            S             16A
 
-      ** UT00032 parameters.
+      ** UT000033 parameters.
 
      D PReturnCode     S              7A
      D PAction         S              1A

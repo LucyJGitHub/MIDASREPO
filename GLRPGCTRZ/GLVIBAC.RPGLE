@@ -763,7 +763,7 @@
      C                   IF        @RTCD = *BLANK                                             CGL199
      C                   MOVEL     'Y'           CGL199            1                          CGL199
      C                   ELSE                                                                 CGL199
-     C                   MOVEL     'Y'           CGL199                                       CGL199
+     C                   MOVEL     'N'           CGL199                                       CGL199
      C                   ENDIF                                                                CGL199
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************

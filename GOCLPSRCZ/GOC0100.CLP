@@ -27,7 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       HUT121 -  Allow SE Price Input for Non-working day          */
+/*       HUT121 -  Allow SE Price Input for Non-working day.         */
 /*       MD055751 - Global Sync Issue for GOC0100 during COB         */
 /*                  Include zone in the creation of SQL view.        */
 /*       MD055146 - Failed MXC004802 seq. 00001 and others           */

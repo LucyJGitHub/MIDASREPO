@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT121C            Date 27Apr22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1092524          Date 12Mar13               *
       *                 AR670962           Date 27Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121C - Added HUT121 parameters on call to SEVVLDT01       *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1092524 - Data inserted in Branch, Market & Book were not  *
@@ -499,6 +501,7 @@
       * private banking                                                                       CAP060
      C                   PARM                    BGN4ST                                       CAP060
       *                                                                                       CAP060
+     C/COPY WNCPYSRC,HUT121_159                                                              HUT121C
       * OUTPUTS                                                                               CAP060
       *                                                                                       CAP060
       * Error fields/message IDs/message data (arrays) from/to caller                         CAP060

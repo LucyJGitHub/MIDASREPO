@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT121             Date 07Feb22               *      
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. HUT121C            Date 05May22               *
+      *  Prev Amend No. HUT121             Date 07Feb22               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD054998           Date 22Apr20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -51,7 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  HUT121 -  Allow SE Price Input for Non-working day           *      
+      *  HUT121C - Changes to allow SE Price Input for non-working day*
+      *  HUT121 -  Allow SE Price Input for Non-working day           *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD054998 - Security Prices sent to repair queue.             *
       *           - Specify 'N' (not locked) operation extender when  *
@@ -200,6 +202,7 @@
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       * DATA STRUCTURE FOR SECURITIES TRADING DETAILS
 
+     D/COPY WNCPYSRC,HUT121_164                                                              HUT121C
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
 
@@ -1299,6 +1302,7 @@
      C/COPY WNCPYSRC,HUT121_048                                                               HUT121
       *                                                                                       HUT121
      C                   IF        NOT %FOUND(PRICE)                                          CAP060
+     C/COPY WNCPYSRC,HUT121_160                                                              HUT121C
      C                   WRITE     PRICEDF                                                    CAP060
      C                   ELSE                                                                 CAP060
      C                   UPDATE    PRICEDF                                                    CAP060

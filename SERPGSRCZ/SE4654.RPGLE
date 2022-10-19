@@ -15,7 +15,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. HUT121             Date 07Feb22               *      
+      *  Last Amend No. HUT121             Date 07Feb22               *
       *  Prev Amend No. MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CCB020             Date 06Aug12               *
@@ -43,7 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  HUT121 -  Allow SE Price Input for Non-working day           *      
+      *  HUT121 -  Allow SE Price Input for Non-working day.          *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *

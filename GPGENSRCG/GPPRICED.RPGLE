@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. HUT121             Date 07Feb22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT121C            Date 05May22               *
+      *  Prev Amend No. HUT121             Date 07Feb22               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260464             Date 28May09               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121C - Changes to allow SE Price Input for non-working day*
       *  HUT121 -  Allow SE Price Input for Non-working day           *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
@@ -85,6 +87,7 @@ O    C     I#BFAF        IFEQ      'B'
 O    C  N99              DELETE    PRICEDF
      C/COPY WNCPYSRC,HUT121_012                                                               HUT121
 O    C                   ELSE
+     C/COPY WNCPYSRC,HUT121_163                                                              HUT121C
 O
 O     * 'After'
 O

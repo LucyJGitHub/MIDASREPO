@@ -5,6 +5,10 @@
       *  Last Amend No. HUT121  *CREATE    Date 07Feb22               *
       *                                                               *
       *---------------------------------------------------------------*
+      *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day.          *
+      *                                                               *
+      *****************************************************************
       *                                                                                       HUT121
       ** Convert Value date to Midas                                                          HUT121
      C                   IF        DDPVDT <> *BLANKS                                          HUT121

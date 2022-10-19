@@ -59,7 +59,7 @@
       *             Move Front Office ID and Associate Front Office ID*
       *             to corresponding fields in valid file so it can be*
       *             written in PRICED file during update              *
-      *  HUT121 - Alloww SE Price Input for Non-working day           *
+      *  HUT121 - Alloww SE Price Input for Non-working day.          *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *

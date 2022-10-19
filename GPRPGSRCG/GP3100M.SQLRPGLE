@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD056555 *CREATE   Date 31Aug20               *
+      *  Last Amend No. MD060654           Date 19Oct22               *
+      *  Prev Amend No. MD056555 *CREATE   Date 31Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060654 - Missing menu when global feature is switched on   *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *                                                               *
       *****************************************************************
@@ -440,7 +442,8 @@
      C+ , :#1SARD
      C+ , :WUAKTX
      C+ , 'I'
-     C+ , ' '
+     C**,*' '***                                                                            MD060654
+     C+ , 'GLOBAL'                                                                          MD060654
      C+ , 'E'
      C+ , 'B'
      C+ )
@@ -460,7 +463,8 @@
      C+   :#1SARN
      C+ , :WUAKTX
      C+ , 'I'
-     C+ , ' '
+     C**,*' '***                                                                            MD060654
+     C+ , 'GLOBAL'                                                                          MD060654
      C+ , 'E'
      C+ , 'B'
      C+ )

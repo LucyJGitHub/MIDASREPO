@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR939238           Date 23Apr12               *
+      *  Last Amend No. MD059403           Date 10Oct22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR939238           Date 23Apr12               *
       *                 AR1001991          Date 06Aug12               *
       *                 CRE114             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -63,6 +64,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059403 - Retail Teller: Not possible to close account in   *
+      *             case historical sweep is present                  *
+      *             Recompiled due to LF/RESWEPL8 change              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR939238 - Array Index Error whenever during retail account  *

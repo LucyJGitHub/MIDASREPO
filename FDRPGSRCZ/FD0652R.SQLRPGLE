@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. 259451A            Date 07Feb22               *
-      *  Prev Amend No. 259451             Date 07Feb22               *
+      *  Last Amend No. MD058188           Date 11May21               *
+      *  Prev Amend No. 259451A            Date 07Feb22               *
+      *                 259451             Date 07Feb22               *
       *                 MD056555           Date 31Aug20               *
       *                 MD056747           Date 23Sep20               *
       *                 MD046248           Date 27Oct17               *
@@ -54,6 +55,7 @@
       *                 184471             Date 02Oct00               *
       *---------------------------------------------------------------
       *                                                               *
+      *  MD058188 - Deliverable Data Split for Global files           *
       *  259451A - Make sure that 'N' or Blank input on Type Amort is *
       *            allowed for all DTST combination and only MM and   *
       *            NA DTST combination will allow input of 'Y'.       *
@@ -328,7 +330,8 @@
      D  PDGCHT       E                     EXTFLD(PDCHTP)                                         BU
       ** Global Product Code Details Data Structure                                         BUG10769
       *                                                                                     BUG10769
-     D GPINST        E DS                  EXTNAME(GPINSTPD)                                      BU
+     D*GPINST***     E DS                  EXTNAME(GPINSTPD)                             BU MD058188
+     D GPINST        E DS                  EXTNAME(GPINSJW0)                                MD058188
       ** Global Instrument Code Details Data Structure                                      BUG10769
       *                                                                                     BUG10769
      D LDA             DS           256                                                           BU

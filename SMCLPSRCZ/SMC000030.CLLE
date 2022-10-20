@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CFB001             Date 12Nov14              */
+/*       Last Amend No. MD058188           Date 11May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CFB001             Date 12Nov14              */
 /*                      CTP011             Date 10Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058188 - Deliverable Data Split for Global files          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CFB001 - FusionBanking Midas Rebranding                     */
 /*       CTP011 - Bank Fusion Midas Rebranding                       */
@@ -30,25 +32,25 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&SQL) TYPE(*CHAR) LEN(80)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2005')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Run the following script to synchronise GPCURRPD;     */
 /* (all currencies in SDCURRPD must also be on GPCURRPD) */
- 
+
 /* INSERT INTO GPCURRPD SELECT A6CYCD, CYDESC, A6NBDP,1,'M',0,'I',      */
 /* 'MIDASPLUS' FROM (SELECT DISTINCT A6CYCD, A6NBDP FROM SDCURRPD) T    */
 /* INNER JOIN GPICURRPD ON T.A6CYCD = CYCYCD WHERE NOT EXISTS           */
 /* (SELECT GCCYCD FROM GPCURRPD WHERE A6CYCD = GCCYCD)                  */
- 
+
 /* INSERT INTO GPCURRPD (GCCYCD, GCDESC, GCNBDP, GCSPRT, GCMDIN,        */                /*CTP011*/
 /*  GCLCD, GCCHTP, GCCUSR) SELECT A6CYCD, CYDESC, A6NBDP,1,'M',0,'I',   */                /*CTP011*/
 /* 'BANKFUSION' FROM (SELECT DISTINCT A6CYCD, A6NBDP FROM SDCURRPD) T   */                /*CTP011*/
@@ -64,7 +66,7 @@
                           MBR(RUNSQLSTM)
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
- 
+
 /* Set up the statement line-by-line....                 */
 /**********  CHGVAR     VAR(&SQL) VALUE('INSERT INTO GPCURRPD SELECT +
                           A6CYCD, CYDESC, A6NBDP,1,''M'',0,''I'',')    */                 /*CTP011*/
@@ -81,17 +83,19 @@
              CHGVAR     VAR(&SQL) VALUE(''' '' FROM (SELECT +
                           DISTINCT A6CYCD, A6NBDP FROM SDCURRPD)')                        /*CFB001*/
              CALL       PGM(UTWRTSQL) PARM(&SQL &MODE)
-             CHGVAR     VAR(&SQL) VALUE('T INNER JOIN GPICURRPD ON +
-                          T.A6CYCD = CYCYCD WHERE NOT EXISTS ')
+/**********  CHGVAR     VAR(&SQL) VALUE('T INNER JOIN GPICURRPD ON +
+                          T.A6CYCD = CYCYCD WHERE NOT EXISTS ') */                      /*MD005188*/
+             CHGVAR     VAR(&SQL) VALUE('T INNER JOIN GPICRJW0 ON +
+                          T.A6CYCD = CYCYCD WHERE NOT EXISTS ')                         /*MD005188*/
              CALL       PGM(UTWRTSQL) PARM(&SQL &MODE)
              CHGVAR     VAR(&SQL) VALUE('(SELECT GCCYCD FROM +
                           GPCURRPD WHERE A6CYCD = GCCYCD)')
              CALL       PGM(UTWRTSQL) PARM(&SQL &MODE)
- 
+
 /* ....then run it.                                      */
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE) NAMING(*SYS)
- 
+
              GOTO       CMDLBL(END)
  ABNOR:
              CHGJOB     SWS(XXXXXX11)

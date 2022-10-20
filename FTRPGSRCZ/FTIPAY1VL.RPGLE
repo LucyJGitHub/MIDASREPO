@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD047369A          Date 24Jan18               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
       *                 AR900506           Date 04Nov14               *
@@ -82,6 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
@@ -173,7 +175,7 @@
       ** +--------------------------------------+
       *
       ** SWIFT ISO Country Codes File                                           CFT014
-     FMEISOCL1  IF   E           K DISK    INFSR(*PSSR)                         CFT014
+     F*MEISOCL1* IF   E           K DISK    INFSR(*PSSR)                         CFT014     MD058081
       *                                                                         CFT014
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,FTIPY1V001
@@ -289,6 +291,7 @@
       * Valid Payments layout (default)                                         CFT009
      D DEFVALID      E DS                  EXTNAME(FTVIPAYPD)                   CFT009
      D                                     PREFIX(D#)                           CFT009
+     D MEISOC        E DS                  EXTNAME(MEISOJW0)                                MD058081
                                                                                               CGL014
       ** GL006000 parameter account details                                                   CGL014
      D WACCT           DS            24                                                       CGL014
@@ -2809,9 +2812,15 @@
       *                                                                         CFT014
      C     BBCSID        IFNE      *BLANKS                                      CFT014
      C     2             SUBST     BBCSID:5      W0506W            2            CFT014
-     C     W0506W        CHAIN     MEISOCL1                           88        CFT014
+     C*****W0506W        CHAIN     MEISOCL1                           88        CFT014      MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      W0506W        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *                                                                         CFT014
-     C     *IN88         IFEQ      *ON                                          CFT014
+     C******IN88         IFEQ      *ON                                          CFT014      MD058081
+     C     @RTCD         IFNE      *BLANKS                                                  MD058081
      C     M3SCHT        ORNE      'Y'                                          CFT014
      C                   GOTO      EXIDFT                                       CFT014
      C                   ENDIF                                                  CFT014
@@ -2838,9 +2847,15 @@
       ** Use A4ISOC from Country Code details to chain                          CFT014
       ** to MEISOCL1.                                                           CFT014
       *                                                                         CFT014
-     C     A4ISOC        CHAIN     MEISOCL1                           88        CFT014
+     C*****A4ISOC        CHAIN     MEISOCL1                           88        CFT014      MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      A4ISOC        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *                                                                         CFT014
-     C     *IN88         IFEQ      *ON                                          CFT014
+     C******IN88         IFEQ      *ON                                          CFT014      MD058081
+     C     @RTCD         IFNE      *BLANKS                                                  MD058081
      C     M3SCHT        ORNE      'Y'                                          CFT014
      C                   GOTO      EXIDFT                                       CFT014
      C                   ENDIF                                                  CFT014
@@ -2885,9 +2900,15 @@
       *                                                                         CFT014
      C     A8BTID        IFNE      *BLANKS                                      CFT014
      C     2             SUBST     A8BTID:5      W0506W                         CFT014
-     C     W0506W        CHAIN     MEISOCL1                           88        CFT014
+     C*****W0506W        CHAIN     MEISOCL1                           88        CFT014      MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      W0506W        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *                                                                         CFT014
-     C     *IN88         IFEQ      *ON                                          CFT014
+     C******IN88         IFEQ      *ON                                          CFT014      MD058081
+     C     @RTCD         IFNE      *BLANKS                                                  MD058081
      C     M3SCHT        ORNE      'Y'                                          CFT014
      C                   GOTO      EXIDFT                                       CFT014
      C                   ENDIF                                                  CFT014
@@ -2929,9 +2950,15 @@
       ** Use A4ISOC from Country Code details to chain                          CFT014
       ** to MEISOCL1.                                                           CFT014
       *                                                                         CFT014
-     C     A4ISOC        CHAIN     MEISOCL1                           88        CFT014
+     C*****A4ISOC        CHAIN     MEISOCL1                           88        CFT014      MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      A4ISOC        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *                                                                         CFT014
-     C     *IN88         IFEQ      *ON                                          CFT014
+     C******IN88         IFEQ      *ON                                          CFT014      MD058081
+     C     @RTCD         IFNE      *BLANKS                                                  MD058081
      C     M3SCHT        ORNE      'Y'                                          CFT014
      C                   GOTO      EXIDFT                                       CFT014
      C                   ENDIF                                                  CFT014
@@ -2960,9 +2987,15 @@
       *                                                                         CFT014
      C     BBCSID        IFNE      *BLANKS                                      CFT014
      C     2             SUBST     BBCSID:5      W0506W                         CFT014
-     C     W0506W        CHAIN     MEISOCL1                           88        CFT014
+     C*****W0506W        CHAIN     MEISOCL1                           88        CFT014      MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      W0506W        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *                                                                         CFT014
-     C     *IN88         IFEQ      *ON                                          CFT014
+     C******IN88         IFEQ      *ON                                          CFT014      MD058081
+     C     @RTCD         IFNE      *BLANKS                                                  MD058081
      C     M3SCHT        ORNE      'Y'                                          CFT014
      C                   GOTO      EXIDFT                                       CFT014
      C                   ENDIF                                                  CFT014
@@ -2988,9 +3021,15 @@
       ** Use A4ISOC from Country Code details to chain                          CFT014
       ** to MEISOCL1.                                                           CFT014
       *                                                                         CFT014
-     C     A4ISOC        CHAIN     MEISOCL1                           88        CFT014
+     C*****A4ISOC        CHAIN     MEISOCL1                           88        CFT014      MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      A4ISOC        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *                                                                         CFT014
-     C     *IN88         IFEQ      *ON                                          CFT014
+     C******IN88         IFEQ      *ON                                          CFT014      MD058081
+     C     @RTCD         IFNE      *BLANKS                                                  MD058081
      C     M3SCHT        ORNE      'Y'                                          CFT014
      C                   GOTO      EXIDFT                                       CFT014
      C                   ENDIF                                                  CFT014

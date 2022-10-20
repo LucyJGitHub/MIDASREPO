@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035623           Date 27Aug15               *
       *                 MD035625           Date 27Aug15               *
       *                 MD034842           Date 30Jun15               *
@@ -101,6 +102,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -219,7 +221,7 @@
       *                                                                                       CSW201
       ** Midas ME SWIFT ISO country codes retrieval                                           CSW201
       *                                                                                       CSW201
-     FMEISOCL1  IF   E           K DISK    INFSR(*PSSR)                                       CSW201
+     F*MEISOCL1* IF   E           K DISK    INFSR(*PSSR)                             CSW201 MD058081
       *
      FFT0658AU  O    E             PRINTER INFDS(SPOOLU)
      F*                                                                                       147933
@@ -491,6 +493,7 @@
                                                                                               CSD015
      D SDWLCC        E DS                  EXTNAME(SDWLCCPD)                                  222385
       ** Watch list checking details                                                          222385
+     D MEISOC        E DS                  EXTNAME(MEISOJW0)                                MD058081
                                                                                               222385
       ** SCCMTJOB DataArea Layout                                                             CSC022
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
@@ -2512,10 +2515,16 @@
       ** table. If found, check if 'Supports Charges Transparency'                            CSW201
       ** flag is 'Y'.                                                                         CSW201
       *                                                                                       CSW201
-     C     WDCnCd        CHAIN     MEISOCL1                           27                      CSW201
+     C*****WDCnCd        CHAIN     MEISOCL0                           27             CSW201 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      WDCnCd        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
      C**********         IF        *IN27 = *OFF AND                                  CSW201 MD023793
      C**********                   M3SCHT = 'Y'                                      CSW201 MD023793
-     C                   IF        *IN27 = *OFF                                             MD023793
+     C**********         IF        *IN27 = *OFF                                    MD023793 MD058081
+     C                   IF        @RTCD = *BLANKS                                          MD058081
      C                   IF        M3SCHT = 'Y' AND                                         MD023793
      C                             CSW213 = 'N' OR                                          MD023793
      C                             M3IBAR = 'Y' AND                                         MD023793
@@ -2543,10 +2552,16 @@
       ** table. If found, check if 'Supports Charges Transparency'                            CSW201
       ** flag is 'Y'.                                                                         CSW201
       *                                                                                       CSW201
-     C     WSCnCd        CHAIN     MEISOCL1                           27                      CSW201
+     C*****WSCnCd        CHAIN     MEISOCL0                           27             CSW201 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      WSCnCd        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
      C**********         IF        *IN27 = *OFF AND                                  CSW201 MD023793
      C**********                   M3SCHT = 'Y'                                      CSW201 MD023793
-     C                   IF        *IN27 = *OFF                                             MD023793
+     C**********         IF        *IN27 = *OFF                                    MD023793 MD058081
+     C                   IF        @RTCD = *BLANKS                                          MD058081
      C                   IF        M3SCHT = 'Y' AND                                         MD023793
      C                             CSW213 = 'N' OR                                          MD023793
      C                             M3IBAR = 'Y' AND                                         MD023793
@@ -2598,11 +2613,17 @@
       ** country code table. If found, check if 'Supports Charges                             CSW209
       ** Transparency' flag is 'Y'.                                                           CSW209
       *                                                                                       CSW209
-     C     WAccIn        CHAIN     MEISOCL1                           27                      CSW209
+     C*****WAccIn        CHAIN     MEISOCL0                           27             CSW201 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      WAccIn        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
      C**********         IF        *IN27 = *OFF AND                                  CSW209 MD023793
      C**********                   M3SCHT = 'Y'                                        CSW209 CSW213
      C**********                   M3IBAR = 'Y'                                      CSW213 MD023793
-     C                   IF        *IN27 = *OFF                                             MD023793
+     C**********         IF        *IN27 = *OFF                                    MD023793 MD058081
+     C                   IF        @RTCD = *BLANKS                                          MD058081
      C                   IF        M3SCHT = 'Y' AND                                         MD023793
      C                             CSW213 = 'N' OR                                          MD023793
      C                             M3IBAR = 'Y' AND                                         MD023793

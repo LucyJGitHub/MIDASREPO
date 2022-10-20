@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR936976           Date 13Apr12               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -210,7 +212,8 @@
       *                                                                                       CRE008
       * User check programm - Extended use                                                    CRE008
       *                                                                                       CRE008
-     FMEECHKPD  IT   F   15        DISK
+     F*MEECHKPD* IT   F   15        DISK                                                    MD058081
+     FMECHKJW0  IT   F   15        DISK                                                     MD058081
       *
       * SD Country codes                                                                      CFT004
       *                                                                                       CFT004
@@ -231,7 +234,8 @@
      D HK6             S            100    DIM(28)
      D @CK             S             15    DIM(200) FROMFILE(MEUCHKPD)
      D                                     PERRCD(1)
-     D @CE             S             15    DIM(200) FROMFILE(MEECHKPD)
+     D*@CE******       S             15    DIM(200) FROMFILE(MEECHKPD)                      MD058081
+     D @CE             S             15    DIM(200) FROMFILE(MECHKJW0)                      MD058081
      D                                     PERRCD(1)
      D/COPY WNCPYSRC,ME1501E001
      D*COPY*ZSRSRC,ZDATE1Z1                                                                 MD056560

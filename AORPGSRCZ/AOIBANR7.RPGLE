@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW213             Date 03Jun13               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW213             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -26,6 +27,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013                                  *
       *  CRE026 - Consumer Banking (Recompile)                        *
@@ -71,7 +73,8 @@
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
       ** Country Codes table data
       *
-     D MEISOC        E DS                  EXTNAME(MEISOCPD)                                  CSW213
+     D*MEISOC***     E DS                  EXTNAME(MEISOCPD)                         CSW213 MD058081
+     D MEISOC        E DS                  EXTNAME(MEISOJW0)                                MD058081
       ** ISO country codes                                                                    CSW213
       *                                                                                       CSW213
      D DSFDY         E DS                  EXTNAME(DSFDY)

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051679           Date 09Nov18               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD051679           Date 09Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW213             Date 03Jun13               *
       *                 MD000091           Date 15May13               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD051679 - Added clear before reading SDNOSTPD to ensure that*
@@ -147,7 +149,7 @@
                                                                                               CFT032
       ** Midas ME SWIFT ISO country codes                                                     CFT032
                                                                                               CFT032
-     FMEISOCL1  IF   E           K Disk                                                       CFT032
+     F*MEISOCL1* IF   E           K Disk                                             CFT032 MD058081
                                                                                               CFT032
       *                                                                                       250600
      FSDJACCL3  IF   E           K DISK    INFSR(*PSSR)                                       250600
@@ -298,6 +300,8 @@
                                                                                               CSW207
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                  CSW207
                                                                                               CSW207
+     D MEISOC        E DS                  EXTNAME(MEISOJW0)                                MD058081
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD058081
       ** #SODMT Data Structure                                                                CFT032
                                                                                               CFT032
      D #SODMT          DS                                                                     CFT032
@@ -583,8 +587,14 @@
      C     SDCTRY        Parm      SDCTRY        DSSDY                                        CFT032
                                                                                               CFT032
      C                   If        @RtCD = *Blanks                                            CFT032
-     C     A4ISOC        Chain     MEISOCL1                                                   CFT032
-     C                   If        %Found( MEISOCL1 )                                         CFT032
+     C*****A4ISOC        Chain     MEISOCL1                                          CFT032 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      A4ISOC        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
+     C**********         If        %Found( MEISOCL1 )                                CFT032 MD058081
+     C     @RTCD         IFEQ      *BLANKS                                                  MD058081
      C                   Eval      WSendFTAF = M3FATF                                         CFT032
      C                   EndIf                                                                CFT032
      C                   EndIf                                                                CFT032
@@ -640,8 +650,14 @@
                                                                                               CFT032
      C                   EndSl                                                                CFT032
                                                                                               CFT032
-     C     WFTAFCountry  Chain     MEISOCL1                                                   CFT032
-     C                   If        %Found( MEISOCL1 )                                         CFT032
+     C*****WFTAFCountry  Chain     MEISOCL1                                          CFT032 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      A4ISOC        @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
+     C**********         If        %Found( MEISOCL1 )                                CFT032 MD058081
+     C     @RTCD         IFEQ      *BLANKS                                                  MD058081
      C                   Eval      WDestFTAF = M3FATF                                         CFT032
      C                   EndIf                                                                CFT032
                                                                                               CFT032

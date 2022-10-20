@@ -22,8 +22,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059141           Date 26Oct21               *
-      *  Prev Amend No. MD059065           Date 15Oct21               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD059867           Date 03May22               *
+      *                 MD059141           Date 26Oct21               *
+      *                 MD059065           Date 15Oct21               *
       *                 MD058988           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058513           Date 09Sep21               *
@@ -43,6 +45,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD059867 - Calculator fails when RFR used is ESTR and calcu- *
+      *             lation method is simple ARR due to Calculator     *
+      *             not supporting ESTR for the specific calc method. *
+      *             Add a new validation rule to allow only SOFR and  *
+      *             SONIA for this calc method.                       *
       *  MD059141 - SIRS Transaction accepting NCCR and SARR on       *
       *             'Their Details'                                   *
       *  MD059065 - IR020 fields/values not auto-populating when      *
@@ -107,7 +115,7 @@
       ** +--------------------------------------+
 
       ** ARR Calculator Parameter Details File
-     FSDLIBRTD  IF   E           K DISK    INFSR(*PSSR)
+     F*SDLIBRTD* IF   E           K DISK    INFSR(*PSSR)                                    MD060008
 
       ** Lending Loans File
      F***LECLIPL2  IF   E           K DISK    INFSR(*PSSR)                                  MD057934
@@ -160,6 +168,7 @@
       ** DS for Base Rate Details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
 
+     D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD060008
       ** DS for Loan Details
      D***CLOANL        E DS                  EXTNAME(LECLIPL2:*INPUT)                       MD057934
      D***                                     PREFIX(CL)                                    MD057934
@@ -612,8 +621,15 @@
 
      C                   EVAL      KSCRFLD = 'RFR'
      C                   EVAL      KINTVAL = DDRFRR
-     C     KLIBR         CHAIN     SDLIBRTD
-     C                   IF        NOT %FOUND(SDLIBRTD)
+     C*****KLIBR         CHAIN     SDLIBRTD                                                 MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDLIBR                                                                        MD060008
+     C+ from SDLIBJW0                                                                       MD060008
+     C+ where SCRFLD = :KSCRFLD and INTVAL = :KINTVAL                                       MD060008
+     C/END-EXEC                                                                             MD060008
+     C**********         IF        NOT %FOUND(SDLIBRTD)                                     MD060008
+     C                   If        SQLCODE = 100                                            MD060008
      C                   EVAL      DDRFRROK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI
@@ -709,8 +725,16 @@
 
      C                   EVAL      KSCRFLD = 'METHOD'
      C                   EVAL      KINTVAL = DDCALM
-     C     KLIBR         CHAIN     SDLIBRTD
-     C                   IF        NOT %FOUND(SDLIBRTD)
+     C*****KLIBR         CHAIN     SDLIBRTD                                                 MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDLIBR                                                                        MD060008
+     C+ from SDLIBJW0                                                                       MD060008
+     C+ where SCRFLD = :KSCRFLD and INTVAL = :KINTVAL                                       MD060008
+     C/END-EXEC                                                                             MD060008
+     C                   EVAL      DDRFRROK = 'N'
+     C**********         IF        NOT %FOUND(SDLIBRTD)                                     MD060008
+     C                   If        SQLCODE = 100                                            MD060008
      C                   EVAL      DDCALMOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -772,6 +796,28 @@
      C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049407'
      C                   ENDIF
+      ** Do not allow other risk free rates aside from 'SOFR' and 'SONIA'                   MD059867
+      ** when calculation method is Simple ARR                                              MD059867
+      *                                                                                     MD059867
+     C                   IF        DDBLRT = 'Y'                                             MD059867
+     C                   IF        ( DDCALM =  'SARR' AND                                   MD059867
+     C                               DDRFRR <> 'SONIA     ' AND                             MD059867
+     C                               DDRFRR <> 'SOFR      ' )                               MD059867
+     C                   EVAL      DDCALMOK = 'N'                                           MD059867
+     C                   EVAL      Idx += 1                                                 MD059867
+     C                   EVAL      MsgIdXAr(Idx) = '5049539'                                MD059867
+     C                   SELECT                                                             MD059867
+     C                   WHEN      ApiName = 'LERI'                                         MD059867
+     C                   EVAL      FldNamXAr(Idx) = 'DDNCALM'                               MD059867
+     C                   WHEN      ApiName = 'CIR1' OR ApiName = 'SIR1'                     MD059867
+     C                   EVAL      FldNamXAr(Idx) = 'SUCALM'                                MD059867
+     C                   WHEN      ApiName = 'CIR2' OR ApiName = 'SIR2'                     MD059867
+     C                   EVAL      FldNamXAr(Idx) = 'STCALM'                                MD059867
+     C                   OTHER                                                              MD059867
+     C                   EVAL      FldNamXAr(Idx) = 'DDCALM'                                MD059867
+     C                   ENDSL                                                              MD059867
+     C                   ENDIF                                                              MD059867
+     C                   ENDIF                                                              MD059867
 
      C                   IF        DDCALMOK <> 'N'
      C                   MOVE      DDCALM        VCALM
@@ -1697,8 +1743,15 @@
 
      C                   EVAL      KSCRFLD = 'DAYCOUNT'
      C                   EVAL      KINTVAL = DDDBAV
-     C     KLIBR         CHAIN     SDLIBRTD
-     C                   IF        NOT %FOUND(SDLIBRTD)
+     C*****KLIBR         CHAIN     SDLIBRTD                                                 MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDLIBR                                                                        MD060008
+     C+ from SDLIBJW0                                                                       MD060008
+     C+ where SCRFLD = :KSCRFLD and INTVAL = :KINTVAL                                       MD060008
+     C/END-EXEC                                                                             MD060008
+     C**********         IF        NOT %FOUND(SDLIBRTD)                                     MD060008
+     C                   If        SQLCODE = 100                                            MD060008
      C                   EVAL      DDDBAVOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172

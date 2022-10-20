@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059424           Date 29Mar22               *
-      *  Prev Amend No. MD059375           Date 20Dec21               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD059424           Date 29Mar22               *
+      *                 MD059375           Date 20Dec21               *
       *                 MD059270           Date 16Dec21               *
       *                 MD059253           Date 19Nov21               *
       *                 CIR020             Date 02Aug21               *
@@ -38,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  249385 - Ensure input fields ZDAYNO keeps original value     *
+      *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD059424 - Calculator returned rates for previous period of  *
       *             deal defined with forward rate prior to amending  *
       *             the rate into backward-looking. Pass the new      *
@@ -120,7 +125,7 @@
       *****************************************************************
 
       ** ARR Calculator Parameter Details File
-     FSDLIBRTD  IF   E           K DISK    INFSR(*PSSR)
+     F*SDLIBRTD* IF   E           K DISK    INFSR(*PSSR)                                    MD060008
 
       *****************************************************************
       /EJECT
@@ -284,6 +289,7 @@
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
+     D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD060008
 
       *****************************************************************
       /EJECT
@@ -1333,16 +1339,39 @@
       ** Publication Time in an array
      C                   EVAL      Idx = 1
      C                   EVAL      KRFRR = 'RFR'
-     C     KRFRR         SETLL     SDLIBRTD
-     C     KRFRR         READE     SDLIBRTD
-     C                   DOW       NOT %EOF(SDLIBRTD)
+     C*****KRFRR         SETLL     SDLIBRTD                                                 MD060008
+     C*****KRFRR         READE     SDLIBRTD                                                 MD600008
+     C/EXEC SQL                                                                             MD060008
+     C+ declare ACursor insensitive scroll cursor for                                       MD060008
+     C+ select * from SDLIBJW0                                                              MD060008
+     C+ where SCRFLD = 'RFR'                                                                MD060008
+     C+ order by INTVAL                                                                     MD060008
+     C/END-EXEC                                                                             MD060008
+                                                                                            MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ open ACursor                                                                        MD060008
+     C/END-EXEC                                                                             MD060008
+                                                                                            MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ fetch next from ACursor into :SDLIBR                                                MD060008
+     C/END-EXEC                                                                             MD060008
+                                                                                            MD060008
+     C***********        DOW       NOT %EOF(SDLIBRTD)                                       MD060008
+     C                   DOW       SQLCODE = 0                                              MD060008
      C                   EVAL      ArrRFR(Idx) = INTVAL
      C                   EVAL      ArrPubLag(Idx) = PUBLAG
      C                   EVAL      ArrPubTim(Idx) = PUBTIM
      C                   EVAL      Idx = Idx + 1
-     C     KRFRR         READE     SDLIBRTD
+     C*****KRFRR         READE     SDLIBRTD                                                 MD600008
+     C/EXEC SQL                                                                             MD060008
+     C+ fetch next from ACursor into :SDLIBR                                                MD060008
+     C/END-EXEC                                                                             MD060008
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD060008
+     C+ close ACursor                                                                       MD060008
+     C/END-EXEC                                                                             MD060008
+                                                                                            MD060008
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG2145 - Use variables to hold the values of the subfile    *
@@ -53,9 +55,9 @@
      F**********                           INFSR(*PSSR)                                     MD056560
       * RTV : Midas SD Message field tag description retrieval
       *
-     FSDMTPYL1  IF   E           K DISK    USROPN
-     F                                     INFDS(ID0001)
-     F                                     INFSR(*PSSR)
+     F*SDMTPYL1* IF   E           K DISK    USROPN                                          MD060008
+     F**********                           INFDS(ID0001)                                    MD060008
+     F**********                           INFSR(*PSSR)                                     MD060008
       * RTV : Midas¦ABS SD Message type descriptions retrieval
       *
      F*SDMTAGL0* UF A E           K DISK    USROPN                                          MD056560
@@ -204,6 +206,7 @@
       * Report/Telex Field Desc.
      D  ZA0006                 1     60
      D SDMTAG        E DS                  EXTNAME(SDMTGJW0)                                MD056560
+     D SDMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -1534,8 +1537,15 @@
      C                   KFLD                    EEMTPY                         Message Type
       * Setup key
      C                   MOVEL     #1MTPY        EEMTPY                         Message Type
-     C     KLVAEE        CHAIN     @EEREJ2                            9091      *
-     C     *IN90         IFEQ      '0'
+     C*****KLVAEE        CHAIN     @EEREJ2                            9091      *           MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDMTPY                                                                        MD060008
+     C+ from SDMTYJW0                                                                       MD060008
+     C+ where EEMTPY = :EEMTPY                                                              MD060008
+     C/END-EXEC                                                                             MD060008
+     C******IN90         IFEQ      '0'                                                      MD060008
+     C     SQLCODE       IFEQ      0                                                        MD060008
       * Record found - move back any virtuals
      C                   GOTO      VAEXIT
      C                   END
@@ -1642,6 +1652,10 @@
      CSR   ZXEXIT        ENDSR
       /EJECT
      CSR   ZYEXPG        BEGSR
+     C/EXEC SQL                                                                             MD060008
+     C+ close ACursor                                                                       MD060008
+     C/END-EXEC                                                                             MD060008
+                                                                                            MD060008
       *================================================================
       * Exit program: Direct
       *================================================================
@@ -1783,7 +1797,7 @@
      C                   PARM                    ZZFQL            21            LIBRARY/FILE
      C                   OPEN      SD2040M#
      C**********         OPEN      SDMTAGL1                                                 MD056560
-     C                   OPEN      SDMTPYL1
+     C**********         OPEN      SDMTPYL1                                                 MD060008
      C**********         OPEN      SDMTAGL0                                                 MD056560
      C                   OPEN      SDFCTLL0
      C                   MOVEL     'N'           W0PMT             1

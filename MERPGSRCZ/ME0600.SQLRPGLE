@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD057490           Date 22Feb21               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD057490           Date 22Feb21               *
       *                 MD052485           Date 02Apr19               *
       *                 MD051910           Date 02Apr19               *
       *                 CSW218             Date 19Mar18               *
@@ -97,6 +98,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD057490 - MT202 Incorrect Bank Name in 57 field.            *
       *           - Use the correct message sequence in file MGOEXTPD *
@@ -259,7 +261,7 @@
      F/COPY WNCPYSRC,ME0600F001
      FMGOMSGPD  IF   E           K DISK
      FMGOEXTLF  IF   E           K DISK                                         183583
-     FSDMTPYL0  IF   E           K DISK
+     F*SDMTPYL0* IF   E           K DISK                                                    MD060008
      F*SDMTAGL0* IF   E           K DISK                                                    MD056560
      FSDMMODPD  IF   E             DISK
      FSDBRCHL5  IF   E           K DISK
@@ -679,6 +681,7 @@
       *                                                                                       CSD015
      D SDSTAT        E DS                  EXTNAME(SDSTAT)
      D SDMTAG        E DS                  EXTNAME(SDMTGJW0)                                MD056560
+     D SDMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
       ** SD data area                                                                         CSD015
      I/COPY WNCPYSRC,ME0600I006
       *                                                                                       CSD015
@@ -1395,8 +1398,15 @@
      C                   WRITE     ME0600F2
      C                   ADD       1             RRN
       *
-     C     MTPY          CHAIN     SDMTPYL0                           96
-     C     *IN96         IFEQ      '1'                                                     1
+     C*****MTPY*         CHAIN     SDMTPYL0                           96                    MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDMTPY                                                                        MD060008
+     C+ from SDMTYJW0                                                                       MD060008
+     C+ where EEMTPY = :MTPY                                                                MD060008
+     C/END-EXEC                                                                             MD060008
+     C******IN96         IFEQ      '1'                                                     1MD060008
+     C     SQLCODE       IFNE      0                                                        MD060008
      C                   MOVEL     TXT(15)       @TYP
      C                   ELSE                                                             X1
      C                   MOVEL     EEMTPD        @TYP

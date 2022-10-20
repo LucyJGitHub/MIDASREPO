@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD058769 *REDUNDANTDate 21Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -56,19 +58,19 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas SD Standing Data Control File
      FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas SD Narrative Codes File
      FSDNARRL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas SD Narrative Codes Acceptance File
      FSDANARL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -87,16 +89,16 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -105,12 +107,12 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -118,39 +120,39 @@
       *
       ** Midas SD Narrative Codes Acceptance file
      D Ds_AcceptFile E DS                  ExtName(SDANARPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       ** Entry Parameters
- 
+
      D PData           S           4000A
      D PRetCode        S              7A
      D PProgram        S             10A
- 
+
      D p_Cmd           S             13A
      D p_CmdLen        S             15  5 Inz(%Len(p_Cmd))
- 
+
      D w_NarCod        S                   Like(ALNVCD)
      D w_ALAACC        S                   Like(ALAACC)
      D w_ALDON         S                   Like(ALDON)
      D w_Action        S              1A
- 
+
      D v_Count         S              3  0
- 
+
      D i_Success       S               N
- 
+
      D c_Yes           C                   Const('Y')
      D c_Insert        C                   Const('I')
      D c_Amend         C                   Const('A')
      D c_AcceptEffDte  C                   Const('SDC000061')
      D c_File          C                   Const('SDNARRPD  ')
      D c_DelayJob      C                   Const('DLYJOB DLY(1)')
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -161,36 +163,36 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       *  MAIN PROCEDURE                                               *
       *****************************************************************
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C                   EVAL      Ds_AcceptFile = PData
      C                   EVAL      w_NarCod = ALNVCD
      C                   EVAL      w_ALAACC = ALAACC
      C                   EVAL      w_ALDON  = ALDON
- 
+
      C                   IF        ALAACC = c_Yes or
      C                             PProgram = c_AcceptEffDte
      C                   EXSR      SrZone
      C                   ELSE
      C                   EXSR      SrAccp
      C                   ENDIF
- 
+
       ** Commit changes if there are no errors
- 
+
      C                   IF        PRetCode = *Blanks
      C                   COMMIT
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *On
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -202,19 +204,19 @@
       *  Calls: Sr_UpdNarCod / Sr_UpdTrailr                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SrZone        BEGSR
- 
+
       ** Update Narrative Code
- 
+
      C                   EXSR      Sr_UpdNarCod
- 
+
       ** Update Trailer File
- 
+
      C                   EXSR      Sr_UpdTrailr
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -226,25 +228,25 @@
       *  Calls: SrQcmd                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     Sr_UpdNarCod  BEGSR
- 
+
       ** Update Narrative code with data from Acceptance File
       ** ...retry file processing until successful or until loop
       **    count is 100
- 
+
      C                   DO        100           v_Count
- 
+
       ** ...only process delay when error is encountered, that is
       **    when loop is iterated
- 
+
      C                   IF        v_Count > 1
      C                   EXSR      SrQcmd
      C                   ENDIF
- 
+
       ** ...if there are errors, iterate and start anew with processing
       **    until updates are successful
- 
+
      C     w_NarCod      CHAIN(e)  @ALRECZ
      C                   IF        %Error
      C                   ITER
@@ -260,9 +262,9 @@
      C                   ITER
      C                   ENDIF
      C                   EVAL      w_Action = c_Amend
- 
+
      C                   ELSE
- 
+
      C                   EVAL      Ds_AcceptFile = PData
      C                   EVAL      ALLCD  = BJRDNB
      C                   EVAL      ALTYLC = c_Insert
@@ -273,15 +275,15 @@
      C                   ENDIF
      C                   EVAL      w_Action = c_Insert
      C                   ENDIF
- 
+
       ** ...if the program reaches this point, no errors
       **    were encountered
- 
+
      C                   EVAL      i_Success = *On
      C                   LEAVE
- 
+
      C                   ENDDO
- 
+
      C                   IF        i_Success = *Off
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDNARRL0'
@@ -294,9 +296,9 @@
      C                   EVAL      PRetCode = '*ERROR'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -308,24 +310,24 @@
       *  Calls: SrQcmd                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     Sr_UpdTrailr  BEGSR
- 
+
       ** Update Trailer File
       ** ...retry file processing until successful or until loop
       **    count is 100
- 
+
      C                   DO        100           v_Count
- 
+
       ** ...only process delay when error is encountered, that is
       **    when loop is iterated
- 
+
      C                   IF        v_Count > 1
      C                   EXSR      SrQcmd
      C                   ENDIF
- 
+
       ** ...check if file is existing in trailer file
- 
+
      C     c_File        CHAIN(e)  @AHREAU
      C                   IF        Not %Found(SDFCTLL0)
      C     *LOCK         IN        LDA
@@ -337,14 +339,14 @@
      C                   EVAL      DBPROC =  'SR/Sr_UpdTrailr'
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSEIF    %Error
      C                   ITER
      C                   ENDIF
- 
+
       ** ...update necessary fields based on action performed in
       **    facility update routine
- 
+
      C                   IF        w_Action = c_Insert
      C                   EVAL      AHNORC = AHNORC + 1
      C                   EVAL      AHNOIN = AHNOIN + 1
@@ -355,15 +357,15 @@
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
- 
+
       ** ...if the program reaches this point, no errors were
       **    encountered
- 
+
      C                   EVAL      i_Success = *On
      C                   LEAVE
- 
+
      C                   ENDDO
- 
+
      C                   IF        i_Success = *Off
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDFCTLL0'
@@ -376,9 +378,9 @@
      C                   EVAL      PRetCode = '*ERROR'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -390,25 +392,25 @@
       *  Calls: SrQcmd                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAccp        BEGSR
- 
+
       ** Update Acceptance File
       ** ...retry file processing until successful or until loop
       **    count is 100
- 
+
      C                   DO        100           v_Count
- 
+
       ** ...only process delay when error is encountered, that is
       **    when loop is iterated
- 
+
      C                   IF        v_Count > 1
      C                   EXSR      SrQcmd
      C                   ENDIF
- 
+
       ** ...if there are errors, iterate and start anew with processing
       **    until updates are successful
- 
+
      C     w_NarCod      CHAIN(e)  SDNARRD0
      C                   IF        %Error
      C                   ITER
@@ -425,15 +427,15 @@
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** ...if the program reaches this point, no errors
       **    were encountered
- 
+
      C                   EVAL      i_Success = *On
      C                   LEAVE
- 
+
      C                   ENDDO
- 
+
      C                   IF        i_Success = *Off
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDANARL0'
@@ -446,9 +448,9 @@
      C                   EVAL      PRetCode = '*ERROR'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -460,15 +462,15 @@
       *  Calls: QCMDEXC                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SrQcmd        BEGSR
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM      c_DelayJob    p_Cmd
      C                   PARM                    p_CmdLen
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -480,25 +482,25 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    PData
      C                   PARM                    PRetCode
      C                   PARM                    PProgram
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Datebase error
- 
+
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBANKPD'
      C                   EVAL      DBKEY  =  @OPTN
@@ -508,11 +510,11 @@
      C                   EVAL      DBPROC =  'SR/*INZSR '
      C                   EXSR      *PSSR
      C                   OUT       LDA
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -527,22 +529,22 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   ROLBK
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+

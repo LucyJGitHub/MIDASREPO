@@ -10,8 +10,9 @@
 0007  *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD059871           Date 18May22               *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD059871           Date 18May22               *
       *                 MD058764           Date 06Oct21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055528           Date 13Aug20               *
@@ -97,6 +98,7 @@
 0011  *                                                               *
 0012  *****************************************************************
       *                                                               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  CLE138 - Class Codes for Facilities                          *
       *  MD059871 - Profit Center of the journal entry is different   *
       *             from the profit center of the retail account.     *
@@ -115,7 +117,7 @@
       *             Removed 238728 since warning msg is being shown   *
       *             during insert of batch if retail/nostro and profit*
       *             centre does not match value in ACCNTAB.           *
-      *  MD045515 - Real-time postings resulted in duplicate movements* 
+      *  MD045515 - Real-time postings resulted in duplicate movements*
       *             in Midas. Remove fix MD037046.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
@@ -290,7 +292,7 @@
 0016 F*GLBTREL0IF  E           K        DISK                       S01154 S01229
 0016 FGLJENPL0IF  E           K        DISK                               S01229
      F/COPY OFCPYSRCZ,CGL135_082                                                             CGL135B
-     FSDNARRL1IF  E           K        DISK                               E19312
+     F*SDNARRL1IF  E           K        DISK                               E19312           MD058769
      FACCNT   IF  E           K        DISK                               090139
      F            ACCNTAAF                          KIGNORE               090139
      F            ACCNTACF                          KIGNORE               090139
@@ -464,9 +466,9 @@
      I              BTBKCD                          BOKCA                 S10736
      I              BTNITM                          NITMS                 S01413
       *                                                                   CCB003
-     I@ALREC0                                                             E19312
+     I*@ALREC0**                                                           E19312           MD058769
      I*********     ALANTX                          PNAR1           E19312S01194
-     I              ALDON                           PNAR1                 S01194
+     I**********    ALDON                           PNAR1                 S01194            MD058769
       *                                                                   CCB003
 0042 I*****TABLE*FILE*-*INSTALLATION*CONTROL RECORD 1                     S01194
 0043 I***********                                                         S01194
@@ -676,6 +678,7 @@
      I*SECOND DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE                BHF794
      I*                                                                   BHF794
      I*                                                                   S01408
+     ISDNARR    E DSSDNARRPD                                                                MD058769
       ** Commitment control size                                                            CGL127AM
       *                                                                                     CGL127AM
      ICBTASK    E DSCBTASKSP                                                                CGL127AM
@@ -1174,11 +1177,22 @@
      C/COPY WNCPYSRC,GL0260CCP4                                           S01408
      C*                                                                   S01408
      C           NARC      IFNE '  '                                      E19312
-     C           NARC      CHAINSDNARRL1             65                   E19312
+     C********** NARC      CHAINSDNARRL1             65                   E19312            MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM NARC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    DSFDY                                             MD058769
+     C                     SETOF                     65                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     65                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C           *IN65     IFEQ '1'                                       E19312
      C                     MOVELDELT,1    PNAR                            E19312
      C                     ELSE                                           E19312
-     C                     MOVELPNAR1     PNAR                            E19312
+     C**********           MOVELPNAR1     PNAR                            E19312            MD058769
+     C                     MOVELALDON     PNAR                                              MD058769
      C                     END                                            E19312
      C                     END                                            E19312
      C/COPY WNCPYSRC,GL0260C026
@@ -1471,7 +1485,7 @@
      C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     ANDEQ'0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
-     C           VALD      ANDEQ*ZERO                                                       MD055528     
+     C           VALD      ANDEQ*ZERO                                                       MD055528
      C                     Z-ADDHQBDTE    VALD                                                CSC054
      C                     ENDIF                                                              CSC054
      C*                                                                   S01408
@@ -1769,7 +1783,7 @@
      C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     ANDEQ'0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
-     C           VALD      ANDEQ*ZERO                                                       MD055528     
+     C           VALD      ANDEQ*ZERO                                                       MD055528
      C                     Z-ADDHQBDTE    VALD                                                CSC054
      C                     ENDIF                                                              CSC054
       *                                                                   087773
@@ -1946,7 +1960,7 @@
      C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     ANDEQ'0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
-     C           VALD      ANDEQ*ZERO                                                       MD055528    
+     C           VALD      ANDEQ*ZERO                                                       MD055528
      C                     Z-ADDHQBDTE    VALD                                                CSC054
      C                     ENDIF                                                              CSC054
       *                                                                   087773
@@ -2087,7 +2101,7 @@
      C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     ANDEQ'0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
-     C           VALD      ANDEQ*ZERO                                                       MD055528  
+     C           VALD      ANDEQ*ZERO                                                       MD055528
      C                     Z-ADDHQBDTE    VALD                                                CSC054
      C                     ENDIF                                                              CSC054
       *                                                                   087773

@@ -9,23 +9,25 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058769 *REDUNDANTDate 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG12604           Date 10Nov06              */
+/*                      BUG12604           Date 10Nov06              */
 /*                      CSD031  *CREATE    Date 10Apr06              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058769 - Deliverable Data Split for SDNARRPD and TABLETP  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG12604 - SDC000061 00001 Failed                           */
 /*       CSD031 - Enhanced Centralised Standing Data                 */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CMPNAM &CMPSEQ)
- 
+
              DCL        VAR(&CMPNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CMPSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&CMPSTS) TYPE(*CHAR) LEN(1)
@@ -35,36 +37,36 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2006')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              SNDPGMMSG  MSG('SDC000061 - Central Data Acceptance on +
                           Effective Date') TOMSGQ(MRUNQ)
- 
- 
+
+
 /* Commitment Control    */
- 
+
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
              MONMSG     MSGID(CPF0000)
- 
+
              CHGVAR     VAR(%SST(*LDA 1 512)) VALUE(' ')
- 
+
              CHGJOB     SWS(XXXXXXXX)
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSPRF)
- 
+
 /**********  CHGVAR     VAR(&DPLIB) VALUE(&SYSPRF *CAT 'DMLIB') */                      /*BUG12604*/
              CHGVAR     VAR(&DPLIB) VALUE(&SYSPRF *CAT 'DPLIB')                         /*BUG12604*/
- 
+
              CALL       PGM(CB0160) PARM(&CMPNAM &CMPSEQ &CMPSTS)
- 
+
              IF         COND(&CMPSTS *NE 'Y') THEN(DO)
- 
+
 /* Acceptance files */
- 
+
              DLTF       FILE(&DPLIB/XSDAACDPD)
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(&DPLIB/XSDAAKYPD)
@@ -103,9 +105,9 @@
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(&DPLIB/XSDALENPD)
              MONMSG     MSGID(CPF2105)
- 
+
 /* Standing Data Files and Controls */
- 
+
              DLTF       FILE(&DPLIB/XSDACODPD)
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(&DPLIB/XSDFCTLPA)
@@ -190,9 +192,9 @@
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(&DPLIB/XSDLENOPD)
              MONMSG     MSGID(CPF2105)
- 
+
 /* Backup the following acceptance files */
- 
+
              CPYF       FROMFILE(SDAACDPD) TOFILE(&DPLIB/XSDAACDPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817)
@@ -250,9 +252,9 @@
              CPYF       FROMFILE(SDALENPD) TOFILE(&DPLIB/XSDALENPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817)
- 
+
 /* Backup the following Standing Data Files and controls */
- 
+
              CPYF       FROMFILE(SDACODPD) TOFILE(&DPLIB/XSDACODPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817)
@@ -379,11 +381,11 @@
              CPYF       FROMFILE(SDLENOPD) TOFILE(&DPLIB/XSDLENOPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              ENDDO
- 
+
              IF         COND(&CMPSTS *EQ 'Y') THEN(DO)
- 
+
 /* Copy the following X-Acceptance files */
- 
+
              CPYF       FROMFILE(XSDAACDPD) TOFILE(&DPLIB/SDAACDPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817)
@@ -441,9 +443,9 @@
              CPYF       FROMFILE(XSDALENPD) TOFILE(&DPLIB/SDALENPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817)
- 
+
 /* Copy the following X-SD files and Controls */
- 
+
              CPYF       FROMFILE(XSDACODPD) TOFILE(&DPLIB/SDACODPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817)
@@ -571,38 +573,38 @@
                           MBROPT(*REPLACE) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817)
              ENDDO
- 
+
              CHGVAR     VAR(&CMPSTS) VALUE('Y')
- 
+
              CALL       PGM(CB0150) PARM(&CMPNAM &CMPSEQ &CMPSTS)
- 
+
              CALL       PGM(SD000061)
- 
+
              IF         COND(%SWITCH(XXXXXXXX)) THEN(DO)
              CHGVAR     VAR(&CMPSTS) VALUE('N')
              CALL       PGM(CB0150) PARM(&CMPNAM &CMPSEQ &CMPSTS)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MSG)
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MSG) +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
- 
+
              CHGJOB     SWS(XXXXXX11)
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000)
              SNDPGMMSG  MSG('Program SDC000061 ended abnormally - +
                             see job log.') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
                           Limited 2006')
- 
+
              ENDPGM

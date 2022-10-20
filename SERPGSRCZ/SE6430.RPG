@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -63,6 +64,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -166,7 +168,7 @@
      FSDCURRL0IF  E           K        DISK                               48200
      F                                              KINFSR *PSSR          48200
       *
-     FSDNARRL0IF  E           K        DISK                               R00142
+     F*SDNARRL0IF  E           K        DISK                               R00142           MD058769
       *                                                                   R00142
       ** GL Account Master
      FACCNT   IF  E           K        DISK
@@ -287,6 +289,7 @@
      IDSSDY     E DSDSSDY                                                 S01464
      I** Long DS for access programs                                      S01464
      I*                                                                   S01464
+     ISDNARR    E DSSDNARRPD                                                                MD058769
       *                                                                   179044
       ** SAR File Details Accessed via access program AOSARDR0            179044
       *                                                                   179044
@@ -1805,7 +1808,17 @@
       **   Write the narrative code to chain in sdnarrl0                  R00142
      C                     MOVE 'C5'      C5VAR   2                       R00142
      C*                                                                   S01464
-     C           C5VAR     CHAINSDNARRL0             83                   S01464
+     C********** C5VAR     CHAINSDNARRL0             83                   S01464            MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM C5VAR     @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    DSFDY                                             MD058769
+     C                     SETOF                     83                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     83                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C*                                                                   S01464
      C           *IN83     IFEQ '1'                                       S01464
      C           *LOCK     IN   LDA                                       S01464

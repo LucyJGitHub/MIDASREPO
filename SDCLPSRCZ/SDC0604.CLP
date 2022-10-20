@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058755           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BG12497            Date .  20NOV             */
+/*                      BG12497            Date .  20NOV             */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CDL002             Date .  24APR             */
@@ -34,6 +35,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG12497 -  SD0630 made redundant.                          */
 /*       CDL002  -  FX Netting                                      */
@@ -63,12 +65,12 @@
              DCL        &USER         TYPE(*CHAR)  LEN(10)
              DCL        &DATE         TYPE(*CHAR)  LEN(6)
              DCL        &MSG          TYPE(*CHAR)  LEN(75)
- 
+
 /**********  DCLDTAARA  DTAARA(MMOD)                                *  *S01179*/
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)               /*S01179*/
 /**********  RCVDTAARA  DTAARA(MMOD)                                *  *S01179*/
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)                    /*S01179*/
- 
+
 /*                                                                  */
              RTVJOBA    JOB(&JOB)  USER(&USER)  DATE(&DATE)
 /********************************************************************/
@@ -279,9 +281,9 @@
 /* */
 /*  Override the TABLE file for use within the called program                 */
 /* */
-             OVRDBF     FILE(TABLE) TOFILE(TABSDM)
-             OVRDBF     FILE(TABLEI) TOFILE(TABSDM)
-             OVRDBF     FILE(TABLEU) TOFILE(TABSDM)
+/**********  OVRDBF     FILE(TABLE) TOFILE(TABSDM) */                                   /*MD058755*/
+/**********  OVRDBF     FILE(TABLEI) TOFILE(TABSDM) */                                  /*MD058755*/
+/**********  OVRDBF     FILE(TABLEU) TOFILE(TABSDM) */                                  /*MD058755*/
                    CHGJOB     SWS(01000000)                           /*S01263*/
 /* */
                CHGVAR     &MSG VALUE(' COUNTERPARTY NOSTROS LIST EXECUTING')
@@ -450,7 +452,7 @@
 /*                                                           */
 /* */                                                                 /*S01263*/
              IF         (&PRM01 *EQ 'SD0634') THEN(DO)
- 
+
              IF         COND(%SUBSTRING(&MMOD 6 1) *NE 'Y') THEN(DO)
 /*              SNDMSG MSG('Letters of Credit not on +              *  *E80830*/
 /*              system.') TOMSGQ(&JOB)                              *  *E80830*/
@@ -458,14 +460,14 @@
                 system.') TOMSGQ(MRUNQ)                               /*E80830*/
                 GOTO ENDCLPGM
              ENDDO
- 
+
                 CHGVAR     &MSG VALUE(' COLLATERAL CODES LIST +
                 EXECUTING')
                 GOTO ENDCHECK
  ENDD033:    ENDDO
 /* */
              IF         (&PRM01 *EQ 'SD0636') THEN(DO)
- 
+
              IF         COND(%SUBSTRING(&MMOD 6 1) *NE 'Y') THEN(DO)
 /*                        SNDMSG MSG('Letters of Credit not on +    *  *E80830*/
 /*                        system.') TOMSGQ(&JOB)                    *  *E80830*/
@@ -473,7 +475,7 @@
                 system.') TOMSGQ(MRUNQ)                               /*E80830*/
              GOTO ENDCLPGM
              ENDDO
- 
+
                 CHGVAR     &MSG VALUE(' GOODS CODES LIST EXECUTING')
                 GOTO ENDCHECK
  ENDD034:    ENDDO

@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD058854           Date 21Oct21               *
+      *  Prev Amend No. MD058755           Date 01Sep21               *
+      *                 MD058815           Date 28Sep21               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037176           Date 09Feb16               *
       *                 MD027119           Date 21May14               *
@@ -56,6 +58,8 @@
      F*                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058854 - Deliverable Data Split for TABLEV4                *
+      *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -146,9 +150,11 @@
      FREHISL  IF  E           K        DISK
      FREHISDL UF  E           K        DISK                                                  CRE090A
      F            REHISPPF                          KRENAMEREHISD1                           CRE090A
-     FTABLETZ IF  E                    DISK
+     F*TABLETZ*IF  E                    DISK                                                MD058755
+     FSDRTRXTDIF  E                    DISK                                                 MD058755
      FTABTBRE IF  E                    DISK
-     FTABLEV4 IF  E                    DISK
+     F*TABLEV4*IF  E                    DISK                                                MD058854
+     FTABV4XTDIF  E                    DISK                                                 MD058854
      FRECCY   IF  E           K        DISK
      F            RECCYAF                           KIGNORE
      F            RECCYZF                           KIGNORE
@@ -413,6 +419,9 @@
      I/COPY ZSRSRC,ZINTDYZ1                                                                  CRE090A
      I/COPY ZSRSRC,ZDATE9Z2                                                                  CRE090A
      I/COPY ZSRSRC,ZDAT10Z1                                                                  CRE090A
+     ITRATDS      DS                                                                        MD058755
+     I                                        1   50XTRAT                                   MD058755
+     I                                        1   5 CTRAT                                   MD058755
       *                                                                   CCB003
      ICBTASK    E DSCBTASKSP                                              CCB003
       ** Commitment control size                                          CCB003
@@ -909,10 +918,12 @@
      C**         details in internal arrays.                          *
      C*                                                               *
      C                     Z-ADD0         I1
-     C           1         SETLLTABLEV4F
+     C********** 1         SETLLTABLEV4F                                                    MD058854
+     C           1         SETLLTABV4XTD                                                    MD058854
      C*
      C           *IN10     DOUEQ'1'
-     C                     READ TABLEV4F                 10
+     C**********           READ TABLEV4F                 10                                 MD058854
+     C                     READ TABV4XTD                 10                                 MD058854
      C           *IN10     IFEQ '0'
      C                     ADD  1         I1
      C                     MOVE GRPKEY    GRP,I1
@@ -937,17 +948,22 @@
      C*                                                               *
      C                     Z-ADD*HIVAL    TRT
      C                     Z-ADD0         I1
-     C           1         SETLLTABLETZF
+     C********** 1         SETLLTABLETZF                                                    MD058755
+     C           1         SETLLSDRTRXT0                                                    MD058755
      C                     SETOF                     10
      C           *IN10     DOUEQ'1'
-     C                     READ TABLETZF                 10
+     C**********           READ TABLETZF                 10                                 MD058755
+     C                     READ SDRTRXTD                 10                                 MD058755
      C           *IN10     IFEQ '0'
-     C           RECI      IFEQ 'D'
-     C           CUOR      IFEQ 'Y'
+     C********** RECI      IFEQ 'D'                                                         MD058755
+     C********** CUOR      IFEQ 'Y'                                                         MD058755
+     C           A1COIN    IFEQ 'Y'                                                         MD058755
+     C                     MOVELA1RTTY    CTRAT                                             MD058755
      C                     ADD  1         I1
-     C                     Z-ADDTRAT      TRT,I1
+     C**********           Z-ADDTRAT      TRT,I1                                            MD058755
+     C                     Z-ADDXTRAT     TRT,I1                                            MD058755
      C                     END
-     C                     END
+     C**********           END                                                              MD058755
      C                     END
      C                     END                             ENDDO
      C*                                                               *

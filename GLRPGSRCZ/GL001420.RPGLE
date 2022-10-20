@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783             Date 28May12               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 223783             Date 28May12               *
       *                 222088             Date 28May12               *
       *                 216936             Date 28May12               *
       *                 212319             Date 28May12               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
@@ -196,7 +198,8 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  Data Structure for Bank Details.
 
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       **  Data Structure for Network Details.
 
      D GLACCNT       E DS                  EXTNAME(ACCNTAB)

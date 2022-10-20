@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 MD055642A          Date 27May20               *
       *                 CMG008             Date 20Feb20               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
       *           (Recompile)                                         *
@@ -192,7 +194,8 @@
      D DSACCT        E DS                  EXTNAME(ACCNTAB) PREFIX(XG)                        223783
       **  Data Structure for Account Details.                                                 223783
                                                                                             BUG26832
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)                                BUG26832
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                       BUG26832 MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       **  Data Structure for Network Description format                                     BUG26832
                                                                                               CRE008
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CRE008

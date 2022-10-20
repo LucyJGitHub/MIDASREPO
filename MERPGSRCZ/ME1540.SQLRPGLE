@@ -16,8 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058890           Date 21Sep21               *
-      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD058081           Date 11May21               *
+      *                 MD058890           Date 21Sep21               *
+      *                 MD056560           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
@@ -70,6 +73,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD058890 - Decimal-data error occurred when inserting new    *
       *             record in Generation Criteria Table Maintenance   *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
@@ -163,7 +169,7 @@
      F** ME User Repair
      F*SDMTAGL1* IF   E           K DISK    INFSR(SRFILE)                                   MD056560
      F**********                           RENAME(@EFREJ5:@MTAGL1)                          MD056560
-     FMEINMVL2  IF   E           K DISK                                                           MD
+     F*MEINMVL2* IF   E           K DISK                                                 MD MD058081
      F** Midas Incoming Valid Messages by Message Type                                      MD020057
      F/EJECT
       *****************************************************************
@@ -346,18 +352,21 @@
      D INFDS1        E DS                  EXTNAME(Y2I1DSP)
      D**  File information data structure
      D*
-     D DSNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*DSNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DSNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
      D**  Data Structures for Network Definition
      D*
      D DSBRCA        E DS                  EXTNAME(SDBRCHPD)
      D**  Data Structures for Branch Definition
      D*
-     D DSMTPY        E DS                  EXTNAME(SDMTPYPD)
+     D*DSMTPY***     E DS                  EXTNAME(SDMTPYPD)                                MD060008
+     D DSMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
      D**  Data Structures for Message Type Definition
      D*
      D*DSMTAG***     E DS                  EXTNAME(SDMTAGPD)                                MD056560
      D DSMTAG        E DS                  EXTNAME(SDMTGJW0)                                MD056560
      D**  Data Structures for Message Tag Definition
+     D MEINMV        E DS                  EXTNAME(MEIVMJW0)                                MD058081
      D*
      D SDDLST        E DS                  EXTNAME(SDDLSTPD)
      D**  Data Structures for Message Tag Definition
@@ -1259,7 +1268,19 @@
      C                   END
      C*
      C                   ELSE
-     C     #HMTPY        SETLL     MEINMVL2                               69
+     C*****#HMTPY        SETLL     MEINMVL2                               69                MD058081
+     C/EXEC SQL                                                                             MD058081
+     C+ SELECT *                                                                            MD058081
+     C+ into :MEINMV                                                                        MD058081
+     C+ from MEIVMJW0                                                                       MD058081
+     C+ where MVMTPY = :#HMTPY                                                              MD058081
+     C+   and MVACPT = '*AUTO'                                                              MD058081
+     C/END-EXEC                                                                             MD058081
+     C                   SETON                                        69                    MD058081
+     C                   IF        SQLCODE = 100                                            MD058081
+     C                   SETOFF                                       69                    MD058081
+     C                   ENDIF                                                              MD058081
+                                                                                            MD058081
      C     *IN69         IFEQ      '1'
      C                   MOVEL     'Y'           OKSTP             1
      C                   ENDIF
@@ -2565,7 +2586,19 @@
      C*                                                                                     MD030369
      C                   MOVE      P@NWRK        #1NWRK
      C*                                                                                     MD030369
-     C     #MTKEY        SETLL     MEINMVL2                               70
+     C*****#MTKEY        SETLL     MEINMVL2                               70                MD058081
+     C/EXEC SQL                                                                             MD058081
+     C+ SELECT *                                                                            MD058081
+     C+ into :MEINMV                                                                        MD058081
+     C+ from MEIVMJW0                                                                       MD058081
+     C+ where MVMTPY = :#1MTPY and MVNWRK = #1NWRK                                          MD058081
+     C+   and MVACPT = '*AUTO'                                                              MD058081
+     C/END-EXEC                                                                             MD058081
+     C                   SETON                                        70                    MD058081
+     C                   IF        SQLCODE = 100                                            MD058081
+     C                   SETOFF                                       70                    MD058081
+     C                   ENDIF                                                              MD058081
+                                                                                            MD058081
      C     *IN70         IFEQ      '0'
      C                   SETON                                        3199
      C                   MOVEL     #1MTPY        ZAMSDA

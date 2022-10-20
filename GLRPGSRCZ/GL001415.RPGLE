@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059392           Date 18Jan22
-      *  Prev Amend No. MD045952           Date 06Jul17               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD059392           Date 18Jan22
+      *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027367           Date 04Jun14               *
       *                 MD025973           Date 25Mar14               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059392 - Preformance issues. Duplcate messages is now      *
       *             processed here instead of GL001415                *
       *  MD045952 - Ensure that COB MT940s only generated if          *

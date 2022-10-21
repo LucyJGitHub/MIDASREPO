@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056313           Date 21Sep20               *      
-      *  Prev Amend No. MD051895           Date 22May19               *
+      *  Last Amend No. MD059046           Date 20Oct22               *
+      *  Prev Amend No. MD056313           Date 21Sep20               *
+      *                 MD051895           Date 22May19               *
       *                 MD053956           Date 29Oct19               *
       *                 MD036838A          Date 29Oct19               *
       *                 MD036838           Date 29Oct19               *
@@ -145,6 +146,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to skip checking  *
+      *             of Auto Loan allocate if loan is from 24X7.       *
+      *             Applied for MD060544.                             *
       *  MD056313 - Settlement validated twice. Used placeholder for  *
       *             messages in first ZASETINVAL call                 *      
       *  MD051895 - Error when rejecting a change to a loan which     *
@@ -1699,6 +1704,7 @@
       ** Reject Button                                                                      AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
+     C                   PARM                    APSRCSYS                                   MD059046
      C/COPY WNCPYSRC,LECLIPXC03
 
      C                   Z-ADD     CL_TNLU       H#TNLU            5 0
@@ -2010,6 +2016,7 @@
       ** Front Office ID                                                                    MD032052
      C                   PARM                    APFOTranID       20                        MD032052
      C**********         PARM                    WBLKACCT                         MD022807 MD022807C
+     C                   PARM                    APSRCSYS                                   MD059046
                                                                                               247441
      C                   MOVE      DDAPRC        @DDAPRC           1                        MD054028
      C                   MOVE      DDPREM        @DDPREM          15                        MD054028

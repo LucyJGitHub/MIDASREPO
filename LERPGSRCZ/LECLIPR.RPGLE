@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD059046           Date 10Oct22               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039248           Date 07Jun16               *
@@ -62,6 +63,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to skip checking  *
+      *             of Auto Loan allocate if loan is from 24X7.       *
+      *             Applied for MD060544.                             *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -982,6 +987,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
+     C                   PARM      *BLANK        APSRCSYS          8                        MD059046
      C/COPY WNCPYSRC,LECLIPYC02
  
      C                   ENDSR

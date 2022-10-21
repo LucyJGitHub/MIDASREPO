@@ -17,8 +17,10 @@
       *                                                               *
       *  (C) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060088           Date 07Jul22               *
-      *  Prev Amend No. CAP774             Date 21Jan21               *
+      *  Last Amend No. MD060544           Date 20Oct22               *
+      *  Prev Amend No. MD059046           Date 20Oct22               *
+      *                 MD060088           Date 07Jul22               *
+      *                 CAP774             Date 21Jan21               *
       *                 CAP773             Date 21Jan21               *
       *                 CAP735             Date 12May20               *
       *                 CAP734             Date 12May20               *
@@ -26,6 +28,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060544 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to use %LEN to    *
+      *             get message length.                               *
+      *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to include loan   *
+      *             ref to pass to MQ Series Queue.                   *
+      *             Applied for MD060544.                             *
       *  MD060088 - 24x7: FCIP final message processing failed with   *
       *             CNTR0020E.                                        *
       *           - Use length function instead of scan to retrieve   *
@@ -181,6 +190,8 @@
      D PfldAttr        S             10A
      D P24X7LCK        S              3A
      D WkVarChar       S              1A
+     D WMSGLNRF        S             23A                                                    MD059046
+     D WLNRF           S              6A                                                    MD059046
 
       ** Variables for setup message
      D MQTGTT          S             32A
@@ -1189,6 +1200,28 @@
      C                   ENDIF                                                  CAP774
      C                   ENDIF                                                  CAP774
       *                                                                         CAP774
+      ** Include Loan Ref in the XML                                                        MD059046
+      *                                                                                     MD059046
+     C                   MOVEL     *BLANKS       WMSGBF11      32000                        MD059046
+     C                   MOVEL     *BLANKS       WMSGBF12      32000                        MD059046
+     C                   MOVEL     *BLANKS       WMSGBF13      32000                        MD059046
+     C                   EVAL      WLNRF    = %TRIM(APMIDT)                                 MD059046
+     C                   EVAL      WMSGBF11 = WMSGBF10                                      MD059046
+     C                   EVAL      WMSGLNRF = '<DDLNRF>' + %TRIM(WLNRF) +                   MD059046
+     C                                        '</DDLNRF>'                                   MD059046
+     C                   Z-ADD     0             I                 5 0                      MD059046
+     C                   Z-ADD     0             J                 5 0                      MD059046
+     C                   Z-ADD     0             K                 5 0                      MD059046
+     C                   EVAL      I = %SCAN('</CLIP>':WMSGBF11)                            MD059046
+     C**********         EVAL      K = %SCAN('   ':WMSGBF11)                       MD059046 MD060544
+     C                   EVAL      K = %LEN(%TRIM(WMSGBF11))                                MD060544
+     C                   EVAL      K+=1                                                     MD060544
+     C     I             SUB       1             J                                          MD059046
+     C                   EVAL      WMSGBF12 = %TRIM(%Subst(WMSGBF11:1:J))                   MD059046
+     C                   EVAL      WMSGBF13 = %TRIM(%Subst(WMSGBF11:I:K))                   MD059046
+     C                   MOVEL     *BLANKS       WMSGBF10      32000                        MD059046
+     C                   EVAL      WMSGBF10 = %TRIM(WMSGBF12)+ %TRIM(WMSGLNRF) +            MD059046
+     C                               %TRIM(WMSGBF13)                                        MD059046
       *                                                                         CAP774
      C                   Z-ADD     0             H                 5 0          CAP774
      C**********         Eval      H = %SCAN('   ':WMSGBF10)                         CAP774 MD060088

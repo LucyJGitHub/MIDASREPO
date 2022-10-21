@@ -98,14 +98,14 @@
      C                   IF        CDL033 = 'N'
      C                   EXSR      PrintDetail1
      C                   EVAL      HKSTRT = 0
-     C*                  UPDATE    MMDELDP0
+     C                   UPDATE    MMDELDP0
 
      C                   ELSE
      C                   IF        CDL033 = 'Y'
      C                             AND HKBSRC <> *BLANKS
      C                   EXSR      PrintDetail1
      C                   EVAL      HKSTRT = 0
-     C*                  UPDATE    MMDELDP0
+     C                   UPDATE    MMDELDP0
      C                   ENDIF
      C
      C                   ENDIF
@@ -187,7 +187,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *
-      ** Check if enhancement CGL032 is on
+      ** Check if enhancement CDL033 is on
       *
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD

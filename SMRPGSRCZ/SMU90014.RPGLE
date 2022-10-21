@@ -98,14 +98,14 @@
      C                   IF        CDL033 = 'N'
      C                   EXSR      PrintDetail1
      C                   EVAL      XKSTRT = 0
-     C*                  UPDATE    DEALSDCF
+     C                   UPDATE    DEALSDCF
 
      C                   ELSE
      C                   IF        CDL033 = 'Y'
-     C                             AND BRTT <> *BLANKS
+     C                             AND BRTT <> 0
      C                   EXSR      PrintDetail1
      C                   EVAL      XKSTRT = 0
-     C*                  UPDATE    DEALSDCF
+     C                   UPDATE    DEALSDCF
      C                   ENDIF
      C
      C                   ENDIF
@@ -187,7 +187,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *
-      ** Check if enhancement CGL032 is on
+      ** Check if enhancement CDL033 is on
       *
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD

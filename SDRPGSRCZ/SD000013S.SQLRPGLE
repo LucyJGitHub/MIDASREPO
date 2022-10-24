@@ -211,6 +211,17 @@
      C+ close ACursor                                                                       MD058188
      C/END-EXEC                                                                             MD058188
                                                                                             MD058188
+     C/EXEC SQL                                                                             MD058188
+     C+ declare ACursor insensitive scroll cursor for                                       MD058188
+     C+ select * from GPINSJW0                                                              MD058188
+     C+ where INGINS >= :KGINS                                                              MD058188
+     C+ order by INGINS                                                                     MD058188
+     C/END-EXEC                                                                             MD058188
+                                                                                            MD058188
+     C/EXEC SQL                                                                             MD058188
+     C+ open ACursor                                                                        MD058188
+     C/END-EXEC                                                                             MD058188
+                                                                                            MD058188
 
       ** Reset the subfile error indicator.
 
@@ -265,10 +276,7 @@
      C******LOVAL        SETLL     GPINSTL0                                                 MD058188
      C                   ENDIF
      C/EXEC SQL                                                                             MD058188
-     C+ declare ACursor insensitive scroll cursor for                                       MD058188
-     C+ select * from GPINSJW0                                                              MD058188
-     C+ where INGINS >= :KGINS                                                              MD058188
-     C+ order by INGINS                                                                     MD058188
+     C+ close ACursor                                                                       MD058188
      C/END-EXEC                                                                             MD058188
                                                                                             MD058188
      C/EXEC SQL                                                                             MD058188

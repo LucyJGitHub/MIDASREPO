@@ -1599,7 +1599,8 @@
      C                   If        SQLCODE = 100                                            MD058769
      C                   seton                                        13                    MD058769
      C                   Endif                                                              MD058769
-     C                   MOVE      ALNVCD        #NAR(C)
+     C**********         MOVE      ALNVCD        #NAR(C)                                    MD058769
+     C                   MOVE      XALNVCD       #NAR(C)                                    MD058769
      C                   MOVE      PNAR1         ALDON
      C     *IN13         DOWEQ     '0'
      C     C             ANDGT     0
@@ -1616,7 +1617,8 @@
      C                   If        SQLCODE = 100                                            MD058769
      C                   seton                                        13                    MD058769
      C                   Endif                                                              MD058769
-     C                   MOVE      ALNVCD        #NAR(C)
+     C**********         MOVE      ALNVCD        #NAR(C)                                    MD058769
+     C                   MOVE      XALNVCD       #NAR(C)                                    MD058769
      C                   MOVE      PNAR1         ALDON
      C                   ENDDO
      C     C             IFEQ      0

@@ -11,7 +11,7 @@
 /*                                                                   */
 /*       Last Amend No. MD058081           Date 11May21              */
 /*       Prev Amend No. MD056752           Date 20Sep20              */
-/*             mend No. MD046248           Date 27Oct17              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -165,7 +165,7 @@
                              MEINFXTD +
                              MEINDTPD +
                       ) JRN(&JLIB/MECOBJRN) +
-                        IMAGES(*BOTH)                                                   /*MD056752*/
+                        IMAGES(*BOTH)                                                   /*MD058081*/
              ENDDO                                                    /*CCB009*/
 /*/COPY WNCPYSRC,MEC1200004                                          */
 /* */

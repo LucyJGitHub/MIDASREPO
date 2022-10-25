@@ -3395,6 +3395,18 @@
      C                   MOVEL     SVAL2         WFld21                                       CMG006
       *                                                                                       CMG006
      C                   ENDIF                                                                CMG006
+                                                                                              CGL094
+      ** Check if feature CGL094 is present.                                                  CGL094
+                                                                                              CGL094
+     C                   CALL      'AOSARDR0'                                                 CGL094
+     C                   PARM      *BLANKS       P@RTCD                                       CGL094
+     C                   PARM      '*KEY   '     P@OPTN                                       CGL094
+     C                   PARM      'CGL094'      P@SARD                                       CGL094
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL094
+      *                                                                                       CGL094
+     C     P@RTCD        IFEQ      *BLANKS                                                    CGL094
+     C                   MOVE      'Y'           CGL094                                       CGL094
+     C                   ENDIF                                                                CGL094
       *
       **  Convert history retention date to YYMMDD
       *

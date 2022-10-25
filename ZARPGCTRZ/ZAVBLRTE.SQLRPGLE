@@ -22,8 +22,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059867           Date 03May22               *
-      *  Prev Amend No. MD059141           Date 26Oct21               *
+      *  Last Amend No. MD060474           Date 22Sep22               *
+      *  Prev Amend No. MD060473           Date 15Sep22               *
+      *                 MD059624           Date 20Jul22               *
+      *                 MD059867           Date 03May22               *
+      *                 MD059141           Date 26Oct21               *
       *                 MD059065           Date 15Oct21               *
       *                 MD058988           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -44,6 +47,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060474 - Late defaulting and validation of rate rounding   *
+      *             decimal places.                                   *
+      *             Default rate rounding decimal places as follows   *
+      *             '04' when CCR rounding precision is true else     *
+      *             '05'. If risk free rate of trn is not equal to    *
+      *             risk free rate from base rates file.              *
+      *  MD060473 - Inconsistent behavior on BSRT Mnt when rate       *
+      *             rounding decimal is 0 and 00                      *
+      *             Move the value of DDRRDP to a new variable and    *
+      *             test for zero value before defaulting             *
+      *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059867 - Calculator fails when RFR used is ESTR and calcu- *
       *             lation method is simple ARR due to Calculator     *
       *             not supporting ESTR for the specific calc method. *
@@ -177,6 +191,7 @@
      D QUO             c                   const('''')                                      MD057934
      D NO_ERROR        c                   const(0)                                         MD057934
      D NO_RECORD       c                   const(100)                                       MD057934
+     D CONST_RFR       c                   const('RFR')                                     MD059624
                                                                                             CDL102
       ** DS for Deal Details                                                                CDL102
      D DEALSDS       E DS                  EXTNAME(DEALSDC)                                 CDL102
@@ -285,6 +300,7 @@
      D DDRRDPOK        S              1A
      D DDDBAVOK        S              1A
      D DDRTKNOK        S              1A                                                      CLE172
+     D isRndApplies    S              1A                                                    MD059624
 
       *****************************************************************
       /EJECT
@@ -1525,13 +1541,140 @@
       *  SRRRDP - Validate Rate Rounding Decimal Places               *
       *****************************************************************
      C     SRRRDP        BEGSR
+                                                                                            MD060474
+     C                   MOVE      '00'          WDAY                                       MD060474
+     C                   Z-ADD     0             @@ERCD                                     MD060474
 
+      ** Validate rounding precision using CCR Rounding if NCCR                             MD059624
+      *                                                                                     MD059624
+     C                   EXSR      chkRndApply                                              MD059624
+     C                   IF        (DDCALM = 'NCCR' AND                                     MD059624
+     C                             isRndApplies = 'Y')                                      MD059624
+                                                                                            MD059624
+      ** Default value depending on where this program is called                            MD059624
+      *                                                                                     MD060473
+     C                   MOVE      DDRRDP        NURRDP            2 0                      MD060473
+      *                                                                                     MD060473
+     C                   IF        DDRRDP = *BLANKS OR                                      MD059624
+     C**********                   DDRRDP = '00'                                   MD059624 MD060473
+     C                             NURRDP = *ZEROS                                          MD060473
+                                                                                            MD059624
+     C                   SELECT                                                             MD059624
+                                                                                            MD059624
+      ** Default to '04'                                                                    MD059624
+     C                   WHEN      ApiName = 'BSRT'                                         MD059624
+     C                             and DDBLRT = 'Y'                                         MD059624
+     C                   MOVE      '04'          WDAY                                       MD059624
+                                                                                            MD059624
+      ** Default value from base rate code                                                  MD059624
+     C                   WHEN      (ApiName = 'CLIP' or                                     MD059624
+     C                             ApiName = 'LDNI' or                                      MD059624
+     C                             ApiName = 'FUND'  or                                     MD059624
+     C                             ApiName = 'CIR1'  or                                     MD059624
+     C                             ApiName = 'CIR2'  or                                     MD059624
+     C                             ApiName = 'SIR1'  or                                     MD059624
+     C                             ApiName = 'SIR2'  or                                     MD059624
+     C                             ApiName = 'CACF') and                                    MD059624
+     C                             BSRTRecFound = 'Y'                                       MD059624
+     C                   MOVE      BARRDP        WDAY                                       MD059624
+                                                                                            MD059624
+      ** Default value from loan details                                                    MD059624
+     C                   WHEN      ApiName = 'LERI'                                         MD059624
+     C                   MOVE      CLRRDP        WDAY                                       MD059624
+                                                                                            MD059624
+      ** Default value from deal details                                                    MD059624
+     C                   WHEN      ApiName = 'DEAM'                                         MD059624
+     C                   IF        DDBLRT = 'Y'                                             MD059624
+     C                   MOVE      DLRRDP        WDAY                                       MD059624
+     C                   ENDIF                                                              MD059624
+                                                                                            MD059624
+     C                   ENDSL                                                              MD059624
+     C                   EXSR      SRDFLT                                                   MD060474
+                                                                                            MD059624
+     C                   ELSE                                                               MD059624
+                                                                                            MD059624
+      ** Use ZA0841 on input to allow single digit entry in form                            MD059624
+     C                   MOVE      *BLANKS       @@ALPH                                     MD059624
+     C                   MOVE      DDRRDP        @@ALPH                                     MD059624
+     C                   CALLB     'ZA0841'                                                 MD059624
+     C                   PARM      *BLANK        RetCodeOut                                 MD059624
+     C                   PARM                    @@ALPH                                     MD059624
+     C                   PARM      0             @@IDP                                      MD059624
+     C                   PARM      2             @@IINT                                     MD059624
+     C                   PARM      'N'           @@MTID                                     MD059624
+     C                   PARM      *ZERO         @@ERCD                                     MD059624
+     C                   PARM      *ZERO         @@AMT                                      MD059624
+     C                   PARM                    BNDCSP                                     MD059624
+                                                                                            MD059624
+     C                   EVAL      WSign = *BLANK                                           MD059624
+     C                   IF        @@AMT < 0                                                MD059624
+     C                   Z-SUB     @@AMT         @@AMT                                      MD059624
+     C                   EVAL      WSign = '-'                                              MD059624
+     C                   ENDIF                                                              MD059624
+     C                   MOVE      @@ALPH        WDAY                                       MD059624
+     C                   IF        WSign = '-'                                              MD059624
+     C                   Z-SUB     WDAY          WDAY                                       MD059624
+     C                   ENDIF                                                              MD059624
+                                                                                            MD059624
+     C                   ENDIF                                                              MD059624
+                                                                                            MD059624
+      ** Value must be numeric from 01 to 10                                                MD059624
+     C                   IF        DDBLRT = 'Y' and                                         MD059624
+     C                             DDRRDP <> *BLANKS                                        MD059624
+                                                                                            MD059624
+     C                   IF        WDAY < 1 or                                              MD059624
+     C                             WDAY > 10 or                                             MD059624
+     C                             @@ERCD <> 0                                              MD059624
+     C                   EVAL      DDRRDPOK = 'N'                                           MD059624
+     C                   EVAL      Idx = Idx + 1                                            MD059624
+      ** Use BLRT Next Fields if LERI                                                       MD059624
+     C                   IF        ApiName = 'LERI'                                         MD059624
+     C                   EVAL      FldNamXAr(Idx) = 'DDNRRDP'                               MD059624
+     C                   ELSE                                                               MD059624
+     C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'                                MD059624
+     C                   ENDIF                                                              MD059624
+     C                   IF        Apiname = 'CIR1' OR                                      MD059624
+     C                             Apiname = 'SIR1'                                         MD059624
+     C                   EVAL      FldNamXAr(Idx) = 'SURRDP'                                MD059624
+     C                   ELSEIF    Apiname = 'CIR2' OR                                      MD059624
+     C                             Apiname = 'SIR2'                                         MD059624
+     C                   EVAL      FldNamXAr(Idx) = 'STRRDP'                                MD059624
+     C                   ENDIF                                                              MD059624
+     C                   EVAL      MsgIdXAr(Idx) = '5049549'                                MD059624
+     C                   ELSE                                                               MD059624
+                                                                                            MD059624
+     C                   IF        WDAY > 6 and                                             MD059624
+     C                             DDCALM = 'SARR'                                          MD059624
+     C                   EVAL      DDRRDPOK = 'N'                                           MD059624
+     C                   EVAL      Idx = Idx + 1                                            MD059624
+      ** Use BLRT Next Fields if LERI                                                       MD059624
+     C                   IF        ApiName = 'LERI'                                         MD059624
+     C                   EVAL      FldNamXAr(Idx) = 'DDNRRDP'                               MD059624
+     C                   ELSE                                                               MD059624
+     C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'                                MD059624
+     C                   ENDIF                                                              MD059624
+     C                   IF        Apiname = 'CIR1' OR                                      MD059624
+     C                             Apiname = 'SIR1'                                         MD059624
+     C                   EVAL      FldNamXAr(Idx) = 'SURRDP'                                MD059624
+     C                   ELSEIF    Apiname = 'CIR2' OR                                      MD059624
+     C                             Apiname = 'SIR2'                                         MD059624
+     C                   EVAL      FldNamXAr(Idx) = 'STRRDP'                                MD059624
+     C                   ENDIF                                                              MD059624
+     C                   EVAL      MsgIdXAr(Idx) = '5049454'                                MD059624
+     C                   ENDIF                                                              MD059624
+                                                                                            MD059624
+     C                   ENDIF                                                              MD059624
+                                                                                            MD059624
+     C                   ENDIF                                                              MD059624
+     C                   ELSE                                                               MD059624
      C                   MOVE      '00'          WDAY
+     C                   MOVE      DDRRDP        NURRDP            2 0                      MD060473
 
       ** Default value depending on where this program is called
      C**********         IF        DDRRDP = *BLANKS                                         MD059065
      C                   IF        DDRRDP = *BLANKS OR                                      MD059065
-     C                             DDRRDP = '00'                                            MD059065
+     C**********                   DDRRDP = '00'                                   MD059065 MD060473
+     C                             NURRDP = *ZEROS                                          MD060473
 
      C                   SELECT
 
@@ -1565,6 +1708,7 @@
      C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL
+     C                   EXSR      SRDFLT                                                   MD060474
 
      C                   ELSE
 
@@ -1641,6 +1785,7 @@
      C                   ENDIF
 
      C                   ENDIF
+     C                   ENDIF                                                              MD059624
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
@@ -1945,6 +2090,16 @@
 
       /end-free
      C                   ENDSR                                                              MD057934
+      *****************************************************************                     MD059624
+      /EJECT                                                                                MD059624
+      *****************************************************************                     MD059624
+      *  chkRndApply - Check if CCR Rounding Applies                  *                     MD059524
+      *****************************************************************                     MD059624
+     C     chkRndApply   BEGSR                                                              MD059624
+     C                   CALL      'ZAGETRDAPL'                                             MD059624
+     C                   PARM                    DDRFRR                                     MD059624
+     C                   PARM                    isRndApplies                               MD059624
+     C                   ENDSR                                                              MD059624
 
       *****************************************************************                       CDL102
       /EJECT                                                                                  CDL102
@@ -1988,6 +2143,33 @@
                    exec sql close P2;                                                       //CDL102
       /end-free                                                                             //CDL102
      C                   ENDSR                                                                CDL102
+      *****************************************************************                     MD060474
+      /EJECT                                                                                MD060474
+      *****************************************************************                     MD060474
+      *  SRDFLT - Default rate rounding decimal places                *                     MD060474
+      *****************************************************************                     MD060474
+     C     SRDFLT        BEGSR                                                              MD060474
+      /free
+                  if (ddrfrr <> barfrr) and
+                     (apiname <> 'BSRT') and
+                     (ddcalm = 'NCCR') and
+                     (BSRTRecFound = 'Y');
+
+                     if ddrrdp = *blanks or
+                          nurrdp = *zeros;
+
+                          if ddcalm = 'NCCR' and
+                             isRndApplies = 'Y';
+                                wday = 4;
+                          else;
+                                wday = 5;
+                          endif;
+
+                     endif;
+
+                  endif;
+      /end-free                                                                             MD060474
+     C                   ENDSR                                                              MD060474
       *****************************************************************
       /EJECT
       *****************************************************************

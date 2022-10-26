@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060586           Date 25Oct22               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054028           Date 05Sep19               *
       *                 MD039617           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
@@ -76,6 +77,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060586 - A term deposit can´t be ended prematurely.        *
+      *           - Zeroise DDSTRT and DDAIR if CDL033 and BRTT is 0. *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -958,6 +961,11 @@
      C                   ELSE                                                                 245692
      C                   MOVE      W#AMTD        DDSTRT                                       245692
      C                   ENDIF                                                                245692
+     C                   IF        CDL033 = 'Y'                                             MD060586
+     C                             AND BRTT = '00'                                          MD060586
+     C                             OR  BRTT = '  '                                          MD060586
+     C                   EVAL      DDSTRT = *BLANKS                                         MD060586
+     C                   ENDIF                                                              MD060586
       *                                                                                       CDL033
       ** Rate Fix Days                                                                        CDL033
       *                                                                                       CDL033
@@ -1035,6 +1043,10 @@
      C                   EXSR      FMTAMT                                                   BUG11107
      C                   MOVE      @@AMTD        DDAIR                                      BUG11107
      C                   ENDIF                                                              BUG11107
+     C                   IF        BRTT = '00'                                              MD060586
+     C                             OR BRTT = '  '                                           MD060586
+     C                   EVAL      DDAIR = *BLANKS                                          MD060586
+     C                   ENDIF                                                              MD060586
       *                                                                                     BUG11107
      C                   ENDIF                                                              BUG11107
       *                                                                                       CDL038

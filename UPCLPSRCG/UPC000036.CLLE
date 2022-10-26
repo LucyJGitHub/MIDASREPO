@@ -9,12 +9,21 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD054336           Date 27Sep19              */
-/*       Prev Amend No. CUP042             Date 26May15              */
+/*       Last Amend No. MD060563           Date 10Oct22              */
+/*       Prev Amend No. MD060005           Date 10Oct22              */
+/*                      MD059471           Date 10Oct22              */
+/*                      MD054336           Date 27Sep19              */
+/*                      CUP042             Date 26May15              */
 /*                      CUP041   *CREATE   Date 27May14              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060563 - SP 2021.D - Request for SWIFT 2022 Patch         */
+/*       MD060005 - SCSWPSVL is removed from Bridge library after    */
+/*                  database upgrade                                 */
+/*                - Applied for MD-60563                             */
+/*       MD059471 - SWIFT 2022 Changes Feature Password              */
+/*                - Applied for MD-60563                             */
 /*       MD054336 - Bridge ends in error after GPST option when two  */
 /*                  different sessions were used                     */
 /*       CUP042 - New option to run Upgrade Programs after           */
@@ -94,6 +103,21 @@
 /* Set up library list. */
              CALLSUBR   SUBR(SETUPLIBL)
 
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                               /*MD060563*/
+                                                                                        /*MD059471*/
+SWIFTVLDL:                                                                              /*MD059471*/
+/**********  CHKOBJ     OBJ(&BRGBRGLIB/SCSWPSVL) OBJTYPE(*VLDL)  */            /*MD059471 MD060005*/
+             CHKOBJ     OBJ(&BRGBRGLIB/SCSWPSVLB) OBJTYPE(*VLDL)                        /*MD060005*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD059471*/
+                GOTO       CMDLBL(RUNUPGPGM)                                            /*MD059471*/
+             ENDDO                                                                      /*MD059471*/
+             CALL       PGM(UP000714) PARM(&BRGBRGLIB &PFX &RTNCODE)                    /*MD059471*/
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)                                 /*MD059471*/
+                CHGVAR     VAR(&ERRPGM) VALUE('UP000712')                               /*MD059471*/
+                GOTO       CMDLBL(ERROR)                                                /*MD059471*/
+             ENDDO                                                                      /*MD059471*/
+             ENDDO                                                                      /*MD060563*/
+                                                                                        /*MD060563*/
 /* Run Upgrade Programs after deliverable data changes. */                                /*CUP042*/
 RUNUPGPGM:                                                                                /*CUP042*/
              CHGVAR     VAR(&SUBOPT) VALUE('RunUpgradePgmsPostDD')                        /*CUP042*/

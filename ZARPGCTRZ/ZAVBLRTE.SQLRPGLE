@@ -732,7 +732,6 @@
      C+ from SDLIBJW0                                                                       MD060008
      C+ where SCRFLD = :KSCRFLD and INTVAL = :KINTVAL                                       MD060008
      C/END-EXEC                                                                             MD060008
-     C                   EVAL      DDRFRROK = 'N'
      C**********         IF        NOT %FOUND(SDLIBRTD)                                     MD060008
      C                   If        SQLCODE = 100                                            MD060008
      C                   EVAL      DDCALMOK = 'N'

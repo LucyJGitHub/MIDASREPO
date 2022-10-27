@@ -169,7 +169,7 @@
      F** ME User Repair
      F*SDMTAGL1* IF   E           K DISK    INFSR(SRFILE)                                   MD056560
      F**********                           RENAME(@EFREJ5:@MTAGL1)                          MD056560
-     F*MEINMVL2* IF   E           K DISK                                                 MD MD058081
+     F*MEINMVL2* IF   E           K DISK                                           MD020057 MD058081
      F** Midas Incoming Valid Messages by Message Type                                      MD020057
      F/EJECT
       *****************************************************************

@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
       *
-      *  Last Amend No. MD059114           Date 26Oct22               *
-      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *  Last Amend No. MD060624           Date 27Oct22               *
+      *  Prev Amend No. MD059114           Date 27Oct22               *
+      *                 MD056555           Date 31Aug20               *
       *                 MD057705           Date 21Jan21               *
       *                 MD056890           Date 11Oct20               *
       *                 MD055681           Date 31Jul20               *
@@ -34,12 +35,16 @@
      F*                                                                  *
       ********************************************************************
       *                                                                  *
+      *  MD060624 - From loan details enquiry, when navigating to funding*
+      *             information, a database error is encountered.        *
+      *           - Correct the parameters passed to window controller in*
+      *             SR/OPTION.                                           *
       *  MD059114 - At Fusion SP25 the "N" for extended Narrative        *
       *             function does not work on Account movements          *
       *           - Use the correct parameter on the cursor select       *
       *             statement.  Also mismatch (packed v zoned) on the    *
       *             window dimensions passed to the window program.      *
-      *             Applied for MD060624                                 *
+      *           - Applied for MD060624                                 *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD057705 - Deliverable Data Split for SDOREFPD               *
       *  MD056890 - Deliverable Data Split for SDMREFPD               *
@@ -354,6 +359,12 @@
       ** CALL WINDOW CONTROLLER
      C*
      C*******************  CALL DMAKNA                                    S01251
+      *                                                                                     MD060624
+     C                   Z-ADD     DMLGWD        M_LGWD            3 0                      MD060624
+     C                   Z-ADD     DMWDWD        M_WDWD            3 0                      MD060624
+     C                   Z-ADD     DMSRWD        M_SRWD            3 0                      MD060624
+     C                   Z-ADD     DMSCWD        M_SCWD            3 0                      MD060624
+      *                                                                                     MD060624
      C                   CALL      DMWNCN                                                      S0125
      C                   PARM                    ACTN
      C                   PARM                    DATA
@@ -363,10 +374,14 @@
      C******************** PARM           DMNBNB                          S01251
      C******************** PARM           DMNCNB                          S01251
      C******************** PARM           DMALNA                          S01251
-     C                   PARM                    DMLGWD                                        S0125
-     C                   PARM                    DMWDWD                                        S0125
-     C                   PARM                    DMSRWD                                        S0125
-     C                   PARM                    DMSCWD                                        S0125
+     C**********         PARM                    DMLGWD                               S0125 MD060624
+     C**********         PARM                    DMWDWD                               S0125 MD060624
+     C**********         PARM                    DMSRWD                               S0125 MD060624
+     C**********         PARM                    DMSCWD                               S0125 MD060624
+     C                   PARM                    M_LGWD                                     MD060624
+     C                   PARM                    M_WDWD                                     MD060624
+     C                   PARM                    M_SRWD                                     MD060624
+     C                   PARM                    M_SCWD                                     MD060624
      C                   PARM                    DMTTWD                                        S0125
      C                   PARM                    SPARE           256                           S0125
      C************         PARM           P@RTN   7                       S01216

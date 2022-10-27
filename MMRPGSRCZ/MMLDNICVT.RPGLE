@@ -961,8 +961,7 @@
      C                   ELSE                                                                 245692
      C                   MOVE      W#AMTD        DDSTRT                                       245692
      C                   ENDIF                                                                245692
-     C                   IF        CDL033 = 'Y'                                             MD060586
-     C                             AND BRTT = '00'                                          MD060586
+     C                   IF        BRTT = '00'                                              MD060586
      C                             OR BRTT = '  '                                           MD060586
      C                   EVAL      DDSTRT = *BLANKS                                         MD060586
      C                   ENDIF                                                              MD060586
@@ -1044,7 +1043,7 @@
      C                   MOVE      @@AMTD        DDAIR                                      BUG11107
      C                   ENDIF                                                              BUG11107
      C                   IF        BRTT = '00'                                              MD060586
-     C                             OR BRTT '  '                                             MD060586
+     C                             OR  BRTT = '  '                                          MD060586
      C                   EVAL      DDAIR = *BLANKS                                          MD060586
      C                   ENDIF                                                              MD060586
       *                                                                                     BUG11107

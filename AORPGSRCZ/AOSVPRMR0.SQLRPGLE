@@ -73,7 +73,7 @@
       *
      D*D@FMT****     E DS                  EXTNAME(SCSVPRMPD)                               MD060009
      D D@FMT         E DS                  EXTNAME(SCSVPJW0)                                MD060009
-     D PFKY            S              3A
+     D PFKY            S              3A                                                    MD060009
       *
      D P@MGDA          DS
      D  @MG                    1     50

@@ -1,0 +1,164 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CL program to Call SMU90013 and SMU90014')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Money Market (Dealing)                              */
+/*                                                                   */
+/*       SMUC90013  - CL program to call datapatch SMU90013/14       */
+/*                                                                   */
+/*       (c) Finastra International Banking Sytems Ltd. 2022         */
+/*                                                                   */
+/*       Last Amend No. MD060586 *CREATE   Date 13Oct22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD060586 - A term deposit can´t be ended prematurely.       */
+/*                - Zeroise the short term rate field from files     */
+/*                  MMDELDPP and DEALSDC.                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+/**/
+             DCL        VAR(&LSTD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2022')
+/**/
+/* Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+/* Start of program */
+/**/
+             SNDPGMMSG  MSG('SMUC90013 - MD-60586 Data Patch Program') +
+                          TOMSGQ(MRUNQ MOPERQ)
+/**/
+/* Create LDA if it doesn't exist */
+/**/
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+
+/**/
+/* Get system prefix */
+/**/
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PREF *TCAT 'DMLIB')
+             CHGVAR     VAR(&DTALIB) VALUE(&PREF *TCAT 'DTALIB')
+/**/
+
+FLECHK:
+/* Check if YYXXXXXXXX exists */
+/**/
+             CHKOBJ     OBJ(&DPLIB/YYDEALSDC) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(FLECHK2))
+             DLTF       FILE(YYDEALSDC)
+/**/
+FLECHK2:
+             CHKOBJ     OBJ(&DPLIB/YYMMDELDPP) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BACKUP))
+             DLTF       FILE(YYMMDELDPP)
+
+/**/
+/* Create backup */
+/**/
+BACKUP:
+             CPYF       FROMFILE(&DMLIB/DEALSDC) TOFILE(&DPLIB/YYDEALSDC) +
+                        MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             CLRPFM     FILE(YYDEALSDC)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in copying PF/DEALSDC to +
+                PF/YYDEALSDC. Process terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+             CPYF       FROMFILE(&DMLIB/MMDELDPP) TOFILE(&DPLIB/YYMMDELDPP) +
+                        MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             CLRPFM     FILE(YYMMDELDPP)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in copying PF/MMDELDPP to +
+                          PF/YYMMDELDPP. Process terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/**/
+/* Call ILE/SMU90013 */
+/**/
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&RUNP) VALUE('YES')
+
+             CALL       PGM(SMU90013)
+/**/
+/* Error occurred in data patch program */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR1))
+
+/**/
+/* Call ILE/SMU90014 */
+/**/
+             CALL       PGM(SMU90014)
+/**/
+/* Error occurred in data patch program */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR2))
+
+             SNDPGMMSG  MSG('SMUC90013 completed normally.') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+
+             GOTO       CMDLBL(END)
+
+/**/
+/* Abnormal Termination of the program or */
+/* Restore backup if an error occurred in update mode */
+/**/
+ABNOR1:
+             IF         COND(&RUNP *EQ 'YES') THEN(DO)
+
+
+                CPYF FROMFILE(&DPLIB/YYMMDELDPP) TOFILE(&DMLIB/MMDELDPP) +
+                    MBROPT(*REPLACE) FMTOPT(*NONE)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error occurred in restoring PF/MMDELDPP +
+                        from PF/YYMMDELDPP. Process terminated.  Please restore +
+                        PF/MMDELDPP manually from PF/YYMMDELDPP.') +
+                        MSGTYPE(*INFO)
+                ENDDO
+             GOTO       CMDLBL(END)
+             ENDDO
+
+ABNOR2:
+             IF         COND(&RUNP *EQ 'YES') THEN(DO)
+
+                CPYF FROMFILE(&DPLIB/YYDEALSDC) TOFILE(&DMLIB/DEALSDC) +
+                     MBROPT(*REPLACE) FMTOPT(*NONE)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error occurred in restoring PF/DEALSDC +
+                        from  PF/YYDEALSDC. Process terminated.  Please restore +
+                        PF/DEALSDC manually from PF/YYDEALSDC.') +
+                        MSGTYPE(*INFO)
+                ENDDO
+             ENDDO
+
+ABNOR:       SNDPGMMSG  MSG('Error occurred in SMUC90013 program') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2022')
+             SNDPGMMSG  MSG('End of SMUC90013') TOMSGQ(MRUNQ MOPERQ)
+             ENDPGM

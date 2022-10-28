@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP039             Date 11Jan11              */
+/*       Last Amend No. MD058854           Date 21Oct21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP039             Date 11Jan11              */
 /*                      BUG27793           Date 16Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058854 - Deliverable Data Split for TABLEV4               */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP039 - Calls to status program are incorrect.             */
 /*       BUG27793 - Make migration multi-streamed.                   */
@@ -37,13 +39,13 @@
 /*********************************************************************/
 /**********  PGM                                                                       */ /*CPK025*/
              PGM        PARM(&OLDSBSID &SBSID)                                            /*CPK025*/
- 
+
              DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)                                 /*CPK025*/
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                    /*CPK025*/
 /**COPY*UPCPYSRC,UPSVALDCL*                                          */ /*             */ /*CPK025*/
 /**********  DCL        VAR(&LIBGRP) TYPE(*CHAR) LEN(2)                                */ /*CPK025*/
 /**********  DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)                              */ /*CPK025*/
- 
+
              DCL        VAR(&R4DMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&R4DTLIB) TYPE(*CHAR) LEN(10)                               /*BUG27793*/
              DCL        VAR(&R3DMLIB) TYPE(*CHAR) LEN(10)
@@ -51,17 +53,17 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Set status to ACTIVE. */                                                             /*BUG27793*/
 /**********  CALL       PGM(SMC0260) PARM('SMC000031' '*PGM' +                         */ /*CUP039*/
 /**********               '*UPDATE' 'ACTIVE')                             */ /*BUG27793*/ /*CUP039*/
              CALL       PGM(SM000008) PARM('SMC0260' '*PGM' +
                           '*UPDATE' 'ACTIVE')                                             /*CUP039*/
- 
+
 /**********  RTVDTAARA  DTAARA(UPSTAT) RTNVAR(&UPSTAT)                                 */ /*CSM003*/
 /**********  CHGVAR     VAR(&LIBGRP) VALUE(%SST(&UPSTAT 62 2))                         */ /*CSM003*/
 /**If*this*is*blank*then*this*should*mean*that*this*is*an*'XX'**/ /*                   */ /*CSM003*/
@@ -69,10 +71,10 @@
 /**********  IF         COND(&LIBGRP *EQ '  ') THEN(DO)                                */ /*CSM003*/
 /**********     CHGVAR     VAR(&LIBGRP) VALUE(%SST(&UPSTAT 60 2))                      */ /*CSM003*/
 /**********  ENDDO                                                                     */ /*CSM003*/
- 
+
 /**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CPK025*/
 /**COPY*UPCPYSRC,UPSVALCAL3*                                         */ /*  */ /*CSM003*/ /*CPK025*/
- 
+
 /* Create variables  to be used only when attempting to copy data areas */
 /* from DPLIB to DMLIB.                                                 */
 /**********  CHGVAR     VAR(&R4DMLIB) VALUE(&LIBGRP *TCAT 'DMLIB')                     */ /*CSM003*/
@@ -82,7 +84,7 @@
              CHGVAR     VAR(&R3DMLIB) VALUE(&OLDSBSID *TCAT 'DMLIB')                      /*CSM003*/
              CHGVAR     VAR(&R3DPLIB) VALUE(&OLDSBSID *TCAT 'DPLIB')                      /*CSM003*/
              CHGVAR     VAR(&R4DTLIB) VALUE(&SBSID *TCAT 'DTALIB')                      /*BUG27793*/
- 
+
 /* For the data areas that have been moved from DPLIB to DMLIB there is */
 /*  special processing.                                                 */
 CFTEMP:
@@ -143,7 +145,7 @@ SETEMP:
              ENDDO
              CPYDTAARA  FMDTAARA(&R3DPLIB/SETEMP) +
                           TODTAARA(&R4DMLIB/SETEMP)
- 
+
 CMPRND:
              CHKOBJ     OBJ(&R3DPLIB/CMPRND) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -164,28 +166,29 @@ CMPRND:
 /**********     GOTO       CMDLBL(ENDPGM)                                 */ /*CPK023*/ /*BUG27793*/
                 GOTO       CMDLBL(TABLEV4)                                              /*BUG27793*/
              ENDDO                                                                        /*CPK023*/
- 
+
 TABLEV4:                                                                                /*BUG27793*/
              CHKOBJ     OBJ(&R3DMLIB/TABLEV4) OBJTYPE(*FILE)                            /*BUG27793*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*BUG27793*/
                 GOTO       CMDLBL(SUCCESS)                                              /*BUG27793*/
              ENDDO                                                                      /*BUG27793*/
-             CPYF       FROMFILE(&R3DMLIB/TABLEV4) +
+/* no need to copy TABLEV4 anymore as file is migrated with DDS */                      /*MD058854*/
+/**********  CPYF       FROMFILE(&R3DMLIB/TABLEV4) +
                           TOFILE(&R4DTLIB/TABLEV4) MBROPT(*REPLACE) +
-                          FMTOPT(*MAP *DROP)                                            /*BUG27793*/
-             MONMSG     MSGID(CPF2817) CMPDTA(CPF2868)                                  /*BUG27793*/
-             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*BUG27793*/
-             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870)                                  /*BUG27793*/
- 
+                          FMTOPT(*MAP *DROP) */                               /*BUG27793**MD058854*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) */                     /*BUG27793**MD058854*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) */                     /*BUG27793**MD058854*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) */                     /*BUG27793**MD058854*/
+
 SUCCESS:                                                                                /*BUG27793*/
 /* Set status to PASSED. */                                                             /*BUG27793*/
 /**********  CALL       PGM(SMC0260) PARM('SMC000031' '*PGM' +                         */ /*CUP039*/
 /**********               '*UPDATE' 'PASSED')                             */ /*BUG27793*/ /*CUP039*/
              CALL       PGM(SM000008) PARM('SMC0260' '*PGM' +
                           '*UPDATE' 'PASSED')                                             /*CUP039*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ABNOR:
 /* Set status to FAILED. */                                                             /*BUG27793*/
 /**********  CALL       PGM(SMC0260) PARM('SMC000031' '*PGM' +                         */ /*CUP039*/

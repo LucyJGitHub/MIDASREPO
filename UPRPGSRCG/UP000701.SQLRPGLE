@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD059472             Date 19Jan22             *
-      *  Prev Amend No. MD058986             Date 11Oct21             *
+      *  Last Amend No. MD058830             Date 01Oct21             *
+      *  Prev Amend No. MD059472             Date 19Jan22             *
+      *                 MD058986             Date 11Oct21             *
       *                 MD058933             Date 28Sep21             *
       *                 MD058721             Date 28Aug21             *
       *                 MD058491             Date 28Jul21             *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059472 - Introduce Logical Delete field                    *
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD058933 - For CBCMPCTD, field 'Execution parameters' needs  *
@@ -72,13 +74,17 @@
      D WIdx            S              3P 0
      D KeyFld          S            200A
      D*WHERE****       S            300A                                                    MD054955
-     D WHERE           S            600A                                                    MD054955
+     D*WHERE****       S            600A                                           MD054955 MD058830
+     D WHERE           S           1000A                                                    MD058830
      D*WHEREX***       S            300A                                           MD055832 MD054955
-     D WHEREX          S            600A                                                    MD054955
+     D*WHEREX***       S            600A                                           MD054955 MD058830
+     D WHEREX          S           1000A                                                    MD058830
      D*PINSERT**       S            300A                                                    MD054955
-     D PINSERT         S            600A                                                    MD054955
+     D*PINSERT**       S            600A                                           MD054955 MD058830
+     D PINSERT         S           1000A                                                    MD058830
      D*PSELECT**       S            300A                                                    MD054955
-     D PSELECT         S            600A                                                    MD054955
+     D*PSELECT**       S            600A                                           MD054955 MD058830
+     D PSELECT         S           1000A                                                    MD058830
      D SQLDynStmt      S           5000A
      D Outfile         S             10A
      D OFMbr           S             10A

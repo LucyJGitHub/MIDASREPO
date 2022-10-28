@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
@@ -159,7 +161,8 @@
       ** Rundat DS
       *
 
-     D DsNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*DsNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DsNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       ** Network details record format data structure
       *
 

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26824           Date 09Dec09               *
       *                 BUG24305           Date 11Jun09               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -116,7 +118,8 @@
       *
       ** New Network File Record (i.e. new state after amendments)
       *
-     D NewFilRcd     E DS                  EXTNAME(SDNWRKPD)
+     D*NewFilRcd     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D NewFilRcd     E DS                  EXTNAME(SDNWKJW0)                                MD058830
       *
      D ScrLayout     E DS                  EXTNAME(SD200129DF:SD200129F7)
       *
@@ -521,7 +524,7 @@
       ** Return the current values of the error indicators
       *
      C                   MOVEA     *IN(40)       IN40_TO_70
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *

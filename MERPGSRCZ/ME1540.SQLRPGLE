@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058081           Date 11May21               *
-      *  Prev Amend No. MD058890           Date 21Sep21               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *      
+      *                 MD058081           Date 11May21               *
+      *                 MD058890           Date 21Sep21               *
       *                 MD056560           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
@@ -71,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *      
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD058890 - Decimal-data error occurred when inserting new    *
       *             record in Generation Criteria Table Maintenance   *
@@ -348,13 +352,15 @@
      D INFDS1        E DS                  EXTNAME(Y2I1DSP)
      D**  File information data structure
      D*
-     D DSNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*DSNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DSNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
      D**  Data Structures for Network Definition
      D*
      D DSBRCA        E DS                  EXTNAME(SDBRCHPD)
      D**  Data Structures for Branch Definition
      D*
-     D DSMTPY        E DS                  EXTNAME(SDMTPYPD)
+     D*DSMTPY***     E DS                  EXTNAME(SDMTPYPD)                                MD060008
+     D DSMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
      D**  Data Structures for Message Type Definition
      D*
      D*DSMTAG***     E DS                  EXTNAME(SDMTAGPD)                                MD056560

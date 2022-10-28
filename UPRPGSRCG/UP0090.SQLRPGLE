@@ -11,8 +11,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD058089             Date 01Sep21             *
-      *  Prev Amend No. MD058079             Date 11May21             *
+      *  Last Amend No. MD060352             Date 22Aug22             *
+      *  Prev Amend No. MD058188             Date 11May21             *
+      *                 MD060008             Date 11May21             *
+      *                 MD058830             Date 01Oct21             *
+      *                 MD058081             Date 11May21             *
+      *                 MD058088             Date 01Oct21             *
+      *                 MD058854             Date 21Oct21             *
+      *                 MD056602             Date 04Sep20             *
+      *                 MD058769             Date 21Sep21             *
+      *                 MD058755             Date 01Sep21             *
+      *                 MD058085             Date 11May21             *
+      *                 MD058069             Date 11May21             *
+      *                 MD058087             Date 11May21             *
+      *                 MD058089             Date 01Sep21             *
+      *                 MD058079             Date 11May21             *
       *                 MD058082             Date 11May21             *
       *                 MD058068             Date 11May21             *
       *                 MD058071             Date 11May21             *
@@ -85,6 +98,19 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060352 - Deliverable Data Split for GP/SCRELCTD            *
+      *  MD058188 - Deliverable Data Split for Global files           *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
+      *  MD058088 - Deliverable Data Split for global tables          *
+      *  MD058854 - Deliverable Data Split for TABLEV4                *
+      *  MD056602 - Deliverable Data Split for T_APICFG               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
+      *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
+      *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
+      *  MD058087 - Deliverable Data Split for System Control         *
       *  MD058089 - Deliverable Data Split for SM and UP              *
       *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD058082 - Deliverable Data Split for FRS                    *
@@ -1177,6 +1203,11 @@
      C                             or ChkFile = 'BYPRDXTD'                                  MD058068
      C                             or ChkFile = 'BYPRMXTD'                                  MD058068
      C                             or ChkFile = 'BYREGXTD'                                  MD058068
+     C                             or ChkFile = 'CGCSTXTD'                                  MD058069
+     C                             or ChkFile = 'CGCTYXTD'                                  MD058069
+     C                             or ChkFile = 'CGISTXTD'                                  MD058069
+     C                             or ChkFile = 'CGPSHXTD'                                  MD058069
+     C                             or ChkFile = 'CGRGZXTD'                                  MD058069
      C                             or ChkFile = 'RNAMTXTD'                                  MD058082
      C                             or ChkFile = 'RNCPYXTD'                                  MD058082
      C                             or ChkFile = 'RNCTYXTD'                                  MD058082
@@ -1186,6 +1217,38 @@
      C                             or ChkFile = 'RNICPXTD'                                  MD058082
      C                             or ChkFile = 'RNKYPXTD'                                  MD058082
      C                             or ChkFile = 'RNSECXTD'                                  MD058082
+     C                             or ChkFile = 'SDAUEXTD'                                  MD058085
+     C                             or ChkFile = 'SDAUFXTD'                                  MD058085
+     C                             or ChkFile = 'SDAUSXTD'                                  MD058085
+     C                             or ChkFile = 'SDAUXXTD'                                  MD058085
+     C                             or ChkFile = 'SDBACXTD'                                  MD058085
+     C                             or ChkFile = 'SDBAJXTD'                                  MD058085
+     C                             or ChkFile = 'SDBAPXTD'                                  MD058085
+     C                             or ChkFile = 'SDBATXTD'                                  MD058085
+     C                             or ChkFile = 'SDBRKXTD'                                  MD058085
+     C                             or ChkFile = 'SDBTSXTD'                                  MD058085
+     C                             or ChkFile = 'SDCMTXTD'                                  MD058085
+     C                             or ChkFile = 'SDCMUXTD'                                  MD058085
+     C                             or ChkFile = 'SDDSTXTD'                                  MD058085
+     C                             or ChkFile = 'SDECLXTD'                                  MD058085
+     C                             or ChkFile = 'SDFNCXTD'                                  MD058085
+     C                             or ChkFile = 'SDIRMXTD'                                  MD058085
+     C                             or ChkFile = 'SDISOXTD'                                  MD058085
+     C                             or ChkFile = 'SDMAPXTD'                                  MD058085
+     C                             or ChkFile = 'SDMDFXTD'                                  MD058085
+     C                             or ChkFile = 'SDMMOXTD'                                  MD058085
+     C                             or ChkFile = 'SDMTYXTD'                                  MD058085
+     C                             or ChkFile = 'SDNCDXTD'                                  MD058085
+     C                             or ChkFile = 'SDNCOXTD'                                  MD058085
+     C                             or ChkFile = 'SDPMRXTD'                                  MD058085
+     C                             or ChkFile = 'SDSRFXTD'                                  MD058085
+     C                             or ChkFile = 'SDTDTXTD'                                  MD058085
+     C                             or ChkFile = 'SDTIAXTD'                                  MD058085
+     C                             or ChkFile = 'SDTIZXTD'                                  MD058085
+     C                             or ChkFile = 'SDWLCXTD'                                  MD058085
+     C                             or ChkFile = 'SDWLIXTD'                                  MD058085
+     C                             or ChkFile = 'SDWLTXTD'                                  MD058085
+     C                             or ChkFile = 'SDWMTXTD'                                  MD058085
      C                             or ChkFile = 'APARCXTD'                                  MD058079
      C                             or ChkFile = 'EMCOFXTD'                                  MD058079
      C                             or ChkFile = 'ERLNAXTD'                                  MD058079
@@ -1217,6 +1280,58 @@
      C                             or ChkFile = 'UPMPXXTD'                                  MD058089
      C                             or ChkFile = 'UTSCRXTD'                                  MD058089
      C                             or ChkFile = 'UTSRCXTD'                                  MD058089
+     C                             or ChkFile = 'SCDTRXTD'                                  MD058087
+     C                             or ChkFile = 'SCMEXXTD'                                  MD058087
+     C                             or ChkFile = 'SCRMVXTD'                                  MD058087
+     C                             or ChkFile = 'SCSVPXTD'                                  MD058087
+     C                             or ChkFile = 'SDRTRXTD'                                  MD058755
+     C                             or ChkFile = 'SDNARXTD'                                  MD058769
+     C                             or ChkFile = 'T_APIXTD'                                  MD056602
+     C                             or ChkFile = 'TABV4XTD'                                  MD058854
+     C                             or ChkFile = 'T_ALAXTD'                                  MD058088
+     C                             or ChkFile = 'T_ALMXTD'                                  MD058088
+     C                             or ChkFile = 'T_APTXTD'                                  MD058088
+     C                             or ChkFile = 'T_FREXTD'                                  MD058088
+     C                             or ChkFile = 'T_FRPXTD'                                  MD058088
+     C                             or ChkFile = 'T_FROXTD'                                  MD058088
+     C                             or ChkFile = 'T_FRUXTD'                                  MD058088
+     C                             or ChkFile = 'T_EXAXTD'                                  MD058088
+     C                             or ChkFile = 'T_EXMXTD'                                  MD058088
+     C                             or ChkFile = 'T_EXTXTD'                                  MD058088
+     C                             or ChkFile = 'T_MLCXTD'                                  MD058088
+     C                             or ChkFile = 'T_MLEXTD'                                  MD058088
+     C                             or ChkFile = 'T_MLGXTD'                                  MD058088
+     C                             or ChkFile = 'T_MLLXTD'                                  MD058088
+     C                             or ChkFile = 'T_MLTXTD'                                  MD058088
+     C                             or ChkFile = 'T_POPXTD'                                  MD058088
+     C                             or ChkFile = 'T_DLTXTD'                                  MD058088
+     C                             or ChkFile = 'T_SMOXTD'                                  MD058088
+     C                             or ChkFile = 'T_WACXTD'                                  MD058088
+     C                             or ChkFile = 'T_WSTXTD'                                  MD058088
+     C                             or ChkFile = 'MEBEIXTD'                                  MD058081
+     C                             or ChkFile = 'MEBTYXTD'                                  MD058081
+     C                             or ChkFile = 'MECHKXTD'                                  MD058081
+     C                             or ChkFile = 'MEINCXTD'                                  MD058081
+     C                             or ChkFile = 'MEISOXTD'                                  MD058081
+     C                             or ChkFile = 'MEIVMXTD'                                  MD058081
+     C                             or ChkFile = 'MESTGXTD'                                  MD058081
+     C                             or ChkFile = 'MGCONXTD'                                  MD058081
+     C                             or ChkFile = 'MG580XTD'                                  MD058081
+     C                             or ChkFile = 'MSRCOXTD'                                  MD058081
+     C                             or ChkFile = 'SDNWKXTD'                                  MD058830
+     C                             or ChkFile = 'SDNW1XTD'                                  MD058830
+     C                             or ChkFile = 'SDLIBXTD'                                  MD060008
+     C                             or ChkFile = 'GPACSXTD'                                  MD058188
+     C                             or ChkFile = 'GPACXXTD'                                  MD058188
+     C                             or ChkFile = 'GPCTRXTD'                                  MD058188
+     C                             or ChkFile = 'GPFRSXTD'                                  MD058188
+     C                             or ChkFile = 'GPGRSXTD'                                  MD058188
+     C                             or ChkFile = 'GPICRXTD'                                  MD058188
+     C                             or ChkFile = 'GPICYXTD'                                  MD058188
+     C                             or ChkFile = 'GPINSXTD'                                  MD058188
+     C                             or ChkFile = 'GPNJRXTD'                                  MD058188
+     C                             or ChkFile = 'SCRELXTD'                                  MD060352
+     C                             or ChkFile = 'GPRELXTD'                                  MD060352
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1361,6 +1476,37 @@
      C                             or Member = 'SMGNMCTD'                                   MD058089
      C                             or Member = 'SMINPCTD'                                   MD058089
      C                             or Member = 'SMCNUCTD'                                   MD058089
+     C                             or Member = 'T_APICTD'                                   MD056602
+     C                             or Member = 'T_ALACTD'                                   MD058088
+     C                             or Member = 'T_ALMCTD'                                   MD058088
+     C                             or Member = 'T_APTCTD'                                   MD058088
+     C                             or Member = 'T_FRECTD'                                   MD058088
+     C                             or Member = 'T_FRPCTD'                                   MD058088
+     C                             or Member = 'T_FROCTD'                                   MD058088
+     C                             or Member = 'T_FRUCTD'                                   MD058088
+     C                             or Member = 'T_EXACTD'                                   MD058088
+     C                             or Member = 'T_EXMCTD'                                   MD058088
+     C                             or Member = 'T_EXTCTD'                                   MD058088
+     C                             or Member = 'T_MLCCTD'                                   MD058088
+     C                             or Member = 'T_MLECTD'                                   MD058088
+     C                             or Member = 'T_MLGCTD'                                   MD058088
+     C                             or Member = 'T_MLLCTD'                                   MD058088
+     C                             or Member = 'T_MLTCTD'                                   MD058088
+     C                             or Member = 'T_POPCTD'                                   MD058088
+     C                             or Member = 'T_DLTCTD'                                   MD058088
+     C                             or Member = 'T_SMOCTD'                                   MD058088
+     C                             or Member = 'T_WACCTD'                                   MD058088
+     C                             or Member = 'T_WSTCTD'                                   MD058088
+     C                             or Member = 'GPACSCTD'                                   MD058188
+     C                             or Member = 'GPACXCTD'                                   MD058188
+     C                             or Member = 'GPCTRCTD'                                   MD058188
+     C                             or Member = 'GPFRSCTD'                                   MD058188
+     C                             or Member = 'GPGRSCTD'                                   MD058188
+     C                             or Member = 'GPICRCTD'                                   MD058188
+     C                             or Member = 'GPICYCTD'                                   MD058188
+     C                             or Member = 'GPINSCTD'                                   MD058188
+     C                             or Member = 'GPNJRCTD'                                   MD058188
+     C                             or Member = 'GPRELCTD'                                   MD060352
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264
@@ -1458,6 +1604,11 @@
      C                             or Member = 'BYPRDCTD'                                   MD058068
      C                             or Member = 'BYPRMCTD'                                   MD058068
      C                             or Member = 'BYREGCTD'                                   MD058068
+     C                             or Member = 'CGCSTCTD'                                   MD058069
+     C                             or Member = 'CGCTYCTD'                                   MD058069
+     C                             or Member = 'CGISTCTD'                                   MD058069
+     C                             or Member = 'CGPSHCTD'                                   MD058069
+     C                             or Member = 'CGRGZCTD'                                   MD058069
      C                             or Member = 'RNAMTCTD'                                   MD058082
      C                             or Member = 'RNCPYCTD'                                   MD058082
      C                             or Member = 'RNCTYCTD'                                   MD058082
@@ -1467,6 +1618,38 @@
      C                             or Member = 'RNICPCTD'                                   MD058082
      C                             or Member = 'RNKYPCTD'                                   MD058082
      C                             or Member = 'RNSECCTD'                                   MD058082
+     C                             or Member = 'SDAUECTD'                                   MD058085
+     C                             or Member = 'SDAUFCTD'                                   MD058085
+     C                             or Member = 'SDAUSCTD'                                   MD058085
+     C                             or Member = 'SDAUXCTD'                                   MD058085
+     C                             or Member = 'SDBACCTD'                                   MD058085
+     C                             or Member = 'SDBAJCTD'                                   MD058085
+     C                             or Member = 'SDBAPCTD'                                   MD058085
+     C                             or Member = 'SDBATCTD'                                   MD058085
+     C                             or Member = 'SDBRKCTD'                                   MD058085
+     C                             or Member = 'SDBTSCTD'                                   MD058085
+     C                             or Member = 'SDCMTCTD'                                   MD058085
+     C                             or Member = 'SDCMUCTD'                                   MD058085
+     C                             or Member = 'SDDSTCTD'                                   MD058085
+     C                             or Member = 'SDECLCTD'                                   MD058085
+     C                             or Member = 'SDFNCCTD'                                   MD058085
+     C                             or Member = 'SDIRMCTD'                                   MD058085
+     C                             or Member = 'SDISOCTD'                                   MD058085
+     C                             or Member = 'SDMAPCTD'                                   MD058085
+     C                             or Member = 'SDMDFCTD'                                   MD058085
+     C                             or Member = 'SDMMOCTD'                                   MD058085
+     C                             or Member = 'SDMTYCTD'                                   MD058085
+     C                             or Member = 'SDNCDCTD'                                   MD058085
+     C                             or Member = 'SDNCOCTD'                                   MD058085
+     C                             or Member = 'SDPMRCTD'                                   MD058085
+     C                             or Member = 'SDSRFCTD'                                   MD058085
+     C                             or Member = 'SDTDTCTD'                                   MD058085
+     C                             or Member = 'SDTIACTD'                                   MD058085
+     C                             or Member = 'SDTIZCTD'                                   MD058085
+     C                             or Member = 'SDWLCCTD'                                   MD058085
+     C                             or Member = 'SDWLICTD'                                   MD058085
+     C                             or Member = 'SDWLTCTD'                                   MD058085
+     C                             or Member = 'SDWMTCTD'                                   MD058085
      C                             or Member = 'APARCCTD'                                   MD058079
      C                             or Member = 'EMCOFCTD'                                   MD058079
      C                             or Member = 'ERLNACTD'                                   MD058079
@@ -1489,6 +1672,27 @@
      C                             or Member = 'SMMTOCTD'                                   MD058089
      C                             or Member = 'SMSFCCTD'                                   MD058089
      C                             or Member = 'SMZNMCTD'                                   MD058089
+     C                             or Member = 'SCDTRCTD'                                   MD058087
+     C                             or Member = 'SCMEXCTD'                                   MD058087
+     C                             or Member = 'SCRMVCTD'                                   MD058087
+     C                             or Member = 'SCSVPCTD'                                   MD058087
+     C                             or Member = 'SDRTRCTD'                                   MD058755
+     C                             or Member = 'SDNARCTD'                                   MD058769
+     C                             or Member = 'TABV4CTD'                                   MD058854
+     C                             or Member = 'MEBEICTD'                                   MD058081
+     C                             or Member = 'MEBTYCTD'                                   MD058081
+     C                             or Member = 'MECHKCTD'                                   MD058081
+     C                             or Member = 'MEINCCTD'                                   MD058081
+     C                             or Member = 'MEISOCTD'                                   MD058081
+     C                             or Member = 'MEIVMCTD'                                   MD058081
+     C                             or Member = 'MESTGCTD'                                   MD058081
+     C                             or Member = 'MGCONCTD'                                   MD058081
+     C                             or Member = 'MG580CTD'                                   MD058081
+     C                             or Member = 'MSRCOCTD'                                   MD058081
+     C                             or Member = 'SDNWKCTD'                                   MD058830
+     C                             or Member = 'SDNW1CTD'                                   MD058830
+     C                             or Member = 'SDLIBCTD'                                   MD060008
+     C                             or Member = 'SCRELCTD'                                   MD060352
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C/exec SQL                                                                             MD057943

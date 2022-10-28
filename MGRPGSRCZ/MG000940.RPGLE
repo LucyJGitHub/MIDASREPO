@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CGL094             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CGL094             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR898442           Date 24Feb12               *
       *                 MD055842           Date 02Jun20               *
       *                 CMG008             Date 20Feb20               *
@@ -84,6 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CGL094 - Allow External Destination for MT940 Message.       *
       *           Remove Spaces when formatting field 61.             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -272,7 +274,7 @@
      FMGY940L0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(Y_)
-     FSDNWRKL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDNWRKL1* IF   E          K DISK    INFSR(*PSSR)                                     MD058830
      FSDCUSTL7  IF   E           K DISK    INFSR(*PSSR)
      FGLNW94L0  IF   E           K DISK    INFSR(*PSSR)
      F/COPY WNCPYSRC,MGH00088
@@ -400,6 +402,8 @@
       ** External DS for SAR Details                                                          CER030
       *                                                                                       CER030
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER030
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD058830
 
      D                 DS
      D   WCrlf                 1      2
@@ -826,7 +830,16 @@
      C     Get_NwrkDet   BEGSR
 
       *  Access Network Details to retrieve message settings
-     C     MGNWRK        Chain     SDNWRKL1                           02
+     C*****MGNWRK        Chain     SDNWRKL1                           02                    MD058830
+     C                   CALLB     'AONWRKR1'                                               MD058830
+     C                   PARM      *BLANKS       P@RTCD                                     MD058830
+     C                   PARM      '*KEY'        P@OPTN                                     MD058830
+     C                   PARM      MGNWRK        P@NWRK            6                        MD058830
+     C     SDNWRK        PARM      SDNWRK        DSLDY                                      MD058830
+     C                   setoff                                       02                    MD058830
+     C                   if        P@RTCD <> *BLANKS                                        MD058830
+     C                   seton                                        02                    MD058830
+     C                   endif                                                              MD058830
 
      C                   If        *IN02 = *ON
      C     *Lock         In        LDA

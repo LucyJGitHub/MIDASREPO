@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783             Date 28May12               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 223783             Date 28May12               *
       *                 CMG008             Date 20Feb20               *
       *                 MD054605           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
@@ -250,9 +252,11 @@
       *                                                                                     BUG26814
      D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                       BUG26814 MD054605
       *
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       *                                                                                    BUG23280A
-     D DSNwrk        E DS                  EXTNAME(SDNWRKPD)                               BUG23280A
+     D*DSNwrk***     E DS                  EXTNAME(SDNWRKPD)                      BUG23280A MD058830
+     D DSNwrk        E DS                  EXTNAME(SDNWKJW0)                                MD058830
      D                                     PREFIX(N_)                                      BUG23280A
       *                                                                                    BUG23280A
       ** External DS for account details                                                   BUG23280A

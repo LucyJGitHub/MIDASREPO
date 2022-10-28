@@ -11,7 +11,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060604 - Set off bits on RETB.                             *
+      *  MD060604 - Journal entry coming from OPICS with non-existing *
+      *             account is not accepted. Set off bits on RETB.    *
       *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
       *                                                               *
       *****************************************************************

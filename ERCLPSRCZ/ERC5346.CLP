@@ -10,16 +10,19 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058755           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      EMFIX              Date 26Aug98              */
 /*                      ER1023             Date 01Feb93              */
 /*                                                                  */
 /*------------------------------------------------------------------*/
+/*                                                                  */
+/*       MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*   EMFIX  - DBA2 upgrade : GL3320 and GL0340                      */
@@ -49,31 +52,31 @@
 /*       S01097  -  GL0323 REMOVED AND FILES CHANGED                */
 /*                                                                  */
 /********************************************************************/
- 
+
 /* Valid parameters are '1' (Spot Trade Historic & Equiv. Postings,  */
 /*                  and '2'  Spot Trade Hist. Revaluation Postings)  */
- 
+
              PGM        PARM(&POSTNUM)
- 
+
              DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&ACJND) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ACJNT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MMOD)  TYPE(*CHAR) LEN(256)
              DCL        VAR(&ERSTAT) TYPE(*CHAR) LEN(256)
- 
+
              DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6) VALUE('  JLIB')
- 
+
              DCL        VAR(&TIMES) TYPE(*DEC) LEN(1 0) VALUE(0) /* +
                           ER1023 */
- 
+
              DCL        VAR(&MAUD) TYPE(*CHAR) LEN(1) VALUE(' ') /* +
                           EMFIX */
- 
+
              MONMSG MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
- 
+
              IF         COND(&POSTNUM *EQ '1') THEN(DO)
              SNDPGMMSG  MSG('ERC5346 - GL A/c Post, Daily Journal - +
                           Spot Trade Historic & Equivalent') +
@@ -84,14 +87,14 @@
                           Spot Trade Historic Revaluations') +
                           TOMSGQ(MRUNQ)
              ENDDO
- 
+
 /* Identify Library Group and if this is a restart                   */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              RTVDTAARA  DTAARA(ERSTAT (41 1)) RTNVAR(&BUSY)
- 
+
 /* If restart, then remove journalled changes                        */
- 
+
              IF         COND(&BUSY = 'Y') THEN(DO)
                 CHKOBJ     OBJ(JRERC5346) OBJTYPE(*JRNRCV)
                 MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOJRNRCV))
@@ -115,16 +118,16 @@ NOJRN:          CHGJOB     INQMSGRPY(*DFT)
                 CHGJOB     INQMSGRPY(*RQD)
 NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
              ENDDO
- 
+
 /* Create temporary Journal & Receiver                               */
- 
+
              CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('Y')
              CHGVAR     VAR(%SUBSTRING(&JLIB 1 2)) VALUE(&SYSID)
- 
+
              CRTJRNRCV  JRNRCV(&JLIB/JRERC5346)
              CRTJRN     JRN(&JLIB/JERC5346) JRNRCV(&JLIB/JRERC5346)
- 
- 
+
+
     RETRY:                                    /* ER1023 */
 /* Prevent file LOCK by another job                          ER1023  */
              IF         COND(&TIMES *GT 5) THEN(DO) /* ER1023 */
@@ -134,74 +137,74 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
                           restart.') TOMSGQ(MOPERQ MRUNQ) /* ER1023 */
              GOTO       CMDLBL(ABNOR) /* ER1023 */
                                                 ENDDO    /* ER1023 */
- 
+
              CHGVAR     VAR(&TIMES) VALUE(&TIMES + 1) /* ER1023 */
- 
+
              ALCOBJ     OBJ((ACCNTAA *FILE *EXCL)) WAIT(9999) /* +
                           ER1023 */
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(RETRY)) /* +
                           ER1023 */
- 
+
              ALCOBJ     OBJ((ACCNTAB *FILE *EXCL)) WAIT(9999) /* +
                           ER1023 */
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(RETRY)) /* +
                           ER1023 */
- 
+
              ALCOBJ     OBJ((ACCNTAC *FILE *EXCL)) WAIT(9999) /* +
                           ER1023 */
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(RETRY)) /* +
                           ER1023 */
- 
- 
+
+
              STRJRNPF   FILE(ACCNTAB ACCNTAA ACCNTAC) JRN(JERC5346) +
                           IMAGES(*BOTH)
- 
+
              DLCOBJ     OBJ((ACCNTAA *FILE *EXCL)) /* ER1023 */
              MONMSG     MSGID(CPF0000) /* ER1023 */
              DLCOBJ     OBJ((ACCNTAB *FILE *EXCL)) /* ER1023 */
              MONMSG     MSGID(CPF0000) /* ER1023 */
              DLCOBJ     OBJ((ACCNTAC *FILE *EXCL)) /* ER1023 */
              MONMSG     MSGID(CPF0000) /* ER1023 */
- 
- 
+
+
 /* Clear work files                                                  */
- 
+
              RMVM       FILE(SACBL) MBR(SACBL)
              MONMSG     MSGID(CPF0000)
- 
+
              CLRPFM     FILE(ABEXHH)
              CLRPFM     FILE(ABEXAG)
              CLRPFM     FILE(ABEXZY)
- 
+
 /* Identify if Retail II or Interest on A/c's Modules are installed  */
- 
+
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
- 
+
              CHGJOB     SWS(00000000)
- 
+
              IF         COND((%SST(&MMOD 16 1) = 'Y') *OR +
                           (%SST(&MMOD 23 1) = 'Y')) THEN(CHGJOB +
                           SWS(01XX1XXX))
- 
-             OVRDBF     FILE(TABLE) TOFILE(TABGL)
- 
+
+/**********  OVRDBF     FILE(TABLE) TOFILE(TABGL) */                                    /*MD058755*/
+
 /* Block large files                                                 */
- 
+
              OVRDBF     FILE(ACCNTAB) SEQONLY(*YES 100)
              OVRDBF     FILE(ACBRC) SEQONLY(*YES 100)
              OVRDBF     FILE(ABEXAG) SEQONLY(*YES 100)
- 
+
 /* Call GL Account Balances Extract program                          */
- 
+
 /*******     CALL       PGM(GL3320)                                       EMFIX*****/
              CALL       PGM(GL3320) PARM(&MAUD) /* EMFIX*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              DLTOVR     FILE(ABEXAG)
- 
+
 /* UNSUCCESSFUL COMPLETION - Therefore REMOVE Journalled changes     */
- 
+
              IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
                 RMVM       FILE(ACCNT) MBR(ACCNT)
                 MONMSG     MSGID(CPF0000)
@@ -225,7 +228,7 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
                 DLTJRNRCV  JRNRCV(JRERC5346)
                 CHGJOB     INQMSGRPY(*RQD)
                 CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
- 
+
                 SNDPGMMSG  MSG('JOB TERMINATED - DATABASE IN ERROR') +
                              TOMSGQ(MRUNQ)
                 SNDPGMMSG  MSG('JOB TERMINATED - DATABASE IN ERROR') +
@@ -233,9 +236,9 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
 /* GL3320 - Abort                                                    */
                 GOTO ENDPGM
              ENDDO
- 
+
 /* SUCCESSFUL COMPLETION - Therefore, delete Journal & Receiver      */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                 ENDJRNPF   FILE(*ALL) JRN(JERC5346)
                 DLTJRN     JERC5346
@@ -244,27 +247,27 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
                 CHGJOB     INQMSGRPY(*RQD)
                 CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
- 
+
 /* If U1, then reorganise of GL Accounts Files required              */
- 
+
                 IF         COND(%SWITCH(1XXXXXXX)) THEN(DO)
- 
+
                    RMVM       FILE(SADETC) MBR(SADETC)
                    MONMSG     MSGID(CPF0000)
                    RMVM       FILE(SAIR) MBR(SAIR)
                    MONMSG     MSGID(CPF0000)
- 
+
                 ENDDO
- 
+
                 ADDLFM     FILE(SACBL) MBR(SACBL)
                 MONMSG     MSGID(CPF0000)
- 
+
 /* Identify which new postings file is to be used for Daily Journal  */
- 
+
                 CHGDTAARA  DTAARA(ERSTAT (42 1)) VALUE(&POSTNUM)
- 
+
                 IF         COND(&POSTNUM *EQ '1') THEN(DO)
 /**********        CHGVAR     VAR(&ACJND) VALUE('ACJNDHE')                                /*CER001*/
 /**********        CHGVAR     VAR(&ACJNT) VALUE('ACJNTHE')                                /*CER001*/
@@ -277,40 +280,40 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
                    CHGVAR     VAR(&ACJND) VALUE('GLSRX2L0')                               /*CER001*/
                    CHGVAR     VAR(&ACJNT) VALUE('GLSRX2L2')                               /*CER001*/
                 ENDDO
- 
+
 /* Override files to work file & new postings file for Daily Journal */
- 
+
                 OVRDBF     FILE(ACBL) TOFILE(SACBL) SEQONLY(*YES 100)
- 
+
                 OVRDBF     FILE(ACJND) TOFILE(&ACJND)
                 OVRDBF     FILE(ACJNT) TOFILE(&ACJNT)
- 
+
 /* Set off external switch for Funds Transfer module for report      */
- 
+
                 CHGJOB     SWS(XXXXX0XX)
- 
+
 /* Call GL Daily Journal report program                              */
- 
+
 /*************  CALL       PGM(GL0340)                                        EMFIX*/
              CALL       PGM(GL0340) PARM(&MAUD)                             /*EMFIX*/
- 
+
                 DLTOVR     FILE(ACBL ACJND ACJNT TABLE)
- 
+
                 IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                    CLRPFM     FILE(ABEXHH)
                    CLRPFM     FILE(ABEXAG)
                    CLRPFM     FILE(ABEXZY)
                    ENDDO
- 
+
                 ELSE      CMD(DO)
- 
+
                    IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                       SNDPGMMSG  MSG('DAILY JOURNAL DOES NOT BALANCE') +
                                   TOMSGQ(MRUNQ)
                       SNDPGMMSG  MSG('DAILY JOURNAL DOES NOT BALANCE') +
                                   TOMSGQ(MOPERQ)
                       ENDDO
- 
+
                    ELSE       CMD(DO)
                       CHGJOB     SWS(XXXXXXX1)
                       SNDPGMMSG  MSG('FILE OUT OF BALANCE - SACBL') +
@@ -318,45 +321,45 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
                       SNDPGMMSG  MSG('FILE OUT OF BALANCE - SACBL') +
                                    TOMSGQ(MOPERQ)
                       ENDDO
- 
+
                    ENDDO
- 
+
                 ENDDO
- 
+
              ELSE      CMD(DO)
- 
+
                 CHGJOB     SWS(XXXXXXX1)
                 SNDPGMMSG  MSG('FILE OUT OF BALANCE - ACCNT') +
                              TOMSGQ(MRUNQ)
                 SNDPGMMSG  MSG('FILE OUT OF BALANCE - ACCNT') +
                              TOMSGQ(MOPERQ)
                 ENDDO
- 
+
              ADDLFM     FILE(SADETC) MBR(SADETC)
              MONMSG     MSGID(CPF0000)
              ADDLFM     FILE(SAIR) MBR(SAIR)
              MONMSG     MSGID(CPF0000)
- 
+
 /* SUCCESSFUL COMPLETION - Therefore, end procedure                  */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                 CHGDTAARA  DTAARA(ERSTAT (42 2)) VALUE(' N')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* GENERAL ABORT - Remove all journalled changes                     */
- 
+
 ABNOR:       RTVDTAARA  DTAARA(ERSTAT (41 1)) RTNVAR(&BUSY)
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(EXIT))
              IF         COND(&BUSY = 'Y') THEN(DO)
- 
+
              DLCOBJ     OBJ((ACCNTAA *FILE *EXCL)) /* ER1023 */
              MONMSG     MSGID(CPF0000) /* ER1023 */
              DLCOBJ     OBJ((ACCNTAB *FILE *EXCL)) /* ER1023 */
              MONMSG     MSGID(CPF0000) /* ER1023 */
              DLCOBJ     OBJ((ACCNTAC *FILE *EXCL)) /* ER1023 */
              MONMSG     MSGID(CPF0000) /* ER1023 */
- 
+
                 RMVM       FILE(ACCNT) MBR(ACCNT)
                 MONMSG     MSGID(CPF0000)
                 RMVM       FILE(ACBRC) MBR(ACBRC)
@@ -381,5 +384,5 @@ ABNOR:       RTVDTAARA  DTAARA(ERSTAT (41 1)) RTNVAR(&BUSY)
                 MONMSG     MSGID(CPF0000)
                 ENDDO
 EXIT:        CHGJOB     SWS(XXXXXXX1)
- 
+
 ENDPGM:      ENDPGM

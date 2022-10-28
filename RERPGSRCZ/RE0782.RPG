@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c)Finastra International Limited 2001                       *
       *                                                               *
-      *  Last Amend No. MD057283           Date 19May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058755           Date 01Sep21               *
+      *  Prev Amend No. MD057283           Date 19May21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057047           Date 15Jan21               *
       *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
@@ -98,6 +99,7 @@
      F*                                                               *
 0012 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  MD057283 - If initial threshold is specified on the interest *
       *             calc. type,calculation of interest will only start*
       *             when balance exceeds initial threshold. Interest  *
@@ -275,7 +277,7 @@
      FACNUM   IF  F     113 10AI     2 DISK                                                   CGL029
      FSDSTAXL1IF  E                    DISK                                                   CGL031
      F***SDRETRL1***IF  E                    DISK                                  BUG12686 BUG12832
-     FSDRETRL1IF  E           K        DISK                                                 BUG12832
+     F*SDRETRL1IF  E           K        DISK                                       BUG12832 MD058755
 0019 F*E0782P7O** F     132            PRINTER                      S01124S01117
 0019 FRE0782AUO   F     132            PRINTER      KINFDS SPOOLU         S01117
 0020 F*E0782P6O** F     132            PRINTER                      S01124S01117
@@ -1383,6 +1385,7 @@
      IDSFDY     E DSDSFDY                                                 S01270
       *                                                                   S01270
       ** Short data structure for access programs.                        S01270
+     ISDRETR    E DSSDRTRJW0                                                                MD058755
       *                                                                                       235555
      IDSACCT    E DSACCNTAB                                                                   235555
      I              RECI                            ARECI                                     235555
@@ -2081,7 +2084,16 @@
      C           ##PFIC    IFEQ 'Y'                                                         CRE083AW
      C                     EXSR SRSETP                                                      CRE083AW
      C                     ELSE                                                             CRE083AW
-     C           WTRAT     CHAINSDRETRL1             48                                     BUG12832
+     C********** WTRAT     CHAINSDRETRL1             48                            BUG12832 MD058755
+     C                     CALL 'AORETRR0'                                                  MD058755
+     C                     PARM *BLANKS   PRTCD                                             MD058755
+     C                     PARM '*KEY    'POPTN                                             MD058755
+     C                     PARM WTRAT     @KEY    5                                         MD058755
+     C           SDRETR    PARM SDRETR    DSFDY                                             MD058755
+     C                     SETOF                     48                                     MD058755
+     C           PRTCD     IFNE *BLANKS                                                     MD058755
+     C                     SETON                     48                                     MD058755
+     C                     ENDIF                                                            MD058755
      C********** TRAT      CHAINSDRETRL1             48                            BUG12686 BUG12832
      C   48                MOVE 'SDRETRL1'DBFILE           ***********                      BUG12686
 0378 C***48*****           MOVELTTKEY     DBKEY            DB ERROR 02    S01117            BUG12686

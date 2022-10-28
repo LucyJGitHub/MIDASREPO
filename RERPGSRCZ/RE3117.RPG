@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027016           Date 19May14               *
+      *  Last Amend No. MD058854           Date 21Oct21               *
+      *  Prev Amend No. MD058755           Date 01Sep21               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD027016           Date 19May14               *
       *                 MD026867           Date 15May14               *
       *                 CER049             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +37,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD058854 - Deliverable Data Split for TABLEV4                *
+      *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027016 - Outstanding interest after delayed capitalisation *
       *             date is incorrect on accounts with commission for *
@@ -83,8 +87,9 @@
      FRECCY   IF  E           K        DISK
      F            RECCYAF                           KIGNORE
      F            RECCYZF                           KIGNORE
-     FTABLEV4 IF  E                    DISK
-     FTABLETZ IF  E           K        DISK
+     F*TABLEV4*IF  E                    DISK                                                MD058854
+     FTABV4XTDIF  E                    DISK                                                 MD058854
+     F*TABLETZ*IF  E           K        DISK                                                MD058755
      FREHISBL IF  E           K        DISK
      FRECOM   UF  E           K        DISK
      FRE3117AUO   E             88     PRINTER
@@ -236,6 +241,7 @@
      I*
      I** Second DS for access programs, long data structure
      I*
+     ISDRETR    E DSSDRTRJW0                                                                MD058755
      I/COPY WNCPYSRC,RE3117I001
      C/EJECT
      C                     MOVEACPY@      BIS@   80
@@ -337,16 +343,19 @@
      C*
      C                     Z-ADD1         Y       10
      C*
-     C           1         SETLLTABLEV4
+     C********** 1         SETLLTABLEV4                                                     MD058854
+     C           1         SETLLTABV4XTD                                                    MD058854
      C*
-     C                     READ TABLEV4                  42
+     C**********           READ TABLEV4                  42                                 MD058854
+     C                     READ TABV4XTD                 42                                 MD058854
      C*
      C           *IN42     DOUEQ'1'                        READ UNTIL EOF
      C           RECI      IFEQ 'D'
      C                     MOVE KEY       CGRP,Y
      C                     MOVE ACMI      AGRP,Y
      C                     ADD  1         Y
-     C                     READ TABLEV4                  42
+     C**********           READ TABLEV4                  42                                 MD058854
+     C                     READ TABV4XTD                 42                                 MD058854
      C                     END
      C                     END
      C*
@@ -770,20 +779,28 @@
      C*
      C** Get Transactions Details
      C*
-     C           TRAT      CHAINTABLETZF             62
+     C********** TRAT      CHAINTABLETZF             62                                     MD058755
+     C                     MOVE TRAT      @KEY                                              MD058755
+     C                     CALL 'AORETRR0'                                                  MD058755
+     C                     PARM *BLANKS   PRTCD                                             MD058755
+     C                     PARM '*KEY    'POPTN                                             MD058755
+     C                     PARM           @KEY    5                                         MD058755
+     C           SDRETR    PARM SDRETR    DSFDY                                             MD058755
       *
       *  INSTEAD OF ENDING PROGRAM OUPUT A LIST OF WRONG OR MISSING
       *  TRANSACTION TYPE.
       *
-     C           *IN62     IFEQ '1'                         -B3
-     C           RECI      ORNE 'D'
+     C********** *IN62     IFEQ '1'                         -B3                             MD058755
+     C********** RECI      ORNE 'D'                                                         MD058755
+     C           PRTCD     IFNE *BLANKS                                                     MD058755
      C           *IN88     IFEQ '1'
      C                     MOVE '0'       *IN70
      C                     WRITEHEADAU
      C                     MOVE '0'       *IN88
      C                     END
      C                     WRITETRATERRF                               11
-     C                     MOVE 'Y'       ACCOM
+     C**********           MOVE 'Y'       ACCOM                                             MD058755
+     C                     MOVE 'Y'       ACCOM   1                                         MD058755
      C                     END                             -E3
      C*
      C                     END                             -E2

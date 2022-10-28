@@ -9,14 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058755           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 099226             Date 05Feb96              */
+/*                      099226             Date 05Feb96              */
 /*                      087757             Date 24Oct95              */
 /*                      S01413             DATE 13APR93              */
 /*                      RT0159             DATE 25JUN91              */
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       099226 - Change 087757 has resulted in a subset of SD       */
 /*                functions being locked out with an 'in use by      */
@@ -73,13 +75,13 @@
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)             /*087757*/
 /**/
                CHGJOB     SWS(00000000)
- 
+
              IF         COND(&PRM02 *EQ '1') THEN(DO)
                 OVRDBF     FILE(TABLE) TOFILE(TABSDU)
                 OVRDBF     FILE(TABLEI) TOFILE(TABSDU) SHARE(*NO)
              ENDDO
-             IF         COND(&PRM02 *EQ '2') THEN(OVRDBF FILE(TABLE)           +
-                          TOFILE(TABSDM))
+/**********  IF         COND(&PRM02 *EQ '2') THEN(OVRDBF FILE(TABLE)           +
+                          TOFILE(TABSDM)) */                                            /*MD058755*/
              IF         COND(&PRM02 *EQ '3') THEN(OVRDBF FILE(TABLE)           +
                           TOFILE(TABSDU))
              IF         COND(&PRM02 *EQ '4') THEN(OVRDBF FILE(TABLE)           +
@@ -88,7 +90,7 @@
 /************             TOFILE(TABST))                                E22545*/
              IF         COND(&PRM02 *EQ '6') THEN(OVRDBF FILE(TABLE)           +
                           TOFILE(TABSE))                              /*S01129*/
- 
+
              IF         COND(&PRM01 *EQ 'SD0010') THEN(DO)
                OVRDBF     FILE(CLIND) TOFILE(CLINT) SHARE(*NO)
                OVRDBF     FILE(CLINT2) TOFILE(CLINT) SHARE(*NO)
@@ -133,8 +135,8 @@
 /************ENDDO                                                 */ /*E17785*/
 /**/                                                                  /*S01109*/
              IF         COND(&PRM01 *EQ 'SD0284') THEN(DO)
-               OVRDBF     FILE(TABLE) TOFILE(TABSDM) SHARE(*NO)
-               OVRDBF     FILE(TABLE2) TOFILE(TABSDM) SHARE(*NO)
+/**********    OVRDBF     FILE(TABLE) TOFILE(TABSDM) SHARE(*NO) */                      /*MD058755*/
+/**********    OVRDBF     FILE(TABLE2) TOFILE(TABSDM) SHARE(*NO) */                     /*MD058755*/
              ENDDO
 /****/                                                                /*E11184*/
  /*          RCVDTAARA  DTAARA(MMOD)                                *  *S01147*/

@@ -10,16 +10,18 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058769           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      ER0004 AD          Date 26Nov92              */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD058769 - Deliverable Data Split for SDNARRPD and TABLETP  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*  ER0004 - Writted to call new revaluation program, based on      */
@@ -43,14 +45,14 @@
              CLRPFM     FILE(GLSRX2PD)                                                    /*CER001*/
 /**********  CLRPFM     FILE(GESTHRZZ)                                                    /*CER001*/
              CLRPFM     FILE(GLSRX2PA)                                                    /*CER001*/
-             OVRDBF     FILE(TABLE)   TOFILE(TABDLEI)
-             OVRDBF     FILE(TABLE2)  TOFILE(TABDLEE)
+/**********  OVRDBF     FILE(TABLE)   TOFILE(TABDLEI)                                   /*MD058769*/
+/**********  OVRDBF     FILE(TABLE2)  TOFILE(TABDLEE)                                   /*MD058769*/
 /**/
 /* ER0004 ***CALL       PGM(DL0450)                                */
              CALL       PGM(ER5348)
 /**/
              RTVJOBA    SWS(&SWS)
-             DLTOVR     FILE(TABLE TABLE2)
+/**********  DLTOVR     FILE(TABLE TABLE2) */                                           /*MD058769*/
 /**/
              IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(SNDMSG +
                         MSG('JOB TERMINATED - DATABASE IN ERROR') +

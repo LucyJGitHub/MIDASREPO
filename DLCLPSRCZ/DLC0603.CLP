@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD044136           Date 13Mar17              */
+/*       Last Amend No. MD058769           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD044136           Date 13Mar17              */
 /*                      MD031243           Date 06Nov14              */
 /*                      CSW214             Date 25Nov14              */
 /*                      MD030111           Date 28Aug14              */
@@ -63,6 +64,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058769 - Deliverable Data Split for SDNARRPD and TABLETP  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD044136 - DLC0603 00001 in MSGW                            */
 /*       MD031243 - DLC0603 sequence 00001 failed in COB             */
@@ -133,15 +135,15 @@
 /*********************************************************************/
 /************PGM                                                      /*CCB009*/
              PGM        PARM(&CNAM &CSEQ)                             /*CCB009*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6)
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
- 
+
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
 /*/COPY WNCPYSRC,DLC0603009                                          */
@@ -191,12 +193,12 @@
              DCL        VAR(&CMG003) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CMG003*/
                                                                                           /*CMG003*/
 /*/COPY WNCPYSRC,DLC0603018                                          */
- 
+
              DCLF       FILE(SDMGMEPD)
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /*                                                                                        /*CSC020*/
 /* Write current journal sequence number to file SCJSEQPD, using command SCWRTJREG.       /*CSC020*/
 /*                                                                                        /*CSC020*/
@@ -209,7 +211,7 @@
              SNDPGMMSG  MSG('CoB Confirmations Generation') +
                           TOMSGQ(MRUNQ)
 /*/COPY WNCPYSRC,DLC0603004                                          */
- 
+
 /* Clear down extract files */
 /* */                                                                 /*086128*/
 /* Only Clear ECONX if UDC not installed   */                         /*086128*/
@@ -346,9 +348,9 @@
              IF         COND((&CSW011 *EQ 'Y') *AND (&CSW005 *NE +
                           'Y')) THEN(CLRPFM FILE(MGF341PD))           /*CSW011*/
                                                                       /*CSW011*/
- 
+
              RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
- 
+
              CHGVAR     VAR(&PREFIX) VALUE(%SST(&SDSTAT 6 2))
              CHGVAR     VAR(&JLIB) VALUE(&PREFIX *CAT 'JLIB')
                                                                       /*S01408*/
@@ -448,7 +450,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)                                            /*232543*/
              ENDDO                                                    /*CCB009*/
              ENDDO                                                    /*CCB009*/
- 
+
                                                            /* E29371 */
 /*           CRTJRNRCV  JRNRCV(&JLIB/TEMPRCV)               */
 /*           CRTJRN     JRN(&JLIB/TEMPJRN) JRNRCV(TEMPRCV)  */
@@ -480,28 +482,28 @@
 /**/                                                                  /*CCB009*/
              CRTJRN     JRN(&JLIB/JDLC0603) JRNRCV(&JLIB/JRDLC0603)   /*CCB009*/
 /**/                                                                  /*CCB009*/
- 
+
 /*           STRJRNPF   FILE(DEALSDA DEALSDB DEALSDC DEALSDD DEALSDE +
                           DEALSDF DEALSDG DEAMSDH DEAMSDI DEAMSDJ +
                           MGOREFPD MGOMSGPD MGF300PD MGF350PD +
                           MGF320PD MGF321PD MGF324PD MGF330PD +
                           MGF335PD CFFEEDPD) JRN(TEMPJRN) +
                           IMAGES(*BOTH) OMTJRNE(*NONE)      */
- 
+
 /************STRJRNPF   FILE(DEALSDA DEALSDB DEALSDC DEALSDD DEALSDE +
                           DEALSDF DEALSDG DEAMSDH DEAMSDI DEAMSDJ +
                           MGOREFPD MGOMSGPD MGF300PD MGF350PD +
                           MGF320PD MGF321PD MGF324PD MGF330PD +
                           MGF335PD CFFEEDPD) JRN(DLTEMPJRN) +
                           IMAGES(*BOTH) OMTJRNE(*NONE)           E29371E43951*/
- 
+
 /************STRJRNPF   FILE(DEALSDA DEALSDB DEALSDC DEALSDD DEALSDE +
                           DEALSDF DEALSDG DEAMSDH DEAMSDI DEAMSDJ +
                           MGOREFPD MGOMSGPD MGF300PD MGF350PD +
                           MGF320PD MGF321PD MGF324PD MGF330PD +
                           MGF335PD CFFEEDPD CFCHSRPD) JRN(DLTEMPJRN) +
                           IMAGES(*BOTH) OMTJRNE(*NONE)           E43951*086128*/
- 
+
 /**********  STRJRNPF   FILE(DEALSDA DEALSDB DEALSDC DEALSDD DEALSDE +
 /**********               DEALSDF DEALSDG DEAMSDH DEAMSDI DEAMSDJ +
 /**********               MGOREFPD MGOMSGPD MGF300PD MGF350PD +
@@ -565,20 +567,20 @@
              ENDDO                                                    /*171312*/
              ENDDO                                                    /*CCB009*/
                                                                       /*171312*/
- 
+
 /*/COPY WNCPYSRC,DLC0603011                                          */
 /*  Retrieve System Date and Time - required to extract journal       /*E40242*/
 /*  entries for audit report.                                         /*E40242*/
              RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)                  /*E40242*/
              RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&SDATE)                  /*E40242*/
 /*/COPY WNCPYSRC,DLC0603012                                          */
- 
+
 /* Begin commitment control */
 /**********  STRCMTCTL LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))             /*CPK009*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                              /*CPK009*/
              MONMSG     MSGID(CPF0000)
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')                         /*CCB009*/
 /**/                                                                  /*CCB009*/
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)           /*CCB009*/
@@ -587,15 +589,15 @@
 /*/COPY WNCPYSRC,DLC0603016                                          */
              CHGJOB     LOG(4) LOGCLPGM(*YES) SWS(10000000)
 /*/COPY WNCPYSRC,DLC0603017                                          */
- 
+
 /* Create LDA */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           TEXT('Midas SD AS400 LOCAL DATA AREA +
                           EQUIVALENT')
              MONMSG     MSGID(CPF0000)
- 
+
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
- 
+
 /*** *******                                                   *S01522**086128*/
 /**User*Defined Correspondence processing  *                   *S01522**086128*/
 /*** *******                                                   *S01522**086128*/
@@ -642,7 +644,7 @@
 /*********** GOTO       CMDLBL(ERROR)                          *S01522**086128*/
 /*********** ENDDO                                             *S01522**086128*/
 /*********** ENDDO                                             *S01522**086128*/
- 
+
 /*/COPY WNCPYSRC,DLC0603005                                          */
                 IF         COND(&CER040 *EQ 'Y') THEN(DO)                                 /*CER040*/
                   CLRPFM     FILE(DLDABRPD)                                               /*CER040*/
@@ -656,7 +658,7 @@
                   ENDDO                                                                   /*CER040*/
                   CLRPFM     FILE(DLDACOPD)                                               /*CER040*/
                   CALL       PGM(DL9911)                                                  /*CER040*/
- 
+
                   IF         COND(%SWITCH(XXXXXX1X) *OR +
                                %SWITCH(XXXXXXX1)) THEN(DO)                                /*CER040*/
                        CHGVAR     VAR(&MSG) VALUE('Amendments Consolidation +
@@ -686,13 +688,13 @@
              DLTOVR     FILE(DLIND)                                  /*090998*/
              DLTOVR     FILE(DAIND)                                  /*051496*/
              CLOF       OPNID(DAIND)                                 /*051496*/
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Confirmation print failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /*/COPY WNCPYSRC,DLC0603006                                          */
              IF         COND(&CER040 *EQ 'Y') THEN(DO)                                    /*CER040*/
                                                                                           /*CER040*/
@@ -730,24 +732,24 @@
 /**/                                                                                      /*CER040*/
 /************IF         COND(%SUBSTRING(&MMOD 41 1) *EQ 'Y') +        /*S01427*/
 /************             THEN(CALL PGM(CHC0603))                     /*S01427*/
- 
+
              IF         COND((%SUBSTRING(&MMOD 41 1) *EQ 'Y') *AND             +
                              (%SWITCH(XXXXXX00))) THEN(DO)            /*S01427*/
-             OVRDBF     FILE(TABLE) TOFILE(TABDLEE)                   /*S01427*/
+/**********  OVRDBF     FILE(TABLE) TOFILE(TABDLEE) */                /*S01427*/        /*MD058769*/
                            CLRPFM     FILE(*LIBL/CHRXCTT)             /*S01427*/
                            CALL       PGM(CH0060)                     /*S01427*/
-             DLTOVR     FILE(TABLE)                                   /*S01427*/
+/**********  DLTOVR     FILE(TABLE) */                                /*S01427*/        /*MD058769*/
                            ENDDO                                      /*S01427*/
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('C.H.I.P.S. message +
                           generation failure')
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              IF COND(%SST(&MMOD 25 1) *EQ 'Y') THEN(DO)
- 
+
              OVRDBF     FILE(MGOREFPD) SHARE(*NO)
 /**                                                      START E29714*/
              OVRDBF     FILE(MGOREFL0) SHARE(*NO)
@@ -764,7 +766,7 @@
 /**                                                                   /*084318*/
 /*/COPY WNCPYSRC,DLC0603015                                          */
              CALL       PGM(DL6310)   /* COMIT DEALS ONLY */
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Confirmation extract failure')
@@ -812,16 +814,16 @@
                                                                                         /*MD028093*/
              ENDDO                                                    /*CSW005*/
                                                                       /*CSW005*/
- 
+
 /* GDFs records are deleted as they are processed */
 /*/COPY WNCPYSRC,DLC0603026                                          */
- 
+
 /* Process foreign exchange confirmations */
              IF         COND(&CSW097 = 'N') THEN( +
              CALL       PGM(MG0300))                                  /*CSW097*/
              ELSE       CMD(CALL PGM(MG0300A))                        /*CSW097*/
 /*********** CALL       PGM(MG0300)                                */ /*CSW097*/
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              SNDPGMMSG  MSG('Foreign exchange confirmation +
@@ -829,10 +831,10 @@
                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Process fixed loan/deposit confirmations */
              CALL       PGM(MG0320)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              SNDPGMMSG  MSG('Loan/deposit confirmation +
@@ -840,7 +842,7 @@
                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              IF         COND(&CMG003 *EQ 'Y') THEN(DO)                                    /*CMG003*/
              CALL       PGM(MG000600)                                                     /*CMG003*/
                                                                                           /*CMG003*/
@@ -861,7 +863,7 @@
                                                                                           /*CSW208*/
 /* Process secondary certificate of deposits */
              CALL       PGM(MG0321)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              SNDPGMMSG  MSG('Secondary certificate of deposit +
@@ -869,12 +871,12 @@
                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Process liquidation of loan/deposits */
 /*                  (only if CSW200 is off)                        */ /*CSW200*/
              IF         COND(&CSW200 *NE 'CSW200') THEN(DO)           /*CSW200*/
              CALL       PGM(MG0324)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              SNDPGMMSG  MSG('Loan/deposit liquidation +
@@ -883,10 +885,10 @@
              GOTO       CMDLBL(ERROR)
              ENDDO
              ENDDO                                                    /*CSW200*/
- 
+
 /* Process call loan/deposits */
              CALL       PGM(MG0330)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              SNDPGMMSG  MSG('Call loan/deposit confirmation +
@@ -894,12 +896,12 @@
                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Process interest rate change advices */
 /*                  (only if CSW200 is off)                        */ /*CSW200*/
              IF         COND(&CSW200 *NE 'CSW200') THEN(DO)           /*CSW200*/
              CALL       PGM(MG0335)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              SNDPGMMSG  MSG('Interest rate change advice +
@@ -908,10 +910,10 @@
              GOTO       CMDLBL(ERROR)
              ENDDO
              ENDDO                                                    /*CSW200*/
- 
+
 /* Process interest advices */
              CALL       PGM(MG0350)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              SNDPGMMSG  MSG('Interset rate advice +
@@ -954,7 +956,7 @@
                                                                       /*CSW005*/
              ENDDO                                                    /*CSW005*/
                                                                       /*CSW005*/
- 
+
 /* If ISO confirmations required print messages */
              RCVF
              IF         COND(&ENFFCR = 'N') THEN(DO)
@@ -967,7 +969,7 @@
              ENDDO
              ENDDO
              ENDDO
- 
+
 /* Call Confirmation matching control program */
 /************IF*********COND(%SST(&MMOD 60 1) *EQ 'Y') THEN(CALL +
 /*************************PGM(CFC0180))                            */ /*084318*/
@@ -998,7 +1000,7 @@
                               TOMSGQ(MOPERQ) MSGTYPE(*INFO)           /*084318*/
                   GOTO  ERROR                                         /*084318*/
                   ENDDO                                               /*084318*/
- 
+
 /* */                                                                 /*086128*/
 /* Clear ECONX files */                                               /*086128*/
 /* */                                                                 /*086128*/
@@ -1030,7 +1032,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ) +
                           MSGTYPE(*INFO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /* Send database error message to workstation & MOPERQ */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MSG)
@@ -1040,12 +1042,12 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&ERROR) VALUE('Y')                                         /*AR1077561*/
              ENDDO
- 
+
 /* If U7/U8 both OFF, must be CPF error - ensure switches ON for */
 /* return to CB */
              IF         COND(%SWITCH(XXXXXX00)) THEN(CHGJOB +
                           SWS(XXXXXX11))
- 
+
 /*/COPY WNCPYSRC,DLC0603020                                          */
             CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')                                     /*CER040*/
             CALL       PGM(CGC3605) PARM(&ACTION)                                         /*CER040*/
@@ -1118,7 +1120,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
                           (DEALSDC) (DEALSDD) (DEALSDE) (DEALSDF) +
                           (DEALSDG) (DEAMSDH) (DEAMSDI) (DEAMSDJ) +
                           (MGOREFPD) (MGOMSGPD) (CFFEEDPD)) */
- 
+
 /************RMVJRNCHG  JRN(DLTEMPJRN) FILE((DEALSDA) (DEALSDB) +
                           (DEALSDC) (DEALSDD) (DEALSDE) (DEALSDF) +
                           (DEALSDG) (DEAMSDH) (DEAMSDI) (DEAMSDJ) +
@@ -1148,7 +1150,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              RMVJRNCHG  JRN(JDLC0603) FILE((SDCSINPD))                                    /*232543*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                    /*232543*/
              ENDDO                                                    /*CCB009*/
- 
+
 /* Reset busy flag in DLSTAT */
  END:        ALCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD)) WAIT(32000)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
@@ -1156,10 +1158,10 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DLCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              ENDCMTCTL
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
                                                            /* E29371 */
 /*/COPY WNCPYSRC,DLC0603021                                          */
 /**/                                                                  /*CCB009*/
@@ -1175,7 +1177,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
                                                            /* E29371 */
              CHGJOB     INQMSGRPY(*DFT)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
                                                            /* E29371 */
 /***********                                                           *086128*/
 /*** *******                                                   *S01522**086128*/
@@ -1196,7 +1198,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /*/COPY WNCPYSRC,DLC0603024                                          */
                                                            /* E29371 */
- 
+
              IF         COND(%SST(&FMT 101 1) *NE 'Y') THEN(DO)       /*086128*/
              CLRPFM     FILE(ECONXCY)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
@@ -1253,7 +1255,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              CLRPFM     FILE(MGF341PD)                                /*CSW011*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CSW011*/
              ENDDO                                                    /*CSW011*/
- 
+
                  CHGVAR     VAR(&STAT) VALUE('N')                     /*CCB009*/
 /**/                                                                  /*CCB009*/
                  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)       /*CCB009*/

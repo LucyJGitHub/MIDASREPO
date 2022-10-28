@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 CFT157             Date 29Aug14               *
       *                 CSW213             Date 03Jun13               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -133,7 +135,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *                                                                                       CFT017
-     FMEISOCL1  IF   E           K DISK                                                       CFT017
+     F*MEISOCL1* IF   E           K DISK                                             CFT017 MD058081
       ** Midas ME SWIFT ISO Country Codes retrieval index                                     CFT017
       *                                                                                       CFT017
 
@@ -314,6 +316,7 @@
       ** BIC details                                                                          CFT017
      D MEBICD        E DS                  EXTNAME(MEBICDPD)                                  CFT017
 
+     D MEISOC        E DS                  EXTNAME(MEISOJW0)                                MD058081
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
@@ -2872,9 +2875,15 @@
       *                                                                                       CFT017
       ** Get ISO country code. Country must be an EEA member.                                 CFT017
       *                                                                                       CFT017
-     C     WCNCD         CHAIN     MEISOCL1                           01                      CFT017
+     C*****WCNCD         CHAIN     MEISOCL1                           01             CFT017 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      WCNCD         @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *                                                                                       CFT017
-     C                   IF        *IN01 OR                                                   CFT017
+     C**********         IF        *IN01 OR                                          CFT017 MD058081
+     C                   IF        @RTCD <> *BLANKS OR                                      MD058081
      C                             M3EEAM <> 'Y'                                              CFT017
      C                   CLEAR                   WCNCD                                        CFT017
      C                   ENDIF                                                                CFT017

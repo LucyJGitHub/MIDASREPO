@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR596191           Date 19Aug14               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR596191           Date 19Aug14               *
       *                 AR573194           Date 09Jul10               *
       *                 AR892580           Date 02Feb12               *
       *                 CSF011A            Date 28Nov11               *
@@ -86,6 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR596191 - Error on Safekeeping Account is issued even if    *
       *             a valid value is inserted                         *
@@ -160,18 +162,18 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-     FMGECONL0  IF   E           K DISK
+     F*MGECONL0* IF   E           K DISK                                                    MD058081
      FTRADSDZ3  IF   E           K DISK                                                       201429
      FSDCUSTL1  IF   E           K DISK                                                       229443
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SETRDEV033
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -183,50 +185,50 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** Trade Primary Details in screen format
      D TrPrim        E DS                  EXTNAME(SETRPRPD)
      D TR1_CLTY      E                     EXTFLD(DDCLTY)
@@ -238,40 +240,40 @@
      D TrSett        E DS                  EXTNAME(SETRSTPD)
       ** Trade Extension File details (SWIFT) in screen format
      D TrSwft        E DS                  EXTNAME(SETRSWPD)
- 
- 
+
+
       ** Flags to indicate whether SWIFT fields are OK
      D OKTrSwft      E DS                  EXTNAME(SEETRSWPD)
- 
- 
+
+
       * Valid Trade layout
      D ValidTrad     E DS                  EXTNAME(SEVTRADPD)
- 
+
       * File Fields for Securities SWIFT (Extension) screen.
      D ValidTrX1     E DS                  EXTNAME(SEVTRX1PD)
- 
+
       ** TRADSDX2 record                                                                      210517
      D PTradeX2      E DS                  EXTNAME(TRADSDX2)                                  210517
      D                                     PREFIX(X2:2)                                       210517
- 
+
       ** Security Customer Details
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
       ** Customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** Second Data Structure for Access Objects
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
- 
+     D MGECON        E DS                  EXTNAME(MGCONJW0)                                MD058081
+
+
      D MGFUN           S              1    DIM(50)
       ** Array used to check Fungibility Codes
- 
+
      D                 DS
       ** Data Structure to set up field for chain to SDCUSTPD
      D**CustNum*               1      6  0                                                    CSD027
      D  CustNum                1      6A                                                      CSD027
      D  CustAlp                1      6
- 
+
      D VA0             S              1    DIM(10) CTDATA PERRCD(10)
      D VA01            S              1    DIM(26) CTDATA PERRCD(26)                          184406
       ** Array used in EUCL validations
@@ -283,11 +285,11 @@
       ** Array for Euroclear codes validation (numeric)
      D VA4             S              8    DIM(9) CTDATA PERRCD(1)
       ** Array for valid Further Identification fields
- 
- 
+
+
      D EU1             S              1    DIM(6)
       ** Array used to split SEUCL into individual characters
- 
+
      D                 DS
       ** Euroclear/Cedel code validation
      D  DDEUCL_X               1     10
@@ -302,7 +304,7 @@
       ** Safekeeping Account
      D  DDSAFA_X               1      6
      D  DDSAFA26               2      6
- 
+
      D                 DS
       ** KMGECO data structure
      D  W_GECO                 1     20
@@ -312,12 +314,12 @@
                                                                                 CAP004
      D ExtData       E DS                  EXTNAME(SETDEXPD)                    CAP004
       * SE Trades Extra Data - File (D/B) format                                CAP004
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
      D Ix              S              3P 0                                                  AR596191
@@ -328,19 +330,19 @@
      D CSW202          S              1A                                                      CSW202
      D PRtCd           S              7A                                                      CSW202
      D ValSafe         S              1A                                                    AR573194
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SETRDEV034
- 
+
       *******************************************************************
       /EJECT
       *******************************************************************
@@ -353,7 +355,7 @@
       *******************************************************************
       *
       /COPY WNCPYSRC,SETRDEV001
- 
+
       ** INITIAL PROCESSING
      C                   EXSR      INIT
       /COPY WNCPYSRC,SETRDEV002
@@ -539,12 +541,12 @@
      C                   EXSR      UPDFIL
      C                   ENDIF
       /COPY WNCPYSRC,SETRDEV032
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SETRDEV035
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -749,20 +751,20 @@
       ** Check time is valid
       *
      C     DDTRTT        IFNE      *BLANKS
- 
+
      C                   TESTN                   DDTRTT               98
      C                   MOVE      DDTRTT        @@TEST            1
      C                   TESTZ                   @@TEST                   99
- 
+
      C     *IN98         IFEQ      '0'
      C     *IN99         OREQ      '0'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDTRTT'
      C                   EVAL      MsgIDArr(Idx) = 'SEW5147'
      C                   MOVE      'N'           DDTRTTOK
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     DDTRTT        W_NUM5            5 0
      C                   MOVEL     W_NUM5        W_ALP4            4
      C                   MOVEL     DDTRTT        W_HOUR            2 0
@@ -935,8 +937,13 @@
      C                   END
       *
       ** Check instructions sub-type depending of type of delivering
-     C     KMGECO        CHAIN     MGECONL0                           86
-     C     *IN86         IFEQ      '1'
+     C*****KMGECO        CHAIN     MGECONL0                           86                    MD058081
+     C                   CALL      'MGCONRTV'                                               MD058081
+     C                   PARM      *BLANKS       WRTCD             7                        MD058081
+     C                   PARM      KMGECO        WKEYX            20                        MD058081
+     C     MGECON        PARM      MGECON        DSSDY                                      MD058081
+     C******IN86         IFEQ      '1'                                                      MD058081
+     C     WRTCD         IFNE      *BLANKS                                                  MD058081
       *
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDINSS'
@@ -1387,8 +1394,13 @@
       ** Check combinations between instructions and fungibility codes
       ** (Only for Cedel).
      C     W_DEST        IFEQ      'CEDEL'
-     C     KMGECO        CHAIN     MGECONL0                           85
-     C     *IN85         IFEQ      '0'
+     C*****KMGECO        CHAIN     MGECONL0                           85                    MD058081
+     C                   CALL      'MGCONRTV'                                               MD058081
+     C                   PARM      *BLANKS       WRTCD             7                        MD058081
+     C                   PARM      KMGECO        WKEYX            20                        MD058081
+     C     MGECON        PARM      MGECON        DSSDY                                      MD058081
+     C******IN85         IFEQ      '0'                                                      MD058081
+     C     WRTCD         IFEQ      *BLANKS                                                  MD058081
      C                   MOVEA     MGXFUN        MGFUN
      C     DDFCOD        LOOKUP    MGFUN                                  85
      C     *IN85         IFEQ      '0'
@@ -1780,21 +1792,21 @@
       ** ---------------------------------------------
       *
      C     Screen        IFEQ      'A'
- 
+
      C     DDTDTP        IFEQ      'TP'
      C                   MOVE      DELT          Dest_DEPOT        6
      C                   ELSE
      C                   MOVE      DELF          Dest_DEPOT
      C                   END
- 
+
      C                   ELSE
- 
+
      C     DDTDTP        IFEQ      'TP'
      C                   MOVE      DELF          Dest_DEPOT
      C                   ELSE
      C                   MOVE      DELT          Dest_DEPOT
      C                   ENDIF
- 
+
      C                   END
       *
       ** Retrieve Cedel/Euroclear destination
@@ -1947,7 +1959,7 @@
      C                   MOVEL     '900'         DBASE                          ************
      C                   EXSR      SRERR
      C                   END
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           CSW003
      C                   ELSE
@@ -1990,10 +2002,10 @@
      C     KEY001        KLIST                                                                201429
      C                   KFLD                    DDTDRF                                       201429
      C                   KFLD                    SCREEN                                       201429
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SETRDEV036
- 
+
      C                   ENDSR
       *****************************************************************
       *

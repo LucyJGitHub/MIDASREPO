@@ -19,8 +19,10 @@
       *  Note: Core amendments to this program must be applied via    *
       *        the core synon model.                                  *
       *                                                               *
-      *  Last Amend No. MD056888           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD056888           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,6 +39,8 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD056888 - Deliverable Data Split for SDCODEPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
@@ -60,14 +64,14 @@
      F**********                           INFSR(*PSSR)                                     MD056888
       * RTV : SWIFT Codewords           Retrieval index
       *
-     FSDMTPYL1  IF   E           K DISK    USROPN
-     F                                     INFDS(ID0001)
-     F                                     INFSR(*PSSR)
+     F*SDMTPYL1* IF   E           K DISK    USROPN                                          MD060008
+     F**********                           INFDS(ID0001)                                    MD060008
+     F**********                           INFSR(*PSSR)                                     MD060008
       * RTV : Midas SD Message type descriptions retrieval
       *
-     FSDMEMOL1  IF   E           K DISK    USROPN
-     F                                     INFDS(ID0002)
-     F                                     INFSR(*PSSR)
+     F*SDMEMOL1* IF   E           K DISK    USROPN                                          MD058085
+     F**********                           INFDS(ID0002)                                    MD058085
+     F**********                           INFSR(*PSSR)                                     MD058085
       * RTV : Message Manage Module Det Retrieval index
       *
      FSDCUSTL5  IF   E           K DISK    USROPN
@@ -152,6 +156,8 @@
      D QSDFC1        E DS                  EXTNAME(SDFCTLL0)
       * UPD : Midas SD Standing data controls update
      D SDCODE        E DS                  EXTNAME(SDCODJW0)                                MD056888
+     D SDMEMO        E DS                  EXTNAME(SDMMOJW0)                                MD058085
+     D SDMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
      D WQSD01          S             20                                                     MD056888
      D WQSD02          S              3                                                     MD056888
      D WQSD03          S              2                                                     MD056888
@@ -1144,8 +1150,15 @@
      C                   KFLD                    EEMTPY                         Message Type
       * Move fields to key list
      C                   MOVEL     #1SMTP        EEMTPY                         Message Type
-     C     KRSSA         CHAIN     @EEREJ2                            90        *
-     C     *IN90         IFEQ      '1'
+     C*****KRSSA         CHAIN     @EEREJ2                            90        *           MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDMTPY                                                                        MD060008
+     C+ from SDMTYJW0                                                                       MD060008
+     C+ where EEMTPY = :EEMTPY                                                              MD060008
+     C/END-EXEC                                                                             MD060008
+     C******IN90         IFEQ      '1'                                                      MD060008
+     C     SQLCODE       IFNE      0                                                        MD060008
       * Data record not found
      C                   MOVEL     'USR1539'     W0RTN             7
       * USER: Processing if Data record not found
@@ -1171,7 +1184,17 @@
      C                   KFLD                    EBMODI                         Module Id
       * Move fields to key list
      C                   MOVEL     #1MMID        EBMODI                         Module Id
-     C     KRSSB         CHAIN     @EBREJT                            90        *
+     C*****KRSSB         CHAIN     @EBREJT                            90        *           MD058085
+     C/EXEC SQL                                                                             MD058085
+     C+ SELECT *                                                                            MD058085
+     C+ into :SDMEMO                                                                        MD058085
+     C+ from SDMMOJW0                                                                       MD058085
+     C+ where EBMODI = :EBMODI                                                              MD058085
+     C/END-EXEC                                                                             MD058085
+     C                   SETOFF                                       90                    MD058085
+     C                   If        SQLCODE = 100                                            MD058085
+     C                   SETON                                        90                    MD058085
+     C                   ENDIF                                                              MD058085
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR1533'     W0RTN             7
@@ -2379,6 +2402,10 @@
      CSR   ZXEXIT        ENDSR
       /EJECT
      CSR   ZYEXPG        BEGSR
+     C/EXEC SQL                                                                             MD058085
+     C+ close SCursor                                                                       MD058085
+     C/END-EXEC                                                                             MD058085
+                                                                                            MD058085
       *================================================================
       * Exit program: Direct
       *================================================================
@@ -2482,8 +2509,8 @@
      C                   PARM                    ZZFQL            21            LIBRARY/FILE
      C                   OPEN      SD2051C#
      C**********         OPEN      SDCODEL1                                                 MD056888
-     C                   OPEN      SDMTPYL1
-     C                   OPEN      SDMEMOL1
+     C**********         OPEN      SDMTPYL1                                                 MD060008
+     C**********         OPEN      SDMEMOL1                                                 MD058085
      C                   OPEN      SDCUSTL5
      C**********         OPEN      SDCODEL3                                                 MD056888
      C**********         OPEN      SDCODEL0                                                 MD056888

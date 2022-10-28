@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060105           Date 15Jun21               *
-      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD060105           Date 15Jun21               *
+      *                 MD056560           Date 31Aug20               *
       *                 MD057490           Date 22Feb21               *
       *                 MD052485           Date 02Apr19               *
       *                 MD051910           Date 02Apr19               *
@@ -76,6 +77,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD060105 - Tag description is not printed due to incorrect   *
       *             access to table                                   *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
@@ -187,7 +189,7 @@
      FMGOREFL0  IF   E           K DISK
      FMGOMSGPD  IF   E           K DISK
      FMGOEXTLF  IF   E           K DISK                                         183583
-     FSDMTPYL0  IF   E           K DISK
+     F*SDMTPYL0* IF   E           K DISK                                                    MD060008
      F*SDMTAGL0* IF   E           K DISK                                                    MD056560
       * Customer and C/Party nostro files by network address
      FSDCUSTL7  IF   E           K DISK
@@ -520,6 +522,7 @@
      D DSLDY         E DS                  EXTNAME(DSLDY)
       ** Long data structure for access objects                                               196833
      D SDMTAG        E DS                  EXTNAME(SDMTGJW0)                                MD056560
+     D SDMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
       *                                                                                       196833
       *****************************************************************
       *               Index to subroutines                            *
@@ -1545,8 +1548,15 @@
      C                   MOVEL     MTPY          SMTPY
       *
       ** Access message type description
-     C     MTPY          CHAIN     SDMTPYL0                           96
-     C     *IN96         IFEQ      '1'
+     C*****MTPY*         CHAIN     SDMTPYL0                           96                    MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDMTPY                                                                        MD060008
+     C+ from SDMTYJW0                                                                       MD060008
+     C+ where EEMTPY = :MTPY                                                                MD060008
+     C/END-EXEC                                                                             MD060008
+     C******IN96         IFEQ      '1'                                                      MD060008
+     C     SQLCODE       IFNE      0                                                        MD060008
       *
       ** If not found move <MSG DESC NOT FOUND> INTO DATA QUEUE
      C                   MOVEL     TXT(39)       SMTPD

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD059942             Date 16May22             *
-      *  Prev Amend No. MD059554             Date 09Feb22             *
+      *  Last Amend No. MD056602             Date 04Sep20             *
+      *  Prev Amend No. MD059942             Date 16May22             *
+      *                 MD059554             Date 09Feb22             *
       *                 MD059572             Date 14Feb22             *
       *                 MD058986             Date 11Oct21             *
       *                 MD058933A            Date 20Oct21             *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  MD059942 - Ignore column DJLOGD                              *
       *  MD059554 - Need to remove old core deliverable that were     *
       *             'migrated' to the bespoke table.                  *
@@ -445,6 +447,7 @@
                                                                                             MD054346
       * for T_WIPACT migration                                                              MD056891
      C                   if        EXTINDEX = 'GPWATBTD'                                    MD056891
+     C                             or EXTINDEX = 'T_APIBTD'                                 MD056602
      C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD056891
      C                             ' overriding user value (select ' +                      MD056891
      C                             %trimr(PSELECT) + ' from ' + OLDFILE +                   MD056891

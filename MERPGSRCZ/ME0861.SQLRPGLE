@@ -13,8 +13,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -88,7 +90,7 @@
      FMGOREFL0  IF   E           K DISK
      FMGOMSGPD  IF   E           K DISK
      F*SDMTAGL0* IF   E           K DISK                                                    MD056560
-     FSDMTPYL0  IF   E           K DISK
+     F*SDMTPYL0* IF   E           K DISK                                                    MD060008
      FSDBRCHL0  IF   E           K DISK
       * Customer and C/Party nostro files by network address
      FSDCUSTL7  IF   E           K DISK
@@ -205,6 +207,7 @@
      D*
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D SDMTAG        E DS                  EXTNAME(SDMTGJW0)                                MD056560
+     D SDMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
       **  Access object DS
       *
       *****************************************************************
@@ -443,14 +446,21 @@
      C                   END
       *
      C                   MOVEL     MTPY          MTPYK2            3
-     C     MTPYK2        CHAIN     SDMTPYL0                           94
+     C*****MTPYK2        CHAIN     SDMTPYL0                           94                    MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDMTPY                                                                        MD060008
+     C+ from SDMTYJW0                                                                       MD060008
+     C+ where EEMTPY = :MTPY                                                                MD060008
+     C/END-EXEC                                                                             MD060008
       *
       ** If not found move <MSG DESC NOT FOUND> INTO DATA QUEUE
       *
      C                   MOVE      *BLANKS       @MTPY
      C                   MOVEL     MTPY          @MTPY
       *
-     C     *IN94         IFEQ      '1'
+     C******IN94         IFEQ      '1'                                                      MD060008
+     C     SQLCODE       IFNE      0                                                        MD060008
      C                   MOVE      *BLANKS       @MTPD
      C                   MOVEL     TXT(9)        @MTPD
      C                   ELSE

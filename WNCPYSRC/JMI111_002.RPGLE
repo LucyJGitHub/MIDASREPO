@@ -6,10 +6,12 @@
       *                                                               *
       *  (C) Copyright Finastra Internatonal Limited 2018             *
       *                                                               *
-      *  Last Amend No. JMI111 *CREATE     Date 18May18               *
+      *  Last Amend No. MD060604           Date 26Oct22               *
+      *  Prev Amend No. JMI111 *CREATE     Date 18May18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060604 - Set off bits on RETB.                             *
       *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
       *                                                               *
       *****************************************************************
@@ -86,6 +88,7 @@
      C                   EVAL      ECFB = 0                                                   JMI111
      C                   EVAL      ACNO = 0                                                   JMI111
      C                   EVAL      RRNM = 0                                                   JMI111
+     C                   BITOFF    '01234567'    RETB                                       MD060604
      C                   EVAL      F1RRNM = *ZERO                                             JMI111
      C                   EVAL      F1DACO = *ZERO                                             JMI111
      C                   EVAL      F1LDID = *ZERO                                             JMI111

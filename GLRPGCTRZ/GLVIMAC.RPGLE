@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. JMI111             Date 16May19               *      
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060604           Date 26Oct22               *
+      *  Prev Amend No. JMI111             Date 16May19               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055515           Date 13Apr20               *
       *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -56,8 +57,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060604 - Journal entry coming from OPICS with non-existing *
+      *             account is not accepted. Set off bits of RETB     *
+      *             inside copysource JMI111_002 (Recompile)          *
       *  JMI111   - OPICS-Midas GL Interface. Upgrade to FBM 2.1      *
-      *             Added hooks: JMI111_001, JMI111_002, JMI111_005   *      
+      *             Added hooks: JMI111_001, JMI111_002, JMI111_005   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD055515 - Batch Item allows customer as blank to be         *

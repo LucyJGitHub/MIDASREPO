@@ -9,10 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. MD060092 *CREATE   Date 01Aug22              */
+/*       Last Amend No. MD060641           Date 28Oct22              */
+/*       Prev Amend No. MD060092 *CREATE   Date 01Aug22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*          MD060641 - OTB_DBU job failed                            */
+/*                     Save and restore SMFACTF3 file.               */ 
 /*          MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0   */
 /*                     and SD Facility Type Maintenance. Apply       */
 /*                     CLE138 design of SDFACTX0 to store            */
@@ -24,6 +27,7 @@
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&TMPLIB) TYPE(*CHAR) LEN(10) VALUE('#.')
+             DCL        VAR(&DILIB)  TYPE(*CHAR) LEN(10)                                /*MD060641*/
 
              COPYRIGHT  TEXT('(c) Finastra International Limited 2022')
 
@@ -37,6 +41,7 @@
              CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))
              CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT &ZONEID)
              CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT 'DMLIB')
+             CHGVAR     VAR(&DILIB)  VALUE(&ZONEID *TCAT 'DILIB')                       /*MD060641*/
 
              DLTF       FILE(QTEMP/SMFACTF2)
              MONMSG     MSGID(CPF2105)
@@ -46,7 +51,6 @@
 
              CPYF       FROMFILE(SDFACTPD) TOFILE(QTEMP/SMFACTF2) CRTFILE(*YES)
              CLRPFM     FILE(QTEMP/SMFACTF2)
-
 
 /* Call program to perform migration. */
 
@@ -58,7 +62,20 @@
 
              CPYF       FROMFILE(QTEMP/SMFACTF3) TOFILE(&TMPLIB/SMFACTF3) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
-
+                                                                                        /*MD060641*/
+/* Create a save file of SMFACTF3 */                                                    /*MD060641*/
+                                                                                        /*MD060641*/
+             CHKOBJ     OBJ(&DILIB/SMFACTF3SF) OBJTYPE(*FILE)                           /*MD060641*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD060641*/
+             CRTSAVF    FILE(&DILIB/SMFACTF3SF) TEXT('Backup of SMFACTF3')              /*MD060641*/
+             ENDDO                                                                      /*MD060641*/
+             CLRSAVF    FILE(&DILIB/SMFACTF3SF)                                         /*MD060641*/
+                                                                                        /*MD060641*/
+/* Save SMFACTF3 */                                                                     /*MD060641*/
+                                                                                        /*MD060641*/
+             SAVOBJ     OBJ(SMFACTF3) +
+                          LIB(QTEMP) DEV(*SAVF) +
+                          SAVF(&DILIB/SMFACTF3SF)                                       /*MD060641*/
 
              GOTO       CMDLBL(ENDPGM)
 

@@ -9,10 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. MD060092 *CREATE   Date 01Aug22              */
+/*       Last Amend No. MD060641           Date 28Oct22              */
+/*       Prev Amend No. MD060092 *CREATE   Date 01Aug22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*          MD060641 - OTBU_DBU job failed                           */
+/*                     Save and restore SMFACTF3 file.               */
 /*          MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0   */
 /*                     and SD Facility Type Maintenance. Apply       */
 /*                     CLE138 design of SDFACTX0 to store            */
@@ -25,6 +28,7 @@
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&TMPLIB) TYPE(*CHAR) LEN(10) VALUE('#.')
+             DCL        VAR(&DILIB)  TYPE(*CHAR) LEN(10)                                /*MD060641*/
 
              COPYRIGHT  TEXT('(c) Finastra International Limited 2022')
 
@@ -38,13 +42,26 @@
              CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))
              CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT &ZONEID)
              CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT 'DMLIB')
+             CHGVAR     VAR(&DILIB)  VALUE(&ZONEID *TCAT 'DILIB')                       /*MD060641*/
 
              DLTF       FILE(QTEMP/SMFACTF3)
              MONMSG     MSGID(CPF2105)
 
+/* Clear File SDFACTX0 */                                                               /*MD060641*/
+             CLRPFM FILE(SDFACTX0)                                                      /*MD060641*/
+                                                                                        /*MD060641*/
+/* Check if SMFACTF3 exists in #.zzDMLIB */                                             /*MD060641*/
+             CHKOBJ     OBJ(&TMPLIB/SMFACTF3) OBJTYPE(*FILE)                            /*MD060641*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD060641*/
+                RSTOBJ     OBJ(SMFACTF3) SAVLIB(QTEMP) DEV(*SAVF) +
+                           SAVF(&DILIB/SMFACTF3SF)                                      /*MD060641*/
+
+                GOTO       CMDLBL(CALLMIG)                                              /*MD060641*/
+             ENDDO                                                                      /*MD060641*/
+
              CPYF       FROMFILE(&TMPLIB/SMFACTF3) TOFILE(QTEMP/SMFACTF3) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
-
+ CALLMIG:                                                                               /*MD060641*/
 /* Call program to perform migration. */
 
              CALL       PGM(SMU00202)  PARM(&PARM)

@@ -23,7 +23,7 @@
       *                                                               *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates             *
-      *             CC10 CLE172 Spool File Correspondence (MD059817). *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059190 - Use rollover ARR parameters if loan exists in     *
       *             RO extract file and rollover is authorised.       *

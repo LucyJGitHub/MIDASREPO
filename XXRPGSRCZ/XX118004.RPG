@@ -1,0 +1,3450 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  XX118004 - Generate Position Settlements - Depots            *
+      *                                                               *
+      *  Function: This program reads through the Security Diary and  *
+      *   (COB/IC) Non Diary File. For each Security Event extracted  *
+      *            today, accesses the Depot Positions by Security    *
+      *            File. For each Depot Pos found where the Pos Date  *
+      *            is before the Event Date, Position Settlements are *
+      *            generated.                                         *
+      *                                                               *
+      *  Called By: XXC118003 - SE On-Line Positions Generation       *
+      *                                                               *
+      *  Calls: XX118006 - SE Position Settlement Check/Delete        *
+      *         XX118009 - SE Position Settlement Split for Treaty WHT*
+      *         SEC8100  - Position Calculation Routine               *
+      *                                                               *
+      *  (c) Finastra International Limited 2020                      *
+      *                                                               *
+      *****************************************************************
+      * NOTE:                                                         *
+      * Changes related to Pos. Settl. should be evaluated and then   *
+      * implemented in SE2390 as well. Account keys generation changes*
+      * are not needed in SE2390.                                     *
+      **                                                              *
+      * This is the upgraded version of SE4859 from CSE053 with fixes *
+      * and developments up to FM 2.1 SP22                            *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. HUT118  *CREATE    Date 10Dec20               *
+      *****************************************************************
+      *                 248698             Date 01Jun20               *
+      *                 248184             Date 01Jun20               *
+      *                 AR324886           Date 07Apr20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD037742           Date 04Apr16               *
+      *                 215959             Date 21Mar16               *
+      *                 251950A            Date 27Feb12               *
+      *                 AR853119           Date 24Nov11               *
+      *                 CSW210             Date 04May10               *
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG11046           Date 05May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAP182             Date 19Feb03               *
+      *                 CSE037             Date 29Apr02               *
+      *                 CSE035             Date 22Apr02               *
+      *                 CGL020             Date 12Dec02               *
+      *                 192467             Date 26Jul01               *
+      *                 194195             Date 15Apr02               *
+      *                 CSE034             Date 18Apr02               *
+      *                 136297             Date 07Feb02               *
+      ***SE4859********************************************************
+      *  Last Amend No. 247246             Date 15May07               *
+      *  Prev Amend No. 243031             Date 25Oct06               *
+      *                 239622             Date 24Apr06               *
+      *                 236617             Date 20Oct05               *
+      *                 236591             Date 20Oct05               *
+      *                 236080             Date 03Oct05               *
+      *                 CSE053             Date 17Dec04               *
+      *                 CSE053             Date 15Dec04               *
+      *                 CSE053             Date 25Aug04               *
+      *                 CSE053             Date 24Aug04               *
+      *                 CSE053             Date 23Aug04               *
+      *                 CSE053   *Create   Date 18May04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  HUT118 - Position Settlements On-line generation             *
+      *                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  248184 - Wrong security withholding tax calculation.  If     *
+      *           S01496, use 4 dec places for tax rate else use 2.   *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
+      *             (Upgrade as required by HUT105)                   *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD037742 - Security diary events - pool factor reversal.     *
+      *             Additional fix to initialize tax fields to prevent*
+      *             garbage which cause decimal data error in COB.    *
+      *  215959 - Truncation error on event amount in SE2450P3.       *
+      *           Recompiled due to changes in PF/SEKEYD.             *
+      *         - Applied for MD-37439.                               *
+      *  251950A - Component SEC1112 0001 terminated abnormally.      *
+      *            Check if PSEB is blank, if it is move value of     *
+      *            PBCA to CCTA, if not move value of PSEB to CCTA.   *
+      *          - Applied for AR964313 (Child:AR964316)              *
+      *  AR853119 - Position settlements generated from corporate     *
+      *             action did not calculate stamp tax.               *
+      *  CSW210 - SWIFT 2010 Changes                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG11046 - Due date in position settlement should be equal   *
+      *             to the coupon date. Remove the CSE075 codings     *
+      *             which updates the due date field.                 *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAP182 - Auto Settlement of Trades                           *
+      *           Recompile over changed SETLED                       *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *  CGL020 - Compliance Watch - Addtl A/C Postings Information   *
+      *  192467 - No maturity position settlement was generated.  Set *
+      *           price for records with processing type '1' and      *
+      *           price basis 'U'.                                    *
+      *  194195 - Position settlements in base ccy incorrect when the *
+      *           nominal ccy is an 'IN' ccy and settled in EUR via   *
+      *           the standard settlement instructions (in STDSED).   *
+      *  CSE034 - Standing Settlement Instruction improvements        *
+      *           (applied without tagging)                           *
+      *  136297 - When settlement method 04 and no settlement account *
+      *           defined, prime account number is defaulted ... If   *
+      *           it does not exist, use suspense computer account    *
+      *--SE4859-------------------------------------------------------*
+      *  247246 - Reduce running time                                 *
+      *  243031 - Incorrect management for ex-Date dividend.          *
+      *  239622 - Decimal data error                                  *
+      *  236617 - Avoid duplications of position settlements.         *
+      *  236591    - Initialise fields as it fails in SE4861          *
+      *              with decimal data error                          *
+      *  236080    - Position settlement generated with TNLU = 0      *
+      *              causing wrong update of POSETA by SE0170         *
+      *              ==> FOOB in SE0640                               *
+      *  CSE053    - ONPG should update projected movements           *
+      *  CSE053    - On-line Projected Account Movements must be      *
+      *              updated if Position Settlement is generated      *
+      *              authorised.                                      *
+      *  CSE053   - Nr of Insertion field (NOIN) not updated          *
+      *  CSE053   - Position Settlement not created for MT            *
+      *  CSE053   - Position Settlement Duplicated                    *
+      *  CSE053 - Position Settlement Generation/Adjustment           *
+      *****************************************************************
+      *
+      * Security Diary and Non Diary Events Extracted file
+     FXXPSDNV0IF  E           K        DISK         KINFSR *PSSR
+      *
+      * Security Details File
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      *
+      * Security Withholding Tax Details
+     FSESWHTL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      * SE Investment Type
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      *
+      * Standard Settlement
+     FSTDSED  IF  E           K        DISK         KINFSR *PSSR
+      *
+      * Historic + Current + Fwd Depot Positions
+     FXXDPOFV0IF  E           K        DISK         KINFSR *PSSR
+     F            DPOSNDF                           KRENAMEDPOSNDFH
+      *
+      * Cust & Depot Positions - Depot Positions extract
+     FXXCDUDV0IF  E           K        DISK         KINFSR *PSSR
+      *
+      *  SE Diary Events file
+     FSEDEV   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDV
+     FSEDEVL3 UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F*SEDEVLEUF  E           K        DISK                           UC                  CSE053
+     F*           SEDEVDF                           KRENAMESEDEVDE                        CSE053
+     F*                                             KCOMIT                                CSE053
+     F*XXDEVLV0IF E           K        DISK                                               CSE053
+     F*           SEDEVDF                           KRENAMESEDEVDD                        CSE053
+      *
+      *
+      *  SE Non Diary Event Audit file
+     FSNDEVA  UF  E                    DISK
+     F                                              KCOMIT
+      *
+      *  SE Diary and Non Diary Events file
+     FSECEO2  IF  E           K        DISK         KINFSR *PSSR A
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+     F                                              KCOMIT
+     FSDCUSQL0IF  E           K        DISK                                                 AR853119
+      **  Midas SD Stamp Tax Customer Extension file                                        AR853119
+     FPOSETDX3O   E           K        DISK         KINFSR *PSSR                            AR853119
+      ***  Position Settlements - Extension File                                            AR853119
+      *                                                                                     AR853119
+      *
+      * Position Settlement Audit file
+     FPOSETA  UF  E                    DISK         KINFSR *PSSR A    UC
+     F                                              KCOMIT
+      *
+      * Position Settlement  file
+     FPOSETD  O   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FPSAUTD  O   E           K        DISK                                                 AR324886
+     F                                              KINFSR *PSSR                              HUT118
+     F                                              KCOMIT                                    HUT118
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
+      * Client Details
+     FCLINT   IF  E           K        DISK         KINFSR *PSSR
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCBF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+      *
+      * ICD
+     FTABSE   IF  E           K        DISK         KINFSR *PSSR
+     F            TABTB10F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+      *
+      * Audit Report
+     FXX1184AUO   E                    PRINTER      KINFSR *PSSR
+      *
+     FSDBRCHL0IF  E           K        DISK                               136297
+     FTABTB20 IF  E                    DISK                               136297
+     FACCNT   IF  E           K        DISK                               136297
+      *
+     F/COPY WNCPYSRC,SE4859F001
+      *****************************************************************
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E/COPY WNCPYSRC,SE4859E001
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZHOLE
+     E                    CPY@    1   1 80
+      /EJECT
+     ISEDEVDF
+     I              NMCY                            SNMCY
+      *
+     ISEDEVDO
+     I              NMCY                            ONMCY
+      *                                                                                       CSE037
+     IINVTPDF                                                                                 CSE037
+     I              SFLG                            ISFLG                                     CSE037
+      *
+      ** DS for customer/book standard settlement instruction
+      **  to be passed to SESSIR0
+      *
+     IPCBSTD    E DSSTDSED                    2
+     I              RECI                            WRECI
+     I              LCD                             WLCD
+     I              CHTP                            WCHTP
+     I              TNLU                            WTNLU
+      *
+      ** Data structure for standard additional settlement details
+      ** for customer/book to be passed to SESSIR0
+      *
+     IPCBSAD    E DSSTDADSED                  8
+      *
+     ITABLKY      DS
+      *
+      *  TABTB11 TABLE KEY FIELD DATA STRUCTURE FOR DB ERROR
+      *
+     I                                        1  12 TABKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+      *
+      *
+      *
+     IWWINV       DS
+      ***  Working DS for Database Error on LF/INVTP
+     I                                        1   3 WKNMCY
+     I                                        4   6 WKSITP
+      *
+      *
+      * MIDAS ' NEXT AVAILABLE TRANSACTION NUMBER NO.'DATA AREA MNATN.
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     ISDBANK    E DSSDBANKPD
+      ***  Data structure for bank details                 Prefix - BJ
+     ISDBRCE    E DSSDBRCHEXPD                                                              AR853119
+      ** Branch Details Extension                                                           AR853119
+     ISDSTPD    E DSSDSTPDPD                                                                AR853119
+      *
+     ISDMMOD    E DSSDMMODPD
+      **  DS FOR ACCESS TO MODULES FILE
+      *
+     ISDSTRD    E DSSDSTRDPD
+      **  Securities Trading Details
+      *
+     I/COPY WNCPYSRC,SE4859I001
+     ILDA       E DSLDA
+      *
+      *
+     I/COPY WNCPYSRC,SE4859I002
+     I***P@DATA*     DS                            128                               CAC002 AR853119
+     IP@DATA      DS                            141                                         AR853119
+     I** Data structure for the parameter passed to and from SEZ010
+     I                                        1   1 P@CLAS
+     I                                        2   2 P@PPRE
+     I                                        3  150P@PAMD
+     I                                       16  280P@PCHA
+     I                                       29  410P@PCAM
+     I                                       42  540P@TASO
+     I                                       55  670P@TAUS
+     I                                       68  808P@PSXR
+     I                                       81  81 P@PMDI
+     I                                       82  84 P@PNCY
+     I                                       85  87 P@PSCU
+     I                                       88 1000P@PSAT
+     I                                      101 1138P@FXMR
+     I                                      114 1260P@MAMT
+     I                                      127 128 P@TDTP
+     I                                      129 1410P@STAM                                  AR853119
+     I/COPY WNCPYSRC,SE4859I003
+      * Prime account code
+     I            DS
+     I**********                              1  12 PRACCT                             103361 CGL029
+     I                                        1  18 PRACCT                                    CGL029
+     I                                        1   6 PRCNUM
+     I**********                              7  10 PRACOD                             103361 CGL029
+     I**********                             11  12 PRACSQ                             103361 CGL029
+     I                                        7  16 PRACOD                                    CGL029
+     I                                       17  18 PRACSQ                                    CGL029
+      *
+     ICPYR@#      DS
+      *
+      *  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IPPOSET    E DSPOSETD
+      *  Position Settlement record for calling XX118009
+     ISECNTR    E DSSECNTRPD
+      ** SE Country tax rate details
+      *
+     ISECBTX    E DSSECBTXPD
+     I** SE Country to Branch tax rate details
+     I*
+     ISDRETL    E DSSDRETLPD
+     I** Retail ICD details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** Currency details
+     I*
+     ISDGELR    E DSSDGELRPD
+      ** General ledger details
+     I              QQACCD                          QQACC1                                    CGL029
+      *
+     IDSFDY     E DSDSFDY
+      *  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     IDSSDY     E DSDSSDY
+      *  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     ISCSARD    E DSSCSARDPD                                                                  CGL020
+      ** Data structure for switchable features file                                          CGL020
+     I              LCD                             SCLCD                 CSE026              CGL020
+      *                                                                                       CGL020
+     I              'ZAAMLSETSE'          C         ZAAMLP                                    CGL020
+      *                                                                                       CGL020
+     ISDSTAT    E DSSDSTAT                                                                  AR324886
+      ** SD Data area                                                                       AR324886
+      *                                                                                     AR324886
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+      *
+     ISESTAT    E DS
+      ***  Data structure for SESTAT
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+     I                                      254 263 USER
+      *
+     I/COPY WNCPYSRC,SE4859I004
+      *                                                                                    CSE053
+     IKEYFLD      DS                                                                       CSE053
+     I                                        3  05 SPBCA                                  CSE053
+     I                                        6  15 SPSSH                                  CSE053
+     I                                       16  25 SPCPY                                  CSE053
+     I                                       26  300SPDUD                                  CSE053
+      *                                                                                    CSE053
+     IZ#BSTS    E DSZ#BST                                                                  CSE053
+     IZ#ASTS    E DSZ#AST                                                                  CSE053
+      *                                                                                    CSE053
+     C/EJECT
+      *****************************************************************
+      *                M A I N     P R O C E S S I N G                *
+      *
+      * Initial Process
+     C                     EXSR SRINIT
+      *
+      * Main Process
+     C                     EXSR SRMAIN
+      *
+      *
+      * End Process
+     C                     EXSR SRENDP
+      *
+     C/EJECT
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *****************************************************************
+      *
+     C/COPY WNCPYSRC,SE4859C001
+      *
+     C           @WSECU    IFNE *BLANKS                                                  247246
+     C           @WSECU    ANDNE'*ALL'                                                   247246
+     C           @WSECU    SETLLXXPSDNV0                                                 247246
+     C           @WSECU    READEXXPSDNV0                 44                              247246
+     C                     ELSE                                                          247246
+     C           *LOVAL    SETLLXXPSDNV0
+     C                     READ XXPSDNV0                 44
+     C                     END                                                           247246
+      *
+      ***  Do while end of file is not reached
+      *
+     C           *IN44     DOWEQ*OFF                       B* Read SE Events
+     C           P9RECI    IFNE 'M'                                       236617
+      *
+     C/COPY WNCPYSRC,SE4859C002
+      *
+      ***  If "Security Shortname" is not equal to "Saved Security"
+      ***  Access to Security Details
+      *
+     C           P9SDSN    IFNE WOSESN
+     C                     MOVELP9SDSN    WOSESN    P
+     C                     MOVELP9SDSN    WKSESN    P
+     C                     EXSR #SECTO
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,SE4859C003
+      * Read all depots where the security is held
+      *
+     C                     MOVE *OFF      *IN45
+     C                     CLEARPRVDEP
+     C/COPY WNCPYSRC,SE4859C004
+      *
+      * if program runs during the Cob, access file XXDPOFV0
+      * if program runs during I/C, access file XXCDUDV0
+     C           @PHASE    IFEQ 'C'
+     C           P9SDSN    SETLLXXDPOFV0
+     C                     ELSE
+     C           P9SDSN    SETLLXXCDUDV0
+     C                     END
+      *
+      ***  Do while end of file is not reached
+      *
+     C           *IN45     DOWEQ*OFF                       B* Read Depot
+      *
+      * Get Depot where the security is held
+      *
+     C/COPY WNCPYSRC,SE4859C005
+     C                     EXSR #GETDP
+      *
+      * only process if not end of file
+     C           *IN45     IFEQ *OFF                       B* IN45
+      *
+     C           P9SDET    IFEQ 'DV'                       B* SELECT
+     C*****      DDTE      ANDLTP9SDXD                                    243031
+     C           S01510    ANDEQ'Y'
+      *
+     C           P9SDET    OREQ 'MA'
+     C           DDTE      ANDLEP9SDED
+     C           P9SDET    OREQ 'MG'
+     C           DDTE      ANDLEP9SDED
+      *
+     C           P9SDET    ORNE 'MA'
+     C           P9SDET    ANDNE'MG'
+     C           DDTE      ANDLTP9SDED
+     C           S01510    ANDEQ'N'
+     C*
+     C           P9SDET    ORNE 'MA'
+     C           P9SDET    ANDNE'MG'
+     C           P9SDET    ANDNE'DV'
+     C           DDTE      ANDLTP9SDED
+     C           S01510    ANDEQ'Y'
+      *
+      * Process Depot only if different from previous Depot
+     C           DDPT      IFNE PRVDEP                     B* DEPOT
+     C           DSBA      ORNE PRVBRA
+      *
+     C/COPY WNCPYSRC,SE4859C006
+      * Get Depot Nominal Position
+     C                     EXSR #GETNP
+      *
+      * Execute Subroutines Depending On Action Types
+     C*
+     C           P9SDET    CASEQ'DV'      #DIVID
+     C*****      P9SDET    CASEQ'CP'      #COUPO                          HUT118
+     C*****      P9SDET    CASEQ'CG'      #COUPO                          HUT118
+     C*****      P9SDET    CASEQ'MP'      #MORTP                          HUT118
+     C*****      P9SDET    CASEQ'MA'      #MATUR                          HUT118
+     C*****      P9SDET    CASEQ'MG'      #MATUR                          HUT118
+     C*****      P9SDET    CASEQ'PP'      #PARTP                          HUT118
+     C/COPY WNCPYSRC,SE4859C007
+     C                     END
+     C                     END                             E* DEPOT
+     C                     END                             E* SELECT
+      *
+     C/COPY WNCPYSRC,SE4859C008
+     C                     END                             E* IN45
+      *
+      * Enddo: Read of Depot Positions
+     C                     ENDDO                           E* Read Depot
+      *
+      * Read nexst SE Diary and Non Diary Events
+      *
+     C                     ENDIF                           E*             236617
+     C/COPY WNCPYSRC,SE4859C009
+     C           @WSECU    IFNE *BLANKS                                                  247246
+     C           @WSECU    ANDNE'*ALL'                                                   247246
+     C           @WSECU    READEXXPSDNV0                 44                              247246
+     C                     ELSE                                                          247246
+     C                     READ XXPSDNV0                 44
+     C                     END                                                           247246
+     C                     ENDDO                           E* Read SE Events
+      *
+     C/COPY WNCPYSRC,SE4859C010
+      *
+     C                     ENDSR
+      *
+      *================================================================
+      /EJECT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #DIVID - Subroutine to produce Dividend Position Settlements *
+      *  ------                                                       *
+      *  Called by : SRMAIN                                           *
+      *  Calls     : #CHKPS, ZCNSD, #GENPS                            *
+      *****************************************************************
+      *
+     C           #DIVID    BEGSR
+      *
+     C           S01509    IFEQ 'Y'
+     C                     MOVE WVNBDP    ZCDP
+     C                     ELSE
+     C                     MOVE WONBDP    ZCDP
+     C                     END
+      * Calculate Dividend Due
+      *
+     C                     CLEARWCUMCP
+     C           S01510    IFEQ 'Y'
+     C                     Z-ADDDSNVT     WCUMCP
+     C                     ELSE
+     C           DSNVT     SUB  DEXN      WCUMCP
+     C                     END
+      *
+      ** Check if Position Settlement already existing
+      *
+     C                     EXSR #CHKPS
+      *
+      * If Positions found, and returned value is zero, then do not create Position
+      *    Settlement and skip to end routine
+     C           ZFOUND    IFEQ 'Y'
+     C           ZNWCMP    ANDEQ0
+     C                     GOTO ENDDIV
+     C                     END
+      *
+      * If Position Found, then set Nominal to be equal to the value returned by
+      *    the check routine (which will be the whole or adjusted amount depending
+      *    on Position Adjustment System Value)
+     C           ZFOUND    IFEQ 'Y'
+     C                     Z-ADDZNWCMP    WCUMCP
+     C                     END
+      *
+      ** Calculate Dividend Due using sr ZCNSD
+      *
+     C                     Z-ADDWCUMCP    ZNOML
+     C                     Z-ADDP9SDVA    ZPRC
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     WDIVDU 150
+      *
+      *
+     C/COPY WNCPYSRC,SE4859C011
+      *
+     C                     MOVE 'DV'      PEVT
+     C                     Z-ADDWCUMCP    PNMP
+     C           WDIVDU    IFLT 0                          B* Sign
+     C                     Z-SUBWDIVDU    PAMD
+      *
+     C/COPY WNCPYSRC,SE4859C012
+      *
+     C                     ELSE
+     C                     Z-ADDWDIVDU    PAMD
+      *
+     C/COPY WNCPYSRC,SE4859C013
+      *
+     C                     END                             E* Sign
+      *
+      * Set Pay/Receive indicator, if ZFOUND is yes, then set New Pay/receive indicator
+      * returned by Position Sett Check program
+      *
+     C           ZFOUND    IFNE 'Y'                        B* New PPRE
+      *
+     C           WCUMCP    IFGT 0
+     C                     MOVE 'R'       PPRE
+     C                     ELSE
+     C                     MOVE 'P'       PPRE
+     C                     END
+      *
+     C                     ELSE                            X* New PPRE
+     C                     MOVE ZNWPRE    PPRE
+     C                     END                             E* New PPRE
+      *
+      * Generate Position Settlement
+     C                     EXSR #GENPS
+      *
+      * Check if SDDT is to be update
+     C                     EXSR #EVUPD
+      *
+     C/COPY WNCPYSRC,SE4859C014
+      *
+     C           ENDDIV    ENDSR                           **ENDDIV**
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #COUPO - Subroutine to produce Coupon Position Settlements   *
+      *  ------                                                       *
+      *  Called by : SRMAIN                                           *
+      *  Calls     : #CHKPS, ZCNSD, #GENPS                            *
+      *****************************************************************
+      *
+     C           #COUPO    BEGSR
+      *
+     C                     MOVE WONBDP    ZCDP
+      *
+     C/COPY WNCPYSRC,SE4859C015
+      *
+      ** Check if Position Settlement already existing
+      *
+     C                     EXSR #CHKPS
+      *
+      * If Positions found, and returned value is zero, then do not create Position
+      *    Settlement and skip to end routine
+     C           ZFOUND    IFEQ 'Y'
+     C           ZNWCMP    ANDEQ0
+     C                     GOTO ENDCPN
+     C                     END
+      *
+     C/COPY WNCPYSRC,SE4859C016
+      *
+      * If Position Found, then set Nominal to be equal to the value returned by
+      *    the check routine (which will be the whole or adjusted amount depending
+      *    on Position Adjustment System Value)
+      *
+     C                     Z-ADDWCUMCP    ZNAMT
+     C           ZFOUND    IFEQ 'Y'
+     C                     Z-ADDZNWCMP    ZNAMT  150                      HUT118
+     C                     END
+      *
+     C/COPY WNCPYSRC,SE4859C017
+      *
+      * If Processing type is not '6', then calculate interest
+      *    using the Returned Nominal Amount
+      *
+      *  Non-Schuldshein processing
+      *
+     C*****      PROT      IFNE '6'                        B* <> 6        HUT118
+     C*****                CALL 'XX118010'                                HUT118
+     C*****                PARM           P9LCCP                          HUT118
+     C*****                PARM           P9SDED                          HUT118
+     C*****                PARM           P9SDSN                          HUT118
+     C*****                PARM           ZNAMT  150                      HUT118
+     C*****                PARM           WONBDP                          HUT118
+     C*****                PARM           ZINTAM 150                      HUT118
+      *
+     C*****                Z-ADDZINTAM    ZINTDU                          HUT118
+     C*****                END                             E* <> 6        HUT118
+      *
+      * Schuldshein processing
+      *
+     C           PROT      IFEQ '6'                        B* Proc 6
+      ** Calculate Interest Due using CCRD For security
+      *  From Date is Last Coupon / To Date is Event Date
+      *
+     C/COPY WNCPYSRC,SE4859C018
+      *
+     C                     CALL 'ZACRFD'
+     C                     PARM           P9LCCP
+     C                     PARM           P9SDED
+     C                     PARM           DSBA
+     C                     PARM           DDPT
+     C                     PARM           DSSC
+     C                     PARM           WONBDP
+     C                     PARM *ZEROS    ZINTDU 150
+      *
+     C/COPY WNCPYSRC,SE4859C019
+      *
+      *   U7 AND U8 OFF if no database error during ZACCR Processing
+      *   BUT DBPGM NEEDS TO RESET
+      *
+     C           *INU7     IFEQ '0'
+     C           *INU8     ANDEQ'0'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBPGM                           S01447
+     C                     MOVEL'XX118004'DBPGM                     S01447HUT118
+     C                     OUT  LDA                                       S01447
+     C                     END                                            S01447
+     C           *INU7     IFEQ '1'
+     C           *INU8     OREQ '1'
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'XX118004'DBPGM                           HUT118
+     C           'ZACRFD  'CAT  'RT    '  DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END                             E* Proc 6
+     C/COPY WNCPYSRC,SE4859C020
+      *
+      ** If S01509 is active, and value currency is different from
+      ** nominal currency, convert coupon amount to value currency
+      *
+     C           S01509    IFEQ 'Y'
+     C           NMCY      ANDNEVLCY
+     C                     Z-ADDWONBDP    ZCDPI
+     C                     Z-ADDWVNBDP    ZCDPO
+     C                     MOVE NMCY      ZCCYI
+     C                     MOVE VLCY      ZCCYO
+     C                     Z-ADDZINTDU    ZAMTCI
+      *
+      ** Exchange rate and Mult/Div Ind can be from SECEO2 if 'XR' event
+      ** found, else from SECTYD
+      *
+     C                     MOVE 'XR'      KSDET
+     C           SEDKEY    SETLLSEDEVDO
+     C           SEDKEQ    READESEDEVDO                  81
+     C           *IN81     IFEQ '0'
+     C                     Z-ADDSDCE      ZEXCH
+     C                     MOVE SDMD      ZMD
+     C                     ELSE
+     C                     Z-ADDSEXR      ZEXCH
+     C                     MOVE SMDI      ZMD
+     C                     END
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    ZINTDU
+     C                     END
+      *
+     C/COPY WNCPYSRC,SE4859C021
+      *
+      *  Calculate Adjustment on Interest and set Nominal Adjustment
+      *
+     C           ZFOUND    IFEQ 'Y'                        B* Adjust
+      *
+     C           PROT      IFEQ '6'                        B* Process Type 6
+      *
+     C           ZINTDU    SUB  ZNWDUE    ZINTDU
+      *
+     C                     END                             E* Process Type 6
+      *
+     C                     Z-ADDZNWCMP    WCUMCP
+     C                     MOVE ZNWPRE    ZPPRE
+     C                     END                             E* Adjust
+      *
+     C/COPY WNCPYSRC,SE4859C022
+      *
+      * Set fields to output POSETD
+     C                     MOVE 'CP'      PEVT
+     C                     Z-ADDWCUMCP    PNMP
+      *
+     C           ZINTDU    IFLT 0                          B* Sign
+     C                     Z-SUBZINTDU    PAMD
+      *
+     C/COPY WNCPYSRC,SE4859C023
+      *
+     C                     MOVE 'P'       PPRE
+     C                     ELSE
+     C                     Z-ADDZINTDU    PAMD
+      *
+     C/COPY WNCPYSRC,SE4859C024
+     C                     MOVE 'R'       PPRE
+     C                     END                             E* Sign
+      *
+      * Set Pay/Receive indicator, if ZFOUND is yes, then set New Pay/receive indicator
+      * returned by Position Sett Check program
+      *
+     C           ZFOUND    IFEQ 'Y'                        B* New PPRE
+     C                     MOVE ZNWPRE    PPRE
+     C                     END                             E* New PPRE
+      *
+      * Generate Position Settlement
+     C                     EXSR #GENPS
+      *
+     C/COPY WNCPYSRC,SE4859C025
+      *
+      *  Check if Generated Position Settlement Non Diary event is needed
+      *  Next coupon Date
+      *
+     C           P9LCCP    IFNE 0
+     C           P9LCCP    ADD  1         ECD     50
+     C                     ELSE
+     C                     Z-ADDBJRDNB    ECD     50
+     C                     END
+     C                     EXSR ZNCD
+     C                     MOVELP9SDSN    K9SDSN
+     C                     MOVEL'CG'      KSDET
+     C                     Z-ADDP9SDED    K9SDED
+      *
+      * do not generate Pos Sett record on SNDEVD if Event processed is already CG
+     C           P9SDET    IFNE 'CG'
+     C           SEDNDE    CHAINSNDEVDO              99
+     C           *IN99     IFEQ '1'
+     C                     EXSR #GENND
+     C                     END
+     C                     END
+      *
+     C           ENDCPN    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PARTP - Subroutine to produce Part Payment Position         *
+      *  ------   Settlements                                         *
+      *                                                               *
+      *  Called by : SRMAIN                                           *
+      *  Calls     : #CHKPS, ZCNSD, #GENPS                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #PARTP    BEGSR
+      *
+     C                     MOVE WONBDP    ZCDP
+      ** Check if Position Settlement already existing
+     C                     EXSR #CHKPS
+      *
+      * If Positions found, and returned value is zero, then do not create Position
+      *    Settlement and skip to end routine
+     C           ZFOUND    IFEQ 'Y'
+     C           ZNWCMP    ANDEQ0
+     C                     GOTO ENDPPY
+     C                     END
+      *
+      * If Position Found, then set Nominal to be equal to the value returned by
+      *    the check routine (which will be the whole or adjusted amount depending
+      *    on Position Adjustment System Value)
+      *
+     C                     Z-ADDDSNVT     ZNOML
+      *
+     C           ZFOUND    IFEQ 'Y'
+     C                     Z-ADDZNWCMP    ZNOML
+     C                     END
+      *
+      * Calculate Payment Due as:
+      *   Nominal Times call Amount
+      *   Holding is in Nom Dec Places, Result as 13/0 With Ccy dec
+      *
+     C           PROT      IFNE '4'
+     C           P9SDPC    DIV  100000    ZPRC
+     C                     ELSE
+     C           5         ADD  WONBDP    DC
+     C           P9SDPP    DIV  POWER8,DC ZPRC
+     C                     END
+      *
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       ZPRC
+     C                     END
+      *
+      * Calculate Copsideration
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     WPAYDU 130
+      *
+      ** IF PROCESSING TYPE ON INVPTD IS 8 MULTIPLY BY CURRENT FACTOR
+      *
+     C           PROT      IFEQ '8'
+     C                     MULT CFCT      WPAYDU    H
+     C                     END
+      *
+      * Write Position Settlement
+      *
+     C                     MOVE 'PP'      PEVT
+     C                     Z-ADDZNOML     PNMP
+     C                     Z-ADDWPAYDU    PAMD
+     C           PAMD      IFLT 0
+     C                     Z-SUBPAMD      PAMD
+     C                     END
+     C*
+     C           DSNV      IFLE 0
+     C                     MOVE 'R'       PPRE
+     C                     ELSE
+     C                     MOVE 'P'       PPRE
+     C                     END
+      *
+      * Set Pay/Receive indicator, if ZFOUND is yes, then set New Pay/receive indicator
+      * returned by Position Sett Check program
+      *
+     C           ZFOUND    IFEQ 'Y'                        B* New PPRE
+     C                     MOVE ZNWPRE    PPRE
+     C                     END                             E* New PPRE
+      *
+      * Generate Position Settlement
+     C                     EXSR #GENPS
+      *
+     C           P9SDTP    IFEQ *ZERO
+     C                     MOVE P9SDTA    UCPDP
+     C                     ELSE
+     C                     MOVE P9SDTP    UCPDP
+     C                     END
+      *
+      * Check if SDDT is to be update
+     C                     EXSR #EVUPD
+      *
+     C           ENDPPY    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #MORTP - Subroutine to produce Mortgage Payment Position     *
+      *  ------   Settlements                                         *
+      *                                                               *
+      *  Called by : SRMAIN                                           *
+      *  Calls     : #CHKPS, ZCNSD, #GENPS                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MORTP    BEGSR
+      *
+     C                     MOVE WONBDP    ZCDP
+      ** Check if Position Settlement already existing
+     C                     EXSR #CHKPS
+      *
+      * If Positions found, and returned value is zero, then do not create Position
+      *    Settlement and skip to end routine
+     C           ZFOUND    IFEQ 'Y'
+     C           ZNWCMP    ANDEQ0
+     C                     GOTO ENDMPY
+     C                     END
+      *
+      * If Position Found, then set Nominal to be equal to the value returned by
+      *    the check routine (which will be the whole or adjusted amount depending
+      *    on Position Adjustment System Value)
+      *
+     C                     Z-ADDDSNVT     ZNOML
+      *
+     C           ZFOUND    IFEQ 'Y'
+     C                     Z-ADDZNWCMP    ZNOML
+     C                     END
+      *
+      * Get the current factor prior to the action date from the
+      * security diary. If no details are present, use the current
+      * factor from the security.
+     C*
+     C                     MOVE 'MP'      KSDET
+     C           SEDKEY    SETGTSEDEVDO
+     C           SEDKEQ    READESEDEVDO                  81
+     C           *IN81     IFEQ '0'
+     C                     Z-ADDSDCP      PCFA
+     C                     ELSE
+     C                     Z-ADDCFCT      PCFA
+     C                     END
+     C*
+      * Calculate Principal Repayment as:
+      *   If Repayment method ind is Y, Repayment amount
+      *
+     C           P9SRMI    IFEQ 'Y'                        B* P9SRMI
+     C                     Z-ADDP9SRPT    PAMD
+     C                     ELSE
+      *
+      * ELSE
+      * Nominal Value Date basis times
+      * (previous current factor minus current factor)
+     C*
+     C           PCFA      SUB  P9SDCP    WACF
+      *
+      * Calculate Due Amount
+     C                     Z-ADDWACF      ZPRC
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       ZPRC
+     C                     END
+      *
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     PAMD
+      *
+     C                     END                             E* P9SRMI
+      *
+      * Set Position Settlement record
+      *
+     C                     MOVE 'MP'      PEVT
+     C                     Z-ADDZNOML     PNMP
+      *
+     C           ZNOML     IFLE 0
+     C                     MOVE 'P'       PPRE
+     C                     ELSE
+     C                     MOVE 'R'       PPRE
+     C                     END
+      *
+     C           PAMD      IFLT 0
+     C                     Z-SUBPAMD      PAMD
+     C                     END
+      *
+      * If Adjustment
+     C           ZFOUND    IFEQ 'Y'                        B* New PPRE
+     C                     MOVE ZNWPRE    PPRE
+     C                     END                             E* New PPRE
+      *
+      * Generate Position Settlement
+     C                     EXSR #GENPS
+      *
+      * Check if SDDT is to be update
+      *
+     C                     EXSR #EVUPD
+      *
+     C           ENDMPY    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #MATUR - Subroutine to produce Maturity Position Settlement  *
+      *  ------                                                       *
+      *                                                               *
+      *  Called by : SRMAIN                                           *
+      *  Calls     : #CHKPS, ZCNSD, #GENPS                            *
+      *****************************************************************
+      *
+     C           #MATUR    BEGSR
+      *
+     C                     MOVE WONBDP    ZCDP
+      *
+     C/COPY WNCPYSRC,SE4859C026
+      *
+      ** Check if Position Settlement already existing
+      *
+     C                     EXSR #CHKPS
+      *
+      * If Positions found, and returned value is zero, then do not create Position
+      *    Settlement and skip to end routine
+     C           ZFOUND    IFEQ 'Y'
+     C           ZNWCMP    ANDEQ0
+     C                     GOTO ENDMAT
+     C                     END
+      *
+      * Use Last Coupon Date
+      *
+     C                     Z-ADDP9LCCP    LCPN
+      *
+      * Calculate interest due
+      *
+     C/COPY WNCPYSRC,SE4859C027
+      *
+      * If Position Found, then set Nominal to be equal to the value returned by
+      *    the check routine (which will be the whole or adjusted amount depending
+      *    on Position Adjustment System Value)
+      *
+     C                     Z-ADDWCUMCP    ZNAMT
+     C           ZFOUND    IFEQ 'Y'
+     C                     Z-ADDZNWCMP    ZNAMT
+     C                     END
+      *
+     C/COPY WNCPYSRC,SE4859C028
+      *
+      * If Processing type is not '6', then calculate interest
+      *    using the Returned Nominal Amount
+      *
+      *  Non-Schuldshein processing
+      *
+     C*****      PROT      IFNE '6'                        B* <> 6        HUT118
+     C*****                CALL 'XX118010'                                HUT118
+     C*****                PARM           P9LCCP                          HUT118
+     C*****                PARM           P9SDED                          HUT118
+     C*****                PARM           P9SDSN                          HUT118
+     C*****                PARM           ZNAMT  150                      HUT118
+     C*****                PARM           WONBDP                          HUT118
+     C*****                PARM           ZINTAM 150                      HUT118
+      *
+     C*****                Z-ADDZINTAM    ZINTDU                          HUT118
+     C*****                END                             E* <> 6        HUT118
+      *
+      * Schuldshein processing
+      *
+     C           PROT      IFEQ '6'                        B* Proc 6
+      ** Calculate Interest Due using CCRD For security
+      *  From Date is Last Coupon / To Date is Event Date
+      *
+     C/COPY WNCPYSRC,SE4859C029
+      *
+     C                     CALL 'ZACRFD'
+     C                     PARM           P9LCCP
+     C                     PARM           P9SDED
+     C                     PARM           DSBA
+     C                     PARM           DDPT
+     C                     PARM           DSSC
+     C                     PARM           WONBDP
+     C                     PARM           ZINTDU 150
+     C***********          PARM           ZINDUE 151
+      *
+     C/COPY WNCPYSRC,SE4859C030
+      *
+      *   U7 AND U8 OFF if no database error during ZACCR Processing
+      *   BUT DBPGM NEEDS TO RESET
+      *
+     C           *INU7     IFEQ '0'
+     C           *INU8     ANDEQ'0'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'XX118004'DBPGM                           HUT118
+     C           'XX118004'CAT  'RT    '  DBKEY     P                     HUT118
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END                             E* Proc 6
+     C/COPY WNCPYSRC,SE4859C031
+      *
+      * Obtain price at Maturity - Check LF/Sedev for redemption price
+      *
+     C                     Z-ADD0         SDRP
+     C                     Z-ADDMATY      K9SDED
+     C                     MOVE 'RC'      K9SDET
+     C                     MOVE P9SDSN    K9SDSN
+     C*
+     C** CHECK FILE FOR EITHER 'RC' TYPE OR 'RP' TYPE IN KEY FIELD
+     C*
+     C                     EXSR #SEDEV
+     C           *IN78     IFEQ '1'
+     C                     MOVE 'RP'      K9SDET
+     C                     EXSR #SEDEV
+     C                     END
+      *
+      * IF Neither RC nor RP use 100 if price basis is P, else 1 (U)
+      * Or if RP/RC record found AND price is zero and S01509 is
+      * active, use 100 if price basis is P, else 1
+      *
+     C           *IN78     IFEQ '1'                        B* price
+     C           *IN78     OREQ '0'
+     C           SDRP      ANDEQ0
+     C           S01509    ANDEQ'Y'
+     C*
+     C           SPBS      IFEQ 'P'
+     C                     Z-ADD100       SDRP
+     C                     END
+     C           PROT      IFEQ '1'                                       192467
+     C           SPBS      ANDEQ'U'                                       192467
+     C                     Z-ADD1         SDRP                            192467
+     C                     ENDIF                                          192467
+     C                     END                             E* price
+      *
+      * Mortgage Back
+     C           PROT      IFEQ '8'                        B* Prot 8
+      *
+      * Get the current factor prior to the action date from the
+      * security diary. If no details are present, use the current
+      * factor from the security. As these securities are always
+      * SBPS = P, multiply by 100.
+      *
+     C                     MOVE 'MP'      KSDET
+     C           SEDKEY    SETGTSEDEVDO
+     C           SEDKEQ    READESEDEVDO                  81
+     C           *IN81     IFEQ '0'
+     C           SDCP      MULT 100       SDRP
+     C                     Z-ADDSDCP      UCFCT
+     C                     ELSE
+     C           CFCT      MULT 100       SDRP
+     C                     END
+      *
+     C                     END                             E* Prot 8
+      *
+      ** Use ZCNSD subroutin to calculate Amount
+      *
+     C                     Z-ADDDSNVT     ZNOML
+     C           ZFOUND    IFEQ 'Y'
+     C                     Z-ADDZNWCMP    ZNOML
+     C                     END
+      *
+     C                     Z-ADDP9SDRP    ZPRC
+     C           P9SDRP    IFEQ 0                                                     CSE053
+     C                     Z-ADDSDRP      ZPRC                                        CSE053
+     C                     END                                                        CSE053
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     WNOMAT 150
+      *
+      * If S01509 is active and redemption currency is not blank and
+      * is different from the nominal currency, convert maturity
+      * amount to redemption currency
+      *
+     C           S01509    IFEQ 'Y'                        B* S01509
+     C           *IN78     ANDEQ'0'
+     C           SDCX      ANDNE*BLANKS
+     C           SDCX      ANDNENMCY
+     C                     Z-ADDWONBDP    ZCDPI
+     C                     MOVE SDCX      WCURR   3
+     C                     EXSR #CURRN
+     C                     Z-ADDZCDP      ZCDPO
+     C                     MOVE NMCY      ZCCYI
+     C                     MOVE SDCX      ZCCYO
+     C                     Z-ADDWNOMAT    ZAMTCI
+     C                     Z-ADDSDCE      ZEXCH
+     C                     MOVE SDMD      ZMD
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    WNOMAT
+     C                     END                             E* S01509
+     C/COPY WNCPYSRC,SE4859C032
+      *
+      * Set Position Settlement Record
+      *
+     C                     MOVE 'MT'      PEVT
+     C                     Z-ADDZNOML     PNMP
+      *
+     C                     Z-ADDWNOMAT    PAMD
+     C           PAMD      IFLT 0
+     C                     Z-SUBPAMD      PAMD
+     C                     END
+      *
+     C           WNOMAT    IFLE 0
+     C                     MOVE 'P'       PPRE
+     C                     ELSE
+     C                     MOVE 'R'       PPRE
+     C                     END
+      *
+      * Set Pay/Receive indicator, if ZFOUND is yes, then set New Pay/receive indicator
+      * returned by Position Sett Check program
+      *
+     C           ZFOUND    IFEQ 'Y'                        B* New PPRE
+     C                     MOVE ZNWPRE    PPRE
+     C                     END                             E* New PPRE
+      *
+      * Generate Position Settlement
+     C                     EXSR #GENPS
+      *
+     C/COPY WNCPYSRC,SE4859C033
+      *
+      *  Check if Generated Position Settlement Non Diary event is needed
+      *
+     C                     MOVELP9SDSN    K9SDSN
+     C                     MOVEL'MG'      KSDET
+     C                     Z-ADDMATY      K9SDED
+      *
+      * do not generate Pos Sett record on SNDEVD if Event processed is already CG
+     C           P9SDET    IFNE 'MG'
+     C           SEDNDE    CHAINSNDEVDO              99
+     C           *IN99     IFEQ '1'
+     C                     EXSR #GENND
+     C                     END
+     C                     END
+      *
+     C           ENDMAT    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #GENPS - Subroutine to write a Position Settlement           *
+      *  ------                                                       *
+      *  Called by : #DIVID, #COUPO, #PARTP, #MORTP, #MATUR           *
+      *  Calls     :                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #GENPS    BEGSR
+      *
+      ** Do not output records if Amount Due is zero
+      *
+     C           PAMD      CABEQ0         ENDPSG
+      *
+     C           P9RECI    IFEQ 'R'                        B* P9Reci
+     C           PPRE      IFEQ 'R'
+     C                     MOVEL'P'       PPRE
+     C                     ELSE
+     C           PPRE      IFEQ 'P'
+     C                     MOVEL'R'       PPRE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                           E* P9Reci
+      *
+     C                     MOVE 'D'       RECI
+     C                     MOVE MKTI      PMAR
+     C                     MOVE DSBA      PBCA
+     C                     MOVE DSSC      PSSH
+     C                     MOVELDDPT      PCPY
+     C*
+     C                     MOVE 'D'       CTYP
+     C                     Z-ADD0         BAUS
+     C                     Z-ADD0         MAMT
+     C                     Z-ADD0         DAMT
+     C                     Z-ADD0         PSEQ
+     C                     Z-ADD0         SABC
+     C*
+     C           P9SDET    IFEQ 'MP'
+     C           P9SDET    OREQ 'DV'
+     C           S01512    ANDNE'Y'
+      *
+     C/COPY WNCPYSRC,SE4859C034
+      *
+      ** If Enhanced Treasury is switched on:                                                 CSE075
+      ** Some securities have a standard coupon delay.  If SE2100 has set                     CSE075
+      ** up the 'Other Date' field, use this as the due date for payments.                    CSE075
+      *                                                                                       CSE075
+     C********** P9SDET    OREQ 'CP'                                                 CSE075 BUG11046
+     C********** P9SDPD    ANDNE0                                                    CSE075 BUG11046
+     C********** CSE075    ANDEQ'Y'                                                  CSE075 BUG11046
+     C                     Z-ADDP9SDPD    PDUD
+     C                     ELSE
+     C                     Z-ADDP9SDED    PDUD
+     C                     END
+     C/COPY WNCPYSRC,SE4859C035
+      *
+     C           BVAPST    IFEQ 'Y'
+     C                     MOVE 'Y'       PAUI
+     C                     MOVE 'Y'       PSMI
+     C                     ELSE
+     C                     MOVE ' '       PAUI
+     C                     END
+      *
+      ** If S01509 is active, position currency could be equal to value
+      ** ccy, redemption ccy or nominal ccy depending on the event type
+      *
+     C           S01509    IFEQ 'Y'                        B* S01509
+     C                     SELEC
+     C           P9SDET    WHEQ 'DV'
+     C           P9SDET    OREQ 'CP'
+     C           P9SDET    OREQ 'CG'                                                      CSE053
+     C                     MOVE VLCY      PNCY
+     C           P9SDET    WHEQ 'PP'
+     C           P9SDET    OREQ 'MP'
+     C                     MOVE NMCY      PNCY
+     C           P9SDET    WHEQ 'MA'
+     C           *IN78     ANDEQ'0'
+     C           SDCX      ANDNE*BLANKS
+     C           P9SDET    OREQ 'MG'                                                      CSE053
+     C           *IN78     ANDEQ'0'                                                       CSE053
+     C           SDCX      ANDNE*BLANKS                                                   CSE053
+     C                     MOVE SDCX      PNCY
+     C                     OTHER
+     C                     MOVE VLCY      PNCY
+     C                     ENDSL
+     C*
+     C                     ELSE
+     C                     MOVE NMCY      PNCY
+     C                     END                             E* S01509
+      *
+      * Value date - set initially to due date
+      * Should be date of the next working day after value date in
+      * value currency if S01512 is active
+      *
+     C           S01512    IFEQ 'Y'
+     C           P9SDET    IFEQ 'DV'
+     C           P9SDPD    SUB  1         ZDAYNO
+     C                     ELSE
+     C           PDUD      SUB  1         ZDAYNO
+     C                     ENDIF
+     C                     MOVE PNCY      ZCCY
+     C                     Z-ADD1         ZNRDYS
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    PSVL
+     C                     ELSE
+     C           P9SDET    IFEQ 'DV'
+     C                     Z-ADDP9SDPD    PSVL
+     C                     ELSE
+     C                     Z-ADDPDUD      PSVL
+     C                     ENDIF
+     C                     END
+     C*****      CSE075    IFEQ 'Y'                                                   BUG11046HUT118
+     C*****      P9SDET    ANDEQ'CP'                                                  BUG11046HUT118
+     C*****      P9SDPD    ANDNE0                                                     BUG11046HUT118
+     C*****                Z-ADDSAOD      PSVL                                        BUG11046HUT118
+     C*****                ENDIF                                                      BUG11046HUT118
+     C*
+     C                     MOVE BVDMBC    PBCD
+     C                     MOVE '0'       PYCUSD  1
+      *
+      * Payment currency and settlement exchange rate are held on
+      * SECTYD for straight, dual- and multi-currency securities.
+      * Exchange rate=1 for straight securities.
+      * If S01509 is active, settle = pos currency, exchange rate is
+      * 1 with mult/div indicator as 'M'
+      *
+     C           S01509    IFEQ 'Y'                        B* S01509
+     C                     MOVE PNCY      PSCU
+     C                     Z-ADD1         PSXR
+     C                     MOVE 'M'       PMDI
+     C                     ELSE
+     C                     MOVE SPYC      PSCU
+     C                     Z-ADDSEXR      PSXR
+     C                     MOVE SMDI      PMDI
+     C                     END                             E* S01509
+      *
+     C/COPY WNCPYSRC,SE4859C036
+      *
+      * ACCESS STANDARD SETTLEMENT INSTRUCTIONS FILE
+      *
+     C                     MOVE PBCA      SBRA
+     C                     MOVELPCPY      CSTM
+     C                     MOVE PSCU      CYSI
+     C                     MOVE SITP      ITSI
+      *
+     C                     Z-ADD0         PSMT
+     C                     MOVE *BLANK    PSEA
+     C                     MOVE *BLANK    PSEB
+     C                     MOVE *BLANK    PCPN
+     C                     MOVE *BLANK    PFAC
+     C                     MOVE *BLANK    PSPI
+      *
+      ** If CSE028 is on, call SESSIR0 for default of MT5xx information
+      *
+     C           CSE028    IFEQ 'Y'
+      *
+     C                     MOVELPBCD      WBKCD
+     C                     MOVELPTFR      WPTFR
+     C                     MOVELCSTM      WCUST   6
+      *
+     C                     CALL 'SESSIR0'
+     C                     PARM 'D'       POTYP   1
+     C                     PARM SBRA      PSBRA   3
+     C                     PARM           WCUST
+     C                     PARM           WBKCD
+     C                     PARM CYSI      PCYSI   3
+     C                     PARM SMCC      PMRKT   2
+     C                     PARM ITSI      PITSI   3
+     C                     PARM           WPTFR
+     C                     PARM           PCBSTD
+     C                     PARM           PCBSAD
+     C                     PARM *BLANKS   PRTCD   5
+      *
+     C                     MOVE '0'       *IN77
+     C           PRTCD     IFNE '*NCRF'
+     C           PRTCD     ANDNE'*NRF '
+     C           2         OCUR PCBSTD
+     C                     ELSE
+     C           PRTCD     IFNE '*NBRF'
+     C           PRTCD     ANDNE'*NRF '
+     C           1         OCUR PCBSTD
+     C                     ELSE
+     C                     MOVE '1'       *IN77
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVEL*BLANKS   WBKCD
+     C                     MOVEL*BLANKS   WPTFR
+      *
+      ***  First try chaining to STDSE with appropriate Investment Type
+      *
+     C           STDSKY    CHAINSTDSED               77
+      *
+     C                     MOVE '1'       WRECT
+     C           CLIKEY    CHAINCLINT                99
+     C           *IN99     IFEQ '0'
+     C           C1DI      ANDNE'M'
+      *
+      ***  If first chain to STDSED failed, retry with blank ITSI.
+      *
+     C           *IN77     ANDEQ'1'
+     C                     MOVE *BLANK    ITSI
+     C           STDSKY    CHAINSTDSED               77
+     C                     END
+      *
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,SE4859C037
+      *
+     C           *IN77     IFNE '1'
+     C           RECI      ANDNE'*'
+      *
+     C                     MOVE *OFF      *IN88
+      *
+      * CEU005 active and Settlement Ccy used on STDSED.
+     C           CEU005    IFEQ 'Y'
+     C           SCCY      ANDNE*BLANKS
+      *
+      * Access currencies file for EURO rate, EURO M/D indicator and
+      * Transition Date for 'In' Ccy.
+      *
+     C           PNCY      IFEQ BKEURO
+     C                     CALL 'AOCURRR0'
+     C                     PARM           @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SCCY      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE '01'      DBASE             ************
+     C                     MOVEL'SDCURRPD'DBFILE            * DATABASE *
+     C                     MOVELSCCY      DBKEY             * ERROR 01 *
+     C                     EXSR *PSSR                       ************
+     C                     ENDIF
+     C                     ELSE
+     C           SCCY      IFEQ BKEURO
+     C                     CALL 'AOCURRR0'
+     C                     PARM           @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM PNCY      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE '02'      DBASE             ************
+     C                     MOVEL'SDCURRPD'DBFILE            * DATABASE *
+     C                     MOVELPSCU      DBKEY             * ERROR 02 *
+     C                     EXSR *PSSR                       ************
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Value date is later than Transition Start Date.
+     C           PSVL      IFGE A6TPSD
+     C           A6INCY    ANDEQ'Y'
+     C                     Z-ADDA6EUER    PSXR
+      *
+      * Nominal ccy is Euro currency, reverse M/D indicator.
+     C           PNCY      IFEQ BKEURO
+     C           A6EUMD    IFEQ 'M'
+     C                     MOVE 'D'       PMDI
+     C                     ELSE
+     C                     MOVE 'M'       PMDI
+     C                     ENDIF
+      *
+      * Settlement ccy is Euro ccy, use Euro M/D indicator.
+     C                     ELSE
+     C                     MOVE A6EUMD    PMDI
+     C                     ENDIF
+      *
+      * Use standard settlement ccy for position settlement ccy
+     C                     MOVE SCCY      PSCU
+      *                                                                   194195
+     C                     MOVE PSCU      WCURR                           194195
+     C                     EXSR #CURRN                              194195HUT118
+     C                     Z-ADDA6SPRT    PBRX                      194195HUT118
+      *
+      * Chain STDSED again.
+     C                     MOVE SCCY      CYSI
+      *
+      ** If CSE028 is on, call SESSIR0 for default of MT5xx information
+      *
+     C           CSE028    IFEQ 'Y'
+      *
+     C                     CALL 'SESSIR0'
+     C                     PARM 'D'       POTYP   1
+     C                     PARM SBRA      PSBRA
+     C                     PARM           WCUST
+     C                     PARM           WBKCD
+     C                     PARM CYSI      PCYSI
+     C                     PARM SMCC      PMRKT
+     C                     PARM ITSI      PITSI
+     C                     PARM           WPTFR
+     C                     PARM           PCBSTD
+     C                     PARM           PCBSAD
+     C                     PARM *BLANKS   PRTCD
+      *
+     C                     MOVE '0'       *IN88
+     C           PRTCD     IFNE '*NCRF'
+     C           PRTCD     ANDNE'*NRF '
+     C           2         OCUR PCBSTD
+     C                     ELSE
+     C           PRTCD     IFNE '*NBRF'
+     C           PRTCD     ANDNE'*NRF '
+     C           1         OCUR PCBSTD
+     C                     ELSE
+     C                     MOVE '1'       *IN88
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           STDSKY    CHAINSTDSED               88
+      *
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,SE4859C038
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * If no record found ensure fields from last chain not loaded
+      * to output fields.
+     C           *IN88     IFEQ *ON
+     C           CEU005    ANDEQ'Y'
+     C                     MOVE *BLANKS   PSMT
+     C                     MOVE *BLANKS   PSEA
+     C                     MOVE *BLANKS   PSEB
+     C                     MOVE *BLANKS   PCPN
+     C                     MOVE *BLANKS   PFAC
+     C                     MOVE *BLANKS   PSPI
+     C                     MOVE *BLANKS   STLA                            CEU005
+     C                     Z-ADD0         STLT                            CEU005
+     C                     MOVE *BLANKS   PRCNUM
+     C                     MOVE *BLANKS   PRACOD
+     C                     MOVE *BLANKS   PRACSQ
+     C                     MOVE *BLANKS   PPFC
+     C                     ELSE
+      *
+     ** USE RECEIVE FIELDS IF PAY/RECEIVE IND IS SET TO P
+      *
+     C           PPRE      IFEQ 'P'
+     C                     MOVE SPSM      PSMT
+     C                     MOVE SPAT      PSEA
+     C                     MOVE SPBA      PSEB
+     C                     MOVE SPCB      PCPN
+     C                     MOVE SPFA      PFAC
+     C                     MOVE SPSI      PSPI
+     C                     MOVE SPAT      STLA                            103361
+     C                     Z-ADDSPSM      STLT                            103361
+      *
+      * If settlement method is '04' and settlement account is blank,
+      * retrieve prime account number
+      *
+     C           SPSM      IFEQ 04
+     C           SPAT      ANDEQ*BLANKS
+      *
+      * Retrieve prime account number
+      *
+     C                     MOVE CSTM      PRCNUM
+     C                     MOVE BMACCD    PRACOD
+     C                     MOVE '01'      PRACSQ
+      *                                                                   136297
+      ** Check if account exists else use suspense account                136297
+      *                                                                   136297
+     C                     MOVE PRCNUM    KYCNUM                          136297
+     C                     MOVE PSCU      KYCCY                           136297
+     C                     MOVE PRACOD    KYACOD                          136297
+     C                     MOVE PRACSQ    KYACSQ                          136297
+     C                     MOVE PSEB      KYBRCA                          136297
+     C           KEYACC    CHAINACCNTABF             20                   136297
+     C           *IN20     IFEQ '1'                                       136297
+     C           RECI      OREQ '*'                                       136297
+     C           1         CHAINTABTB20              21                   136297
+     C           *IN21     IFEQ '0'                                       136297
+     C                     MOVE COMS      PRACOD                          136297
+     C                     ENDIF                                          136297
+     C           PSEB      CHAINSDBRCHL0             22                   136297
+     C           *IN22     IFEQ '0'                                       136297
+     C                     MOVE A8BICN    PRCNUM                          136297
+     C                     ENDIF                                          136297
+     C                     ENDIF                                          136297
+      *
+     C                     MOVE PRACCT    STLA                            103361
+     C                     MOVE PRACCT    PSEA
+     C                     END
+      *
+     C                     ELSE
+      *
+      * USE PAY FIELDS IF PAY/RECEIVE IND IS SET TO R
+      *
+     C           PPRE      IFEQ 'R'
+     C                     MOVE SRSM      PSMT
+     C                     MOVE SRAC      PSEA
+     C                     MOVE SRAB      PSEB
+     C                     MOVE SRCB      PCPN
+     C                     MOVE *BLANK    PFAC
+     C                     MOVE *BLANK    PSPI
+     C                     MOVE SRAC      STLA                            103361
+     C                     Z-ADDSRSM      STLT                            103361
+      *
+      *
+      * If settlement method is '04' and settlement account is blank,
+      * retrieve prime account number
+      *
+     C           STLT      IFEQ 04
+     C           STLA      ANDEQ*BLANKS
+      *
+      * Retrieve prime account
+      *
+     C                     MOVE CSTM      PRCNUM
+     C                     MOVE BMACCD    PRACOD
+     C                     MOVE '01'      PRACSQ
+      *
+      ** Check if account exists else use suspense account                136297
+      *                                                                   136297
+     C                     MOVE PRCNUM    KYCNUM                          136297
+     C                     MOVE PSCU      KYCCY                           136297
+     C                     MOVE PRACOD    KYACOD                          136297
+     C                     MOVE PRACSQ    KYACSQ                          136297
+     C                     MOVE PSEB      KYBRCA                          136297
+     C           KEYACC    CHAINACCNTABF             20                   136297
+     C           *IN20     IFEQ '1'                                       136297
+     C           RECI      OREQ '*'                                       136297
+     C           1         CHAINTABTB20              21                   136297
+     C           *IN21     IFEQ '0'                                       136297
+     C                     MOVE COMS      PRACOD                          136297
+     C                     ENDIF                                          136297
+     C           PSEB      CHAINSDBRCHL0             22                   136297
+     C           *IN22     IFEQ '0'                                       136297
+     C                     MOVE A8BICN    PRCNUM                          136297
+     C                     ENDIF                                          136297
+     C                     ENDIF                                          136297
+     C                     MOVE PRACCT    STLA                            103361
+     C                     MOVE PRACCT    PSEA
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,SE4859C039
+     C                     END
+     C                     ENDIF
+     C*                                                                                       HUT118
+     C                     Z-ADDBJRDNB    PDTG                                                HUT118
+      *                                                                                       CGL020
+      ** If Settlement Account is not blank                                                   CGL020
+      *                                                                                       CGL020
+     C           CGL020    IFEQ 'Y'                                                           CGL020
+     C           PSEA      ANDNE*BLANKS                                                       CGL020
+      *                                                                                       CGL020
+     C                     MOVE *BLANKS   PINTG                                               CGL020
+     C                     MOVE *BLANKS   PINTGA                                              CGL020
+     C                     MOVE *BLANKS   PINST                                               CGL020
+     C                     MOVE *BLANKS   PINSTA                                              CGL020
+     C                     MOVE *BLANKS   PBENM                                               CGL020
+     C                     MOVE *BLANKS   PBENMA                                              CGL020
+      *                                                                                       CGL020
+     C                     CALL ZAAMLP                                                        CGL020
+     C                     PARM           PINTG  10                                           CGL020
+     C                     PARM           PINTGA 35                                           CGL020
+     C                     PARM           PINST  10                                           CGL020
+     C                     PARM           PINSTA 35                                           CGL020
+     C                     PARM           PBENM  10                                           CGL020
+     C                     PARM           PBENMA 35                                           CGL020
+     C                     PARM           PDEBT  10                                           CSW210
+     C                     PARM           PDEBTA 35                                           CSW210
+     C                     PARM           PCPY                                                CGL020
+     C                     PARM           PFAC                                                CGL020
+     C                     PARM           PSEA                                                CGL020
+     C                     PARM           PSEB                                                CGL020
+     C                     PARM           PSCU                                                CGL020
+     C                     PARM           WWRACT 20                                           CGL020
+     C                     PARM           WWRCTY  2                                           CGL020
+     C                     PARM           WWRBNK 20                                           CGL020
+     C                     PARM           WWRCDE 11                                           CGL020
+     C                     PARM           WWPACT 20                                           CGL020
+     C                     PARM           WWPCTY  2                                           CGL020
+     C                     PARM           WWPBNK 20                                           CGL020
+     C                     PARM           WWPCDE 11                                           CGL020
+     C                     PARM           WWDACT 35                                           CGL020
+     C                     PARM           WWDCTY  2                                           CGL020
+     C                     PARM           WWDBNK 20                                           CGL020
+      *                                                                                       CGL020
+     C                     MOVE PDUD      WWSDAT  50                                          CGL020
+      *                                                                                       CGL020
+     C                     ENDIF                                                              CGL020
+      *
+     C                     MOVE PSCU      WCURR
+     C                     EXSR #CURRN
+     C                     Z-ADDA6SPRT    PBRX
+     C/COPY WNCPYSRC,SE4859C040
+      *
+     C                     Z-ADDBJRDNB    PDTG
+      *
+      * If S01447 installed, and settlement type = Dividend or Coupon
+      * and a Security WHT rcd for the security exists, and
+      * settlement is not a payment, calculate tax amounts.
+      *
+     C           S01447    IFEQ 'N'
+     C           *IN80     OREQ '1'
+     C           PPRE      OREQ 'P'
+     C           P9SDET    ORNE 'DV'
+     C           P9SDET    ANDNE'CP'
+     C           P9SDET    ANDNE'CG'                                                     CSE053
+     C                     CLEARTASO
+     C                     CLEARTASR
+     C                     CLEARTAUS
+     C                     ELSE
+     C/COPY WNCPYSRC,SE4859C041
+     C                     EXSR #CALTX
+     C/COPY WNCPYSRC,SE4859C042
+     C                     END
+      *
+      * Zeroise Numeric Fields With no specified value
+      *
+     C                     Z-ADD0         PCHA
+     C/COPY WNCPYSRC,SE4859C043
+     C                     Z-ADD0         PCAM
+     C/COPY WNCPYSRC,SE4859C044
+      *
+      * Set up parameter for call to SEZ010
+      *
+     C                     MOVE 'M'       P@CLAS
+     C                     MOVELPPRE      P@PPRE
+     C                     Z-ADDPAMD      P@PAMD
+     C                     Z-ADDPCHA      P@PCHA
+     C                     Z-ADDPCAM      P@PCAM
+     C                     Z-ADDTASO      P@TASO
+     C                     Z-ADDTAUS      P@TAUS
+     C                     Z-ADDPSXR      P@PSXR
+     C                     MOVELPMDI      P@PMDI
+     C                     MOVELPNCY      P@PNCY
+     C                     MOVELPSCU      P@PSCU
+     C                     Z-ADD0         P@STAM                                            AR853119
+     C/COPY WNCPYSRC,SE4859C045
+      *
+     C                     MOVE 'TS'      P@TDTP
+     C                     Z-ADD0         P@FXMR
+     C                     Z-ADD0         P@MAMT
+     C                     Z-ADD0         FXMP
+     C                     Z-ADD0         FXMR
+     C                     Z-ADD0         MAMT
+      *
+      ** Call SEZ010 to calculate the settlement amount in settle ccy
+      *
+     C                     CALL 'SEZ010'
+     C                     PARM *BLANKS   P@RCDE  7
+     C                     PARM           P@DATA
+     C           P@RCDE    IFEQ *BLANKS
+     C                     Z-ADDP@PSAT    PSAT
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     MOVE '1'       *INLR
+     C                     ENDIF
+      *
+     C                     Z-ADDBJRDNB    LCD
+     C                     Z-ADD0         TNLU
+      *
+      * IF PORTFOLIO MANAGEMENT IS ON, OUTPUT TNLU ON POSETD
+      *
+     C           BGPFMG    IFEQ 'Y'
+     C           BGN4ST    OREQ 'Y'                                       236080
+     C                     EXSR ZTNLU1
+     C                     MOVELNATN      TNLU
+     C                     END
+     C                     MOVE 'I'       CHTP
+     C                     MOVE 'D'       RECI
+      *
+     C           PSEB      IFEQ *BLANKS
+     C                     MOVE PBCA      PSEB
+     C                     END
+      *
+      * Profit Centres are not applicable to depot positions
+      * therefore ensure that any depot position position settlements
+      * have a blank profit centre
+      *
+     C                     MOVE *BLANKS   PPFC
+     C/COPY WNCPYSRC,SE4859C046
+      *
+      *  If Analytical Accounting is installed, set the profit centre
+      *  SE ICD default profit centre.
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C                     MOVE BVSEPC    PPFC
+     C                     ENDIF
+      *                                                                                      251950A
+     C           PSEB      IFEQ *BLANKS                                                      251950A
+     C                     MOVE PBCA      PSEB                                               251950A
+     C                     END                                                               251950A
+      *
+      * WRITE POSITION SETTLMENT RECORD
+      *
+      * If CSE023 is not installed or if CSE023 is installed and
+      * the events is not for Coupon, Dividend or Maturity then
+      ** use the normal processing.
+      *
+     C           CSE023    IFEQ 'N'
+      *
+     C           CSE023    OREQ 'Y'
+     C           PEVT      ANDNE'CP'
+     C           PEVT      ANDNE'MT'
+     C           PEVT      ANDNE'DV'
+      *
+     C           CRTT      OREQ *BLANKS
+      *                                                                                     MD037742
+      ** Initialize tax fields to prevent garbage in POSETD                                 MD037742
+      *                                                                                     MD037742
+     C                     Z-ADD0         TAXA                                              MD037742
+     C                     Z-ADD0         TXNM                                              MD037742
+     C                     Z-ADD0         TXST                                              MD037742
+      *
+      * COUNT RECORDS WRITTEN
+      *
+     C                     ADD  1         W02CNT  50
+     C                     MOVE 'D'       RECI
+     C                     WRITEPOSETDF
+     C                     EXSR PSAUDT                                                      AR324886
+      *                                                                                     AR853119
+      ***  Write extension file                                                             AR853119
+      *                                                                                     AR853119
+     C           CER049    IFEQ 'Y'                                                         AR853119
+     C                     EXSR SRPOST                                                      AR853119
+     C                     ENDIF                                                            AR853119
+      *                                                                                       HUT118
+     C                     MOVE 'Y'       WWDATA  1
+      *                                                                   CSE053
+      * Set data for On-line Projected movements update                   CSE053
+      *                                                                   CSE053
+     C           @PHASE    IFNE 'C'                                       CSE053
+     C           PAUI      ANDEQ'Y'                                       CSE053
+     C                     MOVEL*BLANK    Z#BSTS                          CSE053
+     C                     MOVELPPOSET    Z#ASTS                          CSE053
+      *                                                                   CSE053
+      * Do On-line Updates                                                CSE053
+      *                                                                   CSE053
+     C                     CALL 'AOOUPSU0'                                CSE053
+     C                     PARM           @RTCD   7                       CSE053
+     C                     PARM           Z#BSTS                          CSE053
+     C                     PARM           Z#ASTS                          CSE053
+     C           @RTCD     IFEQ '*ERROR*'                                 CSE053
+     C                     SETON                     U7U8                 CSE053
+     C                     MOVE PBCA      SPBCA                           CSE053
+     C                     MOVE PSSH      SPSSH                           CSE053
+     C                     MOVE PCPY      SPCPY                           CSE053
+     C                     Z-ADDPDUD      SPDUD                           CSE053
+      *                                                                   CSE053
+     C                     Z-ADD80        DBASE            ***************CSE053
+     C                     MOVEL'AOOUPSU0'DBFILE           * DB ERROR 80 *CSE053
+     C                     MOVE *BLANKS   DBKEY            ***************CSE053
+     C                     MOVELKEYFLD    DBKEY            ***************CSE053
+     C                     EXSR *PSSR                                     CSE053
+     C                     END                                            CSE053
+     C                     END                                            CSE053
+      *
+     C                     ELSE
+      *
+      * If Treaty Withholding Tax is installed, then set up fields
+      * for XX118009.
+      *
+      ** For Coupon Event, @DIVDT is the Last Coupon Date.
+      ** For Dividend Event, @DIVDT is equal to the dividend date.
+      *
+     C                     Z-ADD0         @DIVDT
+      *
+     C           PEVT      IFEQ 'CP'
+     C                     Z-ADDP9LCCP    @DIVDT
+     C                     END
+      *
+     C           PEVT      IFEQ 'DV'
+      *
+      * If S01510 is active AND event type = DV, use ex-dividend date
+      *
+     C           S01510    IFEQ 'Y'
+     C                     Z-ADDP9SDXD    @DIVDT
+     C                     ELSE
+     C                     Z-ADDP9SDED    @DIVDT
+     C                     END
+     C                     SUB  1         @DIVDT
+      *
+      ** If CSE008 is ON then use value date position for dividend.
+      *
+     C           CSE008    IFEQ 'Y'
+     C                     MOVE 'V'       @TVBAS
+     C                     ELSE
+     C                     MOVE 'T'       @TVBAS
+     C                     END
+     C                     END
+     C                     Z-ADD0         TXNM                            236591
+     C                     Z-ADD0         TXST                            236591
+     C                     Z-ADD0         TAXA                            236591
+     C*****                Z-ADD0         TISD                      239622HUT118
+      *
+     C                     CALL 'XX118009'
+     C                     PARM           PPOSET
+     C                     PARM           @TVBAS  1
+     C                     PARM           @DIVDT  50
+     C                     PARM           @NREC   30
+     C                     PARM           @ERR    1
+     C*
+     C           @ERR      IFEQ 'N'
+     C                     ADD  @NREC     W02CNT
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     MOVE '1'       *INLR
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,SE4859C047
+      *
+      ** IF PORTFOLIO MANAGEMENT IS ON, OUTPUT TNLU ON POSETD
+      *
+     C           BGPFMG    IFEQ 'Y'
+     C           BGN4ST    OREQ 'Y'                                       236080
+     C                     Z-ADD0         TNLU
+     C                     END
+     C*
+     C           ENDPSG    ENDSR
+      *
+      *****************************************************************
+      *  #GENND - Subroutine to write Non Diary Events CG or MG       *
+      *  ------                                                       *
+      *  Called by : #COUPO, #MATUR                                   *
+      *  Calls     :                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #GENND    BEGSR
+      *
+      *  Set up fileds
+      *
+     C                     MOVEL'D'       RECI
+     C                     MOVELP9SDSN    SNSN
+     C                     Z-ADDP9SDED    SNDT
+     C                     MOVELKSDET     SNET
+     C                     Z-ADDCPNR      SNCR
+     C                     Z-ADDUCFCT     SNCF
+     C                     Z-ADD*ZERO     SNCA
+     C                     Z-ADDUCPDP     SNCP
+     C                     Z-ADD*ZERO     SNPR
+     C                     MOVELP9SNNA    SNNA
+     C                     MOVELP9LCCP    LCCP
+     C                     MOVELP9MDTI    MDTI
+     C/COPY WNCPYSRC,SE4859C048
+      *
+     C                     WRITESNDEVDO
+      *
+     C                     ADD  1         WNDADD  50
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #CALTX - Subroutine to calculate tax amounts for dividends   *
+      *  -------  and Coupons                                         *
+      *                                                               *
+      *  CALLED FROM: W02                                             *
+      *  CALLS:       NONE                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CALTX    BEGSR
+      *
+      *** Initialise work tax rate and amount fields
+      *
+     C                     CLEARUTXRSR
+     C                     CLEARUTXRRF
+     C                     CLEARUTXRUS
+      *
+      *** If tax band at source is zero, then take rate from security
+      *** WHT details file; Otherwise access SEcountry tax rate file to
+      *** get tax rate at source
+      *
+     C           S1TABD    IFEQ *ZERO                      *B1
+     C                     Z-ADDS1RASO    UTXRSR
+     C                     ELSE                            *X1
+      *
+     C                     MOVELS1CTTA    UKEY    3
+     C                     MOVE S1TABD    UKEY
+      *
+     C                     CALL 'AOSCTXR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM S1CTTA    @CTTA   2
+     C                     PARM S1TABD    @TABD   10
+     C           SECNTR    PARM SECNTR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS                    *B2
+     C           TXRECI    ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SECNTRL0'DBFILE           ***************
+     C                     MOVELUKEY      DBKEY            ** DBERROR 003
+     C                     Z-ADD03        DBASE            ***************
+     C                     SETON                       U7U8
+     C                     EXSR *PSSR
+     C                     ELSE                            *X2
+     C                     Z-ADDTXRASO    UTXRSR
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      *** If tax band by user is not zero, then access country to
+      *** branch tax rate file to get tax rate by user
+      *** Otherwise set to zero.
+      *
+     C           S1TABU    IFNE *ZERO                      *B1
+     C                     CALL 'AOCBTXR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM DSBA      @BRCA   3
+     C                     PARM S1CTTA    @CTTA
+     C                     PARM S1TABU    @TABU   10
+     C           SECBTX    PARM SECBTX    DSFDY
+     C*
+     C           @RTCD     IFEQ *BLANKS                    *B2
+     C           TBRECI    ANDEQ'D'
+     C                     Z-ADDTBRASR    UTXRRF
+     C                     Z-ADDTBRAUS    UTXRUS
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      *
+      *** calculate amount deducted at source
+      *
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRSR    WTASO  204                                          248184
+     C           WTASO     DIV  100       TASO      H                                         248184
+     C                     ELSE                                                               248184
+     C           UTXRSR    DIV  100       URATE   54
+     C           PAMD      MULT URATE     TASO      H
+     C                     ENDIF                                                              248184
+      *
+      *** calculate amount deducted refundable
+      *
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRRF    WTASR  204                                          248184
+     C           WTASR     DIV  100       TASR      H                                         248184
+     C                     ELSE                                                               248184
+     C           UTXRRF    DIV  100       URATE
+     C           PAMD      MULT URATE     TASR      H
+     C                     ENDIF                                                              248184
+      *
+      *** Amount deducted by user is set to zero, as this is a depot
+      *** position.
+      *
+     C                     CLEARTAUS
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  #EVUPD - Access SE Diary and Non Diary File to update        *
+      *  ------   Positon Settlement generated date or new event      *
+      *                                                               *
+      *  Called by :                                                  *
+      *  Calls     : *PSSR                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #EVUPD    BEGSR                           ** SECEDI **
+      *
+      ** CHAIN FOR SECURITY EVENT RECORD AND DATA BASE ERROR
+      *
+     C                     MOVE P9SDSN    K9SDSN
+     C                     MOVE P9SDED    K9SDED
+     C                     MOVE P9SDET    K9SDET
+      *
+     C           SEDEVE    CHAINSEDEVDV              7877
+     C           *IN78     IFNE '1'
+     C           *IN77     ANDNE'1'
+     C           SDDT      ANDEQ*ZERO
+      *
+     C           SEDEVE    CHAINSEDEVDF              7877
+     C           *IN78     IFNE '1'
+     C           *IN77     ANDNE'1'
+     C           RECI      COMP '*'                      78
+     C  N78      RECI      COMP 'C'                      78
+     C                     END
+      *
+     C           *IN78     IFNE '1'
+     C           SDDT      IFEQ *ZERO
+     C                     Z-ADDBJRDNB    SDDT
+     C                     ADD  1         WDEVEU  50
+     C                     END
+     C           *IN77     IFNE '1'
+     C                     UPDATSEDEVDF
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #GETDP - Access Depot Position File, XXDPOFV0 if function r  *
+      *  ------   function runs during the cob; XXCDUDV0 if program   *
+      *           runs in I/C.                                        *
+      *                                                               *
+      *  Called by : SRMAIN                                           *
+      *  Calls     : *PSSR                                            *
+      *                                                               *
+      *****************************************************************
+     C           #GETDP    BEGSR
+      *
+     C/COPY WNCPYSRC,SE4859C049
+      *
+      * if program runs during the Cob, access file XXDPOFV0
+      * if program runs during I/C, access file XXCDUDV0
+     C           @PHASE    IFEQ 'C'
+     C           P9SDSN    READEXXDPOFV0                 45
+     C                     ELSE
+     C           P9SDSN    READEXXCDUDV0                 45
+     C                     END
+      *
+      *
+     C           *IN45     IFEQ *OFF
+     C           S01510    IFEQ 'Y'
+     C           CSE008    IFNE 'Y'
+     C                     Z-ADDDSNT      DSNVT
+     C                     ELSE
+     C                     Z-ADDDSNV      DSNVT
+     C                     END
+     C                     ELSE
+     C           CSE008    IFNE 'Y'
+     C                     Z-ADDDSNT      DSNVT
+     C                     ELSE
+     C                     Z-ADDDSNV      DSNVT
+     C                     END
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,SE4859C050
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #GETNP - Get Depot Nominal Position using new Position       *
+      *  ------   Calculation Routine.                                *
+      *                                                               *
+      *  Called by : SRMAIN                                           *
+      *  Calls     :          *PSSR                                   *
+      *                                                               *
+      *****************************************************************
+     C           #GETNP    BEGSR
+      *
+      * clear fields
+     C                     MOVE 'N'       CALSEP  1
+     C                     MOVE *BLANKS   PERROR
+     C                     MOVE *OFF      *IN55
+      * Save Depot
+     C                     MOVE DDPT      PRVDEP
+     C                     MOVE DSBA      PRVBRA
+      *
+      * set parameters to call Nominal Position Calculation Routine
+      *
+      * set Date = Event Date - 1
+     C           P9SDED    SUB  1         ZWDDTE
+      *
+      * If Dividend, set Date = Ex-date - 1
+     C           P9SDET    IFEQ 'DV'
+     C           S01510    ANDEQ'Y'
+     C           P9SDXD    SUB  1         ZWDDTE
+     C                     END
+      *
+      * Value/Trade Date basis
+      *
+     C                     MOVE 'V'       PBASIS  1
+      *
+     C           CSE008    IFNE 'Y'
+     C           P9SDET    ANDEQ'DV'
+     C                     MOVE 'T'       PBASIS  1
+     C                     END
+      *
+      * ************************************************************************
+      * At the moment - SEC8100  is only called if function runs in I/C
+      *
+     C           @PHASE    IFEQ 'I'                        B* CALL SEP
+      * ************************************************************************
+      *
+     C                     MOVE 'Y'       CALSEP  1
+      *
+      * SEC8100 : if called with PTYPE = 'D', Depot Position is returned
+      *
+      * Input  Parameter
+     C                     CALL 'SEC8100'              55
+     C                     PARM DSBA      ZBRCH   3
+     C                     PARM P9SDSN    ZSECT  10
+     C                     PARM '  '      PBOOK   2
+     C                     PARM ' '       FMKT    1
+     C                     PARM DDPT      ZDEPOT  6                       HUT118
+     C                     PARM *ZEROS    ZCUST6  6                       HUT118
+     C                     PARM *BLANKS   PPTFR   4
+     C                     PARM           PBASIS  1
+     C                     PARM           ZWDDTE  50
+     C                     PARM 'D'       PTYPE   1
+     C                     PARM ' '       PREPO   1
+     C                     PARM ' '       PUNAU   1
+      *
+      * Output Parameter
+     C                     PARM *ZEROS    ZNOMNL 150
+     C                     PARM *ZEROS    ZEXCPB 150
+     C                     PARM *ZEROS    ZPRICE 158
+     C                     PARM ' '       PERROR  1
+      *
+      * Set Nominals returned from Nominal Position Calculation Routine
+      *
+     C           PERROR    IFEQ '1'
+     C           @PHASE    ANDEQ'I'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD5         DBASE
+     C           'NOM PS R'CAT  'OUTINE'  DBKEY     P
+     C                     MOVE 'Rt '     DBFILE
+     C                     MOVELDDPT      DBKEY     P
+     C                     MOVEL'XX118004'DBPGM     P                     HUT118
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * If error on call to SEC8100 , and if function is running in I/C, then set
+      *    Nominal to zero
+     C           *IN55     IFEQ *ON
+     C           @PHASE    ANDEQ'I'
+     C                     Z-ADD0         ZNOMNL
+     C                     Z-ADD0         ZEXCPB
+     C                     END
+      *
+     C                     END                             E* CALL SEP
+      *
+      *
+      *
+      * IF error when calling SEC8100  and program is running during Cob, or if Pgm SEC8100
+      *    not called when @Phase is 'C', then set  ZNOMML to the value read from file
+      *
+      *
+     C           @PHASE    IFEQ 'C'                        B* PHASE COB
+      *
+     C           *IN55     IFEQ *ON
+     C           PERROR    OREQ '1'
+     C           CALSEP    OREQ 'N'
+     C                     MOVE DSNVT     ZNOMNL
+     C                     MOVE DEXN      ZEXCPB
+     C                     END
+      *
+     C                     ENDIF                           E* PHASE COB
+      *
+      * Set fields
+     C                     MOVE ZNOMNL    DSNVT
+     C                     MOVE ZEXCPB    DEXN
+      *
+      ** Calculate Cum-Coupon value
+      *
+     C           DSNVT     SUB  DEXN      WCUMCP 150
+      *
+     C                     ENDSR
+     C/EJECT
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  #CURRN - Access Currencies file to get Nr of decimal Places  *
+      *  ------                                                       *
+      *  Called by :                                                  *
+      *  Calls     :          *PSSR                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CURRN    BEGSR
+     C*
+      ** Chain Currencies Record
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM           @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WCURR     @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD6         DBASE             ************
+     C                     MOVEL'SDCURRPD'DBFILE            * DATABASE *
+     C                     MOVELWCURR     DBKEY             * ERROR 06 *
+     C                     EXSR *PSSR                       ************
+     C                     ENDIF
+      *
+      **  Set up new output parameter for use in SR.ZCNSD
+      *
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  #CHKPO - Check if Position Settlement already exist          *
+      *  ------                                                       *
+      *  Called by : #DIVID                                           *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #CHKPS    BEGSR
+      *
+      * Clear fields
+      *
+     C                     MOVE 'N'       ZFOUND
+     C                     CLEARZNWCMP
+     C                     CLEARZNWPRE
+     C                     CLEARZNWDUE
+      *
+      * Position Settlement existing check is not done for Treaty Tax
+      *
+     C********   CRTT      IFEQ *BLANKS                    B* Treaty Tax
+      *
+      * set parameters
+     C           P9SDET    IFEQ 'MP'
+     C           P9SDET    OREQ 'DV'
+     C           S01512    ANDNE'Y'
+     C                     MOVE P9SDPD    ZDUEDT
+     C                     ELSE
+     C                     MOVE P9SDED    ZDUEDT
+     C                     END
+      *
+      * Set Pay/Receive indicator
+     C           WCUMCP    IFGT 0
+     C                     MOVE 'R'       ZPPRE   1
+     C                     ELSE
+     C                     MOVE 'P'       ZPPRE
+     C                     END
+      * Input  Parameter
+      * ZCHKFL = 'U', if Position settlements are found, they are deleted according to the
+      *          Position Settlement Adjustmnet System Value
+      * ZCHKFL = 'C', if Position settlements are found, they are not deleted
+      *
+     C           ZAUDIT    IFNE 'F'
+     C                     MOVE 'F'       ZAUDIT  1
+     C                     MOVE 'F'       ZOPEN   1
+     C                     ELSE
+     C                     MOVE ' '       ZOPEN
+     C                     END
+      *
+      * IF Event Type read from XXPSDNV0 is CG, it has to be set to CP to allow Pos Sett check
+     C                     MOVE P9SDET    ZSDET
+     C           P9SDET    IFEQ 'CG'
+     C                     MOVE 'CP'      ZSDET
+     C                     END
+      *
+      * IF Event Type read from XXPSDNV0 is MG or MA, set it to MT to allow Pos Sett check
+     C           P9SDET    IFEQ 'MG'
+     C           P9SDET    OREQ 'MA'
+     C                     MOVE 'MT'      ZSDET
+     C                     END
+      *
+     C                     CALL 'XX118006'               55
+     C                     PARM DSBA      ZBRCH   3
+     C                     PARM P9SDSN    ZSECT  10
+     C                     PARM DDPT      ZDEPOT  6                       HUT118
+     C                     PARM           ZDUEDT  50
+     C                     PARM           ZSDET   2
+     C                     PARM           ZPTFR
+     C                     PARM 'U'       ZCHKFL  1
+     C                     PARM           WCUMCP
+     C                     PARM           ZPPRE
+     C                     PARM *BLANKS   ZCUDEP  6
+     C                     PARM CRTT      ZCRTT   2
+     C                     PARM           @PHASE  1                       CSE053
+      *
+      * Output Parameters
+     C                     PARM *BLANKS   ZFOUND  1
+     C                     PARM *ZEROS    ZNWCMP 150
+     C                     PARM ' '       ZNWPRE  1
+     C                     PARM *ZEROS    ZNWDUE 150
+     C                     PARM           ZOPEN   1
+     C                     PARM *BLANKS   ZRTNCD  7
+      *
+      * Check if error occurred
+     C           *IN55     IFEQ '1'
+     C           ZRTNCD    ORNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD22        DBASE
+     C           'XX118006'CAT  ' ROUTINE'DBKEY     P
+     C                     MOVE 'Rt '     DBFILE
+     C                     MOVELDDPT      DBKEY     P
+     C                     MOVEL'XX118006'DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C****************     END                             E* Treaty Tax
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *  #SECTO - Access to LF/SECTY to Retrieve fields details       *
+      *  ------   for the old security                                *
+      *  Called by : Main processing                                  *
+      *  Calls     : AOCURRR0 *PSSR                                   *
+      *****************************************************************
+      *
+     C           #SECTO    BEGSR
+      *
+      ***  Chain for security record
+      *
+     C           WKSESN    CHAINSECTY                89
+      *
+     C           *IN89     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD07        DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           * DB ERROR 07 *
+     C                     MOVEL'SECTY   'DBFILE    P      ***************
+     C                     MOVELWKSESN    DBKEY     P
+     C                     MOVEL'XX118004'DBPGM     P                     HUT118
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Security nominal decimal places and price basis
+      *
+     C                     MOVE CPDP      UCPDP
+     C                     MOVE CFCT      UCFCT
+     C                     MOVELNMCY      WONMCY
+     C                     MOVE MKTI      WOMKTI
+     C                     MOVE ISSR      WOISSR                          HUT118
+     C                     MOVE SITP      WOSITP
+     C                     MOVE SCVI      WOSCVI
+     C                     MOVE SPBS      WOSPBS
+     C                     MOVE SITP      WOSITP
+      *
+      ***  Retrieve nomimal currency spot, m/d ind. and dec. places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WONMCY    @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD08        DBASE            *****************
+     C                     MOVE *BLANKS   DBFILE           ** DB ERROR 08 **
+     C                     MOVEL'SDCURRPD'DBFILE    P      *****************
+     C                     MOVELWONMCY    DBKEY     P
+     C                     MOVEL'XX118004'DBPGM     P                     HUT118
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Save base currency spot, m/d indicator, dec. places for later
+      *
+     C                     Z-ADDA6SPRT    WOSPRT
+     C                     MOVE A6MDIN    WOMDIN
+     C                     Z-ADDA6NBDP    WONBDP
+      *
+      *  Investment Type
+     C                     MOVE WONMCY    WKNMCY
+     C                     MOVE WOSITP    WKSITP
+      *
+      ***  Retrieve the processing type
+     C           KWINV     CHAININVTP                89
+     C           *IN89     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD9         DBASE            *****************
+     C                     MOVEL*BLANKS   DBFILE           ** DB ERROR 09 **
+     C                     MOVE 'INVTP   'DBFILE           *****************
+     C                     MOVELWWINV     DBKEY     P
+     C                     MOVEL'XX118004'DBPGM     P                     HUT118
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *** Access Security WHT Details file
+      *
+     C           P9SDSN    CHAINSESWHTL0             80
+      *
+      * If retrieve Value Currency Details used when S01509 is on
+      *
+     C                     CLEARWVSPRT
+     C                     CLEARWVMDIN
+     C                     CLEARWVNBDP
+      *
+     C           S01509    IFEQ 'Y'
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM VLCY      @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD10        DBASE            *****************
+     C                     MOVE *BLANKS   DBFILE           ** DB ERROR 10 **
+     C                     MOVEL'SDCURRPD'DBFILE    P      *****************
+     C                     MOVELVLCY      DBKEY     P
+     C                     MOVEL'XX118004'DBPGM     P                     HUT118
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Save base currency spot, m/d indicator, dec. places for later
+      *
+     C                     Z-ADDA6SPRT    WVSPRT
+     C                     MOVE A6MDIN    WVMDIN
+     C                     Z-ADDA6NBDP    WVNBDP
+     C                     END
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  #SEDEV - Subroutine to get Security Diary Events record      *
+      *  ------                                                       *
+      *  Called by : #MATUR                                           *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #SEDEV    BEGSR
+      *
+     C           SEDEVE    CHAINSEDEVDF              7877
+     C           *IN78     IFNE '1'
+     C           RECI      COMP '*'                      78
+     C                     END
+     C           *IN77     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SEDEV'   DBFILE           ***************
+     C                     MOVELP9SDSN    DBKEY            * DB ERROR 11 *
+     C                     Z-ADD11        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRENDP -  Termination processing                             *
+      *  ------                                                       *
+      *  Called by : Main processing                                  *
+      *  Calls     : None                                             *
+      *****************************************************************
+      *
+     C           SRENDP    BEGSR
+      *
+      * Allow XX118006 to generate AUDIT printer file
+     C                     CALL 'XX118006'             55
+     C                     PARM DSBA      ZBRCH   3
+     C                     PARM P9SDSN    ZSECT  10
+     C                     PARM DDPT      ZDEPOT  6                       HUT118
+     C                     PARM           ZDUEDT  50
+     C                     PARM '  '      ZSDET
+     C                     PARM           ZPTFR
+     C                     PARM 'U'       ZCHKFL  1
+     C                     PARM           WCUMCP
+     C                     PARM           ZPPRE
+     C                     PARM *BLANKS   ZCUDEP  6
+     C                     PARM *BLANKS   ZCRTT   2
+     C                     PARM           @PHASE  1                       CSE053
+      *
+      * Output Parameters
+     C                     PARM *BLANKS   ZFOUND  1
+     C                     PARM *ZEROS    ZNWCMP 150
+     C                     PARM ' '       ZNWPRE  1
+     C                     PARM *ZEROS    ZNWDUE 150
+     C                     PARM 'L'       ZOPEN   1
+     C                     PARM *BLANKS   ZRTNCD  7
+      *
+      * Check if error occurred
+      *
+     C           *IN55     IFEQ *ON
+     C           ZRTNCD    ORNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD23        DBASE
+     C           'XX118006'CAT  ' EOF    'DBKEY     P
+     C                     MOVEL'XX118006'DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Update Position Settlement audit file
+     C                     OPEN POSETA
+     C                     READ POSETAF                  02
+     C           *IN02     IFEQ *OFF
+     C                     ADD  W02CNT    NORE
+     C                     ADD  W02CNT    NOIN                                   CSE053
+     C                     Z-ADD*ZEROS    TNLU
+     C                     UPDATPOSETAF
+     C                     ELSE
+     C                     Z-ADDW02CNT    NOIN                                   CSE053
+     C                     Z-ADDW02CNT    NORE
+     C                     Z-ADD*ZEROS    TNLU
+     C                     WRITEPOSETAF
+     C                     ENDIF
+     C                     CLOSEPOSETA
+      *
+      * Output Control Report
+      *
+     C           WWDATA    IFEQ 'N'
+     C                     WRITEHEADAU
+     C                     WRITENODTLS                     No detail to report
+     C                     ELSE
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE4859C051
+      *
+      * UPDATE SNDEVA AUDIT RECORD
+      *
+      *
+     C           1         CHAINSNDEVAF              99
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C                     Z-ADD50        DBASE            **DB ERROR 50**
+     C                     MOVEL'SNDEVA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ADD  WNDADD    NORE
+      *
+     C                     UPDATSNDEVAF
+     C*
+     C                     CLOSESEDEVL3
+     C                     CLOSEXXPSDNV0               46
+     C*****                CLOSESEDEVLE                                              CSE053
+      *
+     C                     MOVE *ON       *INLR
+      *
+     C                     Z-ADDW02CNT    @WNPOS                                     HUT118
+      *                                                                              HUT118
+      ***  Return out of the program
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *
+      *****************************************************************
+      /SPACE 3
+      ***************************************************************
+      * ZTNLU1      *TO LOCK THE TRANSACTION NUMBER DATA AREA,
+      *              ACCESS THE NEXT AVAILABLE TRANSACTION NUMBER,
+      *              THEN UPDATE AND RELEASE THE DATAAREA
+      ****************************************************************
+      *
+     C           ZTNLU1    BEGSR                           ** ZTNLU1 BSR*
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR                           ** ZTNLU1 ESR**
+      *****************************************************************
+      *   SRINIT : Program initialisation Subroutine                  *
+      *  -------                                                      *
+      *  Called by : Automatically at pgm start                       *
+      *  Calls     : AOBANKR0 *PSSR                                   *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ***  Copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+     C*****                MOVEACPY@      BIS@   80                                      HUT118
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @PHASE  1
+     C                     PARM           @WSECU 10                                      247246
+     C                     PARM           @WNPOS  60                                     HUT118
+      *
+      ***  Initialise key and working fields
+      *
+      * Depot Name Information - LF/CLINT (PF/CLINTSE)
+      *
+     C           CLIKEY    KLIST
+     C                     KFLD           PCPY
+     C                     KFLD           WRECT   1
+      *
+      *  - Security Diary and non Diary Events
+     C           SEDKEY    KLIST
+     C                     KFLD           P9SDSN
+     C                     KFLD           KSDET
+     C                     KFLD           P9SDED
+      *
+      *  - Security Non Diary Events
+     C           SEDNDE    KLIST
+     C                     KFLD           K9SDSN
+     C                     KFLD           KSDET
+     C                     KFLD           K9SDED
+      *
+      *  - Security Diary & non Diary Events ReadE
+     C           SEDKEQ    KLIST
+     C                     KFLD           P9SDSN
+     C                     KFLD           KSDET
+      *
+      *  - Security Diary Events
+     C           SEDEVE    KLIST
+     C                     KFLD           K9SDSN
+     C                     KFLD           K9SDED
+     C                     KFLD           K9SDET
+      *
+      *                                                                                CSE053
+      *  - Security Diary Events                                                       CSE053
+     C           SEDEVS    KLIST                                                       CSE053
+     C                     KFLD           K9SDSN                                       CSE053
+     C                     KFLD           K9SDED                                       CSE053
+     C                     KFLD           K9SDET                                       CSE053
+     C*****                KFLD           K9SEQU                                       CSE053
+      *                                                                                CSE053
+      * Investment Types LF/INVTP
+      *
+      *
+     C           KWINV     KLIST
+     C                     KFLD           WKNMCY
+     C                     KFLD           WKSITP
+      *
+      *
+      * Standard Settlement Instruction  PF/STDSED
+      *
+     C           STDSKY    KLIST
+     C                     KFLD           SBRA
+     C                     KFLD           CSTM
+     C                     KFLD           WBKCD   2
+     C                     KFLD           CYSI
+     C                     KFLD           ITSI
+     C                     KFLD           WPTFR   4
+      *                                                                   136297
+      ** Key to ACCNTAB                                                   136297
+      *                                                                   136297
+     C           KEYACC    KLIST                                          136297
+     C**********           KFLD           KYCNUM  60                                   136297 CSD027
+     C                     KFLD           KYCNUM  6                                           CSD027
+     C                     KFLD           KYCCY   3                       136297
+     C**********           KFLD           KYACOD  40                                   136297 CGL029
+     C                     KFLD           KYACOD 100                                          CGL029
+     C                     KFLD           KYACSQ  20                      136297
+     C                     KFLD           KYBRCA  3                       136297
+      *
+     C                     OPEN SEDEVL3
+     C                     OPEN XXPSDNV0               46
+     C*****                OPEN SEDEVLE                                    CSE053
+      *
+     C                     Z-ADD0         WCPOSN  50
+     C                     Z-ADD0         WDEVEU  50
+     C                     Z-ADD0         WNDADD  50
+     C                     Z-ADD0         W02CNT  50
+     C                     MOVE ' '       WWDATA  1
+      *
+     C           *LIKE     DEFN PRACCT    STLA
+     C           *LIKE     DEFN SPSM      STLT
+     C           *LIKE     DEFN P9SDSN    K9SDSN
+     C           *LIKE     DEFN P9SDET    K9SDET
+     C*****      *LIKE     DEFN P9ESEQ    K9SEQU                                            CSE053/4
+     C           *LIKE     DEFN P9SDED    K9SDED
+     C           *LIKE     DEFN CPDP      UCPDP
+     C           *LIKE     DEFN CFCT      UCFCT
+     C           *LIKE     DEFN SDCP      PCFA
+     C           *LIKE     DEFN SDET      KSDET
+     C           *LIKE     DEFN PTFR      ZPTFR
+     C           *LIKE     DEFN DSNV      DSNVT
+     C           *LIKE     DEFN DDPT      PRVDEP
+     C           *LIKE     DEFN DSSC      WDSSC
+     C           *LIKE     DEFN DDPT      WDDPT
+     C           *LIKE     DEFN DSBA      WDSBA
+     C           *LIKE     DEFN DSBA      PRVBRA
+     C           *LIKE     DEFN DDTE      WDDTE
+     C           *LIKE     DEFN RECI      WSRECI
+     C           *LIKE     DEFN SESN      WOSESN           Event Security
+     C           *LIKE     DEFN SESN      WKDPSS           Security
+     C           *LIKE     DEFN SESN      WKSESN           Security
+     C           *LIKE     DEFN SITP      WOSITP           Inv. Type
+     C           *LIKE     DEFN ISSR      WOISSR           Issuer
+     C           *LIKE     DEFN NMCY      WONMCY           Nominal Ccy
+     C           *LIKE     DEFN MKTI      WOMKTI           Market Indicator
+     C           *LIKE     DEFN SCVI      WOSCVI           Convertible Indicator
+     C           *LIKE     DEFN SPBS      WOSPBS           Price Basis
+     C           *LIKE     DEFN SITP      WNSITP           Invest type
+      ***  PF/POSETD
+     C           *LIKE     DEFN PPRE      WWPPRE           Pay/Reversal
+      ***  PF/SDCURRPD
+     C           *LIKE     DEFN A6SPRT    WLSPRT           Spot Rate
+     C           *LIKE     DEFN A6SPRT    WOSPRT           Spot Rate
+     C           *LIKE     DEFN A6NBDP    WONBDP           Num. of Dec. Places
+     C           *LIKE     DEFN A6NBDP    WLNBDP           Num. of Dec. Places
+     C           *LIKE     DEFN A6MDIN    WLMDIN           Mult/Div. ind.
+     C           *LIKE     DEFN A6MDIN    WOMDIN           Mult/Div. ind.
+     C           *LIKE     DEFN CFCT      WACF
+     C           *LIKE     DEFN A6SPRT    WVSPRT           Spot Rate
+     C           *LIKE     DEFN A6NBDP    WVNBDP           Num. of Dec. Places
+     C           *LIKE     DEFN A6MDIN    WVMDIN           Mult/Div. ind.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA                                       S
+     C                     Z-ADD0         DBASE
+     C                     MOVEL*BLANKS   DBPGM
+     C                     MOVEL'XX118004'DBPGM
+     C                     OUT  LDA
+     C           *NAMVAR   DEFN           SDSTAT                                            AR324886
+     C                     IN   SDSTAT                                                      AR324886
+      *
+      ***  Define data area SESTAT
+      *
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+      *
+      ***  Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD13        DBASE            *****************
+     C                     MOVE *BLANKS   DBFILE           ** DB ERROR 13 **
+     C                     MOVEL'SDBANKPD'DBFILE    P      *****************
+     C                     MOVEL'*FIRST  'DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE *OFF      *IN98
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     END
+      *
+      ** Retrieve Accruals/Profit Date form General Leg
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD14        DBASE            *****************
+     C                     MOVE *BLANKS   DBFILE           ** DB ERROR 14 **
+     C                     MOVEL'SDGELRPD'DBFILE    P      *****************
+     C                     MOVEL'*FIRST  'DBKEY     P
+     C                     MOVEL'XX118004'DBPGM     P                     HUT118
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access SE ICD
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD15        DBASE            *****************
+     C                     MOVE *BLANKS   DBFILE           ** DB ERROR 15 **
+     C                     MOVEL'SDSTRDPD'DBFILE    P      *****************
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     MOVEL'XX118004'DBPGM     P                     HUT118
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access Midas Module Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD16        DBASE            *****************
+     C                     MOVE *BLANKS   DBFILE           ** DB ERROR 16 **
+     C                     MOVEL'SDBANKPD'DBFILE    P      *****************
+     C                     MOVEL'*FIRST  'DBKEY     P
+     C                     MOVEL'XX118004'DBPGM     P                     HUT118
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * ACCESS ICD2
+      *
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *IN99
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE 'TABSE'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            * DB ERROR 17 *
+     C                     MOVEL'XX118004'DBPGM     P                     HUT118
+     C                     Z-ADD17        DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Get module details using access object
+      *
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSE023'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSE023  1
+     C                     ELSE
+     C                     MOVE 'N'       CSE023
+     C                     END
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSE008'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSE008  1
+     C                     ELSE
+     C                     MOVE 'N'       CSE008
+     C                     END
+      *
+      ** Check if CSE028 - MT5xx Standing Settlements Instructions is
+      **   is switched on.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSE028'  @SARD
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSE028  1
+     C                     ELSE
+     C                     MOVE 'N'       CSE028
+     C                     ENDIF
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      **  Check if error occurred
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDMMODPD'DBFILE           ***************
+     C                     Z-ADD18        DBASE            * DB ERROR 18 *
+     C                     SETON                       U7U8***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * Retrieve account code
+     C           BGRTBN    IFEQ 'Y'
+     C                     CALL 'AORETLR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDRETL    PARM SDRETL    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     SETON                       U7U8***************
+     C                     Z-ADD19        DBASE            * DB ERROR 19 *
+     C                     MOVEL'SDRETLL1'DBFILE           ***************
+     C                     MOVEL*BLANK    DBKEY
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,SE4859C052
+     C*
+      *** Obtain General ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                             CEU005 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                        CEU005 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      *** Check Withholding tax is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01447'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S01447  1
+     C                     ELSE
+     C                     MOVE 'N'       S01447
+     C                     END
+      *
+      ** Check if Value Currency is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01509'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S01509  1
+     C                     ELSE
+     C                     MOVE 'N'       S01509
+     C                     END
+      *
+      ** Check if Dividend Payments based on Ex-date is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01510'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S01510  1
+     C                     ELSE
+     C                     MOVE 'N'       S01510
+     C                     END
+      *
+      ** Check if Position Settlements is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01512'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S01512  1
+     C                     ELSE
+     C                     MOVE 'N'       S01512
+     C                     END
+     C*
+     C** Check if EMU Settlement Ccy switchable feature is installed
+     C*
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CEU005'  @SARD   6
+     C*
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CEU005  1
+     C                     ELSE
+     C                     MOVE 'N'       CEU005
+     C                     END
+      *                                                                                       CSE035
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD                                               CSE035
+     C                     PARM '*VERIFY' @OPTN                                               CSE035
+     C                     PARM 'CSE035'  @SARD                                               CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+      *                                                                                       CGL020
+      ** Determine if Midas Compliance Watch is installed                                     CGL020
+      *                                                                                       CGL020
+     C                     MOVE 'N'       CGL020  1                                           CGL020
+     C                     CALL 'AOSARDR0'                                                    CGL020
+     C                     PARM '       ' @RTCD                                               CGL020
+     C                     PARM '*VERIFY' @OPTN                                               CGL020
+     C                     PARM 'CGL020'  @SARD                                               CGL020
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL020
+      *                                                                                       CGL020
+     C           @RTCD     IFNE *BLANK                                                        CGL020
+     C           @RTCD     ANDNE'*NRF   '                                                     CGL020
+     C           *LOCK     IN   LDA                                                           CGL020
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL020
+     C                     Z-ADD25        DBASE                                               CGL020
+     C                     MOVEL@SARD     DBKEY                                               CGL020
+     C                     OUT  LDA                                                           CGL020
+     C                     MOVE *ON       *INU7                                               CGL020
+     C                     MOVE *ON       *INU8                                               CGL020
+     C                     MOVE *ON       *INLR                                               CGL020
+     C                     EXSR *PSSR                                                         CGL020
+      *                                                                                       CGL020
+     C                     ELSE                                                               CGL020
+     C           @RTCD     IFNE '*NRF   '                                                     HUT118
+     C                     MOVE 'Y'       CGL020                                              CGL020
+     C                     ENDIF                                                              HUT118
+     C                     ENDIF                                                              CGL020
+      *                                                                                       248184
+      ** Check if S01496 - Private Banking Securities Trading Enhancements                    248184
+      *                                                                                       248184
+     C                     CALL 'AOSARDR0'                                                    248184
+     C                     PARM *BLANKS   @RTCD                                               248184
+     C                     PARM '*VERIFY' @OPTN                                               248184
+     C                     PARM 'S01496'  @SARD                                               248184
+      *                                                                                       248184
+     C           @RTCD     IFEQ *BLANK                                                        248184
+     C                     MOVE 'Y'       S01496  1                                           248184
+     C                     ELSE                                                               248184
+     C                     MOVE 'N'       S01496                                              248184
+     C                     END                                                                248184
+      *
+      * HUT118 - Position Settlement Generation
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'HUT118'  @SARD   6
+     C*
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       HUT118  1
+     C                     ELSE
+      *
+      * IF CSE053 is off, then exit program
+      *
+     C                     MOVE 'N'       HUT118
+     C                     EXSR SRENDP
+     C                     END
+      *
+     C/COPY WNCPYSRC,SE4859C053
+      *
+      **  Access MIDAS Module details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD20        DBASE            ************
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERR 20 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     SETON                     U7U899
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C**  Access Securities Trading details
+     C*
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD21        DBASE            ************
+     C                     MOVEL'SDSTRDPD'DBFILE           * DBERR 21 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     SETON                     U7U899
+     C                     DUMP
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,SE4859C054
+      *
+      ***  Define like field definitions
+      *
+     C           *LIKE     DEFN S1RASO    UTXRSR           src tax rate
+     C           *LIKE     DEFN TBRASR    UTXRRF           ref tax rate
+     C           *LIKE     DEFN TBRAUS    UTXRUS           usr tax rate
+      *
+     C/COPY WNCPYSRC,SE4859C055
+      *                                                                                       CSE075
+      ** Determine if Midas Compliance Watch is installed                                     CSE075
+      *                                                                                       CSE075
+     C                     CALL 'AOSARDR0'                                                    CSE075
+     C                     PARM '       ' @RTCD   7                                           CSE075
+     C                     PARM '*VERIFY' POPTN   7                                           CSE075
+     C                     PARM 'CSE075'  PSARD   6                                           CSE075
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSE075
+      *                                                                                       CSE075
+     C           @RTCD     IFNE *BLANK                                                        CSE075
+     C           @RTCD     ANDNE'*NRF   '                                                     CSE075
+     C           *LOCK     IN   LDA                                                           CSE075
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSE075
+     C                     MOVEL'CSE075 ' DBKEY                                               CSE075
+     C                     Z-ADD26        DBASE                                               CSE075
+     C                     OUT  LDA                                                           CSE075
+     C                     MOVE *ON       *INU7                                               CSE075
+     C                     MOVE *ON       *INU8                                               CSE075
+     C                     MOVE *ON       *INLR                                               CSE075
+     C                     EXSR *PSSR                                                         CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+     C           @RTCD     IFEQ *BLANKS                                                       CSE075
+     C                     MOVE 'Y'       CSE075  1                                           CSE075
+     C                     ELSE                                                               CSE075
+     C                     MOVE 'N'       CSE075                                              CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                     AR853119
+      ** Check if CER049 - Stamp Tax is switch on                                           AR853119
+      *                                                                                     AR853119
+     C                     CALL 'AOSARDR0'                                                  AR853119
+     C                     PARM *BLANKS   @RTCD                                             AR853119
+     C                     PARM '*VERIFY' POPTN                                             AR853119
+     C                     PARM 'CER049'  PSARD                                             AR853119
+      *                                                                                     AR853119
+     C           @RTCD     IFEQ *BLANK                                                      AR853119
+     C                     MOVE 'Y'       CER049  1                                         AR853119
+     C                     ELSE                                                             AR853119
+     C                     MOVE 'N'       CER049                                            AR853119
+     C                     ENDIF                                                            AR853119
+      *                                                                                     AR853119
+      ***  Access bank details                                                              AR853119
+      *                                                                                     AR853119
+     C                     CALL 'AOBANKR0'                                                  AR853119
+     C                     PARM *BLANKS   @RTCD                                             AR853119
+     C                     PARM '*FIRST  'POPTN                                             AR853119
+     C           SDBANK    PARM SDBANK    DSFDY                                             AR853119
+      *                                                                                     AR853119
+     C           @RTCD     IFNE *BLANK                                                      AR853119
+     C           *LOCK     IN   LDA                                                         AR853119
+     C                     Z-ADD27        DBASE            *****************                AR853119
+     C                     MOVE *BLANKS   DBFILE           ** DB ERROR 18 **                AR853119
+     C                     MOVEL'SDBANKPD'DBFILE    P      *****************                AR853119
+     C                     MOVEL'*FIRST  'DBKEY     P                                       AR853119
+     C                     MOVEL'SE2390'  DBPGM     P                                       AR853119
+     C                     OUT  LDA                                                         AR853119
+     C                     EXSR *PSSR                                                       AR853119
+     C                     ENDIF                                                            AR853119
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                     AR853119
+      /EJECT                                                                                AR853119
+      *****************************************************************                     AR853119
+      *                                                               *                     AR853119
+      * SRPOST - Create Position Settlement extension                 *                     AR853119
+      *                                                               *                     AR853119
+      *****************************************************************                     AR853119
+     C           SRPOST    BEGSR                                                            AR853119
+      *                                                                                     AR853119
+     C                     MOVE *BLANK    WSTAX   1                                         AR853119
+     C                     MOVE *BLANK    WCTAX   1                                         AR853119
+     C                     Z-ADD0         P3STAF                                            AR853119
+     C                     MOVELBJRDNB    P3CDTE                                            AR853119
+     C                     MOVE 'N'       P3TAX                                             AR853119
+     C                     MOVELPBCA      P3PBCA                                            AR853119
+     C                     MOVELPSSH      P3PSSH                                            AR853119
+     C                     MOVELPCPY      P3PCPY                                            AR853119
+     C                     MOVELPDUD      P3PDUD                                            AR853119
+     C                     MOVELPEVT      P3PEVT                                            AR853119
+      *                                                                                     AR853119
+     C                     CALL 'AOBRCHR2'                                                  AR853119
+     C                     PARM *BLANKS   @RTCD                                             AR853119
+     C                     PARM '*KEY   ' @OPTN                                             AR853119
+     C                     PARM PBCA      @DSNB   3                                         AR853119
+     C           SDBRCE    PARM SDBRCE    DSSDY                                             AR853119
+     C           @RTCD     IFEQ *BLANKS                                                     AR853119
+     C                     MOVE BXTAX     WSTAX                                             AR853119
+     C                     ENDIF                                                            AR853119
+      *                                                                                     AR853119
+     C           PCPY      CHAINSDCUSQL0             99                                     AR853119
+     C           *IN99     IFEQ '0'                                                         AR853119
+     C                     MOVE CQTAX     WCTAX                                             AR853119
+     C                     ENDIF                                                            AR853119
+      *                                                                                     AR853119
+      ** Calculate Stamp tax                                                                AR853119
+      *                                                                                     AR853119
+     C           WSTAX     IFEQ 'Y'                                                         AR853119
+     C           WCTAX     ANDEQ'Y'                                                         AR853119
+     C                     MOVE 'Y'       P3TAX                                             AR853119
+     C                     ENDIF                                                            AR853119
+      *                                                                                     AR853119
+     C                     WRITEPOSETDD3                                                    AR853119
+      *                                                                                     AR853119
+     C                     ENDSR                                                            AR853119
+     C********************************************************************                  AR324886
+     C/EJECT                                                                                AR324886
+     C********************************************************************                  AR324886
+     C           PSAUDT    BEGSR                                                            AR324886
+      *                                                                                     AR324886
+     C                     MOVE RECI      PARECI                                            AR324886
+     C                     MOVE PBCA      PAPBCA                                            AR324886
+     C                     MOVE PSSH      PAPSSH                                            AR324886
+     C                     MOVE PCPY      PAPCPY                                            AR324886
+     C                     MOVE PDUD      PAPDUD                                            AR324886
+     C                     MOVE PEVT      PAPEVT                                            AR324886
+     C                     MOVE PTFR      PAPTFR                                            AR324886
+     C                     MOVE TNLU      PATNLU                                            AR324886
+     C                     MOVE TXBS      PATXBS                                            AR324886
+     C                     MOVE BNFO      PABNFO                                            AR324886
+     C                     MOVE EXCD      PAEXCD                                            AR324886
+     C           LIBR      CAT  'OWNER'   PALUSR                                            AR324886
+     C                     MOVE LCD       PALCD                                             AR324886
+     C                     MOVE CHTP      PALCTP                                            AR324886
+     C                     WRITEPSAUTDF                                                     AR324886
+      *                                                                                     AR324886
+     C                     ENDSR                                                            AR324886
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFNE 'Y'
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C           DBASE     IFGT 1
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C/COPY WNCPYSRC,SE4859C057
+      *
+     C                     ENDSR
+      *
+     C***************************************************************
+     C/COPY WNCPYSRC,SE4859C056
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZCNSDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z4
+      ***
+     C/COPY WNCPYSRC,SE4859C057
+     C/COPY ZSRSRC,ZDATE2Z3
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  POWER - Array of powers for currency conversion
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2004

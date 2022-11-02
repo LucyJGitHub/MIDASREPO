@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR660635           Date 16Jul21               *
-      *  Prev Amend No. 260191A            Date 22May20               *
+      *  Last Amend No. HUT118             Date 02Dec20               *
+      *  Prev Amend No. AR660635           Date 16Jul21               *
+      *                 260191A            Date 22May20               *
       *                 260191             Date 22May20               *
       *                 259978             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT118 - Position Settlements on-line generation             *
+      *           Added hooks: HUT118_001, HUT118_002                 *
       *  AR660635 - Deletion of Diary Event of a matured security     *
       *             causes SEC0602 to fail. Prevent deletion.         *
       *             (Child Artifact: AR660636)                        *
@@ -892,6 +895,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSDSN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0318'
      C                   ENDIF
+      /COPY WNCPYSRC,HUT118_002                                                               HUT118
 
      C                   ENDSR
 
@@ -1969,6 +1973,7 @@
      C                   ELSE                                                                 260331
      C                   MOVE      'N'           S01512                                       260331
      C                   ENDIF                                                                260331
+      /COPY WNCPYSRC,HUT118_001                                                               HUT118
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

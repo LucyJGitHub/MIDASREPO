@@ -15,7 +15,7 @@
 /*********************************************************************/
 /*                                                                   */
 /*          MD060641 - OTB_DBU job failed                            */
-/*                     Save and restore SMFACTF3 file.               */ 
+/*                     Save and restore SMFACTF3 file.               */
 /*          MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0   */
 /*                     and SD Facility Type Maintenance. Apply       */
 /*                     CLE138 design of SDFACTX0 to store            */
@@ -27,7 +27,9 @@
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&TMPLIB) TYPE(*CHAR) LEN(10) VALUE('#.')
-             DCL        VAR(&DILIB)  TYPE(*CHAR) LEN(10)                                /*MD060641*/
+             DCL        VAR(&BRGLIB) TYPE(*CHAR) LEN(200)                               /*MD060641*/
+             DCL        VAR(&SVAL1)  TYPE(*CHAR) LEN(200)                               /*MD060641*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*MD060641*/
 
              COPYRIGHT  TEXT('(c) Finastra International Limited 2022')
 
@@ -41,7 +43,19 @@
              CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))
              CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT &ZONEID)
              CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT 'DMLIB')
-             CHGVAR     VAR(&DILIB)  VALUE(&ZONEID *TCAT 'DILIB')                       /*MD060641*/
+                                                                                        /*MD060641*/
+ /* Retrieve Bridge Library  */                                                         /*MD060641*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgDeliveredBrgLib' &SVAL1  +
+                             ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                             ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' )                      /*MD060641*/
+                                                                                        /*MD060641*/
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)                                          /*MD060641*/
+                   GOTO       CMDLBL(ERROR)                                             /*MD060641*/
+                ENDDO                                                                   /*MD060641*/
+                                                                                        /*MD060641*/
+             CHGVAR     VAR(&BRGLIB) VALUE(%SST(&SVAL1 1 10))                           /*MD060641*/
 
              DLTF       FILE(QTEMP/SMFACTF2)
              MONMSG     MSGID(CPF2105)
@@ -65,17 +79,17 @@
                                                                                         /*MD060641*/
 /* Create a save file of SMFACTF3 */                                                    /*MD060641*/
                                                                                         /*MD060641*/
-             CHKOBJ     OBJ(&DILIB/SMFACTF3SF) OBJTYPE(*FILE)                           /*MD060641*/
+             CHKOBJ     OBJ(&BRGLIB/SMFACTF3SF) OBJTYPE(*FILE)                          /*MD060641*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD060641*/
-             CRTSAVF    FILE(&DILIB/SMFACTF3SF) TEXT('Backup of SMFACTF3')              /*MD060641*/
+             CRTSAVF    FILE(&BRGLIB/SMFACTF3SF) TEXT('Backup of SMFACTF3')             /*MD060641*/
              ENDDO                                                                      /*MD060641*/
-             CLRSAVF    FILE(&DILIB/SMFACTF3SF)                                         /*MD060641*/
+             CLRSAVF    FILE(&BRGLIB/SMFACTF3SF)                                        /*MD060641*/
                                                                                         /*MD060641*/
 /* Save SMFACTF3 */                                                                     /*MD060641*/
                                                                                         /*MD060641*/
              SAVOBJ     OBJ(SMFACTF3) +
-                          LIB(QTEMP) DEV(*SAVF) +
-                          SAVF(&DILIB/SMFACTF3SF)                                       /*MD060641*/
+                          LIB(&TMPLIB) DEV(*SAVF) +
+                          SAVF(&BRGLIB/SMFACTF3SF)                                      /*MD060641*/
 
              GOTO       CMDLBL(ENDPGM)
 

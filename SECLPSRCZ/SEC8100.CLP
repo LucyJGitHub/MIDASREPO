@@ -9,9 +9,9 @@
 /*       Called By: XX118004 - Generate Position Settlements - Depots*/
 /*                  XX118008 - Generate Position Settlements - Cust  */
 /*                                                                  */
-/*       (c) Finastra International Limited 2020                     */
+/*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. HUT118A *CREATE    Date 16Dec20              */
+/*       Last Amend No. HUT118A *CREATE    Date 03Nov22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
@@ -22,9 +22,8 @@
                         &PTFR &BASIS &DATE &TYPE &REPO &UAUT +
                         &BALA &XBAL &PRIC &ERR)
 
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
-                          2004')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) finastra Ltd. +
+                          2022')
              DCL        VAR(&BRCD) TYPE(*CHAR) LEN(3)
              DCL        VAR(&SESN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BKCD) TYPE(*CHAR) LEN(2)
@@ -89,6 +88,5 @@
              MONMSG     MSGID(CPF0000 MCH0000)
 
  ENDCLPGM:
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra Ltd.')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(Finastra Ltd 2020')
+     H COPYRIGHT('(Finastra Ltd 2022')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
       *****************************************************************
@@ -14,9 +14,9 @@
       *                                                               *
       *  Component of: XX118001 On-Line Position Generation           *
       *                                                               *
-      *  (c) Finastra International Limited 2020                      *
+      *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. HUT118  *CREATE    Date 09Dec20               *
+      *  Last Amend No. HUT118  *CREATE    Date 03Nov22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -838,4 +838,4 @@
       *****************************************************************
 
 **  CPY@
-(c) Finastra Ltd 2020
+(c) Finastra Ltd 2022

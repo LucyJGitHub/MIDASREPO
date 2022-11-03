@@ -16,7 +16,7 @@
       *  Called By: XX118004 - Generate Position Settlements - Depots *
       *             XX118008 - Generate Position Settlements - Cust   *
       *                                                               *
-      *  (c) Finastra International Limited 2020                      *
+      *  (c) Finastra International Limited 2022                      *
       *                                                               *
       *****************************************************************
       *  NOTE: This program is a copy of SE4861 (SE2310).             *
@@ -27,7 +27,7 @@
       *        tags have not been removed                             *
       *****************************************************************
       *                                                               *
-      *  Last Amend No. HUT118   *Create   Date 16Dec20               *
+      *  Last Amend No. HUT118   *Create   Date 03Nov22               *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -2876,4 +2876,4 @@
       *
       ********************************************************************
 **  CPY@
-(c) Finastra International Limited 2020
+(c) Finastra International Limited 2022

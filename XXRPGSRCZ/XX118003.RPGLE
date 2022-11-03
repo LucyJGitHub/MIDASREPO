@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra Ltd. 2022')
       **********************************************************************
 /*STD *  RPGBASEMOD                                                        *
       **********************************************************************
@@ -15,9 +15,9 @@
       *                                                                    *
       *  Called By: XXC118003 - Position Settlement Generated Report       *
       *                                                                    *
-      *  (c) Finastra International Limited 2020                           *
+      *  (c) Finastra International Limited 2022                           *
       *                                                                    *
-      *  Last Amend No. HUT118  *CREATE    Date 27May04                    *
+      *  Last Amend No. HUT118  *CREATE    Date 03Nov22                    *
       *                                                                    *
       *--------------------------------------------------------------------*
       *                                                                    *

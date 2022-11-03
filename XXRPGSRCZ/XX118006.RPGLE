@@ -16,11 +16,11 @@
       *  Called By: XX118004 - Generate Position Settlements - Depots *
       *             XX118008 - Generate Position Settlements - Cust   *
       *                                                               *
-      *  (c) Finastra International Limited 2020                      *
+      *  (c) Finastra International Limited 2022                      *
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  Last Amend No. HUT118  *CREATE    Date 16Dec20               *
+      *  Last Amend No. HUT118  *CREATE    Date 03Nov22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -728,4 +728,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Finastra International Limited 2020
+(c) Finastra International Limited 2022

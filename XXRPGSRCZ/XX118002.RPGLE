@@ -14,9 +14,9 @@
       *                                                               *
       *  Called By: XXC118002 - Position Settlement Generated Report  *
       *                                                               *
-      *  (c) Finastra International Limited 2020                      *
+      *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. HUT118  *CREATE    Date 10Dec20               *
+      *  Last Amend No. HUT118  *CREATE    Date 03Nov22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -1249,7 +1249,7 @@
       *
       *****************************************************************
 ** CPY@
-(c) Finastra International Systems Ltd. 2020
+(c) Finastra International Systems Ltd. 2022
 **   ZCOM - EDIT FORMAT FOR AMOUNT FIELD
    ,   ,   ,   ,  0
    ,   ,   ,   ,  0.

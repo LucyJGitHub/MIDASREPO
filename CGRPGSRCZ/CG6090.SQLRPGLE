@@ -20,6 +20,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
+      *             Interest Projection Using Known Rates.            *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  MD059320 - CLE172 - LIBOR Lending - Correspondence Manager   *
       *                                                               *
       *****************************************************************
@@ -32,6 +35,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D W0FMT         E DS                  EXTNAME(CGUDTAPD)
+     D SDRTKN        E DS                  EXTNAME(SDRTKNTD)                                MD058517
      D XLNRF           S              6
      D XADDI           S              1
      D XMDAT           S              5  0
@@ -114,28 +118,28 @@
      C     SQLCODE       DOWEQ     0
 
       ** Check if an interest event created today exists in HISTSHP
-     C/EXEC SQL
-     C+ SELECT INTA, VDAT into :XINTA, :XVDAT
-     C+ from HISTSHP
-     C+ where AMTP = 'MA' and LNRF = :XLNRF and LCD = :BJRDNB
-     C+ or    AMTP = 'IN' and LNRF = :XLNRF and LCD = :BJRDNB
-     C+ or    AMTP = 'RE' and LNRF = :XLNRF and LCD = :BJRDNB and :XREPT <> 2
-     C/END-EXEC
+     C**********/EXEC SQL
+     C**********+ SELECT INTA, VDAT into :XINTA, :XVDAT
+     C**********+ from HISTSHP
+     C**********+ where AMTP = 'MA' and LNRF = :XLNRF and LCD = :BJRDNB
+     C**********+ or    AMTP = 'IN' and LNRF = :XLNRF and LCD = :BJRDNB
+     C**********+ or    AMTP = 'RE' and LNRF = :XLNRF and LCD = :BJRDNB and :XREPT <> 2
+     C**********/END-EXEC
       **  If no interest if found, skip
-     C     SQLCODE       IFEQ      100
-     C                   else
+     C*****SQLCODE       IFEQ      100
+     C**********         else
 
       ** Here below are the initial conditions for the extract...
       ****Call extract program if one of the 3 conditions (a or b or c) is satisfied
       **********
-     C/exec SQL
-     C+ select CINPDT, CINPSD, CINPED  into :XCINPDT, :XCINPSD, :XCINPED
-     C+ from SDHSDRTD
-     C+ where CMODID = 'LE' and CTRNID = :XLNRF
-     C+ and (CINPDT + CINPDY - 1 = CINPED or CINPDT = CINPED)
-     C+ ORDER BY CINPDT desc
-     C+ fetch first row only
-     C/end-exec
+     C**********/exec SQL
+     C**********+ select CINPDT, CINPSD, CINPED  into :XCINPDT, :XCINPSD, :XCINPED
+     C**********+ from SDHSDRTD
+     C**********+ where CMODID = 'LE' and CTRNID = :XLNRF
+     C**********+ and (CINPDT + CINPDY - 1 = CINPED or CINPDT = CINPED)
+     C**********+ ORDER BY CINPDT desc
+     C**********+ fetch first row only
+     C**********/end-exec
       **********
       ****a.*if*Additional Day Indicator = B and latest Interest Period Date = MDAT
      C**********         if        SQLCODE = 0
@@ -166,10 +170,17 @@
      C**********                   and XCINPDT + 1 < BJDNWD
      C**********                   and XCINPED     = XVDAT
       ** ... since the interest is retrieved now from HISTSHP, these can be simplified
+     C/exec SQL                                                                             MD058517
+     C+ select * into :SDRTKN                                                               MD058517
+     C+   from   SDRTKNTD                                                                   MD058517
+     C+  where  ( KTRNID = :XLNRF )                                                         MD058517
+     C+    and  ( (KRTKNI = 'Y' and KCORMP <> 'Y')                                          MD058517
+     C+     or    (KRTKNI = 'Y' and KCINTA <> KPINTA) )                                     MD058517
+     C/end-exec                                                                             MD058517
 
      C                   If        SQLCODE = 0
-     C                   If        XCINPED + 1 = XVDAT
-     C                             or XCINPED = XVDAT
+     C**********         If        XCINPED + 1 = XVDAT                                      MD058517
+     C**********                   or XCINPED = XVDAT                                       MD058517
 
      C                   CALL      'CG6091'
      C                   PARM      *BLANKS       ##RTCD            7
@@ -177,6 +188,7 @@
      C                   PARM      *BLANK        ##COPD            1
      C                   PARM                    XLNRF
      C                   PARM                    XCINPSD
+     C                   PARM                    KCINTA                                     MD058517
 
       **  Error in called program.
      C     ##RTCD        IFNE      *BLANK
@@ -190,9 +202,15 @@
      C                   EXSR      SRERR
      C                   END
 
-     C                   Endif
+     C/exec SQL                                                                             MD058517
+     C+ update SDRTKNTD                                                                     MD058517
+     C+    set KCORMP  = 'Y', KSPLFP = 'Y'                                                  MD058517
+     C+  where KTRNID = :XLNRF                                                              MD058517
+     C/end-exec                                                                             MD058517
 
-     C                   Endif
+     C**********         Endif                                                              MD058517
+
+     C**********         Endif                                                              MD058517
      C                   Endif
      C/EXEC SQL
      C+ fetch next from ACursor into :XLNRF, :XADDI, :XMDAT, :XREPT

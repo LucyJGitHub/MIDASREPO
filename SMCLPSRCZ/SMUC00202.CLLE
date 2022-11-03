@@ -9,10 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. MD060092 *CREATE   Date 01Aug22              */
+/*       Last Amend No. MD060641           Date 28Oct22              */
+/*       Prev Amend No. MD060092 *CREATE   Date 01Aug22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*          MD060641 - OTBU_DBU job failed                           */
+/*                     Save and restore SMFACTF3 file.               */
 /*          MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0   */
 /*                     and SD Facility Type Maintenance. Apply       */
 /*                     CLE138 design of SDFACTX0 to store            */
@@ -25,6 +28,9 @@
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&TMPLIB) TYPE(*CHAR) LEN(10) VALUE('#.')
+             DCL        VAR(&BRGLIB) TYPE(*CHAR) LEN(10)                                /*MD060641*/
+             DCL        VAR(&SVAL1)  TYPE(*CHAR) LEN(200)                               /*MD060641*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*MD060641*/
 
              COPYRIGHT  TEXT('(c) Finastra International Limited 2022')
 
@@ -39,8 +45,28 @@
              CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT &ZONEID)
              CHGVAR     VAR(&TMPLIB) VALUE(&TMPLIB *TCAT 'DMLIB')
 
+/* Retrieve Bridge Library  */                                                          /*MD060641*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgDeliveredBrgLib' &SVAL1  +
+                             ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                             ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' )                      /*MD060641*/
+                                                                                        /*MD060641*/
+               IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)                                          /*MD060641*/
+                   GOTO       CMDLBL(ERROR)                                             /*MD060641*/
+                ENDDO                                                                   /*MD060641*/
+                                                                                        /*MD060641*/
+             CHGVAR     VAR(&BRGLIB) VALUE(%SST(&SVAL1 1 10))                           /*MD060641*/
+                                                                                        /*MD060641*/
              DLTF       FILE(QTEMP/SMFACTF3)
              MONMSG     MSGID(CPF2105)
+
+/* Check if SMFACTF3 exists in #.zzDMLIB */                                             /*MD060641*/
+             CHKOBJ     OBJ(&TMPLIB/SMFACTF3) OBJTYPE(*FILE)                            /*MD060641*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD060641*/
+             RSTOBJ     OBJ(SMFACTF3) SAVLIB(&TMPLIB) DEV(*SAVF) +
+                          SAVF(&BRGLIB/SMFACTF3SF) RSTLIB(&TMPLIB)                      /*MD060641*/
+             ENDDO                                                                      /*MD060641*/
 
              CPYF       FROMFILE(&TMPLIB/SMFACTF3) TOFILE(QTEMP/SMFACTF3) +
                           MBROPT(*REPLACE) CRTFILE(*YES)

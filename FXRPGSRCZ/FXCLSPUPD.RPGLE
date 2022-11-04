@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060628           Date 04Nov22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CSD083             Date 27May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060628 - Cannot reenter CLS Pay In Schedule details after  *
+      *             deletion due to error                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -814,6 +817,7 @@
      C                   EVAL      PYLTIM = DCLLTIM
      C                   EVAL      PYTIMD = DCLSTIM
      C                   EVAL      PYGENT = 'N'
+     C                   EVAL      PYDSEQ = DCLDSEQ                                         MD060628
       *
       ** Set detail fields depending on Pay/Rcv indicator
       *

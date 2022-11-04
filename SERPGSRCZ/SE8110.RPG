@@ -1,0 +1,1489 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8110 - Customer Depot Position Calculation                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2022                      *
+      *                                                               *
+      *  Last Amend No. HUT118A *CREATE    Date 03Nov22               *
+      *---------------------------------------------------------------*
+      *                 237173             Date  29Nov05              *
+      *                 UPGPTC             Date 13Jun05               *
+      *                 228844             Date  05Aug04              *
+      *                 CSE063             Date  08Jul04              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  HUT118A - Position Settlements Online Generation (CSE063)    *
+      *---------------------------------------------------------------*
+      *  237173 - DB Error 03 file TRADS, key blank.                  *
+      *           Correct processing for files SEPCALL4, SETLEL0 and  *
+      *           SEPCALJ0 in SR SRSETL.                              *
+      *  UPGPTC - Recompile over changed CDEPPD (Patch C in DBA4.04)  *
+      *  228844 - Trade is being included twice in position           *
+      *  CSE063 - On-Line Position Calculation Routine                *
+      *                                                               *
+      *****************************************************************
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      *  Securities
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      *  SE Investment Types
+      *
+     FCDEPD   IF  E           K        DISK         KINFSR *PSSR
+      *  SE Client Depot Postions
+      *
+     FSEDEV   IF  E           K        DISK         KINFSR *PSSR
+      *  Securities Diary Events
+      *
+     FTRADS   IF  E           K        DISK         KINFSR *PSSR
+      *  Trade Details
+      *
+     FSEPCALL0IF  E           K        DISK         KINFSR *PSSR
+      *  Securities Transactions by Trade Date (CSE015 active)
+     F            TRADSDF                           KRENAMETRADSDF0
+     F            DPTMVDF                           KRENAMEDPTMVDF0
+      *
+     FSEPCALL1IF  E           K        DISK         KINFSR *PSSR
+      *  Securities Transactions by Trade Date (CSE015 not active)
+     F            TRADSDF                           KRENAMETRADSDF1
+     F            SEDVPRD0                          KRENAMESEDVPRD1
+     F            DPTMVDF                           KRENAMEDPTMVDF1
+      *
+     FSEPCALL3IF  E           K        DISK         KINFSR *PSSR
+      *  Securities Transactions by Value Date
+     F            TRADSDF                           KRENAMETRADSDF3
+     F            SEDVPRD0                          KRENAMESEDVPRD3
+     F            DPTMVDF                           KRENAMEDPTMVDF3
+     F            DPTMVDG                           KRENAMEDPTMVDG3
+      *
+     FSEPCALL4IF  E           K        DISK         KINFSR *PSSR
+      *  Securities Transactions by Settlement Date
+     F            TRADSDF                           KRENAMETRADSDF4
+     F            SEDVPRD0                          KRENAMESEDVPRD4
+     F            DPTMVDF                           KRENAMEDPTMVDF4
+     F            DPTMVDG                           KRENAMEDPTMVDG4
+      *
+     FSETLEL0 IF  E           K        DISK         KINFSR *PSSR
+      *  Securities Trades Setllement
+      *
+     FSEPCALJ0IF  E           K        DISK         KINFSR *PSSR
+      *  Securities Transactions by Settlement Date
+      *
+     FSEPCALLBIF  E           K        DISK         KINFSR *PSSR
+      *  Securities Transactions by Last Change Date
+     F            TRADSDF                           KRENAMETRADSDFB
+     F            SEDVPRD0                          KRENAMESEDVPRDB
+     F            DPTMVDF                           KRENAMEDPTMVDFB
+      *
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    01  - Record read from format TRADSDF from LF/SEPCALL0     *
+     F*    02  - Record read from format SEDVPRD0 from LF/SEPCALL0    *
+     F*    03  - Record read from format DPTMVDF from LF/SEPCALL0     *
+     F*    04  - Record read from format TRADSDF from LF/SEPCALL1     *
+     F*    05  - Record read from format SEDVPRD0 from LF/SEPCALL1    *
+     F*    06  - Record read from format DPTMVDF from LF/SEPCALL1     *
+     F*    07  - Record read from format DPTMVDG from LF/SEPCALL1     *
+     F*    11  - Record read from format TRADSDF from LF/SEPCALL3     *
+     F*    12  - Record read from format SEDVPRD0 from LF/SEPCALL3    *
+     F*    13  - Record read from format DPTMVDF from LF/SEPCALL3     *
+     F*    14  - Record read from format DPTMVDG from LF/SEPCALL3     *
+     F*    15  - Record read from format TRADSDF from LF/SEPCALL4     *
+     F*    16  - Record read from format SEDVPRD0 from LF/SEPCALL4    *
+     F*    17  - Record read from format DPTMVDF from LF/SEPCALL4     *
+     F*    18  - Record read from format DPTMVDG from LF/SEPCALL4     *
+     F*    19  - Record read from format SETLEDF from LF/SETLEL0      *
+     F*    20  - Record read from format SEPCALD0 from LF/SEPCALJ0    *
+     F*    31  - Record read from format TRADSDF from LF/SEPCALLB     *
+     F*    32  - Record read from format SEDVPRD0 from LF/SEPCALLB    *
+     F*    33  - Record read from format DPTMVDF from LF/SEPCALLB     *
+     F*    81  - Record read from LF/SEPCALL4                         *
+     F*    82  - Record read from LF/SETLEL0                          *
+     F*    83  - Record read from LF/SEPCALJ0                         *
+     F*    87  - End of file indicator for LF/SEPCALJ0                *
+     F*    88  - End of file indicator for LF/SETLEL0                 *
+     F*    88  - End of file indicator for position calculation files *
+     F*    89  - End of file indicator for LF/CDEPD                   *
+     F*    90  - General work indicator                               *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *INZSR - Initial Processing                                  *
+     F*  *PSSR  - Program error handling routine                      *
+     F*  SRCHKP - Check Parameters Passed                             *
+     F*  SRCDEP - Customer Depot Position Calculation                 *
+     F*  SRTDAT - Trade Date Position Calculation Routine             *
+     F*  SRVDAT - Value Date Position Calculation Routine             *
+     F*  SRSDAT - Value Date Position Calculation Routine             *
+     F*  SRSETL - Read Settlement Position Details                    *
+     F*  SRINCL - Check if Transaction Record to be Included          *
+     F*  SRNDIV - Calculate Next Dividend Date                        *
+     F*  SRTERM - Termination Processing                              *
+     F*                                                               *
+     F*****************************************************************
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZNCDZ1
+      *
+     E                    CDET      100 11
+      *
+      *
+      *  Record from TRADSDF in LF/SEPCALL0
+     ITRADSDF0    01
+     I              RECI                            #1RECI
+     I              TDBA                            #1BRCD
+     I              TDSS                            #1SESN
+     I              TCNR                            #1CUST
+     I              TDMI                            #1MARK
+     I              PTFR                            #1PTFR
+     I              TDDT                            #1TDDT
+     I              TDTP                            #1TDTP
+     I              NOML                            #1NOML
+     I              ACIN                            #1ACIN
+      *
+      *  Record from SEDVPRD0 in LF/SEPCALL0
+     ISEDVPRD0    02
+     I              DVRECI                          #1RECI
+     I              DVBRCA                          #1BRCD
+     I              DVSESN                          #1SESN
+     I              DVCNUM                          #1CUST
+     I              DVPTFR                          #1PTFR
+     I              DVTDAT                          #1TDDT
+     I              DVTYPE                          #1TDTP
+     I              DVNOML                          #1NOML
+     I              DVCMEX                          #1ACIN
+      *
+      **  Record from DPTMVDF in LF/SEPCALL0
+     IDPTMVDF0    03
+     I              RECI                            #1RECI
+     I              DPBA                            #1BRCD
+     I              DPSS                            #1SESN
+     I              DPBN                            #1CUST
+     I              DPMK                            #1MARK
+     I              PTFR                            #1PTFR
+     I              DMTD                            #1TDDT
+     I              DPMV                            #1TDTP
+     I              DPNA                            #1NOML
+     I              ACIN                            #1ACIN
+      *
+      *  Record from TRADSDF in LF/SEPCALL1
+     ITRADSDF1    04
+     I              RECI                            #1RECI
+     I              TDBA                            #1BRCD
+     I              TDSS                            #1SESN
+     I              TCNR                            #1CUST
+     I              TDMI                            #1MARK
+     I              PTFR                            #1PTFR
+     I              TDDT                            #1TDDT
+     I              TDTP                            #1TDTP
+     I              NOML                            #1NOML
+     I              ACIN                            #1ACIN
+      *
+      *  Record from SEDVPRD0 in LF/SEPCALL1
+     ISEDVPRD1    05
+     I              DVRECI                          #1RECI
+     I              DVBRCA                          #1BRCD
+     I              DVSESN                          #1SESN
+     I              DVCNUM                          #1CUST
+     I              DVPTFR                          #1PTFR
+     I              DVTDAT                          #1TDDT
+     I              DVTYPE                          #1TDTP
+     I              DVNOML                          #1NOML
+     I              DVCMEX                          #1ACIN
+      *
+      **  Record from DPTMVDF in LF/SEPCALL1 (Walk In's only)
+     IDPTMVDF1    06
+     I              RECI                            #1RECI
+     I              DPBA                            #1BRCD
+     I              DPSS                            #1SESN
+     I              DPBN                            #1CUST
+     I              DPMK                            #1MARK
+     I              PTFR                            #1PTFR
+     I              DPMD                            #1TDDT
+     I              DPMV                            #1TDTP
+     I              DPNA                            #1NOML
+     I              ACIN                            #1ACIN
+      *
+      **  Record from DPTMVDG in LF/SEPCALL1 (Walk Out's only)
+     IDPTMVDG     07
+     I              RECI                            #1RECI
+     I              DPBA                            #1BRCD
+     I              DPSS                            #1SESN
+     I              DPBN                            #1CUST
+     I              DPMK                            #1MARK
+     I              PTFR                            #1PTFR
+     I              DPDO                            #1TDDT
+     I              DPMV                            #1TDTP
+     I              DPNA                            #1NOML
+     I              ACIN                            #1ACIN
+      *
+      *  Record from TRADSDF in LF/SEPCALL3
+     ITRADSDF3    11
+     I              RECI                            #1RECI
+     I              TDBA                            #1BRCD
+     I              TDSS                            #1SESN
+     I              TCNR                            #1CUST
+     I              TDMI                            #1MARK
+     I              PTFR                            #1PTFR
+     I              TDVD                            #1TDVD
+     I              TDTP                            #1TDTP
+     I              NOML                            #1NOML
+     I              ACIN                            #1ACIN
+      *
+      *  Record from SEDVPRD0 in LF/SEPCALL3
+     ISEDVPRD3    12
+     I              DVRECI                          #1RECI
+     I              DVBRCA                          #1BRCD
+     I              DVSESN                          #1SESN
+     I              DVCNUM                          #1CUST
+     I              DVPTFR                          #1PTFR
+     I              DVVDAT                          #1TDVD
+     I              DVTYPE                          #1TDTP
+     I              DVNOML                          #1NOML
+     I              DVCMEX                          #1ACIN
+      *
+      **  Record from DPTMVDF in LF/SEPCALL3 (Walk In's only)
+     IDPTMVDF3    13
+     I              RECI                            #1RECI
+     I              DPBA                            #1BRCD
+     I              DPSS                            #1SESN
+     I              DPBN                            #1CUST
+     I              DPMK                            #1MARK
+     I              PTFR                            #1PTFR
+     I              DPMD                            #1TDVD
+     I              DPMV                            #1TDTP
+     I              DPNA                            #1NOML
+     I              ACIN                            #1ACIN
+      *
+      **  Record from DPTMVDG in LF/SEPCALL3 (Walk Out's only)
+     IDPTMVDG3    14
+     I              RECI                            #1RECI
+     I              DPBA                            #1BRCD
+     I              DPSS                            #1SESN
+     I              DPBN                            #1CUST
+     I              DPMK                            #1MARK
+     I              PTFR                            #1PTFR
+     I              DPDO                            #1TDVD
+     I              DPMV                            #1TDTP
+     I              DPNA                            #1NOML
+     I              ACIN                            #1ACIN
+      *
+      *  Record from TRADSDF in LF/SEPCALL4
+     ITRADSDF4    15
+     I              RECI                            #2RECI
+     I              TDBA                            #2BRCD
+     I              TDSS                            #2SESN
+     I              TCNR                            #2CUST
+     I              TDMI                            #2MARK
+     I              PTFR                            #2PTFR
+     I              TDVD                            #2TDVD
+     I              TDTP                            #2TDTP
+     I              NOML                            #2NOML
+     I              ACIN                            #2ACIN
+     I              AUTS                            #2AUTS
+      *
+      *  Record from SEDVPRD0 in LF/SEPCALL4
+     ISEDVPRD4    16
+     I              DVRECI                          #2RECI
+     I              DVBRCA                          #2BRCD
+     I              DVSESN                          #2SESN
+     I              DVCNUM                          #2CUST
+     I              DVPTFR                          #2PTFR
+     I              DVVDAT                          #2TDVD
+     I              DVTYPE                          #2TDTP
+     I              DVNOML                          #2NOML
+     I              DVCMEX                          #2ACIN
+     I              DVAUTS                          #2AUTS
+      *
+      **  Record from DPTMVDF in LF/SEPCALL4 (Walk In's only)
+     IDPTMVDF4    17
+     I              RECI                            #2RECI
+     I              DPBA                            #2BRCD
+     I              DPSS                            #2SESN
+     I              DPBN                            #2CUST
+     I              DPMK                            #2MARK
+     I              PTFR                            #2PTFR
+     I              DPMD                            #2TDVD
+     I              DPMV                            #2TDTP
+     I              DPNA                            #2NOML
+     I              ACIN                            #2ACIN
+      *
+      **  Record from DPTMVDG in LF/SEPCALL4 (Walk Out's only)
+     IDPTMVDG4    18
+     I              RECI                            #2RECI
+     I              DPBA                            #2BRCD
+     I              DPSS                            #2SESN
+     I              DPBN                            #2CUST
+     I              DPMK                            #2MARK
+     I              PTFR                            #2PTFR
+     I              DPDO                            #2TDVD
+     I              DPMV                            #2TDTP
+     I              DPNA                            #2NOML
+     I              ACIN                            #2ACIN
+      *
+      **  Record from SETLED in LF/SETLEL0
+     ISETLEDF     19
+     I              RECI                            #3RECI
+     I              SBCA                            #3BRCD
+     I              SSSN                            #3SESN
+     I              SCPN                            #3CUST
+     I              SMKI                            #3MARK
+     I              SEDE                            #3TDVD
+     I              SNMS                            #3NOML
+     I              SRIN                            #3SRIN
+      *
+      **  Record from SEPCALD0 in LF/SEPCALJ0
+     ISEPCALD0    20
+     I              DRRECI                          #4RECI
+     I              DRSBCA                          #4BRCD
+     I              DVSESN                          #4SESN
+     I              DRCNUM                          #4CUST
+     I              DVPTFR                          #4PTFR
+     I              DRSEDE                          #4TDVD
+     I              DVTYPE                          #4TDTP
+     I              DRCNMS                          #4NOML
+     I              DVCMEX                          #4ACIN
+     I              DRSRIN                          #4SRIN
+      *
+      *  Record from TRADSDF in LF/SEPCALLB
+     ITRADSDFB    31
+     I              TCNR                            #1CUST
+      *
+      *  Record from SEDVPRD0 in LF/SEPCALLB
+     ISEDVPRDB    32
+     I              DVCNUM                          #1CUST
+      *
+      **  Record from DPTMVDF in LF/SEPCALLB
+     IDPTMVDFB    33
+     I              DPBN                            #1CUST
+      *
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ** Securities Trading ICD Details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      ** Securities Trading ICD Details
+      *
+     ISCSARD    E DSSCSARDPD
+      ** Switchable Features Details
+      *
+     ILDA       E DSLDA                         256
+      *
+     I            DS
+      ** Customer Depot position details
+     I                                        1  11 CDETA
+     I*****                                   1   60CDPT                  HUT118A
+     I                                        1   6 CDPT                  HUT118A
+     I                                        7   7 CDMK
+     I                                        8  11 PTFR
+      *
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+      /TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Check parameters passed
+      *
+     C                     EXSR SRCHKP
+      *
+      ***  Calculate customer depot position
+      *
+     C                     EXSR SRCDEP
+      *
+      ***  Termination  Processing.
+      *
+     C                     EXSR SRTERM
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHKP - Check Parameters Passed                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHKP    BEGSR
+      *
+      **  Branch code, security, customer and date are mandatory fields
+     C           @@BRCD    IFEQ *BLANKS
+     C           @@SESN    OREQ *BLANKS
+     C*****      @@CUST    OREQ 0                                         HUT118A
+     C           @@CUST    OREQ *BLANKS                                   HUT118A
+     C           @@DATE    OREQ 0
+     C                     MOVE '1'       @@ERR
+     C                     ENDIF
+      *
+      **  Unauthorised must be Y or N
+     C           @@UAUT    IFNE 'Y'
+     C           @@UAUT    ANDNE'N'
+     C           @@UAUT    ANDNE' '
+     C                     MOVE '2'       @@ERR
+     C                     ENDIF
+      *
+      **  Basis must be either T (Trade), V (Value or S (Settlement)
+     C           @@BAST    IFNE 'T'
+     C           @@BAST    ANDNE'V'
+     C           @@BAST    ANDNE'S'
+     C                     MOVE '3'       @@ERR
+     C                     ENDIF
+      *
+      **  Return to calling program if error on parameter
+     C           @@ERR     IFNE *BLANKS
+     C                     EXSR SRTERM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCDEP - Customer Depot Position Initialisation              *
+      *                                                               *
+      *****************************************************************
+     C           SRCDEP    BEGSR
+      *
+      ** Access Securities  File
+     C           @@SESN    CHAINSECTY                99
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE            **************
+     C                     MOVEL'SECTY   'DBFILE           * DB ERROR 01*
+     C                     MOVEL@@SESN    DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  If the maturity date is before the input date then
+      **  return with position details set to zero.
+     C           MATY      IFLT @@DATE
+     C           MATY      ANDNE0
+     C/COPY WNCPYSRC,SE8110C002
+     C                     EXSR SRTERM
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE8110C003
+      *
+      *** Access Investment Types file
+     C           KINVT     CHAININVTP                99
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE            ***************
+     C                     MOVEL'INVTPD  'DBFILE           * DB ERROR 02 *
+     C                     MOVELSITP      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Find date to find starting position to use for calculations
+     C                     EXSR SRKDAT
+      *
+      *** Key list for CDEPD
+     C           KCDEP     KLIST
+     C                     KFLD           @@CUST
+     C                     KFLD           @@SESN
+     C                     KFLD           @@BRCD
+     C                     KFLD           KDAT
+      *
+      **  Position customer depot position file
+     C           KCDEP     SETGTCDEPD
+      *
+      **  Reset work fields
+     C                     Z-ADD0         I       30
+     C                     Z-ADD0         ##RUNB 150
+     C                     Z-ADD0         ##EXCB 150
+     C                     Z-ADD0         ##NCD   50
+     C                     Z-ADD0         ##NDVD  50
+      *
+      **  Get opening position for requested position
+     C           *IN89     DOUEQ*ON
+      *
+      **  Get customer depot position
+     C                     READPCDEPD                    89
+      *
+      **  Do not process if not requested branch, customer or security
+     C           *IN89     IFEQ *ON
+     C           CDPA      ORNE @@BRCD
+     C           CDCN      ORNE @@CUST
+     C           CDSN      ORNE @@SESN
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  Do not process if not requested Depot, Market or Portfolio
+     C*****      @@DPOT    IFNE 0                                         HUT118A
+     C           @@DPOT    IFNE *BLANKS                                   HUT118A
+     C           @@DPOT    ANDNECDPT
+     C           @@MARK    ORNE *BLANKS
+     C           @@MARK    ANDNECDMK
+     C           @@PTFR    ORNE *BLANKS
+     C           @@PTFR    ANDNEPTFR
+     C                     ITER
+     C                     ENDIF
+      *
+      **  Check if starting position already accessed for Depot,
+      **  Market & Portfolio combination
+     C                     Z-ADD1         #       30
+     C           CDETA     LOKUPCDET,#                   90
+     C           *IN90     IFEQ *ON
+     C                     ITER
+     C                     ENDIF
+      *
+      **  Store position details
+     C                     ADD  1         I
+     C                     MOVE CDETA     CDET,I
+      *
+      **  Accumulate position details
+     C                     ADD  CECN      ##EXCB
+     C                     SELEC
+     C           @@BAST    WHEQ 'T'
+     C                     ADD  CDNT      ##RUNB
+     C           @@BAST    WHEQ 'V'
+     C                     ADD  CDNV      ##RUNB
+     C           @@BAST    WHEQ 'S'
+     C                     ADD  CDNS      ##RUNB
+     C                     ENDSL
+      *                                                                   228844
+      **  Store first position date                                       228844
+     C           ##DDTE    IFEQ 0                                         228844
+     C                     Z-ADDDDTE      ##DDTE  50                      228844
+     C                     ENDIF                                          228844
+      *
+     C                     ENDDO
+      *
+      **  Get next coupon date
+     C           @@BAST    IFEQ 'V'
+     C           @@REPO    ANDNE'Y'
+     C           PROT      ANDNE'2'
+     C           PROT      ANDNE'4'
+     C           PROT      ANDNE'6'
+     C           PROT      ANDNE'7'
+     C           STBS      ANDNE'D'
+     C           CD01      ANDNE0
+     C                     Z-ADDKDAT      ECD     50
+     C                     EXSR ZNCD
+     C                     Z-ADDNCD       ##NCD   50
+     C                     ENDIF
+      *
+      **  Get next dividend date from back value date
+     C           S01510    IFEQ 'N'
+     C           PROT      IFEQ '4'
+     C           PROT      OREQ '7'
+     C                     Z-ADDKDAT      KDATE
+     C                     EXSR SRNDIV
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   228844
+      ** Increment key date by 1 so that trades for same position date    228844
+      ** are not included again if key date is same as position date      228844
+     C           KDAT      IFEQ ##DDTE                                    228844
+     C                     ADD  1         KDAT                            228844
+     C                     ENDIF                                          228844
+      *
+      ** Adjust position with trades if trades inserted today
+      ** otherwise use position from position files
+     C           ##TRAN    IFEQ 'Y'
+     C           @@DATE    ORGT BJRDNB
+      *
+      ** Calculate position balance according to date basis
+     C                     SELEC
+     C           @@BAST    WHEQ 'T'
+     C                     EXSR SRTDAT
+     C           @@BAST    WHEQ 'V'
+     C                     EXSR SRVDAT
+     C           @@BAST    WHEQ 'S'
+     C                     EXSR SRSDAT
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+      **  If value of Next Dividend Date last calculated is prior
+      **  to requested balance date then zeroise Ex-Coupon Balance
+     C           ##NDVD    IFNE 0
+     C           ##NDVD    ANDLT@@DATE
+     C                     Z-ADD0         ##EXCB 150
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRKDAT - Get Date for Starting Position                      *
+      *                                                               *
+      *****************************************************************
+     C           SRKDAT    BEGSR
+      *
+      *** Key list for LF/SEPCALLB
+     C           KPCAL     KLIST
+     C                     KFLD           @@BRCD
+     C                     KFLD           @@SESN
+     C                     KFLD           BJRDNB
+      *
+      **  Set indicator for date to check
+     C           @@BAST    IFEQ 'T'
+     C                     MOVE *ON       *IN41
+     C                     ELSE
+     C                     MOVE *ON       *IN42
+     C                     ENDIF
+      *
+      **  Set starting date for position to run date
+     C                     Z-ADDBJRDNB    KDAT    50
+      *
+      **  Set flag to indicate trades inserted today
+     C                     MOVE 'N'       ##TRAN  1
+      *
+      **  Position file
+     C           KPCAL     SETLLSEPCALLB
+      *
+     C           *IN89     DOUEQ*ON
+      *
+      **  Reset record format indicators
+     C                     SETOF                     313233
+      *
+      **  Read next record
+     C           KPCAL     READESEPCALLB                 89
+      *
+      **  If end of file then end
+     C           *IN89     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  If not correct customer then read next record
+     C           #1CUST    IFNE @@CUST
+     C                     ITER
+     C                     ENDIF
+      *
+      **  Process record according to type of transaction
+     C                     SELEC
+      *
+      **  Trade record read from TRADSD
+     C           *IN31     WHEQ *ON
+     C   41                Z-ADDTDDT      ##KDAT  50
+     C   42                Z-ADDTDVD      ##KDAT
+      *
+      **  Trade record from SEDVPRPD
+     C           *IN32     WHEQ *ON
+     C   41                Z-ADDDVTDAT    ##KDAT
+     C   42                Z-ADDDVVDAT    ##KDAT
+      *
+      **  Depot movement Walk In
+     C           *IN33     WHEQ *ON
+     C           DPMV      ANDEQ'WI'
+     C   41      CSE015    IFEQ *ON
+     C                     Z-ADDDMTD      ##KDAT
+     C                     ELSE
+     C                     Z-ADDDPMD      ##KDAT
+     C                     ENDIF
+     C   42                Z-ADDDPMD      ##KDAT
+      *
+      **  Depot movement Walk Out
+     C           *IN33     WHEQ *ON
+     C           DPMV      ANDEQ'WO'
+     C   41      CSE015    IFEQ *ON
+     C                     Z-ADDDMTD      ##KDAT
+     C                     ELSE
+     C                     Z-ADDDPDO      ##KDAT
+     C                     ENDIF
+     C   42                Z-ADDDPDO      ##KDAT
+      *
+     C                     ENDSL
+      *
+      ** Set key date field
+     C           ##KDAT    IFLT KDAT
+     C                     Z-ADD##KDAT    KDAT
+     C                     ENDIF
+      *
+      **  Set flag to indicate trades inserted today backvalued
+      **  prior to position date requested
+     C           KDAT      IFLE @@DATE
+     C                     MOVE 'Y'       ##TRAN  1
+     C                     ENDIF
+      *
+      **  Read next record
+     C           KPCAL     READESEPCALLB                 89
+     C                     ENDDO
+      *
+      ** If transactions inserted/amended today then reduce key date
+      ** field by 1 to ensure today's trade are included in position
+     C           ##TRAN    IFEQ 'Y'
+     C                     SUB  1         KDAT
+     C                     ENDIF
+      *
+      ** If earliest valued transaction amended today is after date
+      ** position is requested for then set date to request date
+     C           KDAT      IFGT @@DATE
+     C                     Z-ADD@@DATE    KDAT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTDAT - Trade Date Position Calculation Routine             *
+      *                                                               *
+      *****************************************************************
+     C           SRTDAT    BEGSR
+      *
+      **  Reset settlement record indicator
+     C                     MOVE 'N'       ##SETL  1
+      *
+      **  Set off settlement file indicators
+     C                     MOVE *OFF      *IN82
+     C                     MOVE *OFF      *IN83
+      *
+      **  Set back value date for key K0PCAL
+     C                     Z-ADDKDAT      KDAT
+      *
+      **  Position SE transactions file
+     C           CSE015    IFEQ 'Y'
+     C           K0PCAL    SETLLSEPCALL0                 90
+     C                     ELSE
+     C           K0PCAL    SETLLSEPCALL1                 90
+     C                     ENDIF
+      *
+      **  Read all SE Transactions
+     C           *IN88     DOUEQ*ON
+      *
+      **  Reset record format indicators for LF/SEPCALL0 & LF/SEPCALL1
+     C                     SETOF                     010203
+     C                     SETOF                     040506
+     C                     SETOF                     07
+      *
+      **  Read SE transactions
+     C           CSE015    IFEQ 'Y'
+     C           K1PCAL    READESEPCALL0                 88
+     C                     ELSE
+     C           K1PCAL    READESEPCALL1                 88
+     C                     ENDIF
+      *
+      **  End processing if no more records to read
+     C           *IN88     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  End processing if trade date is after date requested
+     C           #1TDDT    IFGT @@DATE
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  Check if transaction is to be included in position
+     C                     EXSR SRINCL
+     C           ##INCL    IFEQ 'N'
+     C                     ITER
+     C                     ENDIF
+      *
+      **  If trade date is on or after next dividend date then reset
+      **  ex-coupon running balance and get next dividend date
+     C           ##NDVD    IFNE 0
+     C           ##NDVD    ANDLT#1TDDT
+     C                     Z-ADD0         ##EXCB 150
+     C                     Z-ADD#1TDDT    KDATE
+     C                     EXSR SRNDIV
+     C                     ENDIF
+      *
+      **  Accumulate nominal running balance
+     C           #1TDTP    IFEQ 'TS'
+     C           #1TDTP    OREQ 'RV'
+     C           #1TDTP    OREQ 'WI'
+     C                     ADD  #1NOML    ##RUNB
+     C           #1ACIN    IFEQ 'X'
+     C                     ADD  #1NOML    ##EXCB
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Subtract nominal running balance
+     C           #1TDTP    IFEQ 'TP'
+     C           #1TDTP    OREQ 'DP'
+     C           #1TDTP    OREQ 'WO'
+     C                     SUB  #1NOML    ##RUNB
+     C           #1ACIN    IFEQ 'X'
+     C                     SUB  #1NOML    ##EXCB
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVDAT - Value Date Position Calculation Routine             *
+      *                                                               *
+      *****************************************************************
+     C           SRVDAT    BEGSR
+      *
+      **  Reset settlement record indicator
+     C                     MOVE 'N'       ##SETL
+      *
+      **  Set off settlement file indicators
+     C                     MOVE *OFF      *IN82
+     C                     MOVE *OFF      *IN83
+      *
+      **  Position SE transactions file
+     C           K0PCAL    SETLLSEPCALL3                 90
+      *
+      **  Read all SE Transactions
+     C           *IN88     DOUEQ*ON
+      *
+      **  Reset record format indicators for LF/SEPCALL3
+     C                     SETOF                     111213
+     C                     SETOF                     14
+      *
+      **  Read SE transactions
+     C           K1PCAL    READESEPCALL3                 88
+      *
+      **  End processing if no more records to read
+     C           *IN88     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  End processing if value date is after date requested
+     C           #1TDVD    IFGT @@DATE
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  Check if transaction is to be included in position
+     C                     EXSR SRINCL
+     C           ##INCL    IFEQ 'N'
+     C                     ITER
+     C                     ENDIF
+      *
+      **  If value date is on or after next dividend date then reset
+      **  ex-coupon running balance and get next dividend date
+     C           ##NDVD    IFNE 0
+     C           ##NDVD    ANDLT#1TDVD
+     C                     Z-ADD0         ##EXCB 150
+     C                     Z-ADD#1TDVD    KDATE
+     C                     EXSR SRNDIV
+     C                     ENDIF
+      *
+      **  If value date is on or after next coupon date then reset
+      **  ex-coupon running balance and get next coupon date
+     C           ##NCD     IFNE 0
+     C           ##NCD     ANDLT#1TDVD
+     C                     Z-ADD0         ##EXCB 150
+     C                     Z-ADD#1TDVD    ECD     50
+     C                     EXSR ZNCD
+     C                     Z-ADDNCD       ##NCD   50
+     C                     ENDIF
+      *
+      **  Accumulate nominal running balance
+     C           #1TDTP    IFEQ 'TS'
+     C           #1TDTP    OREQ 'RV'
+     C           #1TDTP    OREQ 'WI'
+     C                     ADD  #1NOML    ##RUNB
+     C           #1ACIN    IFEQ 'X'
+     C                     ADD  #1NOML    ##EXCB
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Subtract nominal running balance
+     C           #1TDTP    IFEQ 'TP'
+     C           #1TDTP    OREQ 'DP'
+     C           #1TDTP    OREQ 'WO'
+     C                     SUB  #1NOML    ##RUNB
+     C           #1ACIN    IFEQ 'X'
+     C                     SUB  #1NOML    ##EXCB
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSDAT - Value Date Position Calculation Routine             *
+      *                                                               *
+      *****************************************************************
+     C           SRSDAT    BEGSR
+      *
+      **  Reset settlement record indicator
+     C                     MOVE 'N'       ##SETL
+      *
+      **  Set customer key field for key K2PCAL
+     C                     MOVE @@CUST    K2CUST
+      *
+      **  Position SE transactions file for settlement position
+     C           K0PCAL    SETLLSEPCALL4                 90
+     C           K2PCAL    SETLLSETLEL0                  90
+      *
+      **  Read through open query file till first record with date
+      **  equal to or greater than key date is found
+     C           *IN86     DOUEQ*ON
+     C           #4TDVD    ORGE KDAT
+     C                     READ SEPCALJ0                 86
+     C                     ENDDO
+      *
+      **  Set indicators for read of files in SR/SETL
+     C                     MOVE *ON       *IN81
+     C                     MOVE *ON       *IN82
+     C                     MOVE *OFF      *IN83
+      *
+      **  Read all SE Transactions
+     C           *IN88     DOUEQ*ON
+     C           *IN87     ANDEQ*ON
+     C           *IN86     ANDEQ*ON
+      *
+      **  Read SE transactions for settlement position
+     C                     EXSR SRSETL
+      *
+      **  End processing if no more records to read
+     C           *IN88     IFEQ *ON
+     C           *IN87     ANDEQ*ON
+     C           *IN86     ANDEQ*ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  End processing if value date is after date requested
+     C           #1TDVD    IFGT @@DATE
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  Check if transaction is to be included in position
+     C                     EXSR SRINCL
+     C           ##INCL    IFEQ 'N'
+     C                     ITER
+     C                     ENDIF
+      *
+      **  Accumulate nominal running balance
+     C                     SELEC
+      *
+     C           #1TDTP    WHEQ 'TS'
+     C           *IN81     ANDEQ*ON
+     C           #1TDTP    OREQ 'RV'
+     C           *IN81     ANDEQ*ON
+     C           #1RECI    IFNE 'S'
+     C           #1AUTS    ANDEQ'Y'
+     C                     ADD  #1NOML    ##RUNB
+     C                     ENDIF
+      *
+     C           #1TDTP    WHEQ 'WI'
+     C                     ADD  #1NOML    ##RUNB
+      *
+     C           #1TDTP    WHEQ 'TS'
+     C           *IN82     ANDEQ*ON
+     C           #1TDTP    OREQ 'RV'
+     C           *IN83     ANDEQ*ON
+     C           #1SRIN    IFNE 'Y'
+     C                     ADD  #1NOML    ##RUNB
+     C                     ENDIF
+      *
+     C           #1TDTP    WHEQ 'TP'
+     C           *IN81     ANDEQ*ON
+     C           #1TDTP    OREQ 'DP'
+     C           *IN81     ANDEQ*ON
+     C           #1RECI    IFNE 'S'
+     C           #1AUTS    ANDEQ'Y'
+     C                     SUB  #1NOML    ##RUNB
+     C                     ENDIF
+      *
+     C           #1TDTP    WHEQ 'WO'
+     C                     SUB  #1NOML    ##RUNB
+      *
+     C           #1TDTP    WHEQ 'TP'
+     C           *IN82     ANDEQ*ON
+     C           #1TDTP    OREQ 'DP'
+     C           *IN83     ANDEQ*ON
+     C           #1SRIN    IFNE 'Y'
+     C                     SUB  #1NOML    ##RUNB
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSETL - Read Settlement Position Details                    *
+      *                                                               *
+      *****************************************************************
+     C           SRSETL    BEGSR
+      *
+      **  Reset record format indicators from LF/SEPCALL4
+     C           *IN81     IFEQ *ON
+     C                     MOVE *OFF      *IN15            TRADSDF
+     C                     MOVE *OFF      *IN16            SEDVPRPD0
+     C                     MOVE *OFF      *IN17            DPTMVDF
+     C                     MOVE *OFF      *IN18            DPTMVDF
+     C                     ENDIF
+      *
+      **  Reset record format indicators from LF/SETLEL0
+     C           *IN82     IFEQ *ON
+     C                     MOVE *OFF      *IN19
+     C                     ENDIF
+      *
+      **  Reset record format indicators from LF/SEPCALJ0
+     C           *IN83     IFEQ *ON
+     C                     MOVE *OFF      *IN20
+     C                     ENDIF
+      *
+      *
+      **  Read SE transactions for settlement position details
+     C   81      K1PCAL    READESEPCALL4                 88
+     C   82      K3PCAL    READESETLEL0                  87
+     C   83                READ SEPCALJ0                 86
+      *
+      **  Determine which record to process
+     C                     MOVE *OFF      *IN81            SEPCALL4
+     C                     MOVE *OFF      *IN82            SETLEL0
+     C                     MOVE *OFF      *IN83            SEPCALJ0
+     C                     SELEC
+      *
+      **  Records read from all 3 files.
+      **  Determine earliest record to process
+     C           *IN88     WHEQ *OFF
+     C           *IN87     ANDEQ*OFF
+     C           *IN86     ANDEQ*OFF
+     C           #2TDVD    IFLE #3TDVD
+     C           #2TDVD    ANDLE#4TDVD
+     C                     MOVE *ON       *IN81
+     C                     ELSE
+     C           #3TDVD    IFLE #4TDVD
+     C                     MOVE *ON       *IN82
+     C                     ELSE
+     C                     MOVE *ON       *IN83
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Records read from LF/SEPCALL4 & LF/SETLEL0
+     C           *IN88     WHEQ *OFF
+     C           *IN87     ANDEQ*OFF                                      237173
+     C           *IN86     ANDEQ*ON                                       237173
+     C******     *IN86     ANDEQ*OFF                                      237173
+     C******     *IN87     ANDEQ*ON                                       237173
+     C           #2TDVD    IFLE #3TDVD
+     C                     MOVE *ON       *IN81
+     C                     ELSE
+     C                     MOVE *ON       *IN82
+     C                     ENDIF
+      *
+      **  Records read from LF/SEPCALL4 & LF/SEPCALJ0
+     C           *IN88     WHEQ *OFF
+     C           *IN87     ANDEQ*ON                                       237173
+     C           *IN86     ANDEQ*OFF                                      237173
+     C******     *IN86     ANDEQ*ON                                       237173
+     C******     *IN87     ANDEQ*OFF                                      237173
+     C           #2TDVD    IFLE #4TDVD
+     C                     MOVE *ON       *IN81
+     C                     ELSE
+     C                     MOVE *ON       *IN83
+     C                     ENDIF
+      *
+      **  Records read from LF/SETLEL0 & LF/SEPCALJ0
+     C           *IN88     WHEQ *ON
+     C           *IN86     ANDEQ*OFF
+     C           *IN87     ANDEQ*OFF
+     C           #3TDVD    IFLE #4TDVD
+     C                     MOVE *ON       *IN82
+     C                     ELSE
+     C                     MOVE *ON       *IN83
+     C                     ENDIF
+      *
+     C                     OTHER
+     C  N88                MOVE *ON       *IN81            SEPCALL4
+     C  N87                MOVE *ON       *IN82            SETLEL0
+     C  N86                MOVE *ON       *IN83            SEPCALJ0
+     C                     ENDSL
+      *
+      **  Move fields if record read is from LF/SEPCALL4
+     C           *IN81     IFEQ *ON
+     C                     MOVE #2RECI    #1RECI
+     C                     MOVE #2BRCD    #1BRCD
+     C                     MOVE #2SESN    #1SESN
+     C                     MOVE #2CUST    #1CUST
+     C                     MOVE #2MARK    #1MARK
+     C                     MOVE #2PTFR    #1PTFR
+     C                     MOVE #2TDVD    #1TDVD
+     C                     MOVE #2TDTP    #1TDTP
+     C                     MOVE #2NOML    #1NOML
+     C                     MOVE #2ACIN    #1ACIN
+     C                     MOVE #2AUTS    #1AUTS  1
+     C                     ENDIF
+      *
+      **  Move fields if record read is from LF/SETLEL0
+     C           *IN82     IFEQ *ON
+     C                     MOVE #3RECI    #1RECI
+     C                     MOVE #3BRCD    #1BRCD
+     C                     MOVE #3SESN    #1SESN
+     C                     MOVE #3CUST    #1CUST
+     C                     MOVE #3MARK    #1MARK
+     C                     MOVE #3TDVD    #1TDVD
+     C                     MOVE #3NOML    #1NOML
+     C                     MOVE #3SRIN    #1SRIN  1
+      *
+      **  Get trade type and portfolio reference from trade details
+     C           STDR      CHAINTRADS                90
+     C           *IN90     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'TRADS   'DBFILE           * DB ERROR 03 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE TDTP      #1TDTP
+     C                     MOVE PTFR      #1PTFR
+     C                     MOVE 'Y'       ##SETL
+     C                     ENDIF
+      *
+      **  Move fields if record read is from LF/SEPCALJ0
+     C******     *IN82     IFEQ *ON                                       237173
+     C           *IN83     IFEQ *ON                                       237173
+     C                     MOVE #4RECI    #1RECI
+     C                     MOVE #4BRCD    #1BRCD
+     C                     MOVE #4SESN    #1SESN
+     C                     MOVE #4CUST    #1CUST
+     C                     MOVE 'S'       #1MARK
+     C                     MOVE #4PTFR    #1PTFR
+     C                     MOVE #4TDVD    #1TDVD
+     C                     MOVE #4TDTP    #1TDTP
+     C                     MOVE #4NOML    #1NOML
+     C                     MOVE #4SRIN    #1SRIN
+     C                     MOVE 'Y'       ##SETL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINCL - Check if Transaction Record to be Included          *
+      *                                                               *
+      *****************************************************************
+     C           SRINCL    BEGSR
+      *
+      **  Set flag
+     C                     MOVE 'Y'       ##INCL  1
+      *
+      **  Ignore record if market entered and not correct market
+      **  for trades and depot movements
+     C           @@MARK    IFNE *BLANKS
+     C           @@MARK    ANDNE#1MARK
+     C           #1TDTP    IFEQ 'TP'
+     C           #1TDTP    OREQ 'TS'
+     C           #1TDTP    OREQ 'WI'
+     C           #1TDTP    OREQ 'WO'
+     C                     MOVE 'N'       ##INCL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Ignore record if market entered & value is not 'S' and
+      **  transaction read is a DVP/RVP trade
+     C           @@MARK    IFNE *BLANKS
+     C           @@MARK    ANDNE'S'
+     C           #1TDTP    IFEQ 'RV'
+     C           #1TDTP    OREQ 'DP'
+     C                     MOVE 'N'       ##INCL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Ignore record if portfolio entered and not same portfolio
+     C           @@PTFR    IFNE *BLANKS
+     C           @@PTFR    ANDNE#1PTFR
+     C                     MOVE 'N'       ##INCL
+     C                     ENDIF
+      *
+      **  Ignore record if depot entered and not the same depot
+     C*****      @@DPOT    IFNE 0                                         HUT118A
+     C           @@DPOT    IFNE *BLANKS                                   HUT118A
+     C           #1TDTP    IFEQ 'TP'
+     C           DELF      ANDNE@@DPOT
+     C           #1TDTP    OREQ 'TS'
+     C           DELT      ANDNE@@DPOT
+     C           #1TDTP    OREQ 'WI'
+     C           DPID      ANDNE@@DPOT
+     C           #1TDTP    OREQ 'WO'
+     C           DPOD      ANDNE@@DPOT
+     C           #1TDTP    OREQ 'RV'
+     C           DVOUDP    ANDNE@@DPOT
+     C           #1TDTP    OREQ 'DP'
+     C           DVOUDP    ANDNE@@DPOT
+     C                     MOVE 'N'       ##INCL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Ignore record if unauthorised records not to be included
+      **  (if transaction not a settlement record)
+     C           ##SETL    IFNE 'Y'
+     C           @@UAUT    IFEQ 'N'
+     C           #1RECI    IFNE 'D'
+     C           #1RECI    ANDNE'A'
+     C           #1RECI    ANDNE'S'
+     C                     MOVE 'N'       ##INCL
+     C                     ENDIF
+     C                     ELSE
+     C           #1RECI    IFNE 'L'
+     C           #1RECI    ANDNE'P'
+     C           #1RECI    ANDNE'D'
+     C           #1RECI    ANDNE'S'
+     C           #1RECI    ANDNE'A'
+     C                     MOVE 'N'       ##INCL
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Ignore record if reocrd id. not correet for settlement record
+     C           ##SETL    IFEQ 'Y'
+     C           #1RECI    IFNE 'H'
+     C           #1RECI    ANDNE'D'
+     C                     MOVE 'N'       ##INCL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Only process trade types TS,TP,RV,DP,WI and WO
+     C           #1TDTP    IFNE 'TS'
+     C           #1TDTP    ANDNE'TP'
+     C           #1TDTP    ANDNE'RV'
+     C           #1TDTP    ANDNE'DP'
+     C           #1TDTP    ANDNE'WI'
+     C           #1TDTP    ANDNE'WO'
+     C                     MOVE 'N'       ##INCL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNDIV - Calculate Next Dividend Date                        *
+      *                                                               *
+      *****************************************************************
+     C           SRNDIV    BEGSR
+      *
+      **  Reset work field
+     C                     Z-ADD0         ##NDVD  50                   **
+      *
+      *** Key list for SEDEV
+     C           KSEDE     KLIST
+     C                     KFLD           SESN
+     C                     KFLD           KDATE   50
+      *
+      ** Get next dividend date
+     C           KSEDE     SETLLSEDEV
+     C           SESN      READESEDEV                    90
+     C           *IN99     DOWEQ*OFF
+     C           SDET      IFEQ 'DV'                                   **
+     C                     Z-ADDSDED      ##NDVD                       **
+     C                     LEAVE
+     C                     ENDIF
+     C           SESN      READESEDEV                    90
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE8110'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Termination Processing                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR
+      *
+      **  If no errors return results to calling program
+     C           @@ERR     IFEQ *BLANKS
+      *
+     C                     Z-ADD##RUNB    @@BALA
+     C                     Z-ADD##EXCB    @@EXCB
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Initialisation Processing                           *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      *
+      ***  Receive entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @@BRCD  3        Branch
+     C                     PARM           @@SESN 10        Security
+     C                     PARM           @@BOOK  2        Book
+     C                     PARM           @@MARK  1        Market
+     C*****                PARM           @@DPOT  60       Depot          HUT118A
+     C                     PARM           @@DPOT  6        Depot          HUT118A
+     C*****                PARM           @@CUST  60       Customer       HUT118A
+     C                     PARM           @@CUST  6        Customer       HUT118A
+     C                     PARM           @@PTFR  4        Portfolio
+     C                     PARM           @@BAST  1        Basis
+     C                     PARM           @@DATE  50       Date
+     C                     PARM           @@TYPE  1        Position Type
+     C                     PARM           @@REPO  1        Repo Balance
+     C                     PARM           @@UAUT  1        Unauthorised included
+     C                     PARM           @@BALA 150       Balance
+     C                     PARM           @@EXCB 150       Ex-Coupon Balance
+     C                     PARM           @@PRIC 158       Price
+     C                     PARM           @@ERR   1        Error
+      *
+      **  Reset error indicator
+     C                     MOVE ' '       @@ERR
+      *
+      **  Access SAR details file to see if CSE015 is installed
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSE015'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSE015  1
+     C                     END
+      *
+      **  Access SAR details file to see if S01510 is installed
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'S01510'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S01510  1
+     C                     END
+      *
+      ** Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 04 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Check System Date Format, ddmmyy (*IN98 off)
+      ***                            mmddyy (*IN98 on).
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     END
+      *
+      ***  Access Securities Trading ICD details
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'005'     DBASE            **************
+     C                     MOVEL'SDSTRDPD'DBFILE           * DB ERROR 5 *
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Calculate Back-value date
+     C           BJRDNB    SUB  BVBVP     @BACKV  50
+      *
+      *
+      **  Reset error indicator
+     C                     MOVE *BLANKS   @@ERR
+      *
+      **  Define external data area LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      *** Key list for INVTP
+     C           KINVT     KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      *** Key list for chain to position files
+     C           K0PCAL    KLIST
+     C                     KFLD           @@BRCD
+     C                     KFLD           @@SESN
+     C                     KFLD           @@CUST
+     C                     KFLD           KDAT
+      *
+      *** Key list for chain to position files
+     C           K1PCAL    KLIST
+     C                     KFLD           @@BRCD
+     C                     KFLD           @@SESN
+     C                     KFLD           @@CUST
+      *
+      *** Key list for chain to position files
+     C           K2PCAL    KLIST
+     C                     KFLD           @@BRCD
+     C                     KFLD           @@SESN
+     C                     KFLD           K2CUST  6
+     C                     KFLD           KDAT
+      *
+      *** Key list for chain to position files
+     C           K3PCAL    KLIST
+     C                     KFLD           @@BRCD
+     C                     KFLD           @@SESN
+     C                     KFLD           K2CUST
+      *
+     C/COPY WNCPYSRC,SE8110C001
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *
+     C/COPY ZSRSRC,ZNCDZ3
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      **  Compile time arrays
+     C/COPY ZSRSRC,ZDATE2Z3

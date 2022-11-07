@@ -60,7 +60,7 @@
       *                                                               *
       *------------------------------------------------	---------------*
       *                                                               *
-      *  MD059519- Add missing code - copysource FTV101007            *
+      *  MD059519- Add missing code -  copysource FTV101007           *
       *  MD05826 - MT940 with incorrect Field 61 after SP23 Upgrade   *
       *            (Recompile)                                        *
       *  FVT101  - Field 61 Enhancement on SWIFT Statement Messages   *

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR322731           Date 01Aug12              */
+/*       Last Amend No. MD058517           Date 17Oct22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR322731           Date 01Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -42,6 +43,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1       */
+/*                  Interest Projection Using Known Rates            */
+/*                  CC10 CLE172 Spool File Correspondence (MD059817) */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR322731 - LEC0212A and APISERVER locks LTRIX file. Apply   */
 /*                  fix 252833A (Child:AR322732)                     */
@@ -82,13 +86,13 @@
 /*********************************************************************/
 /**/
              PGM
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
- 
+
              DCL        VAR(&LESTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
                                                                       /*E41579*/
@@ -118,28 +122,29 @@
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                    /*CSW208*/
              DCL        VAR(&CSW208) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSW208*/
              DCL        VAR(&CLE044) TYPE(*CHAR) LEN(1)                                   /*CLE044*/
+             DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD058517*/
 /*/COPY WNCPYSRC,LEC0212A06                                          */
- 
+
              DCLF       FILE(SDMGMEPD)
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              ALCOBJ     OBJ((LECONF *DTAARA *EXCL))                   /*124684*/
              MONMSG     MSGID(CPF0000)                                /*124684*/
 /* Notify MRUNQ */
              SNDPGMMSG  MSG('Input Cycle Confirmations Print') +
                         TOMSGQ(MRUNQ)
 /*/COPY WNCPYSRC,LEH01026                                            */
- 
+
 /* Begin commitment control */
 /**********  STRCMTCTL LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))             /*CPK009*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                              /*CPK009*/
- 
+
 /* Zero switches */
              CHGJOB     LOG(4) LOGCLPGM(*YES) SWS(10010000)
- 
+
 /* Create LDA */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' ') TEXT('Midas SD AS400 LOCAL +
@@ -177,9 +182,9 @@
              CALL       PGM(SWIF2008) PARM(&PRTCD)                                        /*CSW208*/
              IF         COND(&PRTCD *EQ 'CSW2008') THEN( +
                           CHGVAR VAR(&CSW208) VALUE('Y'))                                 /*CSW208*/
- 
+
              RTVDTAARA  DTAARA(LESTAT) RTNVAR(&LESTAT)
- 
+
              IF COND(%SST(&LESTAT 98 1) *EQ 'A') THEN(GOTO TAGA)
              IF COND(%SST(&LESTAT 98 1) *EQ 'B') THEN(GOTO TAGB)
              IF COND(%SST(&LESTAT 98 1) *EQ 'C') THEN(GOTO TAGC)
@@ -233,7 +238,7 @@
                 CPYF       FROMFILE(LEEXTAB) TOFILE(QTEMP/XLEEXTAB) +
                               MBROPT(*REPLACE) CRTFILE(*YES)          /*CCG008*/
              ENDDO                                                    /*CCG008*/
- 
+
 /* Produce confirmation extract LEEXT */
 /*/COPY WNCPYSRC,LEC0212A07                                          */
 /**/                                                                                      /*CLE044*/
@@ -246,6 +251,15 @@
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CLE044*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CLE044) VALUE('Y'))                                        /*CLE044*/
+/**/                                                                                    /*MD058517*/
+/** Access SAR file to determine if switchable feature CLE172     */                    /*MD058517*/
+/**/                                                                                    /*MD058517*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD058517*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD058517*/
+             CHGVAR     VAR(&SAR) VALUE('CLE172')                                       /*MD058517*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*MD058517*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CLE172) VALUE('Y'))                                      /*MD058517*/
 /**/                                                                 /*S01465*/
 /** Access SAR file to determine if switchable feature  S01465    */ /*S01465*/
 /** is switched ON                                                */ /*S01465*/
@@ -261,6 +275,11 @@
 /**                                                                  /*S01408*/
 /*/COPY WNCPYSRC,LEC0212A03                                          /*S01408*/
 /**                                                                  /*S01408*/
+/** Override LE1150P1 attributes to increase page size and overflow */                  /*MD058517*/
+                                                                                        /*MD058517*/
+                 IF        COND(&CLE172 *EQ 'Y') THEN(OVRPRTF +
+                           FILE(LE1150P1) PAGESIZE(68 90) OVRFLW(68))                   /*MD058517*/
+                                                                                        /*MD058517*/
                 OVRDBF     FILE(CLOAN2) TOFILE(CLOAN) SHARE(*NO)     /*S01465*/
                 CALL       PGM(LE1150) PARM('     ' 'ALL')           /*S01465*/
 /*/COPY WNCPYSRC,LEC0212A05                                          */
@@ -269,12 +288,17 @@
 /**                                                                  /*S01408*/
 /*/COPY WNCPYSRC,LEC0212A01                                          /*S01408*/
 /**                                                                  /*S01408*/
+/** Override LE0130P1 attributes to increase page size and overflow */                  /*MD058517*/
+                                                                                        /*MD058517*/
+                IF         COND(&CLE172 *EQ 'Y') THEN(OVRPRTF +
+                           FILE(LE0130P1) PAGESIZE(68 90) OVRFLW(68))                   /*MD058517*/
+                                                                                        /*MD058517*/
                 CALL       PGM(LE0130) PARM('     ' 'ALL')
 /**                                                                  /*S01408*/
 /*/COPY WNCPYSRC,LEC0212A02                                          /*S01408*/
 /**                                                                  /*S01408*/
              ENDDO                                                   /*S01465*/
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Confirmations print failure')
@@ -295,17 +319,17 @@
              GOTO       CMDLBL(ERROR)
              ENDDO                                                    /*CCG008*/
              ENDDO
- 
+
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
              IF COND(%SST(&MMOD 28 1) *EQ 'Y') THEN(DO)
- 
+
 TAGA:        CHGDTAARA  DTAARA(LESTAT (98 1)) VALUE('A')
- 
+
 /* Extract messages */
              OVRDBF     FILE(MGOREFL0) SHARE(*NO)
              OVRDBF     FILE(CLOAN) SHARE(*NO)
              CALL       PGM(LE4500)  /* COMIT ONLY LOANS */
- 
+
 /* If all LEEXT not processed report failure */
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN(DO)
@@ -317,18 +341,18 @@ TAGA:        CHGDTAARA  DTAARA(LESTAT (98 1)) VALUE('A')
                           CLRPFM FILE(MGX320PD))                                          /*CSW208*/
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 TAGB:        CHGDTAARA  DTAARA(LESTAT (98 1)) VALUE('B')
              CLRPFM     FILE(LEEXTAA)
              CLRPFM     FILE(LEEXTAB)
              CLRPFM     FILE(LEEXTAC)
- 
+
 /* GDFs records are deleted as they are processed */
 /*/COPY WNCPYSRC,LEC0212A10                                          */
- 
+
 /* Process fixed loan/deposit confirmations */
              CALL       PGM(MG0320)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +
              SNDPGMMSG  MSG('Loan/deposit confirmation +
@@ -345,10 +369,10 @@ TAGB:        CHGDTAARA  DTAARA(LESTAT (98 1)) VALUE('B')
              IF         COND(&CSW208 *EQ 'Y') THEN( +
                           CLRPFM FILE(MGX320PD))                                          /*CSW208*/
                                                                                           /*CSW208*/
- 
+
 /* Process call loan/deposits */
              CALL       PGM(MG0330)
- 
+
              IF         COND(%SWITCH(XXXXXX1X) *OR +
                           %SWITCH(XXXXXXX1)) THEN( +
              SNDPGMMSG  MSG('Call loan/deposit confirmation +
@@ -362,7 +386,7 @@ TAGB:        CHGDTAARA  DTAARA(LESTAT (98 1)) VALUE('B')
              GOTO       CMDLBL(ERROR)
              ENDDO
 /*/COPY WNCPYSRC,LEC0212A11                                          */
- 
+
 /**********  RGZPFM     FILE(MGF320PD)                                                    /*228542*/
 /**********  MONMSG     MSGID(CPF2995 CPF2981)                                            /*228542*/
              CALL       PGM(SCC000060) PARM('MGF320PD' '*FIRST')                          /*228542*/
@@ -377,9 +401,9 @@ TAGB:        CHGDTAARA  DTAARA(LESTAT (98 1)) VALUE('B')
              CALL       PGM(SCC000060) PARM('MGF330PD' '*FIRST')                          /*228542*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ERROR))                                                  /*228542*/
- 
+
 TAGC:        CHGDTAARA  DTAARA(LESTAT (98 1)) VALUE('C')
- 
+
 /* If ISO confirmations required print messages */
              RCVF
              IF         COND(&ENFFCR = 'N') THEN(DO)
@@ -393,7 +417,7 @@ TAGC:        CHGDTAARA  DTAARA(LESTAT (98 1)) VALUE('C')
              ENDDO
              ENDDO
              ENDDO
- 
+
              CHGDTAARA  DTAARA(LESTAT (98 1)) VALUE(' ')
                                                                 /*102427*/
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO) /*102427*/
@@ -412,7 +436,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ) +
                           MSGTYPE(*INFO)                              /*E41579*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /* Send database error message to workstation & MOPERQ */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MSG)
@@ -429,7 +453,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
                 CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')                                 /*CCG015*/
                 CALL       PGM(CGC3605) PARM(&ACTION)                                     /*CCG015*/
              ENDDO                                                                        /*205448*/
- 
+
 END:         ENDCMTCTL
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
                                                                       /*E40242*/
@@ -438,13 +462,13 @@ END:         ENDCMTCTL
              CALL       PGM(MEC0890) PARM('LE' 'C' 'ICJRN     ' +
                           &SDATE &STIME)                              /*E40242*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*E40242*/
- 
+
 /* Ensure stop confirmations indicator set off */
 /*/COPY WNCPYSRC,LEH01264                                            */
 /**********  CALL       PGM(LE0106) */                                                   /*252833A*/
 /**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                                /*252833A*/
 /*/COPY WNCPYSRC,LEH01265                                            */
- 
+
 /* Reset busy flag in LESTAT */
 /*/COPY WNCPYSRC,LEC0212A09                                          */
 /************ALCOBJ     OBJ((LESTAT *DTAARA *EXCLRD)) WAIT(32000)     /*124684*/
@@ -453,7 +477,7 @@ END:         ENDCMTCTL
 /************MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*124684*/
 /************DLCOBJ     OBJ((LESTAT *DTAARA *EXCLRD))                 /*124684*/
 /************MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*124684*/
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 263109             Date 07Nov22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 264185             Date 19Aug14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263109 - Do not generate TS and TP events for incomplete     *
+      *           trades.                                             *
+      *         - Applied for MD060087.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -803,6 +807,7 @@
       *
       * CLEAR EVENT
      C                   CLEAR                   E_EVNT
+     C                   IF        TINC = 'C'                                                 263109
       *
       * Processing Date
      C     I#TVDI        IFEQ      'T'
@@ -851,6 +856,8 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
+      *                                                                                       263109
+     C                   ENDIF                                                                263109
       *
       * Read next live record
       *

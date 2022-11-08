@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250822             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CGL198             Date 19Oct22               *
+      *  Prev Amend No. 250822             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 AR1021393          Date 13Nov18               *
@@ -85,6 +86,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL198 - Account Name Defaulting in Account Maintenance.     *
+      *           CGL198 is non-switchable feature.                   *
       *  250822 - Next Statement date is incorrect.  Ensure that      *
       *           DnxtSDat is always called to calculate value based  *
       *           on Frequency and/or Next Statement Day.             *
@@ -463,6 +466,8 @@
      D PACSQ                  23     24                                                       CGL029
                                                                                               CSD012
      D/COPY OFCPYSRCZ,CGL123_001                                                              CGL123
+     D SDACOD        E DS                  EXTNAME(SDACODPD)                                  CGL198
+     D  QAACCD       E                     EXTFLD(QQACCD)                                     CGL198
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -513,6 +518,30 @@
      D CGL165          S              1A                                                      CGL165
      D CGL184          S              1A                                                      CGL184
      D CER050          S              1A                                                      CER050
+      *                                                                                       CGL198
+      ** System Values fields defined for CGL198                                              CGL198
+      *                                                                                       CGL198
+     D DfltAccntName   S              1A                                                      CGL198
+     D POP01           S             20A                                                      CGL198
+     D PVL01           S            200A                                                      CGL198
+     D POP02           S             20A                                                      CGL198
+     D PVL02           S            200A                                                      CGL198
+     D POP03           S             20A                                                      CGL198
+     D PVL03           S            200A                                                      CGL198
+     D POP04           S             20A                                                      CGL198
+     D PVL04           S            200A                                                      CGL198
+     D POP05           S             20A                                                      CGL198
+     D PVL05           S            200A                                                      CGL198
+     D POP06           S             20A                                                      CGL198
+     D PVL06           S            200A                                                      CGL198
+     D POP07           S             20A                                                      CGL198
+     D PVL07           S            200A                                                      CGL198
+     D POP08           S             20A                                                      CGL198
+     D PVL08           S            200A                                                      CGL198
+     D POP09           S             20A                                                      CGL198
+     D PVL09           S            200A                                                      CGL198
+     D POP10           S             20A                                                      CGL198
+     D PVL10           S            200A                                                      CGL198
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -632,6 +661,19 @@
       ** Retrieve Account Name from Customer Report Name                                    AR869261
                                                                                             AR869261
      C                   EVAL      DDANAM = BBCRNM                                          AR869261
+      *                                                                                       CGL198
+      ** If System Value AMADAccntNameDefault is 'A', default the account name to the account CGL198
+      ** code name (instead of the Customer Report Name)                                      CGL198
+      *                                                                                       CGL198
+     C                   IF        DfltAccntName = 'A'                                        CGL198
+     C                   CALL      'AOACODR0'                                                 CGL198
+     C                   PARM      '*MSG   '     @RTCD                                        CGL198
+     C                   PARM      '*KEY   '     @OPTN                                        CGL198
+     C                   PARM      DDACOD        @ACOD            10                          CGL198
+     C     SDACOD        PARM      SDACOD        DSFDY                                        CGL198
+     C                   EVAL      DDANAM = A5ACCN                                            CGL198
+     C                   ENDIF                                                                CGL198
+      *                                                                                       CGL198
      C                   ENDIF                                                              AR869261
      C                   ENDIF
       *
@@ -2749,6 +2791,41 @@
      C                   MOVEL     'Y'           CFT004                         CFT004
      C                   ENDIF                                                  CFT004
      C/COPY WNCPYSRC,GLAMA1VC04
+      *                                                                                       CGL198
+      ** Access Midas System values via access program                                        CGL198
+      *                                                                                       CGL198
+                                                                                              CGL198
+     C                   EVAL      POP01 = 'AMADAccntNameDefault'                             CGL198
+     C                   EVAL      PVL01 = *BLANKS                                            CGL198
+                                                                                              CGL198
+     C                   CALL      'AOSVALR0'                                                 CGL198
+     C                   PARM                    @RTCD                                        CGL198
+     C                   PARM                    POP01                                        CGL198
+     C                   PARM                    PVL01                                        CGL198
+     C                   PARM      *BLANKS       POP02                                        CGL198
+     C                   PARM      *BLANKS       PVL02                                        CGL198
+     C                   PARM      *BLANKS       POP03                                        CGL198
+     C                   PARM      *BLANKS       PVL03                                        CGL198
+     C                   PARM      *BLANKS       POP04                                        CGL198
+     C                   PARM      *BLANKS       PVL04                                        CGL198
+     C                   PARM      *BLANKS       POP05                                        CGL198
+     C                   PARM      *BLANKS       PVL05                                        CGL198
+     C                   PARM      *BLANKS       POP06                                        CGL198
+     C                   PARM      *BLANKS       PVL06                                        CGL198
+     C                   PARM      *BLANKS       POP07                                        CGL198
+     C                   PARM      *BLANKS       PVL07                                        CGL198
+     C                   PARM      *BLANKS       POP08                                        CGL198
+     C                   PARM      *BLANKS       PVL08                                        CGL198
+     C                   PARM      *BLANKS       POP09                                        CGL198
+     C                   PARM      *BLANKS       PVL09                                        CGL198
+     C                   PARM      *BLANKS       POP10                                        CGL198
+     C                   PARM      *BLANKS       PVL10                                        CGL198
+                                                                                              CGL198
+     C                   EVAL      DfltAccntName = *BLANKS                                    CGL198
+     C                   IF        @RTCD = *BLANKS                                            CGL198
+     C                   MOVEL     PVL01         DfltAccntName                                CGL198
+     C                   ENDIF                                                                CGL198
+
                                                                                               CSC011
       ** Check if CSC011 is installed                                                         CSC011
                                                                                               CSC011

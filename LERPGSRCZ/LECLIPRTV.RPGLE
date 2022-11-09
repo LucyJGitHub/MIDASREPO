@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD059046           Date 20Oct22               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 260408             Date 06Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -79,6 +80,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to skip checking  *
+      *             of Auto Loan allocate if loan is from 24X7.       *
+      *             Applied for MD060544.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  260408 - Non-syndicated loans with attached part sold are    *
@@ -426,6 +431,7 @@
       *                                                                                       CLE134
      D CLE134          S              1A   INZ('N')                                           CLE134
      D DSPDSts         S             10A   INZ                                                CLE134
+     D CAP774          S              1A   INZ('N')                                         MD059046
       *                                                                                       CLE134
       ** Key fields for CLE134 amendments                                                     CLE134
       *                                                                                       CLE134
@@ -1020,6 +1026,10 @@
                                                                                               CSC024
      C                   MOVE      *BLANKS       WFOTRID           8                        MD032052
      C                   MOVEL     FOTRID        WFOTRID                                    MD032052
+     C     CAP774        IFEQ      'Y'                                                      MD059046
+     C     APSRCSYS      ANDEQ     'MIDASCOB'                                               MD059046
+     C     WFOTRID       ANDNE     'LE000473'                                               MD059046
+     C                   ELSE                                                               MD059046
      C     CLE134        IFEQ      'N'                                                      MD031225
      C     CLE134        OREQ      'Y'                                                      MD031225
      C     MPHAS         ANDNE     'C'                                                      MD031225
@@ -1031,6 +1041,7 @@
      C                   GOTO      EVALAI
      C                   ENDIF                                                              MD031225
      C                   ENDIF                                                                CSC024
+     C                   ENDIF                                                              MD059046
                                                                                               CSC024
       ** Check Loan Reference Duplicate                                                       CSC024
      C                   MOVE      DDLNRF        K@LNRF                                       CSC024
@@ -1686,6 +1697,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV            1                        AR804863
+     C                   PARM                    APSRCSYS          8                        MD059046
      C/COPY WNCPYSRC,LECLIPTC01
       *
       ***  Initialise program name
@@ -2242,6 +2254,19 @@
      C                   IN        MPHAS                                                    MD031225
      C                   UNLOCK    MPHAS                                                    MD031225
      C                   ENDIF                                                                CLE134
+      *                                                                                     MD059046
+      ** Determine if CAP774 is switched on                                                 MD059046
+     C                   EVAL      CAP774 = 'N'                                             MD059046
+     C                   CALLB     'AOSARDR0'                                               MD059046
+     C                   PARM      *BLANKS       @RTCD                                      MD059046
+     C                   PARM      '*VERIFY'     @OPTN                                      MD059046
+     C                   PARM      'CAP774'      @SARD                                      MD059046
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059046
+                                                                                            MD059046
+     C                   IF        PRTCD = *BLANKS                                          MD059046
+     C                   EVAL      CAP774 = 'Y'                                             MD059046
+     C                   ENDIF                                                              MD059046
+                                                                                            MD059046
       *
       ***  Get ZMUSER to access default branch.
       *

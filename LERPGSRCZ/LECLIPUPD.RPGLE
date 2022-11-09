@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058476           Date 23Jul21               *
-      *  Prev Amend No. 207964             Date 23Aug02               *
+      *  Last Amend No. MD059046           Date 20Oct22               *
+      *  Prev Amend No. MD058476           Date 23Jul21               *
+      *                 207964             Date 23Aug02               *
       *                 MD031292           Date 06Nov19               *
       *                 MD025836           Date 06Nov19               *
       *                 MD055714           Date 06May20               *
@@ -165,6 +166,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to skip checking  *
+      *             of Auto Loan allocate if loan is from 24X7.       *
+      *             Applied for MD060544.                             *
       *  MD058476 - LE 24x7 API - Online Accounts movements not       *
       *             generated (CAP774)                                *
       *  207964 - Incorrect exposure if loan is in base currency. Do  *
@@ -1634,6 +1639,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
+     C                   PARM      *BLANK        APSRCSYS                                   MD059046
      C/COPY WNCPYSRC,LECLIPPC04
       *
       ***  Error if Timestamp is not the same (record has been changed

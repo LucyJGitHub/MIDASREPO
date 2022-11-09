@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058526           Date 05Aug21               *
-      *  Prev Amend No. FVT101             Date 07Oct16               *
+      *  Last Amend No. MD059519           Date 28Oct22               *
+      *  Prev Amend No. MD058526           Date 05Aug21               *
+      *                 FVT101             Date 07Oct16               *
       *                 MD058285           Date 22Jun21               *
       *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
@@ -59,8 +60,9 @@
       *                                                               *
       *------------------------------------------------	---------------*
       *                                                               *
+      *  MD059519- Add missing code -  copysource FTV101007           *
       *  MD05826 - MT940 with incorrect Field 61 after SP23 Upgrade   *
-      *            (Recompile)                                        * 
+      *            (Recompile)                                        *
       *  FVT101  - Field 61 Enhancement on SWIFT Statement Messages   *
       *          - Added hooks:                                       *
       *             WNCPYSRC,FVT101004                                *
@@ -69,7 +71,7 @@
       *             WNCPYSRC,FVT101007                                *
       *             WNCPYSRC,FVT101008                                *
       *             WNCPYSRC,FVT101009                                *
-      *             WNCPYSRC,FVT101010                                *    
+      *             WNCPYSRC,FVT101010                                *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
       *           (Recompile)                                         *
@@ -701,6 +703,7 @@
      C                   Eval      MGSFD7 = WConvFld                                          CMG008
      C                   Endif                                                                CMG008
                                                                                               CMG008
+     C/COPY WNCPYSRC,FVT101007                                                              MD059519
       *    --------      -----
      C     @SubFld7      ENDSR
 

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD058517           Date 17Oct22               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055733           Date 03Jul20               *
@@ -104,6 +105,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058517 - CLE172 LIBOR Lending - Change Control CC3.1       *
+      *             Interest Projection Using Known Rates             *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  MD058815 - Dealing interest Calculation type 6 have different*
@@ -256,6 +260,7 @@
      F            CLOANHHF                          KIGNORE
      F**********  CLOANCKF                          KIGNORE               CLE006
      F            CLOANZ1F                          KIGNORE
+     FSDARRTTDIF  E                    DISK                                                 MD058517
      F***LEHISTL4IF  E           K        DISK                     135620 154455
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE0426FFP1                                           S01408
@@ -275,6 +280,7 @@
      F*   23 - FACO is blank                                          *   CLE006
      F*   24 - SPI is blank                                           *   CLE006
      F*   26 - Output Beneficiary Bank details                        *   CLE006
+     F*   29 - When CLE172 LIBOR Lending is enabled                   *                     MD058517
      F*       31         Write maturity narrative                      ¦* 091679
      F*       32         Write interest date narrative                 ¦* 091679
      F*   37 - Processing type is 66                                  *   CLE006
@@ -289,6 +295,7 @@
      F*   57 -                 14                                     *   CLE006
      F*   60 - work                                                   *   CLE006
      F*   61 - work                                                   *   CLE006
+     F*   62 - READ to SDARRTTD File                                  *                     MD058517
      F*       80         BIT5 of CNFI on                               ¦*   0085
      F*       81         BIT7 of CNFI on                               ¦*   0085
      F*       85         BIT6 of CNFI on - DUPLICATE                   ¦*   0085
@@ -2965,6 +2972,34 @@
      C                     EXSR AUDIT                                     CLE033
      C                     ENDIF                                          CLE033
      C                     ENDIF                                          CLE033
+      *                                                                                     MD058517
+      ** Check if CLE172 is Installed                                                       MD058517
+      *                                                                                     MD058517
+     C                     CALL 'AOSARDR0'                                                  MD058517
+     C                     PARM *BLANKS   @RTCD                                             MD058517
+     C                     PARM '*KEY   ' @OPTN                                             MD058517
+     C                     PARM 'CLE172'  PSARD                                             MD058517
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD058517
+      *                                                                                     MD058517
+      ** Error Processing                                                                   MD058517
+      *                                                                                     MD058517
+     C           @RTCD     IFEQ *BLANKS                                                     MD058517
+     C                     MOVE '1'       *IN29                                             MD058517
+      ** Retrieve pre-defined text                                                          MD058517
+     C                     READ SDARRTTD                 62                                 MD058517
+     C                     ELSE                                                             MD058517
+     C                     MOVE '0'       *IN29                                             MD058517
+     C           @RTCD     IFNE '*NRF    '                                                  MD058517
+     C           *LOCK     IN   LDA                                                         MD058517
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD058517
+     C                     Z-ADD34        DBASE                                             MD058517
+     C                     MOVEL'CLE172'  DBKEY                                             MD058517
+     C                     OUT  LDA                                                         MD058517
+      *                                                                                     MD058517
+     C                     EXSR *PSSR                                                       MD058517
+     C                     EXSR AUDIT                                                       MD058517
+     C                     ENDIF                                                            MD058517
+     C                     ENDIF                                                            MD058517
       *****************************************************************            MD035545 MD047993
       ***Access*general*ledger*details.********************************            MD035545 MD047993
       *****************************************************************            MD035545 MD047993

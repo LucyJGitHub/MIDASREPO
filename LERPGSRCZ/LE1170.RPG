@@ -14,8 +14,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058517           Date 17Oct22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 252771             Date 04Sep19               *
       *                 MD053295           Date 13Apr19               *
@@ -98,6 +99,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058517 - CLE172 LIBOR Lending - Change Control CC3.1       *
+      *             Interest Projection Using Known Rates             *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -220,6 +224,7 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      F            CLOANHHF                          KIGNORE
      F*********** CLOANCKF                          KIGNORE               088807
      F            CLOANZ1F                          KIGNORE
+     FSDARRTTDIF  E                    DISK                                                 MD058517
      F***LEHISTL4IF  E           K        DISK                     135620 154455
      F***LE1170P1O***E                    PRINTER      KINFDS SPOOL  UC   128104
      FLE1170P1O   E             01     PRINTER      KINFDS SPOOL      UC  128104
@@ -239,6 +244,7 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      F*   24 - SPI is blank                                           *   088807
      F*   25 - Display branch name on report                          *
      F*   26 - Output Beneficiary Bank details                        *   088807
+     F*   29 - When CLE172 LIBOR Lending is enabled                   *                     MD058517
      F*   34 - Currency array lookup                                  *                       CLE031
      F*   37 - Processing type is 66                                  *   088807
      F*   38 - Processing type is 67                                  *   088807
@@ -256,6 +262,7 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      F*   57 -                 14                                     *   088807
      F*   60 - work                                                   *   088807
      F*   61 - work                                                   *   088807
+     F*   62 - READ to SDARRTTD File                                  *                     MD058517
      F*   70 - Error indicator for WRITELE1170D1                      *   107431
      F*   80 - BIT5 of CNFI on                                        *
      F*   81 - BIT7 of CNFI on                                        *
@@ -973,6 +980,30 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      C                     EXSR AUDIT                                                         CLE036
      C                     ENDIF                                                              CLE036
      C                     ENDIF                                                              CLE036
+      *                                                                                     MD058517
+      ** Check if CLE172 is Installed                                                       MD058517
+      *                                                                                     MD058517
+     C                     CALL 'AOSARDR0'                                                  MD058517
+     C                     PARM *BLANKS   PRTCD                                             MD058517
+     C                     PARM '*KEY   ' POPTN                                             MD058517
+     C                     PARM 'CLE172'  PSARD                                             MD058517
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD058517
+     C           PRTCD     IFEQ *BLANKS                                                     MD058517
+     C                     MOVE '1'       *IN29                                             MD058517
+      ** Retrieve pre-defined text                                                          MD058517
+     C                     READ SDARRTTD                 62                                 MD058517
+     C                     ELSE                                                             MD058517
+     C                     MOVE '0'       *IN29                                             MD058517
+     C           PRTCD     IFNE '*NRF    '                                                  MD058517
+     C           *LOCK     IN   LDA                                                         MD058517
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD058517
+     C                     Z-ADD22        DBASE                                             MD058517
+     C                     MOVEL'CLE172'  DBKEY                                             MD058517
+     C                     OUT  LDA                                                         MD058517
+     C                     EXSR *PSSR                                                       MD058517
+     C                     EXSR AUDIT                                                       MD058517
+     C                     ENDIF                                                            MD058517
+     C                     ENDIF                                                            MD058517
       *                                                                                     MD035545
       ** Retrieve system value setting.                                                     MD035545
       *                                                                                     MD035545

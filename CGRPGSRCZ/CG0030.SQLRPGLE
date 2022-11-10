@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD060007           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060715           Date 10Nov22               *
+      *  Prev Amend No. MD060007           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060715 - CG0030 does not compile                           *
       *  MD060007 - Deliverable Data Split for Correspondence Mgr 3   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -177,7 +179,8 @@
       *
       * Data to be passed to window processing
       *
-     I/COPY QWINDSRC,CG0030WDTA
+     I*COPY*QWINDSRC,CG0030WDTA                                                             MD060715
+     I/COPY QWINDSRC,CG0030WDTE                                                             MD060715
       /EJECT
       *****************************************************************
       * Entry parameters

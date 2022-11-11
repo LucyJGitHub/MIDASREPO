@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD060721           Date 10Nov22               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL146             Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060721 - Module does not compile                           *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
@@ -106,7 +108,7 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
-
+                                   
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
@@ -150,7 +152,7 @@
       ** Error Indicators Array
       *
      D IN40_TO_70      S              1    DIM(31)
-     D/COPY OFCPYSRCZ,CGL146_001                                                              CGL146
+     D*COPY OFCPYSRCZ,CGL146_001                                                     CGL146 MD060721
 
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives

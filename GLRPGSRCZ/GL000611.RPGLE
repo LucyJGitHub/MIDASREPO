@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD048482A          Date 20Jun22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD060676           Date 09Nov22               *
+      *  Prev Amend No. MD048482A          Date 20Jun22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 CGL185             Date 13Mar17               *
       *                 MD046248           Date 27Oct17               *
@@ -29,6 +30,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060676 - Redesign HELABA fix MD-48482 ; used HISTSL0       *
+      *             instead of HISTSL5 and DLDLDCL1 instead of        *
+      *             DLDEALLF to prevent impact on performance of      *
+      *             Lending components                                *
       *  MD048482A - FATCA Account closed flag is wrong               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -85,12 +90,15 @@
      F                                     PREFIX(W_)
                                                                                            MD048482A
       ** Midas DL Deals File                                                               MD048482A
-     FDLDEALLF  IF   E           K DISK    INFSR(*PSSR)                                    MD048482A
+     F***DLDEALLF  IF   E           K DISK    INFSR(*PSSR)                        MD048482A MD060676
+     FDLDLDCL1  IF   E           K DISK    INFSR(*PSSR)                                     MD060676
      F                                     RENAME(DEALSDCF:DEALSDCF1)                      MD048482A
      F                                     PREFIX(V_)                                      MD048482A
                                                                                            MD048482A
       ** Midas LE History Amount Details File                                              MD048482A
-     FHISTSL5   IF   E           K DISK    INFSR(*PSSR)                                    MD048482A
+     F***HISTSL5   IF   E           K DISK    INFSR(*PSSR)                        MD048482A MD060676
+     FHISTSL0   IF   E           K DISK    INFSR(*PSSR)                                     MD060676
+     F                                     IGNORE(HISTSHMF:HISTSHQF)                        MD060676
      F                                     PREFIX(H_)                                      MD048482A
                                                                                            MD048482A
       ** Midas GL FATCA Closed Accounts Balances Detail                                    MD048482A
@@ -895,12 +903,17 @@
 
      C                   ENDDO
                                                                                            MD048482A
-     C     *LOVAL        SETLL     DLDEALLF                                                MD048482A
-     C                   READ      DLDEALLF                                                MD048482A
+     C******LOVAL        SETLL     DLDEALLF                                       MD048482A MD060676
+     C**********         READ      DLDEALLF                                       MD048482A MD060676
                                                                                            MD048482A
-     C                   DOW       NOT %EOF(DLDEALLF)                                      MD048482A
+     C**********         DOW       NOT %EOF(DLDEALLF)                             MD048482A MD060676
+     C     *LOVAL        SETLL     DLDLDCL1                                                 MD060676
+     C                   READ      DLDLDCL1                                                 MD060676
+                                                                                            MD060676
+     C                   DOW       NOT %EOF(DLDLDCL1)                                       MD060676
      C                   IF        V_MDAT = BJRDNB                                         MD048482A
      C                             AND V_PCPL = 0                                          MD048482A
+     C                             AND V_RECI = 'M'                                         MD060676
      C                   MOVE      V_CNUM        Wcust                                     MD048482A
      C                   EVAL      Wdtyp = V_DTYP                                          MD048482A
      C                   EVAL      Wdlst = V_DLST                                          MD048482A
@@ -956,7 +969,8 @@
      C                   ENDIF                                                             MD048482A
      C                   ENDIF                                                             MD048482A
      C                                                                                     MD048482A
-     C                   READ      DLDEALLF                                                MD048482A
+     C**********         READ      DLDEALLF                                       MD048482A MD060676
+     C                   READ      DLDLDCL1                                                 MD060676
      C                   ENDDO                                                             MD048482A
      C                   ENDSR
 
@@ -1126,15 +1140,24 @@
 
      C                   ENDDO
                                                                                            MD048482A
-     C     *LOVAL        SETLL     HISTSL5                                                 MD048482A
-     C                   READ      HISTSL5                                                 MD048482A
+     C******LOVAL        SETLL     HISTSL5                                        MD048482A MD060676
+     C**********         READ      HISTSL5                                        MD048482A MD060676
                                                                                            MD048482A
-     C                   DOW       NOT %EOF(HISTSL5)                                       MD048482A
+     C**********         DOW       NOT %EOF(HISTSL5)                              MD048482A MD060676
+                                                                                            MD060676
+     C     *LOVAL        SETLL     HISTSL0                                                  MD060676
+     C                   READ      HISTSL0                                                  MD060676
+                                                                                            MD060676
+     C                   DOW       NOT %EOF(HISTSL0)                                        MD060676
                                                                                            MD048482A
      C                   IF        H_AMTP = 'MA'                                           MD048482A
      C                             AND H_RECI = 'M'                                        MD048482A
      C                             AND H_PRAM = 0                                          MD048482A
      C                             AND H_LCD = BJRDNB                                      MD048482A
+     C                   IF        H_PTYP = 66                                              MD060676
+     C                             OR H_PTYP = 67                                           MD060676
+     C                             OR H_PTYP = 69                                           MD060676
+     C                             OR H_PTYP = 72                                           MD060676
      C                   MOVE      H_CNUM        Wcust                                     MD048482A
      C                   EVAL      CACBCNUM = H_CNUM                                       MD048482A
      C                   EVAL      CACBCURR = H_CCY                                        MD048482A
@@ -1176,9 +1199,11 @@
      C                   ENDDO                                                             MD048482A
                                                                                            MD048482A
      C                   ENDIF                                                             MD048482A
+     C                   ENDIF                                                              MD060676
      C                   ENDIF                                                             MD048482A
                                                                                            MD048482A
-     C                   READ      HISTSL5                                                 MD048482A
+     C**********         READ      HISTSL5                                        MD048482A MD060676
+     C                   READ      HISTSL0                                                  MD060676
      C                   ENDDO                                                             MD048482A
 
      C                   ENDSR
@@ -1344,15 +1369,24 @@
 
      C                   ENDDO
                                                                                            MD048482A
-     C     *LOVAL        SETLL     HISTSL5                                                 MD048482A
-     C                   READ      HISTSL5                                                 MD048482A
+     C******LOVAL        SETLL     HISTSL5                                        MD048482A MD060676
+     C**********         READ      HISTSL5                                        MD048482A MD060676
                                                                                            MD048482A
-     C                   DOW       NOT %EOF(HISTSL5)                                       MD048482A
+     C**********         DOW       NOT %EOF(HISTSL5)                              MD048482A MD060676
+                                                                                            MD060676
+     C     *LOVAL        SETLL     HISTSL0                                                  MD060676
+     C                   READ      HISTSL0                                                  MD060676
+                                                                                            MD060676
+     C                   DOW       NOT %EOF(HISTSL0)                                        MD060676
                                                                                            MD048482A
      C                   IF        H_AMTP = 'MA'                                           MD048482A
      C                             AND H_RECI = 'M'                                        MD048482A
      C                             AND H_PRAM = 0                                          MD048482A
      C                             AND H_LCD = BJRDNB                                      MD048482A
+     C                   IF        H_PTYP = 66                                              MD060676
+     C                             OR H_PTYP = 67                                           MD060676
+     C                             OR H_PTYP = 69                                           MD060676
+     C                             OR H_PTYP = 72                                           MD060676
      C                   MOVE      H_CNUM        Wcust                                     MD048482A
      C                   EVAL      CACBCNUM = H_CNUM                                       MD048482A
      C                   EVAL      CACBCURR = H_CCY                                        MD048482A
@@ -1394,9 +1428,11 @@
      C                   ENDDO                                                             MD048482A
                                                                                            MD048482A
      C                   ENDIF                                                             MD048482A
+     C                   ENDIF                                                              MD060676
      C                   ENDIF                                                             MD048482A
                                                                                            MD048482A
-     C                   READ      HISTSL5                                                 MD048482A
+     C**********         READ      HISTSL5                                        MD048482A MD060676
+     C                   READ      HISTSL0                                                  MD060676
      C                   ENDDO                                                             MD048482A
                                                                                            MD048482A
      C                   ENDSR

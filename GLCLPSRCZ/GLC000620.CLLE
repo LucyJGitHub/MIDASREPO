@@ -9,12 +9,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD055129           Date 06Mar20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060718           Date 09Nov22              */
+/*       Prev Amend No. MD055129           Date 06Mar20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CGL154  *CREATE    Date 13Oct14              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060718 - Error in COB component GLC000620 due to non-     */
+/*                  existence of data area ZMUSER                    */
+/*                - applied for MD-60676                             */
 /*       MD055129 - Component GLC000620 fails when COB is run        */
 /*                  via AutoCOB.                                     */
 /*       MD046248 - Finastra Rebranding                              */
@@ -41,6 +45,7 @@
              DCL        VAR(&WYRNO1) TYPE(*CHAR) LEN(2) VALUE('  ')
 
 /**********  DCLF       FILE(CBUSERPD)   */                          /*MD055129*/
+             DCLF       FILE(CBUSERPD)                                                  /*MD060718*/
 
 /* Monitor for any errors and send appropriate message to MOPERQ */
 
@@ -61,6 +66,18 @@
 /**********  MONMSG     MSGID(CPF1023) */                            /*MD055129*/
 /**********  RCVF       */                                           /*MD055129*/
 /**********  CHGDTAARA  DTAARA(ZMUSER (1 10)) VALUE(&USUSER) */      /*MD055129*/
+                                                                                        /*MD060718*/
+             CRTDTAARA  DTAARA(QTEMP/ZMUSER) TYPE(*CHAR) LEN(17)                        /*MD060718*/
+             MONMSG     MSGID(CPF1023)                                                  /*MD060718*/
+             RCVF                                                                       /*MD060718*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                         /*MD060718*/
+                 RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                         /*MD060718*/
+                 CHGVAR     VAR(&USUSER) VALUE(&SYSID *CAT 'OWNER  ')                   /*MD060718*/
+                 GOTO       CMDLBL(CONTINUE)                                            /*MD060718*/
+             ENDDO                                                                      /*MD060718*/
+ CONTINUE:                                                                              /*MD060718*/
+             CHGDTAARA  DTAARA(ZMUSER (1 10)) VALUE(&USUSER)                            /*MD060718*/
+                                                                                        /*MD060718*/
 /* Retrieve system prefix and setup library to be use for */
 /* backup and recovery */
 

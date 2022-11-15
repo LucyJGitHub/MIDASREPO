@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD045831           Date 02Jun17              */
+/*       Last Amend No. MD055662           Date 07Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD045831           Date 02Jun17              */
 /*                      CCB023             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -26,6 +27,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055662 - Error in Transaction Journal report for reversal */
+/*                  transaction, database error 002 was encountered  */
+/*                  as transaction was not found in TTRANL1.         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045831 - Report shows all teller transaction even though  */
 /*                  single teller is specified in selection criteria */
@@ -123,7 +127,7 @@
                           &ATBID *BCAT ' WHERE' *BCAT &QRYSLT *BCAT +
                           ' ORDER BY TBRI, TBID, TBTN')                                   /*CCB023*/
                                                                                           /*CCB023*/
-                OVRDBF  FILE(TTRANL1) TOFILE(TTRANX) SHARE(*NO)                           /*CCB023*/
+/**********     OVRDBF  FILE(TTRANL1) TOFILE(TTRANX) SHARE(*NO)                  /*CCB023 MD055662*/
                 OVRDBF  FILE(TTRANL0) TOFILE(TTRANX) SHARE(*NO)                           /*CCB023*/
                                                                                           /*CCB023*/
 /*********** ENDDO  ***/                                              /*098181*/

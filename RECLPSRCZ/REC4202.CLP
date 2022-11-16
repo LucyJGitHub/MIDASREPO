@@ -29,7 +29,8 @@
 /*                                                                   */
 /*       MD055662 - Error in Transaction Journal report for reversal */
 /*                  transaction, database error 002 was encountered  */
-/*                  as transaction was not found in TTRANL1.         */
+/*                  as transaction was not found in TTRANL1. Removed */
+/*                  OVRDBF for TTRANL1.                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045831 - Report shows all teller transaction even though  */
 /*                  single teller is specified in selection criteria */

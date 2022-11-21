@@ -12,7 +12,7 @@
       *                                                               *
       *  (c) Finastra International Systems Ltd. 2022                 *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
+      *  Last Amend No. MD058517  *CREATE  Date 17Oct22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -26,10 +26,6 @@
      F                                     IGNORE(CLOANZ1F)
      F                                     USROPN
      FSDHSFWL0  IF   E           K DISK    INFSR(*PSSR)
-     F                                     IGNORE(SDHSDRT0)
-     F                                     USROPN
-     FLEHISTL3  IF   E           K DISK    INFSR(*PSSR)
-     F                                     PREFIX(Q_)
      F                                     USROPN
      FLEFWBRPD  O    E             DISK    INFSR(*PSSR)
      F                                     PREFIX(K_)
@@ -54,13 +50,16 @@
      D WRun            S              1
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-     D SDGELR        E DS                  EXTNAME(SDGELRPD)                                MD058517
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)
       *
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
-     D EventCtrlDate   S              5S 0                                                  MD058517
-     D PRTCD           S              7                                                     MD058517
-     D POPTN           S              7                                                     MD058517
+     D EventCtrlDate   S              5S 0
+     D eventDate1      S              5S 0
+     D eventDate2      S              5S 0
+     D PRTCD           S              7
+     D POPTN           S              7
+     D Ix              S              3S 0
       *
      ISDFWDRT0
      I              FTRNID                      CTRNID
@@ -84,31 +83,19 @@
      C     CALM          ANDNE     'MANL'
      C     MDAT          ANDGE     BJDNWD
 
-     C     NIDT          IFNE      0
-     C                   Z-ADD     NIDT          @@NIDT
-     C                   ELSE
-     C     REPT          IFEQ      3
-     C     NRPD          ANDNE     0
-     C                   Z-ADD     NRPD          @@NIDT
-     C                   ELSE
-     C                   Z-ADD     MDAT          @@NIDT
-     C                   ENDIF
-     C                   ENDIF
 
-     C     KHSFW         SETGT     SDHSFWL0
-     C                   READP     SDHSFWL0                               41
+     C     KHSFW         SETLL     SDHSFWL0
+     C     KHSFW         READE     SDHSFWL0                               41
+     C                   EVAL      Ix = 0
 
      C     *IN41         DOWEQ     *OFF
      C     LNRF          ANDEQ     CTRNID
 
-     C                   Z-ADD     CINPDT        KHISD
 
-     C     KHISQ         CHAIN     LEHISTL3                           42
-     C     *IN42         IFEQ      *ON
      C                   CLEAR                   LEFWBRD0
      C                   MOVE      'D'           K_RECI
      C                   MOVE      LNRF          K_LNRF
-     C                   Z-ADD     KHISD         K_VDAT
+     C                   Z-ADD     CINPDT        K_VDAT
      C                   MOVE      MRIN          K_MRIN
      C                   MOVE      LTYP          K_LTYP
      C                   MOVE      SUTP          K_SUTP
@@ -121,19 +108,19 @@
 
      C                   SELECT
      C     Calm          WHENEQ    'NCCR'
-     C     CDCMRT        ADD       BADJ          K_BRTE
-     C                   Z-ADD     1             K_LASN
+     C     CDCMRT        ADD(H)    BADJ          K_BRTE
+     C                   Z-ADD     1             Ix
      C     Calm          WHENEQ    'CCR'
-     C     CAVCRT        ADD       BADJ          K_BRTE
+     C     CAVCRT        ADD(H)    BADJ          K_BRTE
      C                   Z-ADD     FINPSD        K_VDAT
-     C                   EVAL      K_LASN += 1
+     C                   EVAL      Ix += 1
      C     Calm          WHENEQ    'SARR'
-     C     CRTEAP        ADD       BADJ          K_BRTE
-     C                   Z-ADD     1             K_LASN
+     C     CRTEAP        ADD(H)    BADJ          K_BRTE
+     C                   Z-ADD     1             Ix
      C     Calm          WHENEQ    'SAVG'
-     C     CSMPAV        ADD       BADJ          K_BRTE
+     C     CSMPAV        ADD(H)    BADJ          K_BRTE
      C                   Z-ADD     FINPSD        K_VDAT
-     C                   EVAL      K_LASN += 1
+     C                   EVAL      Ix += 1
      C                   ENDSL
 
      C                   MOVE      'A'           K_LLAG
@@ -156,11 +143,12 @@
      C                   TIME                    K_TMST
      C                   Z-ADD     K_BRTE        K_BASR
      C                   Z-ADD     CINPDT        K_LSMD
-     C                   Z-ADD     EventCtrlDate K_XAVD
+     C                   Z-ADD     Ix            K_LASN
+     C                   Z-ADD     eventDate1    K_XAVD
+     C                   Z-ADD     eventDate2    K_TNLU
      C                   WRITE     LEFWBRD0
-     C                   ENDIF
 
-     C                   READP     SDHSFWL0                               41
+     C     KHSFW         READE     SDHSFWL0                               41
      C                   ENDDO
 
      C                   ENDIF
@@ -170,7 +158,6 @@
       *
      C                   CLOSE     CLOANC
      C                   CLOSE     SDHSFWL0
-     C                   CLOSE     LEHISTL3
 
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -188,7 +175,6 @@
       *
      C     *DTAARA       DEFINE                  LDA
 
-     C     *LIKE         DEFINE    NIDT          @@NIDT
       *
       ** Access Bank details via access program
       *  (database error handling done in access program)
@@ -206,40 +192,34 @@
 
      C     KHSFW         KLIST
      C                   KFLD                    LNRF
-     C                   KFLD                    @@NIDT
 
-     C     KHISQ         KLIST
-     C                   KFLD                    LNRF
-     C                   KFLD                    KHisd             5 0
-      ** Access General Ledger details                                                      MD058517
-     C                   CALL      'AOGELRR1'                                               MD058517
-     C                   PARM      *BLANKS       PRtCd                                      MD058517
-     C                   PARM      '*FIRST '     POptn                                      MD058517
-     C     SDGELR        PARM      SDGELR        DSSDY                                      MD058517
-                                                                                            MD058517
-     C                   IF        PRtCd <> *BLANKS                                         MD058517
-     C                   EVAL      DBFILE = 'SDGELRPD'                                      MD058517
-     C                   EVAL      DBKEY = POptn                                            MD058517
-     C                   EVAL      DBASE  = 002                                             MD058517
-     C                   EXSR      *PSSR                                                    MD058517
-     C                   ENDIF                                                              MD058517
-      *                                                                                     MD058517
-      ** Determine the Event Control Date                                                   MD058517
-      *                                                                                     MD058517
-     C                   EVAL      EventCtrlDate = BJDNWD - 1                               MD058517
-     C                   IF        BKAPDT < EventCtrlDate                                   MD058517
-     C                   EVAL      EventCtrlDate = BKAPDT                                   MD058517
-     C                   ENDIF                                                              MD058517
-                                                                                            MD058517
-     C                   IF        BKANWD = '0' or BKANWD = '1'                             MD058517
-     C                   EVAL      EventCtrlDate = BJDNWD - 1                               MD058517
-     C                   ENDIF                                                              MD058517
-     C                                                                                      MD058517
+      ** Access General Ledger details
+     C                   CALL      'AOGELRR1'
+     C                   PARM      *BLANKS       PRtCd
+     C                   PARM      '*FIRST '     POptn
+     C     SDGELR        PARM      SDGELR        DSSDY
+
+     C                   IF        PRtCd <> *BLANKS
+     C                   EVAL      DBFILE = 'SDGELRPD'
+     C                   EVAL      DBKEY = POptn
+     C                   EVAL      DBASE  = 002
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** Determine the Event Control Date
+      *
+     C                   EVAL      EventCtrlDate = BJDNWD - 1
+     C                   EVAL      eventDate1 = EventCtrlDate
+     C                   EVAL      eventDate2 = EventCtrlDate
+     C                   IF        BKAPDT < EventCtrlDate
+     C                   EVAL      EventCtrlDate = BKAPDT
+     C                   EVAL      eventDate2 = EventCtrlDate
+     C                   ENDIF
+
 
       *
      C                   OPEN      CLOANC
      C                   OPEN      SDHSFWL0
-     C                   OPEN      LEHISTL3
       *
      C                   ENDSR
       *****************************************************************
@@ -265,7 +245,6 @@
       *
      C                   CLOSE     CLOANC
      C                   CLOSE     SDHSFWL0
-     C                   CLOSE     LEHISTL3
 
      C                   RETURN
 

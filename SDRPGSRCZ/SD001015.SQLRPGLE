@@ -26,7 +26,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
-      *             Interest Projection Using Known Rates             *
+      *             Interest Projection Using Known Rates.            *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CDL102 - LIBOR Deregulation - Dealing                        *

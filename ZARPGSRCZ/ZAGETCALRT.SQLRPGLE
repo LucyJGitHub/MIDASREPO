@@ -169,6 +169,8 @@
       ** Rates Known Indicator
      D  controlDate                   5a                                                    MD058182
       ** Event Control Date                                                                 MD058182
+     D  evntCtrlDate                  5a                                                    MD058517
+      ** Event Control Date                                                                 MD058517
      D  returnCD                     20a
       ** Return Code
 
@@ -221,6 +223,8 @@
       ** Rates Known Indicator
      D  controlDate                   5a                                                    MD058182
       ** Event Control Date                                                                 MD058182
+     D  evntCtrlDate                  5a                                                    MD058517
+      ** Event Control Date                                                                 MD058517
      D  returnCD                     20a
       ** Return Code
 
@@ -1167,7 +1171,7 @@
                                                                                           //MD058182
        // Start of MD058517
 
-               if result.list(i).intPDMidas >= %dec(controlDate:5:0);
+               if result.list(i).intPDMidas >= %dec(evntCtrlDate:5:0);
 
                    if (calcMethod = 'NCCR' or calcMethod  = 'SARR')
                    and  result.list(i).intPDMidas > transactDate;

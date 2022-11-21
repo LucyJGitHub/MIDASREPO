@@ -55,6 +55,8 @@
 
              DCLF       FILE(SDCSTSTD) OPNID(STAT)
              DCLF       FILE(SDBANKPD) OPNID(BANK)
+             DCL        VAR(&REPLY)  TYPE(*CHAR) LEN(3) /*CLPDEBUG*/
+             DCL        VAR(&CSEQX ) TYPE(*CHAR) LEN(5) /*CLPDEBUG*/
 
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           2020')
@@ -77,7 +79,11 @@
 
 /** Retrieve Midas phase */
 
-             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)         
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
+
+             SNDUSRMSG  MSG('DEBUG')
+                          /*CLPDEBUG*/
+
 
 /** If the program is called from the Menu or Scheduler */                              /*MD058331*/
 /** and system is in COB, end the job processing */                                     /*MD058331*/
@@ -236,7 +242,6 @@ CONTINUE:
              CLRPFM     FILE(DLBCAMPD)                                                    /*CDL102*/
              CLRPFM     FILE(SDBJEXPD)
              CLRPFM     FILE(SDFWDRTD)                                                  /*MD058517*/
-             CLRPFM     FILE(SDRTKNTD)                                                  /*MD058517*/
              CLRPFM     FILE(LEFWBRPD)                                                  /*MD058517*/
                                                              /*CDL102*/
                                                                                           /*CDL102*/
@@ -316,6 +321,11 @@ CONTINUE:
              ENDDO                                                                      /*MD060020*/
              ENDDO                                                                      /*MD060020*/
                                                                                         /*MD060020*/
+             SNDUSRMSG  MSG('TYPE (YES) TO CONTINUE  '  *BCAT ' WITH NO FAILURE ') +
+                          MSGRPY(&REPLY) /*CLPDEBUG*/
+             IF         COND(&REPLY *NE 'YES') THEN(DO) /*CLPDEBUG*/
+                CHGJOB     SWS(XXXXXX11) /*CLPDEBUG*/
+             ENDDO      /*CLPDEBUG*/
 /** If sucessful completion, update status file to Completed */
 
              CALL       PGM(SD000118) PARM('C')

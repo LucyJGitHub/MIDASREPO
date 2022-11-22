@@ -118,28 +118,28 @@
      C     SQLCODE       DOWEQ     0
 
       ** Check if an interest event created today exists in HISTSHP
-     C**********/EXEC SQL
-     C**********+ SELECT INTA, VDAT into :XINTA, :XVDAT
-     C**********+ from HISTSHP
-     C**********+ where AMTP = 'MA' and LNRF = :XLNRF and LCD = :BJRDNB
-     C**********+ or    AMTP = 'IN' and LNRF = :XLNRF and LCD = :BJRDNB
-     C**********+ or    AMTP = 'RE' and LNRF = :XLNRF and LCD = :BJRDNB and :XREPT <> 2
-     C**********/END-EXEC
-      **  If no interest if found, skip
-     C*****SQLCODE       IFEQ      100
-     C**********         else
-
-      ** Here below are the initial conditions for the extract...
-      ****Call extract program if one of the 3 conditions (a or b or c) is satisfied
-      **********
-     C**********/exec SQL
-     C**********+ select CINPDT, CINPSD, CINPED  into :XCINPDT, :XCINPSD, :XCINPED
-     C**********+ from SDHSDRTD
-     C**********+ where CMODID = 'LE' and CTRNID = :XLNRF
-     C**********+ and (CINPDT + CINPDY - 1 = CINPED or CINPDT = CINPED)
-     C**********+ ORDER BY CINPDT desc
-     C**********+ fetch first row only
-     C**********/end-exec
+     C**********/EXEC SQL                                                                   MD058517 
+     C**********+ SELECT INTA, VDAT into :XINTA, :XVDAT                                     MD058517
+     C**********+ from HISTSHP                                                              MD058517
+     C**********+ where AMTP = 'MA' and LNRF = :XLNRF and LCD = :BJRDNB                     MD058517
+     C**********+ or    AMTP = 'IN' and LNRF = :XLNRF and LCD = :BJRDNB                     MD058517
+     C**********+ or    AMTP = 'RE' and LNRF = :XLNRF and LCD = :BJRDNB and :XREPT <> 2     MD058517
+     C**********/END-EXEC                                                                   MD058517
+      **  If no interest if found, skip                                                     MD058517
+     C*****SQLCODE       IFEQ      100                                                      MD058517
+     C**********         else                                                               MD058517
+      ****************************************************************                      MD058517 
+      ** Here below are the initial conditions for the extract...                           MD058517
+      ****Call extract program if one of the 3 conditions (a or b or c) is satisfied        MD058517
+      **********                                                                            MD058517 
+     C**********/exec SQL                                                                   MD058517
+     C**********+ select CINPDT, CINPSD, CINPED  into :XCINPDT, :XCINPSD, :XCINPED          MD058517
+     C**********+ from SDHSDRTD                                                             MD058517
+     C**********+ where CMODID = 'LE' and CTRNID = :XLNRF                                   MD058517 
+     C**********+ and (CINPDT + CINPDY - 1 = CINPED or CINPDT = CINPED)                     MD058517
+     C**********+ ORDER BY CINPDT desc                                                      MD058517
+     C**********+ fetch first row only                                                      MD058517 
+     C**********/end-exec                                                                   MD058517
       **********
       ****a.*if*Additional Day Indicator = B and latest Interest Period Date = MDAT
      C**********         if        SQLCODE = 0
@@ -187,7 +187,7 @@
      C                   PARM      W0CMT         ##CMT             3
      C                   PARM      *BLANK        ##COPD            1
      C                   PARM                    XLNRF
-     C                   PARM                    XCINPSD
+     C**********         PARM                    XCINPSD                                    MD058517
      C                   PARM                    KCINTA                                     MD058517
 
       **  Error in called program.
@@ -204,7 +204,8 @@
 
      C/exec SQL                                                                             MD058517
      C+ update SDRTKNTD                                                                     MD058517
-     C+    set KCORMP  = 'Y', KSPLFP = 'Y'                                                  MD058517
+     C+    set KCORMP  = 'Y', KSPLFP = 'Y',                                                 MD058517
+     C+        KPINTA = KCINTA                                                              MD058517
      C+  where KTRNID = :XLNRF                                                              MD058517
      C/end-exec                                                                             MD058517
 

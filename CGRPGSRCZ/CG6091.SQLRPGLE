@@ -553,7 +553,7 @@
      C                   PARM                    W0CMT             3
      C                   PARM                    ##COPD            1
      C                   PARM                    XXLNRF            6
-     C                   PARM                    XCINPSD           5 0
+     C**********         PARM                    XCINPSD           5 0                      MD058517
      C                   PARM                    KCINTA           13 0                      MD058517
 
       **  Set up subroutine stack name.
@@ -1351,7 +1351,8 @@
      C+ where
      C+     CMODID = 'LE'
      C+ and CTRNID = :XXLNRF
-     C+ and CINPSD = :XCINPSD
+     C**********and CINPSD = :XCINPSD                                                       MD058517
+     C+ and CINFLG = 'Y'                                                                    MD058517
      C**********+ order by                                                                  MD058517
      C**********+     CINPDT asc                                                            MD058517
      C+ union all                                                                           MD058517
@@ -1375,19 +1376,14 @@
      C+ where T1.CINPDT = T2.FINPDT )                                                       MD058517
      C+ and FMODID = 'LE'                                                                   MD058517
      C+ and FTRNID = :XXLNRF                                                                MD058517
-     C+ and FINPSD = :XCINPSD                                                               MD058517
      C+ order by                                                                            MD058517
      C+ CINPDT asc                                                                          MD058517
      C/end-exec
-                                                                                            MD058517
-     C                   If        SQLCOD <> 100                                            MD058517
-     C                   eval      XCINPSD = DintStart                                      MD058517
-     C                   Endif                                                              MD058517
 
      C/exec SQL
      C+ open SDHS
      C/end-exec
-
+     
      C/exec SQL
      C+ fetch next
      C+ from SDHS

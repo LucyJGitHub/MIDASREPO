@@ -28,6 +28,7 @@
 /*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1      */
 /*                  Interest Projection Using Known Rates           */
 /*                  CC10 CLE172 Spool File Correspondence (MD059817)*/
+/*                  Added LEC000372 parameter.                      */
 /*       MD046248 - Finastra Rebranding                             */
 /*       AR1061796 - Encountered error in component LEC07 sequence  */
 /*                   10003, 10004 and 10005                         */
@@ -76,7 +77,7 @@
 /**/
      IF         COND(&PARM *EQ 'LEC0707' *OR &PARM *EQ 'LEC0708' +
                     *OR &PARM *EQ 'LEC0709' *OR &PARM *EQ +
-                    'LEC000372' *OR &PARM *EQ +                                         /*MD058517*/
+                    'LEC000372' *OR &PARM *EQ +
                     'LEC0710' *OR &PARM *EQ 'LEC0711') +
                     THEN(DO)                                          /*S01117*/
                     CALL       PGM(&PARM) PARM(&RSEQ &RLEV &RENT)     /*S01117*/

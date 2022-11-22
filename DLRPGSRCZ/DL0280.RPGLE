@@ -22,7 +22,7 @@
       /COPY DLCPYSRC,DL0280FHD4                                                            BUG27027A
       /COPY DLCPYSRC,DL0280FHD2
       /COPY WNCPYSRC,DL0280F001
-      ** Comment to commit source to git                                                    MD056644
+      ** Comment to commit source to git                                           MD056644 MD058575
       *****************************************************************
      FDLOPOSPD  O  A E             DISK
      FCLINT     IF   E           K DISK                                         S01383

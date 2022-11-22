@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. 231853             Date 15Nov22               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058285           Date 22Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -101,6 +102,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  231853 - Cannot delete repo when depot movement exists.      *
+      *           Applied for MD057975.                               *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -1230,6 +1233,8 @@
       **  Further check if Deal Number to be deleted is not linked to                         196380
       **  any 'Live' Depot Movement.  Otherwise, send error message.                          196380
       *                                                                                       196380
+     C     CSE006        IFEQ      'N'                                                        231853
+      *                                                                                       231853
      C     DDDDMR        CHAIN     DPTMVR                             88                      196380
       *                                                                                       196380
      C     *IN88         IFEQ      '0'                                                        196380
@@ -1241,6 +1246,8 @@
      C                   GOTO      EVALAD                                                     196380
      C                   ENDIF                                                                196380
       *                                                                                       196380
+     C                   ENDIF                                                                231853
+      *                                                                                       231853
      C                   END
 
       **  If there is no valid, undeleted record on MMDEALLL, it is an
@@ -1596,6 +1603,17 @@
      C                   MOVEL     'Y'           OKBRCA
      C                   EVAL      WIdx = *ZEROS                                              CAS004
 
+     C                   CALLB     'AOSARDR0'                                                 231853
+     C                   PARM      *BLANKS       @RTCD             7                          231853
+     C                   PARM      '*VERIFY'     @OPTN             7                          231853
+     C                   PARM      'CSE006'      @SARD             6                          231853
+     C                   PARM                    DSFDY                                        231853
+     C     @RTCD         IFEQ      *BLANK                                                     231853
+     C                   MOVE      'Y'           CSE006            1                          231853
+     C                   ELSE                                                                 231853
+     C                   MOVE      'N'           CSE006                                       231853
+     C                   ENDIF                                                                231853
+      *                                                                                       231853
      C                   ENDSR
       ********************************************************************
       /EJECT

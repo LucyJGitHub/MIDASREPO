@@ -8,9 +8,10 @@
 /*       LEC07 - END OF DAY PROCESSING                              */
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
-/*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1061796          Date 03Dec12              */
+/*                                                                   */
+/*       Last Amend No. MD058517           Date 17Oct22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1061796          Date 03Dec12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -24,7 +25,10 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1      */
+/*                  Interest Projection Using Known Rates           */
+/*                  CC10 CLE172 Spool File Correspondence (MD059817)*/
+/*       MD046248 - Finastra Rebranding                             */
 /*       AR1061796 - Encountered error in component LEC07 sequence  */
 /*                   10003, 10004 and 10005                         */
 /*       CLE134 - Past Due Call Loan Processing                     */
@@ -72,6 +76,7 @@
 /**/
      IF         COND(&PARM *EQ 'LEC0707' *OR &PARM *EQ 'LEC0708' +
                     *OR &PARM *EQ 'LEC0709' *OR &PARM *EQ +
+                    'LEC000372' *OR &PARM *EQ +                                         /*MD058517*/
                     'LEC0710' *OR &PARM *EQ 'LEC0711') +
                     THEN(DO)                                          /*S01117*/
                     CALL       PGM(&PARM) PARM(&RSEQ &RLEV &RENT)     /*S01117*/

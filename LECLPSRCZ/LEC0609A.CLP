@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD056889           Date 11Oct20              */
-/*       Prev Amend No. MD055685           Date 24Apr20              */
+/*       Last Amend No. MD058517           Date 17Oct22              */
+/*       Prev Amend No. MD056889           Date 11Oct20              */
+/*                      MD055685           Date 24Apr20              */
 /*                      MD054799           Date 14Nov19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD021351           Date 06May14              */
@@ -63,6 +64,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1       */
+/*                  Interest Projection Using Known Rates            */
 /*       MD056889 - Deliverable Data Split for SDJARFPD              */
 /*       MD055685 - Double posting of Retail Account Debit Balance   */
 /*                  on FCLTYFN and FACHISA. Do not process RSACMTPD  */
@@ -160,6 +163,8 @@
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*127720*/
              DCL        VAR(&CLE005) TYPE(*CHAR) LEN(1) VALUE('N')    /*127720*/
              DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE025*/
+             DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD058517*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')                 /*MD058517*/
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                   /*CLE025*/
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                    /*CLE025*/
              DCL        VAR(&JAVAPATH) TYPE(*CHAR) LEN(200)                              /*BUG3523*/
@@ -226,6 +231,7 @@
                                                                                           /*CLE025*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                               /*CLE025*/
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)                         /*CLE025*/
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)                       /*MD058517*/
                                                                       /*127720*/
 /*/COPY WNCPYSRC,LEC0609A06                                          */
 /**/                                                                  /*127720*/
@@ -262,6 +268,24 @@
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&ULX004) VALUE('Y'))                                        /*CER001*/
                                                                                           /*CER001*/
+/**/                                                                                    /*MD058517*/
+/** Check if CLE172 is installed */                                                     /*MD058517*/
+/**/                                                                                    /*MD058517*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD058517*/
+             CHGVAR     VAR(&SARO) VALUE('CLE172')                                      /*MD058517*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARO &FMT)                      /*MD058517*/
+                                                                                        /*MD058517*/
+             IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
+                          '*NRF   ') THEN(DO)                                           /*MD058517*/
+             SNDPGMMSG  MSG('AOSARDR0 - PROGRAM ERROR') +
+                                TOMSGQ(MOPERQ)                                          /*MD058517*/
+             CHGJOB (XXXXXX11)                                                          /*MD058517*/
+             RETURN                                                                     /*MD058517*/
+             ENDDO                                                                      /*MD058517*/
+                                                                                        /*MD058517*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CLE172) VALUE('Y'))                                      /*MD058517*/
+                                                                                        /*MD058517*/
                                                                       /*127720*/
 /**/                                                                   /*S0650*/
 /**/
@@ -432,11 +456,44 @@
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                             /*AR1022206*/
                 OVRDBF     FILE(CLOAN) TOFILE(CLOANE) SHARE(*NO)                       /*AR1022206*/
              ENDDO                                                                     /*AR1022206*/
+
+             IF         COND((&RERUN *EQ '      ') *AND +
+                          (&CLE172 *EQ 'Y')) THEN(DO)                                   /*MD058517*/
+                CPYF       FROMFILE(&DMLIB/LEFWBRPD) +
+                             TOFILE(&DPLIB/XLEFWBRPD) MBROPT(*REPLACE) +
+                             CRTFILE(*YES)                                              /*MD058517*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD058517*/
+                CPYF       FROMFILE(&DMLIB/SDRTKNTD) +
+                             TOFILE(&DPLIB/XSDRTKNTD) MBROPT(*REPLACE) +
+                             CRTFILE(*YES)                                              /*MD058517*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD058517*/
+                SCRUNSQL   SQL('CREATE TABLE QTEMP/LEFWBRPDQ AS +
+                             (SELECT * FROM LEFWBRPD WHERE +
+                             LSMD > XAVD) WITH DATA')                                   /*MD058517*/
+                CPYF       FROMFILE(LOAMSDK) TOFILE(LEFWBRPD) +
+                            MBROPT(*ADD) FMTOPT(*NOCHK)                                 /*MD058517*/
+                MONMSG     MSGID(CPF2817)                                               /*MD058517*/
+                OVRDBF     FILE(LOAMS) TOFILE(LEFWBRL1) SHARE(*NO)                      /*MD058517*/
+             ENDDO                                                                      /*MD058517*/
 /**********     CALL       PGM(LE0480)                             */                   /*MD021605*/
                 CALL       PGM(LE0480) PARM(&MRPDCL)                                    /*MD021605*/
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                             /*AR1022206*/
                 DLTOVR     FILE(CLOAN)                                                 /*AR1022206*/
              ENDDO                                                                     /*AR1022206*/
+             IF         COND((&RERUN *EQ '      ') *AND +
+                          (&CLE172 *EQ 'Y')) THEN(DO)                                   /*MD058517*/
+               DLTOVR     FILE(LOAMS)                                                   /*MD058517*/
+               MONMSG     MSGID(CPF0000)                                                /*MD058517*/
+               IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)                              /*MD058517*/
+               CPYF       FROMFILE(&DPLIB/XLEFWBRPD) +
+                            TOFILE(&DMLIB/LEFWBRPD) MBROPT(*REPLACE)                    /*MD058517*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                /*MD058517*/
+               CPYF       FROMFILE(&DPLIB/XSDRTKNTD) +
+                            TOFILE(&DMLIB/SDRTKNTD) MBROPT(*REPLACE)                    /*MD058517*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                /*MD058517*/
+              ENDDO                                                                     /*MD058517*/
+             ENDDO                                                                      /*MD058517*/
+
 /**/                                                                                    /*MD021605*/
 /** Restore back up if LE0480 failed in the rerun.                                      /*MD021605*/
 /**/                                                                                    /*MD021605*/
@@ -498,6 +555,13 @@
                               CMDLBL(ABNOR))                          /*131373*/
              ENDDO                                                    /*S01128*/
 /**/                                                                  /*S01098*/
+             IF         COND((&RERUN *EQ '      ') *AND +
+                          (&CLE172 *EQ 'Y')) THEN(DO)                                   /*MD058517*/
+               CPYF       FROMFILE(QTEMP/LEFWBRPDQ) +
+                           TOFILE(&DMLIB/LEFWBRPD) MBROPT(*REPLACE)                     /*MD058517*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                           EXEC(CLRPFM FILE(&DMLIB/LEFWBRPD))                           /*MD058517*/
+             ENDDO                                                                      /*MD058517*/
            ENDDO                                                      /*S01128*/
 /**/                                                                   /*S0650*/
                 IF         COND(%SWITCH(XXXXXX00)) THEN(DO)

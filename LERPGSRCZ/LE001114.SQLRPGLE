@@ -81,7 +81,7 @@
      C     BLRT          IFEQ      'Y'
      C     RTKN          ANDEQ     'Y'
      C     CALM          ANDNE     'MANL'
-     C     MDAT          ANDGE     BJDNWD
+     C     MDAT          ANDGE     EventCtrlDate
 
 
      C     KHSFW         SETLL     SDHSFWL0

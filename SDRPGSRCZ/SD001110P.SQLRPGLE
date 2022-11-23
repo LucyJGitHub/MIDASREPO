@@ -557,8 +557,6 @@
      C                   EVAL      pOption = '*FIRST'
      C                   CALLP     RetrieveBANK(pReturnCode: pOption: pDSSDY)
      C                   EVAL      SDBANK = pDSSDY
-
-
      C                   ENDSR
       *****************************************************************
       /EJECT

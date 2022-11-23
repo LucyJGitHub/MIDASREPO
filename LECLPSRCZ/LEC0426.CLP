@@ -78,7 +78,7 @@
 /**/                                                                 /*S01465*/
 /*/COPY WNCPYSRC,LEC0426003                                          */
 /**********  IF         COND(&RTCD *EQ '       ') THEN(+             */                 /*MD058517*/
-             IF         COND(&RTCD *EQ '       ') THEN(DO)
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD058517*/
                                                                                         /*MD058517*/
 /** Override LE1170P1 attributes to increase page size and overflow  */                 /*MD058517*/
                  IF        COND(&CLE172 *EQ 'Y') THEN(OVRPRTF +

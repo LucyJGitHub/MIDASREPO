@@ -335,7 +335,7 @@
      C+ and CTRNID = :P1LNRF
      C+ and CINFLG >= 'Y'
      C***order by                                                                           MD058517
-     C***   CINPDT asc                                                                      MD058517
+     C******CINPDT asc                                                                      MD058517
      C+ union all                                                                           MD058517
      C+ select                                                                              MD058517
      C+   FINPSD                                                                            MD058517

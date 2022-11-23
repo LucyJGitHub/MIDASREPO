@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL082             Date 02Nov21               *
-      *  Prev Amend No. MD058466           Date 09Aug21               *
+      *  Last Amend No. MD060726           Date 23Nov22               *
+      *  Prev Amend No. CGL082             Date 02Nov21               *
+      *                 MD058466           Date 09Aug21               *
       *                 AR574704           Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056412           Date 11Aug20               *
@@ -100,6 +101,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060726 - Add missing parameter introduced by CGL082 when   *
+      *             calling GLBITHUPD.                                *
       *  CGL082 - Journal Entry User Audit                            *
       *  MD058466 - Batch item processed before Batch header          *
       *             Delay and check again before issuing error msg.   *
@@ -1147,7 +1150,7 @@
      C                   PARM                    CRE019                                       TCA102
       *                                                                                       CGL082
       ** Journal Entry User Audit                                                             CGL082
-     C                   PARM                    CGL082            1                          CGL082     
+     C                   PARM                    CGL082            1                          CGL082
       *                                                                                       246418
       ** Cheque book processing feature                                                       246418
      C                   PARM                    CGL013                                       246418
@@ -1474,6 +1477,7 @@
      C                   CALLB     'GLBITHUPD'                                             AR1029481
      C                   PARM      *BLANK        PRTCD                                     AR1029481
      C                   PARM                    CGL008                                    AR1029481
+     C                   PARM                    CGL082            1                        MD060726
      C                   PARM                    PVBITH                                    AR1029481
      C                   PARM      *BLANKS       JERRMSG                                   AR1029481
      C                   PARM                    BKMHTN                                    AR1029481
@@ -1955,7 +1959,7 @@
      C                   ELSE                                                                 CGL082
      C                   MOVEL     'N'           CGL082                                       CGL082
      C                   ENDIF                                                                CGL082
-      *                                                                                       CGL082      
+      *                                                                                       CGL082
      C     KBITP         KLIST                                                                249585
      C                   KFLD                    WBTNB                                        249585
      C                   KFLD                    WBINB                                        249585

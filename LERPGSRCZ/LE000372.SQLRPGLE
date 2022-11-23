@@ -223,8 +223,8 @@
 
      C                   READ      SDRTKNTD                               40
      C     *IN40         DOWEQ     *OFF
-     C                   IF        KRTKNI = 'Y' AND KSPLFP <> 'Y' AND
-     C                             KMODID = 'LE' AND KCINTA <> KPINTA
+     C                   IF        KMODID = 'LE' AND KRTKNI = 'Y' AND
+     C                             (KCINTA <> KPINTA OR KSPLFP <> 'Y')
      C/exec SQL
      C+ declare CLOA cursor for
      C+ select
@@ -341,14 +341,15 @@
      C     DSDy1         IFEQ      ' '
      C                   EVAL      DSDy1 = '0'
      C                   ENDIF
-     C                   EVAL      P1SLID = DSDay + '-' + DSMth + '-' + DSYear
+     C                   EVAL      P1STDT = DSDay + '-' + DSMth + '-' + DSYear
 
       ** Int End Date
-     C     SQLCOD        IFNE      100
-     C     DintEnd       ANDNE     0
-     C                   Z-ADD     DintEnd       PNIDT
+     C     DSNidt        IFNE      0
+     C                   Z-ADD     DSNidt        PNIDT
      C                   ELSE
      C     DSRept        IFEQ      3
+     C     DSNrpd        ANDNE     0
+     C     DSRept        OREQ      1
      C     DSNrpd        ANDNE     0
      C                   Z-ADD     DSNrpd        PNIDT
      C                   ELSE
@@ -386,14 +387,8 @@
      C     DSCalm        OREQ      'SAVG'
 
      C                   SELECT
-     C     DSCalm        WHENEQ    'NCCR'
-     C     Dcmrt         ADD(H)    DSBADJ        WIntr
-
      C     DSCalm        WHENEQ    'CCR'
      C     Davcr         ADD(H)    DSBADJ        WIntr
-
-     C     DSCalm        WHENEQ    'SARR'
-     C     Drtap         ADD(H)    DSBADJ        WIntr
 
      C     DSCalm        WHENEQ    'SAVG'
      C     Dsmav         ADD(H)    DSBADJ        WIntr

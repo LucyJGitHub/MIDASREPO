@@ -1078,7 +1078,7 @@
       *                                                                                     MD060033
      C                   EVAL      RatesKnown = 'N'                                         MD060033
      C                   IF        RTKNDate < MidasDay                                      MD060033
-     C**********                   (RTKNDate = MidasDay and PublTime < CurrTime)    MD060033 TEMPFIX
+     C**********                   (RTKNDate = MidasDay and PublTime < CurrTime)   MD060033 MD058517
      C                   EVAL      RatesKnown = 'Y'                                         MD060033
      C                   ENDIF                                                              MD060033
 

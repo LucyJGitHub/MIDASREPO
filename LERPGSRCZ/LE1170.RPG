@@ -549,6 +549,8 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      I              BKAPDT                          APDA                                      CLE031
      I              QQACCD                          QQACC2                                    CGL029
      I*                                                                                       CLE031
+     ISDARRT    E DSSDARRTTD                                                                MD058517
+      ** Array of Text Table                                                                MD058517
      I*SDSVAL***E DSSDSVALPD                                                           218782 222373
       ****EXTERNAL DS FOR SYSTEM VALUES                                                218782 222373
       **********                                                                       218782 222373
@@ -989,11 +991,10 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      C                     PARM 'CLE172'  PSARD                                             MD058517
      C           SCSARD    PARM SCSARD    DSFDY                                             MD058517
      C           PRTCD     IFEQ *BLANKS                                                     MD058517
-     C                     MOVE '1'       *IN29                                             MD058517
-      ** Retrieve pre-defined text                                                          MD058517
-     C                     MOVEL'LOANCONF'WCALLP 10                                         MD058517
-     C           WCALLP    CHAINSDARRTTD             62                                     MD058517
+     C                     MOVE 'Y'       CLE172  1                                         MD058517
+     C                     MOVE '0'       *IN29                                             MD058517
      C                     ELSE                                                             MD058517
+     C                     MOVE 'N'       CLE172                                            MD058517
      C                     MOVE '0'       *IN29                                             MD058517
      C           PRTCD     IFNE '*NRF    '                                                  MD058517
      C           *LOCK     IN   LDA                                                         MD058517
@@ -1781,6 +1782,30 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      C                     ENDIF                                          CLE006
      C                     ENDIF                                          CLE006
       *                                                                   CLE006
+      ** If CLE172 is enabled and a backward looking rate,                                  MD058517
+      ** retrieve the predefined text fields.                                               MD058517
+      *                                                                                     MD058517
+     C           CLE172    IFEQ 'Y'                                                         MD058517
+     C                     MOVE CCY       KEY1                                              MD058517
+     C           NBRA      IFNE ' '                                                         MD058517
+     C                     MOVE NBRA      KEY2                                              MD058517
+     C                     ELSE                                                             MD058517
+     C                     MOVE BRTT      KEY2                                              MD058517
+     C                     ENDIF                                                            MD058517
+      *                                                                                     MD058517
+     C                     CALL 'AOBSRTR0'PLIST1                                            MD058517
+     C           @RTCD     IFEQ *BLANKS                                                     MD058517
+     C           BABLRT    ANDEQ'Y'                                                         MD058517
+     C                     CLEARSDARRT                                                      MD058517
+     C                     MOVEL'ROLLCONF'WCALLP 10                                         MD058517
+     C           WCALLP    CHAINSDARRTTD             62                                     MD058517
+     C           *IN62     IFEQ '0'                                                         MD058517
+I    C                     MOVE '1'       *IN29                                             MD058517
+     C                     ENDIF                                                            MD058517
+     C                     ELSE                                                             MD058517
+     C                     MOVE '0'       *IN29                                             MD058517
+     C                     ENDIF                                                            MD058517
+     C                     ENDIF                                                            MD058517
      C*                                                                   088807
      C** Setup pay/receive instructions                                   088807
      C*                                                                   088807

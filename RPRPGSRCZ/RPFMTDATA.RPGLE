@@ -18,44 +18,47 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060749           Date 22Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPK016  *CREATE    Date 22Apr03               *
+      *                 CPK016  *CREATE    Date 22Apr03               *
       *                 XXXXXX             Date NNXxxNN               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060749 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK016 - Midas R5 packaging.                                 *
       *           - Break direct link with Replication product.       *
       *                                                               *
       *****************************************************************
       /EJECT
- 
+
       ** Declare the Message Format file.
      FRPMSGFPD  IF   E           K DISK
- 
+
       * Following /COPY is the procedure prototype for the Packed routine
       /COPY RPCPYSRC,RPFMTPPP
- 
+
       * Following /COPY is the procedure prototype for the Signed routine
       /COPY RPCPYSRC,RPFMTPPS
- 
+
       * Following /COPY is the procedure prototype for the Format routine
       /COPY RPCPYSRC,RPFMTPPF
- 
+
       * Following /COPY is the declares for fields passed to the formatting
       *  routines
      C/COPY RPCPYSRC,RPFMTDCL
- 
+
       ** The following /COPY contains various standard declares
-     C/COPY RPCPYSRC,Std_Dcl
- 
+     C*COPY*RPCPYSRC,Std_Dcl                                                                MD060749
+     C/COPY RPCPYSRC,STD_DCL                                                                MD060749
+
      D Defaults      E DS                  DTAARA(RPDFTSDA) EXTNAME(RPDFTSDA)
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -83,112 +86,112 @@
       *    Purpose     : Convert AS/400 Packed to EBCDIC text         *
       *    Called by   : External routine                             *
       *****************************************************************
- 
+
      P ProcPacked      B                   export
- 
+
      D                 PI            32A
      D   InNumber                    30P10 value
      D   Length                       2S 0 value
      D   DecPos                       2S 0 value
      D   DecSep                       1A   value
      D   ShwPosSign                   1A   value
- 
+
       * Following /COPY is the procedure prototype for the Signed routine
       /COPY RPCPYSRC,RPFMTPPS
- 
+
       * Following /COPY is the declares for fields passed to the formatting
       *  routines
       /COPY RPCPYSRC,RPFMTDCL
- 
+
      D  InAlpha        S             30A   INZ(*BLANKS)
      D  OutAlpha       S             32A   INZ(*BLANKS)
- 
+
      C                   RESET                   OutAlpha
      C                   RESET                   InAlpha
- 
+
       ** Convert the incoming number from packed to signed
      C                   eval      fmSign3010 = InNumber
- 
+
       ** Set up the other parameters on the call to the Signed procedure as
       **  the incoming values
      C                   eval      fmLength   = Length
      C                   eval      fmDecPos   = DecPos
      C                   eval      fmDecSep   = DecSep
      C                   eval      fmShwPsSgn = ShwPosSign
- 
+
       ** Use the Signed procedure to reformat the data to alpha
      C                   eval      OutAlpha =
      C                              ProcSigned(fmSign3010:fmLength:fmDecPos:
      C                                                 fmDecSep:fmShwPsSgn)
- 
+
      C                   return    OutAlpha
- 
+
      P ProcPacked      E
- 
+
       /EJECT
       *****************************************************************
       *    Procedure   : ProcSigned                                   *
       *    Purpose     : Convert AS/400 Signed to EBCDIC text         *
       *    Called by   : External routine                             *
       *****************************************************************
- 
+
      P ProcSigned      B                   export
- 
+
      D                 PI            32A
      D   InNumber                    30S10 value
      D   Length                       2S 0 value
      D   DecPos                       2S 0 value
      D   DecSep                       1A   value
      D   ShwPosSign                   1A   value
- 
+
      D  InAlpha        S             30A   INZ(*BLANKS)
      D  InPtr          S              2S 0 INZ(1)
      D  OutPtr         S              2S 0 INZ(1)
      D  OutAlpha       S             32A   INZ(*BLANKS)
- 
+
      D  FirstTimeDone  S              1A   INZ(*BLANKS)
- 
+
      C                   RESET                   InAlpha
      C                   RESET                   InPtr
      C                   RESET                   OutAlpha
      C                   RESET                   OutPtr
- 
+
       ** First time only, access the defaults data area
      C                   IF        FirstTimeDone = *BLANK
      C                   IN        Defaults
      C                   EVAL      FirstTimeDone = 'Y'
      C                   ENDIF
- 
+
       ** Place the incoming number into an alpha field for substringing
       **  purposes
      C                   movel     InNumber      InAlpha
- 
+
       ** If Replication formatting is required (i.e. all numerics are
       **  represented as two bytes longer than the number of digits in
       **  all cases) then;
       **   If the number of decimal places is 0, increase the length
       **    by 1 so that a leading zero is introduced.
- 
+
      C                   If            RCZeroFld = '+2'
      C                             And DecPos = 0
      C                   Eval      Length = Length + 1
      C                   EndIf
- 
+
       ** Set the first byte of the Output field as the sign, only put in
       **  a positive sign if specifically requested.
      C                   if        InNumber < 0
      C                   eval      %subst(OutAlpha:OutPtr:1) = '-'
- 
+
      C                   else
- 
+
      C                   if        ShwPosSign = 'Y'
      C                   eval      %subst(OutAlpha:OutPtr:1) = '+'
      C                   endif
- 
+
      C                   endif
- 
+
      C                   eval      OutPtr = OutPtr + 1
- 
+
       ** Extract the digits to the left of the decimal point
       ** As the whole number is aligned on the decimal point, and there are
       **  20 character to the left of the dp, this data will start at
@@ -197,52 +200,52 @@
      C                   eval      InPtr = 20 - (Length-DecPos) + 1
      C                   eval      %subst(OutAlpha:OutPtr:(Length-DecPos)) =
      C                              %subst(InAlpha:InPtr:(Length-DecPos))
- 
+
      C                   eval      InPtr = InPtr + (Length-DecPos)
      C                   eval      OutPtr = OutPtr + (Length-DecPos)
- 
+
       ** If requested, insert a decimal separator and there are any decimals
      C                   if            DecSep <> *blank
      C                             and DecPos > 0
- 
+
      C                   eval      %subst(OutAlpha:OutPtr:1) = DecSep
- 
+
      C                   eval      OutPtr = OutPtr + 1
- 
+
      C                   endif
- 
+
       ** Extract the digits to the right of the decimal point if there are
       **  any
      C                   if        DecPos > 0
- 
+
      C                   eval      %subst(OutAlpha:OutPtr:DecPos) =
      C                              %subst(InAlpha:InPtr:DecPos)
- 
+
      C                   endif
- 
+
      C                   return    OutAlpha
- 
+
      P ProcSigned      E
- 
+
       /EJECT
       *****************************************************************
       *    Procedure   : ProcFormat                                   *
       *    Purpose     : Convert AS/400 format to EBCDIC text         *
       *    Called by   : External routine                             *
       *****************************************************************
- 
+
      P ProcFormat      B                   export
- 
+
      D                 PI            +4          like(TransData)
      D   InData                            value like(TransData)
      D   InDBFile                    10A   value
      D   DecSep                       1A   value
      D   ShwPosSign                   1A   value
- 
+
      DOutParms         DS
      D   OutData                           INZ(*BLANKS) like(TransData)
      D   OutPos                       4S 0 INZ(1)
- 
+
      DFmtInp           DS
      D FmtInp30A               1     30A
      D FmtInp01P               1     01P 0
@@ -290,34 +293,34 @@
      D FmtInp28S               1     28S 0
      D FmtInp29S               1     29S 0
      D FmtInp30S               1     30S 0
- 
+
      D fmPack3010      S             30P10
      D fmAlpNum32      S             32A
      D FmtResSize      S              4P 0
      D FmtRes1000A     S           1000A
- 
+
      D WrkFactor       S             11P 0
- 
+
       ** Define Key List for PF/RPMSGFPD.
      C     @KList01      KLIST
      C                   KFLD                    @KDBFile         10
- 
+
       * Set up the variables for formatting that will not change during the
       *  run
      C                   eval      fmDecSep   = DecSep
      C                   eval      fmShwPsSgn = ShwPosSign
- 
+
      C                   RESET                   OutData
      C                   RESET                   OutPos
- 
+
       ** Access first record for format requested.
      C                   Eval      @KDBFile = InDBFile
      C     @KList01      SETLL     RPMSGFPD
      C     @KList01      READE     RPMSGFPD                               90
- 
+
       ** Process all fields on the format.
      C     *IN90         DOWEQ     '0'
- 
+
       ** Select type of processing required.
      C                   SELECT
      C     WHFLDT        WHENEQ    'P'
@@ -327,18 +330,18 @@
      C                   OTHER
      C                   EXSR      #SRAlpha
      C                   ENDSL
- 
+
       ** Join up text to form output message.
      C                   EVAL      %subst(OutData:OutPos:FmtResSize) =
      C                               %subst(FmtRes1000A:1:FmtResSize)
      C                   EVAL      OutPos = OutPos + FmtResSize
- 
+
       ** Process next record
      C     @KList01      READE     RPMSGFPD                               90
      C                   ENDDO
- 
+
      C                   RETURN    OutParms
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -347,16 +350,16 @@
       *           on the format.                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     #SRPack       BEGSR
- 
+
       ** Obtain the field length and decimal places from the Message Format
       **  file and then extract the right amount of data from the large
       **  input field.
      C                   EVAL      fmLength = WHFLDD
      C                   EVAL      fmDecPos = WHFLDP
      C                   EVAL      FmtInp30A  = %Subst(InData:WHFOBO:WHFLDB)
- 
+
       ** FmtInp30A is 30 alpha, so the correct sub-set of bytes (as a
       **  numeric field) needs to be used as the input parameter to the
       **  reformatting routine (which expects numeric input)
@@ -394,7 +397,7 @@
      C                   OTHER
      C                   EVAL      fmPack3010 = 0
      C                   ENDSL
- 
+
       ** Adjust input field for the number of decimal places.
       **  This is needed as the fields that are sub-sets of FmtInp30A all
       **  have zero decimal places, so the value will all be in the part of
@@ -402,19 +405,19 @@
       **  will correctly align the data on the decimal point.
      C                   EVAL      WrkFactor   = 10**fmDecPos
      C                   EVAL      fmPack3010  = fmPack3010/WrkFactor
- 
+
       ** Reformat selected data to alpha
      C                   EVAL      fmAlpNum32  = ProcPacked(fmPack3010:
      C                                 fmLength:fmDecPos:fmDecSep:fmShwPsSgn)
- 
+
       ** Extract alpha equivalent into a common 1000 alpha field in which
       **  it will go back to the caller
      C                   EVAL      FmtResSize  = WHFLDD + 2
      C                   EVAL      FmtRes1000A =
      C                               %subst(fmAlpNum32:1:FmtResSize)
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -423,16 +426,16 @@
       *           on the format.                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     #SRSign       BEGSR
- 
+
       ** Obtain the field length and decimal places from the Message Format
       **  file and then extract the right amount of data from the large
       **  input field.
      C                   EVAL      fmLength = WHFLDD
      C                   EVAL      fmDecPos = WHFLDP
      C                   EVAL      FmtInp30A  = %Subst(InData:WHFOBO:WHFLDB)
- 
+
       ** FmtInp30A is 30 alpha, so the correct sub-set of bytes (as a
       **  numeric field) needs to be used as the input parameter to the
       **  reformatting routine (which expects numeric input)
@@ -500,7 +503,7 @@
      C                   OTHER
      C                   EVAL      fmPack3010 = 0
      C                   ENDSL
- 
+
       ** Adjust input field for the number of decimal places.
       **  This is needed as the fields that are sub-sets of FmtInp30A all
       **  have zero decimal places, so the value will all be in the part of
@@ -508,18 +511,18 @@
       **  will correctly align the data on the decimal point.
      C                   EVAL      WrkFactor   = 10**fmDecPos
      C                   EVAL      fmPack3010  = fmPack3010/WrkFactor
- 
+
       ** Reformat selected data to alpha
      C                   EVAL      fmAlpNum32  = ProcSigned(fmSign3010:
      C                               fmLength:fmDecPos:fmDecSep:fmShwPsSgn)
- 
+
       ** Extract alpha equivalent into a common 1000 alpha field in which
       **  it will go back to the caller
      C                   EVAL      FmtResSize  = WHFLDD + 2
      C                   EVAL      FmtRes1000A = %subst(fmAlpNum32:1:FmtResSize)
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -528,16 +531,16 @@
       *            on the format.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     #SRAlpha      BEGSR
- 
+
       ** Simply place into a common 1000 alpha field in which it will go
       **  back to the caller
      C                   EVAL      FmtResSize  = WHFLDB
      C                   EVAL      FmtRes1000A= %Subst(InData:WHFOBO:WHFLDB)
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
- 
+
      P ProcFormat      E

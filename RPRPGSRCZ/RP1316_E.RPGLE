@@ -14,17 +14,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060749           Date 22Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CPB002  *CREATE    Date 21Jul00               *
+      *                 CPB002  *CREATE    Date 21Jul00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060749 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CPB002 - Meridian DBA Middleware Replication Customization.  *
       *                                                               *
@@ -33,10 +35,10 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **  Source file that contains all scripts.
      FX110LF    IF   E             Disk    Infsr(*Pssr)
- 
+
       /Eject
       *****************************************************************
       *                                                               *
@@ -76,44 +78,45 @@
       *  *inzsr - Program Initialization routine.                     *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
       /COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **  The following /COPY contains various standard declares
-     D/COPY RPCPYSRC,Std_Dcl
- 
+     D*COPY*RPCPYSRC,Std_Dcl                                                                MD060749
+     D/COPY RPCPYSRC,STD_DCL                                                                MD060749
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D Cpy@            S             80    Dim(1) Ctdata Perrcd(1)
- 
+
       **  External Data structure for Local data area for database error details.
      D LDA           E DS           256    EXTNAME(LDA)
       **
@@ -121,39 +124,39 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       **  Array used to store Meridian Products names.
      D ArrProd         S              1    Dim(800)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **-------------------- Start of Parameters --------------------**
       **  Input parameter.
      D Input           DS            21
      D   CommandName           1     10
      D   KeywordName          10     20
      D   DataType             21     21
- 
+
       **  Output parameter
      D Output          S             30
       **--------------------- End of Parameters ---------------------**
- 
+
       **  Indexes to manage array enries.
      D P               S              2S 0
      D X               S              2S 0
- 
+
       **  Total number of entries.
      D W_Last          S              2S 0
- 
+
      D W_RunBefore     S              1A
- 
+
       ** True and False can be used for indicators being on or off.
      D True            C                   *On
      D False           C                   *Off
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -162,10 +165,10 @@
       /Eject
       *****************************************************************
      C     Start         Tag
- 
+
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       *****************************************************************
       *                                                               *
       *                  M A I N  P R O C E S S I N G                 *
@@ -177,13 +180,13 @@
       **   +------------------------------------------------------+   *
       *                                                               *
       *****************************************************************
- 
+
       **  Read Meridian DBA Products file.
      C                   Read      X110LF                                 81
- 
+
       **  Process all records.
      C     *In81         Doweq     False                                        Begin Do_W_81
- 
+
      C                   Eval      P = P + 1
      C                   Eval      X = %Len(%trim(Output)) + 1
      C                   if        X > 1
@@ -192,15 +195,15 @@
      C                   Endif
      C                   Movea     X1PRDN        ArrProd(X)
      C                   Movea     ArrProd(1)    Output
- 
+
       **  Read next record from file.
      C                   Read      X110LF                                 81
- 
+
      C                   Enddo                                                  End Do_W_81
- 
+
       **  Exit from program.
      C                   Eval      *inlr = true
- 
+
       /Eject
       *****************************************************************
       /Title SR/*Pssr
@@ -217,22 +220,22 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *Pssr         Begsr
- 
+
      C     W_RunBefore   Ifeq      *blank                                       Begin W_RunBefore
      C                   Move      'Y'           W_RunBefore
      C                   Dump
- 
+
      C                   Endif                                                  End W_RunBefore
- 
+
      C                   Eval      *inu7 = True
      C                   Eval      *inu8 = True
      C                   Eval      *inlr = True
      C                   Return
- 
+
      C                   Endsr
- 
+
       /Eject
       *****************************************************************
       /Title SR/*Inzsr
@@ -243,16 +246,16 @@
       *  Called By: Implicitly on program activation.                 *
       *                                                               *
       *****************************************************************
- 
+
      C     *Inzsr        Begsr
- 
+
       **  List of parameters.
      C     *Entry        Plist
- 
+
       **--------------------- input parameters ----------------------**
- 
+
      C                   Parm                    Input
- 
+
       **   1-10   Command name. Specifies the name of the command being
       **          processed that causes the program to run.
       **  11-20   Keyword name. Specifies the keyword for which possible
@@ -262,11 +265,11 @@
       **          field into which the text for possible choices is to be
       **          returned. The letter P indicates that this a 2000-byte field
       **          into which a permissible values list is to be returned.
- 
+
       **--------------------- Output parameters ---------------------**
- 
+
      C                   Parm                    Output
- 
+
       **  Parameter 2: A 30- or 2000-byte field for returning one of the
       **  following:
       **
@@ -288,9 +291,9 @@
       **
       **      If a binary negative value is returned in the first two bytes, the
       **      list of permissible values is taken from the command.
- 
+
      C                   Endsr
- 
+
       /Eject
       *****************************************************************
 **  CPY@

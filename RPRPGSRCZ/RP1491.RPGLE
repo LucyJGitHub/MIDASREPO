@@ -13,15 +13,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060749           Date 22Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPB010  *CREATE    Date 16Jan03               *
+      *                 CPB010  *CREATE    Date 16Jan03               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD060749 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CPB010 - Avoid DB Error by write message in Trace File       *
       *                                                               *
@@ -53,21 +55,22 @@
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
-     C/COPY RPCPYSRC,Mdn_Hd_DS
- 
+     C*COPY*RPCPYSRC,Mdn_Hd_DS                                                              MD060749
+     C/COPY RPCPYSRC,MDN_HD_DS                                                              MD060749
+
       ** Following /COPY is the declares for fields passed to the formatting
       ** routines
      C/COPY RPCPYSRC,RPFMTDCL
- 
+
       ** Following /COPY is the procedure prototype for the Packed routine
      C/COPY RPCPYSRC,RPFMTPPP
- 
+
       ** Following /COPY is the procedure prototype for the Signed routine
      C/COPY RPCPYSRC,RPFMTPPS
- 
+
       *
       * Description     : Copyright notice for inclusion in all programs
       *
@@ -84,7 +87,7 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       * Program data structure
      D JBDTTM          DS
       * Job date/time
@@ -183,7 +186,7 @@
      D  SUC                   11     11
      D  DFF                   12     12
      D  MBIN                  13     13
- 
+
       * Record to be inserted or new values
      D OUT             DS
      D Application                   15
@@ -192,7 +195,7 @@
      D Body                        3000
      D Front_id                      20
      D Title                        255
- 
+
      D                 DS
      D  ZAMSDA                 1    132
       * Message data for 'Question Mark Invalid'
@@ -277,7 +280,7 @@
      C                   PARM      *ZEROS        ZDAYNO
      C                   PARM                    WUDFF
      C                   PARM                    ErrorFlag
- 
+
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C                   Eval      RPDATE = WURDNB
@@ -818,18 +821,18 @@
      C                   Else
      C                   SetON                                        63
      C                   EndIf
- 
+
      C                   MOVEL     RPTYPE        #1TYPE
      C                   Eval      PDateIn = RPDATE
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDateIn
      C                   PARM                    WUDFF
      C                   PARM      *ZERO         PDateOut
      C                   PARM      *BLANKS       PADateOut
- 
+
      C                   Eval      #1DATE = PADateOut
- 
+
      C                   MOVEL     RPTMST        #1TMST
      C                   MOVEL     RPTRAC        #1RTRC
      C                   MOVE      '...'         #1RTRC
@@ -981,18 +984,18 @@
      C                   Parm                    RPTRAC
      C                   Parm                    RPCOMM
      C                   Parm                    ReturnCode
- 
+
      C                   If        ReturnCode = *Blanks
      C                   Eval      Application=*blanks
      C                   Eval      Process=*blanks
      C                   Eval      Gravity=*blanks
      C                   Eval      Body=RPTRAC
      C                   Eval      Title=*blanks
- 
+
      C                   EVAL      Application= 'RPTRACE'
      C                   EVAL      Process='RPTRACPD'
      C                   EVAL      Gravity=''
- 
+
      C* Call Alerter Generator
      C                   Call      'PBCALERTER'
      C                   Parm                    Gravity
@@ -1001,7 +1004,7 @@
      C                   Parm                    Title
      C                   Parm                    Body
      C                   EndIf
- 
+
      C                   END
       *================================================================
      CSR   SEEXIT        ENDSR
@@ -1270,28 +1273,28 @@
       *****************************************************************
       *
      C     *Pssr         Begsr
- 
+
      C     W_RunBefore   Ifeq      *blank                                       Begin W_RunBefore
- 
+
      C     *Lock         In        Lda
      C     DBpgm         Ifeq      *blanks                                      Begin DBpgm
      C                   Eval      DBpgm  = PSProcName
      C                   Out       Lda
- 
+
      C                   Endif                                                  End DBpgm
- 
+
      C                   Move      'Y'           W_RunBefore       1
      C                   Dump
- 
+
      C                   Endif                                                  End W_RunBefore
- 
+
      C     ReturnCode    Ifeq      *blank                                       Begin ReturnCode
      C                   Eval      ReturnCode = '*PSSR'
      C                   Endif                                                  End ReturnCode
- 
+
      C                   Seton                                        U7U8LR
      C                   Return
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT

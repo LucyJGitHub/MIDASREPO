@@ -66,7 +66,6 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-      ** Data Sructure for general ledger details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                                MD058103
       ** External DS for currency details                                                   MD058103

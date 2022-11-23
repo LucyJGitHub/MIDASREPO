@@ -456,7 +456,7 @@
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                             /*AR1022206*/
                 OVRDBF     FILE(CLOAN) TOFILE(CLOANE) SHARE(*NO)                       /*AR1022206*/
              ENDDO                                                                     /*AR1022206*/
-
+                                                                                        /*MD058517*/
              IF         COND((&RERUN *EQ '      ') *AND +
                           (&CLE172 *EQ 'Y')) THEN(DO)                                   /*MD058517*/
                 CPYF       FROMFILE(&DMLIB/LEFWBRPD) +
@@ -493,7 +493,7 @@
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                /*MD058517*/
               ENDDO                                                                     /*MD058517*/
              ENDDO                                                                      /*MD058517*/
-
+                                                                                        /*MD058517*/
 /**/                                                                                    /*MD021605*/
 /** Restore back up if LE0480 failed in the rerun.                                      /*MD021605*/
 /**/                                                                                    /*MD021605*/

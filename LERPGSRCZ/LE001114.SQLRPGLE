@@ -10,7 +10,7 @@
       *                                                               *
       *  LE001114 - Midas LE Future ARR rate BR events                *
       *                                                               *
-      *  (c) Finastra International Systems Ltd. 2022                 *
+      *  (c) Finastra International Limited 2022                      *
       *                                                               *
       *  Last Amend No. MD058517  *CREATE  Date 17Oct22               *
       *                                                               *

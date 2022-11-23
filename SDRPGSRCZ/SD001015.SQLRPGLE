@@ -16,7 +16,7 @@
       *            Daily Rates file if the main transaction is deleted*
       *            in main transaction file.                          *
       *                                                               *
-      *  (c) Finastra International Limited 2020                      *
+      *  (c) Finastra International Limited 2022                      *
       *                                                               *
       *  Last Amend No. MD058517           Date 17Oct22               *
       *  Prev Amend No. CIR020             Date 02Aug21               *

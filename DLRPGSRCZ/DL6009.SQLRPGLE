@@ -14,14 +14,17 @@
       *        are made to DL9005, this program should also           *
       *        be reviewed.                                           *
       *                                                               *
-      *  Last Amend No. MD058598           Date 17Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD-60692           Date 18Nov22               *
+      *  Prev Amend No. MD058598           Date 17Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054140           Date 27Aug19               *
       *                 CER050  *Create    Date 16Jun19               *
       *                                                               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD-60692 - Component DLC6009 failed in COB due the missing   *
+      *             reversed Deal in DEALSDC.                         *
       *  MD058598 - Correct access to SCSARDPD                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -151,6 +154,17 @@
      C+ from DEALSDC
      C+ where DLNO =:##DLNO
      C/end-exec
+      *                                                                                     MD060692
+      ** Check DLCHISPD if Deal is not found in DEALSDC                                     MD060692
+      *                                                                                     MD060692
+     C     SQLCOD        IFNE      *ZEROS                                                   MD060692
+     C/EXEC SQL                                                                             MD060692
+     C+ SELECT *                                                                            MD060692
+     C+ INTO :DEALDC                                                                        MD060692
+     C+ FROM DLCHISPD                                                                       MD060692
+     C+ WHERE DLNO =:##DLNO                                                                 MD060692
+     C/END-EXEC                                                                             MD060692
+     C                   ENDIF                                                              MD060692
 
       *  Save interest calculation basis for Front Up interest Deals
      C                   MOVE      ICBS1         ICBS2             1

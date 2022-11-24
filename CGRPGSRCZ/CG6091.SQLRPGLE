@@ -15,14 +15,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD060590           Date 04Oct22               *
-      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *  Last Amend No. MD058517           Date 17Oct22               *
+      *  Prev Amend No. MD060590           Date 04Oct22               *
+      *                 MD059624           Date 20Jul22               *
       *                 MD059564           Date 14Feb22               *
       *                 MD059552           Date 08Feb22               *
       *                 MD059320 *CREATE   Date 06Dec21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
+      *             Interest Projection Using Known Rates.            *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  MD060590 - Incorrect ccr rounding applies and precision      *
       *             values for loan defined with SONIA and SARR.      *
       *             Check the calc method to be 'NCCR' before calling *
@@ -549,7 +553,8 @@
      C                   PARM                    W0CMT             3
      C                   PARM                    ##COPD            1
      C                   PARM                    XXLNRF            6
-     C                   PARM                    XCINPSD           5 0
+     C**********         PARM                    XCINPSD           5 0                      MD058517
+     C                   PARM                    KCINTA           13 0                      MD058517
 
       **  Set up subroutine stack name.
 
@@ -1231,30 +1236,31 @@
 
       **  Interest Amount
       **  If loan is matured get INTA from MA record
-     C                   eval      XINTA = 0
-     C                   if        ##RECI = 'M'
-     C/EXEC SQL
-     C+ SELECT INTA into :XINTA
-     C+ from HISTSHP
-     C+ where AMTP = 'MA' and LNRF = :XXLNRF
-     C/END-EXEC
-     C                   else
-      **  If loan is is not matured get INTA from IN record if REPT is 2 or RE record
-      **  using CINPDT (retrieved in SR LIBREV) + 1
-     C                   if        ##REPT = 2
-     C/EXEC SQL
-     C+ SELECT INTA into :XINTA
-     C+ from HISTSHP
-     C+ where AMTP = 'IN' and LNRF = :XXLNRF and VDAT = :BJRDNB
-     C/END-EXEC
-     C                   else
-     C/EXEC SQL
-     C+ SELECT INTA into :XINTA
-     C+ from HISTSHP
-     C+ where AMTP = 'RE' and LNRF = :XXLNRF and VDAT = :BJRDNB
-     C/END-EXEC
-     C                   endif
-     C                   endif
+     C**********         eval      XINTA = 0                                                MD058517
+     C                   Z-ADD     KCINTA        XINTA                                      MD058517
+     C**********if        ##RECI = 'M'                                                      MD058517
+     C**********/EXEC SQL                                                                   MD058517
+     C**********+ SELECT INTA into :XINTA                                                   MD058517
+     C**********+ from HISTSHP                                                              MD058517
+     C**********+ where AMTP = 'MA' and LNRF = :XXLNRF                                      MD058517
+     C**********/END-EXEC                                                                   MD058517
+     C**********                   else                                                     MD058517
+      **  If loan is is not matured get INTA from IN record if REPT is 2 or RE record       MD058517
+      **  using CINPDT (retrieved in SR LIBREV) + 1                                         MD058517
+     C**********                   if        ##REPT = 2                                     MD058517
+     C**********/EXEC SQL                                                                   MD058517
+     C**********+ SELECT INTA into :XINTA                                                   MD058517
+     C**********+ from HISTSHP                                                              MD058517
+     C**********+ where AMTP = 'IN' and LNRF = :XXLNRF and VDAT = :BJRDNB                   MD058517
+     C**********/END-EXEC                                                                   MD058517
+     C**********else                                                                        MD058517
+     C**********/EXEC SQL                                                                   MD058517
+     C**********+ SELECT INTA into :XINTA                                                   MD058517
+     C**********+ from HISTSHP                                                              MD058517
+     C**********+ where AMTP = 'RE' and LNRF = :XXLNRF and VDAT = :BJRDNB                   MD058517
+     C**********/END-EXEC                                                                   MD058517
+     C**********endif                                                                       MD058517
+     C**********endif                                                                       MD058517
 
      C                   ADD       1             R1
      C                   CLEAR                   R#DATA
@@ -1345,15 +1351,39 @@
      C+ where
      C+     CMODID = 'LE'
      C+ and CTRNID = :XXLNRF
-     C+ and CINPSD = :XCINPSD
-     C+ order by
-     C+     CINPDT asc
+     C**********and CINPSD = :XCINPSD                                                       MD058517
+     C+ and CINFLG = 'Y'                                                                    MD058517
+     C**********+ order by                                                                  MD058517
+     C**********+     CINPDT asc                                                            MD058517
+     C+ union all                                                                           MD058517
+     C+ select                                                                              MD058517
+     C+   FINPSD                                                                            MD058517
+     C+ , FINPED                                                                            MD058517
+     C+ , FINPDT AS CINPDT                                                                  MD058517
+     C+ , FINPDY                                                                            MD058517
+     C+ , FOBPDT                                                                            MD058517
+     C+ , FOBPDY                                                                            MD058517
+     C+ , FPBRFR                                                                            MD058517
+     C+ , FRTEAP                                                                            MD058517
+     C+ , FCALCM                                                                            MD058517
+     C+ , FAVCRT                                                                            MD058517
+     C+ , FDCMRT                                                                            MD058517
+     C+ , FSMPAV                                                                            MD058517
+     C+ from SDFWDRTD T2                                                                    MD058517
+     C+ where                                                                               MD058517
+     C+ not exists (                                                                        MD058517
+     C+ select * from SDHSDRTD T1                                                           MD058517
+     C+ where T1.CINPDT = T2.FINPDT )                                                       MD058517
+     C+ and FMODID = 'LE'                                                                   MD058517
+     C+ and FTRNID = :XXLNRF                                                                MD058517
+     C+ order by                                                                            MD058517
+     C+ CINPDT asc                                                                          MD058517
      C/end-exec
 
      C/exec SQL
      C+ open SDHS
      C/end-exec
-
+     
      C/exec SQL
      C+ fetch next
      C+ from SDHS

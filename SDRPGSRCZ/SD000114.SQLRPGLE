@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD059424           Date 29Mar22               *
+      *  Last Amend No. MD060033           Date 25Sep22               *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 249385             Date 01Aug22               *
+      *                 MD059424           Date 29Mar22               *
       *                 MD059375           Date 20Dec21               *
       *                 MD059270           Date 16Dec21               *
       *                 MD059253           Date 19Nov21               *
@@ -39,6 +41,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060033 - Rates Known flag set a day late.  Add 1 day to    *
+      *             SumLBLO.  Introduce new system value              *
+      *             ARRUseSysOrMidasDate.                             *
+      *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
+      *             Interest Projection Using Known Rates             *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD059424 - Calculator returned rates for previous period of  *
@@ -208,11 +216,18 @@
      D  BenchMarkAdj                 20A
      D  RatesKnownInd                 1A
      D  ReturnCode                   20A
+     D RTKNOWDS      e ds                  extname(SDRTKNTD)                                MD058517
+     D RateKnownDS     ds                  likeds(RTKNOWDS)                                 MD058517
 
       ** Constants declaration
      D NO_ERROR        c                   const(0)
      D NO_RECORD       c                   const(100)
      D EC              c                   const('  0 .       ')                            MD057946
+     D AMP             c                   const('&')                                       MD058517
+     D INSERT          c                   const(0)                                         MD058517
+     D QUE             c                   const('?')                                       MD058517
+     D QUO             c                   const('''')                                      MD058517
+     D UPDATE          c                   const(1)                                         MD058517
 
       ** Reference Rates Array
      D ArraySize       C                   CONST(10)
@@ -271,6 +286,7 @@
      D PublTime        S              8A
      D EventCtrlDate   S              5S 0                                                  MD058040
      D ControlDate     S              5A                                                    MD058182
+     D wEvntCtrlDate   S              5A                                                    MD058517
      D WrkMigrate      S              1A                                                    MD059137
      D Wrk2ndCall      S              1A   INZ('N')                                         MD059190
      D WrkEndDate      S              5P 0                                                  MD059190
@@ -287,6 +303,10 @@
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
+     D wSqlStr         S           2000A   INZ(*BLANKS)                                     MD058517
+     D action          s              1s 0                                                  MD058517
+     D SysDate         S               D   DATFMT(*ISO)                                     MD060033
+     D SysOrMidas      S              1A                                                    MD060033
 
       *****************************************************************
       /EJECT
@@ -748,6 +768,10 @@
      C                   EVAL      DBASE  = 008                                               CIR020
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                            MD058517
+     C                   IF        CLE172 = 'Y'                                             MD058517
+     C                   EXSR      SRupdRTKN                                                MD058517
+     C                   ENDIF                                                              MD058517
 
      C                   ENDSR
       *****************************************************************
@@ -995,7 +1019,8 @@
       ** Rates Known Date = Interest Period End Date minus
       ** (Lookback + Lockout) plus Publication Lag Days
      C                   EVAL      RTKNDate = 0
-     C                   EVAL      SumLBLO = TrLBDY + TrLODY
+     C**********         EVAL      SumLBLO = TrLBDY + TrLODY                                MD060033
+     C                   EVAL      SumLBLO = TrLBDY + TrLODY + 1                            MD060033
 
      C                   MOVEL     TrCCY         ZCCY              3
      C                   MOVEL     *BLANKS       ZLOC              3
@@ -1014,18 +1039,48 @@
 
      C                   EVAL      RTKNDate = ZDYNBR
 
-      ** Set the Rates Known flag if the computed Rates Known Date has
-      ** passed the system date and the reference rate publication time
+      *                                                                                     MD060033
+      ** Default MidasDay to Midas run date.                                                MD060033
+      ** If ARRUseSysOrMidasDate = S, set it to machine date.                               MD060033
+      *                                                                                     MD060033
+     C                   EVAL      MidasDay = BJRDNB                                        MD060033
+     C                   IF        SysOrMidas = 'S'                                         MD060033
+      ** Retrieve current system date and time                                              MD060033
+     C                   EVAL      SysDate = %date()                                        MD060033
+     C                   EVAL      CurrDate = %dec(SysDate:*MDY)                            MD060033
+      ** Convert to Midas Day                                                               MD060033
+     C                   CALL      'ZDATE1'                                                 MD060033
+     C                   PARM                    ReturnCde         7                        MD060033
+     C                   PARM                    CurrDate          6 0                      MD060033
+     C                   PARM      'M'           DatFmt            1                        MD060033
+     C                   PARM      *ZEROS        MidasDay          5 0                      MD060033
+     C                   ENDIF                                                              MD060033
+      *                                                                                     MD060033
+      ** Get current time.                                                                  MD060033
+      *                                                                                     MD060033
+     C                   EVAL      CurrTime = %char(%time():*HMS)                           MD060033
+      *                                                                                     MD060033
+      ***Set*the*Rates*Known*flag*if*the*computed*Rates*Known*Date*has**                    MD060033
+      ***passed*the*system*date*and*the*reference*rate*publication*time*                    MD060033
      C**********         IF        RTKNDate <= BJRDNB and                                   MD058040
-     C                   IF        RTKNDate <= EventCtrlDate and                            MD058040
-     C                             RTKNDate <> 0
-     C                   EVAL      RatesKnown = 'Y'
-     C                   EVAL      CurrTime = %char(%time():*HMS)
-     C                   IF        RTKNDate = BJRDNB and
-     C                             PublTime > CurrTime
-     C                   EVAL      RatesKnown = 'N'
-     C                   ENDIF
-     C                   ENDIF
+     C**********         IF        RTKNDate <= EventCtrlDate and                   MD058040 MD060033
+     C**********                   RTKNDate <> 0                                            MD060033
+     C**********         EVAL      RatesKnown = 'Y'                                         MD060033
+     C**********         EVAL      CurrTime = %char(%time():*HMS)                           MD060033
+     C**********         IF        RTKNDate = BJRDNB and                                    MD060033
+     C**********                   PublTime > CurrTime                                      MD060033
+     C**********         EVAL      RatesKnown = 'N'                                         MD060033
+     C**********         ENDIF                                                              MD060033
+     C**********         ENDIF                                                              MD060033
+      *                                                                                     MD060033
+      ** Set the Rates Known flag if the computed Rates Known Date has                      MD060033
+      ** passed MidasDay and the reference rate publication time.                           MD060033
+      *                                                                                     MD060033
+     C                   EVAL      RatesKnown = 'N'                                         MD060033
+     C                   IF        RTKNDate < MidasDay                                      MD060033
+     C**********                   (RTKNDate = MidasDay and PublTime < CurrTime)   MD060033 MD058517
+     C                   EVAL      RatesKnown = 'Y'                                         MD060033
+     C                   ENDIF                                                              MD060033
 
      C                   ENDSR
       *****************************************************************
@@ -1147,6 +1202,7 @@
      C                   PARM                    BenchMarkAdj
      C                   PARM                    RatesKnownInd
      C                   PARM                    ControlDate                                MD058182
+     C                   PARM                    wEvntCtrlDate                              MD058517
      C                   PARM      *BLANKS       ReturnCode
 
       ** End program if there's a connection error
@@ -1245,6 +1301,7 @@
      C                   IF        BKAPDT < EventCtrlDate                                   MD058040
      C                   EVAL      EventCtrlDate = BKAPDT                                   MD058040
      C                   ENDIF                                                              MD058040
+     C                   MOVE      EventCtrlDate wEvntCtrlDate                              MD058517
                                                                                             MD058040
      C                   IF        BKANWD = '0' or BKANWD = '1'                             MD058182
      C                   EVAL      EventCtrlDate = BJDNWD - 1                               MD058182
@@ -1291,12 +1348,18 @@
       ** Get setting of system value ARR Calculation Frequency
      C                   EVAL      ARRCalcFreq = *BLANKS
      C                   EVAL      PSysVal01 = 'ARRCalculationFreq'
+      *                                                                                     MD060033
+      ** Get also the value of ARRUseSysOrMidasDate.                                        MD060033
+      *                                                                                     MD060033
+     C                   EVAL      SysOrMidas = *BLANKS                                     MD060033
+     C                   EVAL      PSysVal02 = 'ARRUseSysOrMidasDate'                       MD060033
 
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       RtnCode
      C                   PARM                    PSysVal01
      C                   PARM      *BLANKS       PCurSet01
-     C                   PARM      *BLANKS       PSysVal02
+     C**********         PARM      *BLANKS       PSysVal02                                  MD060033
+     C                   PARM                    PSysVal02                                  MD060033
      C                   PARM      *BLANKS       PCurSet02
      C                   PARM      *BLANKS       PSysVal03
      C                   PARM      *BLANKS       PCurSet03
@@ -1317,11 +1380,16 @@
      C
      C                   IF        RtnCode <> *BLANKS
      C                   EVAL      DBFILE = 'SDSVLCTD'
+     C                   IF        PCurSet01 = '*NRF'                                       MD060033
      C                   EVAL      DBKEY = PSysVal01
+     C                   ELSE                                                               MD060033
+     C                   EVAL      DBKEY = PSysVal02                                        MD060033
+     C                   ENDIF                                                              MD060033
      C                   EVAL      DBASE  = 003
      C                   EXSR      *PSSR
      C                   ELSE
      C                   MOVEL     PCurSet01     ARRCalcFreq
+     C                   MOVEL     PCurSet02     SysOrMidas                                 MD060033
      C                   ENDIF
 
       ** If ARRCalcFreq is M-Monthly, determine if End of month
@@ -1399,6 +1467,175 @@
      C                   PARM      *ZEROS        WrkBasDate                                 MD059190
                                                                                             MD059190
      C                   ENDSR                                                              MD059190
+      // Start of change MD058517
+      /free
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // SrupdRTKN  - Update Rates Known File                       *
+       // ==========                                                 *
+       //                                                            *
+       // Called by: SrUpdFile                                       *
+       //                                                            *
+       // Calls: checkExist                                          *
+       //                                                            *
+       //*************************************************************
+
+       begsr SrupdRTKN;
+
+                   exsr checkExist;
+
+                   if action = INSERT;
+
+                      exsr insertRecord;
+
+                   elseif action = UPDATE;
+
+                      exsr updateRecord;
+
+                   endif;
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // insertRecord                                               *
+       // ============                                               *
+       //                                                            *
+       // Called by: SRupdRTKN                                       *
+       //                                                            *
+       // Calls: none                                                *
+       //                                                            *
+       //*************************************************************
+
+       begsr insertRecord;
+
+                   clear RateKnownDS;
+                   RateKnownDS.KMODID = TrModi;
+                   RateKnownDS.KTRNID = TrTran;
+                   RateKnownDS.KRTKNI = RatesKnown;
+                   RateKnownDS.KINTPE = 0;
+                   RateKnownDS.KCINTA = 0;
+                   RateKnownDS.KPINTA = 0;
+                   RateKnownDS.KCORMP = 'N';
+                   RateKnownDS.KSPLFP = 'N';
+                   exec sql insert into SDRTKNTD
+                   values (:RateKnownDS);
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      dbFile = 'SDRTKNTD';
+                      dbkey = *blanks;
+                      dbase = 005;
+                      exsr *pssr;
+                   endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // updateRecord                                               *
+       // ============                                               *
+       //                                                            *
+       // Called by: SRupdRTKN                                       *
+       //                                                            *
+       // Calls: none                                                *
+       //                                                            *
+       //*************************************************************
+
+       begsr updateRecord;
+
+                   clear RateKnownDS;
+                   RateKnownDS.KMODID = trModi;
+                   RateKnownDS.KTRNID = trTran;
+                   RateKnownDS.KRTKNI = RatesKnown;
+                   if RatesKnown = 'N';
+                      RateKnownDS.KINTPE = 0;
+                      RateKnownDS.KCINTA = 0;
+                      RateKnownDS.KPINTA = 0;
+                      RateKnownDS.KCORMP = 'N';
+                      RateKnownDS.KSPLFP = 'N';
+                      wSqlStr = 'update SDRTKNTD A SET '  +
+                              'A.KRTKNI = ' + QUO + %trim(RateKnownDS.KRTKNI) +
+                               QUO + ' , ' +
+                              'A.KINTPE = ' + %char(RateKnownDS.KINTPE) +
+                               ' , ' +
+                              'A.KCINTA = ' + %char(RateKnownDS.KCINTA) +
+                               ' , ' +
+                              'A.KPINTA = ' + %char(RateKnownDS.KPINTA) +
+                               ' , ' +
+                              'A.KCORMP = ' + QUO + RateKnownDS.KCORMP  + QUO +
+                              ' , ' +
+                              'A.KSPLFP = ' + QUO + RateKnownDS.KSPLFP  + QUO +
+                              ' where KMODID = '  + QUO + TrMODI   + QUO +
+                              '  and KTRNID = ' + QUO + TrTRAN      + QUO;
+                   else;
+                      wSqlStr = 'update SDRTKNTD A SET '  +
+                              'A.KRTKNI = ' + QUO + %trim(RateKnownDS.KRTKNI) +
+                               QUO +
+                               ' where KMODID = '  + QUO + TrMODI   + QUO +
+                               '  and KTRNID = ' + QUO + TrTRAN      + QUO;
+                   endif;
+
+                   exec sql
+                   execute immediate :wSqlStr;
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      dbFile = 'SDRTKNTD';
+                      dbkey = *blanks;
+                      dbase = 006;
+                      exsr *pssr;
+                   endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // checkExist - Check if a record exist on a given file       *
+       // ==========                                                 *
+       //                                                            *
+       // Called by: Output File                                     *
+       //                                                            *
+       // Calls: None                                                *
+       //                                                            *
+       //*************************************************************
+
+       begsr checkExist;
+
+                   wSQLStr = 'select * from SDRTKNTD ' +
+                             'where KMODID = '  + QUO + TrMODI   + QUO +
+                             ' and KTRNID = ' + QUO + TrTRAN      + QUO;
+
+                   exec sql prepare P1 from :wSQLStr;
+                   exec sql declare P1 cursor for P1;
+                   exec sql open P1;
+
+                   exec sql fetch next From P1 into :RateKnownDS;
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      dbFile = 'SDRTKNTD';
+                      dbkey = *blanks;
+                      dbase = 004;
+                      exsr *pssr;
+                   endif;
+
+                   if sqlCod = NO_RECORD;
+                      action = INSERT;
+                   else;
+                      action = UPDATE;
+                   endif;
+
+                   exec sql close P1;
+
+       endsr;
+      /end-free
+      // End of change MD058517
+
       *****************************************************************                     MD059190
       /EJECT                                                                                MD059190
       *****************************************************************

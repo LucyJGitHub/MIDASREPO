@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059624           Date 20Jul22               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD058517           Date 17Oct22               *
+      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *                 249385             Date 01Aug22               *
       *                 MD059424           Date 29Mar22               *
       *                 MD059104           Date 02Dec21               *
       *                 CIR020             Date 02Aug21               *
@@ -26,6 +27,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
+      *             Interest Projection Using Known Rates             *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
@@ -165,6 +169,8 @@
       ** Rates Known Indicator
      D  controlDate                   5a                                                    MD058182
       ** Event Control Date                                                                 MD058182
+     D  evntCtrlDate                  5a                                                    MD058517
+      ** Event Control Date                                                                 MD058517
      D  returnCD                     20a
       ** Return Code
 
@@ -217,6 +223,8 @@
       ** Rates Known Indicator
      D  controlDate                   5a                                                    MD058182
       ** Event Control Date                                                                 MD058182
+     D  evntCtrlDate                  5a                                                    MD058517
+      ** Event Control Date                                                                 MD058517
      D  returnCD                     20a
       ** Return Code
 
@@ -242,6 +250,10 @@
      D ARRDLYDS      e ds                  extname(SDHSDRTD)
      D DailyHistDS     ds                  likeds(ARRDLYDS)
 
+      ** ARR Daily Rates Future File                                                        MD058517
+     D ARRDLYFDS     e ds                  extname(SDFWDRTD)                                MD058517
+     D DailyHisFDS     ds                  likeds(ARRDLYFDS)                                MD058517
+
       ** Core data structures
      D dssdy         e ds                  extname(DSSDY)
      D dsfdy         e ds                  extname(DSFDY)
@@ -264,6 +276,7 @@
      D UPDATE          c                   const(1)
      D BLANK_FLOOR     c                   const('9999.9999999')                            MD057871
      D SDHSDRTD2       c                   const(2)                                         MD058040
+     D SDFWDRTD        c                   const(3)                                         MD058517
       *
      D isDuplicate     pr             1n                                                    MD059424
      D  fileToCheck                  10a   value                                            MD059424
@@ -1156,6 +1169,33 @@
 
                endif;                                                                     //MD058182
                                                                                           //MD058182
+       // Start of MD058517
+
+               if result.list(i).intPDMidas >= %dec(evntCtrlDate:5:0
+                 and RatesKnownInd = 'Y');
+
+                   if (calcMethod = 'NCCR' or calcMethod  = 'SARR')
+                   and  result.list(i).intPDMidas > transactDate;
+                        includeRecord = 'Y';
+
+                   elseif  (calcMethod = 'CCR' or calcMethod  = 'SAVG');
+                        includeRecord = 'Y';
+                   endif;
+
+                   fileToCheck = SDFWDRTD;
+                   if includeRecord = 'Y';
+                      exsr checkExist;
+                      if action = INSERT;
+                          exsr insertHistFutFile;
+                      elseif action = UPDATE;
+                          exsr updateHistFutFile;
+                      endif;
+                   endif;
+
+               endif;
+
+       // End of MD058517
+
        endsr;
        //*************************************************************
        /EJECT
@@ -1191,6 +1231,12 @@
                                     %char(result.list(i).intPDMidas) +                    //MD058040
                                   ' and CINPDT < '  + %char(BJRDNB)  +                    //MD058040
                                   ' and CRORED <> ' + %char(BJRDNB);                      //MD058040
+                   elseif fileToCheck = SDFWDRTD;                                         //MD058517
+                        wSQLStr = 'select * from SDFWDRTD ' +                             //MD058517
+                                  'where FMODID = '  + QUO + moduleID + QUO +             //MD058517
+                                  ' and FTRNID = ' + QUO + transactREF + QUO +            //MD058517
+                                  ' and FINPDT = ' +                                      //MD058517
+                                    %char(result.list(i).intPDMidas);                     //MD058517
                    endif;
 
                    exec sql prepare P1 from :wSQLStr;
@@ -1202,6 +1248,8 @@
                         exec sql fetch next From P1 into :ExtractFLDS;
                    elseif fileToCheck = SDHSDRTD2;                                        //MD058040
                         exec sql fetch next From P1 into :DailyHistDS;                    //MD058040
+                   elseif fileToCheck = SDFWDRTD;                                         //MD058517
+                        exec sql fetch next From P1 into :DailyHisFDS;                    //MD058517
                    endif;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
@@ -1319,6 +1367,181 @@
                    endif;
 
        endsr;
+
+       // Start of MD058517
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // insertHistFutFile                                          *
+       // =================                                          *
+       //                                                            *
+       // Called by: writeToARRDailyHistory                          *
+       //                                                            *
+       // Calls: None                                                *
+       //                                                            *
+       //*************************************************************
+
+       begsr insertHistFutFile;
+
+                   clear DailyHisFDS;
+                   DailyHisFDS.FMODID = moduleID;
+                   DailyHisFDS.FTRNID = transactREF;
+                   DailyHisFDS.FCALCM = calcMethod;
+                   DailyHisFDS.FINPSD = %dec(intPrdStrMDAY:5:0);
+                   DailyHisFDS.FINPED = %dec(intPrdEndMDAY:5:0);
+                   DailyHisFDS.FINFLG = 'Y';
+                   DailyHisFDS.FINPDT = result.list(i).intPDMidas;
+                   DailyHisFDS.FINPDY = result.list(i).intPrdDays;
+                   DailyHisFDS.FOBPDT = result.list(i).intOPMidas;
+                   DailyHisFDS.FOBPDY = result.list(i).obsPrdDays;
+                   DailyHisFDS.FPBRFR = result.list(i).pubRskFrRt;
+                   DailyHisFDS.FRTEAP = result.list(i).rateApplied;
+                   if result.list(i).rskFrRtFlAp = 'true';
+                      DailyHisFDS.FRFRAP = 'Y';
+                   else;
+                      DailyHisFDS.FRFRAP = 'N';
+                   endif;
+                   DailyHisFDS.FTIMST = %timestamp();
+                   DailyHisFDS.FRORED = BJRDNB;
+                   DailyHisFDS.FRLCDT = BJRDNB;
+
+                   select;
+                        when calcMethod = 'NCCR';
+                             DailyHisFDS.FDCMRT =
+                               %Dec(Result.List(i).dlyCompRate:17:12);
+                             DailyHisFDS.FCMFAC =
+                               %Dec(Result.List(i).compFactor:17:12);
+                        when calcMethod = 'CCR';
+                             DailyHisFDS.FAVCRT =
+                               %Dec(Result.List(i).aveCompRate:17:12);
+                        when calcMethod = 'SAVG';
+                             DailyHisFDS.FSMPAV =
+                               %Dec(Result.List(i).simpleAve:17:12);
+                   endsl;
+
+                   exec sql insert into SDFWDRTD
+                   values (:DailyHisFDS);
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                       AuditLogDS.SJTMST = %timestamp();
+                       AuditLogDS.SJEXMS = 'Error in access SDFWDRTD '
+                                         + 'SQL ERROR ' + %char(sqlCod);
+                       AuditLogDS.SJCODE = '009';
+                       isError = true;
+                       exsr errorHandler;
+                   endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // updateHistFutFile                                          *
+       // =================                                          *
+       //                                                            *
+       // Called by: writeToARRDailyHistory                          *
+       //                                                            *
+       // Calls: None                                                *
+       //                                                            *
+       //*************************************************************
+
+       begsr updateHistFutFile;
+
+                   clear DailyHisFDS;
+                   DailyHisFDS.FMODID = moduleID;
+                   DailyHisFDS.FTRNID = transactREF;
+                   DailyHisFDS.FCALCM = calcMethod;
+                   DailyHisFDS.FINPSD = %dec(intPrdStrMDAY:5:0);
+                   DailyHisFDS.FINPED = %dec(intPrdEndMDAY:5:0);
+                   DailyHisFDS.FINFLG = 'Y';
+                   DailyHisFDS.FINPDT = result.list(i).intPDMidas;
+                   DailyHisFDS.FINPDY = result.list(i).intPrdDays;
+                   DailyHisFDS.FOBPDT = result.list(i).intOPMidas;
+                   DailyHisFDS.FOBPDY = result.list(i).obsPrdDays;
+                   DailyHisFDS.FPBRFR = result.list(i).pubRskFrRt;
+                   DailyHisFDS.FRTEAP = result.list(i).rateApplied;
+                   DailyHisFDS.FRLCDT = BJRDNB;
+                   if result.list(i).rskFrRtFlAp = 'true';
+                      DailyHisFDS.FRFRAP = 'Y';
+                   else;
+                      DailyHisFDS.FRFRAP = 'N';
+                   endif;
+                   DailyHisFDS.FTIMST = %timestamp();
+
+                   select;
+                        when calcMethod = 'NCCR';
+                             DailyHisFDS.FDCMRT =
+                               %dec(Result.List(i).dlyCompRate:17:12);
+                             DailyHisFDS.FCMFAC =
+                               %dec(Result.List(i).compFactor:17:12);
+                        when calcMethod = 'CCR';
+                             DailyHisFDS.FAVCRT =
+                               %dec(Result.List(i).aveCompRate:17:12);
+                        when calcMethod = 'SAVG';
+                             DailyHisFDS.FSMPAV =
+                               %dec(Result.List(i).simpleAve:17:12);
+                   endsl;
+
+                   wSqlStr = 'update SDFWDRTD A SET '  +
+                              'A.FCALCM = ' + QUO + %trim(DailyHisFDS.FCALCM) +
+                               QUO + ' , ' +
+                              'A.FINPSD = ' + %char(DailyHisFDS.FINPSD) +
+                               ' , ' +
+                              'A.FINPED = ' + %char(DailyHisFDS.FINPED) +
+                               ' , ' +
+                              'A.FINFLG = ' + QUO + %trim(DailyHisFDS.FINFLG) +
+                               QUO + ' , ' +
+                              'A.FINPDT = ' + %char(DailyHisFDS.FINPDT) +
+                              ' , ' +
+                              'A.FINPDY = ' + %char(DailyHisFDS.FINPDY) +
+                              ' , ' +
+                              'A.FOBPDT = ' + %char(DailyHisFDS.FOBPDT) +
+                              ' , ' +
+                              'A.FOBPDY = ' + %char(DailyHisFDS.FOBPDY) +
+                              ' , ' +
+                              'A.FPBRFR = ' + %char(DailyHisFDS.FPBRFR) +
+                              ' , ' +
+                              'A.FRTEAP = ' + %char(DailyHisFDS.FRTEAP) +
+                              ' , ' +
+                              'A.FRFRAP = ' + QUO + %trim(DailyHisFDS.FRFRAP) +
+                              QUO + ' , ' +
+                              'A.FAVCRT = ' + %char(DailyHisFDS.FAVCRT) +
+                              ' , ' +
+                              'A.FCMFAC = ' + %char(DailyHisFDS.FCMFAC) +
+                              ' , ' +
+                              'A.FDCMRT = ' + %char(DailyHisFDS.FDCMRT) +
+                              ' , ' +
+                              'A.FSMPAV = ' + %char(DailyHisFDS.FSMPAV) +
+                              ' , ' +
+                              'A.FTIMST = ' + QUO + %char(DailyHisFDS.FTIMST) +
+                              QUO +
+                              ' , ' +
+                              'A.FRLCDT = ' + %char(DailyHisFDS.FRLCDT) +
+                              ' where A.FMODID = ' +
+                                QUO + %trim(moduleID) + QUO +
+                              ' and   A.FTRNID = ' +
+                                QUO + %trim(transactREF) + QUO +
+                              ' and FINPDT = ' +
+                                      %char(DailyHisFDS.FINPDT);
+
+                   exec sql
+                   execute immediate :wSqlStr;
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      AuditLogDS.SJTMST = %timestamp();
+                      AuditLogDS.SJEXMS = 'Error in access SDFWDRTD '
+                                       + 'SQL ERROR ' + %char(sqlCod);
+                      AuditLogDS.SJCODE = '013';
+                      isError = true;
+                      exsr errorHandler;
+                   endif;
+
+       endsr;
+
+       // End of MD058517
 
        //*************************************************************
        /EJECT

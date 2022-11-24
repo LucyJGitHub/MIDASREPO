@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD060020           Date 21Jun22              */
-/*       Prev Amend No. CIR020             Date 02Aug21              */
+/*       Last Amend No. MD058517           Date 17Oct22              */
+/*       Prev Amend No. MD060020           Date 21Jun22              */
+/*                      CIR020             Date 02Aug21              */
 /*                      MD058673           Date 10Sep21              */
 /*                      MD058331           Date 05Jul21              */
 /*                      CDL102             Date 01Jun21              */
@@ -19,6 +20,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1       */
+/*                  Interest Projection Using Known Rates            */
+/*                  CC10 CLE172 Spool File Correspondence (MD059817) */
 /*       MD060020 - Fusion Midas ARR Adapter: Expired Token          */
 /*                  prevents ARR requests. Add checking to U1 job    */
 /*                  switch to capture if there are exceptions and    */
@@ -50,7 +54,7 @@
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(1) VALUE(0)                          /*MD058331*/
 
              DCLF       FILE(SDCSTSTD) OPNID(STAT)
-             DCLF       FILE(SDBANKPD) OPNID(BANK)
+             DCLF       FILE(SDBANKPD) OPNID(BANK)          
 
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           2020')
@@ -231,6 +235,8 @@ CONTINUE:
              CLRPFM     FILE(IRLIBEPD)                                                    /*CIR020*/
              CLRPFM     FILE(DLBCAMPD)                                                    /*CDL102*/
              CLRPFM     FILE(SDBJEXPD)                                                    /*CDL102*/
+             CLRPFM     FILE(SDFWDRTD)                                                  /*MD058517*/
+             CLRPFM     FILE(LEFWBRPD)                                                  /*MD058517*/
                                                                                           /*CDL102*/
              IF         COND(&CLE172 *EQ 'Y' *OR +
                            &CDL102 *EQ 'Y' *OR &CIR020 *EQ 'Y') THEN(DO)
@@ -240,6 +246,16 @@ CONTINUE:
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
+
+/** If CLE172 is ON, call program to create an extract file for */                      /*MD058517*/
+/** future ARR rates BR events*/                                                        /*MD058517*/
+                                                                                        /*MD058517*/
+             IF         COND(&CLE172 *EQ 'Y') THEN(DO)                                  /*MD058517*/
+                CALL       PGM(LE001114)                                                /*MD058517*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                             /*MD058517*/
+                   GOTO       CMDLBL(ERROR)                                             /*MD058517*/
+                ENDDO                                                                   /*MD058517*/
+             ENDDO                                                                      /*MD058517*/                                                                                   
 
 /** Call program to produce Daily Rates Report */
 
@@ -297,7 +313,7 @@ CONTINUE:
              ENDDO                                                                      /*MD060020*/
              ENDDO                                                                      /*MD060020*/
                                                                                         /*MD060020*/
-/** If sucessful completion, update status file to Completed */
+ /** If sucessful completion, update status file to Completed */
 
              CALL       PGM(SD000118) PARM('C')
              MONMSG     MSGID(CPF0000 MCH0000)

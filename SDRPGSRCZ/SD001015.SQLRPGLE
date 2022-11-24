@@ -16,14 +16,18 @@
       *            Daily Rates file if the main transaction is deleted*
       *            in main transaction file.                          *
       *                                                               *
-      *  (c) Finastra International Limited 2020                      *
+      *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
-      *       Amend No. CSD103    *CREATE  Date 10Aug20               *
+      *  Last Amend No. MD058517           Date 17Oct22               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
+      *                 CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
+      *             Interest Projection Using Known Rates.            *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -50,6 +54,7 @@
      D thisSQL3        S            500                                                       CDL102
      D thisSQL4        S            500                                                       CIR020
      D thisSQL5        S            500                                                       CIR020
+     D thisSQL6        S            500                                                     MD058517
                                                                                               CDL102
      D PRtCd           S              7A                                                      CDL102
      D POptn           S              7A                                                      CDL102
@@ -120,6 +125,10 @@
      C                              CMODID = ''LE'' AND CTRNID not in +
      C                              (select LNRF from CLOANCL) AND CTRNID +
      C                              not in (select LNRF from MCLONCL)'
+     C                   EVAL      thisSQL6= 'Delete from SDRTKNTD where +                  MD058517
+     C                              KMODID = ''LE'' AND KTRNID not in +                     MD058517
+     C                              (select LNRF from CLOANCL) AND KTRNID +                 MD058517
+     C                              not in (select LNRF from MCLONCL)'                      MD058517
      C                   EVAL      thisSQL1 = 'Delete from SDARRLOGTD where +
      C                              SJMODI = ''LE'' AND SJTREF not in +
      C                              (select LNRF from CLOANCL)'

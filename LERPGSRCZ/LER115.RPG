@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060411           Date 15Nov22               *
-      *  Prev Amend No. 263582             Date 29Jul22               *
+      *  Last Amend No. MD060594           Date 15Nov22               *
+      *  Prev Amend No. MD060411           Date 15Nov22               *
+      *                 263582             Date 29Jul22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD058815           Date 28Sep21               *
       *                 MD059600           Date 17Feb22               *
@@ -201,6 +202,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060594 - Extend usage of calculation basis 6 variables     *
+      *             DAYS2 and WDAYS2 in the computation of average    *
+      *             amount when CLE071 is ON.                         *
+      *           - Applied for MD060575                              *
       *  MD060411 - Correct the calculation of fee amount using       *
       *             calculation basis 6. Correction to MD058815       *
       *           - Applied for MD060575                              *
@@ -7446,12 +7451,14 @@
       *                                                                                       CLE071
      C           FECALC    IFEQ 6                                                             CLE071
      C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
-     C                     Z-ADDINT6DY    NDAYS                                               CLE071
+     C**********           Z-ADDINT6DY    NDAYS                                      CLE071 MD060594
+     C                     Z-ADDINT6DY    NDAYS2                                            MD060594
      C                     ELSE                                                               CLE071
      C                     Z-ADDZZINDY    NDAYS                                               CLE071
      C                     ENDIF                                                              CLE071
       *                                                                                       CLE071
      C           NDAYS     IFGT 0                                                             CLE071
+     C           NDAYS2    ORGT 0                                                           MD060594
       *                                                                                       CLE071
       ** limit the processing for fees based on average amount                                CLE071
       *                                                                                       CLE071
@@ -7465,9 +7472,15 @@
      C*                                                                                       CLE071
      C** Average amount used (only does accrual once)                                         CLE071
      C*                                                                                       CLE071
+     C           FECALC    IFEQ 6                                                           MD060594
+     C                     MULT NDAYS2    AAMT                                              MD060594
+     C                     DIV  WDAYS2    AAMT      H                                       MD060594
+     C                     ADD  AAMT      WAMT                                              MD060594
+     C                     ELSE                                                             MD060594
      C                     MULT NDAYS     AAMT                                                CLE071
      C                     DIV  WDAYS     AAMT      H                                         CLE071
      C                     ADD  AAMT      WAMT                                                CLE071
+     C                     ENDIF                                                            MD060594
      C                     ELSE                                                               CLE071
      C                     Z-ADDAAMT      WAMT                                                CLE071
      C                     ENDIF                                                              CLE071

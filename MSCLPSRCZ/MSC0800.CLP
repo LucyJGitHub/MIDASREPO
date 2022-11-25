@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas Outgoing Messages Awaiting Trans'n Rpt')        */
+/**** *  TEXT('Midas Outgoing Messages Awaiting Trans'n Rpt')        */                 /*MD060753*/
+/*EXI *  TEXT('Midas Outgoing Messages Awaiting Trans n Rpt')        */                 /*MD060753*/
 /********************************************************************/
 /*                                                                  */
 /*     Midas Midas/S.W.I.F.T. DIRECT LINK                       */
@@ -9,17 +10,19 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     PREV AMEND NO.  S01117           DATE  22JAN90               */
+/*                     S01117           DATE  22JAN90               */
 /*                     00               DATE  00/00/00              */
 /*                                                                  */
 /********************************************************************/
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                             */
 /********************************************************************/
              PGM
@@ -67,5 +70,5 @@
  END:        RCLRSC
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

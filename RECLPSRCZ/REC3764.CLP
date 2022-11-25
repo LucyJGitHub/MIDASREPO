@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas RE FRENCH TICKET D'AGIOS')                      */
+/**** *  TEXT('Midas RE FRENCH TICKET D'AGIOS')                      */                 /*MD060753*/
+/*EXI *  TEXT('Midas RE FRENCH TICKET D AGIOS')                      */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas     Retail Module                                 */
@@ -9,7 +10,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,10 +19,11 @@
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO. S01413 *CREATE     DATE 13APR93              */
+/*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01413 - Retail 3 Incorporation                             */
 /*                                                                   */

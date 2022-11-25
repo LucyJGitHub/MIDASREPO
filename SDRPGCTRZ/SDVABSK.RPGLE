@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SD Validate Addt'l Borrower Statistics Key')     *
+/**** *  TEXT('Midas SD Validate Addt'l Borrower Statistics Key')     *                     MD060753
+/*EXI *  TEXT('Midas SD Validate Addt l Borrower Statistics Key')     *                     MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
@@ -15,12 +16,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER045  *CREATE    Date 20Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER045 - German Features - Reporting Bundesbank              *
@@ -41,8 +44,8 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ¦ Automatically included D-specs       ¦
-      ** ¦ ==============================       ¦
+      **  Automatically included D-specs       
+      **  ==============================       
       ** +--------------------------------------+
       **
       *
@@ -68,8 +71,8 @@
      D/COPY ZACPYSRC,ERR_XARRYS
       *
       ** +--------------------------------------+
-      ** ¦ End of automatically included D-specs¦
-      ** ¦ =====================================¦
+      **  End of automatically included D-specs
+      **  =====================================
       ** +--------------------------------------+
       *
       *****************************************************************
@@ -77,23 +80,23 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ¦ Manually included D-specs            ¦
-      ** ¦ =========================            ¦
+      **  Manually included D-specs            
+      **  =========================            
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** ¦ Named constants                      ¦
-      ** ¦ ===============                      ¦
+      **  Named constants                      
+      **  ===============                      
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** ¦ Arrays and Data Structures           ¦
-      ** ¦ ==========================           ¦
+      **  Arrays and Data Structures           
+      **  ==========================           
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** ¦ Declared variables                   ¦
-      ** ¦ ==================                   ¦
+      **  Declared variables                   
+      **  ==================                   
       ** +--------------------------------------+
       *
      D DDABSK          S              1A
@@ -104,8 +107,8 @@
      D Idx             S              3P 0
       *
       ** +--------------------------------------+
-      ** ¦ End of D-specs                       ¦
-      ** ¦ ==============                       ¦
+      **  End of D-specs                       
+      **  ==============                       
       ** +--------------------------------------+
       *
       *****************************************************************
@@ -113,10 +116,10 @@
       *****************************************************************
       *
       ** +--- Start of Main processing -------------------------------+
-      ** ¦                                                            ¦
-      ** ¦ Initial processing is performed automatically: the *inzsr  ¦
-      ** ¦ is executed at program activation.                         ¦
-      ** ¦                                                            ¦
+      **                                                             
+      **  Initial processing is performed automatically: the *inzsr  
+      **  is executed at program activation.                         
+      **                                                             
       ** +------------------------------------------------------------+
       *
       ** Validate Additional Borrowers Statistics Key

@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas FT Incoming Pay'ts Waiting Complet'n')          */
+/**** *  TEXT('Midas FT Incoming Pay'ts Waiting Complet'n')          */                 /*MD060753*/
+/*EXI *  TEXT('Midas FT Incoming Pay ts Waiting Complet n')          */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas     - Funds Transfer Module                       */
@@ -19,6 +20,7 @@
 /*       Prev Amend No. S01435             Date 22Jul93              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*  S01435 - Incoming Message Management.                            */
 /*********************************************************************/
@@ -26,7 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&BRCH &BORO &PCMD)
- 
+
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&BRCH) TYPE(*CHAR) LEN(3)
              DCL        VAR(&BORO) TYPE(*CHAR) LEN(1)
@@ -35,42 +37,42 @@
              DCL        VAR(&TRNREF) TYPE(*CHAR) LEN(15)
              DCL        VAR(&RINFOR) TYPE(*CHAR) LEN(80)
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /*  call program & monitor for errors                               */
- 
+
              CALL       PGM(FT0180) PARM(&BRCH &BORO &PCMD)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
              SNDPGMMSG  MSG('Transaction Failed. Re-input necessary. +
                           Press Enter to Continue.') TOPGMQ(*EXT)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
 /*    Database error handling    */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              ENDDO
- 
+
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /* call AOC8000 to release locks */
- 
+
              CHGVAR     VAR(&MODULE) VALUE('FT')
              CHGVAR     VAR(&TRNREF) VALUE('               ')
              CHGVAR     VAR(&RINFOR) VALUE('    ')
              CHGVAR     VAR(&RTNCDE) VALUE('       ')
              CALL       PGM(AOC8000) PARM(&RTNCDE &MODULE &TRNREF +
                           &RINFOR)
- 
+
             ENDPGM
- 
+

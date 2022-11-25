@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas RE Determine Today's Debit Totals')              *
+/**** *  TEXT('Midas RE Determine Today's Debit Totals')              *                     MD060753
+/*EXI *  TEXT('Midas RE Determine Today s Debit Totals')              *                     MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Retail Module                                        *
@@ -14,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR976539           Date 25Feb13               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR976539           Date 25Feb13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP204             Date 03Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR976539 - Purge request fails. CAP204 should be reversed.   *
       *             (Child:AR976540)                                  *
@@ -39,20 +42,20 @@
       *  CRE008 - Cash Management                                     *
       *                                                               *
       *****************************************************************
- 
+
      F***ACPO1**   IF   F  400    18AIDISK    KEYLOC(2)                                       245968
      F***ACPO1     IF   F  400    24AIDISK    KEYLOC(2)                                245968 CAP204
      F***GLACPML0  IF   F  400    24AIDISK    KEYLOC(2)                              CAP204 AR976539
      FACPO1     IF   F  620    24AIDISK    KEYLOC(2)                                        AR976539
- 
+
       *****************************************************************
       * Standard D Specifications
      D/COPY ZACPYSRC,RECMSTDD
       * Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       *****************************************************************
- 
- 
+
+
       * Key to A/c postings file
      D                 DS
      D*ACPOK***                1     18                                                       245968
@@ -66,49 +69,49 @@
      D  ACD                   10     19  0                                                    245968
      D  ASN                   20     21  0                                                    245968
      D  BRC                   22     24                                                       245968
- 
- 
+
+
       * Input Entry
      D I_ENTRY       E DS                  EXTNAME(APOSTPD)
      D                                     PREFIX(E_)
- 
- 
+
+
      I***ACPO1     NS                                                                         CAP204
      I***GLACPML0  NS                                                                CAP204 AR976539
      I**********                        1  400  INREC                                       AR976539
      IACPO1     NS                                                                          AR976539
      I                                  1  620  INREC                                       AR976539
- 
- 
+
+
       * Source a/c ID ( = Child a/c ID)
- 
+
      C                   MOVEL     I_CBRC        BRC
      C                   MOVEL     I_CCUS        CUS
      C                   MOVEL     I_CCCY        CCY
      C                   MOVEL     I_CACD        ACD
      C                   MOVEL     I_CASN        ASN
- 
+
      C                   Z-ADD     *zero         O_TVDR
      C                   Z-ADD     *zero         O_TCDR
- 
+
       * Read first child a/c entry
- 
+
      C*****ACPOK         SETLL     ACPO1                                                      CAP204
      C*****ACPOK         SETLL     GLACPML0                                          CAP204 AR976539
      C     ACPOK         SETLL     ACPO1                                                    AR976539
- 
+
      C                   EXSR      READ_ENTRY
- 
- 
+
+
       * Do until more more child a/c entries are read
- 
+
      C     *IN60         DOWEQ     '0'
- 
+
       * If entry has not yet been posted
       * Accumulate today's dr totals
- 
+
      C                   TESTB     '4'           E_PRIN               99        *
- 
+
      C     *IN99         IFEQ      '1'
      C     E_SPOS        IFNE      '  GE-CX'
      C     E_SPOS        ANDNE     '  GE-SF'                                    217028
@@ -118,15 +121,15 @@
      C                   ADD       1             O_TCDR
      C                   ENDIF
      C                   ENDIF
- 
+
       * Read next child a/c entry
- 
+
      C                   EXSR      READ_ENTRY
- 
+
      C                   ENDDO
- 
+
       * If today's debit totals are exceeded
- 
+
      C     O_TVDR        IFGT      I_MDVD
      C     *zero         ANDNE     I_MDVD
      C     O_TCDR        ORGT      I_MDCD
@@ -135,16 +138,16 @@
      C                   ELSE
      C                   MOVEL     'N'           I_Max_Dr_Excd
      C                   ENDIF
- 
- 
+
+
      C                   RETURN
- 
+
       /SPACE 5
       ********************************************************************
       * Read an entry
       ********************************************************************
      C     READ_ENTRY    BEGSR
- 
+
      C*****ACPOK         READE     ACPO1                                  60    *             CAP204
      C*****ACPOK         READE     GLACPML0                               60    *    CAP204 AR976539
      C     ACPOK         READE     ACPO1                                  60                AR976539
@@ -156,7 +159,7 @@
      C     ACPOK         READE     ACPO1                                  60                AR976539
      C  N60              MOVEL     INREC         I_ENTRY
      C                   ENDDO
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -164,9 +167,9 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Return code
       * Error Message
      C                   PARM                    X_RTCD
@@ -183,12 +186,12 @@
      C**********         PARM                    I_CACD            4 0                        245968
      C                   PARM                    I_CACD           10 0                        245968
      C                   PARM                    I_CASN            2 0
- 
+
       * Maximum Debit Value in a Day
       * Maximum Debit Count in a Day
      C                   PARM                    I_MDVD           15 0
      C                   PARM                    I_MDCD            3 0
- 
+
       * OUTPUTS
       * Maximum Debit Value/Debit Count in a Day Exceeded
      C                   PARM                    I_Max_Dr_Excd     1
@@ -196,7 +199,7 @@
       * Today's total dr count
      C                   PARM                    O_TVDR           15 0
      C                   PARM                    O_TCDR            3 0
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5

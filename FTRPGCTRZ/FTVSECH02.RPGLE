@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas FT Default Sender's Charges in Trans. Ccy')
+/**** *  TEXT('Midas FT Default Sender's Charges in Trans. Ccy')                            MD060753
+/*EXI *  TEXT('Midas FT Default Sender s Charges in Trans. Ccy')                            MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Standard subprograms                                 *
@@ -17,9 +18,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSW209             Date 01Apr09               *
+      *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
       *                 CSW207             Date 07Jun07               *
@@ -37,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -49,9 +52,9 @@
       *  CFT008 - Funds Transfer addition of MT102 messages           *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -69,19 +72,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
       **--------------------------------------------------------------------------------------------
@@ -89,100 +92,100 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions parameter list
       ** for call to FT0010.
      D/COPY FTCPYSRC,FT0010D001
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT102HSPD) PREFIX(H)
- 
+
       * Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT102DSPD)
- 
+
       ** External data structure for Bank details ICD
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for ICd
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for Access Objects - long data structure                                          220004
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     220004
                                                                                               220004
       * OK Flags for second screen
      D OKFlagDs2     E DS                  EXTNAME(FTE102S2PD)
- 
+
       * OK Flags for First screen
      D OKFlagDs1     E DS                  EXTNAME(FTE102S1PD)
- 
+
       * OK Flags for second screen - header
      D OKFlagHs2     E DS                  EXTNAME(FTE102H2PD)
- 
+
       * OK Flags for First screen  - header
      D OKFlagHs1     E DS                  EXTNAME(FTE102H1PD)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Numeric version of Receiver's Charges in Receiver's Ccy
      D NumSndCHG       S             13P 0
- 
+
       ** Work field for % rate discrepancy
      D WBtPcrd         S              5  2
- 
+
      D*CalcXRate****   S             13P 8 Import
       *                                                                                       CSW201
       ** SWIFT 2001 switchable feature                                                        CSW201
      D CSW201          S              1A                                                      CSW201
      D PRtCd           S              7A                                                      CSW201
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialise fields
       *

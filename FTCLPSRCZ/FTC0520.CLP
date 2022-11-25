@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('Midas FT Incoming Pay'ts Audit & List-Brca')          */
+/****    TEXT('Midas FT Incoming Pay'ts Audit & List-Brca')          */                 /*MD060753*/
+/*EXI    TEXT('Midas FT Incoming Pay ts Audit & List-Brca')          */                 /*MD060753*/
 /********************************************************************/
 /*                                                                  */
 /*       Midas     - FUNDS TRANSFER MODULE                          */
@@ -10,8 +11,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +28,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure    */
 /*       070913 - Pgm tries to access FTINMGPD which is redundant   */
@@ -42,7 +45,7 @@
 /********************************************************************/
 /**          PGM        PARM(&TYPE)                                  /*S01117*/
              PGM        PARM(&TYPE &RSEQ &RLEV &RENT)                /*S01117*/
- 
+
 /**          DCL        VAR(&MEM)  TYPE(*CHAR) LEN(44)               /*S01194*/
              DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)               /*S01194*/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                /*S01117*/
@@ -102,11 +105,11 @@
 /*****IF  COND((%SST(&MPHAS 1 1) = 'C') *AND (&TYPE *EQ 'A')) THEN( +*/                   /*CCB020*/
 /********** SNDPGMMSG  MSG('FT0520 -  Incoming Payments Audit List') +                    /*CCB020*/
 /**********        TOMSGQ(MRUNQ))                                    */            /*S01117 CCB020*/
- 
+
       IF  COND((&WCOB = '*YES') *AND (&TYPE *EQ 'A')) THEN( +
             SNDPGMMSG  MSG('FT0520 -  Incoming Payments Audit List') +
                    TOMSGQ(MRUNQ))                                                         /*CCB020*/
- 
+
 /**     CALL       PGM(FT0520) PARM(&TYPE)                           /*S01117*/
         CALL       PGM(FT0520) PARM(&RSEQ &RLEV &RENT &TYPE)         /*S01117*/
 /**/
@@ -125,7 +128,7 @@
                  SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                    TOPGMQ(*EXT) TOMSGQ(MOPERQ))
         ENDDO
- 
+
 /**/
 /** check for FOOB errors trapped by program **/
 /**/
@@ -140,7 +143,7 @@
                      SNDPGMMSG  MSGID(MEM0002) MSGF(MIDAS) +
                         TOPGMQ(*EXT) TOMSGQ(MOPERQ))
         ENDDO
- 
+
              GOTO       CMDLBL(END)                                   /*067582*/
 ABNOR:                                                                /*067582*/
 /**/                                                                  /*067582*/
@@ -159,5 +162,5 @@ END:                                                                  /*067582*/
              MONMSG     MSGID(CPF0000)                                /*067582*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

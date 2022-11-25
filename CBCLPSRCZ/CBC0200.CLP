@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas CB Select type of depend'y table rep')          */
+/**** *  TEXT('Midas CB Select type of depend'y table rep')          */                 /*MD060753*/
+/*EXI *  TEXT('Midas CB Select type of depend y table rep')          */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*        Midas     - Close of Business Processing              */
@@ -9,15 +10,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO.                    DATE 00/00/00             */
+/*                                         DATE 00/00/00             */
 /*                                                                   */
+/*********************************************************************/
+/*       MD060753 - Error in source compilation                      */
 /*********************************************************************/
              PGM
 /**/

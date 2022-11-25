@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SD Compliance Watch Reset 'Temp Rel' Flag')
+/**** *  TEXT('Midas SD Compliance Watch Reset 'Temp Rel' Flag')                            MD060753
+/*EXI *  TEXT('Midas SD Compliance Watch Reset  Temp Rel  Flag')                            MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data Module                                 *
@@ -12,108 +13,110 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD015  *CREATE    Date 14Oct02               *
+      *                 CSD015  *CREATE    Date 14Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD015 - Midas Compliance Watch - Watch List Checking        *
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
-      ** ¦ F-specs                              ¦
-      ** ¦ =======                              ¦
+      **  F-specs                              
+      **  =======                              
       ** +--------------------------------------+
- 
+
      FSDCWHTPD  UF   E             DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
-      ** ¦ Automatically included D-specs       ¦
-      ** ¦ ==============================       ¦
+      **  Automatically included D-specs       
+      **  ==============================       
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
-      ** ¦ End of automatically included D-specs¦
-      ** ¦ =====================================¦
+      **  End of automatically included D-specs
+      **  =====================================
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
-      ** ¦ Manually included D-specs            ¦
-      ** ¦ =========================            ¦
+      **  Manually included D-specs            
+      **  =========================            
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Named constants                      ¦
-      ** ¦ ===============                      ¦
+      **  Named constants                      
+      **  ===============                      
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Arrays and Data Structures           ¦
-      ** ¦ ==========================           ¦
+      **  Arrays and Data Structures           
+      **  ==========================           
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Declared variables                   ¦
-      ** ¦ ==================                   ¦
+      **  Declared variables                   
+      **  ==================                   
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ End of D-specs                       ¦
-      ** ¦ ==============                       ¦
+      **  End of D-specs                       
+      **  ==============                       
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
-      ** ¦                                                                ¦
-      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
-      ** ¦ executed at program activation.                                ¦
-      ** ¦                                                                ¦
+      **                                                                 
+      **  Initial processing is performed automatically: the *INZSR is   
+      **  executed at program activation.                                
+      **                                                                 
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   READ      SDCWHTPD                               75
- 
+
      C                   DOW       *IN75 = *OFF
- 
+
      C                   IF        W3TREL = 'Y'
      C                   EVAL      W3TREL = *BLANKS
      C                   UPDATE    SDCWHTD0
      C                   ENDIF
- 
+
      C                   READ      SDCWHTPD                               75
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************

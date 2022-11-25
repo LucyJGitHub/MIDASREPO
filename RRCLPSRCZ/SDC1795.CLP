@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas Fwd Recovery(Last 'xx' Transactions)')          */
+/**** *  TEXT('Midas Fwd Recovery(Last 'xx' Transactions)')          */                 /*MD060753*/
+/*EXI *  TEXT('Midas Fwd Recovery(Last  xx  Transactions)')          */                 /*MD060753*/
 /********************************************************************/
 /*                                                                  */
 /*        Midas     - Restart Recovery Module                   */
@@ -9,20 +10,22 @@
 /*                                                                  */
 /*      (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO.096044         DATE  29MAR96                 */
+/*                     096044         DATE  29MAR96                 */
 /*                     S01194         DATE  21FEB90                 */
 /*                     E13205         DATE  11/03/89                */
 /*                     S01179         DATE  13/09/88                */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                             */
 /*       096044  -  Convert to AS/400 naming conventions            */
 /*       S01194  -  NEW STANDING DATA                               */

@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas ZA Insert decimal pt. and 0's for numeric')
+/**** *  TEXT('Midas ZA Insert decimal pt. and 0's for numeric')                            MD060753
+/*EXI *  TEXT('Midas ZA Insert decimal pt. and 0 s for numeric')                            MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Copy Source converted into ILE procedures            *
@@ -42,24 +43,26 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CAP002  *CREATE    Date 22Jan98               *
+      *                 CAP002  *CREATE    Date 22Jan98               *
       *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP002 - Conversion of SE inputs into modular structure to   *
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -78,77 +81,77 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-Specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
       ** +--- The converted ZEDITZ1 starts here ---------------------------+
- 
+
      D ZA1             S              1    DIM(16)                              ZALIGN/ZEDIT ARRAY
      D ZA2             S              1    DIM(16)                              ZALIGN/ZEDIT ARRAY
- 
+
       ** +--- The converted ZEDITZ1 ends here -----------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Input fields
- 
+
       ** Numeric Input (also the output)
      D   ZFIELD        S             16A
- 
+
       ** Number of decimal position
      D   ZADEC         S              1P 0
- 
+
       ** Working Variables
- 
+
      D ZADEC2          S              2P 0
- 
+
       ** Array Index
      D   IdZ1          S              2P 0
      D   IdZ2          S              2P 0
- 
+
       ** +-----------------------------------------------------------------+
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -156,23 +159,23 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
      C                   EXSR      ZEDIT
       *
      C                   RETURN
- 
+
      C/EJECT
- 
+
       ** +--- The converted ZEDITZ2 starts here ---------------------------+
- 
+
       *****************************************************************
      C     ZEDIT         BEGSR                                                  ***  ZEDIT  ***
       *
@@ -180,19 +183,19 @@
       *
      C                   MOVEA     ' '           ZA1
      C                   MOVEA     ' '           ZA2
- 
+
      C                   Z-ADD     16            IdZ1
      C                   Z-ADD     16            IdZ2
- 
+
      C     16            SUB       ZADEC         ZADEC2
- 
+
      C                   MOVEA     ZFIELD        ZA1
       *
       ** Check if there are any decimal places.
       *
      C     ZADEC         COMP      0                                      91
      C   91              GOTO      ZT20
- 
+
      C     ZT10          TAG                                                    ** ZT10 TAG ***
       *
       **  Set-up Decimals
@@ -200,7 +203,7 @@
      C                   MOVE      ZA1(IdZ1)     ZA2(IdZ2)
      C     IdZ1          SUB       1             IdZ1
      C     IdZ2          SUB       1             IdZ2
- 
+
      C     IdZ2          COMP      0                                      90
      C   90              GOTO      ZT30
       *
@@ -213,7 +216,7 @@
       *
      C                   MOVE      '.'           ZA2(IdZ2)
      C     IdZ2          SUB       1             IdZ2
- 
+
      C     ZT20          TAG                                                    ** ZT20 TAG ***
       *
       ** Set-up integers
@@ -221,33 +224,33 @@
      C                   MOVE      ZA1(IdZ1)     ZA2(IdZ2)
      C     IdZ1          SUB       1             IdZ1
      C     IdZ2          SUB       1             IdZ2
- 
+
      C     IdZ2          COMP      0                                  90
      C   90              GOTO      ZT20
       *
       ** Put in leading blanks
       *
      C     ZT30          TAG
- 
+
      C                   Z-ADD     1             IdZ2
- 
+
      C     ZT40          TAG
- 
+
      C     ZA2(IdZ2)     COMP      '0'                                9090
      C   90ZA2(IdZ2)     COMP      ' '                                9090
- 
+
      C   90              GOTO      ZT50
- 
+
      C                   MOVE      ' '           ZA2(IdZ2)
      C     IdZ2          ADD       1             IdZ2
- 
+
      C     IdZ2          COMP      16                                   90
      C   90              GOTO      ZT40
       *
       ** If no integers, put in leading zero
       *
      C     ZT50          TAG                                                    ** ZT50 TAG ***
- 
+
      C                   Z-ADD     ZADEC2        IdZ2
      C  N91IdZ2          SUB       1             IdZ2
      C     ZA2(IdZ2)     COMP      ' '                                    90
@@ -261,10 +264,10 @@
      C**
      CSR   ZEND          ENDSR                                                  ** ZEND **    *
       *****************************************************************
- 
+
       ** +--- The converted ZEDITZ1 ends here -----------------------------+
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -276,24 +279,24 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       ** Input Fields
- 
+
       ** Numeric Input (also the output)
      C                   PARM                    ZFIELD
       ** Number of decimal position
      C                   PARM                    ZADEC
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

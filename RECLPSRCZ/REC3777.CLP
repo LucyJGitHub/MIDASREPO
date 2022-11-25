@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('Midas RE A/C'S TO MAKE INACT (LIST+OPTION)')          */
+/****    TEXT('Midas RE A/C'S TO MAKE INACT (LIST+OPTION)')          */                 /*MD060753*/
+/*EXI    TEXT('Midas RE A/C S TO MAKE INACT (LIST+OPTION)')          */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas   Retail Module                               */
@@ -9,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CRE083AV           Date 06Aug12              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CRE083AV           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE083AV - COB Restructure - RE COB Optimisation Phase 1    */
 /*       116774  - No records selected by OPNQRYF because file       */
@@ -77,7 +80,7 @@
                            TEXT(&STEXT)                                                 /*CRE083AV*/
 /**/
 /**********  CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STATUS)        */                 /*CRE083AV*/
- 
+
              RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
 /**/
              SNDPGMMSG  MSG('REC3777 - Transfer of accounts to +
@@ -243,7 +246,7 @@
                 SNDPGMMSG  MSG('FILE OUT OF BALANCE - RE3778') +
                            TOMSGQ(MOPERQ)
              ENDDO
- 
+
 /* Begin recovery from error */                                                         /*CRE083AV*/
 /* Retrieve attributes of current job */                                                /*CRE083AV*/
                                                                                         /*CRE083AV*/

@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas Comm'ns/Compression Programs Start-Up.')        */
+/**** *  TEXT('Midas Comm'ns/Compression Programs Start-Up.')        */                 /*MD060753*/
+/*EXI *  TEXT('Midas Comm ns/Compression Programs Start-Up.')        */                 /*MD060753*/
 /********************************************************************/
 /*                                                                  */
 /*       Midas S.W.I.F.T. DIRECT LINK                       */
@@ -9,12 +10,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC023             Date 30Jan04              */
+/*                      CSC023             Date 30Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CPK014             Date 06Nov01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -35,6 +37,7 @@
 /*                                                                  */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
@@ -158,10 +161,10 @@
 /************         MONMSG     MSGID(CPF2105)                                /*087358*/ /*CPK014*/
 /************         CRTDTAQ    DTAQ(&XLIB/MSDTQA) MAXLEN(1) +                           /*CPK014*/
 /************                    AUT(*CHANGE)                                  /*E22636*/ /*CPK014*/
- 
+
 /* Clear data queue MSDTQA. */                                                            /*CPK014*/
              CALL       PGM(QCLRDTAQ) PARM('MSDTQA' '*LIBL ')                             /*CPK014*/
- 
+
 /************                                                               */ /*E22636*/ /*CPK014*/
 /**Clear*dataq*MSDTQB*by*deleting*and*recreating*it                         */ /*E22636*/ /*CPK014*/
 /************                                                               */ /*E22636*/ /*CPK014*/
@@ -171,10 +174,10 @@
 /************                    AUT(*CHANGE)                                  /*E22636*/ /*CSW095*/
 /************         CRTDTAQ    DTAQ(&XLIB/MSDTQB) MAXLEN(1021) +                        /*CPK014*/
 /************                    AUT(*CHANGE)                                  /*CSW095*/ /*CPK014*/
- 
+
 /* Clear data queue MSDTQB. */                                                            /*CPK014*/
              CALL       PGM(QCLRDTAQ) PARM('MSDTQB' '*LIBL ')                             /*CPK014*/
- 
+
 /*                                                                   */
 /* Submit job to run communications program.                         */
 /*                                                                   */
@@ -239,5 +242,5 @@
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('Midas 'Accrual Summary'')                             */
+/****    TEXT('Midas 'Accrual Summary'')                             */                 /*MD060753*/
+/*EXI    TEXT('Midas  Accrual Summary ')                             */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas     Retail Module                                 */
@@ -9,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CRE083AC           Date 06Aug12              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CRE083AC           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE083AC - COB Restructure - RE COB Optimisation Phase 1    */
 /*       CGL075 - Detailed Accrual Summary                           */
@@ -135,23 +138,23 @@
              OPNQRYF    FILE((GEIERPD0 *FIRST)) FORMAT(*FILE) +
                           KEYFLD((BRCA) (CCY) (ACOD) (DRCR))
              CALL       PGM(RE3666A)
- 
+
              CLOF       OPNID(GEIERPD0)
              DLTOVR     FILE(GEIERPD0)
 /*/COPY WNCPYSRC,REC3666A02                                          */
 /**/
- 
+
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)  /*CGL075*/
              IF         COND(&RTCD *NE '       ') THEN(DO)            /*CGL075*/
- 
+
              CLRPFM     FILE(GEIERPD0)
              CLRPFM     FILE(GEIER2PD0)
- 
+
              ENDDO                                                    /*CGL075*/
                                                                                         /*CRE083AC*/
 /* Close DO of check if this component must run.*/                                      /*CRE083AC*/
              ENDDO                                                                      /*CRE083AC*/
- 
+
              GOTO       CMDLBL(END)                                                     /*CRE083AC*/
                                                                                         /*CRE083AC*/
  ABNOR:                                                                                 /*CRE083AC*/

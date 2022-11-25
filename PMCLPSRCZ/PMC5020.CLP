@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas Control display of 'POOL CUSTOMER' job')        */
+/**** *  TEXT('Midas Control display of 'POOL CUSTOMER' job')        */                 /*MD060753*/
+/*EXI *  TEXT('Midas Control display of  POOL CUSTOMER  job')        */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas     - Portfolio Management Module                     */
@@ -9,14 +10,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPM005             Date 17Jul96              */
+/*                      CPM005             Date 17Jul96              */
 /*                      089169             Date 06Sep95              */
 /*                      082392             DATE 30JAN95              */
 /*                      S01486             DATE 26AUG94              */
@@ -25,6 +27,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPM005 - Private Banking Phase 2                            */
 /*                Focus Group Changes upgraded to DBA                */
@@ -43,7 +46,7 @@
 /*********************************************************************/
 /*********** PGM     PARM(&SCROLL)                                    /*CPM005*/
              PGM        PARM(&WJOB)                                   /*CPM005*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -54,9 +57,9 @@
              DCL        VAR(&WJOB) TYPE(*CHAR) LEN(8)                 /*CPM005*/
 /************DCL        VAR(&ENQT) TYPE(*CHAR) LEN(1)                  *S01486*/
              DCL        VAR(&ENQT) TYPE(*CHAR) LEN(1)                 /*CPM005*/
- 
+
 /* IF SCROLL SCREEN SELECTED START SCROLL SCREEN    */
- 
+
 /*********** IF         COND(&SCROLL *EQ 'Y') THEN(DO)                /*CPM005*/
              IF         COND(&WJOB *EQ 'POSINS') THEN(DO)             /*CPM005*/
 /************CHGDTAARA  DTAARA(*GDA (1 1)) VALUE(' ')                  *S01486*/
@@ -64,14 +67,14 @@
              CHGDTAARA  DTAARA(*LDA (540 1)) VALUE(' ')               /*S01486*/
 /*********** CALL       PGM(PMC0670)                          *S01486* *082392*/
              CALL       PGM(PM0670)                                   /*082392*/
- 
+
  /**RETRIEVE*DATA*AREA**GDA*********************************************S01486*/
 /************                                                          *S01486*/
 /************RTVDTAARA  DTAARA(*GDA (1 1)) RTNVAR(&ENQT)               *S01486*/
 /************IF         COND(&ENQT *EQ 'Y' *OR &ENQT *EQ 'C') THEN(DO) *S01486*/
 /************CALL       PGM(PMC1020)                                   *S01486*/
 /************ENDDO                                                     *S01486*/
- 
+
              ENDDO
 /**/                                                                  /*CPM005*/
 /**  Call PM6090 to allow selection of display group  */              /*CPM005*/
@@ -100,10 +103,10 @@
              IF         COND((&ENQT *EQ 'Y') *OR (&ENQT *EQ 'C')) +
                           THEN(RETURN)                                /*CPM005*/
              ENDDO                                                    /*CPM005*/
- 
+
 /**CALL*PM0680*TO*ALLOW*SELECTION*OF*DISPLAY*GROUP***/                /*CPM005*/
 /**  Call PM6050 to allow selection of display group  */              /*CPM005*/
- 
+
 /*********** IF         COND(&SCROLL *EQ 'N') THEN(DO)                /*CPM005*/
              IF         COND(&WJOB *EQ 'TOTINS') THEN(DO)             /*CPM005*/
 /************CHGDTAARA  DTAARA(*GDA (1 1)) VALUE(' ')                  *S01486*/
@@ -113,7 +116,7 @@
              RTVDTAARA  DTAARA(*LDA (540 1)) RTNVAR(&ENQT)            /*CPM005*/
              IF         COND((&ENQT *EQ 'Y') *OR (&ENQT *EQ 'C')) +
                           THEN(RETURN)                                /*CPM005*/
- 
+
 /**IF*SCROLL*SCREEN*SELECTED*TRANSFER*TO*GROUP*JOB*SCROL****************S01486*/
 /**IF*SCROLL*SCREEN*SELECTED*TRANSFER*TO*SCROLL*SCREEN******** /*S01486 CPM005*/
 /***********                                                          /*CPM005*/

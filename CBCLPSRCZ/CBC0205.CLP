@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas CB Submit depend'y tab. rep in batch')          */
+/**** *  TEXT('Midas CB Submit depend'y tab. rep in batch')          */                 /*MD060753*/
+/*EXI *  TEXT('Midas CB Submit depend y tab. rep in batch')          */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*        Midas     - Close of Business Processing              */
@@ -9,10 +10,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 02Jun08              */
+/*                      BG18886            Date 02Jun08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CSC023             Date 29Jan04              */
@@ -23,6 +25,7 @@
 /*                                                                   */
 /*------------------------------------------------------------------ */
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */

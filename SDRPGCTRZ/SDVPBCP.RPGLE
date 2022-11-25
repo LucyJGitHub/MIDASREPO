@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SD Validate private banking valid c'party')
+/**** *  TEXT('Midas SD Validate private banking valid c'party')                            MD060753
+/*EXI *  TEXT('Midas SD Validate private banking valid c party')                            MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data Module - Private Bankings Validation   *
@@ -17,29 +18,31 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
-      *  Prev Amend No. CAP034  *CREATE    Date 03Sep99               *
+      *                 CAP034  *CREATE    Date 03Sep99               *
       *                                    Date DDMmmYY               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP034 - Conversion of SD inputs to modular structure        *
       *           to use as APIs                                      *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
-      ** ¦ Automatically included D-specs       ¦
-      ** ¦ ==============================       ¦
+      **  Automatically included D-specs       
+      **  ==============================       
       ** +--------------------------------------+
       **
       **--------------------------------------------------------------------------------------------
@@ -47,82 +50,82 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
-      ** ¦ End of automatically included D-specs¦
-      ** ¦ =====================================¦
+      **  End of automatically included D-specs
+      **  =====================================
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
-      ** ¦ Manually included D-specs            ¦
-      ** ¦ =========================            ¦
+      **  Manually included D-specs            
+      **  =========================            
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Named constants                      ¦
-      ** ¦ ===============                      ¦
+      **  Named constants                      
+      **  ===============                      
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Arrays and Data Structures           ¦
-      ** ¦ ==========================           ¦
+      **  Arrays and Data Structures           
+      **  ==========================           
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Declared variables                   ¦
-      ** ¦ ==================                   ¦
+      **  Declared variables                   
+      **  ==================                   
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
-      ** ¦ End of D-specs                       ¦
-      ** ¦ ==============                       ¦
+      **  End of D-specs                       
+      **  ==============                       
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
       *****************************************************************
      C
       ** +--- Start of Main processing -----------------------------------+
-      ** ¦                                                                ¦
-      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
-      ** ¦ executed at program activation.                                ¦
-      ** ¦                                                                ¦
+      **                                                                 
+      **  Initial processing is performed automatically: the *INZSR is   
+      **  executed at program activation.                                
+      **                                                                 
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
       *
       ** VALIDATION
       *
@@ -143,12 +146,12 @@
       ** VALIDATION
       *****************************************************************
      C     VCOUN         BEGSR
- 
+
       * Default Valid Counterparty value is 'N'
      C     DDCOUN        IFEQ      ' '
      C                   EVAL      DDCOUN = 'N'
      C                   ENDIF
- 
+
       * Valid Counterparty value can only be 'Y' if Private Banking
       * Customer is 'N'
      C     DDCOUN        IFEQ      'Y'
@@ -158,7 +161,7 @@
      C                   MOVEL     'DDCOUN'      FldNamXAr(Idx)
      C                   MOVEL     'USR3860'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
       * Valid Counterparty value can only be 'Y' or 'N'
      C     DDCOUN        IFNE      'Y'
      C     DDCOUN        ANDNE     'N'
@@ -167,8 +170,8 @@
      C                   MOVEL     'DDCOUN'      FldNamXAr(Idx)
      C                   MOVEL     'USR3863'     MsgIdXAr(Idx)
      C                   ENDIF
- 
- 
+
+
      C     ENDVAL        ENDSR
       *****************************************************************
       /EJECT
@@ -176,7 +179,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -207,9 +210,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

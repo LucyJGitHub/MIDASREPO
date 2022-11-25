@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas EU Define 'In' ccy to Euro RE a/c mapping')     */
+/**** *  TEXT('Midas EU Define 'In' ccy to Euro RE a/c mapping')     */                 /*MD060753*/
+/*EXI *  TEXT('Midas EU Define  In  ccy to Euro RE a/c mapping')     */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - EMU Retail Utilities                                */
@@ -9,10 +10,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 243017             Date 05Jul07              */
+/*                      243017             Date 05Jul07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      TDA082             Date 29Mar04              */
@@ -25,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       243017 - Customer number now can be non-numeric.             */
 /*       TDA082 - No mapping record created                          */
@@ -36,7 +39,7 @@
 /*********************************************************************/
 /*********** PGM **************************************/     /*CRE008*/
              PGM        PARM(&EMUM)                          /*CRE008*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -65,15 +68,15 @@
              DCL        VAR(&EMUM)  TYPE(*CHAR) LEN(1)       /*CRE008*/
              DCL        VAR(&WACSQ) TYPE(*CHAR) LEN(2)       /*217435*/
 /*/COPY WNCPYSRC,EUC0100001                                          */
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
 /*/COPY WNCPYSRC,EUC0100002                                          */
- 
+
 /**START:****CALL*******PGM(EU0100) PARM(&PRM1 &PRM2) ***/   /*CRE008*/
  START:      CALL       PGM(EU0100) PARM(&EMUM &PRM1 &PRM2)  /*CRE008*/
 /*/COPY WNCPYSRC,EUC0100003                                          */
@@ -81,7 +84,7 @@
 /*/COPY WNCPYSRC,EUC0100004                                          */
 /*    Error processing                                               */
 /*    Retrieve LDA and store values                                  */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
                 CHGVAR     VAR(&DBER) VALUE(%SST(&LDA 134 50))
@@ -89,11 +92,11 @@
                            TOMSGQ(MOPERQ MRUNQ)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
              IF         COND(&PRM2 = '1') THEN(GOTO CMDLBL(END))
- 
+
              OVRDBF     FILE(ACCNTAB) SHARE(*YES)
- 
+
              CHGVAR     VAR(&WBRCA) VALUE(%SUBSTRING(&PRM1 7 3))
 /**********  CHGVAR     VAR(&WACOD) VALUE(%SUBSTRING(&PRM1 10 4))                      */ /*TDA082*/
              CHGVAR     VAR(&WCNUM) VALUE(%SUBSTRING(&PRM1 44 6))
@@ -109,7 +112,7 @@
              CHGVAR     VAR(&WCY10) VALUE(%SUBSTRING(&PRM1 41 3))
              CHGVAR     VAR(&WACSQ) VALUE(%SUBSTRING(&PRM1 215 2))    /*217435*/
              CHGVAR     VAR(&WACOD) VALUE(%SUBSTRING(&PRM1 217 10))                       /*TDA082*/
- 
+
              IF         COND(&WCNUM *EQ '000000') THEN(DO)
                                                                       /*137365*/
 /**********  CHGVAR     VAR(&SELECT) VALUE('BRCA *EQ "' *CAT &WBRCA + /*137365*/
@@ -196,18 +199,18 @@
                           &WACSQ *CAT ' ')                            /*217435*/
              ENDDO                                                    /*217435*/
              ENDDO
- 
+
              IF         COND(%SUBSTRING(&PRM1 50 1) *EQ 'Y') THEN(DO)
              OPNQRYF    FILE((ACCNTAB)) QRYSLT(&SELECT) +
                           KEYFLD((BRCA) (ACOD) (CNUM) (CCY) (ACSQ))
              ENDDO
- 
+
              ELSE +
              DO
              OPNQRYF    FILE((ACCNTAB)) QRYSLT(&SELECT) +
                           KEYFLD((BRCA) (ACOD) (CNUM) (ACSQ))
              ENDDO
- 
+
 /*/COPY WNCPYSRC,EUC0100005                                          */
 /*********** CALL ******PGM(EU0110) PARM(&PRM1 &PRM2) **/    /*CRE008*/
              CALL       PGM(EU0110) PARM(&EMUM &PRM1 &PRM2)  /*CRE008*/
@@ -216,7 +219,7 @@
 /**/
 /*    Error processing                                               */
 /*    Retrieve LDA and store values                                  */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
                 CHGVAR     VAR(&DBER) VALUE(%SST(&LDA 134 50))
@@ -224,10 +227,10 @@
                            TOMSGQ(MOPERQ MRUNQ)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
              GOTO       CMDLBL(START)
- 
- 
+
+
 /*     Abnormal termination                                          */
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
@@ -235,8 +238,8 @@
                           Mapping Process has ENDED ABNORMALLY') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
- 
- 
+
+
 /*     Normal termination                                            */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

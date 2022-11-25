@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SD Validate 'Y/N' Fields')                       *
+/**** *  TEXT('Midas SD Validate 'Y/N' Fields')                       *                     MD060753
+/*EXI *  TEXT('Midas SD Validate  Y/N  Fields')                       *                     MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
@@ -15,12 +16,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER034  *CREATE    Date 06Aug08               *
       *                                                               *
       *--------------------------------------------------------------**
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER034 - German Features - New Fields and Enquiries          *
@@ -42,8 +45,8 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ¦ Automatically included D-specs       ¦
-      ** ¦ ==============================       ¦
+      **  Automatically included D-specs       
+      **  ==============================       
       ** +--------------------------------------+
       *
       ** The following /COPY line include (among others) the LDA layout
@@ -64,8 +67,8 @@
      D/COPY ZACPYSRC,ERR_XARRYS
       *
       ** +--------------------------------------+
-      ** ¦ End of automatically included D-specs¦
-      ** ¦ =====================================¦
+      **  End of automatically included D-specs
+      **  =====================================
       ** +--------------------------------------+
       *
       *****************************************************************
@@ -73,23 +76,23 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ¦ Manually included D-specs            ¦
-      ** ¦ =========================            ¦
+      **  Manually included D-specs            
+      **  =========================            
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** ¦ Named constants                      ¦
-      ** ¦ ===============                      ¦
+      **  Named constants                      
+      **  ===============                      
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** ¦ Arrays and Data Structures           ¦
-      ** ¦ ==========================           ¦
+      **  Arrays and Data Structures           
+      **  ==========================           
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** ¦ Declared variables                   ¦
-      ** ¦ ==================                   ¦
+      **  Declared variables                   
+      **  ==================                   
       ** +--------------------------------------+
       *
      D Idx             S              3P 0
@@ -98,17 +101,17 @@
      D PFldName        S             10A
       *
       ** +--------------------------------------+
-      ** ¦ End of D-specs                       ¦
-      ** ¦ ==============                       ¦
+      **  End of D-specs                       
+      **  ==============                       
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** +--- Start of Main processing -------------------------------+
-      ** ¦                                                            ¦
-      ** ¦ Initial processing is performed automatically: the *INZSR  ¦
-      ** ¦ is executed at program activation.                         ¦
-      ** ¦                                                            ¦
+      **                                                             
+      **  Initial processing is performed automatically: the *INZSR  
+      **  is executed at program activation.                         
+      **                                                             
       ** +------------------------------------------------------------+
       *
       ** Initialization

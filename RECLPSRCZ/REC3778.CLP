@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('Midas RE A/C'S TO MAKE INACT (LIST ONLY)')            */
+/****    TEXT('Midas RE A/C'S TO MAKE INACT (LIST ONLY)')            */                 /*MD060753*/
+/*EXI    TEXT('Midas RE A/C S TO MAKE INACT (LIST ONLY)')            */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas        Retail Module                              */
@@ -9,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CRE083AV           Date 06Aug12              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CRE083AV           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE083AV - COB Restructure - Retail CoB Optimisation Phase 1*/
 /*       101949 - Removed DLTF of XACCNT** files because missing     */

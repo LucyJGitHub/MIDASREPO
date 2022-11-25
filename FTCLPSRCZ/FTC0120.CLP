@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas FT Cheques For Collection Authoris'n')          */
+/**** *  TEXT('Midas FT Cheques For Collection Authoris'n')          */                 /*MD060753*/
+/*EXI *  TEXT('Midas FT Cheques For Collection Authoris n')          */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas       FUNDS TRANSFER MODULE                       */
@@ -9,18 +10,20 @@
 /*                            SELECTION                              */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMENDMENT NO. 048377             DATE  22DEC92         */
+/*                          048377             DATE  22DEC92         */
 /*                          S01117             DATE  21SEP90         */
 /*                          S01194             DATE  21SEP90         */
 /*                                                                   */
 /*********************************************************************/
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       048377  -  RECORD LOCKING PROBLEM IN FT PGMS                */
 /*                 (REFER TO ERROR 042167 & 044093)                  */
@@ -29,7 +32,7 @@
 /*********************************************************************/
 /**          PGM                                                      /*S01117*/
              PGM        PARM(&BRCH &BORO &PCMD)                       /*S01117*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -43,11 +46,11 @@
              DCL        VAR(&TRNREF) TYPE(*CHAR) LEN(15)              /*048377*/
              DCL        VAR(&RINFOR) TYPE(*CHAR) LEN(80)              /*048377*/
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)               /*048377*/
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /*  CALL PROGRAM & MONITOR FOR ERRORS                               */
- 
+
 /**          CALL       PGM(FT0120)                                   /*S01117*/
              CALL       PGM(FT0120) PARM(&BRCH &BORO &PCMD)           /*S01117*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
@@ -55,16 +58,16 @@
                           Press Enter to Continue.') TOPGMQ(*EXT)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
 /**   DATABASE ERROR HANDLING   **/
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
  /**         RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)             /*S01194*/
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)             /*S01194*/
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              ENDDO
- 
+
 /**END:********ENDPGM                                                 /*S01117*/
 /**/                                                                  /*S01117*/
  END:                                                                 /*S01117*/
@@ -81,4 +84,4 @@
                           &RINFOR)                                    /*048377*/
 /**/                                                                  /*S01117*/
             ENDPGM                                                    /*S01117*/
- 
+

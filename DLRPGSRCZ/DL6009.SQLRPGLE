@@ -14,7 +14,7 @@
       *        are made to DL9005, this program should also           *
       *        be reviewed.                                           *
       *                                                               *
-      *  Last Amend No. MD-60692           Date 18Nov22               *
+      *  Last Amend No. MD060692           Date 18Nov22               *
       *  Prev Amend No. MD058598           Date 17Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD054140           Date 27Aug19               *

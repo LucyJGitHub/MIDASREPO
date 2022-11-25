@@ -14,14 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD060760           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG23774           Date 20Apr09               *
       *                 BUG22115           Date 13Jan09               *
       *                 CER034  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060760 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG23774 - Updates are not committed                         *
@@ -268,7 +270,7 @@
      D WTotRec         S              5P 0 INZ(0)
      D PTotRcd         S              5P 0 INZ(0)
      D WErmn           S              1A   INZ('N')
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -517,12 +519,14 @@
      C                   IF        %FOUND(SDCUAHL1)
      C                   EVAL      Wi = 1
      C                   EVAL      Wi =
-     C                             %LOOKUP('USR5998':MsgIDArr1(Wi))
+     C**********                   %LOOKUP('USR5998':MsgIDArr1(Wi))                         MD060760
+     C                             %LOOKUP('USR5998':MsgIDArr1:Wi)                          MD060760
       *
      C                   IF        Wi = *ZEROS
      C                   EVAL      Wi = 1
      C                   EVAL      Wi =
-     C                             %LOOKUP(*BLANKS:MsgIDArr1(Wi))
+     C**********                   %LOOKUP(*BLANKS:MsgIDArr1(Wi))                           MD060760
+     C                             %LOOKUP(*BLANKS:MsgIDArr1:Wi)                            MD060760
      C                   EVAL      MsgIDArr1(WI) = 'USR5998'
      C                   ENDIF
      C                   EVAL      %SUBST(OKCuArr(WCtr):1:1) = 'N'
@@ -542,12 +546,14 @@
      C                             ActnArr(WCtr) <> 'D'
      C                   EVAL      Wi = 1
      C                   EVAL      Wi =
-     C                             %LOOKUP('USR5990':MsgIDArr1(Wi))
+     C**********                   %LOOKUP('USR5990':MsgIDArr1(Wi))                         MD060760
+     C                             %LOOKUP('USR5990':MsgIDArr1:Wi)                          MD060760
       *
      C                   IF        Wi = *ZEROS
      C                   EVAL      Wi = 1
      C                   EVAL      Wi =
-     C                             %LOOKUP(*BLANKS:MsgIDArr1(Wi))
+     C**********                   %LOOKUP(*BLANKS:MsgIDArr1(Wi))                           MD060760
+     C                             %LOOKUP(*BLANKS:MsgIDArr1:Wi)                            MD060760
      C                   EVAL      MsgIDArr1(Wi) = 'USR5990'
      C                   ENDIF
       *
@@ -591,7 +597,8 @@
      C                   IF        WMode = '*ADD'
      C                   EVAL      WIndx = 1
      C                   EVAL      WIndx =
-     C                             %LOOKUP(*BLANKS:FldCuArr(WIndx))
+     C**********                   %LOOKUP(*BLANKS:FldCuArr(WIndx))                         MD060760
+     C                             %LOOKUP(*BLANKS:FldCuArr:WIndx)                          MD060760
      C                   IF        WIndx <> 0
      C                   EVAL      WCountrcd = WIndx
      C                   EXSR      SRDftSrnFmt
@@ -664,11 +671,13 @@
       *
      C                   EVAL      Wi = 1
      C                   EVAL      Wi =
-     C                             %LOOKUP('USR5998':MsgIDArr1(Wi))
+     C**********                   %LOOKUP('USR5998':MsgIDArr1(Wi))                         MD060760
+     C                             %LOOKUP('USR5998':MsgIDArr1:Wi)                          MD060760
      C                   IF        Wi = *ZEROS
      C                   EVAL      Wi = 1
      C                   EVAL      Wi =
-     C                             %LOOKUP(*BLANKS:MsgIDArr1(Wi))
+     C**********                   %LOOKUP(*BLANKS:MsgIDArr1(Wi))                           MD060760
+     C                             %LOOKUP(*BLANKS:MsgIDArr1:Wi)                            MD060760
      C                   EVAL      MsgIDArr1(WI) = 'USR5998'
      C                   ENDIF
       *
@@ -700,11 +709,13 @@
       *
      C                   EVAL      Wi = 1
      C                   EVAL      Wi =
-     C                             %LOOKUP(MsgIdArr(Ix):MsgIDArr1(Wi))
+     C**********                   %LOOKUP(MsgIdArr(Ix):MsgIDArr1(Wi))                      MD060760
+     C                             %LOOKUP(MsgIdArr(Ix):MsgIDArr1:Wi)                       MD060760
       *
      C                   IF        Wi = *ZEROS
      C                   EVAL      Wi = 1
-     C                   EVAL      Wi = %LOOKUP(*BLANKS:MsgIDArr1(WI))
+     C**********         EVAL      Wi = %LOOKUP(*BLANKS:MsgIDArr1(WI))                      MD060760
+     C                   EVAL      Wi = %LOOKUP(*BLANKS:MsgIDArr1:WI)                       MD060760
      C                   EVAL      MsgIDArr1(WI) = MsgIdArr(Ix)
      C                   ENDIF
       *

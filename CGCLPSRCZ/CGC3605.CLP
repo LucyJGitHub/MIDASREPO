@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CPK030             Date 11Apr14              */
+/*       Last Amend No. MD060760           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CPK030             Date 11Apr14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BUG17817A          Date 15Apr08              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060760 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK030 - Clean up of deliverable data library.              */
 /*       BUG17817A - Add parameter OPTION(*NOSRC) in CRTLF command   */
@@ -100,7 +102,7 @@
              IF         COND(&RETURN *NE '       ') THEN(DO)
              GOTO       CMDLBL(ENDCLPGM)
              ENDDO
- 
+
  /**/                                                                                     /*CSC022*/
  /** Call AO Switchable features  */                                                      /*CSC022*/
  /**/                                                                                     /*CSC022*/
@@ -206,7 +208,7 @@ ALLOC:       ALCOBJ     OBJ((CGC3605DTA *DTAARA *EXCLRD)) WAIT(3)               
 /**********                TOLIB(&DVLIB)                                    /*BUG8894*/ /*BUG17817*/
              ENDDO
              CLRPFM QTEMP/CGUXMGPD
- 
+
              CHKOBJ     OBJ(QTEMP/CGUXMRPD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
 /************  CPYF       FROMFILE(CGUXMRPD) TOFILE(QTEMP/CGUXMRPD) +                    /*BUG6604*/
@@ -226,7 +228,7 @@ ALLOC:       ALCOBJ     OBJ((CGC3605DTA *DTAARA *EXCLRD)) WAIT(3)               
 /**********                TOLIB(&DVLIB)                                    /*BUG8894*/ /*BUG17817*/
              ENDDO
              CLRPFM QTEMP/CGUXMRPD
- 
+
 /************CHKOBJ     OBJ(QTEMP/CGUXMGL1) OBJTYPE(*FILE)                               /*BUG6604*/
 /************MONMSG     MSGID(CPF9801) EXEC(DO)                                          /*BUG6604*/
 /************  CRTOBJ     SRCMBR(CGUXMGL1) SRCFILE(CGDDSSRCQT) +                         /*BUG6604*/
@@ -251,7 +253,8 @@ ALLOC:       ALCOBJ     OBJ((CGC3605DTA *DTAARA *EXCLRD)) WAIT(3)               
                 CHGVAR     VAR(&SQLSTR) VALUE('create index +
                              QTEMP/CGUXMGL1 on QTEMP/CGUXMGPD (DGITEM, +
                              DGINCR, DGNWGS)')                                            /*CPK030*/
-                RUNSQL     SQL(&SQLSTR) COMMIT(*NONE)                                     /*CPK030*/
+/**********     RUNSQL     SQL(&SQLSTR) COMMIT(*NONE) */                        /*CPK030**MD060760*/
+                SCRUNSQL     SQL(&SQLSTR)                                               /*MD060760*/
              ENDDO                                                                      /*BUG17817*/
              CHKOBJ     OBJ(QTEMP/CGUXMGL2) OBJTYPE(*FILE)                              /*BUG17817*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*BUG17817*/
@@ -262,7 +265,8 @@ ALLOC:       ALCOBJ     OBJ((CGC3605DTA *DTAARA *EXCLRD)) WAIT(3)               
                 CHGVAR     VAR(&SQLSTR) VALUE('create index +
                              QTEMP/CGUXMGL2 on QTEMP/CGUXMGPD (DGSHNM, +
                              DGITEM)')                                                    /*CPK030*/
-                RUNSQL     SQL(&SQLSTR) COMMIT(*NONE)                                     /*CPK030*/
+/**********     RUNSQL     SQL(&SQLSTR) COMMIT(*NONE) */                        /*CPK030**MD060760*/
+                SCRUNSQL     SQL(&SQLSTR)                                               /*MD060760*/
              ENDDO                                                                      /*BUG17817*/
              CHKOBJ     OBJ(QTEMP/CGUXMRL1) OBJTYPE(*FILE)                              /*BUG17817*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*BUG17817*/
@@ -273,7 +277,8 @@ ALLOC:       ALCOBJ     OBJ((CGC3605DTA *DTAARA *EXCLRD)) WAIT(3)               
                 CHGVAR     VAR(&SQLSTR) VALUE('create index +
                              QTEMP/CGUXMRL1 on QTEMP/CGUXMRPD (DEITEM, +
                              DEINCR, DENWRD)')                                            /*CPK030*/
-                RUNSQL     SQL(&SQLSTR) COMMIT(*NONE)                                     /*CPK030*/
+/**********     RUNSQL     SQL(&SQLSTR) COMMIT(*NONE) */                        /*CPK030**MD060760*/
+                SCRUNSQL     SQL(&SQLSTR)                                               /*MD060760*/
              ENDDO                                                                      /*BUG17817*/
              OVRDBF     FILE(CGUXMGPD) TOFILE(QTEMP/CGUXMGPD) +
                           OVRSCOPE(*JOB)
@@ -306,9 +311,9 @@ ALLOC:       ALCOBJ     OBJ((CGC3605DTA *DTAARA *EXCLRD)) WAIT(3)               
              DLTOVR     FILE(CGUXMRL1) LVL(*JOB)
              MONMSG     MSGID(CPF9841)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDCLPGM)
- 
+
 /**/
 /* Abnormal termination processing                       */
 /**/
@@ -329,7 +334,7 @@ ABNORMAL:
              SNDPGMMSG  MSG('Program CGC3605 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              ENDDO                                                                        /*CSC022*/
 /**/
  ENDCLPGM:                                                                               /*BUG6604*/
@@ -337,5 +342,5 @@ ABNORMAL:
 /*******     MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                   /*BUG6604*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

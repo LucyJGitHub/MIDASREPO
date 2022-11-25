@@ -23,7 +23,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD-60692 - Component DLC6009 failed in COB due the missing   *
+      *  MD060692 - Component DLC6009 failed in COB due the missing   *
       *             reversed Deal in DEALSDC.                         *
       *  MD058598 - Correct access to SCSARDPD                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

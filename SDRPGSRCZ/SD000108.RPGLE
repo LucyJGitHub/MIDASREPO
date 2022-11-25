@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026626           Date 12May14               *
+      *  Last Amend No. MD060760           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026626           Date 12May14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060760 - Field D0CNNM was made rdeundant by MD025685       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026626 - Database error on IGA tool report                 *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -583,7 +585,7 @@
      C                   EVAL      D0RPNM = IGRPNM
      C                   EVAL      D0RPTN = IGRPTN
      C                   EVAL      D0FFST = IGFFST
-     C                   EVAL      D0CNNM = IGCNNM
+     C**********         EVAL      D0CNNM = IGCNNM                                          MD060760
      C                   EVAL      D0CLAC = IGCLAC
       *
       ** Customer Number Filter Is Not Blanks

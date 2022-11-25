@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW213             Date 03Jun13               *
+      *  Last Amend No. MD060760           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW213             Date 03Jun13               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060760 - Recompiled due to MEBICCL0 key change             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -47,43 +49,43 @@
      FMEISOCL0  UF A E           K DISK
      F*                                    COMMIT
      F                                     INFSR(*PSSR)
- 
+
       ** Array containing Copyright statement
- 
+
      D A@CPY           DS
      D  CPY@                   1     80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Local data area for database error details
- 
+
      D TRANS           S              2    DIM(44) CTDATA PERRCD(44)                          250600
      D MIFID           S              2    DIM(30) CTDATA PERRCD(30)                          250600
      D FATF            S              2    DIM(48) CTDATA PERRCD(48)                          250600
      D EEAM            S              2    DIM(30) CTDATA PERRCD(30)                          250600
      D WLDA          E DS                  EXTNAME(LDA)
- 
+
       ** Data Area giving Installation Control Details
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Externally described DS for SAR details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** DS for Access Objects - short data structure
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Bank's data structure
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Program Status Data Structure
- 
+
      D PSDS           SDS
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
      D Arr_ISOC        S              2A   DIM(60) CTDATA PERRCD(1)                         BUG14042
      D WBJMRDT         S              7
      D PRTCD           S              7
@@ -93,27 +95,27 @@
      D WERR            S              1
      D WRUN            S              1
      D WTIME           S              6  0
- 
+
       ** Set up copyright parameter
- 
+
      C                   MOVEA     CPY@          CPY2@            80
- 
+
      C                   EXSR      SRINIT
- 
+
      C                   EXSR      SRDFLT
- 
+
      C                   EXSR      SRSETVAL
- 
+
       ** If error is encountered, roll back the values, else commit
- 
+
      C*    WERR          IFEQ      'Y'
      C*                  ROLBK
      C*                  ELSE
      C*                  COMMIT
      C*                  ENDIF
- 
+
      C                   MOVE      *ON           *INLR
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -123,26 +125,26 @@
       *                                                               *
       *****************************************************************
      C     SRINIT        BEGSR
- 
+
      C     *DTAARA       DEFINE    LDA           WLDA
      C     *LOCK         IN        WLDA
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY =  *BLANKS
      C                   EVAL      DBPGM = 'ME001743'
      C                   OUT       WLDA
- 
+
      C                   TIME                    WTIME
- 
+
       ** Get Bank's Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST  '    POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *  If return with an error (LR seton in called program) then
       *  process for database error.
- 
+
      C     PRTCD         IFNE      *BLANK
      C     *LOCK         IN        WLDA
      C                   EVAL      DBKEY = '*FIRST'
@@ -151,20 +153,20 @@
      C                   OUT       WLDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Get Midas Rundate
- 
+
      C                   EVAL      WBJMRDT = BJMRDT
- 
+
       ** Call access object to find out if switchable feature CFT017 is installed
- 
+
      C                   EVAL      CFT017 = 'N'
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CFT017'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS AND
      C                             PRTCD <> '*NRF'
      C     *LOCK         IN        WLDA
@@ -176,7 +178,7 @@
      C                   ELSE
      C                   EVAL      CFT017 = 'Y'
      C                   ENDIF                                                              CFT017
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -187,10 +189,10 @@
       *****************************************************************
       *
      C     SRDFLT        BEGSR
- 
+
      C     *LOVAL        SETLL     MEISOCL0
      C                   READ      MEISOCL0                             0504
- 
+
      C                   IF        *IN05 = *ON
      C     *LOCK         IN        WLDA
      C                   EVAL      DBASE = 3
@@ -199,9 +201,9 @@
      C                   OUT       WLDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   DOW       *IN04 = *OFF
- 
+
      C*********          EVAL      M3FATF = 'N'                                               250600
      C*****M3ISOC        CHAIN     SDCTRYL0                                                 BUG14042
      C**********         IF        %FOUND(SDCTRYL0)                                         BUG14042
@@ -256,7 +258,7 @@
      C                   ENDIF                                                                250600
       *                                                                                       250600
      C                   UPDATE    @ISOCL0                              05
- 
+
      C                   IF        *IN05 = *ON
      C                   EVAL      WERR = 'Y'
      C     *LOCK         IN        WLDA
@@ -266,9 +268,9 @@
      C                   OUT       WLDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   READ      MEISOCL0                             0504
- 
+
      C                   IF        *IN05 = *ON
      C     *LOCK         IN        WLDA
      C                   EVAL      DBASE = 5
@@ -277,9 +279,9 @@
      C                   OUT       WLDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -290,10 +292,10 @@
       *****************************************************************
       *
      C     SRSETVAL      BEGSR
- 
+
      C     *LOVAL        SETLL     SDCTRYL0
      C                   READ      SDCTRYL0                             0504
- 
+
      C                   IF        *IN05 = *ON
      C     *LOCK         IN        WLDA
      C                   EVAL      DBASE = 6
@@ -302,9 +304,9 @@
      C                   OUT       WLDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   DOW       *IN04 = *OFF
- 
+
      C     A4ISOC        CHAIN     MEISOCL0
      C                   IF        NOT %FOUND(MEISOCL0)
      C                   EVAL      M3ISOC = A4ISOC
@@ -352,9 +354,9 @@
      C**********         If        *IN05 = *ON                                       BUG14042 250600
      C**********         Eval      M3FATF = 'Y'                                      BUG14042 250600
      C**********         EndIf                                                       BUG14042 250600
- 
+
      C                   WRITE     @ISOCL0                              06
- 
+
      C                   IF        *IN06 = *ON
      C                   EVAL      WERR = 'Y'
      C     *LOCK         IN        WLDA
@@ -365,9 +367,9 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      SDCTRYL0                             0504
- 
+
      C                   IF        *IN05 = *ON
      C     *LOCK         IN        WLDA
      C                   EVAL      DBASE = 8
@@ -376,11 +378,11 @@
      C                   OUT       WLDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -397,22 +399,22 @@
       *****************************************************************
       *
      C     *PSSR         BEGSR
- 
+
      C                   ROLBK
      C                   IF        WRUN = *BLANK
      C                   EVAL      WRUN = 'Y'
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************
       **  MIFID                                                                             BUG15045

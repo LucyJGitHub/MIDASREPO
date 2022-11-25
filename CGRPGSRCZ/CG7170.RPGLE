@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR813994           Date 11Aug11               *
+      *  Last Amend No. MD060760           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR813994           Date 11Aug11               *
       *                 CER042  *CREATE    Date 11May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060760 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR813994 - Retail Account Codes should be mandatory listed in*
       *             Retail Qualifying Account Codes maintenance in    *
@@ -60,11 +62,12 @@
      F                                     RENAME(CGISRQD0:ZRQPL0)
      F                                     COMMIT
       ** Midas GL Account Extension File                                                    AR813994
-     FGLACNTL9  IF   E           K DISK    INFSR(*PSSR)                                     AR813994
+     F***GLACNTL9  IF   E           K DISK    INFSR(*PSSR)                         AR813994 MD060760
+     FGLACNTLE  IF   E           K DISK    INFSR(*PSSR)                                     MD060760
       ** Retail Interest Scale Qualifying Account Codes Maint Screen
      FCG7170DF  CF   E             WORKSTN INFDS(INFDS2)
      F                                     SFILE(CG7170S1:WSRRN)
- 
+
       ** Parameter list for Y2SNMGC
      D ZAPGMQ          S             10A
      D ZAPGRL          S              5A
@@ -83,7 +86,7 @@
      D WSVAL           S              3A
      D WSFERR          S              3A
      D WSCHGS          S              3A
- 
+
       ** Copyright statement array
      D CPY             S             80    DIM(1) CTDATA PERRCD(1)
       ** Interest Scale Retail Qualifying Account Codes INFDS
@@ -107,7 +110,7 @@
       ** Midas message file default
      D MSGFIL          DS
      D  CSMSGF                 1     10    INZ('CGUSRMSG')
- 
+
       *****************************************************************
       *                                                               *
       * Main routine - Main controlling subroutine                    *
@@ -146,7 +149,7 @@
      C                   CALL      'Y2CLMSC'
      C                   PARM                    ZAPGMQ
      C                   PARM                    ZAPGRL
- 
+
      C                   SELECT
       ** Exit
      C     *IN03         WHENEQ    *ON
@@ -158,12 +161,12 @@
      C     *IN25         WHENEQ    *ON
      C     WSMODE        ANDEQ     'DSPLY'
      C                   EXSR      PAGDWN
- 
+
      C                   OTHER
       ** Enter key
      C                   EXSR      ENTKEY
      C                   ENDSL
- 
+
      C                   ENDDO
       ** Terminate function
      C                   MOVE      *ON           *INLR
@@ -188,10 +191,10 @@
      C                   MOVE      *OFF          *IN40
       ** Reset SFL record number
      C                   Z-ADD     *ZERO         WSRRN
- 
+
       ** Reset RRN of last record loaded into SFL
      C                   Z-ADD     *ZERO         WSLRRN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -207,7 +210,7 @@
       *                                                               *
       *****************************************************************
      C     LODSFL        BEGSR
- 
+
       ** Reset SFL record number to RRN of last record loaded into sfl
      C                   Z-ADD     WSLRRN        WSRRN
       ** Position SFL
@@ -250,7 +253,7 @@
      C     *IN89         IFEQ      *OFF
      C                   READ(N)   ZRQPL0                                 89
      C                   ENDIF
- 
+
       ** If SFl empty
      C     WSRRN         IFEQ      *ZERO
      C                   MOVE      *OFF          *IN41
@@ -261,11 +264,11 @@
      C                   MOVE      *ON           *IN41
       ** Reset SFL RRN to SFL record number
      C                   Z-ADD     WSRRN         DFRNBR
- 
+
       ** Reset RRN of last record loaded into SFL to SFL record number
      C                   Z-ADD     WSRRN         WSLRRN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -282,7 +285,7 @@
       *                                                               *
       *****************************************************************
      C     CHGMOD        BEGSR
- 
+
      C                   CLEAR                   CG7170F2
      C                   SELECT
       ** Display mode
@@ -297,7 +300,7 @@
      C                   EXSR      CLRSFL
      C                   EXSR      LODSFL
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -315,7 +318,7 @@
       *                                                               *
       *****************************************************************
      C     PAGDWN        BEGSR
- 
+
      C                   SELECT
       ** When SFL position to field changes
      C     DFACOS        WHENNE    *BLANK
@@ -327,12 +330,12 @@
      C     *IN89         WHENEQ    *ON
      C                   MOVE      'ISR0002'     ZAMSID
      C                   EXSR      SNDMSG
- 
+
       ** Load next SFL page
      C                   OTHER
      C                   EXSR      LODSFL
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -354,33 +357,33 @@
       *                                                               *
       *****************************************************************
      C     ENTKEY        BEGSR
- 
+
      C                   SELECT
- 
+
       ** When SFL position to field changes
      C     DFACOS        WHENNE    *BLANK
      C                   MOVE      DFACOS        Z6ACOD
      C                   CLEAR                   DFACOS
      C                   EXSR      CLRSFL
      C                   EXSR      LODSFL
- 
+
       ** When SFl empty
      C     WSMODE        WHENEQ    'DSPLY'
      C     WSRRN         ANDEQ     *ZERO
      C                   MOVE      'ISR0001'     ZAMSID
      C                   EXSR      SNDMSG
- 
+
       ** Enter key processing
      C                   OTHER
       ** Validate screen
      C     WSMODE        IFEQ      'DSPLY'
      C                   EXSR      DSPVAL
- 
+
       ** Screen is valid
      C     WSVAL         IFEQ      'YES'
      C                   EXSR      DSPPRO
      C                   ENDIF
- 
+
       ** Add mode
      C                   ELSE
      C                   EXSR      ADDVAL
@@ -390,7 +393,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -406,25 +409,25 @@
       *                                                               *
       *****************************************************************
      C     DSPVAL        BEGSR
- 
+
      C                   MOVE      'YES'         WSVAL
      C                   MOVE      'YES'         WSFERR
- 
+
       ** Process first changed SFL record
      C                   READC     CG7170S1                               88
      C     *IN88         DOWEQ     *OFF
- 
+
       ** If SFL option field is blank, setoff the SFLNXTCHG & option
       ** (RI) indicators
      C     DSOPTN        IFEQ      *BLANK
      C                   MOVEA     '00'          *IN(68)
- 
+
       ** Update & read next changed SFL record
      C                   UPDATE    CG7170S1
      C                   READC     CG7170S1                               88
      C                   ITER
      C                   ENDIF
- 
+
       ** If SFL option field is NOT one of the following, then error.
       ** 'D' - Delete, 'E' - Enquire or 'A' - Amend
      C     DSOPTN        IFEQ      'D'
@@ -433,7 +436,7 @@
      C                   ELSE
      C                   MOVE      'NO '         WSVAL
      C                   MOVEA     '11'          *IN(68)
- 
+
       ** If first SFL option field in error
      C     WSFERR        IFEQ      'YES'
      C                   MOVE      'NO '         WSFERR
@@ -441,22 +444,22 @@
      C                   ENDIF
      C                   MOVE      'ISR0021'     ZAMSID
      C                   EXSR      SNDMSG
- 
+
       ** Update & read next changed SFL record
      C                   UPDATE    CG7170S1
      C                   READC     CG7170S1                               88
      C                   ITER
      C                   ENDIF
- 
+
       ** If valid SFL option
      C                   MOVEA     '0'           *IN(68)
      C                   MOVEA     '1'           *IN(69)
- 
+
       ** Update & read next changed SFL record
      C                   UPDATE    CG7170S1
      C                   READC     CG7170S1                               88
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -476,51 +479,51 @@
       *                                                               *
       *****************************************************************
      C     DSPPRO        BEGSR
- 
+
      C                   MOVE      'NO '         WSCHGS
- 
+
       ** Process first changed SFL record
      C                   READC     CG7170S1                               88
      C     *IN88         DOWEQ     *OFF
- 
+
      C                   SELECT
- 
+
       ** Delete screen processing
      C     DSOPTN        WHENEQ    'D'
      C                   EXSR      DELSCR
- 
+
       ** Enquiry screen processing
      C     DSOPTN        WHENEQ    'E'
      C                   EXSR      ENQSCR
- 
+
       ** Amend screen processing
      C     DSOPTN        WHENEQ    'A'
      C                   EXSR      AMDSCR
      C                   ENDSL
- 
+
       ** Exit selected from previous screen
      C     *IN03         IFEQ      *ON
      C                   LEAVE
      C                   ENDIF
      C                   CLEAR                   DSOPTN
      C                   MOVEA     '00'          *IN(68)
- 
+
       ** Update & read next changed SFL record
      C                   UPDATE    CG7170S1
      C                   READC     CG7170S1                               88
      C                   ENDDO
- 
+
       ** If record change/s have taken place then re-build SFL
       ** prior to re-display
      C     *IN03         IFEQ      *OFF
      C     WSCHGS        ANDEQ     'YES'
      C                   Z-ADD     *ZERO         Z6ACOD
- 
+
       ** Clear & re-load SFL
      C                   EXSR      CLRSFL
      C                   EXSR      LODSFL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -536,7 +539,7 @@
       *                                                               *
       *****************************************************************
      C     DELSCR        BEGSR
- 
+
       ** Setup delete screen fields
      C                   Z-ADD     DSACOD        D1ACOD
      C                   MOVEL(P)  DSDESC        D1DESC
@@ -546,13 +549,13 @@
      C                   MOVE      'ISR0041'     ZAMSID                                     AR813994
      C                   EXSR      SNDMSG                                                   AR813994
      C                   ELSE                                                               AR813994
- 
+
       ** Setup record delete warning message
      C                   MOVE      'ISR0031'     ZAMSID
      C                   EXSR      SNDMSG
      C                   ENDIF                                                              AR813994
      C                   MOVE      *OFF          *IN12
- 
+
       ** Until exit or previous
      C     *IN03         DOUEQ     *ON
      C     *IN12         OREQ      *ON
@@ -561,15 +564,15 @@
      C                   SELECT
      C     *IN03         WHENEQ    *ON
      C     *IN12         OREQ      *ON
- 
+
       ** Confirm delete selected
      C     *IN06         WHENEQ    *ON
- 
+
       ** Attempt to delete the retail interest scale qualifying account
       ** code record
      C                   IF        WDel_Acod_Flg = 'Y'                                      AR813994
      C     DSACOD        DELETE    ZRQPL0                             87
- 
+
       ** If record deleted
      C     *IN87         IFEQ      *OFF
      C                   COMMIT
@@ -579,12 +582,12 @@
      C                   ENDIF                                                              AR813994
      C                   ENDSL
      C                   ENDDO
- 
+
       ** Clear the program message queue
      C                   CALL      'Y2CLMSC'
      C                   PARM                    ZAPGMQ
      C                   PARM                    ZAPGRL
- 
+
      C                   ENDSR
       *****************************************************************                     AR813994
       *                                                               *                     AR813994
@@ -594,16 +597,20 @@
      C     SrVal_ACOD    BEGSR                                                              AR813994
                                                                                             AR813994
      C                   EVAL      WDel_Acod_Flg = 'Y'                                      AR813994
-     C     DSACOD        SETLL     GLACNTL9                                                 AR813994
-     C     DSACOD        READE     GLACNTL9                                                 AR813994
-     C                   DOW       NOT %EOF(GLACNTL9)                                       AR813994
+     C*****DSACOD        SETLL     GLACNTL9                                        AR813994 MD060760
+     C*****DSACOD        READE     GLACNTL9                                        AR813994 MD060760
+     C**********         DOW       NOT %EOF(GLACNTL9)                              AR813994 MD060760
+     C     DSACOD        SETLL     GLACNTLE                                                 MD060760
+     C     DSACOD        READE     GLACNTLE                                                 MD060760
+     C                   DOW       NOT %EOF(GLACNTLE)                                       MD060760
       ** Check in Accounts Maintenance if there is an associated account code               AR813994
       ** where Interest Scale Required flag is ticked                                       AR813994
      C                   IF        F1ZINS = 'Y'                                             AR813994
      C                   EVAL      WDel_Acod_Flg = 'N'                                      AR813994
      C                   LEAVE                                                              AR813994
      C                   ENDIF                                                              AR813994
-     C     DSACOD        READE     GLACNTL9                                                 AR813994
+     C*****DSACOD        READE     GLACNTL9                                        AR813994 MD060760
+     C     DSACOD        READE     GLACNTLE                                                 MD060760
      C                   ENDDO                                                              AR813994
                                                                                             AR813994
      C                   ENDSR                                                              AR813994
@@ -621,18 +628,18 @@
       *                                                               *
       *****************************************************************
      C     ENQSCR        BEGSR
- 
+
       ** Setup enquiry screen fields
      C                   Z-ADD     DSACOD        D3ACOD
      C                   MOVEL(P)  DSDESC        D3DESC
      C                   MOVE      *OFF          *IN12
- 
+
       ** Until exit or previous
      C     *IN03         DOUEQ     *ON
      C     *IN12         OREQ      *ON
      C                   EXFMT     CG7170F3
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -648,49 +655,49 @@
       *                                                               *
       *****************************************************************
      C     AMDSCR        BEGSR
- 
+
       ** Setup amend screen fields
      C                   MOVE      DSACOD        D4ACOD
      C                   MOVEL(P)  DSDESC        D4DESC
      C                   MOVE      *OFF          *IN70
      C                   MOVE      *OFF          *IN12
- 
+
       ** Until exit or previous
      C     *IN03         DOUEQ     *ON
      C     *IN12         OREQ      *ON
      C                   WRITE     #MSGCTL
      C                   EXFMT     CG7170F4
- 
+
       ** Clear the program message queue
      C                   CALL      'Y2CLMSC'
      C                   PARM                    ZAPGMQ
      C                   PARM                    ZAPGRL
- 
+
      C                   SELECT
      C     *IN03         WHENEQ    *ON
      C     *IN12         OREQ      *ON
- 
+
       ** Confirm amend selected
      C     *IN06         WHENEQ    *ON
- 
+
       ** Account code amended
      C                   MOVE      'YES'         WSVAL
      C                   MOVE      *OFF          *IN70
      C                   MOVE      D4ACOD        WSACOD
- 
+
       ** Validate account code
      C                   EXSR      VALACD
- 
+
       ** Invalid account code
      C     WSVAL         IFEQ      'NO '
      C                   MOVE      *ON           *IN70
      C                   CLEAR                   D4DESC
- 
+
      C                   ELSE
       ** Account code description
      C                   MOVEL(P)  A5ACCN        D4DESC
      C                   Z-ADD     Z6ACOD        W1ACOD
- 
+
       ** Update retail qualifying account code record
      C     DSACOD        CHAIN     ZRQPL0                             86
      C     *IN86         IFEQ      *OFF
@@ -706,30 +713,30 @@
      C                   ENDIF
      C                   Z-ADD     W1ACOD        Z6ACOD
      C                   ENDIF
- 
+
       ** Enter key
      C                   OTHER
- 
+
       ** Validate screen
      C                   MOVE      'YES'         WSVAL
      C                   MOVE      *OFF          *IN70
      C                   MOVE      D4ACOD        WSACOD
- 
+
       ** Validate account code
      C                   EXSR      VALACD
- 
+
       ** Invalid account code
      C     WSVAL         IFEQ      'NO '
      C                   MOVE      *ON           *IN70
      C                   CLEAR                   D4DESC
- 
+
      C                   ELSE
       ** Account code description
      C                   MOVEL(P)  A5ACCN        D4DESC
      C                   ENDIF
      C                   ENDSL
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -745,14 +752,14 @@
       *                                                               *
       *****************************************************************
      C     ADDVAL        BEGSR
- 
+
      C                   MOVE      'YES'         WSVAL
      C                   MOVE      *OFF          *IN70
      C                   MOVE      D2ACOD        WSACOD
- 
+
       ** Validate account code
      C                   EXSR      VALACD
- 
+
       ** Invalid account code
      C     WSVAL         IFEQ      'NO '
      C                   MOVE      *ON           *IN70
@@ -761,7 +768,7 @@
       ** Account code description
      C                   MOVEL(P)  A5ACCN        D2DESC
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -777,7 +784,7 @@
       *                                                               *
       *****************************************************************
      C     VALACD        BEGSR
- 
+
      C                   DO
       ** Account code required
      C     WSACOD        IFEQ      *BLANK
@@ -786,7 +793,7 @@
      C                   EXSR      SNDMSG
      C                   LEAVE
      C                   ENDIF
- 
+
       ** Account code must be numeric
      C                   TESTN                   WSACOD               65
      C     *IN65         IFEQ      *OFF
@@ -795,7 +802,7 @@
      C                   EXSR      SNDMSG
      C                   LEAVE
      C                   ENDIF
- 
+
       ** Must be a valid Midas account code
      C                   CALL      'AOACODR0'
      C                   PARM      *BLANKS       PMRTCD
@@ -809,23 +816,23 @@
      C                   EXSR      SNDMSG
      C                   LEAVE
      C                   ENDIF
- 
+
       ** Must not already exist within the retail interest scale
       ** qualifying account codes file
      C                   Z-ADD     Z6ACOD        W1ACOD
      C                   MOVE      WSACOD        Z6ACOD
- 
+
      C     Z6ACOD        SETLL     ZRQPL0                                 86
      C     *IN86         IFEQ      *ON
      C                   MOVE      'NO '         WSVAL
      C                   MOVE      'ISR0019'     ZAMSID
      C                   EXSR      SNDMSG
      C                   ENDIF
- 
+
      C                   Z-ADD     W1ACOD        Z6ACOD
      C                   LEAVE
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -841,13 +848,13 @@
       *                                                               *
       *****************************************************************
      C     ADDCRT        BEGSR
- 
+
      C                   MOVE      D2ACOD        Z6ACOD
      C                   CLEAR                   Z6DLTP
      C                   CLEAR                   Z6DLST
      C                   Z-ADD     AGRDNB        Z6LCDT
      C                   MOVE      'I'           Z6LCTP
- 
+
       ** Create retail qualifying account code record
      C                   WRITE     ZRQPL0
      C                   COMMIT
@@ -856,7 +863,7 @@
      C                   EXSR      SNDMSG
       ** Clear screen fields
      C                   CLEAR                   CG7170F2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -877,7 +884,7 @@
       *                                                               *
       *****************************************************************
      C     SNDMSG        BEGSR
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGMQ
      C                   PARM                    ZAPGRL
@@ -885,13 +892,13 @@
      C                   PARM                    ZAMSGF
      C                   PARM                    ZAMSDA
      C                   PARM                    ZAMSTP
- 
+
       ** Clear all fields for default mechanism next time
      C                   MOVE      *BLANKS       ZAPGRL
      C                   MOVE      *BLANKS       ZAMSID
      C                   MOVE      *BLANKS       ZAMSDA
      C                   MOVE      *BLANKS       ZAMSTP
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -906,7 +913,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEA     CPY           CPY2             80
      C     *DTAARA       DEFINE                  LDA
      C     *DTAARA       DEFINE                  RUNDAT
@@ -925,7 +932,7 @@
      C                   MOVEL(P)  CSMSGF        ZAMSGF
      C                   MOVEL     WPGM          ##PGM
      C                   Z-ADD     15            SFLPAG
- 
+
       ** If the retail interest scale qualifying account codes file is
       ** empty, the default program mode is 'ADD' otherwise it is
       ** 'DISPLAY'
@@ -934,7 +941,7 @@
      C                   ELSE
      C                   MOVEL     'DSPLY'       WSMODE
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -949,22 +956,22 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
       ** Check to see that *PSSR has not already been called
      C     WSRUN         IFEQ      *BLANK
      C                   MOVE      'Y'           WSRUN
- 
+
      C     DBFILE        IFNE      *BLANK
      C                   MOVE      *ON           *INU8
      C                   ENDIF
- 
+
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INLR
      C                   DUMP
       ** Program running interactively, call the error handling program
      C                   CALL      'DBERRCTL'
      C                   ENDIF
- 
+
       ** If *PSSR already run, then end the program here
      C     DBFILE        IFNE      *BLANK
      C                   MOVE      *ON           *INU8
@@ -972,7 +979,7 @@
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************
 ** CPY

@@ -11,13 +11,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD027645A          Date 23Jun14              */
+/*       Last Amend No. MD060760           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD027645A          Date 23Jun14              */
 /*                      MD027645           Date 20Jun14              */
 /*                      CGL132  *CREATE    Date 01May13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060760 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD027645A - Previous customers from global view missing     */
 /*                   after re-running FATCA high value tool          */
@@ -28,24 +30,24 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RTCD &MODE &PLOWI &PLOWE &PHIGT &PHVCY)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2013')
- 
+
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PLOWI) TYPE(*CHAR) LEN(18)
              DCL        VAR(&PLOWE) TYPE(*CHAR) LEN(18)
              DCL        VAR(&PHIGT) TYPE(*CHAR) LEN(18)
              DCL        VAR(&PHVCY) TYPE(*CHAR) LEN(3)
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CLRPFM     FILE(SDFTHLPD)
- 
+
 /**********  IF         COND(&MODE *EQ 'U') THEN(RUNSQL SQL('DELETE +                   /*MD027465*/
 /**********               FROM SDFTHAPD'))                                              /*MD027465*/
 /**********                                                                             /*MD027465*/
@@ -64,14 +66,17 @@
              OVRDBF     FILE(SDFTHAPD) TOFILE(QTEMP/DUFTHAPD) +
                           MBR(*FIRST) OVRSCOPE(*JOB)                                    /*MD027465*/
              ENDDO                                                                      /*MD027465*/
- 
+
              CALL       PGM(SD000161) PARM(&RTCD &MODE &PLOWI &PLOWE &PHIGT &PHVCY)
- 
+
              IF         COND(&MODE *EQ 'U') THEN(DO)                                    /*MD027465*/
              DLTOVR     FILE(SDFTHAPD) LVL(*JOB)                                        /*MD027465*/
-             RUNSQL SQL('DELETE FROM SDFTHAPD a WHERE EXISTS  +
+/**********  RUNSQL SQL('DELETE FROM SDFTHAPD a WHERE EXISTS  +
                        ( SELECT * FROM QTEMP/DUFTHAPD b WHERE +
-                        a.HACUST = b.HACUST)') COMMIT(*NONE)                            /*MD027465*/
+                        a.HACUST = b.HACUST)') COMMIT(*NONE) */               /*MD027465**MD060760*/
+             SCRUNSQL SQL('DELETE FROM SDFTHAPD a WHERE EXISTS  +
+                       ( SELECT * FROM QTEMP/DUFTHAPD b WHERE +
+                        a.HACUST = b.HACUST)')                                /*MD027465**MD060760*/
                                                                                         /*MD027465*/
              CPYF       FROMFILE(QTEMP/DUFTHAPD) TOFILE(SDFTHAPD) +
                           MBROPT(*ADD)                                                  /*MD027465*/
@@ -81,11 +86,11 @@
              COMMIT                                                                    /*MD027465A*/
              ENDDO                                                                      /*MD027465*/
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              SNDPGMMSG  MSG('Program SDC000161 ended abnormally') +
                           TOPGMQ(*EXT)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  END:
              ENDPGM

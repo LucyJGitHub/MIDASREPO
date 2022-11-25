@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
-/*XBI *  OVRDBF FILE(UPSFMTQT) TOFILE(UPSFMTPD)                       *
+/**** *  OVRDBF FILE(UPSFMTQT) TOFILE(UPSFMTPD)                       *                     MD060760
+/*XBI *  OVRDBF FILE(UPSFMTQT) TOFILE(UPFMTJW0)                       *                     MD060760
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Work out priorities for SQL views')
       *****************************************************************
@@ -12,16 +13,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060760           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPK021  *CREATE    Date 22Sep04               *
+      *                 CPK021  *CREATE    Date 22Sep04               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060760 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK021 - New utility to work out priorities for SQL views.   *
       *                                                               *
@@ -213,7 +216,8 @@
      C                   EVAL      FSSFMT = '*NONE'
      C                   EVAL      FSIPTY = Priority
      C                   EVAL      FSLAYR = PLayer
-     C                   WRITE     UPSFMTD1
+     C**********         WRITE     UPSFMTD1                                                 MD060760
+     C                   WRITE     QFMTJW0                                                  MD060760
       * ... and delete record from UPDBR1PD.
      C                   DELETE    @DBR1L0
      C                   EVAL      *IN69 = *OFF

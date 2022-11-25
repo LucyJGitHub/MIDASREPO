@@ -1171,9 +1171,7 @@
                                                                                           //MD058182
        // Start of MD058517
 
-               if result.list(i).intPDMidas >= %dec(evntCtrlDate:5:0
-                 and RatesKnownInd = 'Y');
-
+               if result.list(i).intPDMidas >= %dec(evntCtrlDate:5:0);
                    if (calcMethod = 'NCCR' or calcMethod  = 'SARR')
                    and  result.list(i).intPDMidas > transactDate;
                         includeRecord = 'Y';

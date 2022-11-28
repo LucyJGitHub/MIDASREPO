@@ -26,7 +26,7 @@
       *  MD060591 - No confirmation/extract generated on loan's       *
       *             maturity date                                     *
       *             Subtract 1 from end period if add ind is not 'B'  *
-      *             and date is not maturity date                     *
+      *             and date is not maturity date.                    *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD059190 - Create generic program to calculate loan          *

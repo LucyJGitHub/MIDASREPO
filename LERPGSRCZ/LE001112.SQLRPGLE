@@ -28,7 +28,7 @@
       *  MD060591 - No confirmation/extract generated on loan's       *
       *             maturity date                                     *
       *             Subtract 1 from end period if add ind is not 'B'  *
-      *             and date is not maturity date                     *
+      *             and date is not maturity date.                    *
       *  MD059190 - Use current ARR parameters if:                    *
       *             1. interest and rollover date are input, equal and*
       *                less than next working date, BLRT is Y,        *

@@ -1050,6 +1050,7 @@
      C                   IF        CLE172 = 'N'                                             MD059368
      C                   IF        LeriScnBlrt <> *Blanks                                   MD059368
       *                                                                                     MD060620
+     C                   CLEAR                   ChkLiborFlds                               MD060620
      C                   MOVE      LeriScnBlrt   ChkLiborFlds                               MD060620
      C                   IF        LBNBLRT  <> *BLANKS OR                                   MD060620
      C                             LBNRFRR  <> *BLANKS OR                                   MD060620

@@ -485,6 +485,7 @@
      C                   IF        CSD103 = 'N'                                             MD059368
      C                   IF        LiborScnFld <> *BLANKS                                   MD059368
       *                                                                                     MD060620
+     C                   CLEAR                   ChkLiborFlds                               MD060620
      C                   MOVEL     LiborScnFld   ChkLiborFlds                               MD060620
      C                   IF        LBBLRT <> *BLANKS OR                                     MD060620
      C                             LBRFRR <> *BLANKS OR                                     MD060620

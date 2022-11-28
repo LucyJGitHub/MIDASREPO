@@ -1208,6 +1208,7 @@
       *                                                                                     MD059368
      C                   IF        LoanScnBlrt <> *Blanks                                   MD059368
       *                                                                                     MD060620
+     C                   CLEAR                   ChkLiborFlds                               MD060620
      C                   MOVEL     LoanScnBlrt   ChkLiborFlds                               MD060620
      C                   IF        LBBLRT <> *BLANKS OR                                     MD060620
      C                             LBRFRR <> *BLANKS OR                                     MD060620

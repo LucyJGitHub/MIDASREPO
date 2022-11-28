@@ -26,7 +26,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD060591 - No confirmation/extract generated on loan's       *
-      *             maturity date                                     *
+      *             maturity date.                                    *
       *             Subtract 1 from end period if add ind is not 'B'  *
       *             and date is not maturity date.                    *
       *  MD059190 - Use current ARR parameters if:                    *

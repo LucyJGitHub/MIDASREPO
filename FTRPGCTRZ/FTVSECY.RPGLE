@@ -635,7 +635,7 @@
      C                             @ORCT  <> 'A'                                              254841
      C                   SELECT                                                               254841
      C                   When      @ORCT = 'I'                                                254841
-     C                   Eval      W#SLSH= %subst(SORC1:1)                                  MD060724
+     C                   Eval      W#SLSH = %subst(SORC1:1)                                 MD060724
      C                   If        W#SLSH = '/'                                               254841
      C                   Eval      PIBAN = %subst(SORC1:2)                                    254841
      C                   Else                                                                 254841

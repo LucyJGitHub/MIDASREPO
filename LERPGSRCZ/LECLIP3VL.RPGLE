@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060234           Date 17Nov22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD054876           Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
@@ -73,6 +74,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060234 - Cannot amend loan due to error 45021370. Reverse  *
+      *             fix MD054707.                                     *
+      *           - Applied for MD060432                              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
@@ -961,14 +965,15 @@
       ***  Validated only if multi-branching and originating branch
       ***  are being used (for loans and parts purchased)
       *
-     C     BGMBIN        IFEQ      'Y'                                                      MD054707
-     C     *IN83         IFEQ      '0'                                                      MD054707
-     C     BKOBRU        ANDEQ     'N'                                                      MD054707
-     C                   MOVE      CCLBRCA       DDORBR                                     MD054707
-     C                   ELSE                                                               MD054707
+     C*****BGMBIN        IFEQ      'Y'                                             MD054707 MD060234
+     C******IN83         IFEQ      '0'                                             MD054707 MD060234
+     C*****BKOBRU        ANDEQ     'N'                                             MD054707 MD060234
+     C**********         MOVE      CCLBRCA       DDORBR                            MD054707 MD060234
+     C**********         ELSE                                                      MD054707 MD060234
      C     *IN83         IFEQ      '0'
      C     BKOBRU        ANDEQ     'Y'
      C*****BGMBIN        ANDEQ     'Y'                                                      MD054707
+     C     BGMBIN        ANDEQ     'Y'                                                      MD060234
       *                                                                                       CGL058
       ** When CGL058 is on in Insert mode, the branch has already been                        CGL058
       ** defaulted and stored in the corresponding valid file field by                        CGL058
@@ -1031,8 +1036,8 @@
      C                   ENDSL
      C                   ENDIF
      C                   ENDIF
-     C                   ENDIF                                                              MD054707
-     C                   ENDIF                                                              MD054707
+     C**********         ENDIF                                                     MD054707 MD060234
+     C**********         ENDIF                                                     MD054707 MD060234
       *
      C     DDORBROK      IFNE      'N'
      C                   MOVEL     DDORBR        CCLORBR

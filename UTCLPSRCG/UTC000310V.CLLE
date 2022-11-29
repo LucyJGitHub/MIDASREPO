@@ -9,25 +9,29 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060719           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CUT011             Date 12Dec07              */
+/*                      CUT011             Date 12Dec07              */
 /*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060719 - Make reporting of 'out of date' optional         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUT011 - Rewrite of command.  Make it more flexible and     */
 /*                easier to maintain.                                */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&SRCLIB &GLOBAL &ZONE)
- 
+/**********  PGM        PARM(&SRCLIB &GLOBAL &ZONE)                                     /*MD060719*/
+             PGM        PARM(&SRCLIB &RPTMTC &GLOBAL &ZONE)                             /*MD060719*/
+
              DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RPTMTC) TYPE(*CHAR) LEN(1)                                 /*MD060719*/
              DCL        VAR(&GLOBAL) TYPE(*CHAR) LEN(91)
              DCL        VAR(&ZONE) TYPE(*CHAR) LEN(95)
- 
+
              DCL        VAR(&GLOBPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&GLOBDBTYPE) TYPE(*CHAR) LEN(16)
              DCL        VAR(&GLOBDBLIB) TYPE(*CHAR) LEN(10)
@@ -38,7 +42,7 @@
              DCL        VAR(&ZONEDBLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ZONENDTYPE) TYPE(*CHAR) LEN(35)
              DCL        VAR(&ZONENDLIB) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&GDB) TYPE(*CHAR) LEN(1)
              DCL        VAR(&GND) TYPE(*CHAR) LEN(1)
              DCL        VAR(&ZDB) TYPE(*CHAR) LEN(1)
@@ -81,14 +85,14 @@
              DCL        VAR(&PARMLEN) TYPE(*CHAR) LEN(4)
              DCL        VAR(&DUPLICATE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('N')
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2007')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Find out data about the global element.  As the element contains lists the */
 /*  positions of values can vary.                                             */
 /* Work out the start of the database element; this is actually stored after */
@@ -111,7 +115,7 @@
              ELSE       CMD(DO)
                 CHGVAR     VAR(&GDB) VALUE('Y')
              ENDDO
- 
+
 /* The start of the non-database element is a constant (7) so it is easier */
 /*  to work out the number of non-database requests.                       */
              CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL 21 2))
@@ -123,7 +127,7 @@
              ELSE       CMD(DO)
                 CHGVAR     VAR(&GND) VALUE('Y')
              ENDDO
- 
+
 /* Fill in individual parameters for database, if any entered. */
              IF         COND(&GDB *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 2)
@@ -135,14 +139,14 @@
                 CHGVAR     VAR(&GLOBDBTYPE) VALUE(%SST(&GLOBAL &EPOS +
                              &EVAL))
              ENDDO
- 
+
 /* Fill in individual parameters for non-database, if any entered. */
              IF         COND(&GND *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&GLOBNDLIB) VALUE(%SST(&GLOBAL 11 10))
                 CHGVAR     VAR(&EVAL) VALUE(&NOGND * 7)
                 CHGVAR     VAR(&GLOBNDTYPE) VALUE(%SST(&GLOBAL 23 &EVAL))
              ENDDO
- 
+
 /* Find out data about the zone element.  As the element contains lists the */
 /*  positions of values can vary.                                           */
 /* Work out the start of the database element; this is actually stored after */
@@ -165,7 +169,7 @@
              ELSE       CMD(DO)
                 CHGVAR     VAR(&ZDB) VALUE('Y')
              ENDDO
- 
+
 /* The start of the non-database element is a constant (7) so it is easier */
 /*  to work out the number of non-database requests.                       */
              CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE 21 2))
@@ -177,7 +181,7 @@
              ELSE       CMD(DO)
                 CHGVAR     VAR(&ZND) VALUE('Y')
              ENDDO
- 
+
 /* Fill in individual parameters for database, if any entered. */
              IF         COND(&ZDB *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 2)
@@ -189,14 +193,14 @@
                 CHGVAR     VAR(&ZONEDBTYPE) VALUE(%SST(&ZONE &EPOS +
                              &EVAL))
              ENDDO
- 
+
 /* Fill in individual parameters for non-database, if any entered. */
              IF         COND(&ZND *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&ZONENDLIB) VALUE(%SST(&ZONE 11 10))
                 CHGVAR     VAR(&EVAL) VALUE(&NOZND * 7)
                 CHGVAR     VAR(&ZONENDTYPE) VALUE(%SST(&ZONE 23 &EVAL))
              ENDDO
- 
+
 /* Validity checking. */
 GENERAL:
 /* Check that a cross check has been requested. */
@@ -207,7 +211,7 @@ GENERAL:
                 CHGVAR     VAR(&ERROR) VALUE('Y')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Check that source library exists. */
              CHKOBJ     OBJ(&SRCLIB) OBJTYPE(*LIB)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -217,7 +221,7 @@ GENERAL:
                 CHGVAR     VAR(&ERROR) VALUE('Y')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 GLOBAL:
 /* If database objects have been requested then check the following: */
 /*  1 - If *PFX entered then does prefix have a value?               */
@@ -245,7 +249,7 @@ LOOP1:
                    ENDDO
                    CHGVAR     VAR(&POS) VALUE(&POS + 4)
                 ENDDO
- 
+
 /* 1 */
                 IF         COND(&GLOBDBLIB *EQ '*PFX' *AND &GLOBPFX *EQ +
                              ' ') THEN(DO)
@@ -344,9 +348,9 @@ LOOP1:
                    CHGVAR     VAR(&ERROR) VALUE('Y')
                    GOTO       CMDLBL(ENDPGM)
                 ENDDO
- 
+
              ENDDO
- 
+
 /* If non-database objects have been requested then check the following: */
 /*  1 - Does object library exist?                                   */
 /*  2 - Check that the same selection isn't specified twice.         */
@@ -414,9 +418,9 @@ LOOP1:
                    CHGVAR     VAR(&ERROR) VALUE('Y')
                    GOTO       CMDLBL(ENDPGM)
                 ENDDO
- 
+
              ENDDO
- 
+
 ZONE:
 /* If database objects have been requested then check the following: */
 /*  1 - If *PFX entered then does prefix have a value?               */
@@ -447,7 +451,7 @@ LOOP3:
                    ENDDO
                    CHGVAR     VAR(&POS) VALUE(&POS + 4)
                 ENDDO
- 
+
 /* 1 */
                 IF         COND(&ZONEDBLIB *EQ '*PFX' *AND &ZONEPFX *EQ +
                              ' ') THEN(DO)
@@ -565,9 +569,9 @@ LOOP3:
                    CHGVAR     VAR(&ERROR) VALUE('Y')
                    GOTO       CMDLBL(ENDPGM)
                 ENDDO
- 
+
              ENDDO
- 
+
 /* If non-database objects have been requested then check the following: */
 /*  1 - Does object library exist?                                   */
 /*  2 - Check that the same selection isn't specified twice.         */
@@ -635,11 +639,11 @@ LOOP3:
                    CHGVAR     VAR(&ERROR) VALUE('Y')
                    GOTO       CMDLBL(ENDPGM)
                 ENDDO
- 
+
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
              MONMSG     MSGID(CPF0000)
@@ -648,5 +652,5 @@ ENDPGM:
                 SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              ENDPGM

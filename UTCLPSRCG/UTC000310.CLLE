@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CPK030             Date 22Aug14              */
+/*       Last Amend No. MD060719           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CPK030             Date 22Aug14              */
 /*                      BUG27832A          Date 07Jul10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -19,6 +20,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060719 - Make sure SQLRPG are not reported in error,      */
+/*                  make reporting of 'out of date' optional         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK030 - Previous bug fix not applied correctly             */
 /*       BUG27832A - New SQLDTAARA member type.                      */
@@ -26,12 +29,14 @@
 /*                easier to maintain.                                */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&SRCLIB &GLOBAL &ZONE)
- 
+/**********  PGM        PARM(&SRCLIB &GLOBAL &ZONE)                                     /*MD060719*/
+             PGM        PARM(&SRCLIB &RPTMTC &GLOBAL &ZONE)                             /*MD060719*/
+
              DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RPTMTC) TYPE(*CHAR) LEN(1)                                 /*MD060719*/
              DCL        VAR(&GLOBAL) TYPE(*CHAR) LEN(91)
              DCL        VAR(&ZONE) TYPE(*CHAR) LEN(95)
- 
+
              DCL        VAR(&GLOBPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&GLOBDBTYPE) TYPE(*CHAR) LEN(16)
              DCL        VAR(&GLOBDBLIB) TYPE(*CHAR) LEN(10)
@@ -42,7 +47,7 @@
              DCL        VAR(&ZONEDBLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ZONENDTYPE) TYPE(*CHAR) LEN(35)
              DCL        VAR(&ZONENDLIB) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&GDB) TYPE(*CHAR) LEN(1)
              DCL        VAR(&GND) TYPE(*CHAR) LEN(1)
              DCL        VAR(&ZDB) TYPE(*CHAR) LEN(1)
@@ -88,30 +93,30 @@
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
              DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)
              DCL        VAR(&REPORT) TYPE(*CHAR) LEN(1) VALUE('N')
- 
+
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
- 
+
              DCLF       FILE(UTC000310F)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2007')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /* Create temporary file to hold messages for SRCOBJXCHK. */
              DLTF       FILE(QTEMP/UPERRMQT)
              MONMSG     MSGID(CPF2105)
              CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) TEXT('Temp. +
                           file for holding msgs from SRCOBJXCHK')
- 
+
 /* Create temporary source file for running SQL statements. */
              DLTF       FILE(QTEMP/RUNSQLSTM)
              MONMSG     MSGID(CPF0000)
@@ -121,7 +126,7 @@
                           MBR(RUNSQLSTM)
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
- 
+
 /* Find out data about the global element.  As the element contains lists the */
 /*  positions of values can vary.                                             */
 /* Work out the start of the database element; this is actually stored after */
@@ -144,7 +149,7 @@
              ELSE       CMD(DO)
                 CHGVAR     VAR(&GDB) VALUE('Y')
              ENDDO
- 
+
 /* The start of the non-database element is a constant (7) so it is easier */
 /*  to work out the number of non-database requests.                       */
              CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL 21 2))
@@ -156,7 +161,7 @@
              ELSE       CMD(DO)
                 CHGVAR     VAR(&GND) VALUE('Y')
              ENDDO
- 
+
 /* Fill in individual parameters for database, if any entered. */
              IF         COND(&GDB *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 2)
@@ -193,7 +198,7 @@
                    CHGVAR     VAR(&POS) VALUE(&POS + 4)
                 ENDDO
              ENDDO
- 
+
 /* Fill in individual parameters for non-database, if any entered. */
              IF         COND(&GND *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&GLOBNDLIB) VALUE(%SST(&GLOBAL 11 10))
@@ -222,7 +227,7 @@
                    CHGVAR     VAR(&POS) VALUE(&POS + 7)
                 ENDDO
              ENDDO
- 
+
 /* Find out data about the zone element.  As the element contains lists the */
 /*  positions of values can vary.                                           */
 /* Work out the start of the database element; this is actually stored after */
@@ -245,7 +250,7 @@
              ELSE       CMD(DO)
                 CHGVAR     VAR(&ZDB) VALUE('Y')
              ENDDO
- 
+
 /* The start of the non-database element is a constant (7) so it is easier */
 /*  to work out the number of non-database requests.                       */
              CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE 21 2))
@@ -257,7 +262,7 @@
              ELSE       CMD(DO)
                 CHGVAR     VAR(&ZND) VALUE('Y')
              ENDDO
- 
+
 /* Fill in individual parameters for database, if any entered. */
              IF         COND(&ZDB *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 2)
@@ -297,7 +302,7 @@
                    CHGVAR     VAR(&POS) VALUE(&POS + 4)
                 ENDDO
              ENDDO
- 
+
 /* Fill in individual parameters for non-database, if any entered. */
              IF         COND(&ZND *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&ZONENDLIB) VALUE(%SST(&ZONE 11 10))
@@ -326,7 +331,7 @@
                    CHGVAR     VAR(&POS) VALUE(&POS + 7)
                 ENDDO
              ENDDO
- 
+
 /* Display list of source files. */
              DLTF       FILE(QTEMP/UTC000310F)
              MONMSG     MSGID(CPF0000)
@@ -348,15 +353,15 @@
              CPYF       FROMFILE(QTEMP/SRCFILES) +
                           TOFILE(QTEMP/UTC000310F) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)
- 
+
              CLRPFM     FILE(UTSRCXPD)
- 
+
 READFILE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CROSSCHECK)
              ENDDO
- 
+
              CHGVAR     VAR(&RTNCODE) VALUE('N')
              IF         COND(&ATDTAT *NE 'S') THEN(DO)
                 CHGVAR     VAR(&ERRORMSG) VALUE(&ATFILE *BCAT 'is not a +
@@ -366,7 +371,7 @@ READFILE:
                 CHGVAR     VAR(&REPORT) VALUE('Y')
                 GOTO       CMDLBL(READFILE)
              ENDDO
- 
+
 /* Ignore certain source files - /COPYs, skeletons, etc. */
              IF         COND(&ATFILE *EQ 'STDCRTPARM') THEN(DO)
                 GOTO       CMDLBL(READFILE)
@@ -395,7 +400,7 @@ READFILE:
              IF         COND(%SST(&ATFILE 6 3) *EQ 'EXT') THEN(DO)
                 GOTO       CMDLBL(READFILE)
              ENDDO
- 
+
 /* Call program to see if this source file is to be checked. */
              CALL       PGM(UT000310) PARM(&ATFILE &GM &GP &GT &GV +
                           &GDEV &GCMD &GOAM &GSVP &GPGM &DM &DP &DT +
@@ -419,9 +424,9 @@ READFILE:
                 CHGVAR     VAR(&REPORT) VALUE('Y')
                 GOTO       CMDLBL(READFILE)
              ENDDO
- 
+
              GOTO       CMDLBL(READFILE)
- 
+
 CROSSCHECK:
 /* Call program to populate outfiles. */
              CALL       PGM(UTC000311) PARM(&SRCLIB)
@@ -433,7 +438,7 @@ CROSSCHECK:
                 CHGVAR     VAR(&REPORT) VALUE('Y')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Call program to amend the objects outfile. */
              CALL       PGM(UT000311)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -444,7 +449,7 @@ CROSSCHECK:
                 CHGVAR     VAR(&REPORT) VALUE('Y')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Run SQL statement to change 'SQLRPGLE' member type to 'RPGLE'.  This */
 /*  is to fool the utility as object types of *MODULE or *PGM does not  */
 /*  recognise attributes of 'SQLRPGLE'.                                 */
@@ -462,7 +467,25 @@ CROSSCHECK:
              CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
+/* Run SQL statement to change 'SQLRPG' member type to 'RPG'.  This */                  /*MD060719*/
+/*  is to fool the utility as object types of *MODULE or *PGM does not  */              /*MD060719*/
+/*  recognise attributes of 'SQLRPGLE'.                                 */              /*MD060719*/
+             CHGVAR     VAR(&SQLSTM) VALUE('update UTC00311FA set +
+                          MBLIB =' *BCAT &QUOTE *TCAT 'SQLRPG' +
+                          *TCAT &QUOTE *BCAT 'where MBSEU2 =' *BCAT +
+                          &QUOTE *TCAT SQLRPG *TCAT &QUOTE *TCAT ';')                   /*MD060719*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')                            /*MD060719*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' ')                                         /*MD060719*/
+/* SQL statement to set member type to 'RPGLE' if member type is 'SQLRPGLE'. */         /*MD060719*/
+             CHGVAR     VAR(&SQLSTM) VALUE('update UTC00311FA set +
+                          MBSEU2 =' *BCAT &QUOTE *TCAT 'RPG' +
+                          *TCAT &QUOTE *BCAT 'where MBSEU2 =' *BCAT +
+                          &QUOTE *TCAT SQLRPG *TCAT &QUOTE)                             /*MD060719*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD060719*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*MD060719*/
+
 /* Run SQL statement to change 'SQLTBL' member type to 'PF'.  This */
 /*  is to fool the utility as object types of *FILE does not       */
 /*  recognise attributes of 'SQLTBL'.                              */
@@ -480,7 +503,7 @@ CROSSCHECK:
              CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /* Run SQL statement to change 'SQLVIEW' member type to 'LF'.  This */
 /*  is to fool the utility as object types of *FILE does not        */
 /*  recognise attributes of 'SQLVIEW'.                              */
@@ -515,11 +538,11 @@ CROSSCHECK:
              CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                           /*BUG27832A*/
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)                                                /*BUG27832A*/
- 
+
 OPNQRYF:
              DLTF       FILE(QTEMP/UTSCOBQF)
              MONMSG     MSGID(CPF0000)
- 
+
 /* Find objects without corresponding source. */
              OPNQRYF    FILE((UTC00311FB) (UTC00311FA)) +
                           FORMAT(UTSCOBQF) JFLD((1/ODOBNM 2/MBNAME +
@@ -532,7 +555,7 @@ OPNQRYF:
              CPYFRMQRYF FROMOPNID(UTC00311FB) TOFILE(QTEMP/UTSCOBQF) +
                           MBROPT(*ADD) CRTFILE(*YES) FMTOPT(*MAP *DROP)
              CLOF       OPNID(UTC00311FB)
- 
+
 /* Find source without corresponding object. */
              OPNQRYF    FILE((UTC00311FA) (UTC00311FB)) +
                           FORMAT(UTSCOBQF) JFLD((2/ODOBNM 1/MBNAME +
@@ -545,9 +568,10 @@ OPNQRYF:
              CPYFRMQRYF FROMOPNID(UTC00311FA) TOFILE(QTEMP/UTSCOBQF) +
                           MBROPT(*ADD) CRTFILE(*YES) FMTOPT(*MAP *DROP)
              CLOF       OPNID(UTC00311FA)
- 
+
 /* Find source and objects matching where source has been changed after */
 /*  object.                                                             */
+             IF         COND(&RPTMTC *EQ 'Y') THEN(DO)                                  /*MD060719*/
              OPNQRYF    FILE((UTC00311FA) (UTC00311FB)) +
                           FORMAT(UTSCOBQF) QRYSLT('SOSCHD *GT +
                           SOOCHD') JFLD((2/ODOBNM 1/MBNAME *EQ) +
@@ -564,14 +588,16 @@ OPNQRYF:
              CPYFRMQRYF FROMOPNID(UTC00311FA) TOFILE(QTEMP/UTSCOBQF) +
                           MBROPT(*ADD) CRTFILE(*YES) FMTOPT(*MAP *DROP)
              CLOF       OPNID(UTC00311FA)
- 
+             ENDDO                                                                      /*MD060719*/
+
 /* Call program to produce report. */
              OVRDBF     FILE(UTSCOBQF) TOFILE(QTEMP/UTSCOBQF)
-             CALL       PGM(UT000312) PARM(&SRCLIB)
+/**********  CALL       PGM(UT000312) PARM(&SRCLIB) */                                  /*MD060719*/
+             CALL       PGM(UT000312) PARM(&SRCLIB &GLOBNDLIB &ZONENDLIB)               /*MD060719*/
              DLTOVR     FILE(UTSCOBQF)
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -588,7 +614,7 @@ RCVMSG:
                 SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
                              MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
              ENDDO
- 
+
 ENDPGM:
              IF         COND(&REPORT *EQ 'Y') THEN(DO)
                 CALL       PGM(UP008010) PARM('*REPORT' 'UTC000310' ' ')
@@ -597,5 +623,5 @@ ENDPGM:
                              OUTQ(&SRCLIB/SRCOBJXCHK) USRDTA(SRCOBJXCHK)
                 MONMSG     MSGID(CPF0000 RPG0000)
              ENDDO
- 
+
              ENDPGM

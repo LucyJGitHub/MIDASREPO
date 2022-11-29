@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUT008              Date 09Feb11             */
+/*       Last Amend No. MD060719           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUT008              Date 09Feb11             */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CUT011  *REWRITE   Date 19Nov07              */
@@ -19,6 +20,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060719 - CRTALLOBJ should not compile src type with 'X'   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUT008  - CRTOBJ rewrite.                                   */
 /*                 Change of CRTOBJ parameters.                      */
@@ -28,7 +30,7 @@
 /*********************************************************************/
              PGM        PARM(&SRCF &SRCLIB &TGTLIB &MSGFLIB &OWNER +
                           &PUBAUT &OBJTYPE)
- 
+
              DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TGTLIB) TYPE(*CHAR) LEN(10)
@@ -36,7 +38,7 @@
              DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PUBAUT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(8)
- 
+
 /**********  DCL        VAR(&MULTIL) TYPE(*CHAR) LEN(1) VALUE('N')                     */ /*CUT008*/
              DCL        VAR(&MULTIL) TYPE(*CHAR) LEN(4) VALUE('*NO ')                     /*CUT008*/
              DCL        VAR(&MULTILLIB) TYPE(*CHAR) LEN(10)
@@ -45,22 +47,22 @@
              DCL        VAR(&CREATE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
              DCL        VAR(&REPORT) TYPE(*CHAR) LEN(1) VALUE('N')
- 
+
              DCLF       FILE(UTC000302F)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2007')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Create temporary file to hold messages for CRTALLOBJ. */
              DLTF       FILE(QTEMP/UPERRMQT)
              MONMSG     MSGID(CPF2105)
              CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) TEXT('Temp. +
                           file for holding msgs from CRTALLOBJ')
- 
+
 /* Create list of source file members. */
              DLTF       FILE(QTEMP/UTC000302F)
              MONMSG     MSGID(CPF0000)
@@ -74,7 +76,7 @@
              CPYF       FROMFILE(QTEMP/MEMBERS) +
                           TOFILE(QTEMP/UTC000302F) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)
- 
+
 /* Set up some of the CRTOBJ parameters. */
              IF         COND(&MSGFLIB *EQ '*NONE') THEN(DO)
 /**********     CHGVAR     VAR(&MULTIL) VALUE('N')                                     */ /*CUT008*/
@@ -86,13 +88,18 @@
                 CHGVAR     VAR(&MULTIL) VALUE('*YES')                                     /*CUT008*/
                 CHGVAR     VAR(&MULTILLIB) VALUE(&MSGFLIB)
              ENDDO
- 
+
 READFILE:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
+/* Check for member type starting with 'X' as these should not be compiled */           /*MD060719*/
+             IF         COND(%SUBSTRING(&MLSEU2 1 1) *EQ 'X') THEN(DO)                  /*MD060719*/
+                CHGVAR     VAR(&WRONGTYPE) VALUE('Y')                                   /*MD060719*/
+             ENDDO                                                                      /*MD060719*/
+                                                                                        /*MD060719*/
 /* Check for certain member types that will not be able to compile. */
              IF         COND(&MLSEU2 *EQ 'MOVED') THEN(DO)
                 CHGVAR     VAR(&WRONGTYPE) VALUE('Y')
@@ -112,7 +119,7 @@ READFILE:
                 CHGVAR     VAR(&REPORT) VALUE('Y')
                 GOTO       CMDLBL(READFILE)
              ENDDO
- 
+
 /* Check if the object already exists.  First, we need to work out what the */
 /*  object type is.                                                         */
 /* There are some objects in Midas with the same name which are both an OPM */
@@ -157,7 +164,7 @@ ZEDIT:
                    CHGVAR     VAR(&OBJTYPE) VALUE('*MODULE')
                 ENDDO
              ENDDO
- 
+
              IF         COND(&EXCEPTION *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&EXCEPTION) VALUE('N')
                 CHKOBJ     OBJ(&TGTLIB/&MLNAME) OBJTYPE(&OBJTYPE)
@@ -166,7 +173,7 @@ ZEDIT:
                 ENDDO
                 GOTO       CMDLBL(COMPILE)
              ENDDO
- 
+
              IF         COND(&OBJTYPE *EQ '*OPMMOD') THEN(DO)
                 CHGVAR     VAR(&OBJTYPE) VALUE('*PGM')
                 CHKOBJ     OBJ(&TGTLIB/&MLNAME) OBJTYPE(&OBJTYPE)
@@ -189,7 +196,7 @@ ZEDIT:
                    ENDDO
                 ENDDO
              ENDDO
- 
+
 /* Perform the compilation. */
 COMPILE:
              IF         COND(&CREATE *EQ 'Y') THEN(DO)
@@ -212,9 +219,9 @@ COMPILE:
                    MONMSG     MSGID(CPF0000)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(READFILE)
- 
+
 ERROR:
              CHGVAR     VAR(&ERRORMSG) VALUE('General error when +
                           compiling' *BCAT &SRCF *TCAT '.  Check +
@@ -223,7 +230,7 @@ ERROR:
                           &ERRORMSG)
              MONMSG     MSGID(CPF0000 RPG0000)
              CHGVAR     VAR(&REPORT) VALUE('Y')
- 
+
 ENDPGM:
              IF         COND(&REPORT *EQ 'Y') THEN(DO)
                 CALL       PGM(UP008010) PARM('*REPORT' 'UTC000302' ' ')
@@ -237,5 +244,5 @@ ENDPGM:
              ELSE       CMD(DO)
                 CHGJOB     LOG(*SAME *SAME *NOLIST)
              ENDDO
- 
+
              ENDPGM

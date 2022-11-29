@@ -677,8 +677,6 @@
       *                                                                                     MD060344
      C                   ENDIF                                                              MD060344
       *                                                                                     MD060344
-     C                   Endsl                                                              MD060344
-      *                                                                                     MD060344
      C                   ENDSL                                                              BUG23740
       *                                                                                     BUG25799
       ** CER030 = 'N'                                                                       BUG25799

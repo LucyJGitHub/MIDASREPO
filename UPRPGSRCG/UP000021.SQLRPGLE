@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD034982           Date 14Jul15               *
-      *  Prev Amend No. CUP041   *CREATE   Date 11Sep13               *
+      *  Last Amend No. MD060639           Date 15Oct22               *
+      *  Prev Amend No. MD034982           Date 14Jul15               *
+      *                 CUP041   *CREATE   Date 11Sep13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD60639 - DBU loops with 'QT' source file.                   *
       *  MD034982 - Handle SQL sequences (SQLDTAARA)                  *
       *  CUP041 - New Bridge methodology to combine menu options      *
       *                                                               *
@@ -87,8 +89,9 @@
      C                   DOW       SQLCODE = 0
       *
      C                   IF        %SUBST(SrcFile:9:2) = 'QT'
-     C                   ITER
-     C                   ENDIF
+     C**********         ITER                                                               MD060639
+     C**********         ENDIF                                                              MD060639
+     C                   ELSE                                                               MD060639
       *
      C                   IF        MemberType = 'SQLDTAARA'                                 MD034982
      C                   EVAL      MemberType = 'DTAARA'                                    MD034982
@@ -123,6 +126,7 @@
      C+ set AUUSTS = :Status
      C+ where current of DLVC
      C/end-exec
+     C                   ENDIF                                                              MD060639
       *
      C/exec SQL
      C+ fetch next

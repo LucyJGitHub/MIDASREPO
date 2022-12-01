@@ -1,5 +1,6 @@
 /*********************************************************************/
-/*STD    CLPBASEBND                                                  */
+/****    CLPBASEBND                                                  */                 /*MD070746*/
+/*STD    CLPBASE                                                     */                 /*MD070746*/
 /*EXI    TEXT('Midas LE Zero Interest Rate Loans Report')            */
 /*********************************************************************/
 /*                                                                   */
@@ -9,10 +10,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. CLE170 *CREATE      Date  10Oct19            */
+/*       Last Amend No. MD060746           Date 22Nov22              */
+/*       Prev Amend No. CLE170 *CREATE      Date  10Oct19            */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060746 - Incorrect creation parameter                     */
 /*       CLE170 - Allow Zero Interest Rates (LE)                     */
 /*                                                                   */
 /*********************************************************************/

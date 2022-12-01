@@ -895,7 +895,8 @@ I    C                   ENDIF
       ** If report file is opened, write the End of Report line
      C                   IF        WOPNP1 = 'Y'
 
-      ** Write out trailer format
+      ** Write out end of report format
+     C                   Z-ADD     2             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C     *IN01         OREQ      *ON

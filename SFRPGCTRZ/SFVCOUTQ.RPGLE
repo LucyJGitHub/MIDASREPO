@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Validate Cheque's Output Queue Name')
+/**** *  TEXT('Validate Cheque's Output Queue Name')                                        MD060753
+/*EXI *  TEXT('Validate Cheque s Output Queue Name')                                        MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Security Profile Function Module - User Maintenamce  *
@@ -18,23 +19,25 @@
       *    /COPY, User Maintenance + Menu Items amendments must not be*
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026  *CREATE    Date 18May06               *
+      *                 CRE026  *CREATE    Date 18May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
-      ** ¦ Automatically included D-specs       ¦
-      ** ¦ ==============================       ¦
+      **  Automatically included D-specs       
+      **  ==============================       
       ** +--------------------------------------+
       **
       **--------------------------------------------------------------------------------------------
@@ -42,94 +45,94 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
-      ** ¦ End of automatically included D-specs¦
-      ** ¦ =====================================¦
+      **  End of automatically included D-specs
+      **  =====================================
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
-      ** ¦ Manually included D-specs            ¦
-      ** ¦ =========================            ¦
+      **  Manually included D-specs            
+      **  =========================            
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Named constants                      ¦
-      ** ¦ ===============                      ¦
+      **  Named constants                      
+      **  ===============                      
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Arrays and Data Structures           ¦
-      ** ¦ ==========================           ¦
+      **  Arrays and Data Structures           
+      **  ==========================           
       ** +--------------------------------------+
- 
+
       * Array for Checking Cheque's OUTQ
      D CHK             S              1    DIM(10)
       * Array Index for CHK Array
      D DIdx            S              3P 0
       * Check Flag
      D ChkFlag         S              1
- 
+
       ** +--------------------------------------+
-      ** ¦ Declared variables                   ¦
-      ** ¦ ==================                   ¦
+      **  Declared variables                   
+      **  ==================                   
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIdx            S              3P 0
- 
+
       ** +--------------------------------------+
-      ** ¦ End of D-specs                       ¦
-      ** ¦ ==============                       ¦
+      **  End of D-specs                       
+      **  ==============                       
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
       *****************************************************************
      C*
       ** +--- Start of Main processing -----------------------------------+
-      ** ¦                                                                ¦
-      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
-      ** ¦ executed at program activation.                                ¦
-      ** ¦                                                                ¦
+      **                                                                 
+      **  Initial processing is performed automatically: the *INZSR is   
+      **  executed at program activation.                                
+      **                                                                 
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
      C                   Z-ADD     0             WIdx
- 
+
       *
       ** VALIDATION
- 
+
       *
       ** Validate Cheque's Output Queue Name
       *
@@ -158,9 +161,9 @@
       *
      C                   ENDIF
       *
- 
- 
- 
+
+
+
       *
       * RETURN
       *
@@ -172,7 +175,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -201,9 +204,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

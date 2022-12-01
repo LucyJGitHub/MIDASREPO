@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas SD Yield Curve Type 'Z' to 'S'')
+/**** *  TEXT('Midas SD Yield Curve Type 'Z' to 'S'')                                       MD060753
+/*EXI *  TEXT('Midas SD Yield Curve Type  Z  to  S ')                                       MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data Module                                 *
@@ -14,15 +15,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 228390  *CREATE    Date 14Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  228390 - Introduce a new yield curve type 'S' (for swap      *
@@ -42,52 +45,52 @@
       *****************************************************************
       /SPACE
       *****************************************************************
- 
+
      FSDYLDCL0  UF   E           K DISK    INFSR(*PSSR)
       ** Yield Curve Master file
- 
- 
+
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Work Variable
      D WkUpdate        S              1A
      D WkDump          S              1A   INZ(' ')
      D WkCountF        S              9  0
- 
+
       *****************************************************************
       *                                                               *
       *  Main Processing                                              *
       *                                                               *
       *****************************************************************
- 
+
       ** Read all reord Yield Curve Master File
- 
+
      C     *LOVAL        SETLL     SDYLDCL0
      C                   READ      SDYLDCL0                               10
      C                   DOW       *IN10 = *OFF
      C                   EVAL      WkCountF = WkCountF + 1
      C                   EVAL      WkUpdate = 'N'
- 
+
      C                   IF        FSYLDT = 'Z'
      C                   EVAL      FSYLDT = 'S'
      C                   EVAL      WkUpdate = 'Y'
      C                   ENDIF
- 
+
      C                   IF        FSINTP = 'Z'
      C                   EVAL      FSINTP = 'S'
      C                   EVAL      WkUpdate = 'Y'
      C                   ENDIF
- 
+
      C                   IF        WkUpdate = 'Y'
      C                   UPDATE    SDYLDCD0
      C                   ENDIF
- 
+
      C                   READ      SDYLDCL0                               10
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -98,9 +101,9 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   EVAL      WkCountF = 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -114,7 +117,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WkDump = *BLANKS
      C                   MOVE      'Y'           WkDump
      C                   MOVE      *ON           *INU7
@@ -123,7 +126,7 @@
      C                   DUMP
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
 ** WCPY@

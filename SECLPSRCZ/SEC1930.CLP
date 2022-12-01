@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('Midas SE Withholding Tax to be recl'd rpt.')          */
+/****    TEXT('Midas SE Withholding Tax to be recl'd rpt.')          */                 /*MD060753*/
+/*EXI    TEXT('Midas SE Withholding Tax to be recl d rpt.')          */                 /*MD060753*/
 /********************************************************************/
 /*                                                                  */
 /*         Midas       Securities Trading Module                */
@@ -9,8 +10,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +24,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*  CCB020 - COB Restructure - Secondary COB Infrastracture         */
 /*  S01496 - Incorporation of JYSKE Enhancements (S10982)           */

@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas DL Today's Deals Rep -I/C On Request')          */
+/**** *  TEXT('Midas DL Today's Deals Rep -I/C On Request')          */                 /*MD060753*/
+/*EXI *  TEXT('Midas DL Today s Deals Rep -I/C On Request')          */                 /*MD060753*/
 /********************************************************************/
 /*                                                                  */
 /*        Midas     - Dealing Module                                */
@@ -9,12 +10,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CDL038             Date 10May05              */
+/*                      CDL038             Date 10May05              */
 /*                      CDL021             Date 03Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -26,6 +28,7 @@
 /*                      E263                    DATE  14MAR90       */
 /*                      S01194                  DATE  11/08/89      */
 /********************************************************************/
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CDL038 - Extended Deal Sub Type                            */
 /*       CDL021 - Reports by Deal Type                              */

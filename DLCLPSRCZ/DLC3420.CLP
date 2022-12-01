@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas DL List of today's deals.')                     */
+/**** *  TEXT('Midas DL List of today's deals.')                     */                 /*MD060753*/
+/*EXI *  TEXT('Midas DL List of today s deals.')                     */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*     Midas - DEALING                                       */
@@ -9,18 +10,20 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. E40459             Date 04Jun92              */
+/*                      E40459             Date 04Jun92              */
 /*                      S01358             Date 03Mar92              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       E40459 - S01362 put in a call to access program AOSARDR0,  */
 /*                to check whether the SAR in question is enabled;  */
@@ -63,19 +66,19 @@
              IF         COND(&SRTCD *EQ '*NRF   ') THEN(DO)
              GOTO       CMDLBL(EXIT)
              ENDDO
- 
+
              SNDMSG     MSG('Todays Deals Extract File') TOMSGQ(MRUNQ)
- 
+
              CLRPFM     FILE(DLDTRXDP)
              CLRPFM     FILE(DLDTRXTP)
              CHGJOB     SWS(00000000)
              CALL       PGM(DL3420)
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                 SNDMSG MSG('Todays Deals Extract Report') TOMSGQ(MRUNQ)
              CALL       PGM(DL3440) PARM('     ' 'ALL')
              ENDDO
- 
+
 ABNOR:       IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
                    SNDPGMMSG  MSG('JOB TERMINATED - DATABASE IN ERROR') +

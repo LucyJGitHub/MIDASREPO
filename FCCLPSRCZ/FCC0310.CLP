@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas FC Mandatory output instr's audit')             */
+/**** *  TEXT('Midas FC Mandatory output instr's audit')             */                 /*MD060753*/
+/*EXI *  TEXT('Midas FC Mandatory output instr s audit')             */                 /*MD060753*/
     /*****************************************************************/
     /*                                                               */
     /*  Midas - Report Control Facility Module               */
@@ -9,16 +10,18 @@
     /*                                                               */
     /*   (c) Finastra International Limited 2001                     */
     /*                                                               */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-    /*       PREV AMEND.NO.                  DATE 00/00/00           */
+    /*                                       DATE 00/00/00           */
     /*                                       DATE 00/00/00           */
     /*                                                               */
+/*       MD060753 - Error in source compilation                      */
     /*   MD046248 - Finastra Rebranding                              */
     /*****************************************************************/
     /*                                                               */
@@ -40,29 +43,29 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
              CALL       PGM(FC0220P) PARM('' &AUDIT &SEQ &LVL &ETTY)
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                   RTVDTAARA  DTAARA(LDA *ALL) RTNVAR(&LDA)
                   CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                                TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(GOTO +
                           CMDLBL(THEEND))
- 
+
  ABNOR:      SNDPGMMSG  MSG('FCC0310 - Mandatory Output Instrucitons +
                           Audit List terminated abnormally') +
                           TOMSGQ(MOPERQ)

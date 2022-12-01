@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas PM Start up group job 'PORTFOLIO '')            */
+/**** *  TEXT('Midas PM Start up group job 'PORTFOLIO '')            */                 /*MD060753*/
+/*EXI *  TEXT('Midas PM Start up group job  PORTFOLIO  ')            */                 /*MD060753*/
 /********************************************************************/
 /*                                                                  */
 /*       Midas     PORTFOLIO MANAGEMENT MODULE                      */
@@ -9,7 +10,8 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,11 +19,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO. 092963            DATE  18SEP95             */
+/*                      092963            DATE  18SEP95             */
 /*                      S01486            DATE  07JUL94             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                             */
 /*       092963  -  Clear *LDA after enquiry                        */
 /*       S01486  -  Portfolio Management Upgrade                    */

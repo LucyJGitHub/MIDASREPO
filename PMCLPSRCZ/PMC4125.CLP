@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas Control prod'n of reconciliation rpts')         */
+/**** *  TEXT('Midas Control prod'n of reconciliation rpts')         */                 /*MD060753*/
+/*EXI *  TEXT('Midas Control prod n of reconciliation rpts')         */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Portfolio Management Module                     */
@@ -9,14 +10,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPM005             Date 19Jul96              */
+/*                      CPM005             Date 19Jul96              */
 /*                      101266             Date 07Feb96              */
 /*                      094891             DATE 23OCT95              */
 /*                      086666             DATE 20MAR95              */
@@ -27,6 +29,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPM005 - Private Banking Phase 2                            */
 /*                Focus Group Changes upgraded to DBA                */
@@ -200,7 +203,7 @@
              IF         COND(&WWPODF *EQ 'Y') THEN(CHGVAR +
                           VAR(&WWMODE) VALUE('1'))
              ELSE       CMD(CHGVAR VAR(&WWMODE) VALUE('2'))
- 
+
              CHGVAR     VAR(&WWRRRQ) VALUE(' ')
 /**/
 /* CALL PM1660 TO REPORT PORTFOLIO PERFORMANCE RECONCILIATION    */

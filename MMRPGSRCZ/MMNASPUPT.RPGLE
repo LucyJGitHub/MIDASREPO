@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas MM NA's Purchased TM Database Update')
+/**** *  TEXT('Midas MM NA's Purchased TM Database Update')                                 MD060753
+/*EXI *  TEXT('Midas MM NA s Purchased TM Database Update')                                 MD060753
       *****************************************************************
       *                                                               *
       *  Midas - MM Dealer Module                                     *
@@ -11,12 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CDL049             Date 11Jul06               *
+      *                 CDL049             Date 11Jul06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CAP086             Date 08Jun05               *
@@ -33,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -66,24 +69,24 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       *
       **  DEALS FILE - NAS PURCHASED

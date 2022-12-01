@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SD Validate secs position sett't charge grp')
+/**** *  TEXT('Midas SD Validate secs position sett't charge grp')                          MD060753
+/*EXI *  TEXT('Midas SD Validate secs position sett t charge grp')                          MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data Module - Security Customer Details Val.*
@@ -17,30 +18,32 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
-      *  Prev Amend No. CSE022             Date 29Mar01               *
+      *                 CSE022             Date 29Mar01               *
       * Midas DBA 3.03 -----------------------------------------------*
       *                 CAP039  *CREATE    Date 15Sep99               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE022 - Depository Definition Enhancement                   *
       *  CAP039 - Conversion of SD inputs to modular structure        *
       *           to use as APIs                                      *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
-      ** ¦ Automatically included D-specs       ¦
-      ** ¦ ==============================       ¦
+      **  Automatically included D-specs       
+      **  ==============================       
       ** +--------------------------------------+
       **
       **--------------------------------------------------------------------------------------------
@@ -48,88 +51,88 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
-      ** ¦ End of automatically included D-specs¦
-      ** ¦ =====================================¦
+      **  End of automatically included D-specs
+      **  =====================================
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
-      ** ¦ Manually included D-specs            ¦
-      ** ¦ =========================            ¦
+      **  Manually included D-specs            
+      **  =========================            
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Named constants                      ¦
-      ** ¦ ===============                      ¦
+      **  Named constants                      
+      **  ===============                      
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      ** ¦ Arrays and Data Structures           ¦
-      ** ¦ ==========================           ¦
+      **  Arrays and Data Structures           
+      **  ==========================           
       ** +--------------------------------------+
- 
+
      D SECUGR        E DS                  EXTNAME(SECUGRPD)
       ** External DS for SE customer charge groups
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS for access program
- 
+
       ** +--------------------------------------+
-      ** ¦ Declared variables                   ¦
-      ** ¦ ==================                   ¦
+      **  Declared variables                   
+      **  ==================                   
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
-      ** ¦ End of D-specs                       ¦
-      ** ¦ ==============                       ¦
+      **  End of D-specs                       
+      **  ==============                       
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
       *****************************************************************
      C
       ** +--- Start of Main processing -----------------------------------+
-      ** ¦                                                                ¦
-      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
-      ** ¦ executed at program activation.                                ¦
-      ** ¦                                                                ¦
+      **                                                                 
+      **  Initial processing is performed automatically: the *INZSR is   
+      **  executed at program activation.                                
+      **                                                                 
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
       *
       ** VALIDATION
       *
@@ -150,7 +153,7 @@
       ** VALIDATION
       *****************************************************************
      C     VPSCG         BEGSR
- 
+
       ** Query processing
      C                   MOVEL     DDPSCG        QueryFld          1
      C     QueryFld      IFEQ      '?'
@@ -160,26 +163,26 @@
      C                   PARM                    DDPSCG
      C     SECUGR        PARM      SECUGR        DSSDY
      C                   ENDIF
- 
+
       ** If Private Banking Securities Trading Enhancement is on
      C                   IF        S01496 = 'Y'
- 
+
      C                   SELECT
- 
+
       ***When*PSC*Group*is*entered*and*classification*is*C*X*E*I*or*K**                       CSE022
       ** When PSC Group is entered and classification is C X E or I                           CSE022
- 
+
      C                   WHEN      DDPSCG <> *BLANKS and (DDCLAS = 'C' or
      C                             DDCLAS = 'X' or DDCLAS = 'E' or
      C**********                   DDCLAS = 'I' or DDCLAS = 'K')                              CSE022
      C                             DDCLAS = 'I')                                              CSE022
- 
+
       ** Err: 'Postion settlement charge group must be left blank'
      C                   Eval      DDPSCGOK = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDPSCG    '
      C                   Eval      MsgIdXAr(Idx) = 'USR2593'
- 
+
       ** Check that position settlement charge group is on file
      C                   WHEN      DDPSCG <> *BLANKS
      C                   CALL      'AOCUGRR0'
@@ -187,7 +190,7 @@
      C                   PARM      '*VERIFY'     OPTION            7
      C                   PARM                    DDPSCG
      C     SECUGR        PARM      SECUGR        DSSDY
- 
+
       ** Err: 'Position settlement charge group does not exist'
      C                   IF        ARetcode <> *BLANKS
      C                   Eval      DDPSCGOK = 'N'
@@ -198,15 +201,15 @@
       ** When PSC group is blank and classification is D M or S
      C                   WHEN      DDPSCG = *BLANKS and (DDCLAS = 'D' or
      C                             DDCLAS = 'M' or DDCLAS = 'S')
- 
+
       ** Err: 'Position settlement charge group must be entered'
      C                   Eval      DDPSCGOK = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'DDPSCG    '
      C                   Eval      MsgIdXAr(Idx) = 'USR2596'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C
      C     ENDVAL        ENDSR
@@ -216,7 +219,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -251,9 +254,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

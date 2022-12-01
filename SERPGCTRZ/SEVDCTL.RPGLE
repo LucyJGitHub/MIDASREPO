@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SE Validate Deliverer's Instructing Party')      *
+/**** *  TEXT('Midas SE Validate Deliverer's Instructing Party')      *                     MD060753
+/*EXI *  TEXT('Midas SE Validate Deliverer s Instructing Party')      *                     MD060753
       *****************************************************************
       *                                                               *
       *  Midas - Securities Trading Module                            *
@@ -19,8 +20,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -40,8 +43,8 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ¦ F-specs                              ¦
-      ** ¦ =======                              ¦
+      **  F-specs                              
+      **  =======                              
       ** +--------------------------------------+
       *
       *****************************************************************
@@ -49,8 +52,8 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ¦ Automatically included D-specs       ¦
-      ** ¦ ==============================       ¦
+      **  Automatically included D-specs       
+      **  ==============================       
       ** +--------------------------------------+
       *
       ** Standard D-specs
@@ -82,8 +85,8 @@
       /COPY ZACPYSRC,ERR_XARRYS
       *
       ** +--------------------------------------+
-      ** ¦ End of automatically included D-specs¦
-      ** ¦ =====================================¦
+      **  End of automatically included D-specs
+      **  =====================================
       ** +--------------------------------------+
       *
       *****************************************************************
@@ -91,18 +94,18 @@
       *****************************************************************
       *
       ** +--------------------------------------+
-      ** ¦ Manually included D-specs            ¦
-      ** ¦ =========================            ¦
+      **  Manually included D-specs            
+      **  =========================            
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** ¦ Named constants                      ¦
-      ** ¦ ===============                      ¦
+      **  Named constants                      
+      **  ===============                      
       ** +--------------------------------------+
       *
       ** +--------------------------------------+
-      ** ¦ Arrays and Data Structures           ¦
-      ** ¦ ==========================           ¦
+      **  Arrays and Data Structures           
+      **  ==========================           
       ** +--------------------------------------+
       *
       ** Security API Trades Extended Settlements from incoming transaction
@@ -116,8 +119,8 @@
      D SEETES        E DS                  EXTNAME(SEETESPD)
       *
       ** +--------------------------------------+
-      ** ¦ Declared variables                   ¦
-      ** ¦ ==================                   ¦
+      **  Declared variables                   
+      **  ==================                   
       ** +--------------------------------------+
       *
       ** Index for arrays of error message ids, etc.
@@ -136,8 +139,8 @@
      D PMode           S              6A
       *
       ** +--------------------------------------+
-      ** ¦ End of D-specs                       ¦
-      ** ¦ ==============                       ¦
+      **  End of D-specs                       
+      **  ==============                       
       ** +--------------------------------------+
       *
       *****************************************************************
@@ -145,9 +148,9 @@
       *****************************************************************
       *
       ** +--- Start of Main processing -------------------------------+
-      ** ¦                                                            ¦
-      ** ¦ *INZSR is executed at program activation.                  ¦
-      ** ¦                                                            ¦
+      **                                                             
+      **  *INZSR is executed at program activation.                  
+      **                                                             
       ** +------------------------------------------------------------+
       *
       ** Initialise work variables.
@@ -163,11 +166,11 @@
      C                   IF        ESDCTLOK = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        ESDCTLOK <> 'N'
      C                   MOVEL     ESDCTL        T2DCTL
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -177,7 +180,7 @@
       *  SRVALDCTL - Validation for Deliverer's Instructing Party     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValDctl     BEGSR
       *
       ** Validate If not Blank
@@ -190,7 +193,7 @@
      C                   MOVE      ESDCTL        WWLI05
      C                   MOVEL     WWLI05        WWNUM6
      C                   MOVEL     WWNUM6        WWALF5
- 
+
      C     WWLI05        IFNE      WWALF5
      C     WWLI01        ORNE      '/'
      C                   MOVE      'N'           ESDCTLOK
@@ -198,11 +201,11 @@
      C                   MOVEL     'ESDCTL'      FldNamXAr(IDx)
      C                   MOVEL     'SEW5281'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValDctl      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -212,9 +215,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

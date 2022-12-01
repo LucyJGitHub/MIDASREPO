@@ -1,5 +1,6 @@
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas RE Set Off 2 O'Clock flag')                     */
+/**** *  TEXT('Midas RE Set Off 2 O'Clock flag')                     */                 /*MD060753*/
+/*EXI *  TEXT('Midas RE Set Off 2 O Clock flag')                     */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Retail Banking                                      */
@@ -8,33 +9,35 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CRE023  *CREATE    Date 29Jul05              */
+/*                      CRE023  *CREATE    Date 29Jul05              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE023 - 2 O'clock Flag Upgrade to MidasPlus                */
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2005')
              DCL        VAR(&LDA)    TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM)    TYPE(*CHAR) LEN(50)
- 
+
              SNDPGMMSG  MSG('Accept Outward Clearing Cheques entered   ') +
                         TOMSGQ(MRUNQ)
- 
+
              SNDPGMMSG  MSG('Set off 2 o''clock flag executing') +
                         TOMSGQ(MRUNQ)
- 
+
              CHGJOB     SWS('00000000')
              CALL       PGM(RE2004)
              IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
@@ -45,9 +48,9 @@
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                           TOPGMQ(*EXT)
              ENDDO
- 
+
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

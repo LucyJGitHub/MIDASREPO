@@ -1,7 +1,8 @@
      H DEBUG
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI * ALWNULL(*USRCTL)                                              *
+/**** * ALWNULL(*USRCTL)                                              *                     MD060753
+/*EXI *  ALWNULL(*USRCTL)                                             *                     MD060753
 /*EXI *  TEXT('Midas GO Exception Reporting Extract')
       *****************************************************************
       *                                                               *
@@ -15,9 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060753           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSD086             Date 18Mar10               *
+      *                 CSD086             Date 18Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -26,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD086 - Overridable Errors                                  *
       *  BG4467 - Some fields on report GOEXRP1 contain old data.     *
@@ -71,7 +74,7 @@
      D STK             S             10    DIM(99)
      D WorkRunDate     S               D
      D DateOut         S              8S 0
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
       *
@@ -195,14 +198,14 @@
       *
      C                   READ      V_GPEXREP                              10
      C     *IN10         DOWEQ     '0'
- 
- 
+
+
       * Only process records in this zone that are dated today
      C     O#ZONE        IFEQ      ERZONE
      C     ERPDAT        ANDEQ     WorkRunDate
      C                   EXSR      SRDETAIL
      C                   ENDIF
- 
+
      C                   READ      V_GPEXREP                              10
      C                   ENDDO
       *

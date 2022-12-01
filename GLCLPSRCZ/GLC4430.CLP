@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas Control Print of Today's Mvmnts')               */
+/**** *  TEXT('Midas Control Print of Today's Mvmnts')               */                 /*MD060753*/
+/*EXI *  TEXT('Midas Control Print of Today s Mvmnts')               */                 /*MD060753*/
 /*****************************************************************/
 /*                                                               */
 /*     Midas - General Ledger Module                     */
@@ -9,17 +10,19 @@
 /*                                                               */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                               */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 041693             Date : 05jAN9             */
+/*                      041693             Date : 05jAN9             */
 /*                                                               */
 /*---------------------------------------------------------------*/
 /*                                                               */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*    041693 - Delivered as part of fix.                         */
 /*                                                               */

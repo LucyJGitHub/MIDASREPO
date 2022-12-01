@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas RE Initialise Memos-L & 2 O'clock flag files')  */
+/**** *  TEXT('Midas RE Initialise Memos-L & 2 O'clock flag files')  */                 /*MD060753*/
+/*EXI *  TEXT('Midas RE Initialise Memos-L & 2 O clock flag files')  */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Retail Module                                       */
@@ -9,16 +10,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CRE023R            Date 10Nov05              */
+/*                      CRE023R            Date 10Nov05              */
 /*                      CRE023  *CREATE    Date 29Jul05              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE023R- Clear Memos-L file and 2 O'clock file prior to     */
 /*                initialisation.                                    */
@@ -27,7 +30,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RTNCDE &MODE)
- 
+
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -38,12 +41,12 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2005')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
@@ -54,7 +57,7 @@
                           THEN(DO)                                                       /*CRE023R*/
                 SNDPGMMSG  MSG('Initialise REMEMLPD file installation ') +
                              TOMSGQ(MRUNQ)
- 
+
                 RTVDTAARA DTAARA(RESTAT *ALL) RTNVAR(&RESTAT)
                 CHGVAR VAR(&NMEMOS) VALUE(%SST(&RESTAT 1 6))
                                                                                          /*CRE023R*/
@@ -64,7 +67,7 @@
                 CLRPFM     FILE(REMEMLPD)                                                /*CRE023R*/
                 MONMSG     MSGID(CPF3133 CPF3141) EXEC(GOTO +
                              CMDLBL(ABNOR2))                                             /*CRE023R*/
- 
+
                 CALL       PGM(RE2010)
                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                    RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
@@ -73,7 +76,7 @@
                                 TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                    GOTO       CMDLBL(END)
                 ENDDO
- 
+
                 SNDPGMMSG  MSG('Initialise the 2 O''clock file') +
                              TOMSGQ(MRUNQ)
                                                                                          /*CRE023R*/
@@ -100,9 +103,9 @@
              ENDDO                                                                       /*CRE023R*/
                                                                                          /*CRE023R*/
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
- 
+
              CHGVAR     VAR(&RTNCDE) VALUE('*ERROR ')
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
@@ -118,10 +121,10 @@ ABNOR2:                                                                         
                         *TCAT ' not found - REC2010')                                    /*CRE023R*/
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)                                         /*CRE023R*/
              MONMSG     MSGID(CPF0000 MCH0000)                                           /*CRE023R*/
- 
+
 END:
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

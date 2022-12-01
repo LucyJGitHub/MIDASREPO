@@ -1,6 +1,7 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas RE Today's linked account')                     */
+/**** *  TEXT('Midas RE Today's linked account')                     */                 /*MD060753*/
+/*EXI *  TEXT('Midas RE Today s linked account')                     */                 /*MD060753*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Retail Module                               */
@@ -9,7 +10,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060753           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,12 +19,13 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO. 106240             DATE 02MAR98              */
+/*                      106240             DATE 02MAR98              */
 /*                      S01408             DATE 09MAY95              */
 /*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       106240  - Restart error on copy back to RELINKP and file    */
 /*                 error on RELINKF in RE3261.                       */
@@ -144,7 +147,7 @@ STEP3:
 EXIT3:
              CPYF       FROMFILE(XACCNTAB) TOFILE(ACCNTAB) +
                           MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
- 
+
              MONMSG     MSGID(CPF0000) EXEC(DO)
              SNDPGMMSG  MSG('Error in RESTART COPY with XACCNTAB in +
                           REC3261 (EXIT3)') TOMSGQ(MRUNQ)
@@ -155,7 +158,7 @@ EXIT3:
 EXIT2:
              CPYF       FROMFILE(XRELINKP) TOFILE(RELINKP) +
                           MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
- 
+
              MONMSG     MSGID(CPF0000) EXEC(DO)
              SNDPGMMSG  MSG('Error in RESTART COPY with XRELINKP in +
                           REC3261 (EXIT2)') TOMSGQ(MRUNQ)
@@ -167,7 +170,7 @@ EXIT1:
              CPYF       FROMFILE(&DPLIB/XREEODPF) +
                           TOFILE(&DMLIB/REEODPF) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)
- 
+
              MONMSG     MSGID(CPF0000) EXEC(DO)
              SNDPGMMSG  MSG('Error in RESTART COPY with XREEODPF in +
                           REC3261 (EXIT1)') TOMSGQ(MRUNQ)

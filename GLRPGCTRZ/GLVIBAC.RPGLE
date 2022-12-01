@@ -51,7 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CGL199 - IBAN Extra validation                               *
+      *  CGL199 - Account Customer Number in IBAN pos 15-20           *
       *  MD060443 - When opening GL accounts, on Complete the system  *
       *             sends spurious Warning message. Amend error code  *
       *             to send correct message.                          *

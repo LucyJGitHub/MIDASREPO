@@ -17,14 +17,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060760           Date 10Nov22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG14435           Date 06Aug07               *
+      *                 BUG14435           Date 06Aug07               *
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060760 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG14435 - The system displayed details on Maintain          *
       *             Sundry Items instead of the functionality         *
@@ -73,23 +75,23 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** External Data structure to hold the outgoing record format
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -98,7 +100,7 @@
       ** Format of Call Stack file Header and Records
      D/COPY QSYSINC/QRPGLESRC,QWCATTR
       ** Format of Job Description Information
- 
+
       ** Error Data Structure for the Open File Call
      D   ERRC0100      DS
      D    BYTESPROV            1      4B 0 INZ(144)
@@ -106,16 +108,17 @@
      D    EXCEPID              9     15A   INZ(*BLANKS)
      D    RESVD2              16     16A   INZ(*BLANKS)
      D    EXCEPTION           17    144A   INZ(*BLANKS)
- 
+
      D Entry           DS           256
      D  QWVEL01                      10I 0
      D  PgmNam                       10    Overlay(Entry:25)
      D  PgmLib                       10    Overlay(Entry:35)
      D Holding         DS           256
-     D  QWVEL02                      10I 0
+     D**QWVEL02                      10I 0                                                  MD060760
+     D  QWVEL02x                     10I 0                                                  MD060760
      D  TempPgmNam                   10    Overlay(Holding:25)
      D  TempPgmLib                   10    Overlay(Holding:35)
- 
+
      D @DSINCRM        DS           128
      D @INCREMENTAL                   1
      D @RETURNUIINFO                  1
@@ -127,7 +130,7 @@
      D @PVROOT                        5
      D @PVDECODE                      1
      D @PVFIELD                      10
- 
+
      D @DSCNTRL        DS           128
      D @AUDITUSRID                   10
      D @ENTRYOPTID                    3
@@ -154,34 +157,34 @@
      D @CCEND                         1
      D @CALLSTATUS                    1
      D @RETURNSTATUS                  4
- 
+
      D @DSPV           DS            11
      D  @PVBEGIN                      1
      D  @PVREQCOUNT                   5
      D  @PVRETCOUNT                   5
- 
+
      D @DSSUPER        DS            64
      D @SUPERUSRPWD                  64
- 
+
      D DSEPMS          DS
      D  @ERM                   1      7
      D  @PM1                   8     17
      D  @PM2                  18     27
      D  @PM3                  28     37
      D  @PMALL                 8     37
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
      D PRetCode        S              7A
      D POption         S              7A
      D KeyInfo         S            200A
      D HelpTag         S            600A
- 
+
      D ReceiverVar     S           9999
      D ReceiverLen     S              4B 0 INZ(%size(ReceiverVar))
      D ReceiverFmt     S              8
@@ -196,7 +199,7 @@
      D RootName        S              4A
      D RecNam          S              4A
      D Count           S             10  0 INZ(1)
- 
+
      D @PRMPT          S              1
      D @CCN            S            128
      D @NUM            S             15  0
@@ -212,7 +215,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -220,11 +223,11 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       ** Need to get the program for which the help is required
- 
+
       *
       ** Set up the default variables for the call to the API
       *
- 
+
      C                   Eval      ReceiverFmt = 'CSTK0100'
      C                   Eval      QWCJN02     = %SubSt(KeyInfo:17:10)
      C                   Eval      QWCJNBR00   = %SubSt(KeyInfo:1:6)
@@ -233,7 +236,7 @@
      C                   Eval      QWCERVED06  = X'0000'
      C                   Eval      QWCTI00     = 2
      C                   Eval      QWCTI01     = X'0000000000000000'
- 
+
      C                   CALL      'QWVRCSTK'
      C                   PARM                    ReceiverVar
      C                   PARM                    ReceiverLen
@@ -241,7 +244,7 @@
      C                   PARM                    QWCF0100
      C                   PARM                    JobIDFmt
      C     ERRC0100      PARM                    ERRC0100
- 
+
      C                   IF        BYTESAVAIL <> 0
      C                   MOVEL     'QWVRCSTK'    DBFile
      C                   MOVEL     '001'         DBase
@@ -276,7 +279,8 @@
      C                   Eval      Holding = %subst(ReceiverVar:QWVEO + 1)
      C                   Eval      RecNam      = %SubSt(TempPgmNam:1:4)
      C                   Eval      QWVCSTKE = %subst(ReceiverVar:QWVEO + 1)
-     C                   Eval      QWVEO = QWVEO + QWVEL02
+     C**********         Eval      QWVEO = QWVEO + QWVEL02                                  MD060760
+     C                   Eval      QWVEO = QWVEO + QWVEL02x                                 MD060760
      C                   eval      count = count+1
      C                   Enddo
       *
@@ -312,11 +316,11 @@
      C                   call      'GAR49R'      PLPMOD                 99
       *
      C                   EndIf
- 
+
      C                   Eval      HelpTag = %subst(@CCN:42:3)
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -329,9 +333,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
       *
       ** Inputs
@@ -341,14 +345,14 @@
      C                   Parm                    KeyInfo
      C                   Parm                    HelpTag
      C                   Parm                    DSSDY
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       *  @PRMPT - Prompt or validate mode (prompt=Y, validate=N)
       *  @CCN   - Communication array - data in & out of program
       *  @NUM   - Used to return numeric values
@@ -383,9 +387,9 @@
      C                   PARM                    @PVFILTER
      C                   PARM                    @PVLIST
      C                   PARM                    @PVSELECTION
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *

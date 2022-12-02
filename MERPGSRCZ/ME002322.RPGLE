@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. CGL197             Date 07Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL146             Date 10Jul13               *
       *                 CRE075             Date 06Dec10               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL197 - Statement Page number                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
@@ -327,6 +329,8 @@
      C                   PARM      *Blanks       RetCodeIn
      C                   PARM      ZAPGM         CallerOut        10
      C                   PARM                    ScrLayout
+     C                   PARM                    F20LSNT                                      CGL197
+     C                   PARM                    ActionCode                                   CGL197
      C                   PARM                    IN40_TO_70
      C                   PARM                    NewFilRcd
      C                   ENDIF
@@ -404,7 +408,15 @@
      C                   EVAL      F20MI4 = N40MI4
      C                   EVAL      F20MI5 = N40MI5
      C                   EVAL      F20MI6 = N40MI6
+     C                   IF        CGL197 = 'Y'                                               CGL197
+     C                   IF        N40LSN = 0                                                 CGL197
+     C                   MOVE(P)   '0'           F20LSNT                                      CGL197
+     C                   ELSE                                                                 CGL197
+     C                   MOVE      N40LSN        F20LSNT                                      CGL197
+     C                   ENDIF                                                                CGL197
+     C                   ELSE                                                                 CGL197
      C                   EVAL      F20LSN = N40LSN
+     C                   ENDIF                                                                CGL197
      C                   EVAL      F20LST = N40LST
 
  B1  C                   IF        N40NSD <> 0
@@ -577,6 +589,10 @@
      C                   EVAL      N40MI6 = F20MI6
      C                   EVAL      N40NSD = 0
 
+     C                   IF        CGL197 = 'Y'                                               CGL197
+     C                   MOVE      F20LSNT       N40LSN                                       CGL197
+     C                   ENDIF                                                                CGL197
+      *                                                                                       CGL197
  B1  C                   IF        F20NSD <> *Blanks
      C                   MOVEL(P)  F20NSD        @IDate
 
@@ -621,6 +637,23 @@
 
      C                   MOVEL     '*SAME'       ZAPGRL            5
 
+      ** Check if CGL197 is installed                                                         CGL197
+      *                                                                                       CGL197
+     C                   MOVE      'N'           CGL197            1                          CGL197
+     C                   EVAL      *IN79 = *Off                                               CGL197
+      *                                                                                       CGL197
+     C                   CALLB     'AOSARDR0'                                                 CGL197
+     C                   PARM      *BLANKS       @RtCd                                        CGL197
+     C                   PARM      '*VERIFY'     @Optn                                        CGL197
+     C                   PARM      'CGL197'      @SARD                                        CGL197
+                                                                                              CGL197
+      ** If CGL197 is switched ON and insert mode                                             CGL197
+      *                                                                                       CGL197
+     C                   IF        @RtCd = *BLANKS AND ActionCode = 'I'                       CGL197
+     C                   MOVE      'Y'           CGL197                                       CGL197
+     C                   EVAL      *IN79 = *On                                                CGL197
+     C                   ENDIF                                                                CGL197
+     C
       ** Retrieve RUNDAT
       *
      C                   IN        RUNDAT

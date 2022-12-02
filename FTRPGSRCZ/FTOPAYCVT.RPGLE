@@ -16,8 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052529           Date 12Feb19               *
-      *  Prev Amend No. MD039094           Date 15May18               *
+      *  Last Amend No. 230453             Date 03Jul12               *
+      *  Prev Amend No. CFT162             Date 16Oct20               *
+      *                 CFT046             Date 13Oct20               *
+      *                 MD052529           Date 12Feb19               *
+      *                 MD039094           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039986           Date 10Aug16               *
       *                 MD024011           Date 10Aug16               *
@@ -74,6 +77,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  230453 - Expand field details for Third Reimbursement        *
+      *         - Applied for MD020977.                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
+      *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
+      *           RE Transaction Type for FT payments                 *
       *  MD052529 - If Ordering Customer line 1 = 'MT202', Ordering   *
       *             Customer lines 2 - 5 should be blank.             *
       *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
@@ -154,7 +162,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -173,55 +181,55 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Payment Status
      D/COPY WNCPYSRC,FTH00457
      D*@STSA****       S             24    DIM(5) CTDATA PERRCD(1)                            CFT157
      D @STSA           S             24    DIM(6) CTDATA PERRCD(1)                            CFT157
      D/COPY WNCPYSRC,FTH00458
- 
+
       * Payment details in file format
      D PmntFilFmt    E DS                  EXTNAME(OTPAYDD)
                                                                                 CFT014
       ** Payment detail extension in file format                                CFT014
      D PmntFilFmX    E DS                  EXTNAME(OTPAYXPD)                    CFT014
- 
+
       * Payment details in screen formats
      D PmtScnFmt1    E DS                  EXTNAME(FTOPY1PD)
      D PmtScnFm1b    E DS                  EXTNAME(FTOPY1APD)                   CFT014
@@ -233,41 +241,41 @@
      D PmtScnFmt7    E DS                  EXTNAME(FTOPY7PD)                    CFT014
      D PmtScnFmtA    E DS                  EXTNAME(FTOPYAPD)                                  CSW209
      D PmtScnFmtC    E DS                  EXTNAME(FTOPYCPD)                                  CSW209
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D*SDFODA****    E DS                  EXTNAME(SDFODAPD)                    179994
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)                    179994
       ** EXTERNAL DS FOR FUNDS TRANSFER ICD DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
      D XLCD          E                     EXTFLD(LCD)
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDMGME        E DS                  EXTNAME(SDMGMEPD)                                  219241
       ** External DS for Midas Message Management ICD                                         219241
                                                                                               219241
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
       *                                                                                       CER030
      D PmtScnFmt7A   E DS                  EXTNAME(FTOPY7APD)                                 CER030
       *                                                                                       CER030
      D PmtScnFmt7B   E DS                  EXTNAME(FTOPY7BPD)                                 CER030
- 
+
      D P8FT            DS           128                                                       195220
       *                                                                                       195220
       ** Currency                                                                             195220
@@ -328,11 +336,11 @@
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
+
      D                 DS
      D  @@SXP1                 1      1  0
      D  @@SXP2                 2      2  0
- 
+
      D*
      D                 DS
      D**  Data structures for re-definition of screen fields
@@ -361,7 +369,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Msg Unique Reference                                                                  190845
      D SHMSGR          S              8  0                                                    190845
      D                                                                                        190845
@@ -377,7 +385,7 @@
      D CER030          S              1                                                       CER030
      D CFT003          S              1                                                       CER030
      D CGL013          S              1                                                       CER030
- 
+
       *                                                                                       CFT120
       ** CFT120 switchable field                                                              CFT120
       *                                                                                       CFT120
@@ -385,6 +393,7 @@
                                                                                               CSW209
      D CSW209          S              1A                                                      CSW209
                                                                                               CSW209
+     D CFT046          S              1                                                       CFT046
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -786,7 +795,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       SNDAT
      C                   END
- 
+
      C**  Final Payment Date
      C     FDATD1        IFNE      0
      C     BJDFIN        IFEQ      'D'
@@ -798,7 +807,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       SFIND
      C                   END
- 
+
      C**  Transfer Comission tariff
      C                   MOVEL     TRCT          STRCT
      C*
@@ -1288,7 +1297,7 @@
      C                   EXSR      FMTAMT                                                  BUG17019A
      C                   MOVE      @@AMTD        STOTVA                                    BUG17019A
                                                                                 CFT014
- 
+
       ** Get currency's number of decimal places                                CFT014
                                                                                 CFT014
      C                   If        (SCDRO <> *Blank)                            CFT014
@@ -1570,7 +1579,7 @@
      C                   EXSR      FMTAMT                                       CAP084
      C                   MOVE      @@AMTD        STOTVB                         CAP084
      C                   ENDIF                                                  CFT009
- 
+
      C*
      C**  V.A.T. flags
      C                   MOVEL     OPVAT1        SVAT1
@@ -1580,7 +1589,7 @@
      C                   MOVEL     OPVAT5        SVAT5
      C                   MOVEL     OPVAT6        SVAT6
      C                   MOVEL     OPVAT7        SVAT7
- 
+
      C                   IF        @CFT010 = 'Y'                                CFT009
      C                   EVAL      VAT9 = VMIC1                                 CFT009
      C                   EVAL      VAT10 = VMIC2                                CFT009
@@ -1600,7 +1609,7 @@
      C*
      C**  Set up FX margin fields if feature on.
      C     BGN0ST        IFEQ      'Y'
- 
+
      C**  FX Margin Points.
      C*
      C**  Format amount
@@ -1626,7 +1635,7 @@
      C                   MOVEL     MSIG          SMSIG
      C*
      C                   END
- 
+
      C* Set up STATUS FLAG for display.
      ** Authorised
      C     RECI          IFEQ      'D'
@@ -1671,10 +1680,10 @@
      C     DTCH          IFNE      *BLANKS
      C                   MOVEL     DTCH          SDTCH
      C                   ELSE
- 
+
      C                   if        PmtScnFmt2 <> *blanks OR PmtScnFmt3
      C                             <> *blanks OR PmtScnFmt4 <> *blanks
- 
+
       ** If CFT014 is installed, retrieve the default value from the                          219241
       ** Message Management ICD                                                               219241
                                                                                               219241
@@ -1684,9 +1693,9 @@
      C                   MOVEL     'BEN'         SDTCH
      C/COPY WNCPYSRC,FTOPAYNC03
      C                   ENDIF                                                                219241
- 
+
      C                   endif
- 
+
      C                   ENDIF
      C*                                                                         175479
      C**  Deal Reference                                                        175476
@@ -1720,6 +1729,34 @@
      C                   Movel     OPTRI3        STRI3                          CFT014
      C                   Movel     OPTRI4        STRI4                          CFT014
      C                   Movel     OPTRI5        STRI5                          CFT014
+      *                                                                                       230453
+     C     SACTION       IFEQ      'E'                                                        230453
+      *                                                                                       230453
+     C                   CLEAR                   P8FT                                         230453
+     C                   MOVEL     *BLANKS       W8STMT                                       230453
+     C                   MOVEL     PSPROCPGM     W8CPGM                                       230453
+     C                   MOVEL     '*ENQ  '      W8ACT                                        230453
+     C                   Z-ADD     5             W8NLIN                                       230453
+      *                                                                                       230453
+     C                   MOVEL     OPTRIT        W8TYPE                                       230453
+     C                   MOVEL     *BLANKS       P8LINS                                       230453
+     C                   MOVEL     *BLANKS       WADDRSS                                      230453
+     C                   MOVEL     OPTRI1        WADCHK1                                      230453
+     C                   MOVEL     OPTRI2        WADCHK2                                      230453
+     C                   MOVEL     OPTRI3        WADCHK3                                      230453
+     C                   MOVEL     OPTRI4        WADCHK4                                      230453
+     C                   MOVEL     OPTRI5        WADCHK5                                      230453
+     C                   MOVEL     WADDRSS       P8LINS                                       230453
+      *                                                                                       230453
+     C                   EXSR      SREXPGM                                                    230453
+      *                                                                                       230453
+     C     35            SUBST     P8SCR:1       STRI1                                        230453
+     C     35            SUBST     P8SCR:36      STRI2                                        230453
+     C     35            SUBST     P8SCR:71      STRI3                                        230453
+     C     35            SUBST     P8SCR:106     STRI4                                        230453
+     C     35            SUBST     P8SCR:141     STRI5                                        230453
+      *                                                                                       230453
+     C                   ENDIF                                                                230453
                                                                                 CFT014
       ** Instruction Codes                                                      CFT014
                                                                                 CFT014
@@ -1951,6 +1988,7 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
      C                   IF        CER030 = 'Y' OR CGL013 = 'Y'                               CER030
+     C                             OR CFT046 = 'Y'                                            CFT046
      C                   EVAL      SRTTY = OPRTTY                                             CER030
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
@@ -2102,7 +2140,7 @@
       *
       *  Validation Work Fields
      C                   PARM                    Val@Fields
- 
+
       * Payment Status
      C                   PARM                    PmntStatus       24
       *
@@ -2402,6 +2440,29 @@
      C                   ENDIF                                                                CFT120
      C                   ENDIF                                                                CFT120
       *                                                                                       CFT120
+      ** Check if 'CFT046' is switched 'ON'                                                   CFT046
+      *                                                                                       CFT046
+     C                   EVAL      CFT046 = 'N'                                               CFT046
+     C                   CALL      'AOSARDR0'                                                 CFT046
+     C                   PARM      *BLANKS       PRTCD                                        CFT046
+     C                   PARM      '*VERIFY'     POPTN                                        CFT046
+     C                   PARM      'CFT046'      PSard                                        CFT046
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CFT046
+      *                                                                                       CFT046
+     C                   IF        PRTCD = *BLANKS                                            CFT046
+     C                   EVAL      CFT046 = 'Y'                                               CFT046
+     C                   ELSE                                                                 CFT046
+      *                                                                                       CFT046
+     C                   IF        PRTCD <> '*NRF '                                           CFT046
+      *                                                                                       CFT046
+     C                   MOVEL     'CFT046'      DBKEY                                        CFT046
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CFT046
+     C                   MOVEL     '913'         DBASE                                        CFT046
+     C                   EXSR      *PSSR                                                      CFT046
+      *                                                                                       CFT046
+     C                   ENDIF                                                                CFT046
+     C                   ENDIF                                                                CFT046
+      *                                                                                       CFT046
      C/COPY WNCPYSRC,FTOPAYNC02
                                                                                               CFT157
      C                   CALLB     'AOSARDR0'                                                 CFT157

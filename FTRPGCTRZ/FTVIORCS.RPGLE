@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051508           Date 12Jul18               *
+      *  Last Amend No. BUG25348           Date 30Jan13               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD051508           Date 12Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041643           Date 27Sep16               *
       *                 MD036567           Date 26Apr16               *
@@ -90,6 +91,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG25348 - Should accept invalid characters                  *
+      *           - Applied for AR1068690 (Child: AR1069087)          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD051508 - Correct field name in order to return proper      *
@@ -933,6 +936,9 @@
      C                   MOVEL     'FTM2153'     MsgIdXAr(IDX)
      C                   ENDIF
       *
+     C                   IF        %SUBST(WDORC1:1:1) = '/' AND                             BUG25348
+     C                             *IN94 = *ON                                              BUG25348
+     C                   ELSE                                                               BUG25348
      C     AD#1          IFEQ      'Y'
      C                   MOVEL     'N'           OKORC1
      C                   ENDIF
@@ -952,6 +958,7 @@
      C                   IF        AD#5 = 'Y'                                                 CFT032
      C                   EVAL      OKORC5 = 'N'                                               CFT032
      C                   ENDIF                                                                CFT032
+     C                   ENDIF                                                              BUG25348
                                                                                               CFT032
      C                   IF        CSW207 = 'N'                                               250600
      C                   IF        PNWRK = 'SWIFT ' OR PNWRK = '      '                       250600

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056823           Date 29Sep20               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056823           Date 29Sep20               *
       *                 MD052870           Date 27Feb19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044395           Date 08Mar17               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056823 - Unable to Authorise in PAUT afer Reversal of      *

@@ -91,12 +91,12 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -115,66 +115,66 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
- 
+
      D/COPY MECPYSRC,ME1100_ILE
       **
- 
+
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * CCT Header details in File format
      D CctHdr        E DS                  EXTNAME(FT102HPD)
- 
+
       * CCT Header details in Screen format
      D CctScnFmt     E DS                  EXTNAME(FT102HSPD)
      D  SPBRCA       E                     EXTFLD(PBRCA)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D P8FT            DS           128                                                       221538
       *                                                                                       221538
       ** Currency                                                                             221538
@@ -234,52 +234,52 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Constant
      D NbType          C                   CONST(10)
- 
+
       ** Parameters for ZALIGN
      D Zalignok        S              1
      D Zfield          S             16
      D Zadec           S              1  0
      D Zadig           S              2  0
- 
+
       ** Parameters for ZDATE1
      D DateIn          S              6A
      D DaynoOut        S              5P 0
      D DatFmt          S              1A
      D ErrorFlag       S              1A
- 
+
       ** Parameters passed on entry - for conversion type
      D CnvTyp          S              2
- 
+
       ** Parameters passed on entry - for conversion type
      D TypAcct         S              1    DIM(10)
- 
+
       ** Working variable for conversion of exchange rate on swift
      D WCctrte         S              1    DIM(16)
- 
+
       ** Working variable for conversion of exchange rate on swift
      D TCctrte         S             16
- 
+
      D AplyType        S              1    Dim(NBTYPE)
- 
+
       ** Position of ',' into an amount
      D Comma           S              2  0
- 
+
       ** Parameters for ME1330
      D Prefix          S             20A
      D SpecialC        S            256A
      D AplyValue       S            256A
      D TypeValue       S              1A
- 
+
      D RetCode         S                   LIKE(RetCodeIn)
- 
+
       ** Working CCy variables for sum of sender's charges and sum
       ** of receivers charges (since not on FT102HPd file)
      D SndCcy          S              3
      D RcvCCy          S              3
- 
+
       ** Message reference                                                      185107
      D MgmsgR          S                   LIKE(PhmsgR)                         185107
                                                                                               CSW207
@@ -293,18 +293,18 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Check to see the direction of the conversion (from file to screen
       ** and vice versa)
@@ -688,7 +688,7 @@
      C                   EVAL      AdnLi6 = TmLin6
      C                   ENDIF
       *
- 
+
       ** Map Swift ID
      C                   Eval      STID = PSNDR
                                                                                               CSW209

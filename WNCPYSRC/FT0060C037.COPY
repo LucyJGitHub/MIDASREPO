@@ -1,0 +1,127 @@
+      *****************************************************************                       UUC101
+      *                                                               *                       UUC101
+      *  MIDAS - /COPY MEMBER (FT0060)                                *                       UUC101
+      *                                                               *                       UUC101
+      *  FT0060C037 - Payment Authorisation                           *                       UUC101
+      *                                                               *                       UUC101
+      *  (c) Finastra Ltd 2020                                        *                       UUC101
+      *                                                               *                       UUC101
+      *  Last Amend No. MD058687A          Date 03Sep21               *                       UUC101
+      *  Prev Amend No. MD058687           Date 09Jul21               *                       UUC101
+      *                 MD027774           Date 07Oct20               *                       UUC101
+      *                 UUC101  *CREATE    Date 07Oct20               *                       UUC101
+      *                                                               *                       UUC101
+      *****************************************************************                       UUC101
+      *  MD058687A- MD058687 missed an '*' in this box when writting  *
+      *             comments.  Resulting in compilation err.          *
+      *             Added * in position 7 2 lines below.              *
+      *  MD058687 - Formalise fix to MD027774 for UUC101.             *
+      *             FT Cover Check validating incorrect account.      *                    MD058687A
+      *             Amended hook FT0060C037.                          *
+      *  MD027774 - No warning for retail account OD                  *                       UUC101
+      *             Recompile due to changes on WNCPYSRC/FT0060C037   *                       UUC101
+      *             Upgraded with UUC101                              *                       UUC101
+      *  UUC101 - Cover FT Payments                                   *                       UUC101
+      *           Upgrade UUC041 to FBM 2.1                           *                       UUC101
+      *                                                               *                       UUC101
+      *****************************************************************                       UUC101
+      *                                                                                       UUC101
+      * SMAM NOT PASSED, 0 instead                                                            UUC101
+      *                                                                                       UUC101
+      **  If feature UUC101 (Automatic cover in Funds Transfer)                               UUC101
+      **  is switched on.                                                                     UUC101
+     C           UUC101    IFEQ 'Y'                                                           UUC101
+      *                                                                                       UUC101
+      **  If key <F3> not pressed.                                                            UUC101
+     C           *IN01     IFEQ *OFF                       Begin *IN01                        UUC101
+      *                                                                                       UUC101
+      **  If Outgoing Payment.                                                                UUC101
+     C           *IN60     IFEQ *ON                        Begin *IN60                        UUC101
+     C                     Z-ADDOPMSGR    I#MSGR                                              UUC101
+      **  Else Incoming Payment.                                                              UUC101
+     C                     ELSE                                                               UUC101
+     C                     MOVELINMSGR    I#MSGR                                              UUC101
+     C                     ENDIF                                                              UUC101
+      *                                                                                     MD027774
+      **  Retrieve Account Number to check if funds are enough                              MD027774
+      **    If OPAY = Check Ordering Customer Retail Account Number                         MD027774
+      **    If IPAY = Check Sender  Retail Account Number                                   MD027774
+      **    Ensure ACNO and related fields are blanked if non-Retail account                MD058687
+     C********** *IN60     IFEQ *ON                                                 MD027774MD058687
+     C                     SELEC                                                            MD058687
+     C           *IN60     WHEQ *ON                                                         MD058687
+     C           ORCT      ANDEQ'R'                                                         MD027774
+     C                     MOVELORC1      ACNO                                              MD027774
+     C**********           END                                                      MD027774MD058687
+     C********** *IN60     IFEQ *OFF                                                MD027774MD058687
+     C           *IN60     WHEQ *OFF                                                        MD058687
+     C           SNTP      ANDEQ'R'                                                         MD027774
+     C                     MOVELSND1      ACNO                                              MD027774
+     C                     OTHER                                                            MD058687
+     C                     Z-ADD*ZEROS    ACNO                                              MD058687
+     C                     MOVEL*BLANKS   FGLNO                                             MD058687
+     C**********           END                                                      MD027774MD058687
+     C                     ENDSL                                                            MD058687
+      *                                                                                     MD027774
+     C           ACNO      CHAINACNUMAF              80                                     MD027774
+     C                     MOVELBRCA      CFACO1  9                                         MD027774
+     C                     MOVE CNUM      CFACO1                                            MD027774
+     C                     MOVELCCY       CFACO2 13                                         MD027774
+     C                     MOVE ACOD      CFACO2                                            MD027774
+     C                     MOVELCFACO1    CFACO3 22                                         MD027774
+     C                     MOVE CFACO2    CFACO3                                            MD027774
+     C                     MOVELCFACO3    CFACO4 24                                         MD027774
+     C                     MOVE ACSQ      CFACO4                                            MD027774
+      *                                                                                     MD027774
+      *                                                                                       UUC101
+      **  Call the bank internal program to check the overdrawn                               UUC101
+     C                     CALL 'XX00002'                                                     UUC101
+     C                     PARM *BLANKS   CFRETC                                              UUC101
+     C                     PARM           I#MSGR                                              UUC101
+     C                     PARM           IPREF                                               UUC101
+     C***********          PARM *BLANKS   CFACON                                     UUC101 MD027774
+     C                     PARM CFACO4    CFACON                                            MD027774
+      *                                                                                       UUC101
+      * If return code is *BLANK do Cover Chk                                                 UUC101
+     C           CFRETC    IFEQ *BLANKS                                                       UUC101
+      * Set up amount and action                                                              UUC101
+     C                     MOVEL'X'       CFRTCD                                              UUC101
+     C                     Z-ADDSMAM      CFAMOV                                              UUC101
+      *                                                                                       UUC101
+     C                     CALL W#PGM                                                         UUC101
+     C                     PARM 'F'       CFTYPE  1                                           UUC101
+     C                     PARM IPREF     CFREFN 15                                           UUC101
+     C***********          PARM           CFACON                                     UUC101 MD027774
+     C                     PARM CFACO4    CFACON                                            MD027774
+     C                     PARM           CFRTCD  1                                           UUC101
+     C                     PARM           CFAMOV 150                                          UUC101
+      *                                                                                       UUC101
+      *                                                                                       UUC101
+      **  Check return code.                                                                  UUC101
+      *                                                                                       UUC101
+      *   If the Return code is 'N' (i.e payment not covered)                                 UUC101
+      *   end process                                                                         UUC101
+     C           CFRTCD    IFEQ 'N'                        Not covered                        UUC101
+     C                     MOVE *BLANKS   FTMSDT                                              UUC101
+     C                     MOVE 'Y'       OERROR                                              UUC101
+     C                     MOVE 'Y'       FTNOUP                                              UUC101
+     C                     MOVEL'UC01305' FTMSID                                              UUC101
+     C                     MOVEL'XXUSRMSG'FTMSGF                                              UUC101
+     C                     MOVE *BLANKS   FTMSDT                                              UUC101
+     C           IPREF     CAT  WUREJE:3  FTMSDT                                              UUC101
+     C                     EXSR FTSNMS                                                        UUC101
+     C*********************MOVE '1'       *IN01                                               UUC101
+     C                     ELSE                                                               UUC101
+     C                     MOVEL'UC01305' FTMSID                                              UUC101
+     C                     MOVEL'XXUSRMSG'FTMSGF                                              UUC101
+     C                     MOVE *BLANKS   FTMSDT                                              UUC101
+     C           IPREF     CAT  WUACCE:3  FTMSDT                                              UUC101
+     C                     EXSR FTSNMS                                                        UUC101
+      *                                                                                       UUC101
+     C                     END                             End Not covered                    UUC101
+      *                                                                                       UUC101
+     C                     END                             End CFRETC                         UUC101
+      *                                                                                       UUC101
+     C                     END                             End *IN01                          UUC101
+      *                                                                                       UUC101
+     C                     END                             End UUC101                         UUC101

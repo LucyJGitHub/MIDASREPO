@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. 251121             Date 04Feb13               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
@@ -97,6 +98,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251121 - Update Movement Date when Maturity is inserted.     *
+      *         - Applied for AR1068690 (Child: AR1069087)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1807,6 +1810,22 @@
      C                             AND @TimeStamp <> *BLANKS                                 BUG4728
      C                   MOVEL     @TimeStamp    V_DMTMST                                    BUG1569
      C                   ENDIF                                                               BUG1569
+      *                                                                                       251121
+     C     V_DPAD        CHAIN     MMDELDP0                           90                      251121
+     C                   IF        *IN90 = '0' AND HKMATD <> 0                                251121
+      ** If this is a call deposit maturity date may not have been entered                    251121
+      ** Therefore set Depot Out date to maturity of security.                                251121
+     C                   IF        HKMTYP = 'CD' AND V_DPMD = 99999                           251121
+     C                   EVAL      V_DPMD = HKMATD                                            251121
+     C                   ENDIF                                                                251121
+      *                                                                                       251121
+      ** If this is a call loan maturity date will not have been entered                      251121
+      ** Therefore set Depot In date to maturity of security.                                 251121
+     C                   IF        HKMTYP = 'CL' AND V_DPDO = 99999                           251121
+     C                   EVAL      V_DPDO = HKMATD                                            251121
+     C                   ENDIF                                                                251121
+     C                   ENDIF                                                                251121
+      *                                                                                       251121
       *                                                                                      BUG1569
      C                   ENDSR
 

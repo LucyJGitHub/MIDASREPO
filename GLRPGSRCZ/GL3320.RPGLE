@@ -11,9 +11,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. AR1075401          Date 01Jun20               *     
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. AR758977           Date 04Oct11               *
+      *  Prev Amend No. AR1075401          Date 01Jun20               *     
+      *                 CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD048980           Date 15Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042411           Date 18Nov16               *
@@ -88,6 +89,10 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  AR758977 - Postings still exists from dropped accounts.      *
+      *             Check if account still has existing postings      *
+      *             before dropping the account. Applied fix 261478.  *
+      *             (Child:AR758978).                                 *
       *  AR1075401 - Increase QFOAMT length in PMHOLDPD. Recompiled.  *
       *              (Child: AR1075402)                               *     
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1130,6 +1135,12 @@
      C                   ENDIF                                                                CER036
       *                                                                   S01408
      C/COPY WNCPYSRC,GL3320CCP4                                           S01408
+      ** If account is closed for more than 365 days, check first if                        AR758977
+      ** postings exist before dropping the account.                                        AR758977
+      *                                                                                     AR758977
+     C     *IN42         IFEQ      *ON                                                      AR758977
+     C     RKEY          CHAIN     APOSTL1                            42                    AR758977
+     C                   ENDIF                                                              AR758977
       *                                                                   S01408
      C*
      C** Accumulate number of records being dropped

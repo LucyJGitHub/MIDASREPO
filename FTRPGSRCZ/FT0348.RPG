@@ -15,8 +15,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 261691             Date 19Sep13               *
+      *  Last Amend No. UUC104             Date 12Oct20               *
+      *  Prev Amend No. MD022475           Date 01Oct13               *
+      *                 CSD103             Date 10Aug20               *
+      *                 261691             Date 19Sep13               *
       *                 AR918975           Date 21Mar12               *
       *                 AR954113           Date 13Apr12               *
       *                 AR920077           Date 21Mar12               *
@@ -65,6 +67,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
+      *           Use copy hook FT0348C046, FT0348C007                *
+      *           Add copy hook UUC104_007                            *
+      *  MD022475 - Nips International Other not created as Inter-    *
+      *             mediary validation against bank to bank /INT/     *
+      *             fails.                                            *
+      *           - Fill fields with CFT009 versions for 72 check.    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  261691 - Recompiled due to changes to /copy SFT0345S6.       *
@@ -536,6 +545,29 @@
       ***Validate*Intermediary*Bank************************************   CFT014
       ***********                                                         CFT014
      C***********          EXSR SRINBK                                    CFT014
+      *                                                                                     MD022475
+      ** Correct fill of Account with institution                                           MD022475
+      *                                                                                     MD022475
+     C           V#ACBX    IFNE *BLANKS                                                     MD022475
+     C                     MOVELV#ACBX    V#ACBT                                            MD022475
+     C                     MOVELV#ACBY    ##001A                                            MD022475
+     C           ##001A    IFNE '/'                                                         MD022475
+     C                     MOVELV#ACBY    V#ACB1                                            MD022475
+     C                     ELSE                                                             MD022475
+     C                     MOVELV#ACBZ    V#ACB1                                            MD022475
+     C                     ENDIF                                                            MD022475
+     C                     ENDIF                                                            MD022475
+      *                                                                                     MD022475
+      ** Correct fill of Intermediary Institution                                           MD022475
+      *                                                                                     MD022475
+     C           V#INBX    IFNE *BLANKS                                                     MD022475
+     C                     MOVELV#INBY    ##001A                                            MD022475
+     C           ##001A    IFNE '/'                                                         MD022475
+     C                     MOVELV#INBY    V#INB1                                            MD022475
+     C                     ELSE                                                             MD022475
+     C                     MOVELV#INBZ    V#INB1                                            MD022475
+     C                     ENDIF                                                            MD022475
+     C                     ENDIF                                                            MD022475
       *                                                                   CFT014
       ** Validate Details of Payment                                      CFT014
       *                                                                   CFT014
@@ -693,6 +725,7 @@
       *                                                                   CFT014
      C           S6PAY     IFNE *BLANKS                                   CFT014
      C           V#ORC1    ANDEQORCFLD                                    CFT014
+      /COPY WNCPYSRC,UUC104_007                                           UUC104
      C           S6PAY     ORNE *BLANKS                                                     BUG26775
      C           CTYP      ANDEQ'B'                                                         BUG26775
      C/COPY WNCPYSRC,FT0348C046
@@ -4723,6 +4756,18 @@
      C                     MOVELV#ABK1    I#AWBK                          CFT014
      C                     ENDIF                                          CFT014
      C                     ENDIF                                          CFT014
+      *                                                                                     MD022475
+      ** Set up Account with Bank                                                           MD022475
+      *                                                                                     MD022475
+     C           V#INBX    IFNE *BLANKS                                                     MD022475
+     C                     MOVELV#INBX    I#INBT                                            MD022475
+     C                     MOVELV#INBY    ##001A  1                                         MD022475
+     C           ##001A    IFEQ '/'                                                         MD022475
+     C                     MOVELV#INBZ    I#INBK                                            MD022475
+     C                     ELSE                                                             MD022475
+     C                     MOVELV#INBY    I#INBK                                            MD022475
+     C                     ENDIF                                                            MD022475
+     C                     ENDIF                                                            MD022475
       *                                                                   CFT014
       ** Set up Beneficiary                                               CFT014
       *                                                                   CFT014

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 251863             Date 22May20               *
-      *  Prev Amend No. MD057657           Date 09Mar21               *
+      *  Last Amend No. UUC106             Date 07Oct20               *
+      *  Prev Amend No. 251863             Date 22May20               *
+      *                 MD057657           Date 09Mar21               *
       *                 MD052014           Date 05Oct18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -92,6 +93,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC106 - Upgrade of UUL001 to FBM 2.1                        *
+      *           Deal subtype allocation FX/MM                       *
+      *           Hooks Used: FXFXDLV004, FXFXDLV005, FXFXDLV012,     *
+      *                       FXFXDLV013, FXH00019, FXH00022          *
       *  251863 - Applied fix 238023.                                 *
       *  238023 - Added parameter F3MGBS upon calling FXVEXCHVAM.     *
       *  MD057657 - Passed Local Currency BLCCY to FXVEXCHVAM         *

@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSW218             Date 19Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 221026             Date 22Apr13               *      
+      *  Prev Amend No. CSW218             Date 19Mar18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 246533             Date 22Mar07               *
@@ -40,6 +41,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  221026 - SWIFT skip a blank character when it falls on the   *
+      *           50th position. Pattern fix after 120493 (MS0208).   *
+      *           Applied for MD034151.                               *      
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  246533 - If PAPER message do not expand destination as it may*
@@ -580,6 +584,14 @@
      C                   add       q             p
       *
      C     ' '           checkr    MFLD          q
+      *                                                                                       221026
+      ** Add a blank character to the position 50 to avoid skipping.                          221026
+      *                                                                                       221026
+     C     q             ifeq      49                                                         221026
+     C     CTRC          andeq     *blanks                                                    221026
+     C                   add       1             q                                            221026
+     C                   endif                                                                221026
+      *                                                                                       221026
      C                   movea     MFLD          q@msgbuf(p)
      C                   add       q             p
       *

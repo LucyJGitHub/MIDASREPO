@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD020624A          Date 12Dec13               *
+      *  Last Amend No. MD022451           Date 20Sep13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD020624A          Date 12Dec13               *
       *                 AR1082657          Date 30Jan13               *
       *                 263678             Date 05Feb10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022451 - System generated a warning message.               *
+      *           - Suppress MsgId MMM0799.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020624A - Prevent MMM0799 warning message from showing     *
       *              when user inserts a TD Deal.                     *
@@ -268,12 +271,12 @@
      C                   MOVE      'N'           WFBRT                                     MD020624A
      C                   ENDIF                                                             MD020624A
       *                                                                                       263678
-      ** User override the default value of DDFBRT                                            263678
-     C                   IF        DDFBRT <> WFBRT                                            263678
+      ***User*override*the*default*value*of*DDFBRT*********************              263678 MD022451
+     C**********         IF        DDFBRT <> WFBRT                                   263678 MD022451
      C**********         MOVEL     'MMM0799'     Msgid1                             263678 AR1082657
-     C                   MOVEL     '5045889'     Msgid1                                    AR1082657
-     C                   EVAL      RetCodeIn = 'Warning'                                      263678
-     C                   ENDIF                                                                263678
+     C**********         MOVEL     '5045889'     Msgid1                           AR1082657 MD022451
+     C**********         EVAL      RetCodeIn = 'Warning'                             263678 MD022451
+     C**********         ENDIF                                                       263678 MD022451
      C                   ENDIF                                                                263678
      C                   ENDIF
  

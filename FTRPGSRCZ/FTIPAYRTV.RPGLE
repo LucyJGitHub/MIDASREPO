@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1088819          Date 03Jun20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD027200           Date 20Sep16               *
       *                 MD030957           Date 10Oct14               *
       *                 CFT157             Date 29Aug14               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls                                            *
       *            - Applied for MD050405                             *

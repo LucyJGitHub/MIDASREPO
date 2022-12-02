@@ -11,10 +11,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060719           Date 10Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CUT011             Date 12Dec07              */
+/*                      CUT011             Date 12Dec07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CPK019             Date 08Jul04              */
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060719 - Add parameter to optionally report 'Matching     */
+/*                  with last change date out of step'               */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUT011 - Rewrite of command.  Make it more flexible and     */
 /*                easier to maintain.                                */
@@ -32,16 +35,20 @@
 /*                                                                   */
 /*********************************************************************/
              CMD        PROMPT('Cross check source and objects')
- 
+
              PARM       KWD(SRCLIB) TYPE(*NAME) LEN(10) MIN(1) +
                           PROMPT('Source library name')
- 
+
+             PARM       KWD(RPTMTC) TYPE(*NAME) LEN(1) RSTD(*YES) +
+                          DFT(N) VALUES(N Y) MIN(0) +
+                          PROMPT('Report matching out of date')                         /*MD060719*/
+                                                                                        /*MD060719*/
              PARM       KWD(GLOBAL) TYPE(GLOB) MIN(0) PROMPT('Global +
                           layer')
- 
+
  GLOB:       ELEM       TYPE(GLOBDB) MIN(0) PROMPT('Database')
              ELEM       TYPE(GLOBND) MIN(0) PROMPT('Non-database')
- 
+
  GLOBDB:     ELEM       TYPE(*CHAR) LEN(2) MIN(0) PROMPT('Prefix for +
                           global database')
              ELEM       TYPE(*CHAR) LEN(4) RSTD(*YES) VALUES(*GM *GP +
@@ -49,18 +56,18 @@
                           library')
              ELEM       TYPE(*NAME) LEN(10) DFT(*PFX) SPCVAL((*PFX)) +
                           PROMPT('Library for global database')
- 
+
  GLOBND:     ELEM       TYPE(*CHAR) LEN(7) RSTD(*YES) VALUES(*DEV +
                           *CMD *OPMMOD *SRVPGM *PGM) MIN(0) MAX(5) +
                           PROMPT('Type of source')
              ELEM       TYPE(*NAME) LEN(10) MIN(0) PROMPT('Lib. for +
                           global non-db objs.')
- 
+
              PARM       KWD(ZONE) TYPE(ZONE) MIN(0) PROMPT('Zone')
- 
+
  ZONE:       ELEM       TYPE(ZONEDB) MIN(0) PROMPT('Database')
              ELEM       TYPE(ZONEND) MIN(0) PROMPT('Non-database')
- 
+
  ZONEDB:     ELEM       TYPE(*CHAR) LEN(2) MIN(0) PROMPT('Prefix for +
                           zone database')
              ELEM       TYPE(*CHAR) LEN(4) RSTD(*YES) VALUES(*DM *DP +
@@ -68,7 +75,7 @@
                           library')
              ELEM       TYPE(*NAME) LEN(10) DFT(*PFX) SPCVAL((*PFX)) +
                           PROMPT('Library for zone database')
- 
+
  ZONEND:     ELEM       TYPE(*CHAR) LEN(7) RSTD(*YES) VALUES(*DEV +
                           *CMD *OPMMOD *SRVPGM *PGM) MIN(0) MAX(5) +
                           PROMPT('Type of source')

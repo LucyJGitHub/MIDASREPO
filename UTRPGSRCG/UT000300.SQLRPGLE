@@ -12,14 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD058089           Date 01Sep21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060719           Date 10Nov22               *
+      *  Prev Amend No. MD058089           Date 01Sep21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CUT011  *CREATE    Date 09Nov07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060719 - Add *GD and *DD                                   *
       *  MD058089 - Deliverable Data Split for SM and UP              *
       *  MD046248 - Finastra Rebranding                               *
       *  CUT011 - Rewrite of command.  Make it more flexible and      *
@@ -170,6 +172,20 @@
      C                   EVAL      Write = 'Y'
      C                   ENDIF
       *
+     C                   WHEN      STSRCT = '*GD'                                           MD060719
+     C                   IF        PGP = 'Y'                                                MD060719
+     C                   IF        %SUBST(PGlobDBTgtLib:1:4) = '*PFX'                       MD060719
+     C                   EVAL      Prefix = %SUBST(PGlobDBTgtLib:5:2)                       MD060719
+     C                   EVAL      Target = 'GDLIB'                                         MD060719
+     C                   EVAL      SCTGTL = TargetLib                                       MD060719
+     C                   ELSE                                                               MD060719
+     C                   EVAL      SCTGTL = PGlobDBTgtLib                                   MD060719
+     C                   ENDIF                                                              MD060719
+     C                   EVAL      SCOWN = PGlobDBOwner                                     MD060719
+     C                   EVAL      SCPUB = PGlobDBPublic                                    MD060719
+     C                   EVAL      Write = 'Y'                                              MD060719
+     C                   ENDIF                                                              MD060719
+      *                                                                                     MD060719
      C                   WHEN      STSRCT = '*GTA'
      C                   IF        PGT = 'Y'
      C                   IF        %SUBST(PGlobDBTgtLib:1:4) = '*PFX'
@@ -268,6 +284,20 @@
      C                   EVAL      Write = 'Y'
      C                   ENDIF
       *
+     C                   WHEN      STSRCT = '*DD'                                           MD060719
+     C                   IF        PDZ = 'Y'                                                MD060719
+     C                   IF        %SUBST(PZoneDBTgtLib:1:4) = '*PFX'                       MD060719
+     C                   EVAL      Prefix = %SUBST(PZoneDBTgtLib:5:2)                       MD060719
+     C                   EVAL      Target = 'DDLIB'                                         MD060719
+     C                   EVAL      SCTGTL = TargetLib                                       MD060719
+     C                   ELSE                                                               MD060719
+     C                   EVAL      SCTGTL = PZoneDBTgtLib                                   MD060719
+     C                   ENDIF                                                              MD060719
+     C                   EVAL      SCOWN = PZoneDBOwner                                     MD060719
+     C                   EVAL      SCPUB = PZoneDBPublic                                    MD060719
+     C                   EVAL      Write = 'Y'                                              MD060719
+     C                   ENDIF                                                              MD060719
+      *                                                                                     MD060719
      C                   WHEN      STSRCT = '*DEV'
      C                   IF        Global = 'Y'
      C                   IF        PGDEV = 'Y'

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1095768          Date 05Oct16              */
+/*       Last Amend No. MD060659           Date 28Nov22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1095768          Date 05Oct16              */
 /*                      CCB020             Date 06Aug12              */
 /*                      AR868386           Date 27Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -28,6 +29,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060659 - To protect CBC0540 from interactive calling.     */
+/*                - Removed the setting of SDSTAT, MPHAS and CBSTAT. */
+/*                  Moved this to a new component that will run after*/
+/*                  CBC0540.                                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1095768 - File CBCOBRPD should be clear every day.        */
 /*                 - Applied for MD041858                            */
@@ -54,9 +59,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /*/COPY WNCPYSRC,CBC0540INT                                          */
- 
+
              DCL        VAR(&MONI) TYPE(*CHAR) LEN(1)
              DCL        VAR(&SCHD) TYPE(*CHAR) LEN(1)
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
@@ -69,24 +74,24 @@
                           Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,CBH00013                                            */
- 
+
 /* Global error message trap */
- 
+
              MONMSG     MSGID(CPF0000 CPI0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*/COPY WNCPYSRC,CBC0540MPS                                          */
- 
+
              RTVDTAARA  DTAARA(CBSTAT) RTNVAR(&CBSTAT)
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('COB +
                           Audit Report(s) being produced') +
                           TOPGMQ(*EXT) MSGTYPE(*STATUS)
- 
+
              CHGVAR     VAR(&PRINT) VALUE(%SST(&CBSTAT 44 1))
- 
-             CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('PRINT')
- 
+
+/**********  CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('PRINT') */                        /*MD060659*/
+
              IF         COND((&PRINT *EQ 'T') *OR (&PRINT *EQ 'B')) +
                           THEN(DO)
                 CALL       PGM(CBC0300) PARM('T')
@@ -98,7 +103,7 @@
                 IF         COND((&INU7 *EQ '1') *AND (&INU8 *EQ '1')) +
                              THEN(GOTO CMDLBL(ABNOR))
              ENDDO
- 
+
              IF         COND((&PRINT *EQ 'M') *OR (&PRINT *EQ 'B')) +
                           THEN(DO)
                 CALL       PGM(CBC0300) PARM('M')
@@ -110,7 +115,7 @@
                 IF         COND((&INU7 *EQ '1') *AND (&INU8 *EQ '1')) +
                              THEN(GOTO CMDLBL(ABNOR))
              ENDDO
- 
+
              IF         COND(&PRINT *EQ ' ') THEN(GOTO +
                           CMDLBL(ABNOR))
                                                                                        /*AR1095768*/
@@ -119,16 +124,16 @@
              CLRPFM     FILE(CBCOBRPD)                                                 /*AR1095768*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                 /*AR1095768*/
                                                                                        /*AR1095768*/
- 
+
 /* Set data area SDSTAT for next close of business run */
- 
-             CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('BEGIN')
-             CHGDTAARA  DTAARA(MPHAS (1 1)) VALUE('A')
+
+/**********  CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('BEGIN') */                        /*MD060659*/
+/**********  CHGDTAARA  DTAARA(MPHAS (1 1)) VALUE('A')        */                        /*MD060659*/
 /**********  SCWRTJREG EVENT(MPHAS) FLAG(A) TEXT('MPHAS changed from F to A')     /*BUG5730 CCB020*/
-             SCWRTJREG EVENT(MPHAS) FLAG(A) TEXT('MPHAS changed from G to A')             /*CCB020*/
-             CHGDTAARA  DTAARA(CBSTAT (20 1)) VALUE('N')              /*102495*/
-             CHGDTAARA  DTAARA(CBSTAT (32 1)) VALUE('N')              /*102495*/
-             CHGDTAARA  DTAARA(CBSTAT (45 1)) VALUE('N')              /*102495*/
+/**********  SCWRTJREG EVENT(MPHAS) FLAG(A) TEXT('MPHAS changed from G to A')    /*CCB020 MD060659*/
+/**********  CHGDTAARA  DTAARA(CBSTAT (20 1)) VALUE('N')                         /*102495 MD060659*/
+/**********  CHGDTAARA  DTAARA(CBSTAT (32 1)) VALUE('N')                         /*102495 MD060659*/
+/**********  CHGDTAARA  DTAARA(CBSTAT (45 1)) VALUE('N')                         /*102495 MD060659*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,CBC0540001                                          */
                                                                       /*S01408*/
@@ -136,20 +141,20 @@
 /**********  RCVMSG     MSGQ(MSPECIAL) RMV(*YES) */                              /*091570 AR868386*/
 /**********  MONMSG     MSGID(CPF0000) */                                        /*091570 AR868386*/
              CLRMSGQ    MSGQ(MSPECIAL)                                                  /*AR868386*/
- 
+
 /*/COPY WNCPYSRC,CBC0540MPE                                          */
- 
+
              GOTO       CMDLBL(ENDP)
- 
+
 ABNOR:
 /*/COPY WNCPYSRC,CBC0540ERR                                          */
- 
+
              CHGJOB     SWS(XXXXXX11)                                                   /*AR868386*/
              SNDMSG     MSG('Abnormal End for CBC0540') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000)
- 
+
 ENDP:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /*/COPY WNCPYSRC,CBC0540END                                          */
- 
+
              ENDPGM

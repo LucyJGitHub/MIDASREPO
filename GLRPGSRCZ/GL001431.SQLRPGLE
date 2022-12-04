@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060784           Date 02Dec22               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 223783             Date 28May12               *
       *                 MD049134           Date 27Jul20               *
       *                 CMG008             Date 20Feb20               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060784 - Program fails with decimal data error             *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -488,6 +490,7 @@
 
       ** Add record in MT950 Generation Extract - Posting Detail
 
+     C                   eval      QQACCD = 0                                               MD060784
      C                   WRITE     MGX950D0
 
      C                   ELSE
@@ -558,6 +561,7 @@
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_072                                                             CGL146A
 
+     C                   eval      QQACCD = 0                                               MD060784
      C                   WRITE     MGF950D0
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_082                                                             CGL146A

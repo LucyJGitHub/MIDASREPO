@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060685           Date 27Oct22               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. MD060784           Date 02Dec22               *
+      *  Prev Amend No. MD060685           Date 27Oct22               *
+      *                 MD058830           Date 01Oct21               *
       *                 MD057965           Date 28May21               *
       *                 CSD103             Date 10Aug20               *
       *                 223783             Date 28May12               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060784 - Program fails with decimal data error             *
       *  MD060685 - Program ends with decimal data error due to blank *
       *             field QQACCD                                      *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
@@ -320,7 +322,6 @@
      D  BBNGEN         S              3A   DIM(15)
      D                                     BASED(Pointer1)
      D  Pointer1       S               *   INZ(%Addr(BBNG01))
-
       ** Declared variables
       ** ------------------
 

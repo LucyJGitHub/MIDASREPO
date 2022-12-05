@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR868282           Date 25Nov11               *
+      *  Prev Amend No. CFT162             Date 16Oct20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1084524          Date 13Feb13               *
       *                 CFT120             Date 28Sep12               *
       *                 CRE075             Date 06Dec10               *
@@ -54,6 +56,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR868282 - Dbase 08 Dbfile Accntab - Instructed Party is     *
+      *             free format so do not validate against BFMidas.   *
+      *             (Child: AR868283).                                *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -397,19 +403,19 @@
       ** Ordering Customer
 
      C                   Select
-     C                   When      HINPTY <> *Blanks
+     C**********         When      HINPTY <> *Blanks                                        AR868282
 
-     C                   If        %SUBST(HINPTY:11) = *blanks
-     C                   Eval      Pacid = %SUBST(HINPTY:1:10)
-     C                   Eval      ORC1 = Pacid
-     C                   Else
-     C                   Eval      AccntCode = wcsno
-     C                   Eval      Pacid = wcsno
-     C                   Eval      ORC1 = AccntCode
-     C                   Endif
+     C**********         If        %SUBST(HINPTY:11) = *blanks                              AR868282
+     C**********         Eval      Pacid = %SUBST(HINPTY:1:10)                              AR868282
+     C**********         Eval      ORC1 = Pacid                                             AR868282
+     C**********         Else                                                               AR868282
+     C**********         Eval      AccntCode = wcsno                                        AR868282
+     C**********         Eval      Pacid = wcsno                                            AR868282
+     C**********         Eval      ORC1 = AccntCode                                         AR868282
+     C**********         Endif                                                              AR868282
 
-     C                   Eval      W#Accnt = Pacid
-     C                   Exsr      SrAcct
+     C**********         Eval      W#Accnt = Pacid                                          AR868282
+     C**********         Exsr      SrAcct                                                   AR868282
 
      C                   When      HOCUS1 <> *Blanks
      C                   If        %SUBST(HOCUS1:1:1) <> '/'

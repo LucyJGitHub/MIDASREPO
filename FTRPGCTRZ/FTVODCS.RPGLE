@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD050405           Date 03Jun20               *
+      *  Last Amend No. AR933181           Date 13Apr12               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD050405           Date 03Jun20               *
       *                 MD055570           Date 15May20               *
       *                 MD051978           Date 14Oct19               *
       *                 MD039547           Date 20Sep16               *
@@ -119,6 +120,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR933181 - Allow account line construct in Ordering Customer *
+      *             (Child: AR937315)                                 *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
@@ -814,19 +817,19 @@
      C                   Eval      MsgIdXAr(Idx) = 'FTM2152'                                BUG24679
      C                   LeaveSr                                                            BUG24679
      C                   ENDIF                                                              BUG24679
-                                                                                              CFT032
-      ** Settlement type should be 08 or 01                                                   CFT032
-                                                                                              CFT032
+      *****************************************************************              CFT032 AR933181
+      ***Settlement*type*should*be*08*or*01****************************              CFT032 AR933181
+      *****************************************************************              CFT032 AR933181
      C                   If        CFT142 = 'N'                                               CFT142
-     C                   If        SSTTP <> '08' And                                          CFT032
-     C                             SSTTP <> '01'                                              CFT032
-     C                   Eval      OKOrc1 = 'N'                                               CFT032
-     C                   Eval      Idx = Idx + 1                                              CFT032
-     C                   Eval      FldNamXAr(Idx) = 'SORC1'                                   CFT032
+     C**********         If        SSTTP <> '08' And                                 CFT032 AR933181
+     C**********                   SSTTP <> '01'                                     CFT032 AR933181
+     C**********         Eval      OKOrc1 = 'N'                                      CFT032 AR933181
+     C**********         Eval      Idx = Idx + 1                                     CFT032 AR933181
+     C**********         Eval      FldNamXAr(Idx) = 'SORC1'                          CFT032 AR933181
      C**********         Eval      MsgIdXAr(Idx) = 'MMAnn11'                         CFT032 BUG14042
-     C                   Eval      MsgIdXAr(Idx) = 'MMA1411'                                BUG14042
-     C                   LeaveSr                                                              CFT032
-     C                   EndIf                                                                CFT032
+     C**********         Eval      MsgIdXAr(Idx) = 'MMA1411'                       BUG14042 AR933181
+     C**********         LeaveSr                                                     CFT032 AR933181
+     C**********         EndIf                                                       CFT032 AR933181
      C                   Else                                                                 CFT142
      C                   Movea     P@VL01        PayST                                        CFT142
      C     SPYST         Lookup    PayST                                  50                  CFT142

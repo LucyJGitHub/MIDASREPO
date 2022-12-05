@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055514           Date 06Apr20               *
+      *  Last Amend No. AR856680           Date 17Nov11               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055514           Date 06Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD051247           Date 16Jul18               *
@@ -88,6 +89,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR856680 - USR9265 not being displayed on screen.            *
+      *             (Child: AR856681)                                 *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055514 - Not able to open a new Retail Account. Amend to   *
       *             add check if account in REDEFD is valid.          *
@@ -1092,7 +1095,8 @@
       * If record exists then prevent amendment                                               CSD012
      C     *IN90         IFEQ      *OFF                                                       CSD012
      C                   MOVEL     'N'           OKACTN                                       CSD012
-     C                   MOVE      1             Ix                                           CSD012
+     C**********         MOVE      1             Ix                                  CSD012 AR856680
+     C                   ADD       1             Ix                                         AR856680
      C                   MOVEL     @AULG         FldNameArr(Ix)                               CSD012
      C                   MOVEL     'USR9265'     MsgIdArr(Ix)                                 CSD012
      C                   ENDIF                                                                CSD012

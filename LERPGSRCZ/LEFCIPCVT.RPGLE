@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058392           Date 29Jul21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 AR804792           Date 05Sep11               *
       *                 CSF011A            Date 28Nov11               *
@@ -45,6 +46,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058392 - When amending a multi-currency facility, system   *
+      *             does not allow blank default interest basis.      *
+      *             Convert screen field DDDICB to blanks if DICB     *
+      *             field in FCLTYFM file is zero.                    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -587,7 +592,12 @@
      C                   ENDIF                                                               BUG3723
 
       * Default Interest basis
+                                                                                            MD058392
+     C                   IF        FPDICB = *ZEROS                                          MD058392
+     C                   EVAL      DDDICB = *BLANKS                                         MD058392
+     C                   ELSE                                                               MD058392
      C                   MOVEL(P)  FPDICB        DDDICB
+     C                   ENDIF                                                              MD058392
 
       * Rollover table
      C                   MOVEL(P)  FPRTPS        FPRTPS1

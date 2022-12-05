@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CDL099             Date 09Oct17              */
+/*       Last Amend No. 255155             Date 30Jan13              */
+/*       Prev Amend No. 254065             Date 30Jan13              */
+/*                      MD046248           Date 27Oct17              */
+/*                      CDL099             Date 09Oct17              */
 /*                      CSW214             Date 25Nov14              */
 /*                      AR583880           Date 19Aug14              */
 /*                      AR402334           Date 19Aug14              */
@@ -64,6 +66,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*     255155 - Component SEC05 00001.  Removed call to SE1875       */
+/*            - Applied for AR1068690 (Child: AR1069087)             */
+/*     254065 - Duplicate MT518 messages produced. Removed call to   */
+/*              MG051N                                               */
+/*            - Applied for AR1068690 (Child: AR1069087)             */
 /*     MD046248 - Finastra Rebranding                                */
 /*     CDL099 - Split Value Dates                                    */
 /*     CSW214 - SWIFT Changes 2014                                   */
@@ -389,29 +396,29 @@
              GOTO       CMDLBL(ERROR)                                 /*S01522*/
              ENDDO                                                    /*S01522*/
                                                                       /*CSE006*/
-/***  If MT5XX messages Feature present...                       ***/ /*CSE006*/
-/***  If switchable feature, CSE006, is on, call SE1875 (trades  ***/ /*CSE006*/
-/***  extract confirmations)                                     ***/ /*CSE006*/
+/*****If*MT5XX*messages*Feature*present...****************************/            /*CSE006 255155*/
+/*****If*switchable*feature,*CSE006,*is*on,*call*SE1875*(trades*******/            /*CSE006 255155*/
+/*****extract*confirmations)******************************************/            /*CSE006 255155*/
                                                                       /*CSE006*/
-             IF (&CSE006 *EQ 'Y') THEN(DO)                            /*CSE006*/
+/**********  IF (&CSE006 *EQ 'Y') THEN(DO)                           */            /*CSE006 255155*/
  
-             IF (&S01401 *EQ 'Y') THEN(DO)                            /*CSE006*/
-               OVRDBF (MGOREFL0) SHARE(*NO)                           /*CSE006*/
+/**********  IF (&S01401 *EQ 'Y') THEN(DO)                           */            /*CSE006 255155*/
+/**********    OVRDBF (MGOREFL0) SHARE(*NO)                          */            /*CSE006 255155*/
                                                                       /*CSE006*/
-               OVRDBF (TRADSDY1) SHARE(*NO)                           /*CSE006*/
+/**********    OVRDBF (TRADSDY1) SHARE(*NO)                          */            /*CSE006 255155*/
                                                                       /*CSE006*/
-               CALL (SE1875) PARM(&RSEQ)                              /*CSE006*/
-               IF (%SWITCH(XXXXXX11)) THEN(DO)                        /*CSE006*/
-                  CHGVAR (&MSG) VALUE('SE1875 - I/C SWIFT Trade +
-                     Confirmations Extract failed')                   /*CSE006*/
-                  GOTO (ERROR)                                        /*CSE006*/
-             ENDDO                                                    /*CSE006*/
+/**********    CALL (SE1875) PARM(&RSEQ)                             */            /*CSE006 255155*/
+/**********    IF (%SWITCH(XXXXXX11)) THEN(DO)                       */            /*CSE006 255155*/
+/**********       CHGVAR (&MSG) VALUE('SE1875 - I/C SWIFT Trade +    */            /*CSE006 255155*/
+/**********          Confirmations Extract failed')                  */            /*CSE006 255155*/
+/**********       GOTO (ERROR)                                       */            /*CSE006 255155*/
+/**********  ENDDO                                                   */            /*CSE006 255155*/
                                                                       /*CSE006*/
-             DLTOVR     FILE(MGOREFL0)                                /*CSE006*/
+/**********  DLTOVR     FILE(MGOREFL0)                               */            /*CSE006 255155*/
                                                                       /*CSE006*/
-             ENDDO                                                    /*CSE006*/
+/**********  ENDDO                                                   */            /*CSE006 255155*/
  
-             ENDDO                                                    /*CSE006*/
+/**********  ENDDO                                                   */            /*CSE006 255155*/
                                                                       /*CSE006*/
 /***  If MT5XX Feature present and switchable feature CSE006 ***/     /*CSE006*/
 /***  on, then generate MT510 Messages                       ***/     /*CSE006*/
@@ -419,14 +426,14 @@
              IF (&CSE006 *EQ 'Y') THEN(DO)                            /*CSE006*/
              IF (&S01401 *EQ 'Y') THEN(DO)                            /*CSE006*/
                                                                       /*CSE006*/
-             OVRDBF     FILE(MGF51NPD) SHARE(*NO)                     /*CSE006*/
-               CALL (MG051N)                                          /*CSE006*/
-               DLTOVR (MGF51NPD)                                      /*CSE006*/
-               IF (%SWITCH(XXXXXX11)) THEN(DO)                        /*CSE006*/
-                 CHGVAR (&MSG) VALUE('MG051N - I/C SWIFT Trade +
-                    Confirmation MT51N Generation failed')            /*CSE006*/
-                 GOTO (ERROR)                                         /*CSE006*/
-               ENDDO                                                  /*CSE006*/
+/**********  OVRDBF     FILE(MGF51NPD) SHARE(*NO)                    */            /*CSE006 254065*/
+/**********    CALL (MG051N)                                         */            /*CSE006 254065*/
+/**********    DLTOVR (MGF51NPD)                                     */            /*CSE006 254065*/
+/**********    IF (%SWITCH(XXXXXX11)) THEN(DO)                       */            /*CSE006 254065*/
+/**********      CHGVAR (&MSG) VALUE('MG051N - I/C SWIFT Trade +     */            /*CSE006 254065*/
+/**********         Confirmation MT51N Generation failed')           */            /*CSE006 254065*/
+/**********      GOTO (ERROR)                                        */            /*CSE006 254065*/
+/**********    ENDDO                                                 */            /*CSE006 254065*/
                  SBMJOB (SEC0304) JOBD(MBATCH) USER(*JOBD) +
                         RTGDTA(*JOBD) RQSDTA('CALL SEC0304') +
                         INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)                          /*243124A*/

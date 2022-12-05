@@ -27,12 +27,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. UUC106             Date 07Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 BUG9827            Date 13Jan06               *
       *                 CDL038             Date 10May05               *
       *                 CDL033             Date 10Feb05               *
@@ -45,6 +46,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC106 - Upgrade of UUL001 to FBM 2.1                        *
+      *           Deal subtype allocation FX/MM                       *
+      *           Unibank version of MMVDLTPSTP to default deal       *
+      *           sub-type if customer is valid                       *
+      *           Fixes to this module might be needed by the local   *
+      *           XXVDLTPSTP module too                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BUG9827- Pass CDL006 parameter                               *
@@ -55,7 +62,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Files                                ¦
@@ -63,7 +70,7 @@
       ** +--------------------------------------+
      FFDDTSTL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     USROPN
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -82,41 +89,41 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External data structure for Deal Subtype details
      D SDDLST        E DS                  EXTNAME(SDDLSTPD)
- 
+
       ** External data structure for transaction classes file                                 CDL038
      D SDTCLS        E DS                  EXTNAME(SDTCLSPD)                                  CDL038
                                                                                               CDL038
@@ -130,30 +137,30 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Deal type received as a parameter
      D DDType          S              2A
- 
+
       ** Whether input Deal type is valid, set to Y as a default
      D DDTypeOK        S              1A
- 
+
       ** Deal subtype received as a parameter
      D DDStyp          S              2A
- 
+
       ** Class received as a parameter                                                        CDL038
      D DDClas          S              4A                                                      CDL038
                                                                                               CDL038
       ** Error message code 1 returned to caller (error in deal type)
      D Msgid1          S                   LIKE(#MsgID)
- 
+
       ** Error message code 2 returned to caller (error in subtype)
      D Msgid2          S                   LIKE(#MsgID)
- 
+
       ** Error message code 2C returned to caller (error in class)              CDL038
      D Msgid2C         S                   LIKE(#MsgID)                         CDL038
                                                                                 CDL038
@@ -162,7 +169,7 @@
                                                                                 CDL006
      D**********CDL006          S              1A   IMPORT                            CDL006 BUG9827
      D CDL006          S              1A                                                     BUG9827
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -170,7 +177,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -178,10 +185,10 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
- 
+
       ** Validate the deal type
      C                   RESET                   ReturnCode
      C                   CALLB     'MMVDLTYPE'
@@ -193,16 +200,16 @@
      C                   PARM                    CDL033                                       CDL033
      C                   PARM                    PWMsgID1                       CDL006
      C                   PARM                    CDL006                                      BUG9827
- 
+
       ** If errors were detected set the flag
      C                   IF        ReturnCode <> *blanks
      C                   EVAL      ErrorFound = 'Y'
- 
+
       ** Set the Deal Type OK flag to N for use elsewhere in the suite
      C                   EVAL      DDTypeOK = 'N'
- 
+
      C                   ENDIF
- 
+
       ** Validate the subtype
      C                   RESET                   ReturnCode
      C                   CALLB     'MMVDLSTYPE'
@@ -210,7 +217,7 @@
      C                   PARM                    MsgID2
      C                   PARM                    DDStyp
      C                   PARM                    SDDLST
- 
+
       ** If errors were detected set the flag
      C                   IF        ReturnCode <> *blanks
      C                   EVAL      ErrorFound = 'Y'
@@ -221,24 +228,24 @@
      C     CDL038        IFEQ      'Y'                                          CDL038
      C                   EXSR      CLASV                                        CDL038
      C                   ENDIF                                                  CDL038
- 
+
      C** The deal types/subtypes table should be checked only if the
      C** subtype and class are valid.                                           CDL038
      C***subtype*is*not*blank.******                                            CDL038
- 
+
      C*****DDSTYP********IFNE*******BLANKS                                      CDL038
      C     MsgID2        IFEQ      *BLANK                                       CDL038
      C     MsgID2C       ANDEQ     *BLANK                                       CDL038
      C                   EXSR      ChkCombo
      C                   ENDIF
- 
+
       ** If errors, set the return code
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT                                                                                  CDL038
       *****************************************************************                       CDL038
@@ -280,9 +287,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkCombo      BEGSR
- 
+
      C**  Record must exist on FDDTSTL1
      C*
      C                   OPEN      FDDTSTL1                             65
@@ -292,18 +299,18 @@
      C*
      C     *IN65         IFEQ      '1'
      C     RCID11        OREQ      '*'
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C     CDL038        IFNE      'Y'                                                        CDL038
      C                   MOVEL     'MMM1051'     MsgID3
      C                   ELSE                                                                 CDL038
      C                   MOVEL     'MMM1070'     MsgID3                                       CDL038
      C                   ENDIF                                                                CDL038
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -315,9 +322,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       ** Return code (10A, passed back to caller)
      C                   PARM                    RetCodeIn
@@ -366,23 +373,23 @@
      C                   ELSE                                                                 CDL038
      C                   MOVE      'N'           CDL038                                       CDL038
      C                   ENDIF                                                                CDL038
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       ** Key list for deal type/subtype file
      C     @DTSTK        KLIST
      C                   KFLD                    DDTYPE
      C                   KFLD                    DDSTYP
      C                   KFLD                    DDCLAS                                       CDL038
- 
+
       ** Initialise the deal type OK flag
      C                   EVAL      DDTypeOK = 'Y'
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
      C/EJECT

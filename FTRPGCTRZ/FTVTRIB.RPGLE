@@ -16,8 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 236576             Date 03Jul13               *
+      *  Prev Amend No. 230453             Date 03Jul13               *
+      *                 227661             Date 03Jul13               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -44,6 +47,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  236576 - Amend program to proceed checking specified value   *
+      *           as a SWIFT ID even after it has not been found in   *
+      *           the customers file.  Also, amended program to send  *
+      *           a warning message if value specified is less than   *
+      *           11 characters and seems to be an address.           *
+      *         - Applied for MD021003.                               *
+      *  230453 - Customer type should be 'C' if shortname was entered*
+      *           Revised fix 227661 and pattern processing from      *
+      *           FTVACBA.                                            *
+      *         - Applied for MD020977.                               *
+      *  227661 - Fix is to consider third reimbursement as an address*
+      *           if not found in PF/SDCUSTPD. Fix patterned after    *
+      *           220254.                                             *
+      *         - Applied for MD021004.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -381,6 +398,8 @@
      C     SDCUST        Parm      *Blanks       DSSDY
 
      C                   If        W#RTCD = *Blanks
+     C**********                   or W#KYST <> '*CSHT  '                              227661 230453
+     C                             and W#KYST <> '*ERROR '                                    227661
 
       ** Overwrite shortname
 
@@ -395,10 +414,25 @@
      C                   Eval      @TRIT = 'C'
 
      C                   EndIf
+      *                                                                                       227661
+      ** Treat the beneficiary as an address if it is not found in                            227661
+      ** PF/SDCUSTPD.                                                                         227661
+      *                                                                                       227661
+     C**********         If        W#KYST = '*ERROR ' or                               227661 230453
+     C**********                   W#kyst = '*CSHT ' or                                227661 230453
+     C**********                   ADSLSH = '/'                                        227661 230453
+     C                   If        W#KYST = '*ERROR '                                         230453
+     C                             and ADSLSH = '/'                                           230453
+     C                             or W#RTCD = '*NRF'                                         230453
+     C                             and W#KYST = '*CSHT'                                       230453
+     C                   Eval      @TRIT = 'A'                                                227661
+     C                   Endif                                                                227661
      C                   EndIf
      C                   EndIf
 
-     C                   If        (OKTRI1 <> 'N') And (@TRIT = *Blanks)
+     C**********         If        (OKTRI1 <> 'N') And (@TRIT = *Blanks)                      236576
+     C                   If        OKTRI1 <> 'N' and                                          236576
+     C                             @TRIT <> 'C'                                               236576
 
       ** If 1st 11 Chars of 1st line then SWIFT address assumed
       ** Or first is '/' and second is SWIFT Address
@@ -470,7 +504,10 @@
      C                   EndIf
      C                   EndIf
 
-     C                   If        (OKTRI1 <> 'N') And (@TRIT = *Blanks)
+     C**********         If        (OKTRI1 <> 'N') And (@TRIT = *Blanks)                      236576
+     C                   If        OKTRI1 <> 'N' and                                          236576
+     C                             @TRIT <> 'C' and                                           236576
+     C                             @TRIT <> 'S'                                               236576
 
       ** Invalid customer number or shortname.
 
@@ -483,25 +520,38 @@
      C                             (ADSLSH = '/') And
      C                             (ADSLS2 <> '/')
 
-      ** First 10 characters should be key for SDCUST
-
-     C                   Add       1             Idx
-     C                   If        ADSLSH <> '/'
-     C                   Move      'N'           OKTRI1
+      ***First*10*characters*should*be*key*for*SDCUST******************                       236576
+      *****************************************************************                       236576
+     C**********         Add       1             Idx                                          236576
+     C**********         If        ADSLSH <> '/'                                              236576
+     C**********         Move      'N'           OKTRI1                                       236576
      C**********         Movel     ADCHK1        MsgDtaXar(Idx)                             MD000091
-     C                   EVAL      BLen = %Len(%Trim(ADCHK1))                               MD000091
-     C                   EVAL      MsgDtaXar(Idx) = LenStr +%TRIM(ADCHK1)                   MD000091
-     C                   Movel     'STRI1'       FldNamXAr(Idx)
-     C                   Else
-     C                   Move      'N'           OKTRI2
+     C**********         EVAL      BLen = %Len(%Trim(ADCHK1))                        MD000091 236576
+     C**********         EVAL      MsgDtaXar(Idx) = LenStr +%TRIM(ADCHK1)            MD000091 236576
+     C**********         Movel     'STRI1'       FldNamXAr(Idx)                               236576
+     C**********         Else                                                                 236576
+     C**********         Move      'N'           OKTRI2                                       236576
      C**********         Movel     ADCHK2        MsgDtaXar(Idx)                             MD000091
-     C                   EVAL      BLen = %Len(%Trim(ADCHK2))                               MD000091
-     C                   EVAL      MsgDtaXar(Idx) = LenStr +%TRIM(ADCHK2)                   MD000091
-     C                   Movel     'STRI2'       FldNamXAr(Idx)
-     C                   EndIf
-     C                   Movel     'FTM3205'     MsgIdXAr(Idx)
+     C**********         EVAL      BLen = %Len(%Trim(ADCHK2))                        MD000091 236576
+     C**********         EVAL      MsgDtaXar(Idx) = LenStr +%TRIM(ADCHK2)            MD000091 236576
+     C**********         Movel     'STRI2'       FldNamXAr(Idx)                               236576
+     C**********         EndIf                                                                236576
+     C**********         Movel     'FTM3205'     MsgIdXAr(Idx)                                236576
 
-     C                   Else
+      *                                                                                       236576
+      ** First 10 characters should be key for SDCUST                                         236576
+      *                                                                                       236576
+     C                   Add       1             WIx                                          236576
+     C                   If        ADSLSH <> '/'                                              236576
+     C                   Move      'W'           OKTRI1                                       236576
+     C                   Movel     'STRI1'       WFldNmXAr(WIx)                               236576
+     C                   Else                                                                 236576
+     C                   Move      'N'           OKTRI2                                       236576
+     C                   Movel     'STRI2'       WFldNmXAr(WIx)                               236576
+     C                   EndIf                                                                236576
+     C                   Movel     'FTM3265'     WMsgIdXAr(WIx)                               236576
+     C                   EndIf                                                                236576
+     C**********         Else                                                                 236576
 
       ** Validate as an address
 
@@ -523,7 +573,7 @@
      C                   Movel     'STRI1'       FldNamXAr(Idx)
      C                   Movel     'FTM3210'     MsgIdXAr(Idx)
      C                   EndIf
-     C                   EndIf
+     C**********         EndIf                                                                236576
 
      C                   If        AD#1 = 'Y'
      C**********         Move      'N'           OKTRI1                                       CSD089

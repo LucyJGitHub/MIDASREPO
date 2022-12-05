@@ -43,12 +43,12 @@
       *  CAP084 - Creation of wrappers for use with front end.        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -60,67 +60,67 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
      D/COPY MECPYSRC,ME1100_ILE
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
      D DealScnFmt    E DS                  EXTNAME(FT101HSPD) PREFIX(H)
      D
       * Deal in screen format
- 
- 
+
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
      D DealFilFmt    E DS                  EXTNAME(FT101HPD)
       ** Deal in file format
- 
+
       **-----------------------------------------------------------------------
      D MREFARR         S              8    DIM(100)
       ** Message reference array
- 
+
      D MPRTARR         S              3    DIM(100)
       ** Message part array
- 
+
      D OkRftHdr      E DS                  EXTNAME(FTE101HBPD)
       ** EXTERNAL DS FOR OK FLAGS HEADER
- 
+
      D Idx             S              3P 0
       ** Index for arrays of of error message ids etc
- 
+
      D WIdx            S              3P 0
       ** Index for arrays of warning message ids etc
                                                                                               222373
       ** Message reference (input parameter)                                                  222373
      D MGMSGR          S                   LIKE(PHMSGR)                                       222373
- 
+
       **-----------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -131,14 +131,14 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'FTUSRMSG'
- 
+
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,FTM101M01
- 
+
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   DealFilFmt
      C     DDACTN        IFEQ      *BLANK
@@ -148,7 +148,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -161,7 +161,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      FTM1011RD
@@ -182,18 +182,18 @@
      C     Idx           IFEQ      0
      C                   EXSR      FTM1011CT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        @ERRMS <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'PRFTID'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
       * Build buffer with required output
      C                   EVAL                    Buffer = DDACTN+DealScnfmt
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -204,36 +204,36 @@
      C                   CALLB     'FTM1011RD'
       * Return code
      C                   PARM                    RetCodeOut
- 
+
       * Action code
      C                   PARM                    DDACTN            1
- 
+
       * RFT ID
      C                   PARM      RFTID_IN      WRFTID           15
- 
+
       * Read forwards
      C                   PARM                    @RDFWD            1
- 
+
       * Read backwards
      C                   PARM                    @RDBCK            1
- 
+
       * Error message
      C                   PARM      *BLANK        @ERRMS            7
- 
+
       * RFT ID
      C                   PARM      *BLANK        @RFTID           15
- 
+
       * Front Office ID READ
      C                   PARM      *BLANK        @FTRED           20
- 
+
      C                   ENDSR
       **********************************************************************
      C     FTM1011RV     BEGSR
- 
+
      C                   RESET                   RetCodeOut
       *
      C                   CALLB     'FTM1011RV'
- 
+
       * Return code
      C                   Parm                    RetCodeOut
       * Action Code
@@ -258,18 +258,18 @@
      C                   PARM                    MREFARR
       * Message part array
      C                   PARM                    MPRTARR
- 
+
       ** Errors produced during retrieve operation
      C                   Parm                    OkRftHdr
      C                   Parm                    IDx
      C                   Parm                    FldNameArr
      C                   Parm                    MsgIdArr
      C                   Parm                    MsgDtaArr
- 
+
      C                   ENDSR
       **********************************************************************
      C     FTM1011CT     BEGSR
- 
+
      C                   RESET                   RetCodeOut
       *
      C                   CALLB     'FTM1011CT'
@@ -300,7 +300,7 @@
       * RFT details in screen format
       *
      C                   Parm                    DealScnFmt
- 
+
      C                   ENDSR
       **********************************************************************
       ** The following /COPY contains the standard program status

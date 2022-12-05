@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054826           Date 20Jan20               *
+      *  Last Amend No. AR857262           Date 15Nov11               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054826           Date 20Jan20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE095             Date 25Apr14               *
       *                 AR1095876          Date 30Sep13               *
@@ -36,6 +37,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR857262 - A/c with mssing Facility Detail                   *
+      *             Ignore closed retail accounts as often these do   *
+      *             not have valid facility records. (Child: AR857263)*
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054826 - After processing all the retail accounts, call    *
@@ -254,7 +258,10 @@
      C     1             SETLL     ACCNTAB
      C                   READ      ACCNTABF
      C                   DOW       NOT %EOF(ACCNTAB)
-     C                   IF        ATYP = 'R'
+      *                                                                                     AR857262
+      ** Ignore closed retail accounts                                                      AR857262
+     C**********         IF        ATYP = 'R'                                               AR857262
+     C                   IF        ATYP = 'R' and ACST =' '                                 AR857262
       *
       ** set all values of all keylist
       *
@@ -481,6 +488,21 @@
      C                   PARM      *BLANKS       P@STAT
      C     Z_FCLTN       PARM      *BLANKS       P@FMT
      C     Z_FCLTM       PARM      *BLANKS       Q@FMT
+      *                                                                                     AR857262
+      ** There are a number of RE a/cs with facilities that do not exist                    AR857262
+      ** At this time just use default values. These need to be reviewed|                   AR857262
+     C                   IF        P@RTCD = '*NRF   '                                       AR857262
+     C                   CALL      'AOFCLTR0'                                               AR857262
+     C                   PARM      *BLANKS       P@RTCD                                     AR857262
+     C                   PARM      '*KEY   '     P@OPTN                                     AR857262
+     C                   PARM      '114793 '     P@CNUM                                     AR857262
+     C                   PARM      803           P@FCTY                                     AR857262
+     C                   PARM      01            P@FCNO                                     AR857262
+     C                   PARM      *BLANKS       P@RCDT                                     AR857262
+     C                   PARM      *BLANKS       P@STAT                                     AR857262
+     C     Z_FCLTN       PARM      *BLANKS       P@FMT                                      AR857262
+     C     Z_FCLTM       PARM      *BLANKS       Q@FMT                                      AR857262
+     C                   ENDIF                                                              AR857262
       *
      C                   IF        P@RTCD <> *BLANKS
      C                   EVAL      DBKEY  = P@CNUM

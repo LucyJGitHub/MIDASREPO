@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 236576             Date 03Jul13               *
+      *  Prev Amend No. 227661             Date 03Jul13               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035364           Date 07Aug15               *
       *                 CFT049             Date 20Feb15               *
       *                 MD024825           Date 19Aug14               *
@@ -53,6 +55,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  236576 - Amend program to proceed checking specified value   *
+      *           as a SWIFT ID even after it has not been found in   *
+      *           the customers file.  Also, amended program to send  *
+      *           a warning message if value specified is less than   *
+      *           11 characters and seems to be an address.           *
+      *         - Applied for MD021003.                               *
+      *  227661 - Fix is to treat the account with bank as an address *
+      *           if it is not found in PF/SDCUSTPD. Fix patterned    *
+      *           after 220254.                                       *
+      *         - Applied for MD021004.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -490,6 +502,7 @@
      C     SDCUST        Parm      *Blanks       DSSDY
 
      C                   If        C#RTCD = *Blanks
+     C                             and C#KYST <> '*ERROR '                                    227661
 
       * Overwrite shortname
      C                   If        ADSLSH <> '/'
@@ -501,12 +514,23 @@
      C                   Eval      @ACBT = 'C'
 
      C                   End
+      *                                                                                       227661
+      ** Treat the beneficiary as an address if it is not found in                            227661
+      ** PF/SDCUSTPD.                                                                         227661
+      *                                                                                       227661
+     C                   If        C#KYST = '*ERROR ' and                                     227661
+     C                             ADSLSH = '/'                                               227661
+     C                             or C#RTCD = '*NRF' and                                     227661
+     C                             C#KYST = '*CSHT'                                           227661
+     C                   Eval      @ACBT = 'A'                                                227661
+     C                   Endif                                                                227661
      C                   End
      C                   End
      C                   End
 
      C                   If        OKAcb1 <> 'N' and
-     C                             @ACBT = *Blanks
+     C                             @ACBT <> 'C'                                               236576
+     C**********                   @ACBT = *Blanks                                            236576
 
       *  If 1st 11 Chars of 1st line then SWIFT address assumed
       *  Or first is '/' and second is SWIFT Address
@@ -611,7 +635,9 @@
      C                   End
 
      C                   If        OKAcb1 <> 'N' and
-     C                             @ACBT = *Blanks
+     C                             @ACBT <> 'C'and                                            236576
+     C                             @ACBT <> 'S'                                               236576
+     C**********                   @ACBT = *Blanks                                            236576
 
       * Invalid customer number or shortname.
      C                   If        ADCH26 = *Blanks and
@@ -623,19 +649,33 @@
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
 
-      *  First 10 characters should be key for SDCUST
-      * Send error to screen
-     C                   Add       1             Idx
-     C                   If        ADSLSH <> '/'
-     C                   Move      'N'           OKAcb1
-     C                   Movel     'SACB1'       FldNamXAr(Idx)
-     C                   Else
-     C                   Move      'N'           OKAcb2
-     C                   Movel     'SACB2'       FldNamXAr(Idx)
-     C                   End
-     C                   Movel     'MMA1048'     MsgIdXAr(Idx)
+      ***First*10*characters*should*be*key*for*SDCUST******************                       236576
+      **Send*error*to*screen*******************************************                       236576
+     C**********         Add       1             Idx                                          236576
+     C**********         If        ADSLSH <> '/'                                              236576
+     C**********         Move      'N'           OKAcb1                                       236576
+     C**********         Movel     'SACB1'       FldNamXAr(Idx)                               236576
+     C**********         Else                                                                 236576
+     C**********         Move      'N'           OKAcb2                                       236576
+     C**********         Movel     'SACB2'       FldNamXAr(Idx)                               236576
+     C**********         End                                                                  236576
+     C**********         Movel     'MMA1048'     MsgIdXAr(Idx)                                236576
 
-     C                   Else
+      *                                                                                       236576
+      ** First 10 characters should be key for SDCUSTPD record.                               236576
+      ** Send warning to screen.                                                              236576
+      *                                                                                       236576
+     C                   Add       1             WIx                                          236576
+     C                   If        ADSLSH <> '/'                                              236576
+     C                   Move      'W'           OKAcb1                                       236576
+     C                   Movel     'SACB1'       WFldNmXAr(WIx)                               236576
+     C                   Else                                                                 236576
+     C                   Move      'W'           OKAcb2                                       236576
+     C                   Movel     'SACB2'       WFldNmXAr(WIx)                               236576
+     C                   EndIf                                                                236576
+     C                   Movel     'MMA1343'     WMsgIdXAr(WIx)                               236576
+     C                   EndIf                                                                236576
+     C**********         Else                                                                 236576
       * Validate as an address
      C                   Eval      ADLINE = 'Y'
      C                   Exsr      ADCHK
@@ -667,7 +707,7 @@
      C                   Movel     'SACB1'       FldNamXAr(Idx)
      C                   Movel     'MMA1050'     MsgIdXAr(Idx)
      C                   End
-     C                   End
+     C**********         End                                                                  236576
 
      C                   If        AD#1 = 'Y'
      C**********         Move      'N'           OKAcb1                                       CSD089

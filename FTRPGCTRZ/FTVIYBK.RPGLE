@@ -17,8 +17,11 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 236576             Date 03Jul13               *
+      *  Prev Amend No. 230453             Date 03Jul13               *
+      *                 227661             Date 03Jul13               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -55,6 +58,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  236576 - Amend program to proceed checking specified value   *
+      *           as a SWIFT ID even after it has not been found in   *
+      *           the customers file.  Also, amended program to send  *
+      *           a warning message if value specified is less than   *
+      *           11 characters and seems to be an address.           *
+      *         - Partly applied for MD021003.                        *
+      *  230453 - Customer type should be 'C' if shortname was entered*
+      *           Revised fix 227661 and pattern processing from      *
+      *           FTVACBA.                                            *
+      *         - Partly applied for MD020977.                        *
+      *  227661 - Fix is to treat intermediary bank as an address if  *
+      *           not found in PF/SDCUSTPD. Fix patterned after       *
+      *           220254.                                             *
+      *         - Partly applied for MD021004.                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -500,6 +517,19 @@
      C                   Eval      @INBT = 'C'
 
      C                   End
+      *                                                                                       227661
+      ** Treat the beneficiary as an address if it is not found in                            227661
+      ** PF/SDCUSTPD.                                                                         227661
+      *                                                                                       227661
+     C**********         If        C#KYST = '*ERROR ' or                               227661 230453
+     C**********                   C#KYST = '*CSHT  ' or                               227661 230453
+     C**********                   ADSLSH = '/'                                        227661 230453
+     C                   If        C#KYST = '*ERROR '                                         230453
+     C                             and ADSLSH = '/'                                           230453
+     C                             or C#RTCD = '*NRF'                                         230453
+     C                             and C#KYST = '*CSHT'                                       230453
+     C                   Eval      @INBT = 'A'                                                227661
+     C                   Endif                                                                227661
      C                   End
      C                   End
      C                   End
@@ -583,7 +613,9 @@
       * No error
      C                   If        OKInb1 <> 'N' and
      C                             OKInb2 <> 'N' and
-     C                             @INBT = *Blanks
+     C                             @INBT <> 'C' and                                           236576
+     C                             @INBT <> 'S'                                               236576
+     C**********                   @INBT = *Blanks                                            236576
 
       * Invalid customer number or shortname.
      C                   If        ADCH26 = *Blanks and
@@ -595,19 +627,33 @@
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
 
-      *  First 10 characters should be key for SDCUST
-      * Send error to screen
-     C                   Add       1             Idx
-     C                   If        ADSLSH <> '/'
-     C                   Move      'N'           OKInb1
-     C                   Movel     'SINB1'       FldNamXAr(Idx)
-     C                   Else
-     C                   Move      'N'           OKInb2
-     C                   Movel     'SINB2'       FldNamXAr(Idx)
-     C                   End
-     C                   Movel     'MMA1079'     MsgIdXAr(Idx)
+      ***First*10*characters*should*be*key*for*SDCUST******************                       236576
+      **Send*error*to*screen*******************************************                       236576
+     C**********         Add       1             Idx                                          236576
+     C**********         If        ADSLSH <> '/'                                              236576
+     C**********         Move      'N'           OKInb1                                       236576
+     C**********         Movel     'SINB1'       FldNamXAr(Idx)                               236576
+     C**********         Else                                                                 236576
+     C**********         Move      'N'           OKInb2                                       236576
+     C**********         Movel     'SINB2'       FldNamXAr(Idx)                               236576
+     C**********         End                                                                  236576
+     C**********         Movel     'MMA1079'     MsgIdXAr(Idx)                                236576
+      *                                                                                       236576
+      ** First 10 characters should be key for SDCUST                                         236576
+      ** Send error to screen                                                                 236576
+      *                                                                                       236576
+     C                   Add       1             WIx                                          236576
+     C                   If        ADSLSH <> '/'                                              236576
+     C                   Move      'W'           OKInb1                                       236576
+     C                   Movel     'SINB1'       WFldNmXAr(WIx)                               236576
+     C                   Else                                                                 236576
+     C                   Move      'W'           OKInb2                                       236576
+     C                   Movel     'SINB2'       WFldNmXAr(WIx)                               236576
+     C                   EndIf                                                                236576
+     C                   Movel     'MMA1341'     WMsgIdXAR(WIx)                               236576
+     C                   EndIf                                                                236576
 
-     C                   Else
+     C**********         Else                                                                 236576
       * Validate as an address
      C                   Eval      ADLINE = 'Y'
      C                   Exsr      ADCHK
@@ -639,7 +685,7 @@
      C                   Movel     'SINB1'       FldNamXAr(Idx)
      C                   Movel     'MMA1081'     MsgIdXAr(Idx)
      C                   End
-     C                   End
+     C**********         End                                                                  236576
 
      C                   If        AD#1 = 'Y'
      C**********         Move      'N'           OKInb1                                       CSD089

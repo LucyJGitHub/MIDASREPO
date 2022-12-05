@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056683           Date 14Sep20               *
+      *  Last Amend No. CFT166             Date 02Nov22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056683           Date 14Sep20               *
       *                 MD055849           Date 15May20               *
       *                 CSW220             Date 09Mar20               *
       *                 MD054059           Date 28Nov19               *
@@ -164,6 +165,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT166 - Amendment to FT A/C Balance Check on Authorisation  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
@@ -540,6 +542,11 @@
       *                                                                                       241810
      F/COPY WNCPYSRC,FT0060F001
      FOTPAYQL0UF  E           K        DISK                      A                          MD054059
+      *                                                                                       CFT166
+      ** FT Account Balance Override File                                                     CFT166
+     FFTABOVPDO   E           K        DISK                                                   CFT166
+     F                                              KCOMIT                                    CFT166
+      *                                                                                       CFT166
      E                    CPY@    1   1 80
      E*
      E*   TABLES
@@ -2429,6 +2436,20 @@
      C                     MOVE 'N'       CSW220                                              CSW220
      C                     ENDIF                                                              CSW220
       *                                                                                       CSW220
+      ** Access SAR details file to determine if CFT166 is switched ON                        CFT166
+      *                                                                                       CFT166
+     C                     CALL 'AOSARDR0'                                                    CFT166
+     C                     PARM *BLANKS   @RTCD                                               CFT166
+     C                     PARM '*VERIFY' @OPTN                                               CFT166
+     C                     PARM 'CFT166'  @SARD                                               CFT166
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT166
+      *                                                                                       CFT166
+     C           @RTCD     IFEQ *BLANKS                                                       CFT166
+     C                     MOVE 'Y'       CFT166  1                                           CFT166
+     C                     ELSE                                                               CFT166
+     C                     MOVE 'N'       CFT166                                              CFT166
+     C                     ENDIF                                                              CFT166
+      *                                                                                       CFT166
      C                     ENDSR
      C********************************************************************
      C* END OF INITIAL SUBROUTINE
@@ -3684,6 +3705,30 @@
      C                     MOVEL'N'       FTMSGS                          059192
      C                     MOVEL*BLANKS   FTWARN                          059192
      C/COPY WNCPYSRC,FT0060C037
+      *                                                                                       CFT166
+      ** When CFT166 is ON and override is enabled:                                           CFT166
+      ** If enter, do nothing. If F3, exit. If F22, override                                  CFT166
+      ** and authorize. Else, do nothing.                                                     CFT166
+      *                                                                                       CFT166
+     C                     MOVE 'N'       OVRFLG  1                                           CFT166
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+      *                                                                                       CFT166
+      ** F22 (Override)                                                                       CFT166
+     C           *IN76     IFEQ '1'                                                           CFT166
+     C           *INKW     IFEQ '1'                                                           CFT166
+     C                     MOVE 'Y'       OVRFLG                                              CFT166
+     C                     MOVE ' '       USERR                                               CFT166
+     C                     EXSR DSPTWO                                                        CFT166
+     C                     ELSE                                                               CFT166
+     C                     GOTO TAGNDP                                                        CFT166
+     C                     ENDIF                                                              CFT166
+     C                     ENDIF                                                              CFT166
+      *                                                                                       CFT166
+      ** Reached here, then CFT166 is on and everything is fine.                              CFT166
+     C  N01N02             EXSR DSPTWO                                                        CFT166
+     C           TAGNDP    TAG                                                                CFT166
+      *                                                                                       CFT166
+     C                     ELSE                                                               CFT166
       *                                                                   059192
      C* IF ENTER PRESSED DISPLAY SCREEN TWO
      C           OERROR    IFNE 'Y'                                                           216511
@@ -3692,6 +3737,7 @@
      C                     ENDIF                                                              216511
      C*                                                                   S01408
      C** Core hook for externalisation.                                   S01408
+     C                     ENDIF                                                              CFT166
      C/COPY WNCPYSRC,FT0060CL1E                                           S01408
      C*                                                                   S01408
      C                     END                             E001
@@ -6623,6 +6669,11 @@
       *                                                                                       CRE020
      C                     ENDIF                                                              CRE020
       *                                                                                       CRE020
+      ** Create FTABOVPD record                                                               CFT166
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+     C           OVRFLG    ANDEQ'Y'                                                           CFT166
+     C                     EXSR OVRREC                                                        CFT166
+     C                     ENDIF                                                              CFT166
      C/COPY WNCPYSRC,FT0060C110
       *                                                                   S01435
       * Update Incoming Message FT Transaction Status File record         S01435
@@ -6789,6 +6840,12 @@
      C                     ENDIF                                                              242863
       *                                                                                       242863
      C                     ENDIF                                                              242863
+      *                                                                                       CFT166
+      ** Create FTABOVPD record                                                               CFT166
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+     C           *INKW     ANDEQ'1'                                                           CFT166
+     C                     EXSR OVRREC                                                        CFT166
+     C                     ENDIF                                                              CFT166
      C/COPY WNCPYSRC,FT0060C025
       *                                                                   S01435
       * Update Incoming Message FT Transaction Status File record         S01435
@@ -10316,6 +10373,11 @@
       *                                                                   CFT003
       * Call validation object                                            CFT003
       *                                                                   CFT003
+     C                     MOVE *BLANKS   SVACNT 21                                           CFT166
+     C                     MOVE *BLANKS   SVBRCA  3                                           CFT166
+     C                     Z-ADD*ZEROS    SVCLBL 150                                          CFT166
+     C                     Z-ADD*ZEROS    SVODLN 140                                          CFT166
+     C                     Z-ADD*ZEROS    SVTOTP 150                                          CFT166
      C/COPY WNCPYSRC,FT0060C067
      C                     CALL 'FT0805'                                  CFT003
      C**********           PARM           @ACNT  15                                    CFT003 CGL029
@@ -10326,6 +10388,12 @@
      C                     PARM SLDT      @SLDT   50                      CFT003
      C                     PARM *BLANKS   @RCD    1                       CFT003
      C                     PARM *BLANKS   @ORETB  5                                           216511
+      ** Overdraft Limit                                                                      CFT166
+     C                     PARM *ZEROS    @ODLN  140                                          CFT166
+      ** Cleared Balance                                                                      CFT166
+     C                     PARM *ZEROS    @CLBL  150                                          CFT166
+      ** Total Postings                                                                       CFT166
+     C                     PARM *ZEROS    @TOTP  150                                          CFT166
       *                                                                   CFT003
       * Check results and send messages                                   CFT003
       *                                                                   CFT003
@@ -10339,6 +10407,19 @@
       *                                                                                     BUG15042
      C********** @RCD      IFNE 'N'                                                    CFT003 205523
      C           @RCD      IFEQ 'Y'                                                           205523
+      *                                                                                       CFT166
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+      ** Overdraft Limit                                                                      CFT166
+     C                     MOVE @ODLN     SVODLN                                              CFT166
+      ** Cleared Balance                                                                      CFT166
+     C                     MOVE @CLBL     SVCLBL                                              CFT166
+      ** Cleared Balance                                                                      CFT166
+     C                     MOVE @TOTP     SVTOTP                                              CFT166
+      ** Save Account details                                                                 CFT166
+     C                     MOVE @ACNT     SVACNT                                              CFT166
+     C                     MOVE @BRCA     SVBRCA                                              CFT166
+     C                     ENDIF                                                              CFT166
+      *                                                                                       CFT166
      C/COPY WNCPYSRC,FT0060C052
      C                     MOVEL'BAW0001' FTMSID                          CFT003
      C                     MOVEL'FTUSRMSG'FTMSGF                          CFT003
@@ -10360,6 +10441,21 @@
      C                     RETRN                                                              207477
      C                     ENDIF                                                              207477
       *                                                                                       207477
+      ** When CFT166 is ON:                                                                   CFT166
+      ** If insufficient funds, switch on the override indicator                              CFT166
+      ** (allows the user to press cmd/22 and continue processing).                           CFT166
+      ** Else, there are sufficient funds so continue as normal.                              CFT166
+      *                                                                                       CFT166
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+     C                     SETOF                     76                                       CFT166
+      *                                                                                       CFT166
+     C           @RCD      IFEQ 'Y'                                                           CFT166
+     C                     MOVE '1'       *IN76            Override                           CFT166
+     C                     ELSE                                                               CFT166
+     C                     MOVE '0'       *IN76            No override                        CFT166
+     C                     ENDIF                                                              CFT166
+      *                                                                                       CFT166
+     C                     ENDIF                                                              CFT166
      C/COPY WNCPYSRC,FT0060C053
       *                                                                                       216511
       ** Validate Block Debit/Credit Indicator of Destination                                 216511
@@ -10397,6 +10493,10 @@
      C                     PARM *ZERO     @SLDT                                               216511
      C                     PARM *BLANKS   @RCD                                                216511
      C                     PARM OTHREE    @ORETB                                              216511
+      ** Overdraft Limit                                                                      CFT166
+     C                     PARM *ZEROS    @ODLN                                               CFT166
+      ** Cleared Balance                                                                      CFT166
+     C                     PARM *ZEROS    @CLBL                                               CFT166
       *                                                                                       216511
       * Check results and send messages                                                       216511
       *                                                                                       216511
@@ -10447,6 +10547,10 @@
      C                     PARM *ZERO     @SLDT                                               216511
      C                     PARM *BLANKS   @RCD                                                216511
      C                     PARM OTWO      @ORETB                                              216511
+      ** Overdraft Limit                                                                      CFT166
+     C                     PARM *ZEROS    @ODLN                                               CFT166
+      ** Cleared Balance                                                                      CFT166
+     C                     PARM *ZEROS    @CLBL                                               CFT166
       *                                                                                       216511
       * Check results and send messages                                                       216511
       *                                                                                       216511
@@ -10485,6 +10589,10 @@
      C                     PARM *ZERO     @SLDT                                              247142A
      C                     PARM *BLANKS   @RCD                                               247142A
      C                     PARM OTHREE    @ORETB                                             247142A
+      ** Overdraft Limit                                                                      CFT166
+     C                     PARM *ZEROS    @ODLN                                               CFT166
+      ** Cleared Balance                                                                      CFT166
+     C                     PARM *ZEROS    @CLBL                                               CFT166
       *                                                                                      247142A
       * Check results and send messages                                                      247142A
       *                                                                                      247142A
@@ -10729,6 +10837,55 @@
      C                     ENDSR                                                              CFT158
       *****************************************************************                       CFT158
       /EJECT                                                                                  CFT158
+      *****************************************************************                       CFT166
+      *                                                               *                       CFT166
+      * OVRREC - Create FTABOVPD record when F22 is pressed           *                       CFT166
+      *                                                               *                       CFT166
+      *****************************************************************                       CFT166
+     C           OVRREC    BEGSR                                                              CFT166
+      *                                                                                       CFT166
+     C                     CLEARFTABOVD0                                                      CFT166
+      *                                                                                       CFT166
+     C                     MOVELPREF      FTPREF                                              CFT166
+     C                     Z-ADDSMAM      FTAMT                                               CFT166
+     C                     MOVELSMCY      FTCCY                                               CFT166
+     C           6         SUBSTSVACNT:1  @CNUM                                               CFT166
+     C                     MOVEL@CNUM     FTCNUM                                              CFT166
+      *                                                                                       CFT166
+      ** Retrieve customer details                                                            CFT166
+     C                     CALL 'AOCUSTR0'                                                    CFT166
+     C                     PARM *BLANKS   @RTCD                                               CFT166
+     C                     PARM '*KEY   ' @OPTN                                               CFT166
+     C                     PARM           @CNUM                                               CFT166
+     C                     PARM *BLANKS   @KYST                                               CFT166
+     C           SDCUST    PARM SDCUST    DSSDY                                               CFT166
+      *                                                                                       CFT166
+      ** Update customer report name                                                          CFT166
+     C                     MOVELBBCRNM    FTCRNM                                              CFT166
+      *                                                                                       CFT166
+     C           SVACNT    CAT  SVBRCA    FTGLAC                                              CFT166
+     C                     Z-ADDSVCLBL    FTCBAL                                              CFT166
+     C                     Z-ADDSVTOTP    FTPOST                                              CFT166
+     C                     Z-ADDSVODLN    FTOLIN                                              CFT166
+      *                                                                                       CFT166
+     C                     MOVELUSRID     FTOUSR                                              CFT166
+      *                                                                                       CFT166
+     C                     MOVE RUND      ZDAYNO                                              CFT166
+     C                     EXSR ZDATE2                                                        CFT166
+     C                     MOVE ZYEAR     WYY     2                                           CFT166
+     C                     MOVE ZMTH      WMM     2                                           CFT166
+     C                     MOVE ZDAY      WDD     2                                           CFT166
+      *                                                                                       CFT166
+      ** Format date to DDMMYY                                                                CFT166
+     C           WDD       CAT  WMM       FTDATE                                              CFT166
+     C           FTDATE    CAT  WYY:0     FTDATE                                              CFT166
+      *                                                                                       CFT166
+     C                     MOVE LCHT      FTTIME                                              CFT166
+      *                                                                                       CFT166
+     C                     WRITEFTABOVD0                                                      CFT166
+      *                                                                                       CFT166
+     C                     ENDSR                                                              CFT166
+      *****************************************************************                       CFT166
      C/COPY WNCPYSRC,FT0060C056
      C/COPY ZSRSRC,ZEDITZ2                                                CFT009
      O/EJECT

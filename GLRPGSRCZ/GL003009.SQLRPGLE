@@ -13,12 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD060746 *MOVED    Date 22Nov22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060811           Date 08Dec22               *
+      *  Prev Amend No. MD060746 *MOVED    Date 22Nov22               *
+      *                 MD046248           Date 27Oct17               *
       *                 BUG27832*CREATE    Date 22Jun10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060811 - Program does not compile                          *
       *  MD060746 - Incorrect source file                             *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27832 - Chicago performance issues: File Locking on       *
@@ -188,7 +190,7 @@
 
      C                   ENDSR
 
- ;                                                                              :
-  label on table     **********/**********                                      :
-   is 'Midas GL Account Transfer Reference Seq Reset     ';                     :
-                                                                                :
+ ;    *                                                                         :           MD060811
+  lab * on table     **********/**********                                      :           MD060811
+   is *Midas GL Account Transfer Reference Seq Reset     ';                     :           MD060811
+      *                                                                         :           MD060811

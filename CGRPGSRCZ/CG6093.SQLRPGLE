@@ -16,10 +16,17 @@
      F*                                                               *
       *  (c) Finastra International Limited 2021                      *
      F*                                                               *
-      *  Last Amend No. MD059367 *CREATE   Date 24Dec21               *
+      *  Last Amend No. MD060590           Date 04Oct22               *
+      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *                 MD059367 *CREATE   Date 24Dec21               *
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060590 - Incorrect ccr rounding applies and precision      *
+      *             values for loan defined with SONIA and SARR.      *
+      *             Check the calc method to be 'NCCR' before calling *
+      *             ZAGETRDAPL program                                *
+      *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *
      F*                                                               *
      F*****************************************************************
@@ -46,8 +53,10 @@
      D*
      D* ##GRP = Group/RDE Number               ##RDE = RDE + Attributes
      D*
-     D ##GRP           S             10    DIM(503) CTDATA PERRCD(1)
-     D ##RDEA          S             22    DIM(503) ALT(##GRP)
+     D*** ##GRP           S             10    DIM(503) CTDATA PERRCD(1)                     MD059624
+     D*** ##RDEA          S             22    DIM(503) ALT(##GRP)                           MD059624
+     D ##GRP           S             10    DIM(505) CTDATA PERRCD(1)                        MD059624
+     D ##RDEA          S             22    DIM(505) ALT(##GRP)                              MD059624
      D*
      D*
      D*
@@ -967,6 +976,24 @@
       * Calls       :                                                 *
       *****************************************************************
      C     D@LADS        BEGSR
+      *                                                                                     MD059624
+      ** Get rounding precision from SDLIBRTD                                               MD059624
+      *                                                                                     MD059624
+     C                   EVAL      isRndApplies = ' '                                       MD060590
+     C                   IF        CALM = 'NCCR'                                            MD060590
+     C                   CALL      'ZAGETRDAPL'                                             MD059624
+     C                   PARM                    RFRR                                       MD059624
+     C                   PARM      'N'           isRndApplies      1                        MD059624
+     C                   ENDIF                                                              MD060590
+     C                   IF        isRndApplies = 'Y'                                       MD059624
+     C                   MOVEL     'Y'           CCRRA             1                        MD059624
+     C                   MOVEL     RRDP          CCRRP             2 0                      MD059624
+     C                   Z-ADD     *ZEROS        CCRRD             2 0                      MD059624
+     C                   ELSE                                                               MD059624
+     C                   MOVEL     'N'           CCRRA                                      MD059624
+     C                   MOVEL     RRDP          CCRRD                                      MD059624
+     C                   Z-ADD     *ZEROS        CCRRP                                      MD059624
+     C                   ENDIF                                                              MD059624
       *
       **  Set up subroutine stack name
      C                   ADD       1             Q
@@ -1290,7 +1317,8 @@
       *
       **  Rate rounding decimals
       *
-     C                   MOVEL     RRDP          ##D(15)
+     C**********         MOVEL     RRDP          ##D(15)                                    MD059624
+     C                   MOVEL     CCRRD         ##D(15)                                    MD059624
       *
       **  Calculation Method
       *
@@ -1301,6 +1329,10 @@
       *
       ** Base Rate Code
      C                   MOVEL     ##BSRC        ##D(18)
+      ** ccr Rounding Applies                                                               MD059624
+     C                   MOVEL     CCRRA         ##D(19)                                    MD059624
+      ** ccr Rounding Precision                                                             MD059624
+     C                   MOVEL     CCRRP         ##D(20)                                    MD059624
       *
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
@@ -4525,6 +4557,8 @@ D_LADS0035 RT RDNG DC
 D_LADS0036 CALC METHD
 D_LADS0037 MATUR DATE Date
 D_LADS0038 BASERATTYP
+D_LADS0039 CCR RD APL                                                                       MD059624
+D_LADS0040 CCR RD PRC                                                                       MD059624
 D_OPTD0001 OPT TODATE Date
 D_OTH10001 CANC/AMEND
 D_OTH10002 FEDERAL

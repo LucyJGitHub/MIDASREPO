@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CFT166             Date 02Nov22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR663078           Date 19Aug14               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT166 - Amendment to FT A/C Balance Check on Authorisation  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -210,6 +212,10 @@
      ISDCURR    E DSSDCURRPD                                                                  CFT003
       * CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM                                          CFT003
      I*                                                                                       CFT003
+     ISCSARD    E DSSCSARDPD                                                                  CFT166
+     I              LCD                             SLCD                                      CFT166
+      * SWITCHABLE FEATURES VIA ACCESS PROGRAM                                                CFT166
+     I*                                                                                       CFT166
      IDSFDY     E DSDSFDY
      I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      I*
@@ -303,6 +309,12 @@
      C                     PARM           @SDAT   50
      C                     PARM           @RTCE   1
      C                     PARM           @ORETB  5                                           216511
+      ** Overdraft Limit                                                                      CFT166
+     C                     PARM           @ODLN  140                                          CFT166
+      ** Cleared Balance                                                                      CFT166
+     C                     PARM           @CLBL  150                                          CFT166
+      ** Total Postings                                                                       CFT166
+     C                     PARM           @TOTP  150                                          CFT166
      C/COPY WNCPYSRC,FT0805C007
      C*
      C                     MOVE *BLANK    RETB                                                216511
@@ -520,6 +532,20 @@
       *                                                                                     AR663078
      C                     ENDIF                                                            AR663078
       *                                                                                     AR663078
+      ** Access SAR details file to determine if CFT166 is switched ON                        CFT166
+      *                                                                                       CFT166
+     C                     CALL 'AOSARDR0'                                                    CFT166
+     C                     PARM *BLANKS   @RTCD                                               CFT166
+     C                     PARM '*VERIFY' @OPTN                                               CFT166
+     C                     PARM 'CFT166'  @SARD   6                                           CFT166
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT166
+      *                                                                                       CFT166
+     C           @RTCD     IFEQ *BLANKS                                                       CFT166
+     C                     MOVE 'Y'       CFT166  1                                           CFT166
+     C                     ELSE                                                               CFT166
+     C                     MOVE 'N'       CFT166                                              CFT166
+     C                     ENDIF                                                              CFT166
+      *                                                                                       CFT166
      C                     ENDSR
      C*
      C/EJECT
@@ -917,6 +943,11 @@
      C                     EXSR *PSSR
      C*
      C                     END
+      *                                                                                       CFT166
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+     C                     Z-ADDCLBLN     @CLBL                                               CFT166
+     C                     Z-ADD*ZEROS    SVTOTP 150                                          CFT166
+     C                     ENDIF                                                              CFT166
       *
       ** Adjust Balance for unauthorised transactions
       *
@@ -968,6 +999,11 @@
       **  Compute for Insufficient fund.
       *
      C/COPY WNCPYSRC,FT0805C004
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+     C                     Z-ADDWODLN     @ODLN                                               CFT166
+     C                     Z-ADDSVTOTP    @TOTP                                               CFT166
+     C                     ENDIF                                                              CFT166
+      *                                                                                       CFT166
      C           WODLN     SUB  CLBLN     @HRES  150                                          CFT003
      C***********ODLN      SUB  CLBLN     @HRES  150                                          CFT003
      C/COPY WNCPYSRC,FT0805C005
@@ -979,6 +1015,7 @@
       *
      C/COPY WNCPYSRC,FT0805C001
      C           @SDAT     IFGT BJRDNB
+     C           CFT166    ANDEQ'N'                                                           CFT166
      C           ##MODE    OREQ 'YES'
      C***********@HRES     SUB  @SMAM     @HRES      21                                       207477
      C           @HRES     SUB  @SMAM     @HRES                                               207477
@@ -1075,6 +1112,9 @@
      C           XSUBDR    ANDEQ'Y'                                                         AR663078
      C           VUDT      ANDLEBJRDNB
      C           CLBLN     SUB  MVAM      CLBLN
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+     C           SVTOTP    SUB  MVAM      SVTOTP                                              CFT166
+     C                     ENDIF                                                              CFT166
      C                     ENDIF
       *
       * If Credit, increase balance towards debit (positive)
@@ -1083,6 +1123,9 @@
      C           XSUBCR    ANDEQ'Y'                                                         AR663078
      C           VUDT      ANDLEBJRDNB
      C           CLBLN     ADD  MVAM      CLBLN
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+     C           SVTOTP    ADD  MVAM      SVTOTP                                              CFT166
+     C                     ENDIF                                                              CFT166
      C                     ENDIF
      C                     ENDIF
       *

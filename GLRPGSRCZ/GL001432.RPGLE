@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD060784           Date 02Dec22               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD058285           Date 22Jun21               *
       *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 MD055642A          Date 27May20               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060784 - Program fails with decimal data error             *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
@@ -872,6 +874,8 @@
      C     $Field86      BEGSR
       *    --------      -----
      C/COPY WNCPYSRC,GLH00204
+     C                   eval      MG86LN = 0                                               MD060784
+     C                   eval      MG86LH = 0                                               MD060784
       *                                                                                     BUG25147
      C     KeyAddInf     KLIST                                                              BUG25147
      C                   KFLD                    GLPSTD                                     BUG25147

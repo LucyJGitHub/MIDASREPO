@@ -1,0 +1,137 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTR database refresh')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC7014 - OTR database refresh                              */
+/*                                                                   */
+/*       Function: This program performs the actual refresh of the   */
+/*                 database using CPYF. It calls UPC700038.          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP045   *CREATE   Date 09Dec22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP045 - One Touch Bridge - refresh                         */
+/*              - Applied for MD060769.                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &PRFX &BRGBRGLIB &RERUN &RETURN)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPL) TYPE(*CHAR) LEN(50) VALUE('COMPLETE')
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(50) VALUE('FAIL')
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10) VALUE('UP_OTBRSVR')
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CMPN) TYPE(*DEC) LEN(2 0) VALUE(04)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FAILX) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SUBMIT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ACTIVE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FAILED) TYPE(*CHAR) LEN(6)
+
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC7014')
+
+/* Update monitor */
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             CALL UP7001 ('*UPDATE   ' ' '   'DCMPG4' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Log */
+             CALL UP7002 (&PRFX &CMPN &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* clear driving file if not RERUN */
+             IF         COND(&RERUN *EQ '*NO') THEN(DO)
+             CLRPFM     FILE(SMCPYDPD)
+             ENDDO
+
+/* Set the &FROMLIB */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgOldZonePrefix' &SVAL1 ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CHGVAR     VAR(&FROMLIB) VALUE(%SST(&SVAL1 1 2) *TCAT 'DMLIB')
+                CHGVAR     VAR(&TOLIB) VALUE(&PRFX *TCAT 'DMLIB')
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                             'BrgOldGlobalPrefix' &SVAL1 ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CHGVAR     VAR(&FROMLIB) VALUE(%SST(&SVAL1 1 2) *TCAT 'GMLIB')
+                CHGVAR     VAR(&TOLIB) VALUE(&PRFX *TCAT 'GMLIB')
+             ENDDO
+
+
+/* Call UPC700038 to submit CPYF */
+             CALL       PGM(UPC700038) PARM(&FROMLIB &TOLIB '*NO' +
+                          &RERUN ' ' X'095F' X'001F' &BRGBRGLIB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+
+/* Now wait for all jobs to complete */
+WAIT:
+             DLYJOB     DLY(10)
+             CALL       PGM(UP700043) PARM(&SUBMIT &ACTIVE &FAILED)
+             IF         COND(&SUBMIT *NE '     0' *OR &ACTIVE *NE '  -
+   0') THEN(GOTO WAIT)
+             IF         COND(&FAILED *NE '     0') THEN(DO)
+             CALL       PGM(SM000013)
+/* Send FAIL message to server */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &FAIL)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/* Send back DTAQ COMPLETE message to server job */
+             CALL       PGM(SM000013)
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &CMPL)
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+/* Send FAIL message to server */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &FAIL)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+ END:        ENDPGM

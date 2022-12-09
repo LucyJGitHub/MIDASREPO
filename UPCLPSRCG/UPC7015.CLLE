@@ -1,0 +1,111 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTR deliverable data split restore')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC7015 - OTR deliverable data split restore                */
+/*                                                                   */
+/*       Function: This program restores the BTD/XTD tables saved    */
+/*                 by UPC70111.                                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP045   *CREATE   Date 09Dec22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP045 - One Touch Bridge - refresh                         */
+/*              - Applied for MD060769.                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &PRFX &BRGBRGLIB &RETURN)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPL) TYPE(*CHAR) LEN(50) VALUE('COMPLETE')
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(50) VALUE('FAIL')
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10) VALUE('UP_OTBRSVR')
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CMPN) TYPE(*DEC) LEN(2 0) VALUE(05)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FAILX) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC715')
+
+/* Update monitor */
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             CALL UP7001 ('*UPDATE   ' ' '   'DCMPG5' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Log */
+             CALL UP7002 (&PRFX &CMPN &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Set library name for deliverable data */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&MLIB) VALUE(&PRFX *CAT 'GMLIB')
+             CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR_G')
+             ENDDO
+             ELSE CMD(DO)
+             CHGVAR     VAR(&MLIB) VALUE(&PRFX *CAT 'DMLIB')
+             CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR1Z')
+             ENDDO
+
+/* Restore obj from SAVF */
+             CHKOBJ     OBJ(&BRGBRGLIB/&SAVF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             RSTOBJ     OBJ(*ALL) SAVLIB(&MLIB) DEV(*SAVF) +
+                          SAVF(&BRGBRGLIB/&SAVF) OUTPUT(*PRINT)
+
+/* If *ZONE, restore from thesecond SAVF as well provided that it exists */
+             IF         COND(&LAYER *EQ '*ZONE  ') THEN(DO)
+                CHGVAR     VAR(&SAVF) VALUE('SAVF_RFR2Z')
+                CHKOBJ     OBJ(&BRGBRGLIB/&SAVF) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+
+                RSTOBJ     OBJ(*ALL) SAVLIB(&MLIB) DEV(*SAVF) +
+                          SAVF(&BRGBRGLIB/&SAVF) OUTPUT(*PRINT)
+                MONMSG     MSGID(CPF3707)
+             ENDDO
+
+/* Send back DTAQ COMPLETE message to server job */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &CMPL)
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+/* Send FAIL message to server */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &FAIL)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+ END:        ENDPGM

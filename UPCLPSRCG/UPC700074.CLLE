@@ -1,0 +1,99 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTR check status of files copied')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC700074 - OTR check status of files copied                */
+/*                                                                   */
+/*       Function: This program calls SM000009 to retrieved statuses */
+/*                 of the copy from SMCPYDPD.                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP045   *CREATE   Date 09Dec22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP045 - One Touch Bridge - refresh                         */
+/*              - Applied for MD060769.                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&TOTAL) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SUBMIT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ACTIVE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PASSED) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FAILED) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&UNIQUE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SKIP) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&NFOUND) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&WAIT) TYPE(*CHAR) LEN(6)
+
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Create data area MIDASMSG in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+
+/* Call program to check statuses. */
+                CALL       PGM(SM000009) PARM(&TOTAL &SUBMIT &ACTIVE +
+                             &PASSED &FAILED &UNIQUE &SKIP &NFOUND &WAIT)
+
+/* Display status on screen. */
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('Total +
+                             objects to be migrated         :      ' +
+                             *CAT &TOTAL)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE('Number +
+                             submitted                     :      ' +
+                             *CAT &SUBMIT)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Number +
+                             active                        :      ' +
+                             *CAT &ACTIVE)
+                CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Number +
+                             migrated successfully         :      ' +
+                             *CAT &PASSED)
+                CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE('Number +
+                             failed                        :      ' +
+                             *CAT &FAILED)
+                CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE('Number +
+                             of unique key issues          :      ' +
+                             *CAT &UNIQUE)
+                CHGDTAARA  DTAARA(MIDASMSG (401 50)) VALUE('Number not +
+                             found (in "from" library) :      ' *CAT +
+                             &NFOUND)
+                CHGDTAARA  DTAARA(MIDASMSG (451 50)) VALUE('Number +
+                             awaiting action               :      ' +
+                             *CAT &WAIT)
+                CHGDTAARA  DTAARA(MIDASMSG (501 50)) VALUE('Number +
+                             skipped                       :      ' +
+                             *CAT &SKIP)
+                CALL       PGM(SCC0010) PARM('SMC000074' 'ENTER' ' ')
+
+             GOTO       CMDLBL(ENDPGM)
+
+ ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC000074') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details.')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC000074' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ ENDPGM:
+             ENDPGM

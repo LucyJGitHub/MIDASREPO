@@ -1,0 +1,265 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTR submit copy files')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC700038 - OTR submit copy files                           */
+/*                                                                   */
+/*       Function: This program is created based on SMC000038. It    */
+/*                 perfoms similar tasks: list files to be copied    */
+/*                 and submit one job for each.                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. CUP045   *CREATE   Date 09Dec22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP045 - One Touch Bridge - refresh                         */
+/*              - Applied for MD060769.                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FMLIB &TOLIB &CRT &RERUN &SYSPFX +
+                           &THRESHOLD &JUMP &BRGBRGLIB)
+
+             DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CRT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SYSPFX) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&THRESHOLD) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&JUMP) TYPE(*DEC) LEN(2 0)
+
+             DCL        VAR(&FMPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TOPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ORLVL) TYPE(*CHAR) LEN(22)
+             DCL        VAR(&THRESHOLDA) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JUMPA) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BREACH) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&STATUS) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&STARTOBJ) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&STARTTYP) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&SYSPCTAFT) TYPE(*DEC) LEN(7 4)
+             DCL        VAR(&SYSTOT) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&UP249RTN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80) +
+                          VALUE('UPDATE SMCNUXTD SET CNUPDF =')                         /*MD058089*/
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+
+             DCLF       FILE(SMCPYDL2)                                                    /*CUP003*/
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Create source file for running SQL statements. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC000038')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+
+/* Create temporary file for DSPFFD outfile. */                                           /*CUP003*/
+             DLTF       FILE(QTEMP/DSPFFD)                                                /*CUP003*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP003*/
+             DLTF       FILE(QTEMP/SMC000115F)                                            /*CUP003*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP003*/
+             CRTDUPOBJ  OBJ(UPFFDSTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(SMC000115F)                                 /*CUP003*/
+
+/* Set temporary data area with &THRESHOLD and &JUMP values .... */
+             CHGVAR     VAR(&THRESHOLDA) VALUE(&THRESHOLD)
+             CHGVAR     VAR(&JUMPA) VALUE(&JUMP)
+/* Get first reading of system storage values. */
+             CALL       PGM(UP0249) PARM(&UP249RTN &SYSPCTAFT &SYSTOT)
+/* If the system is already over the threshold then halt processing ... */
+             IF         COND(&SYSPCTAFT *GE &THRESHOLD) THEN(DO)
+                GOTO       CMDLBL(BREACH)
+             ENDDO
+/* ... otherwise update data area and continue. */
+             DLTDTAARA  DTAARA(&FMLIB/SMBRGMIGDA)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(&FMLIB/SMBRGMIGDA) TYPE(*CHAR) +
+                          LEN(100) TEXT('Temporary data area for +
+                          database migration')
+             CHGDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (23 2)) +
+                          VALUE(&THRESHOLDA)
+             CHGDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (25 2)) VALUE(&JUMPA)
+
+
+/* If this is not a re-run then populate driving file. */
+             IF         COND(&RERUN *EQ '*NO') THEN(DO)
+                DLTF       FILE(QTEMP/SMC000038O)
+                MONMSG     MSGID(CPF0000)
+                DSPOBJD    OBJ(&FMLIB/*ALL) OBJTYPE(*ALL) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/SMC000038O)
+                CPYF       FROMFILE(QTEMP/SMC000038O) TOFILE(SMCPYDPD) +
+                             MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+/* Update driving file with the 'to' library. */
+                CHGVAR     VAR(&STM_STR) VALUE('update SMCPYDPD set +
+                             ODSCMD =' *BCAT &QUOTE *TCAT &TOLIB *TCAT +
+                             &QUOTE)
+                CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+                RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)
+                MONMSG     MSGID(SQL9010)
+             ENDDO
+             ELSE       CMD(DO)
+/* If this a re-run then set 'SKIP' records back to neutral value. */
+                CHGVAR     VAR(&STM_STR) VALUE('update SMCPYDPD set +
+                             ODDDAT =' *BCAT &QUOTE *TCAT '999999' +
+                             *TCAT &QUOTE *BCAT 'where ODDDAT =' *BCAT +
+                             &QUOTE *TCAT 'SKIP  ' *TCAT &QUOTE)
+                CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+                RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)
+                MONMSG     MSGID(SQL9010)
+             ENDDO
+
+
+             CHGVAR     VAR(&FMPFX) VALUE(%SST(&FMLIB 1 2))                            /*MD020092B*/
+             CHGVAR     VAR(&TOPFX) VALUE(%SST(&TOLIB 1 2))                            /*MD020092B*/
+
+/* Call program to copy across multi-membered DP files. */                             /*MD020092B*/
+             CALL       PGM(SM000008) PARM('SMC000008' '*PGM' +
+                          '*CHECK' &STATUS)                                            /*MD020092B*/
+             IF         COND(&STATUS *NE 'PASSED' *AND &STATUS *NE +
+                          'SUBMIT') THEN(DO)                                           /*MD020092B*/
+                CALL       PGM(SM000008) PARM('SMC000008' '*PGM' +
+                             '*WRITE' 'SUBMIT')                                        /*MD020092B*/
+             SBMJOB     CMD(CALL PGM(SMC000008) PARM(&FMPFX &TOPFX)) +
+                          JOB(SMC000008) JOBD(&BRGBRGLIB/SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+             ENDDO                                                                     /*MD020092B*/
+
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(EXTRA)
+             ENDDO
+
+/* If this is a rerun then some records will have their status already updated */
+/*  so some of these can be ignored.  Those with a status of PASSED are        */
+/*  already excluded by the logical.                                           */
+             IF         COND(&ODDDAT *EQ 'SUBMIT' *OR &ODDDAT *EQ +
+                          'NFOUND' *OR &ODDDAT *EQ 'SKIP  ') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+             IF         COND(&ODDDAT *EQ 'UNIQUE') THEN(DO)                               /*CUP003*/
+                GOTO       CMDLBL(READNEXT)                                               /*CUP003*/
+             ENDDO                                                                        /*CUP003*/
+
+/* If threshold has been breached then report. */
+             RTVDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (27 1)) +
+                          RTNVAR(&BREACH)
+             IF         COND(&BREACH *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(BREACH)
+             ENDDO
+
+/* Ignore record for temporary data area SMBRGMIGDA. */
+             IF         COND(&ODOBNM *EQ 'SMBRGMIGDA') THEN(DO)
+                CALL       PGM(SM000008) PARM(&ODOBNM '*DTAARA' +
+                             '*DELETE' ' ')
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+
+/* If object not physical file, data area or data queue then just flag */
+/*  as "not found".                                                   */
+/**********  IF         COND(%SST(&ODOBAT 1 2) *NE 'PF' *AND &ODOBTP +                 */ /*CUP003*/
+/**********               *NE '*DTAARA' *AND &ODOBTP *NE '*DTAQ') +                    */ /*CUP003*/
+/**********               THEN(DO)                                                     */ /*CUP003*/
+             IF         COND(%SST(&ODOBAT 1 2) *NE 'PF' *AND &ODOBTP +
+                          *NE '*DTAARA' *AND &ODOBTP *NE '*DTAQ' +
+                          *AND &ODOBTP *NE '*VLDL') THEN(DO)                              /*CUP003*/
+                CALL       PGM(SM000008) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                             'NFOUND')
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+
+ /* Update driving file that job is submitted. */
+             CALL       PGM(SM000008) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          'SUBMIT')
+
+/* Submit job to copy data for each object. */
+             SBMJOB     CMD(CALL PGM(UPC700042) PARM(&ODOBNM &ODOBTP +
+                          &FMLIB &TOLIB &CRT &RERUN &MODE)) +
+                          JOB(&ODOBNM) JOBD(&BRGBRGLIB/SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+             GOTO       CMDLBL(READNEXT)
+
+EXTRA:
+/* Call program to copy renamed files (if any). */
+             CALL       PGM(SM000008) PARM('SMC000031' '*PGM' +
+                          '*CHECK' &STATUS)
+             IF         COND(&STATUS *NE 'PASSED' *AND &STATUS *NE +
+                          'SUBMIT') THEN(DO)
+                CALL       PGM(SM000008) PARM('SMC000031' '*PGM' +
+                             '*WRITE' 'SUBMIT')
+                SBMJOB     CMD(CALL PGM(SMC000031) PARM(&FMLIB &TOLIB)) +
+                             JOB(SMC000031) JOBD(&BRGBRGLIB/SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+             ENDDO
+
+/* Call program to copy files that have been moved out of deliverable data */             /*CPK030*/
+/*  library.                                                               */             /*CPK030*/
+             CALL       PGM(SM000008) PARM('SMC000132' '*PGM' +
+                          '*CHECK' &STATUS)                                               /*CPK030*/
+             IF         COND(&STATUS *NE 'PASSED' *AND &STATUS *NE +
+                          'SUBMIT') THEN(DO)                                              /*CPK030*/
+                CALL       PGM(SM000008) PARM('SMC000132' '*PGM' +
+                             '*WRITE' 'SUBMIT')                                           /*CPK030*/
+/************   SBMJOB     CMD(CALL PGM(SMC0000132) PARM(&FMLIB &TOLIB +
+/************                '*ZONE  ')) JOB(SMC000132) JOBD(SETUP) +
+/************                JOBQ(SMJOBQNM)                                  /*CPK030*/ /*MD039374*/
+                SBMJOB     CMD(CALL PGM(SMC000132) PARM(&FMLIB &TOLIB +
+                             '*ZONE  ')) JOB(SMC000132) JOBD(&BRGBRGLIB/SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+             ENDDO                                                                        /*CPK030*/
+
+             GOTO       CMDLBL(ENDPGM)
+
+BREACH:
+/* Send specific message for breach of threshold. */
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('The +
+                          limits for the command have been +
+                          breached.  The migration is halted.') +
+                          MSGTYPE(*ESCAPE)
+             GOTO       CMDLBL(ENDPGM)
+
+ERROR:
+ /* Recursive error. */
+             IF         COND(&RECURSIVE *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                             MSGDTA('Recursive error in pgm +
+                             SMC000038.') MSGTYPE(*ESCAPE)
+             ENDDO
+             CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+ERROR2:
+ /* Receive escape error message */
+             RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                          MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+ /* Pass it back to calling program */
+             SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                          MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+
+ENDPGM:
+             ENDPGM

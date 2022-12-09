@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059314           Date 22Feb22               *
-      *  Prev Amend No. MD059100A          Date 23Dec21               *
+      *  Last Amend No. MD059863           Date 28Sep22               *
+      *  Prev Amend No. MD059314           Date 22Feb22               *
+      *                 MD059100A          Date 23Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058398           Date 20Aug21               *
       *                 MD058492           Date 06Aug21               *
@@ -114,6 +115,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059863 - UDF field position in CIRS or SIRS message type.  *
+      *           - Move Front Office ID to RXFRNT, if not blanks.    *
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059100A - Incorrect deal status on pre-confirmation        *
@@ -7851,7 +7854,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * Include Header fields that need to be o/p to the Valid file
      C**********         EVAL      RXFRNT = APFOTranID                                        248489
      C**********         EVAL      RXREPA = APRprLocn                                         248489
-     C                   IF        SACCD = 'I'                                              MD029596
+     C**********         IF        SACCD = 'I'                                     MD029596 MD059863
+     C                   IF        APFOTranID <> *BLANKS                                    MD059863
      C                   EVAL      RXFRNT = APFOTranID                                      MD029596
      C                   ENDIF                                                              MD029596
                                                                                             MD029596

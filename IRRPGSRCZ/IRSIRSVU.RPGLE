@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059314           Date 22Feb22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD059863           Date 28Sep22               *
+      *  Prev Amend No. MD059314           Date 22Feb22               *
+      *                 MD059304           Date 11Nov21               *
       *                 MD059183A          Date 21Dec21               *
       *                 MD059100           Date 28Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -123,6 +124,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059863 - UDF field position in CIRS or SIRS message type.  *
+      *           - Move Front Office ID to RSFRNT, if not blanks.    *
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -6098,7 +6101,8 @@ RGC                                                                             
 
      C**********         EVAL      RSFRNT = APFOTranID                                        248489
      C**********         EVAL      RSREPA = APRprLocn                                         248489
-     C                   IF        SACCD = 'I'                                              MD029596
+     C**********         IF        SACCD = 'I'                                     MD029596 MD059863
+     C                   IF        APFOTranID <> *BLANKS                                    MD059863
      C                   EVAL      RSFRNT = APFOTranID                                      MD029596
      C                   ENDIF                                                              MD029596
                                                                                             MD029596

@@ -21,6 +21,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD060811 - Program does not compile                          *
+      *             Comment out lines at the bottom of the program    *
       *  MD060746 - Incorrect source file                             *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27832 - Chicago performance issues: File Locking on       *

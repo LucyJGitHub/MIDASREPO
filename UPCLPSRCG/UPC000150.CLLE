@@ -1,0 +1,104 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP End triggering for upgrade')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000150 - End triggering during upgrade process           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2024                     */
+/*                                                                   */
+/*       Last Amend No. MD060557 *CREATE   Date 22Sep22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD060557 - Improvement in triggering process                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &PFX &RTNFLAG)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&IDX) TYPE(*DEC)  LEN(1) VALUE(0)
+             DCL        VAR(&LASTFILE) TYPE(*CHAR) LEN(10)
+
+             DCLF       FILE(UPSFMTQF)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Create temporary message queue for error handling. */
+             DLTMSGQ    MSGQ(QTEMP/RMVALLTRG)
+             MONMSG     MSGID(CPF0000)
+             CRTMSGQ    MSGQ(QTEMP/RMVALLTRG) TEXT('Temporary +
+                          message queue for RMVALLTRG utility')
+
+             CLRPFM     FILE(UPSFMTQF)
+
+/* Call UP000027 to output in UPSFMTQF */
+             CALL       PGM(UP000027) PARM(&RTNFLAG &PFX &LAYER)
+             IF         COND(&RTNFLAG *EQ 'E') THEN(DO)
+                       GOTO       CMDLBL(ERROR)
+             ENDDO
+
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+             IF         COND(&SFMBNM *NE &LASTFILE) THEN(DO)
+             IF         COND(&SFMBNM *EQ 'SDMMIDPD') THEN(DO)
+                CHGVAR     VAR(&IDX) VALUE(1)
+/* Wait for 5 seconds and repeated up to 3 times */
+ ALCOBJECT:     ALCOBJ     OBJ((&SFMBNM *FILE *EXCL *FIRST)) WAIT(5)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                    IF         COND(&IDX *LE 3) THEN(DO)
+                       CHGVAR     VAR(&IDX) VALUE(&IDX + 1)
+                       GOTO       CMDLBL(ALCOBJECT)
+                    ENDDO
+                    ELSE       CMD(DO)
+                       GOTO       CMDLBL(ERROR)
+                    ENDDO
+                ENDDO
+                RMVPFTRG   FILE(&SFLIB2/&SFMBNM)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   SNDMSG     MSG('Unable to remove trigger for file' +
+                                *BCAT &SFMBNM) TOMSGQ(QTEMP/RMVALLTRG)
+                   CHGVAR     VAR(&RTNFLAG) VALUE('E')
+                ENDDO
+                DLCOBJ     OBJ((&SFMBNM *FILE *EXCL *FIRST))
+                MONMSG     MSGID(CPF0000)
+                ENDDO
+             ELSE       CMD(DO)
+
+                RMVPFTRG   FILE(&SFLIB2/&SFMBNM)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   SNDMSG     MSG('Unable to remove trigger for file' +
+                                *BCAT &SFMBNM) TOMSGQ(QTEMP/RMVALLTRG)
+                   CHGVAR     VAR(&RTNFLAG) VALUE('E')
+                ENDDO
+             ENDDO
+             ENDDO
+
+             CHGVAR     VAR(&LASTFILE) VALUE(&SFMBNM)
+
+             GOTO       CMDLBL(READNEXT)
+
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+
+ENDPGM:
+             IF         COND(&RTNFLAG *EQ 'E') THEN(DO)
+                DSPMSG     MSGQ(QTEMP/RMVALLTRG) OUTPUT(*PRINT)
+             ENDDO
+
+             ENDPGM
+

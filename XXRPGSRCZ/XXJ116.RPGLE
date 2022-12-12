@@ -21,8 +21,9 @@
       ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************         EML110
       *  (c) Finastra International Limited 2018                      *         EML110
       *                                                               *
-      *  Last Amend No. EML110             Date 20Jan20               *
-      *  Prev Amend No. TFJ011             Date 23Jan07               *
+      *  Last Amend No. MD060630           Date 04Nov22               *
+      *  Prev Amend No. EML110             Date 20Jan20               *
+      *                 TFJ011             Date 23Jan07               *
       *                 TFJ11A             Date  1Oct05               *
       *                 TFJ011 (CHG002)    Date 20Jun05               *
       *                 TFJ011             Date 16Jun05               *
@@ -30,6 +31,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060630 - Pooling Interface batch in error (from Head Office*
+      *             Pooling Server for Amsterdam and Brussels)        *
+      *             Added validation during the assignment of Transac-*
+      *             tion Type to limit to Retail accounts only.       *
+      *             Based from fix AR701834 (Child: AR701835).        *
       *  EML110 - Account Balance Pooling. Upgrade to FBM 2.1         *
       *  TFJ011 - Amend Accoutn code size from 4 to 10                *
       *  TFJ11A - Account Transfer Service                            *
@@ -1179,6 +1185,7 @@
       *
       ** Debit Details
      C                   IF        BTDCIN = 'D'
+     C                             AND BTACTY = 'R'                                         MD060630
      C                   EVAL      BTTRTY = JJTRND                              Transaction type
 
      C                   CALL      'AORETRR0'
@@ -1201,6 +1208,7 @@
       *
       ** Credit Details
      C                   IF        BTDCIN = 'C'
+     C                             AND BTACTY = 'R'                                         MD060630
      C                   EVAL      BTTRTY = JJTRNC                              Transaction type
 
      C                   CALL      'AORETRR0'

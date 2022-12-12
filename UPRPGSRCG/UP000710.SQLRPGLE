@@ -12,14 +12,16 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD060626             Date 13Oct22             *
-      *  Prev Amend No. MD059702             Date 15Mar22             *
+      *  Last Amend No. MD060547             Date 12Dec22             *
+      *  Prev Amend No. MD060626             Date 13Oct22             *
+      *                 MD059702             Date 15Mar22             *
       *                 MD057231             Date 18Nov20             *
       *                 MD055681             Date 31Jul20             *
       *                 MD056103   *CREATE   Date 17Jun20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060547 - Issue with column A1FTPT in SDRETRPD              *
       *  MD060626 - CGC2030 fails when RGZPFM CGCSTRPD                *
       *  MD059702 - Align UP000710 (migration) with UP000703 (upgrade)*
       *             And correct location of SCSAREPD                  *
@@ -60,6 +62,7 @@
      D First           S              1A
      D TotRow          S             13  0
      D X_Field         S             10
+     D RcdCount        S              2  0                                                  MD060547
      D FldData       E DS                  EXTNAME(UPFFDSTPD)
 
       /EJECT
@@ -372,8 +375,26 @@
      C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD055681
      C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + '''E'''             MD055681
      C                   else                                                               MD055681
+                                                                                            MD060547
+      ** if processing A1FTPT, check same field exists in SDRETRPD                          MD060547
+     C                   If        X_Field = 'A1FTPT'                                       MD060547
+     C/EXEC SQL                                                                             MD060547
+     C+ select count(*) into :RcdCount                                                      MD060547
+     C+ from QADBILLB WHERE DBILIB = :OSCHEMA and DBIFIL                                    MD060547
+     C+ = :OLDFILE and DBIFLD = 'A1FTPT'                                                    MD060547
+     C/END-EXEC                                                                             MD060547
+     C                   If        RcdCount = 0                                             MD060547
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD060547
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ', '  + ''' '''            MD060547
+     C                   Else                                                               MD060547
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD060547
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ',A.' + X_Field            MD060547
+     C                   Endif                                                              MD060547
+     C                   Else                                                               MD060547
+                                                                                            MD060547
      C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field
      C                   eval      PSELECTB = %trimr(PSELECTB) + ',A.' + X_Field
+     C                   Endif                                                              MD060547
      C                   ENDIF                                                              MD055681
      C                   ENDIF                                                              MD055681
      C                   ENDIF
@@ -690,8 +711,26 @@
      C                   eval      PSELECTX = %trimr(PSELECTX) + 'A.' + X_Field
      C                   eval      First = 'N'
      C                   ELSE
+                                                                                            MD060547
+      ** if processing A1FTPT, check same field exists in SDRETRPD                          MD060547
+     C                   If        X_Field = 'A1FTPT'                                       MD060547
+     C/EXEC SQL                                                                             MD060547
+     C+ select count(*) into :RcdCount                                                      MD060547
+     C+ from QADBILLB WHERE DBILIB = :OSCHEMA and DBIFIL                                    MD060547
+     C+ = :OLDFILE and DBIFLD = 'A1FTPT'                                                    MD060547
+     C/END-EXEC                                                                             MD060547
+     C                   If        RcdCount = 0                                             MD060547
+     C                   eval      PINSERTX = %trimr(PINSERTX) + ',B.' + X_Field            MD060547
+     C                   eval      PSELECTX = %trimr(PSELECTX) + ', '  + ''' '''            MD060547
+     C                   Else                                                               MD060547
+     C                   eval      PINSERTX = %trimr(PINSERTX) + ',B,' + X_Field            MD060547
+     C                   eval      PSELECTX = %trimr(PSELECTX) + ',A.' + X_Field            MD060547
+     C                   Endif                                                              MD060547
+     C                   Else                                                               MD060547
+                                                                                            MD060547
      C                   eval      PINSERTX = %trimr(PINSERTX) + ',B.' + X_Field
      C                   eval      PSELECTX = %trimr(PSELECTX) + ',A.' + X_Field
+     C                   Endif                                                              MD060547
      C                   ENDIF
      C                   ENDIF
 

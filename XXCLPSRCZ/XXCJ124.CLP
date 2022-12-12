@@ -11,11 +11,15 @@
 /********(c)*Misys*International*Banking*Systems*Ltd.*2007************/ /*EML110*/
 /*       (c) Finastra International Limited 2018                     */ /*EML110*/
 /*                                                                   */
-/*       Last Amend No. EML110             Date 20Jan20              */
-/*       Prev Amend No. TFJ011  *CREATE    Date 24Jan07              */
+/*       Last Amend No. 255739             Date 20Oct22              */
+/*       Prev Amend No. EML110             Date 20Jan20              */
+/*                      TFJ011  *CREATE    Date 24Jan07              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       255739 - MIDAS+ : Midas+ : I/F number on Cash Pooling has   */
+/*                not been assigned correctly.                       */
+/*              - Applied for MD-60621.                              */
 /*       EML110 - Account Balance Pooling. Upgrade to FBM 2.1        */
 /*       TFJ011 - Account Pooling Housekeeping                       */
 /*                                                                   */
@@ -29,6 +33,9 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
                           International Limited 2018') /*EML110*/
 
+                                                                                         /*255739*/
+             DCLF       FILE(XXPICDPP)                                                   /*255739*/
+                                                                                         /*255739*/
 /* ----------------------------------------------------------------- */
 /* Global monitor message                                            */
 /* ----------------------------------------------------------------- */
@@ -45,6 +52,12 @@
              SNDPGMMSG  MSG('XXCJ124 - Midas GL Account Pooling Housekeeping +
                           Program') TOMSGQ(MRUNQ) /*EML110*/
 
+/* Obtain Batch No. from Pooling ICD file    */                                           /*255739*/
+             RCVF       RCDFMT(XXPICDD0)                                                  /*255739*/
+                                                                                          /*255739*/
+/* Reset Batch No. from Pooling ICD file   */                                             /*255739*/
+             CHGDTAARA  DTAARA(XXPBTCHDA (1 3)) VALUE(&JJ1BNO)                            /*255739*/
+                                                                                          /*255739*/
              RTVJOBA    TYPE(&JOBTYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              MONMSG     MSGID(CPF1015) EXEC(DO)

@@ -44,7 +44,10 @@
       *                                                               *
       *  MD060823 -  Rolled over loan using SARR calculation method   *
       *              was not processed by calculator and reported     *
-      *              as an exception                                  *
+      *              as an exception.                                 *
+      *              Amended SQL statement in second ARR calculator   *
+      *              call so that risk free rate is also retrieved    *
+      *              on rollover                                      *
       *  MD060033 - Rates Known flag set a day late.  Add 1 day to    *
       *             SumLBLO.  Introduce new system value              *
       *             ARRUseSysOrMidasDate.                             *
@@ -1081,7 +1084,7 @@
       ** passed MidasDay and the reference rate publication time.                           MD060033
       *                                                                                     MD060033
      C                   EVAL      RatesKnown = 'N'                                         MD060033
-     C                   IF        RTKNDate < MidasDay                                      MD060033
+     C                   IF        RTKNDate < MidasDay or                                   MD060033
      C                             (RTKNDate = MidasDay and PublTime < CurrTime)            MD060033
      C                   EVAL      RatesKnown = 'Y'                                         MD060033
      C                   ENDIF                                                              MD060033
@@ -1445,7 +1448,7 @@
      C+           NLODY, NOPSH, NRRDP, NDBAV, NRFRR                                         MD060823
      C+ into :TrCALM, :TrBADJ, :TrFLOR, :TrLBDY,                                            MD059190
      C***+      :TrLODY, :TrOPSH, :TrRRDP, :TrDBAV                                 MD059190 MD060823
-     C+      :TrLODY, :TrOPSH, :TrRRDP, :TrDBAV, TrRFR                                      MD060823
+     C+      :TrLODY, :TrOPSH, :TrRRDP, :TrDBAV,:TrRFRR                                     MD060823
      C+ from CLOANCL                                                                        MD059190
      C+ where LNRF = :TrTRAN                                                                MD059190
      C+   and NBLRT = 'Y'                                                                   MD059190

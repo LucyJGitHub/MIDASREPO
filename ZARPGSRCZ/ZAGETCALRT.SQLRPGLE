@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
-      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *  Last Amend No. MD060823           Date 12Dec22               *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 MD059624           Date 20Jul22               *
       *                 249385             Date 01Aug22               *
       *                 MD059424           Date 29Mar22               *
       *                 MD059104           Date 02Dec21               *
@@ -27,6 +28,12 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060823 -  Rolled over loan using SARR calculation method   *
+      *              was not processed by calculator and reported     *
+      *              as an exception.                                 *
+      *              Amended SQL statement in second ARR calculator   *
+      *              call so that risk free rate is also retrieved    *
+      *              on rollover                                      *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates             *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -1808,7 +1815,7 @@
                    // OR status is failed and this is the last program call
                    // for the same transaction reference (i.e. RatesKnown = N)
                    if (AuditLogDS.SJSTAT = 'C' and writeLogs = 'Y') or
-                      (AuditLogDS.SJSTAT = 'F' and RatesKnownInd = 'N');
+                      (AuditLogDS.SJSTAT = 'F' and RatesKnownInd = 'Nendif;');
                        // Start of change MD059424
                        if not(isDuplicate('SDARRLOGTD'));
                           exec sql insert into SDARRLOGTD
@@ -1822,7 +1829,7 @@
                                : AuditLogDS.SJEXMS,
                                : logData
                           );
-                         // End of change MD059424
+                      // End of change MD059424
                           if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                              AuditLogDS.SJTMST = %timestamp();
                              AuditLogDS.SJEXMS = 'Error in access SDARRLOGTD';
@@ -1996,6 +2003,11 @@
      D isDuplicate     pi             1n                                                    MD059424
      D    fileToCheck                10a   value                                            MD059424
       /free
+                   // Start of change MD060823
+                   if moduleID = 'LE';
+                      return False;
+                   endif;
+                   // End of change MD060823
                    // Start of change MD059424
                    if fileToCheck = 'IRLIBEPD';
                         wSQLStr = 'select * from IRLIBEPD ' +
@@ -2030,6 +2042,7 @@
 
                    if fileToCheck = 'SDARRLOGTD';
                         exec sql fetch next From P0 into :AuditLogDSX;
+                        return false;
                    elseif fileToCheck = 'IRLIBEPD';
                         exec sql fetch next From P0 into :ExtractFLIRX;
                    endif;

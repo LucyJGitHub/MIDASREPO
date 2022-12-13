@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CGL094             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. UUC103             Date 01Dec22               *
+      *  Prev Amend No. CGL094             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR898442           Date 24Feb12               *
       *                 MD055842           Date 02Jun20               *
       *                 CMG008             Date 20Feb20               *
@@ -84,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC103 - Upgrade of CAR UUC061 to BF Midas 2.1               *
+      *           UUC061 - SWIFT Statement Enhancement                *
+      *           Add Hooks UUC103_001, UUC103_002, UUC103_003        *
       *  CGL094 - Allow External Destination for MT940 Message.       *
       *           Remove Spaces when formatting field 61.             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -464,6 +468,7 @@
      D Subfld8         S             18
      D Subfld9         S             34
      D SavTrno         S             16
+     D/COPY WNCPYSRC,UUC103_001                                                               UUC103
 
      D POptn           S              7A                                                      CER030
      D PSard           S              6A                                                      CER030
@@ -1357,7 +1362,9 @@
      C                   Movel     X_MGSFD6      Subfld6
 
       *    Subfld 7 = Reference for the Account Owner
+     C/COPY WNCPYSRC,UUC103_002                                                               UUC103
      C                   Movel     X_MGSFD7      Subfld7
+     C/COPY WNCPYSRC,UUC103_003                                                               UUC103
 
       *    Subfld 8 = Account Servicing Institution's Reference
      C                   Movel     X_MGSFD8      Subfld8

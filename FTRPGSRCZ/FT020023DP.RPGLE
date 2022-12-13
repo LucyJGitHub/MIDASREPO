@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059739           Date 23Mar22               *
-      *  Prev Amend No. CSW122  *CREATE    Date 04Oct21               *
+      *  Last Amend No. MD060246           Date 01Dec22               *
+      *  Prev Amend No. MD059739           Date 23Mar22               *
+      *                 CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -76,6 +77,7 @@
      D WrkUETR         S             36A
      D WrkF20          S             20A
      D WrkLen          S              3S 0
+     D WLineT          S              3S 0                                                  MD060246
      D WFound          S              1A
      D WMXRef          S              8S 0
      D WSeqNo          S              4S 0
@@ -197,12 +199,18 @@
       ** Element Value with more than 60 char
 
      C                   IF        WrkLen > 60
-     C                   EVAL      S0EVAL = %SUBST(MEEVAL:66)
+     C                   EVAL      WLineT = 61                                              MD060246
+     C                   DOW       WLineT < WrkLen                                          MD060246
+     C*********          EVAL      S0EVAL = %SUBST(MEEVAL:66)                               MD060246
+     C                   EVAL      S0EVAL = %SUBST(MEEVAL:WLineT)                           MD060246
      C                   EVAL      S0ELEM = *BLANKS
      C                   ADD       1             S0RRN                31
      C                   Z-ADD     S0RRN         C0SFRC
-     C                   Z-ADD     0             WrkLen
+     C*********          Z-ADD     0             WrkLen                                     MD060246
      C                   WRITE     FT020023S0
+     C                   EVAL      WLineT = WLineT + 60                                     MD060246
+     C                   ENDDO                                                              MD060246
+     C                   Z-ADD     0             WrkLen                                     MD060246
 
      C                   ELSE
 

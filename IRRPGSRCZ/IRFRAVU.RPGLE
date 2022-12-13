@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. BUG26063           Date 01Dec22               *
+      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -85,6 +86,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG26063 - Unable to amend 'Settlement Payments' fields and  *
+      *             'Settlement Receipts' fields                      *
+      *           - Applied for AR1068690 (Child: AR1069087)          *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -256,7 +260,8 @@
      D                                     PREFIX(V_)
      D  FRADet1                2    715
      D  FRARecIns            716    784
-     D  FRAPayIns            785   1343
+     D**FRAPayIns            785   1343                                                     BUG26063
+     D  FRAPayIns            785   1344                                                     BUG26063
      D  FRAFraIns           1345   1992
      D**FRARFCy*            2063   2092                                                       225362
      D  FRARFCy             2097   2126                                                       225362
@@ -265,7 +270,8 @@
      D FRAFilFmt     E DS                  EXTNAME(DEALSDG)
      D DGDet1                  2    715
      D DGRecIns              716    784
-     D DGPayIns              785   1343
+     D*DGPayIns*             785   1343                                                     BUG26063
+     D DGPayIns              785   1344                                                     BUG26063
      D DGFraIns             1345   1992
      D DGFRFCy              2097   2126
 

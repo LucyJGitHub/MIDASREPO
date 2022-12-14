@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSD103             Date 10Aug20              */
-/*       Prev Amend No. MD048071           Date 08Nov17              */
+/*       Last Amend No. MD060772           Date 09Dec22              */
+/*       Prev Amend No. CSD103             Date 10Aug20              */
+/*                      MD048071           Date 08Nov17              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD028276           Date 25Nov14              */
 /*                      CLE134             Date 01Aug12              */
@@ -53,6 +54,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060772 - DLC1921 job ended with error: Missing operand    */
+/*                  on expression in QRYSLT parameter.               */
 /*       CSD103 - Libor Deregulation - Common Layer/Standing Data    */
 /*       MD048071 - Input Cycle Batch Job DLC1921 Looping. Add error */
 /*                  monitoring after ROLLBACK so that when it fails  */
@@ -124,9 +127,12 @@
 /**********  DCL        VAR(&SLT) TYPE(*CHAR) LEN(89) VALUE('UBRTT +          */          /*CSD103*/
 /**********               *NE 0 & UFRFD *EQ 0 & VDAT *EQ       *OR +          */          /*CSD103*/
 /**********               TBRTT *NE 0 & TFRFD *EQ 0 & VDAT *EQ      ')        */          /*CSD103*/
-             DCL        VAR(&SLT) TYPE(*CHAR) LEN(91) VALUE('UBRTT +
-                          *NE    & UFRFD *EQ 0 & VDAT *EQ       *OR +
-                          TBRTT *NE    & TFRFD *EQ 0 & VDAT *EQ      ')                   /*CSD103*/
+/**********  DCL        VAR(&SLT) TYPE(*CHAR) LEN(91) VALUE('UBRTT      */              /*MD060772*/
+/**********               *NE    & UFRFD *EQ 0 & VDAT *EQ       *OR +   */              /*MD060772*/
+/**********               TBRTT *NE    & TFRFD *EQ 0 & VDAT *EQ      ') */   /*CSD103*/ /*MD060772*/
+             DCL        VAR(&SLT) TYPE(*CHAR) LEN(93) VALUE('UBRTT +
+                          *NE " " & UFRFD *EQ 0 & VDAT *EQ 00000 *OR +
+                          TBRTT *NE " " & TFRFD *EQ 0 & VDAT *EQ 00000')                /*MD060772*/
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)                /*046856*/
              DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)                /*046856*/
              DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)                /*S01522*/
@@ -377,8 +383,10 @@ RETRY:       RTVDTAARA  DTAARA(DLSTAT) RTNVAR(&DLSTAT)
              ENDDO                                                    /*CSW005*/
              ENDDO                                                    /*CIR001*/
              ELSE       CMD(DO)                                       /*CIR001*/
-             CHGVAR VAR(%SST(&SLT 38 5)) VALUE(&BJRDNB)
-             CHGVAR VAR(%SST(&SLT 85 5)) VALUE(&BJRDNB)
+/**********  CHGVAR VAR(%SST(&SLT 38 5)) VALUE(&BJRDNB)              */                 /*MD060772*/
+/**********  CHGVAR VAR(%SST(&SLT 85 5)) VALUE(&BJRDNB)              */                 /*MD060772*/
+             CHGVAR VAR(%SST(&SLT 40 5)) VALUE(&BJRDNB)                                 /*MD060772*/
+             CHGVAR VAR(%SST(&SLT 89 5)) VALUE(&BJRDNB)                                 /*MD060772*/
 /************OPNQRYF    FILE(DLDLDGLC) OPTION(*INP) +             */ /*046820*/
 /************             QRYSLT(&SLT) KEYFLD(*FILE)              */ /*046820*/
              IF         COND(&CSW5ON *EQ 'N') THEN(DO)               /*CSW005*/

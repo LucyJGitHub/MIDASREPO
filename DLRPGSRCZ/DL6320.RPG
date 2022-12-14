@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050137           Date 21Mar18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 230641             Date 08Aug22               *
+      *  Prev Amend No. MD050137           Date 21Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -85,6 +86,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  230641 - When RX deal their side contains negative effective *
+      *           interest rate, MT202 produced contains Account with *
+      *           Bank and Beneficiary from Our side payment          *
+      *           settlement instructions. Details should come from   *
+      *           payment side of value date instructions.            *
+      *         - Applied for MD-60241.                               *
       *  MD050137 - DB error on MG0210 due to incorrect MGRONS value  *      
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -1504,7 +1511,31 @@
       **  if 'Account With' bank should appear.                           CSW005
       *                                                                   CSW005
      C           PYRC      IFEQ 'P'                                       CSW005
-     C           AWBN      ANDNE*BLANKS                                   CSW005
+     C********** AWBN      ANDNE*BLANKS                                                CSW005 230641
+      *                                                                                       230641
+      ** Only consider if message is not for value date principal exchange.                   230641
+      *                                                                                       230641
+     C           DTYP      IFEQ 'RX'                                                          230641
+     C           PVDAT     ANDNEVDAT                                                          230641
+      *                                                                                       230641
+     C           PCCY      IFEQ TCUCY                                                         230641
+     C           TEINR     ANDLT0                                                             230641
+     C                     Z-ADDRSETM     MGSETP                                              230641
+     C                     MOVELURACC     PONS2                                               230641
+     C                     MOVE *BLANKS   AWBN                                                230641
+     C                     MOVE *BLANKS   BENN                                                230641
+      *                                                                                       230641
+     C           VDEI      IFEQ 'Y'                                                           230641
+     C                     MOVEL'Y'       CREQ                                                230641
+     C                     EXSR SREXST                                                        230641
+     C                     ENDIF                                                              230641
+      *                                                                                       230641
+     C                     MOVELPONS2     PONS                                                230641
+     C                     ENDIF                                                              230641
+      *                                                                                       230641
+     C                     ENDIF                                                              230641
+      *                                                                                       230641
+     C           AWBN      IFNE *BLANKS                                                       230641
       *                                                                   CSW005
      C                     MOVELPONS      @NSKYE                          CSW005
      C                     MOVELPCCY      @NSKYB                          CSW005
@@ -1539,6 +1570,7 @@
      C           A7CUST    IFEQ AWBN                                      CSW005
      C                     MOVE *BLANKS   AWBN                            CSW005
      C                     ENDIF                                          CSW005
+     C                     ENDIF                                                              230641
      C                     ENDIF                                          CSW005
       *                                                                   CSW005
      C           MGCHTP    IFEQ *BLANK                                                        CSW025
@@ -1617,7 +1649,13 @@
      C                     MOVELPOBR      MGPOBR                          CSW005
      C                     MOVELAWBN      MGAWBN                          CSW005
      C                     MOVELAWBA      MGAWBA                          CSW005
+      *                                                                                       230641
+     C           BENN      IFEQ *BLANKS                                                       230641
+     C                     MOVELCNUM      MGBENN                                              230641
+     C                     ELSE                                                               230641
      C                     MOVELBENN      MGBENN                          CSW005
+     C                     ENDIF                                                              230641
+      *                                                                                       230641
      C                     MOVELBENA      MGBENA                          CSW005
      C                     MOVELDTP1      MGDTP1                          CSW005
      C                     MOVELDTP2      MGDTP2                          CSW005

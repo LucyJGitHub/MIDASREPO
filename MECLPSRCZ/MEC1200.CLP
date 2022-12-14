@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD056752           Date 20Sep20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058081           Date 11May21              */
+/*       Prev Amend No. MD056752           Date 20Sep20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058081 - Deliverable Data Split for ME and MS             */
 /*       MD056752 - Deliverable Data Split for MEINFMPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB009 - Journal files throughout close of business         */
@@ -134,7 +136,7 @@
                              MEINDTPD +
                       ) JRN(&JLIB/MECOBJRN) +
                         IMAGES(*BOTH) */                                                /*MD056752*/
-             STRJRNPF   FILE(MEINCRPD +
+/**********  STRJRNPF   FILE(MEINCRPD +
                              MEINMPPD +
                              MEINMVPD +
                              MEINRMPD +
@@ -147,7 +149,23 @@
                              MEINFXTD +
                              MEINDTPD +
                       ) JRN(&JLIB/MECOBJRN) +
-                        IMAGES(*BOTH)                                                   /*MD056752*/
+                        IMAGES(*BOTH) */                                     /*MD056752* *MD058081*/
+             STRJRNPF   FILE(MEINCRPD +
+                             MEINMPPD +
+                             MEIVMCTD +
+                             MEIVMBTD +
+                             MEIVMXTD +
+                             MEINRMPD +
+                             MEIN35PD +
+                             MEINMRPD +
+                             MEINLFPD +
+                             MEINFTPD +
+                             MEINFCTD +
+                             MEINFBTD +
+                             MEINFXTD +
+                             MEINDTPD +
+                      ) JRN(&JLIB/MECOBJRN) +
+                        IMAGES(*BOTH)                                                   /*MD058081*/
              ENDDO                                                    /*CCB009*/
 /*/COPY WNCPYSRC,MEC1200004                                          */
 /* */

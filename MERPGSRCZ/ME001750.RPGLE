@@ -13,8 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. 256909             Date 26Jul21               *
-      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD058081           Date 11May21               *
+      *                 256909             Date 26Jul21               *
+      *                 MD058085           Date 11May21               *
+      *                 MD056560           Date 31Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034562           Date 02Jun15               *
@@ -38,8 +42,11 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  256909 - Error message "Field should not be blanks"          *
-      *         - Applied for MD-58472                                *      
+      *         - Applied for MD-58472                                * 
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
@@ -122,15 +129,18 @@
 
       ** Data structure for PF/MEISOCPD
 
-     D WDBRC         E DS                  EXTNAME(MEISOCL0)
+     D*WDBRC****     E DS                  EXTNAME(MEISOCL0)                                MD058081
+     D WDBRC         E DS                  EXTNAME(MEISOJW0)                                MD058081
 
       ** Data structure for PF/SDMTPYPD
 
-     D SDMTPY        E DS                  EXTNAME(SDMTPYPD)
+     D*SDMTPY***     E DS                  EXTNAME(SDMTPYPD)                                MD060008
+     D SDMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
 
       ** Data Structures for Network definition
 
-     D DSNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*DSNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DsNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
 
       ** Data Structures for Message Tag Definition
 

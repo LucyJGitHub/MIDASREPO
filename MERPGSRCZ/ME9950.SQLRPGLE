@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056888           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. MD056888           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
       *                 245501             Date 05Jun15               *
       *                 CSW214             Date 25Nov14               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD056888 - Deliverable Data Split for SDCODEPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
@@ -225,7 +227,8 @@
       *
       * Data Structures used by Access Programs
       *
-     D MEISOC        E DS                  EXTNAME(MEISOCPD)
+     D*MEISOC***     E DS                  EXTNAME(MEISOCPD)                                MD058081
+     D MEISOC        E DS                  EXTNAME(MEISOJW0)                                MD058081
       *                                                                                       CSW214
       * ISO Country Code Details Data Structure                                               CSW214
       *                                                                                       CSW214

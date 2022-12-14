@@ -30,6 +30,7 @@
 /*********************************************************************/
 /*                                                                   */
 /*       MD060659 - To protect CBC0540 from interactive calling.     */
+/*                - Removed the clearing of CBCOBRPD and MSPECIAL.   */
 /*                - Removed the setting of SDSTAT, MPHAS and CBSTAT. */
 /*                  Moved this to a new component that will run after*/
 /*                  CBC0540.                                         */
@@ -90,7 +91,7 @@
 
              CHGVAR     VAR(&PRINT) VALUE(%SST(&CBSTAT 44 1))
 
-/**********  CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('PRINT') */                        /*MD060659*/
+             CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('PRINT')
 
              IF         COND((&PRINT *EQ 'T') *OR (&PRINT *EQ 'B')) +
                           THEN(DO)
@@ -119,10 +120,10 @@
              IF         COND(&PRINT *EQ ' ') THEN(GOTO +
                           CMDLBL(ABNOR))
                                                                                        /*AR1095768*/
-/* Clear CBCOBRPD file */                                                              /*AR1095768*/
+/**Clear*CBCOBRPD*file**/                                                     /*AR1095768 MD060659*/
                                                                                        /*AR1095768*/
-             CLRPFM     FILE(CBCOBRPD)                                                 /*AR1095768*/
-             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                 /*AR1095768*/
+/**********  CLRPFM     FILE(CBCOBRPD)                 */                     /*AR1095768 MD060659*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000 RPG0000) */                     /*AR1095768 MD060659*/
                                                                                        /*AR1095768*/
 
 /* Set data area SDSTAT for next close of business run */
@@ -140,7 +141,7 @@
 /**********  CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES) */                            /*091570 AR868386*/
 /**********  RCVMSG     MSGQ(MSPECIAL) RMV(*YES) */                              /*091570 AR868386*/
 /**********  MONMSG     MSGID(CPF0000) */                                        /*091570 AR868386*/
-             CLRMSGQ    MSGQ(MSPECIAL)                                                  /*AR868386*/
+/**********  CLRMSGQ    MSGQ(MSPECIAL) */                                      /*AR868386 MD060659*/
 
 /*/COPY WNCPYSRC,CBC0540MPE                                          */
 

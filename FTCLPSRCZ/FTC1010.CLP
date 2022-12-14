@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD050391           Date 09Apr18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CFT166             Date 02Nov22              */
+/*       Prev Amend No. MD050391           Date 09Apr18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR829688           Date 14Nov12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG24691           Date 30Jul09              */
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CFT166 - Amendment to FT A/C Balance Check on Authorisation */
 /*       MD050391 - Include purge and reorganisation processing for  */
 /*                  PF/NTRANDQD                                      */
 /*       MD046248 - Finastra Rebranding                              */
@@ -183,6 +185,8 @@
              MONMSG     MSGID(CPF2105)                                /*CFT006*/
              DLTF       FILE(&DLIB/FT101HPDX)                         /*CFT006*/
              MONMSG     MSGID(CPF2105)                                /*CFT006*/
+             DLTF       FILE(&DLIB/FTABOVPDX)                                             /*CFT166*/
+             MONMSG     MSGID(CPF2105)                                                    /*CFT166*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,FTC1010002                                          */
                                                                       /*S01408*/
@@ -291,6 +295,11 @@
                           CRTFILE(*YES)                               /*CFT006*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                /*CFT006*/
                                                                       /*CFT006*/
+             CPYF       FROMFILE(FTABOVPD) +
+                          TOFILE(&DLIB/FTABOVPDX) MBROPT(*ADD) +
+                          CRTFILE(*YES)                                                   /*CFT166*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CFT166*/
+                                                                                          /*CFT166*/
 /*/COPY WNCPYSRC,FTC1010007                                          */
 /**/
              ENDDO
@@ -402,6 +411,10 @@
                           TOFILE(FT101HPD) MBROPT(*REPLACE) +
                           CRTFILE(*NO)                                /*CFT006*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                /*CFT006*/
+             CPYF       FROMFILE(&DLIB/FTABOVPDX) +
+                          TOFILE(FTABOVPD) MBROPT(*REPLACE) +
+                          CRTFILE(*NO)                                                    /*CFT166*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CFT166*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,FTC1010003                                          */
                                                                       /*S01408*/
@@ -533,6 +546,10 @@
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNORMAL))                                               /*228542*/
                                                                                           /*228542*/
+             CALL       PGM(SCC000060) PARM('FTABOVPD' '*FIRST')                          /*CFT166*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNORMAL))                                               /*CFT166*/
+                                                                                          /*CFT166*/
 /*/COPY WNCPYSRC,FTC1010008                                          */
 /**/
 /*           DLCOBJ OBJ((FTSTAT *DTAARA *EXCLRD))                  */ /*S01189*/
@@ -594,6 +611,8 @@
              MONMSG     MSGID(CPF2105)                                /*CFT006*/
              DLTF       FILE(&DLIB/FT101HPDX)                         /*CFT006*/
              MONMSG     MSGID(CPF2105)                                /*CFT006*/
+             DLTF       FILE(&DLIB/FTABOVPDX)                                             /*CFT166*/
+             MONMSG     MSGID(CPF2105)                                                    /*CFT166*/
 /*/COPY WNCPYSRC,FTC1010009                                          */
 /* */                                                                /*065746*/
 /* Mark as component finished */                                     /*065746*/

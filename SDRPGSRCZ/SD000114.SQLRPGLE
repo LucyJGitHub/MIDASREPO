@@ -293,6 +293,8 @@
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
+     D SysDate         S               D   DATFMT(*ISO)                                     MD060033
+     D SysOrMidas      S              1A                                                    MD060033
      D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD060008
 
       *****************************************************************

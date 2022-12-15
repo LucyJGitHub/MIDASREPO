@@ -10,14 +10,17 @@
       *                                                                  *
       *  (c) Finastra International Limited 2020                         *
       *                                                                  *
-      *  Last Amend No. MD039572 *CREATE   Date 14Jan20                  *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. MD039572 *CREATE   Date 14Jan20                  *
       ********************************************************************
       *                                                                  *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  MD039572 - Failed Component during COB - Component DLC0606C     *
       ********************************************************************
      F*FSTART                                                            *
       ********************************************************************
-     FSDNARRL1  IF   E           K DISK    USROPN
+     F*SDNARRL1* IF   E           K DISK    USROPN                                          MD058769
+     FSDNARXTD  IF   E             DISK    USROPN                                           MD058769
      FUTSD0816P1O    E             PRINTER
       **
       **
@@ -39,7 +42,8 @@
       *****************************************************
      C                   Z-ADD     0             TOTAL             4 0
      C                   Z-ADD     0             PRTLNE            2 0
-     C                   OPEN      SDNARRL1
+     C**********         OPEN      SDNARRL1                                                 MD058769
+     C                   OPEN      SDNARXTD                                                 MD058769
       *
       **  Access sdbankpd (via aobankr0)
       *
@@ -54,8 +58,9 @@
      C                   IN        DSRUN
      C                   Z-ADD     0             LTBLK             1 0
      C                   SETOFF                                           12
-     C     *LOVAL        SETLL     SDNARRL1
-     C                   READ      SDNARRL1                               01
+     C******LOVAL        SETLL     SDNARRL1                                                 MD058769
+     C*********          READ      SDNARRL1                               01                MD058769
+     C                   READ      SDNARXTD                               01                MD058769
      C     *IN01         DOWEQ     *OFF
       *
       ** Scan Narrative Codes fields for leading or trailing blanks
@@ -86,7 +91,8 @@
      C                   ENDIF
      C                   ENDIF
       *****
-     C                   READ      SDNARRL1                               01
+     C*********          READ      SDNARRL1                               01                MD058769
+     C                   READ      SDNARXTD                               01                MD058769
      C                   ENDDO
       *
       ** Write Footer if No Record Found

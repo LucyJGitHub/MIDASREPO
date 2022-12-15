@@ -12,12 +12,13 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG12272           Date 25Oct06               *
+      *                 BUG12272           Date 25Oct06               *
       *                 BUG11812           Date 04Aug06               *
       *                 BUG11811           Date 31Jul06               *
       *                 BUG11802           Date 30Jul06               *
@@ -41,6 +42,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG12272 - Record not updated when accepting amendment       *
       *  BUG11812 - Action Code & Account Key are not displayed in    *
@@ -110,14 +112,14 @@
      F                                              KINFSR INFS1                              CSD031
      FSDAFAKL1IF  E           K        DISK                                                   CSD031
      F            FACKYDF                           KRENAMESDAFAKLX                           CSD031
-     FGPNARRL0IF  E           K        DISK                                                   CSD031
+     F*GPNARRL0IF E           K        DISK                                          CSD031 MD058769
       ** Global narratives                                                                    CSD031
       *                                                                                       CSD031
      FGPZONEL0IF  E           K        DISK                                                   CSD031
       ** Zone                                                                                 CSD031
      FGZSDBANKIF  E           K        DISK                           UC                      CSD031
       ** Bank                                                                                 CSD031
-     FSDNARRL0IF  E           K        DISK                                                 BUG12272
+     F*SDNARRL0IF  E           K        DISK                                       BUG12272 MD058769
       ** Zonal narratives                                                                   BUG12272
       *                                                                                     BUG12272
      F*ABFF***IF* E           K        DISK                               S01117
@@ -132,7 +134,7 @@
      F*********** TABLETLF                          KIGNORE               S01117
      F*********** TABLETRF                          KIGNORE               S01117
      F*********** TABLET2F                          KIGNORE               S01117
-     FTABLETP IF  E           K        DISK
+     F*TABLETP IF  E           K        DISK                                                MD059769
      F*                                                                   S01408
      F/COPY WNCPYSRC,FF0180FFP1                                           S01408
      F*                                                                   S01408
@@ -473,6 +475,7 @@
      I              ZONE                            SZONE                                     CSD031
       ** Switchable features file                                                             CSD031
       *                                                                                       CSD031
+     ISDNARR    E DSSDNARRPD                                                                MD058769
      IRUNDT       DS                                                      S01117
       **  DATA AREA RUNDAT                                                S01117
      I                                        1   7 RUNA                  S01117
@@ -2644,14 +2647,44 @@
      C           CSD034    IFEQ 'Y'                                                           CSD031
      C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12272
      C           *INU1     IFEQ *ON                                                         BUG12272
-     C           SNRC      CHAINSDNARRD0             26                                       CSD031
+     C********** SNRC      CHAINSDNARRD0             26                              CSD031 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ELSE                                                             BUG12272
       ** If CSD034 is *ON, use SDNARRPD instead of TABLETP                                  BUG12272
-     C           SNRC      CHAIN@ALRECZ              26                                     BUG12272
+     C********** SNRC      CHAIN@ALRECZ              26                            BUG12272 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                            BUG12272
       *                                                                                     BUG12272
      C                     ELSE                                                               CSD031
-     C           SNRC      CHAINTABLETPF             26
+     C********** SNRC      CHAINTABLETPF             26                                     MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                              CSD031
      C*
      C           *IN26     IFEQ '1'
@@ -2711,14 +2744,44 @@
      C           CSD034    IFEQ 'Y'                                                           CSD031
      C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12272
      C           *INU1     IFEQ *ON                                                         BUG12272
-     C           SNRC      CHAINSDNARRD0             26                                       CSD031
+     C********** SNRC      CHAINSDNARRD0             26                              CSD031 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ELSE                                                             BUG12272
       ** If CSD034 is *ON, use SDNARRPD instead of TABLETP                                  BUG12272
-     C           SNRC      CHAIN@ALRECZ              26                                     BUG12272
+     C********** SNRC      CHAIN@ALRECZ              26                            BUG12272 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                            BUG12272
       *                                                                                     BUG12272
      C                     ELSE                                                               CSD031
-     C           SNRC      CHAINTABLETPF             26
+     C********** SNRC      CHAINTABLETPF             26                                     MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                              CSD031
      C*
      C           *IN26     IFEQ '1'
@@ -2780,14 +2843,44 @@
      C           CSD034    IFEQ 'Y'                                                           CSD031
      C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12272
      C           *INU1     IFEQ *ON                                                         BUG12272
-     C           SNRC      CHAINSDNARRD0             26                                       CSD031
+     C********** SNRC      CHAINSDNARRD0             26                              CSD031 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ELSE                                                             BUG12272
       ** If CSD034 is *ON, use SDNARRPD instead of TABLETP                                  BUG12272
-     C           SNRC      CHAIN@ALRECZ              26                                     BUG12272
+     C********** SNRC      CHAIN@ALRECZ              26                            BUG12272 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                            BUG12272
       *                                                                                     BUG12272
      C                     ELSE                                                               CSD031
-     C           SNRC      CHAINTABLETPF             26
+     C********** SNRC      CHAINTABLETPF             26                                     MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                              CSD031
      C*
      C           *IN26     IFEQ '1'
@@ -2849,14 +2942,44 @@
      C           CSD034    IFEQ 'Y'                                                           CSD031
      C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12272
      C           *INU1     IFEQ *ON                                                         BUG12272
-     C           SNRC      CHAINSDNARRD0             26                                       CSD031
+     C********** SNRC      CHAINSDNARRD0             26                              CSD031 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ELSE                                                             BUG12272
       ** If CSD034 is *ON, use SDNARRPD instead of TABLETP                                  BUG12272
-     C           SNRC      CHAIN@ALRECZ              26                                     BUG12272
+     C********** SNRC      CHAIN@ALRECZ              26                            BUG12272 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                            BUG12272
       *                                                                                     BUG12272
      C                     ELSE                                                               CSD031
-     C           SNRC      CHAINTABLETPF             26
+     C********** SNRC      CHAINTABLETPF             26                                     MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                              CSD031
      C*
      C           *IN26     IFEQ '1'
@@ -2917,14 +3040,44 @@
      C           CSD034    IFEQ 'Y'                                                           CSD031
      C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12272
      C           *INU1     IFEQ *ON                                                         BUG12272
-     C           SNRC      CHAINSDNARRD0             26                                       CSD031
+     C********** SNRC      CHAINSDNARRD0             26                              CSD031 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ELSE                                                             BUG12272
       ** If CSD034 is *ON, use SDNARRPD instead of TABLETP                                  BUG12272
-     C           SNRC      CHAIN@ALRECZ              26                                     BUG12272
+     C********** SNRC      CHAIN@ALRECZ              26                            BUG12272 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                            BUG12272
       *                                                                                     BUG12272
      C                     ELSE                                                               CSD031
-     C           SNRC      CHAINTABLETPF             26
+     C********** SNRC      CHAINTABLETPF             26                                     MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                              CSD031
      C*
      C           *IN26     IFEQ '1'
@@ -2985,14 +3138,44 @@
      C           CSD034    IFEQ 'Y'                                                           CSD031
      C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12272
      C           *INU1     IFEQ *ON                                                         BUG12272
-     C           SNRC      CHAINSDNARRD0             26                                       CSD031
+     C********** SNRC      CHAINSDNARRD0             26                              CSD031 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ELSE                                                             BUG12272
       ** If CSD034 is *ON, use SDNARRPD instead of TABLETP                                  BUG12272
-     C           SNRC      CHAIN@ALRECZ              26                                     BUG12272
+     C********** SNRC      CHAIN@ALRECZ              26                            BUG12272 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                            BUG12272
       *                                                                                     BUG12272
      C                     ELSE                                                               CSD031
-     C           SNRC      CHAINTABLETPF             26
+     C********** SNRC      CHAINTABLETPF             26                                     MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM SNRC      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     26                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     26                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C                     ENDIF                                                              CSD031
      C*
      C           *IN26     IFEQ '1'
@@ -4589,7 +4772,7 @@
  Rollup is not possible
  Rolldown is not possible
  F10=Confirm
- 
+
  Record has been updated by another workstation
  Action Code I,A,D,E   F3 = Exit   ENTER = Review                                             CSD031
  Action Code A,D,E   F3 = Exit   F12=Previous                Rollup:Rolldown                  CSD031

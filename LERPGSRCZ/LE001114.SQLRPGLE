@@ -16,6 +16,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060824 - Future rates were rounded up on rates known date  *
+      *             on LOAC and LEFWBRPD                              *
+      *             Amended rate computation to follow ZAGETCALRT     *
+      *             logic                                             *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates             *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -60,6 +64,8 @@
      D PRTCD           S              7
      D POPTN           S              7
      D Ix              S              3S 0
+     D wFinalRate      S             15P 9 INZ(0)                                           MD060824
+     D wCurrRate       S             11P 7 INZ(0)                                           MD060824
       *
      ISDFWDRT0
      I              FTRNID                      CTRNID
@@ -106,22 +112,31 @@
      C                   MOVE      BRCA          K_BRCA
      C                   MOVE      CNUM          K_CNUM
 
+     C                   CLEAR                   wCurrRate                                  MD060824
+     C                   CLEAR                   wFinalRate                                 MD060824
      C                   SELECT
      C     Calm          WHENEQ    'NCCR'
-     C     CDCMRT        ADD(H)    BADJ          K_BRTE
+     C*****CDCMRT        ADD(H)    BADJ          K_BRTE                                     MD060824
+     C                   EVAL      wCurrRate =  CDCMRT                                      MD060824
      C                   Z-ADD     1             Ix
      C     Calm          WHENEQ    'CCR'
-     C     CAVCRT        ADD(H)    BADJ          K_BRTE
+     C*****CAVCRT        ADD(H)    BADJ          K_BRTE                                     MD060824
+     C                   EVAL      wCurrRate =  CAVCRT                                      MD060824
      C                   Z-ADD     FINPSD        K_VDAT
      C                   EVAL      Ix += 1
      C     Calm          WHENEQ    'SARR'
-     C     CRTEAP        ADD(H)    BADJ          K_BRTE
+     C*****CRTEAP        ADD(H)    BADJ          K_BRTE                                     MD060824
+     C                   EVAL      wCurrRate =  CRTEAP                                      MD060824
      C                   Z-ADD     1             Ix
      C     Calm          WHENEQ    'SAVG'
-     C     CSMPAV        ADD(H)    BADJ          K_BRTE
+     C*****CSMPAV        ADD(H)    BADJ          K_BRTE                                     MD060824
+     C                   EVAL      wCurrRate =  CSMPAV                                      MD060824
      C                   Z-ADD     FINPSD        K_VDAT
      C                   EVAL      Ix += 1
      C                   ENDSL
+      ** Compute final value of BRTE
+     C                   EVAL      wFinalRate = wCurrRate + BADJ                            MD060824
+     C                   EVAL(H)   K_BRTE     = wFinalRate                                  MD060824
 
      C                   MOVE      'A'           K_LLAG
      C                   MOVE      FCUS          K_FCUS

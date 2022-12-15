@@ -21,10 +21,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. AR662846           Date 03Nov21               *      
-      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD058081           Date 11May21               *
+      *                 AR662846           Date 03Nov21               *
+      *                 MD056560           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
-      *                 AR927047           Date 21Mar12               *      
+      *                 AR927047           Date 21Mar12               *
       *                 MD055694           Date 09Mar20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD050730           Date 25Nov19               *
@@ -128,11 +130,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR662846 - Field 50F not produced on MT103.                  *      
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
+      *  AR662846 - Field 50F not produced on MT103.                  *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
-      *  AR927047 - Suppress Dbase 6 (Child: AR927049)                *      
+      *  AR927047 - Suppress Dbase 6 (Child: AR927049)                *
       *  MD055694 - SWIFT Changes 2021                                *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD050730 - Output 1/ and 2/ depending on the current setup   *
@@ -300,7 +304,7 @@
      FSDCUSTL1  IF   E           K Disk    INFSR(*PSSR)
      F                                     Prefix(L1)
       * Midas ME SWIFT ISO Country - index by M3ISOC
-     FMEISOCL0  IF   E           K Disk    INFSR(*PSSR)
+     F*MEISOCL0* IF   E           K Disk    INFSR(*PSSR)                                    MD058081
       * Midas GL Account details                                                             CSW207A
      FACCNTL6   IF   E           K Disk                                                      CSW207A
       * Midas GL Account details                                                             CSW207A
@@ -636,7 +640,8 @@
      D SDNAHO        E DS                  Extname(SDNAHOPD)
      D SDNOST        E DS                  Extname(SDNOSTPD)
      D  QQACC1       E                     ExtFld(QQACCD)                                     250600
-     D SDNWRK        E DS                  Extname(SDNWRKPD)
+     D*SDNWRK***     E DS                  Extname(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
      D*SDMTAG***     E DS                  Extname(SDMTAGPD)                                MD056560
      D SDMTAG        E DS                  Extname(SDMTGJW0)                                MD056560
      D DSFDY         E DS                  Extname(DSFDY)
@@ -644,6 +649,7 @@
      D DSSDY         E DS                  Extname(DSSDY)
       ** External DS for bank details
 
+     D MEISOC        E DS                  EXTNAME(MEISOJW0)                                MD058081
      D OMF1            DS
      D  F1C1                         15A
      D  F1C2                         15A
@@ -1885,9 +1891,15 @@
      C                   IF        %Subst(PMInpParm1:1:1) = '/'
      C                   IF        %Subst(PMInpParm1:2:34) <> *Blanks
      C                   EVAL      wISOC = %Subst(PMInpParm1:2:2)
-     C     wISOC         CHAIN     MEISOCL0
+     C*****wISOC         CHAIN     MEISOCL0                                                 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      wISOC         @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *
-     C                   IF        NOT %FOUND(MEISOCL0)
+     C**********         IF        NOT %FOUND(MEISOCL0)                                     MD058081
+     C     @RTCD         IFNE      *BLANKS                                                  MD058081
      C                   EVAL      PMReturnCode = '*ERROR'
      C                   EVAL      PMMsgID = 'ME00155'
      C**********         EVAL      PMErrType = 'E'                                           250804A
@@ -1935,9 +1947,15 @@
      C                   EVAL      wISOC = %Subst(PMInpParm1:6:2)
       * Country definition is not mandatory at definition level                               250600
      C                   If        wISOC <> *Blanks                                           250600
-     C     wISOC         CHAIN     MEISOCL0
+     C*****wISOC         CHAIN     MEISOCL0                                                 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      wISOC         @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *
-     C                   IF        NOT %FOUND(MEISOCL0)     OR
+     C**********         IF        NOT %FOUND(MEISOCL0)     OR                              MD058081
+     C                   IF        @RTCD <> *BLANKS         OR                              MD058081
      C                             %Subst(PMInpParm1:5:1) <> '/' OR
      C                             %Subst(PMInpParm1:8:1) <> '/' OR
      C                             %Subst(PMInpParm1:9:27) <> *BLANKS
@@ -2185,9 +2203,15 @@
       *
      C                   IF        %Subst(wDUMMY:3:33) <> *BLANKS
      C                   EVAL      wISOC = %Subst(wDUMMY:3:2)
-     C     wISOC         CHAIN     MEISOCL0
+     C*****wISOC         CHAIN     MEISOCL0                                                 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      wISOC         @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
       *
-     C                   IF        NOT %FOUND(MEISOCL0) OR
+     C**********         IF        NOT %FOUND(MEISOCL0)     OR                              MD058081
+     C                   IF        @RTCD <> *BLANKS         OR                              MD058081
      C                             %Subst(wDUMMY:5:1) <> '/' OR
      C                             %Subst(wDUMMY:6:30) <> *BLANKS
      C                   EVAL      PMReturnCode = '*ERROR'
@@ -3579,8 +3603,15 @@
      C**********                   %Subst(WInpParm:5:30) = *BLANKS                   CSW215 MD037229
      C                   IF        WPrevNCode <> '3'                                        MD037229
      C                   EVAL      WISOCode = %SUBST(WInpParm:3:2)                            CSW215
-     C     WISOCode      CHAIN     MEISOCL0                                                   CSW215
-     C                   IF        NOT %FOUND(MEISOCL0)                                       CSW215
+     C*****WISOCode      CHAIN     MEISOCL0                                          CSW215 MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      WISOCode      @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
+      *
+     C**********         IF        NOT %FOUND(MEISOCL0)                              CSW215 MD058081
+     C                   IF        @RTCD <> *BLANKS                                         MD058081
      C                   EVAL      PMMsgID = 'FTS0082'                                        CSW215
      C                   EXSR      SetError                                                   CSW215
      C                   EVAL      PMErrType = 'E'                                            CSW215
@@ -3998,8 +4029,15 @@
      C**********         EndIf                                                               CSW207A
       ** Check if ISO Country code is valid for TRAN type                                    CSW207A
      C                   If        PMValType = 'TRAN'                                        CSW207A
-     C     WISOCode      CHAIN     MEISOCL0                                                  CSW207A
-     C                   If        NOT %FOUND(MEISOCL0)                                      CSW207A
+     C*****WISOCode      CHAIN     MEISOCL0                                         CSW207A MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      WISOCode      @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
+      *
+     C**********         IF        NOT %FOUND(MEISOCL0)                             CSW207A MD058081
+     C                   IF        @RTCD <> *BLANKS                                         MD058081
      C                   IF        CSW215 = 'Y' AND WNCode = '3'                              CSW215
      C                   EVAL      PMMsgID = 'FTS0082'                                        CSW215
      C                   ELSE                                                                 CSW215

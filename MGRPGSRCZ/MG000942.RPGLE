@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD022383           Date 17Mar22               *
-      *  Prev Amend No. 261775             Date 17Mar22               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD022383           Date 17Mar22               *
+      *                 261775             Date 17Mar22               *
       *                 CSD103             Date 10Aug20               *
       *                 AR898442           Date 24Feb12               *
       *                 MD055842           Date 02Jun20               *
@@ -86,6 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD022383 - No field 86 generated for an MT942                *
       *           - Applied for MD-59407                              *
       *  261775 - No F86 defined for MT942s. Place :86 in every page. *
@@ -273,7 +275,8 @@
      D SDMGME        E DS                  EXTNAME(SDMGMEPD)
       **  Data structure for message management data.
 
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       **  Data Structure for Network Details.
 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)

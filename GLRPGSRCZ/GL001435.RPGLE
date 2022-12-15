@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059649           Date 27Jun22               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD059649           Date 27Jun22               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045731           Date 27Sep17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059649 - Network always flagged as inactive so MT94x job   *
       *             GLC001400 was never submitted.                    *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
@@ -91,7 +93,8 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  Data Structure for Bank Details.
 
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       **  Data Structure for Network Details.
 
      D DSSDY         E DS                  EXTNAME(DSSDY)

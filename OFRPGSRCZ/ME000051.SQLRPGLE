@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD023480           Date 15Nov13               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD023480           Date 15Nov13               *
       *                 CGL146B *CREATE    Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023480 - Validations regarding input of slash and          *
       *             consecutive slashes in field 21 Related ref       *
@@ -123,7 +125,7 @@
      F                                     COMMIT
       ** Midas OF MT940/950 Messages Requested Extension (Update)
 
-     FSDNWRKI0  IF   E           K DISK    INFSR(*PSSR)
+     F*SDNWRKI0* IF   E           K DISK    INFSR(*PSSR)                                    MD058830
       ** Midas OF Message Network details extension
 
       *****************************************************************
@@ -288,6 +290,7 @@
      D WZACCT          S             24
      D WZDSTN          S             11
      D WKSTIM          S              6S 0
+     D SDNWK1        E DS                  EXTNAME(SDNW1JW0)                                MD058830
 
       *****************************************************************
       /EJECT
@@ -448,12 +451,19 @@
 
       ** Check EDP940 and EDP950 from SDNWRKI0
 
-     C     NXNWRK        CHAIN     SDNWRKI0
+     C*****NXNWRK        CHAIN     SDNWRKI0                                                 MD058830
+     C/EXEC SQL                                                                             MD058830
+     C+ SELECT *                                                                            MD058830
+     C+ into :SDNWK1                                                                        MD058830
+     C+ from SDNW1JW0                                                                       MD058830
+     C+ where EDNWR1 = :NXNWRK                                                              MD058830
+     C/END-EXEC                                                                             MD058830
 
      C                   IF        WOk940 = 'N'
      C                   EVAL      WOk940 = 'Y'
      C                   IF        N4G940 = 'Y'  AND
-     C                             (%FOUND(SDNWRKI0) AND EDP940 = 'Y')
+     C**********                   (%FOUND(SDNWRKI0) AND EDP940 = 'Y')                      MD058830
+     C                             (SQLCODE = 0      AND EDP940 = 'Y')                      MD058830
      C                   EXSR      SRAddSflRec
      C                   ENDIF
 
@@ -461,7 +471,8 @@
      C                   EVAL      WOk940 = 'N'
      C                   EVAL      WOk950 = 'Y'
      C                   IF        NAG950 = 'Y'  AND
-     C                             (%FOUND(SDNWRKI0) AND EDP950 = 'Y')
+     C**********                   (%FOUND(SDNWRKI0) AND EDP950 = 'Y')                      MD058830
+     C                             (SQLCODE = 0      AND EDP950 = 'Y')                      MD058830
      C                   EXSR      SRAddSflRec
      C                   ENDIF
      C                   ENDIF
@@ -846,9 +857,16 @@
 
      C                   IF        #WEACH = 'Y'
 
-     C     NXNWRK        CHAIN     SDNWRKI0
+     C*****NXNWRK        CHAIN     SDNWRKI0                                                 MD058830
+     C/EXEC SQL                                                                             MD058830
+     C+ SELECT *                                                                            MD058830
+     C+ into :SDNWK1                                                                        MD058830
+     C+ from SDNW1JW0                                                                       MD058830
+     C+ where EDNWR1 = :NXNWRK                                                              MD058830
+     C/END-EXEC                                                                             MD058830
 
-     C                   IF        (NOT %FOUND(SDNWRKI0))
+     C**********         IF        (NOT %FOUND(SDNWRKI0))                                   MD058830
+     C                   IF        (SQLCODE = 100       )                                   MD058830
      C                                         OR
      C                             (#1MTPY = '940' AND EDP940 <> 'Y')
      C                                         OR

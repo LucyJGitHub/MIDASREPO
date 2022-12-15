@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL146A   *CREATE  Date 10Jul13               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL146A   *CREATE  Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL146A - MT940/MT950 Production in Input Cycle              *
       *                                                               *
@@ -29,7 +31,7 @@
      FGPZONEL2  IF   E           K DISK    INFSR(*PSSR)
      FGLNWACL4  IF   E           K DISK    INFSR(*PSSR)
      FGLNW94L2  IF   E           K DISK    INFSR(*PSSR)
-     FSDNWRKI0  IF   E           K DISK    INFSR(*PSSR)
+     F*SDNWRKI0* IF   E           K DISK    INFSR(*PSSR)                                    MD058830
      FGPDWNLL0  UF A E           K DISK    INFSR(*PSSR)
 
       ** +--------------------------------------+
@@ -63,6 +65,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** DS for access programs: Short Data Structure
 
+     D SDNWK1        E DS                  EXTNAME(SDNW1JW0)                                MD058830
 
      D @RUN            S              1
      D Value           S             50
@@ -102,8 +105,23 @@
      C                   EVAL      CountN = 0
      C                   ENDIF
 
-     C                   READ      SDNWRKI0                               90
-     C                   DOW       *IN90 = *OFF
+     C**********         READ      SDNWRKI0                               90                MD058830
+     C/EXEC SQL                                                                             MD058830
+     C+ declare ACursor insensitive scroll cursor for                                       MD058830
+     C+ select * from SDNW1JW0                                                              MD058830
+     C+ order by EDNWR1                                                                     MD058830
+     C/END-EXEC                                                                             MD058830
+                                                                                            MD058830
+     C/EXEC SQL                                                                             MD058830
+     C+ open ACursor                                                                        MD058830
+     C/END-EXEC                                                                             MD058830
+                                                                                            MD058830
+     C/EXEC SQL                                                                             MD058830
+     C+ fetch next from ACursor into :SDNWK1                                                MD058830
+     C/END-EXEC                                                                             MD058830
+                                                                                            MD058830
+     C**********         DOW       *IN90 = *OFF                                             MD058830
+     C                   DOW       SQLCODE = 0                                              MD058830
      C                   IF        EDP950 = 'Y' OR EDP940 = 'Y'
 
      C     EDNWR1        CHAIN     GLNWACL4                           91
@@ -123,9 +141,16 @@
      C     EDNWR1        READE     GLNW94L2                               91
      C                   ENDDO
      C                   ENDIF
-     C                   READ      SDNWRKI0                               90
+     C**********         READ      SDNWRKI0                               90                MD058830
+     C/EXEC SQL                                                                             MD058830
+     C+ fetch next from ACursor into :SDNWK1                                                MD058830
+     C/END-EXEC                                                                             MD058830
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD058830
+     C+ close ACursor                                                                       MD058830
+     C/END-EXEC                                                                             MD058830
+                                                                                            MD058830
      C                   IF        %Open(GPDWNLL0)
      C                   CLOSE     GPDWNLL0
      C                   ENDIF

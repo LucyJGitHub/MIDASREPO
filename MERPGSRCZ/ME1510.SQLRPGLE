@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD056560           Date 31Aug20               *
+      *                 CSD103             Date 10Aug20               *
       *                 261990             Date 09Mar12               *
       *                 CMG008             Date 20Feb20               *
       *                 MD049278           Date 12Jan18               *
@@ -52,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -275,11 +279,13 @@
      D  @ACCK1                 2     16
       *
       *
-     D DSNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*DSNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DSNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
      D*
      D* Data Structures for Network definition
      D*
-     D DSMTPY        E DS                  EXTNAME(SDMTPYPD)
+     D*DSMTPY***     E DS                  EXTNAME(SDMTPYPD)                                MD060008
+     D DSMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
      D*
      D* Data Structures for Message Type Definition
      D*

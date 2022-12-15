@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26088A          Date 10Oct09               *
       *                 BUG25438           Date 25Aug09               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -147,7 +149,8 @@
       *
       ** Network details record format data structure
       *
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       *
       ** Long Access Object Data Structure
       *
@@ -268,7 +271,7 @@
       *****************************************************************
       *
      C                   OPEN      GL000186DF
- 
+
      C                   SELECT
       *
       ** Validate only

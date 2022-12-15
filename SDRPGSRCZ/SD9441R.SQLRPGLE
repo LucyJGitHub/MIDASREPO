@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058755           Date 01Sep21               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD030956           Date 09Oct14               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
@@ -90,9 +92,9 @@
      F                                     INFSR(*PSSR)
       * RTV : Department Codes          Retrieval index
       *
-     FSDRETRL1  IF   E           K DISK    USROPN
-     F                                     INFDS(ID0003)
-     F                                     INFSR(*PSSR)
+     F*SDRETRL1* IF   E           K DISK    USROPN                                          MD058755
+     F**********                           INFDS(ID0003)                                    MD058755
+     F**********                           INFSR(*PSSR)                                     MD058755
       * RTV : Midas SD Retail transaction types retrieval
       *
      FSDPRFCL1  IF   E           K DISK    USROPN
@@ -358,6 +360,7 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs, Long Date Structure                                   CTI003
       *                                                                                       CTI033
+     D SDRETR        E DS                  EXTNAME(SDRTRJW0)                                MD058755
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -2533,7 +2536,18 @@
      C                   KFLD                    A1RTTY                         Retail Transact
       * Move fields to key list
      C                   MOVEL     #1TRTP        A1RTTY                         Retail Transact
-     C     KRSSC         CHAIN     @A1RECX                            90        *
+     C*****KRSSC         CHAIN     @A1RECX                            90        *           MD058755
+     C/EXEC SQL                                                                             MD058755
+     C+ SELECT *                                                                            MD058755
+     C+ into :SDRETR                                                                        MD058755
+     C+ from SDRTRJW0                                                                       MD058755
+     C+ where A1RTTY = :A1RTTY                                                              MD058755
+     C/END-EXEC                                                                             MD058755
+     C                   SETOFF                                       90                    MD058755
+     C                   If        SQLCODE = 100                                            MD058755
+     C                   SETON                                        90                    MD058755
+     C                   ENDIF                                                              MD058755
+                                                                                            MD058755
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR0061'     W0RTN             7
@@ -3188,7 +3202,7 @@
      C                   OPEN      SDTIINL1
      C                   OPEN      SDBRCHL1
      C                   OPEN      SDDEPTL1
-     C                   OPEN      SDRETRL1
+     C**********         OPEN      SDRETRL1                                                 MD058755
      C                   OPEN      SDPRFCL1
      C                   OPEN      SDBOOKL1
      C                   OPEN      SDMMODL1

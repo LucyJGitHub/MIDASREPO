@@ -16,6 +16,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060246 - Increase field length value for MX Element Value  *
+      *             changed from 120A to 500A.                        *
       *  MD059739 - Use only the UETR field to link MX and FT         *
       *             transaction                                       *
       *  CSW122 - SWIFT ISO 20022                                     *

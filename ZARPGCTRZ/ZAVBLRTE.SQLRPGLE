@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060474           Date 22Sep22               *
-      *  Prev Amend No. MD060473           Date 15Sep22               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD060474           Date 22Sep22               *
+      *                 MD060473           Date 15Sep22               *
       *                 MD059624           Date 20Jul22               *
       *                 MD059867           Date 03May22               *
       *                 MD059141           Date 26Oct21               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD060474 - Late defaulting and validation of rate rounding   *
       *             decimal places.                                   *
       *             Default rate rounding decimal places as follows   *
@@ -127,7 +129,7 @@
       ** +--------------------------------------+
 
       ** ARR Calculator Parameter Details File
-     FSDLIBRTD  IF   E           K DISK    INFSR(*PSSR)
+     F*SDLIBRTD* IF   E           K DISK    INFSR(*PSSR)                                    MD060008
 
       ** Lending Loans File
      F***LECLIPL2  IF   E           K DISK    INFSR(*PSSR)                                  MD057934
@@ -180,6 +182,7 @@
       ** DS for Base Rate Details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
 
+     D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD060008
       ** DS for Loan Details
      D***CLOANL        E DS                  EXTNAME(LECLIPL2:*INPUT)                       MD057934
      D***                                     PREFIX(CL)                                    MD057934
@@ -634,8 +637,15 @@
 
      C                   EVAL      KSCRFLD = 'RFR'
      C                   EVAL      KINTVAL = DDRFRR
-     C     KLIBR         CHAIN     SDLIBRTD
-     C                   IF        NOT %FOUND(SDLIBRTD)
+     C*****KLIBR         CHAIN     SDLIBRTD                                                 MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDLIBR                                                                        MD060008
+     C+ from SDLIBJW0                                                                       MD060008
+     C+ where SCRFLD = :KSCRFLD and INTVAL = :KINTVAL                                       MD060008
+     C/END-EXEC                                                                             MD060008
+     C**********         IF        NOT %FOUND(SDLIBRTD)                                     MD060008
+     C                   If        SQLCODE = 100                                            MD060008
      C                   EVAL      DDRFRROK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI
@@ -731,8 +741,15 @@
 
      C                   EVAL      KSCRFLD = 'METHOD'
      C                   EVAL      KINTVAL = DDCALM
-     C     KLIBR         CHAIN     SDLIBRTD
-     C                   IF        NOT %FOUND(SDLIBRTD)
+     C*****KLIBR         CHAIN     SDLIBRTD                                                 MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDLIBR                                                                        MD060008
+     C+ from SDLIBJW0                                                                       MD060008
+     C+ where SCRFLD = :KSCRFLD and INTVAL = :KINTVAL                                       MD060008
+     C/END-EXEC                                                                             MD060008
+     C**********         IF        NOT %FOUND(SDLIBRTD)                                     MD060008
+     C                   If        SQLCODE = 100                                            MD060008
      C                   EVAL      DDCALMOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -1870,8 +1887,15 @@
 
      C                   EVAL      KSCRFLD = 'DAYCOUNT'
      C                   EVAL      KINTVAL = DDDBAV
-     C     KLIBR         CHAIN     SDLIBRTD
-     C                   IF        NOT %FOUND(SDLIBRTD)
+     C*****KLIBR         CHAIN     SDLIBRTD                                                 MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ SELECT *                                                                            MD060008
+     C+ into :SDLIBR                                                                        MD060008
+     C+ from SDLIBJW0                                                                       MD060008
+     C+ where SCRFLD = :KSCRFLD and INTVAL = :KINTVAL                                       MD060008
+     C/END-EXEC                                                                             MD060008
+     C**********         IF        NOT %FOUND(SDLIBRTD)                                     MD060008
+     C                   If        SQLCODE = 100                                            MD060008
      C                   EVAL      DDDBAVOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172

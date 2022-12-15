@@ -10,12 +10,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058755           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      FS0001             Date 14Sep95              */
 /*                      ER0004 VT          Date 30Nov92              */
 /*                      EMFIX1             DATE 16AUG90             */
@@ -26,6 +27,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       FS0001  -  FILE HPOSTPD IS REPLACED BY GLACPHPD            */
@@ -41,11 +43,11 @@
              PGM
 /**/
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8) VALUE('00000000')
- 
+
              DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6) VALUE('  JLIB')
- 
+
              MONMSG MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
 /**/
              SNDPGMMSG  MSG('ERC5349 - SPOT TRADE HISTORIC A/C +
@@ -53,15 +55,16 @@
 /**/
              CHGJOB     SWS(&SWS)
 /**/
-             OVRDBF     FILE(TABLE) TOFILE(TABGL)
- 
+/**********  OVRDBF     FILE(TABLE) TOFILE(TABGL) */                                    /*MD058755*/
+             OVRDBF     FILE(TABLE) TOFILE(TABICD)                                      /*MD058755*/
+
 /* Identify Library Group and if this is a restart                   */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              RTVDTAARA  DTAARA(ERSTAT (41 1)) RTNVAR(&BUSY)
- 
+
 /* If restart, then remove journalled changes                        */
- 
+
              IF         COND(&BUSY = 'Y') THEN(DO)
                 CHKOBJ     OBJ(JRERC5349) OBJTYPE(*JRNRCV)
                 MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOJRNRCV))
@@ -78,20 +81,20 @@ NOJRN:          CHGJOB     INQMSGRPY(*DFT)
                 CHGJOB     INQMSGRPY(*RQD)
 NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
              ENDDO
- 
+
 /* Create temporary Journal & Receiver                               */
- 
+
              CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('Y')
              CHGVAR     VAR(%SUBSTRING(&JLIB 1 2)) VALUE(&SYSID)
- 
+
              CRTJRNRCV  JRNRCV(&JLIB/JRERC5349)
              CRTJRN     JRN(&JLIB/JERC5349) JRNRCV(&JLIB/JRERC5349)
- 
+
 /*********** STRJRNPF   FILE(EODPOPD HPOSTPD) JRN(JERC5349) +
                           IMAGES(*BOTH)                                 FS0001*/
              STRJRNPF   FILE(EODPOPD GLACPHPD) JRN(JERC5349) +
                           IMAGES(*BOTH)                               /*FS0001*/
- 
+
 /**/                                                                  /*S01098*/
 /*                BLOCK LARGE FILES                                 *  *S01098*/
 /**/                                                                  /*S01098*/
@@ -110,7 +113,7 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
              CALL       PGM(ABSFDA4)
                 DLTOVR     FILE(EODPOPD)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
 /**********     OVRDBF     FILE(EODPOPD) TOFILE(GESTHEPD)                                   CER001*/
                 OVRDBF     FILE(EODPOPD) TOFILE(GLSHX2PD)                                 /*CER001*/
@@ -121,7 +124,7 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
 /**/
 /**/
 /* UNSUCCESSFUL COMPLETION - Therefore REMOVE Journalled changes     */
- 
+
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
 /************** RMVJRNCHG  JRN(JERC5349) FILE(EODPOPD HPOSTPD)          FS0001*/
                 RMVJRNCHG  JRN(JERC5349) FILE(EODPOPD GLACPHPD)       /*FS0001*/
@@ -132,7 +135,7 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
                 DLTJRNRCV  JRNRCV(JRERC5349)
                 CHGJOB     INQMSGRPY(*RQD)
                 CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
- 
+
 /**/
 /**********  SNDPGMMSG  MSG('FILE OUT OF BALANCE - GEACPO1') +
                           TOMSGQ(MOPERQ MRUNQ)                                            /*CER001*/
@@ -141,9 +144,9 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
 /**/
                 GOTO ENDPGM
              ENDDO
- 
+
 /* SUCCESSFUL COMPLETION - Therefore, delete Journal & Receiver      */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                 ENDJRNPF   FILE(*ALL) JRN(JERC5349)
                 DLTJRN     JERC5349
@@ -153,9 +156,9 @@ NOJRNRCV:       CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
                 CHGDTAARA  DTAARA(ERSTAT (41 1)) VALUE('N')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* GENERAL ABORT - Remove all journalled changes                     */
- 
+
 ABNOR:       RTVDTAARA  DTAARA(ERSTAT (41 1)) RTNVAR(&BUSY)
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(EXIT))
              IF         COND(&BUSY = 'Y') THEN(DO)
@@ -172,7 +175,7 @@ ABNOR:       RTVDTAARA  DTAARA(ERSTAT (41 1)) RTNVAR(&BUSY)
                 MONMSG     MSGID(CPF0000)
                 ENDDO
 EXIT:        CHGJOB     SWS(XXXXXXX1)
- 
+
 /* IF JOB ENDED NORMALLY */
 /**/
 ENDPGM:      ENDPGM

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD058755           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -33,6 +34,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       BUG9619 - Close of business components run long if journal  */
@@ -602,7 +604,7 @@
 /**/
 /*  Call SD1050 to update LDA with name of day for B.O.B. save                */
 /**/
-             OVRDBF     FILE(TABLE) TOFILE(TABSDM)
+/**********  OVRDBF     FILE(TABLE) TOFILE(TABSDM) */                                   /*MD058755*/
              CALL       PGM(SD1050)
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 SNDPGMMSG  MSG('JOB TERMINATED - DATABASE IN ERROR') +

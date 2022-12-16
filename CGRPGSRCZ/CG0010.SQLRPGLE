@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058069           Date 11May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060007           Date 11May21               *
+      *  Prev Amend No. MD058069           Date 11May21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
       *                 MD046248           Date 27Oct17               *
       *                 CCG024             Date 29Sep16               *
@@ -73,6 +74,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060007 - Deliverable Data Split for Correspondence Mgr 3   *
       *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -140,8 +142,8 @@
      F/COPY WNCPYSRC,CG0010F001
       * RTV : Correspondent Details     Retrieval index
       *
-     FCGCTYPL1  IF   E           K DISK
-     F                                     INFSR(SRFILE)
+     F*CGCTYPL1* IF   E           K DISK                                                    MD060007
+     F**********                           INFSR(SRFILE)                                    MD060007
       * RTV : Correspondent Type        Retrieval index
       *
      F*CGPSCHL1* IF   E           K DISK                                                    MD058069
@@ -308,6 +310,7 @@
       *  Country Code *                                                                       217460
       *                                                                                       217460
      D CGCSTR        E DS                  EXTNAME(CGCSTJW0)                                MD058069
+     D CGCTYP        E DS                  EXTNAME(CGCTYJW0)                                MD060007
      D CGPSCH        E DS                  EXTNAME(CGPSHJW0)                                MD058069
      D*COPY*CGCPYSRC,CGCOV                                                           082944 MD056543
      D/COPY CGCPYSRC,CGCOVLE                                                                MD056543
@@ -3813,7 +3816,17 @@
      C                   KFLD                    CTCTYP                         Correspondent t
       * Setup key
      C                   MOVEL     #1CTYP        CTCTYP                         Correspondent t
-     C     KLVDCT        CHAIN     @CTYPL1                            9091      *
+     C*****KLVDCT        CHAIN     @CTYPL1                            9091      *           MD060007
+     C/EXEC SQL                                                                             MD060007
+     C+ SELECT *                                                                            MD060007
+     C+ into :CGCTYP                                                                        MD060007
+     C+ from CGCTYJW0                                                                       MD060007
+     C+ where CTCTYP = :CTCTYP and CTRECI = 'D'                                             MD060007
+     C/END-EXEC                                                                             MD060007
+     C                   SETOFF                                       90                    MD060007
+     C                   If        SQLCODE = 100                                            MD060007
+     C                   SETON                                        90                    MD060007
+     C                   ENDIF                                                              MD060007
      C     *IN90         IFEQ      '0'
       * Record found - move back any virtuals
      C                   GOTO      VEEXIT

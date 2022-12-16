@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058854           Date 21Oct21               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER049             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD058854 - Deliverable Data Split for TABLEV4                *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
      F*  CER049 - Stamp Tax (Recompile)                               *
@@ -45,7 +47,7 @@
      F*  S01413 - Retail 3 Incorporation                              *
      F*                                                               *
      F*****************************************************************
-     FTABLEV4   UF A E             DISK
+     F*TABLEV4** UF A E             DISK                                                    MD058854
      F**
      FTABTBRE   UF A E             DISK
      FTABTREXC  UF A E             DISK                                         078147
@@ -75,6 +77,10 @@
      D*
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
+     D CountX          S              5  0                                                  MD058854
+     D TABV4         E DS                  EXTNAME(TABV4JW0)                                MD058854
+     D ZONEX         E                     EXTFLD(ZONE)                                     MD058854
+     D LCDX          E                     EXTFLD(LCD)                                      MD058854
      I*
      ITABLETXF
      I              RECI                        HRECI
@@ -102,13 +108,17 @@
       **
       ** SETUP OF TABLEV4
       **
-     C     1             SETLL     TABLEV4
-     C                   READ      TABLEV4                                80
-     C     *IN80         IFEQ      '1'
+     C*****1****         SETLL     TABLEV4                                                  MD058854
+     C**********         READ      TABLEV4                                80                MD058854
+     C******IN80         IFEQ      '1'                                                      MD058854
+     C/EXEC SQL                                                                             MD058854
+     C+  SELECT COUNT(*) INTO :CountX FROM TABV4JW0                                         MD058854
+     C/END-EXEC                                                                             MD058854
+     C                   If        CountX = 0                                               MD058854
      C                   MOVE      'P'           WWPROC
      C                   EXSR      #TBV4
      C                   ELSE
-     C                   UPDATE    TABLEV4F
+     C**********         UPDATE    TABLEV4F                                                 MD058854
      C                   END
       **
       ** SETUP OF TABTBRE
@@ -172,7 +182,175 @@
      C                   Z-ADD     BJRDNB        LCD
      C                   MOVE      'I'           CHTP
      C                   Z-ADD     0             TNLU
-     C                   WRITE     TABLEV4F
+     C**********         WRITE     TABLEV4F                                                 MD058854
+     C/EXEC SQL                                                                             MD058854
+     C+ insert into TABV4CTD                                                                MD058854
+     C+ (                                                                                   MD058854
+     C+   RECI                                                                              MD058854
+     C+  ,RECT                                                                              MD058854
+     C+  ,ZZ010                                                                             MD058854
+     C+  ,GRPN                                                                              MD058854
+     C+  ,MDBI                                                                              MD058854
+     C+  ,ACMI                                                                              MD058854
+     C+  ,DINI                                                                              MD058854
+     C+  ,INAI                                                                              MD058854
+     C+  ,MINI                                                                              MD058854
+     C+  ,DYSI                                                                              MD058854
+     C+  ,FIXI                                                                              MD058854
+     C+  ,MDBAQQ                                                                            MD058854
+     C+  ,ACMAQQ                                                                            MD058854
+     C+  ,DINAQQ                                                                            MD058854
+     C+  ,INAAQQ                                                                            MD058854
+     C+  ,MINAQQ                                                                            MD058854
+     C+  ,DYSAQQ                                                                            MD058854
+     C+  ,FIXAQQ                                                                            MD058854
+     C+  ,TIMV                                                                              MD058854
+     C+  ,ZZ007                                                                             MD058854
+     C+  ,LCD                                                                               MD058854
+     C+  ,CHTP                                                                              MD058854
+     C+  ,TNLU                                                                              MD058854
+     C+  ,MDBA                                                                              MD058854
+     C+  ,ACMA                                                                              MD058854
+     C+  ,DINA                                                                              MD058854
+     C+  ,INAA                                                                              MD058854
+     C+  ,MINA                                                                              MD058854
+     C+  ,DYSA                                                                              MD058854
+     C+  ,FIXA                                                                              MD058854
+     C+  ,ZONE                                                                              MD058854
+     C+  ,IUSR                                                                              MD058854
+     C+  ,AUSR                                                                              MD058854
+     C+  ,XUSR                                                                              MD058854
+     C+  ,AACC                                                                              MD058854
+     C+  ,EACC                                                                              MD058854
+     C+  ,GPDT                                                                              MD058854
+     C+  ,REMODE                                                                            MD058854
+     C+ )                                                                                   MD058854
+     C+ Values                                                                              MD058854
+     C+ (                                                                                   MD058854
+     C+   :RECI                                                                             MD058854
+     C+  ,:RECT                                                                             MD058854
+     C+  ,:ZZ010                                                                            MD058854
+     C+  ,:GRPN                                                                             MD058854
+     C+  ,:MDBI                                                                             MD058854
+     C+  ,:ACMI                                                                             MD058854
+     C+  ,:DINI                                                                             MD058854
+     C+  ,:INAI                                                                             MD058854
+     C+  ,:MINI                                                                             MD058854
+     C+  ,:DYSI                                                                             MD058854
+     C+  ,:FIXI                                                                             MD058854
+     C+  ,:MDBA                                                                             MD058854
+     C+  ,:ACMA                                                                             MD058854
+     C+  ,:DINA                                                                             MD058854
+     C+  ,:INAA                                                                             MD058854
+     C+  ,:MINA                                                                             MD058854
+     C+  ,:DYSA                                                                             MD058854
+     C+  ,:FIXA                                                                             MD058854
+     C+  ,:TIMV                                                                             MD058854
+     C+  ,:ZZ007                                                                            MD058854
+     C+  ,:LCD                                                                              MD058854
+     C+  ,:CHTP                                                                             MD058854
+     C+  ,:TNLU                                                                             MD058854
+     C+  ,:MDBA                                                                             MD058854
+     C+  ,:ACMA                                                                             MD058854
+     C+  ,:DINA                                                                             MD058854
+     C+  ,:INAA                                                                             MD058854
+     C+  ,:MINA                                                                             MD058854
+     C+  ,:DYSA                                                                             MD058854
+     C+  ,:FIXA                                                                             MD058854
+     C+  ,:ZONE                                                                             MD058854
+     C+  ,:IUSR                                                                             MD058854
+     C+  ,:AUSR                                                                             MD058854
+     C+  ,:XUSR                                                                             MD058854
+     C+  ,:AACC                                                                             MD058854
+     C+  ,:EACC                                                                             MD058854
+     C+  ,:GPDT                                                                             MD058854
+     C+  ,'C'                                                                               MD058854
+     C+ )                                                                                   MD058854
+     C/END-EXEC                                                                             MD058854
+     C/EXEC SQL                                                                             MD058854
+     C+ insert into TABV4XTD                                                                MD058854
+     C+ (                                                                                   MD058854
+     C+   RECI                                                                              MD058854
+     C+  ,RECT                                                                              MD058854
+     C+  ,ZZ010                                                                             MD058854
+     C+  ,GRPN                                                                              MD058854
+     C+  ,MDBI                                                                              MD058854
+     C+  ,ACMI                                                                              MD058854
+     C+  ,DINI                                                                              MD058854
+     C+  ,INAI                                                                              MD058854
+     C+  ,MINI                                                                              MD058854
+     C+  ,DYSI                                                                              MD058854
+     C+  ,FIXI                                                                              MD058854
+     C+  ,MDBAQQ                                                                            MD058854
+     C+  ,ACMAQQ                                                                            MD058854
+     C+  ,DINAQQ                                                                            MD058854
+     C+  ,INAAQQ                                                                            MD058854
+     C+  ,MINAQQ                                                                            MD058854
+     C+  ,DYSAQQ                                                                            MD058854
+     C+  ,FIXAQQ                                                                            MD058854
+     C+  ,TIMV                                                                              MD058854
+     C+  ,ZZ007                                                                             MD058854
+     C+  ,LCD                                                                               MD058854
+     C+  ,CHTP                                                                              MD058854
+     C+  ,TNLU                                                                              MD058854
+     C+  ,MDBA                                                                              MD058854
+     C+  ,ACMA                                                                              MD058854
+     C+  ,DINA                                                                              MD058854
+     C+  ,INAA                                                                              MD058854
+     C+  ,MINA                                                                              MD058854
+     C+  ,DYSA                                                                              MD058854
+     C+  ,FIXA                                                                              MD058854
+     C+  ,ZONE                                                                              MD058854
+     C+  ,IUSR                                                                              MD058854
+     C+  ,AUSR                                                                              MD058854
+     C+  ,XUSR                                                                              MD058854
+     C+  ,AACC                                                                              MD058854
+     C+  ,EACC                                                                              MD058854
+     C+  ,GPDT                                                                              MD058854
+     C+  ,REMODE                                                                            MD058854
+     C+ )                                                                                   MD058854
+     C+ Values                                                                              MD058854
+     C+ (                                                                                   MD058854
+     C+   :RECI                                                                             MD058854
+     C+  ,:RECT                                                                             MD058854
+     C+  ,:ZZ010                                                                            MD058854
+     C+  ,:GRPN                                                                             MD058854
+     C+  ,:MDBI                                                                             MD058854
+     C+  ,:ACMI                                                                             MD058854
+     C+  ,:DINI                                                                             MD058854
+     C+  ,:INAI                                                                             MD058854
+     C+  ,:MINI                                                                             MD058854
+     C+  ,:DYSI                                                                             MD058854
+     C+  ,:FIXI                                                                             MD058854
+     C+  ,:MDBA                                                                             MD058854
+     C+  ,:ACMA                                                                             MD058854
+     C+  ,:DINA                                                                             MD058854
+     C+  ,:INAA                                                                             MD058854
+     C+  ,:MINA                                                                             MD058854
+     C+  ,:DYSA                                                                             MD058854
+     C+  ,:FIXA                                                                             MD058854
+     C+  ,:TIMV                                                                             MD058854
+     C+  ,:ZZ007                                                                            MD058854
+     C+  ,:LCD                                                                              MD058854
+     C+  ,:CHTP                                                                             MD058854
+     C+  ,:TNLU                                                                             MD058854
+     C+  ,:MDBA                                                                             MD058854
+     C+  ,:ACMA                                                                             MD058854
+     C+  ,:DINA                                                                             MD058854
+     C+  ,:INAA                                                                             MD058854
+     C+  ,:MINA                                                                             MD058854
+     C+  ,:DYSA                                                                             MD058854
+     C+  ,:FIXA                                                                             MD058854
+     C+  ,:ZONE                                                                             MD058854
+     C+  ,:IUSR                                                                             MD058854
+     C+  ,:AUSR                                                                             MD058854
+     C+  ,:XUSR                                                                             MD058854
+     C+  ,:AACC                                                                             MD058854
+     C+  ,:EACC                                                                             MD058854
+     C+  ,:GPDT                                                                             MD058854
+     C+  ,'C'                                                                               MD058854
+     C+ )                                                                                   MD058854
+     C/END-EXEC                                                                             MD058854
      C                   END
       **
       ** INITIALIZE TRAILER

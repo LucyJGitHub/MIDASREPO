@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Systems Ltd. 2020                 *
       *                                                               *
-      *  Last Amend No. JMI113             Date 19Feb20               *
-      *  Prev Amend No. 254598A            Date 22Jul08               *
+      *  Last Amend No. MD060816           Date 15Dec22               *
+      *  Prev Amend No. JMI113             Date 19Feb20               *
+      *                 254598A            Date 22Jul08               *
       *                 254598             Date 16Jun08               *
       *                 JMI019             Date 06Nov07               *
       *                 JMI019             Date 10Sep07               *
@@ -26,6 +27,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060816 - FT route from GCMS message to OPAY shifted the    *
+      *             values for tags 32B and 33B. Change the length of *
+      *             DP32B & DP33B to match the length of P32B & P33B. *
       *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
       *  254598A- Transferred the resized DP32B to DATAF1.            *
       *           Renamed DP32B in DATA2 and restore old length.      *
@@ -91,7 +95,8 @@
      D***DP32B**                     42A                                                      254598
      D***DP32B**                     48A                                              254598 254598A
      D   WDP32B                      42A                                                     254598A
-     D   DP33B                       42A
+     D***DP33B**                     42A                                                    MD060816
+     D   DP33B                       50A                                                    MD060816
      D   DP57                       255A
      D   DSPCCY                       3A
      D   DPYAMA                      14A
@@ -214,7 +219,8 @@
      D  Din099                        1
 
      D DataF1          ds          5000
-     D   DP32B                       48A                                                     254598A
+     D***DP32B**                     48A                                            254598A MD060816
+     D   DP32B                       50A                                                    MD060816
      D   DP59                       255A                                                     254598A
      D   DSTR35                      35A                                                     254598A
      D DataF2          ds          5000

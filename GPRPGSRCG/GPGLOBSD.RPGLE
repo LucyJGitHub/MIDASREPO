@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD058188           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 245952             Date 23Feb07               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058188 - Deliverable Data Split for Global files           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  245952 - New triggers for T_GPCUSTH, T_GPCTRYH and T_GRINDSH *
@@ -38,9 +40,9 @@
       *  BUG1912- Global customer details file                        *
       *                                                               *
       *****************************************************************
- 
+
      D/COPY GPCPYSRCG,STD_D_SPEC
- 
+
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -59,26 +61,26 @@
      D**EntryData******      117  10117A                                                     BUG6921
      D**EntryData******      117  22000A                                              BUG6921 245952
      D  EntryData            117  32000A                                                      245952
- 
+
      D PARM2           DS
      D  LENG                   1      4B 0
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
- 
+
       * Recover before and after image
- 
+
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4000
- 
+
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4000
- 
- 
+
+
       * Global Updates - BEFORE/AFTER image
       * TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
      C     TRGEVENT      IFEQ      '1'
@@ -89,13 +91,16 @@
      C                   MOVEL     *BLANK        I#AIMG
      C                   MOVE      'B'           I#BFAF
      C                   ENDIF
- 
+
      C                   MOVEL     'Y'           I#TRAP
- 
+
      C*****PFLNAME       CASEQ     'GZSDCUSTPD'  GLOB_GZSDCUST                                BG6438
      C     PFLNAME       CASEQ     'GPCUSTPD'    GLOB_GPCUSTPD
      C     PFLNAME       CASEQ     'GPCUSTXPD'   GLOB_GPCUSTX
-     C     PFLNAME       CASEQ     'GPCTRYPD'    GLOB_GPCTRYPD                               BUG4521
+     C*****PFLNAME       CASEQ     'GPCTRYPD'    GLOB_GPCTRYPD                      BUG4521 MD058188
+     C     PFLNAME       CASEQ     'GPCTRCTD'    GLOB_GPCTRYPD                              MD058188
+     C     PFLNAME       CASEQ     'GPCTRBTD'    GLOB_GPCTRYPD                              MD058188
+     C     PFLNAME       CASEQ     'GPCTRXTD'    GLOB_GPCTRYPD                              MD058188
      C     PFLNAME       CASEQ     'GPINDSPD'    GLOB_GPINDSPD                               BUG4521
      C     PFLNAME       CASEQ     'T_GRCUSTG'   GLOB_T_GRCUSTG                              BUG4521
      C     PFLNAME       CASEQ     'T_GRCTRYG'   GLOB_T_GRCTRYG                              BUG4521
@@ -106,9 +111,9 @@
      C     PFLNAME       CASEQ     'T_GRCTRYH'   GLOB_T_GRCTRYH                               245952
      C     PFLNAME       CASEQ     'T_GRINDSH'   GLOB_T_GRINDSH                               245952
      C                   ENDCS
- 
+
      C                   RETURN
- 
+
       /SPACE 5
       **********                                                                              BG6438
       *****************************************************************                       BG6438
@@ -218,10 +223,10 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEL     *BLANK        I#RTCD            7
      C                   MOVEL     *BLANK        I#ERMS           50
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -229,9 +234,9 @@
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     RunBefore     IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           RunBefore         1
      C                   DUMP
       *
@@ -245,10 +250,10 @@
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   ENDIF
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
- 
+
      C                   ENDSR

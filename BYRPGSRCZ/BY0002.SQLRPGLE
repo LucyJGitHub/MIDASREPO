@@ -1,8 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
-/**** *  RPGBASEBND                                                   *                     MD058068
-/*STD *  RPGSQLBND                                                    *                     MD058068
+/**** *  RPGBASEBND                                                   *                     MD058188
+/*STD *  RPGSQLBND                                                    *                     MD058188
 /*EXI *  TEXT('Midas BoE Update ISO Codes and Country Codes')         *
       *****************************************************************
       *                                                               *
@@ -18,13 +18,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD058068           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058188           Date 11May21               *
+      *  Prev Amend No. MD058068           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
       *                 BUG7336 *CREATE    Date 07Jun05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058188 - Deliverable Data Split for Global files           *
       *  MD058068 - Deliverable Data Split for Bank of England        *
       *  MD046248 - Finastra Rebranding                               *
 /*    *  BUG7336- BYCNTYPP not migrated to MidasPlus BOE              *
@@ -57,7 +59,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
 
-     FGPICTRYL0 UF A E           K DISK
+     F*GPICTRYL0 UF A E           K DISK                                                    MD058188
       ** Country Codes Details
 
      FSDCTRYL2  UF A E           K DISK
@@ -115,6 +117,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
      D BYCNTY        E DS                  EXTNAME(BYCTYJW0)                                MD058068
+     D GPICTRY       E DS                  EXTNAME(GPICYJW0)                                MD058188
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -239,11 +242,18 @@
       ** Check if all Bank of England ISO code exist in MidasPlus
 
      C                   EVAL      WValid = 'Y'
-     C     LBISOC        CHAIN     GPICTRYL0                          90
+     C*****LBISOC        CHAIN     GPICTRYL0                          90                    MD058188
+     C/EXEC SQL                                                                             MD058188
+     C+ SELECT *                                                                            MD058188
+     C+ into :GPICTRY                                                                       MD058188
+     C+ from GPICYJW0                                                                       MD058188
+     C+ where CNCNCD = :LBISOC                                                              MD058188
+     C/END-EXEC                                                                             MD058188
 
       ** List record if not found
 
-     C                   IF        *IN90 = *ON
+     C**********         IF        *IN90 = *ON                                              MD058188
+     C                   IF        SQLCODE = 100                                            MD058188
      C                   MOVE      'N'           WValid
      C                   ENDIF
 
@@ -291,7 +301,33 @@
 
      C                   EVAL      CNCNCD = LBISOC
      C                   EVAL      CNCNNM = LBCNNM
-     C                   WRITE     GPICTRYD0
+     C**********         WRITE     GPICTRYD0                                                MD058188
+     C/EXEC SQL                                                                             MD058188
+     C+ insert into GPICYBTD                                                                MD058188
+     C+ (                                                                                   MD058188
+     C+   CNCNCD                                                                            MD058188
+     C+ , CNCNNM                                                                            MD058188
+     C+ , CNMODE                                                                            MD058188
+     C+ )                                                                                   MD058188
+     C+ Values                                                                              MD058188
+     C+ (                                                                                   MD058188
+     C+   :CNCNCD                                                                           MD058188
+     C+ , :CNCNNM                                                                           MD058188
+     C+ , 'B'                                                                               MD058188
+     C+ )                                                                                   MD058188
+     C/END-EXEC                                                                             MD058188
+     C/EXEC SQL                                                                             MD058188
+     C+ insert into GPICYXTD                                                                MD058188
+     C+ (                                                                                   MD058188
+     C+   CNCNCD                                                                            MD058188
+     C+ , CNMODE                                                                            MD058188
+     C+ )                                                                                   MD058188
+     C+ Values                                                                              MD058188
+     C+ (                                                                                   MD058188
+     C+   :CNCNCD                                                                           MD058188
+     C+ , 'B'                                                                               MD058188
+     C+ )                                                                                   MD058188
+     C/END-EXEC                                                                             MD058188
 
       ** Write new Country Code record in SDCTRYPD
 

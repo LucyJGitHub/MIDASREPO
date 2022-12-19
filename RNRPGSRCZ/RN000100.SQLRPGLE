@@ -1,9 +1,9 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
-/**** *  RPGBASEBND                                                   *                     MD058082
-/*STD *  RPGSQLBND                                                    *                     MD058082
-/**** *  ALWNULL(*YES)                                                *                     MD058082
+/**** *  RPGBASEBND                                                   *                     MD058188
+/*STD *  RPGSQLBND                                                    *                     MD058188
+/**** *  ALWNULL(*YES)                                                *                     MD058188
 /*EXI *  TEXT('Midas FRS Transaction/Acct Extraction Audit Rprt')
       *****************************************************************
       *                                                               *
@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD058082           Date 21Jan21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058188           Date 11May21               *
+      *  Prev Amend No. MD058082           Date 21Jan21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058188 - Deliverable Data Split for Global files           *
       *  MD058082 - Deliverable Data Split for FRS                    *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG10699 - Access GPFRSPPD using extended key.               *
@@ -45,7 +47,7 @@
      F*RNAMTTPD* IF   E           K DISK    INFSR(*PSSR)                                    MD058082
       *
       * FRS Product Codes
-     FGPFRSPPD  IF   E           K DISK    INFSR(*PSSR)
+     F*GPFRSPPD* IF   E           K DISK    INFSR(*PSSR)                                    MD058188
       *
      FRN000100AUO    E             PRINTER INFDS(SPOOLU)
      F                                     INFSR(*PSSR)
@@ -169,6 +171,7 @@
      D KFldRuleSet     S                   LIKE(FPRULESET)                                  BUG10699
      D KFldProdId      S                   LIKE(FPPRODID)                                   BUG10699
      D RNAMTT        E DS                  EXTNAME(RNAMTJW0)                                MD058082
+     D GPFRSP        E DS                  EXTNAME(GPFRSJW0)                                MD058188
       *
      C     kProdCode     klist                                                              BUG10699
      C                   kfld                    KFldRuleSet                                BUG10699
@@ -364,14 +367,28 @@
       ** chain to file GPFRSPPD for the product code rule set.                              BUG10699
      C                   EVAL      KFldRuleSet = 1                                          BUG10699
      C                   EVAL      KFldProdId  = AUPRDCOD                                   BUG10699
-     C     KProdCode     CHAIN     GPFRSPPD                                                 BUG10699
+     C*****KProdCode     CHAIN     GPFRSPPD                                        BUG10699 MD058188
+     C/EXEC SQL                                                                             MD058188
+     C+ SELECT *                                                                            MD058188
+     C+ into :GPFRSP                                                                        MD058188
+     C+ from GPFRSJW0                                                                       MD058188
+     C+ where FPRULESET = :KFldRuleSet and FPPRODID = :KFldProdId                           MD058188
+     C/END-EXEC                                                                             MD058188
       ** if not found, try for the US product code rule set.                                BUG10699
-     C                   IF        not %FOUND                                               BUG10699
+     C**********         IF        not %FOUND                                      BUG10699 MD058188
+     C                   IF        SQLCODE <> 0                                             MD058188
      C                   EVAL      KFldRuleSet = 2                                          BUG10699
-     C     KProdCode     CHAIN     GPFRSPPD                                                 BUG10699
+     C*****KProdCode     CHAIN     GPFRSPPD                                        BUG10699 MD058188
+     C/EXEC SQL                                                                             MD058188
+     C+ SELECT *                                                                            MD058188
+     C+ into :GPFRSP                                                                        MD058188
+     C+ from GPFRSJW0                                                                       MD058188
+     C+ where FPRULESET = :KFldRuleSet and FPPRODID = :KFldProdId                           MD058188
+     C/END-EXEC                                                                             MD058188
      C                   ENDIF                                                              BUG10699
       *                                                                                     BUG10699
-     C                   IF        %FOUND
+     C**********         IF        %FOUND                                                   MD058188
+     C                   IF        SQLCODE = 0                                              MD058188
       *
       ** Since the length of the field FPDESC is varying, need to get the length.
      C                   EVAL      FPDescLen = %Len(FPDESC)

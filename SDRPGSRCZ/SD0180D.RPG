@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT051             Date 20Aug15               *
+      *  Last Amend No. MD058188           Date 11May21               *
+      *  Prev Amend No. MD058081           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CFT051             Date 20Aug15               *
       *                 CGL132             Date 01May13               *
       *                 MD023678           Date 21Nov13               *
       *                 CSW213             Date 03Jun13               *
@@ -44,6 +46,8 @@
       *                                                               *
       ********************************************************************
       *                                                                  *
+      *  MD058188 - Deliverable Data Split for Global files           *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT051 - SWIFTRef Directories 2014                              *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and          *
@@ -102,9 +106,9 @@
      F                                              KINFSR *PSSR                              CSD031
       * UPD : Midas SD Standing data controls update                                          CSD031
       *                                                                                       CSD031
-     FGPCTRYL1IF  E           K        DISK                           UC                      CSD031
-     F                                              KINFDS ID0005                             CSD031
-     F                                              KINFSR *PSSR                              CSD031
+     F*GPCTRYL1IF  E           K        DISK                           UC            CSD031 MD058188
+     F**********                                    KINFDS ID0005                    CSD031 MD058188
+     F**********                                    KINFSR *PSSR                     CSD031 MD058188
       * UPD : Midas GP Central Country codes retrieval                                        CSD031
       *                                                                                       CSD031
      FSDMMODL1IF  E           K        DISK                           UC
@@ -114,9 +118,9 @@
       *
      FGZSDBANKIF  E           K        DISK                           UC                      CSD031
      F                                              KINFSR *PSSR                              CSD031
-     FMEISOCL1IF  E           K        DISK                           UC                      CSW213
-     F                                              KINFDS ID0006                             CSW213
-     F                                              KINFSR *PSSR                              CSW213
+     F*MEISOCL1IF  E           K        DISK                           UC            CSW213 MD058081
+     F**********                                    KINFDS ID0006                    CSW213 MD058081
+     F**********                                    KINFSR *PSSR                     CSW213 MD058081
       ** RTV : Midas ME SWIFT ISO country retrieval                                           CSW213
       *                                                                                       CSW213
      E* Description     : Copyright notice for inclusion in all programs
@@ -212,6 +216,7 @@
      ILDA       E DSLDA                         256                                           CSD031
      I              SPARE                           SPAREX                                    CSD031
      IPDATA       DS                           1024                                         BUG11806
+     IMEISOC    E DSMEISOJW0                                                                MD058081
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -267,8 +272,8 @@
      C                     MOVEL#2CNCD    A4CNCD           Country Code
      C           *INU1     IFEQ *ON                                                           CSD031
      C           CSD046    IFEQ 'Y'                                                           CSD031
-     C           KPOS      SETLLGPCTRYL1                                                      CSD031
-     C                     READ GPCTRYL1               8782                                   CSD031
+     C********** KPOS      SETLLGPCTRYL1                                             CSD031 MD058188
+     C**********           READ GPCTRYL1               8782                          CSD031 MD058188
      C                     ENDIF                                                              CSD031
      C                     ELSE                                                               CSD031
      C           KPOS      SETLL@A4REBR
@@ -324,8 +329,8 @@
      C           *INU1     IFEQ *ON                                                           CSD031
      C           CSD046    IFEQ 'Y'                                                           CSD031
      C           *IN82     ANDEQ*OFF                                                          CSD031
-     C                     READPGPCTRYL1                 90                                   CSD031
-     C                     READ GPCTRYL1                 90                                   CSD031
+     C**********           READPGPCTRYL1                 90                          CSD031 MD058188
+     C**********           READ GPCTRYL1                 90                          CSD031 MD058188
      C                     ENDIF                                                              CSD031
      C                     ELSE                                                               CSD031
      C  N82                READP@A4REBR                  90*
@@ -446,7 +451,7 @@
      C                     ADD  1         ##RRRD
      C           *INU1     IFEQ *ON                                                           CSD031
      C           CSD046    IFEQ 'Y'                                                           CSD031
-     C                     READ GPCTRYL1                 82                                   CSD031
+     C**********           READ GPCTRYL1                 82                          CSD031 MD058188
      C                     ENDIF                                                              CSD031
      C                     ELSE                                                               CSD031
      C                     READ @A4REBR                  82*82=EOF
@@ -877,8 +882,14 @@
      C           CSW213    IFEQ 'Y'                                                           CSW213
      C           CFT050    OREQ 'Y'                                                           CSW213
      C           CFT051    OREQ 'Y'                                                           CFT051
-     C           #1CNCD    CHAINMEISOCL1             90                                       CSW213
-     C           *IN90     IFEQ '0'                                                           CSW213
+     C********** #1CNCD    CHAINMEISOCL1             90                              CSW213 MD058081
+     C                     CALL 'AOMSOCR0'             90                                   MD058081
+     C                     PARM *BLANKS   @RTCD   7                                         MD058081
+     C                     PARM '*KEY'    @OPTN   7                                         MD058081
+     C                     PARM #1CNCD    @ISOC   2                                         MD058081
+     C           MEISOC    PARM MEISOC    DSFDY                                             MD058081
+     C********** *IN90     IFEQ '0'                                                  CSW213 MD058081
+     C           @RTCD     IFEQ *BLANKS                                                     MD058081
      C                     MOVELM3BBLN    #1BBAN                                              CSW213
      C**********           MOVELM3BILN    #1BBRL                                     CSW213 MD023678
      C           CFT051    IFEQ 'Y'                                                           CFT051
@@ -1678,7 +1689,7 @@
      C                     OPEN SD0180D#
      C           *INU1     IFEQ *ON                                                           CSD031
      C           CSD046    IFEQ 'Y'                                                           CSD031
-     C                     OPEN GPCTRYL1                                                      CSD031
+     C**********           OPEN GPCTRYL1                                             CSD031 MD058188
      C                     ENDIF                                                              CSD031
      C                     ELSE                                                               CSD031
      C                     OPEN SDCTRYL1
@@ -1895,7 +1906,7 @@
      C           CSW213    IFEQ 'Y'                                                           CSW213
      C           CFT050    OREQ 'Y'                                                           CSW213
      C           CFT051    OREQ 'Y'                                                           CFT051
-     C                     OPEN MEISOCL1                                                      CSW213
+     C**********           OPEN MEISOCL1                                             CSW213 MD058081
      C                     ENDIF                                                              CSW213
       *                                                                                       CSW213
       *================================================================

@@ -16,13 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058188           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058188 - Deliverable Data Split for Global files           *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
@@ -46,50 +48,51 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       ** Midas GP Global Instruments code file
-     D GPINST        E DS                  EXTNAME(GPINSTPD)
+     D*GPINST***     E DS                  EXTNAME(GPINSTPD)                                MD058188
+     D GPINST        E DS                  EXTNAME(GPINSJW0)                                MD058188
       ** Short Data Structure for Access Objects
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **
       ** Data structure for NewInstVal string
      D NewInstVal      DS           200
      D DataToVal               1     10
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message id in GBSDUSRMSG
      D ErrMsgId        S              7
- 
+
       ** System value to be processed
      D SystemValue     S             20
- 
+
       ** Processing mode
      D ProcMode        S            190
- 
+
       ** Return Flag
      D Rflag           S              1
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              2P 0
- 
+
       ** Array of error message IDs
      D MsgIDXArr       S                   DIM(99) LIKE(ErrMsgId)
- 
+
      D @RTCD           S              7
      D @OPTN           S              7
      D @GINS           S             10
@@ -131,7 +134,7 @@
       *
      C                   EVAL      RFlag = ' '
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -145,7 +148,7 @@
       *                                                              *
       ****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** System value to be processed
@@ -171,7 +174,7 @@
       ** Error message ID (array)
       *
      C                   PARM                    MsgIDXArr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -187,15 +190,15 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   EVAL      RFlag = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       ****************************************************************

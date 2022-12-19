@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060223           Date 05Jul22               *
-      *  Prev Amend No. MD060225           Date 05Jul22               *
+      *  Last Amend No. MD028354           Date 01Dec22               *
+      *  Prev Amend No. MD060223           Date 05Jul22               *
+      *                 MD060225           Date 05Jul22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD058815           Date 28Sep21               *
       *                 MD059600           Date 17Feb22               *
@@ -313,6 +314,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD028354 - Process fee due date that falls on the next month *
+      *             on ANWD-COB run following the month-end run.      *
       *  MD060223 - Incorrect loan class code is reflected on report. *
       *             Use a new class variable report field in LER135P2.*
       *  MD060225 - Fee entries on APOSTPD and LEFEED are not updated *
@@ -2541,6 +2544,7 @@
      C                     Z-ADD0         WLOANA 130                                        MD055069
      C                     Z-ADD0         FEPOST                                            MD047522
      C                     MOVEL*BLANK    WPAYTD  1                                         MD052216
+     C                     MOVE ' '       ATYP                                              MD028354
      C                     MOVE *BLANK    WCLSP2  4                                         MD060223
       *                                                                                     MD055481
      C                     SETOF                     36                                     MD055481
@@ -3900,27 +3904,40 @@
      C           FENPYD    IFLE BJDNWD                                                        258414
      C           FENPYD    ANDNE0                                                             258414
      C           PRCDUE    ANDEQ'NWD'                                                       MD058499
+     C           WDELAY    ANDEQ' '                                                         MD028354
      C           FEPEND    ORLE BJDNWD                                                        258414
      C           PRCDUE    ANDEQ'NWD'                                                       MD058499
+     C           WDELAY    ANDEQ' '                                                         MD028354
      C           FENPYD    ORLT BJDNWD                                                      MD058499
      C           FENPYD    ANDNE0                                                           MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WDELAY    ANDEQ' '                                                         MD028354
      C           FENPYD    OREQ BJDNWD                                                      MD058499
      C           OMCODT    ANDEQBJDNWD                                                      MD058499
      C           FENPYD    ANDNE0                                                           MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WDELAY    ANDEQ' '                                                         MD028354
      C           FENPYD    OREQ BJDNWD                                                      MD058499
      C           FENPYD    ANDNE0                                                           MD058499
      C           BKANWD    ANDEQ'2'                                                         MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WDELAY    ANDEQ' '                                                         MD028354
      C           FEPEND    ORLT BJDNWD                                                      MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WDELAY    ANDEQ' '                                                         MD028354
      C           FEPEND    OREQ BJDNWD                                                      MD058499
      C           OMCODT    ANDEQBJDNWD                                                      MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WDELAY    ANDEQ' '                                                         MD028354
      C           FEPEND    OREQ BJDNWD                                                      MD058499
      C           BKANWD    ANDEQ'2'                                                         MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WDELAY    ANDEQ' '                                                         MD028354
+     C           FEPEND    ORLE BKAPDT                                                      MD028354
+     C           WDELAY    ANDEQ'Y'                                                         MD028354
+     C           FENPYD    ORLE BKAPDT                                                      MD028354
+     C           FENPYD    ANDNE0                                                           MD028354
+     C           WDELAY    ANDEQ'Y'                                                         MD028354
       *****************************************************************                209380 258414
      C/COPY WNCPYSRC,LER135C002
      C*                                                                   100428
@@ -10509,6 +10526,7 @@
      C                     END
       *
      C                     Z-ADDGDAYNO    SMDY    50                      MOF60
+     C                     MOVE ' '       WDELAY  1                                         MD028354
       *
       ** Check whether the start of the new month falls between RUND
       ** and the date of next working day and if so make the start of
@@ -10528,6 +10546,7 @@
      C           BJDNWD    SUB  1         CODT
      C           BKAPDT    IFLT CODT
      C                     Z-ADDBKAPDT    CODT
+     C                     MOVE 'Y'       WDELAY                                            MD028354
      C                     END
      C                     END
       *

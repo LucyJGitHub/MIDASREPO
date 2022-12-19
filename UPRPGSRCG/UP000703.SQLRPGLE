@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD060626             Date 13Oct22             *
-      *  Prev Amend No. MD059942             Date 16May22             *
+      *  Last Amend No. MD058830             Date 01Oct21             *
+      *  Prev Amend No. MD056602             Date 04Sep20             *
+      *                 MD060626             Date 13Oct22             *
+      *                 MD059942             Date 16May22             *
       *                 MD059554             Date 09Feb22             *
       *                 MD059572             Date 14Feb22             *
       *                 MD058986             Date 11Oct21             *
@@ -37,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
+      *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  MD060626 - CGC2030 fails when RGZPFM CGCSTRPD                *
       *  MD059942 - Ignore column DJLOGD                              *
       *  MD059554 - Need to remove old core deliverable that were     *
@@ -80,11 +84,14 @@
      D WIdx            S              3P 0
      D KeyFld          S            200A
      D*WHERE****       S            300A                                                    MD054955
-     D WHERE           S            600A                                                    MD054955
+     D*WHERE****       S            600A                                           MD054955 MD058830
+     D WHERE           S           2000A                                                    MD058830
      D*PINSERT**       S            300A                                                    MD054955
-     D PINSERT         S            600A                                                    MD054955
+     D*PINSERT**       S            600A                                           MD054955 MD058830
+     D PINSERT         S           2000A                                                    MD058830
      D*PSELECT**       S            300A                                                    MD054955
-     D PSELECT         S            600A                                                    MD054955
+     D*PSELECT**       S            600A                                           MD054955 MD058830
+     D PSELECT         S           2000A                                                    MD058830
      D SQLDynStmt      S           5000A
      D Outfile         S             10A
      D OFMbr           S             10A
@@ -447,6 +454,7 @@
                                                                                             MD054346
       * for T_WIPACT migration                                                              MD056891
      C                   if        EXTINDEX = 'GPWATBTD'                                    MD056891
+     C                             or EXTINDEX = 'T_APIBTD'                                 MD056602
      C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD056891
      C                             ' overriding user value (select ' +                      MD056891
      C                             %trimr(PSELECT) + ' from ' + OLDFILE +                   MD056891

@@ -26,7 +26,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
-      *           - Applied for MD-60684.                             *
+      *           - Applied for MD-60815.                             *
       *  MD059755 - Various records in MSIXISOPD and MSMXISOPD  have  *
       *             no value date                                     *
       *  MD059677 - Cleared correlation ID                            *

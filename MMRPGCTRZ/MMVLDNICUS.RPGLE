@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL063             Date 02Nov21               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL101             Date 01Dec22               *
+      *  Prev Amend No. CDL063             Date 02Nov21               *      
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL101   - Remove validation on Bank/NonBank Ind. for IP/IT  *
+      *             Deal Types                                        *
       *  CDL063 - Allow non-bank/bank counterparty on certain         *
       *           deal types                                          *
       *  MD046248 - Finastra Rebranding                               *
@@ -268,6 +271,7 @@
       ** If CDL063 is on, bypass the validation for non-bank                                  CDL063
       *                                                                                       CDL063
      C     CDL063        IFNE      'Y'                                                        CDL063
+     C     CDL101        OREQ      'N'                                                        CDL101
      C     DDTYPE        IFEQ      'IP'
      C     DDTYPE        OREQ      'IT'
      C                   MOVE      'Y'           ErrorFound
@@ -336,6 +340,19 @@
      C                   EVAL      CSD025 = 'Y'                                               CSD025
      C                   ENDIF                                                                CSD025
                                                                                               CSD025
+      ** Check if CDL101 (IP/IT deal types check) is active                                   CDL101
+      *                                                                                       CDL101
+     C                   CALLB     'AOSARDR0'                                                 CDL101
+     C                   PARM      *BLANKS       PRtCd             7                          CDL101
+     C                   PARM      '*VERIFY'     POptn             7                          CDL101
+     C                   PARM      'CDL101'      PSARD             6                          CDL101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL101
+                                                                                              CDL101
+     C                   MOVE      'N'           CDL101            1                          CDL101
+     C                   IF        PRtCd = *Blanks                                            CDL101
+     C                   EVAL      CDL101 = 'Y'                                               CDL101
+     C                   ENDIF                                                                CDL101
+                                                                                              CDL101                                                                                         
      C                   CALLB     'AOSARDR0'                                                 CDL063
      C                   PARM      *BLANKS       PRtCd             7                          CDL063
      C                   PARM      '*VERIFY'     POptn             7                          CDL063

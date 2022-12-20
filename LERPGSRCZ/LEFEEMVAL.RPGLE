@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058763           Date 08Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD030628           Date 01Dec22               *
+      *  Prev Amend No. MD027706           Date 01Dec22               *
+      *                 MD022452A          Date 01Dec22               *
+      *                 AR950498           Date 01Dec22               *
+      *                 MD058763           Date 08Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR375891B          Date 26Aug20               *
       *                 AR375892           Date 26Aug20               *
@@ -121,6 +125,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030628 - AR950498 is not applicable for New York branch.   *
+      *  MD027706 - AR950498 is not applicable for Shanghai branch.   *
+      *  MD022452A - LER0014: Fee sequence - invalid number or type   *
+      *              of characters entered.                           *
+      *            - Condition execution of AR950498 to non 'SG'      *
+      *              country.                                         *
+      *  AR950498 - Retrieval of system value                         *
+      *             SetFcltyAvailToZero to combine with MD022452A fix *
+      *             (Child: AR950499)                                 *
       *  MD058763 - Error message LER5607 is displayed despite valid  *
       *             input. Amend conditions to conform with           *
       *             alphanumeric base rates.                          *
@@ -1821,6 +1834,13 @@
 
      C     WPEND         IFLT      FA_DTAP
      C     WPEND         ORGT      FA_DTEX
+     C     WPEND         ORGT      FA_AVLD                                                 MD022452A
+      ** AR950498 not applicable to Nordea Singapore, Shanghai, New York                   MD022452A
+     C     SETZER        ANDEQ     'Y'                                                     MD022452A
+     C     DDCALT        ANDLE     '06'                                                    MD022452A
+     C     BJCNCD        ANDNE     'SG'                                                    MD022452A
+     C     BJCNCD        ANDNE     'CN'                                                     MD027706
+     C     BJCNCD        ANDNE     'US'                                                     MD030628
       *
       ** If calculation type output error message rather than
       ** warning message
@@ -5066,6 +5086,8 @@
      C                   MOVEL     WPARM         SVALK1                                       242377
       *                                                                                     MD046370
      C                   EVAL      SVALK2 = 'AutoEndCalcLoanFee'                            MD046370
+      *                                                                                     AR950498
+     C                   EVAL      SVALK3 = 'SetFcltyAvailToZero'                           AR950498
       *                                                                                       242377
       * Call Access object:                                                                   242377
      C                   CALL      'AOSVALR0'                                                 242377
@@ -5109,6 +5131,7 @@
       *                                                                                     MD046370
      C                   MOVEL     SVAL2         AutoEndFee        1                        MD046370
       *                                                                                     MD046370
+     C                   MOVEL     SVAL3         SETZER            1                        AR950498
      C                   ENDIF                                                                242377
       *
      C                   ENDSR

@@ -19,12 +19,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059755           Date 29Mar22               *
-      *  Prev Amend No. MD059676           Date 09Mar22               *
+      *  Last Amend No. MD060246           Date 01Dec22               *
+      *  Prev Amend No. MD059755           Date 29Mar22               *
+      *                 MD059676           Date 09Mar22               *
       *                 CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060246 - Increase field length value for MX Element Value  *
+      *             changed from 120A to 500A. (Recompile)            *
       *  MD059755 - Various records in MSIXISOPD and MSMXISOPD have   *
       *             no value date                                     *
       *  MD059676 - Program dump in job MS_MX_IMM due to duplicate    *

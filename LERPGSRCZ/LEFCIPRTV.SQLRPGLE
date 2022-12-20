@@ -16,10 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060121           Date 18Jun22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD022358           Date 01Dec22               *
+      *  Prev Amend No. MD060121           Date 18Jun22               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD034146           Date 17May22               *
-      *                 AR928430           Date 17May22
+      *                 AR928430           Date 17May22               *
       *                 CLE125             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -77,6 +78,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022358 - Amendment to facility details cannot be performed *
+      *             on the same day as the reactivation of the ex-    *
+      *             pired facility.                                   *
+      *           - If Facility is either closed or expired, check    *
+      *             for records in PF/LEFCAMPD if it has been reacti- *
+      *             vated.                                            *
       *  MD060121 - Serious Midas error in FCIP enquiry for agg fac.  *
       *             Added access to aggregate fac file aside from     *
       *             facilties extension file                          *
@@ -1080,9 +1087,22 @@
      C                   GOTO      EVALAA
      C                   END
 
+      **  If Facility is either closed or expired, check for records                        MD022358
+      **  in PF/LEFCAMPD if it has been reactivated.                                        MD022358
+     C                   MOVE      *OFF          WREAC                                      MD022358
+     C     F7_RECI       IFEQ      'C'                                                      MD022358
+     C     F7_RECI       OREQ      'E'                                                      MD022358
+     C                   MOVEL     DDCSSN        K3CNUM                                     MD022358
+     C                   MOVE      DDFACT        K3FACT                                     MD022358
+     C                   MOVE      DDFCNO        K3FCNO                                     MD022358
+     C                   EXSR      SRCKFR                                                   MD022358
+     C                   ENDIF                                                              MD022358
+                                                                                            MD022358
       * Amendments are only allowed on live records
+      * and reactivated facilities (i.e. WREAC is *ON)                                      MD022358
      C     F7_RECI       IFNE      'D'
      C     WAggregate    ANDNE     'Y'                                                        CLE041
+     C     WREAC         ANDNE     *ON                                                      MD022358
                                                                                               CLE041
      C     AGF1_RECI     ORNE      'D'                                                        CLE041
      C     WAggregate    ANDEQ     'Y'                                                        CLE041

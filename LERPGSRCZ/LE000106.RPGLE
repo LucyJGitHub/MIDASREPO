@@ -49,8 +49,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD021372           Date 01Dec22               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD026171           Date 07Apr14               *
       *                 MD055657           Date 14May20               *
@@ -81,6 +82,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021372 - Rollover of a Syndicated Loan crashes with        *
+      *             Java NullPointer error                            *
+      *           - Migrated loans - Pf/LeTrefPd - file field AREF    *
+      *             character delimiter '¦' not correct.  It should   *
+      *             be '|'.                                           *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -737,9 +743,12 @@
 
      C                   MOVEL     PCHGDAT       WKYYYY
 
-     C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
-     C                                      WKFCNO + '¦' + FCFATP + '¦' +
-     C                                      WKYYYY + '¦' + WKSQNO
+     C**********         EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +                   MD021372
+     C**********                            WKFCNO + '¦' + FCFATP + '¦' +                   MD021372
+     C**********                            WKYYYY + '¦' + WKSQNO                           MD021372
+     C                   EVAL      TRAREF = WKCNUM + '|' + WKFACT + '|' +                   MD021372
+     C                                      WKFCNO + '|' + FCFATP + '|' +                   MD021372
+     C                                      WKYYYY + '|' + WKSQNO                           MD021372
 
      C                   SELECT
      C                   WHEN      FCFATP = 'FI'
@@ -868,9 +877,12 @@
 
      C                   MOVEL     PCHGDAT       WKYYYY
 
-     C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
-     C                                      WKFCNO + '¦' + FCFATP + '¦' +
-     C                                      WKYYYY + '¦' + WKSQNO
+     C**********         EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +                   MD021372
+     C**********                            WKFCNO + '¦' + FCFATP + '¦' +                   MD021372
+     C**********                            WKYYYY + '¦' + WKSQNO                           MD021372
+     C                   EVAL      TRAREF = WKCNUM + '|' + WKFACT + '|' +                   MD021372
+     C                                      WKFCNO + '|' + FCFATP + '|' +                   MD021372
+     C                                      WKYYYY + '|' + WKSQNO                           MD021372
 
      C                   SELECT
      C                   WHEN      FCFATP = 'FI'
@@ -1009,7 +1021,8 @@
 
      C                   EVAL      TRSPRN = FPCRF
      C                   MOVEL     LNRF          WKLNRF
-     C                   EVAL      TRAREF = WKLNRF + '¦' + 'E'
+     C**********         EVAL      TRAREF = WKLNRF + '¦' + 'E'                              MD021372
+     C                   EVAL      TRAREF = WKLNRF + '|' + 'E'                              MD021372
      C                   EVAL      TRTRTP = 'CLIP'
      C                   EXSR      SRREPORT
 
@@ -1237,11 +1250,15 @@
 
      C**********         IF        FEFELOAN = 0                                               CLE148
      C                   IF        FEFELOAN = *BLANKS                                         CLE148
-     C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
-     C                                      WKFCNO + '¦¦' + WKFSEQ
+     C**********         EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +                   MD021372
+     C**********                            WKFCNO + '¦¦' + WKFSEQ                          MD021372
+     C                   EVAL      TRAREF = WKCNUM + '|' + WKFACT + '|' +                   MD021372
+     C                                      WKFCNO + '||' + WKFSEQ                          MD021372
      C                   ELSE
-     C                   EVAL      TRAREF = WKCNUM + '¦¦¦' + WKLNRF +
-     C                                      '¦' + WKFSEQ
+     C**********         EVAL      TRAREF = WKCNUM + '¦¦¦' + WKLNRF +                       MD021372
+     C**********                            '¦' + WKFSEQ                                    MD021372
+     C                   EVAL      TRAREF = WKCNUM + '|||' + WKLNRF +                       MD021372
+     C                                      '|' + WKFSEQ                                    MD021372
      C                   ENDIF
 
      C                   EVAL      TRTRTP = 'FEEM'
@@ -1622,8 +1639,10 @@
      C                   MOVEL     FCNUM         WKCNUM
      C                   MOVEL     FFACT         WKFACT
      C                   MOVEL     FFCNO         WKFCNO
-     C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
-     C                                      WKFCNO
+     C**********         EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +                   MD021372
+     C**********                            WKFCNO                                          MD021372
+     C                   EVAL      TRAREF = WKCNUM + '|' + WKFACT + '|' +                   MD021372
+     C                                      WKFCNO                                          MD021372
      C                   EVAL      TRTRTP = 'FCIP'
 
      C                   IF        PMODE = 'U'
@@ -1701,8 +1720,10 @@
      C                   PARM                    PRTN
 
      C                   MOVEL     PCHGDAT       WKYYYY
-     C                   EVAL      TRAREF = WKLNRF + '¦' + WKYYYY + '¦' +
-     C                                      WKLASN
+     C**********         EVAL      TRAREF = WKLNRF + '¦' + WKYYYY + '¦' +                   MD021372
+     C**********                            WKLASN                                          MD021372
+     C                   EVAL      TRAREF = WKLNRF + '|' + WKYYYY + '|' +                   MD021372
+     C                                      WKLASN                                          MD021372
      C                   SELECT
      C                   WHEN      DKAMTP = 'BC'
      C                   EVAL      TRTRTP = 'LOAM BC'
@@ -1917,13 +1938,18 @@
 
      C                   SELECT
      C                   WHEN      FAFARECI = 'A'
-     C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
-     C                                      WKFCNO + '¦' + WKFSEQ
+     C**********         EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +                   MD021372
+     C**********                            WKFCNO + '¦' + WKFSEQ                           MD021372
+     C                   EVAL      TRAREF = WKCNUM + '|' + WKFACT + '|' +                   MD021372
+     C                                      WKFCNO + '|' + WKFSEQ                           MD021372
      C                   EVAL      TRTRTP = 'FEAD'
      C                   WHEN      FAFARECI = 'S'
-     C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
-     C                                      WKFCNO + '¦' + WKFSEQ + '¦' +
-     C                                      WKYYYY
+     C**********         EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +                   MD021372
+     C**********                            WKFCNO + '¦' + WKFSEQ + '¦' +                   MD021372
+     C**********                            WKYYYY                                          MD021372
+     C                   EVAL      TRAREF = WKCNUM + '|' + WKFACT + '|' +                   MD021372
+     C                                      WKFCNO + '|' + WKFSEQ + '|' +                   MD021372
+     C                                      WKYYYY                                          MD021372
      C                   EVAL      TRTRTP = 'FEST'
      C                   ENDSL
 

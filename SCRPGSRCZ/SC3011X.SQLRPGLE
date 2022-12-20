@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054346           Date 18Jul21               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD021002           Date 01Dec22               *
+      *  Prev Amend No. MD054346           Date 18Jul21               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021002 - Missing set up of 'CBUSRMSG' in variable ZAMSGF   *
       *  MD054346 - Switchable Features Password Encryption           *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -197,6 +199,7 @@
      C     *IN90         IFEQ      '1'
      C                   MOVEL     'CBM0005'     W0RTN             7
       * Send message 'Switchable Features  EX'
+     C                   MOVEL     'CBUSRMSG'    ZAMSGF                                     MD021002
      C                   MOVEL     'CBM0005'     ZAMSID
      C                   EXSR      ZASNMS
      C                   GOTO      SAEXIT

@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD042752           Date 01Dec22               *
+      *  Prev Amend No. 227174             Date 01Dec22               *
+      *                 MD021699A          Date 01Dec22               *
+      *                 259227             Date 01Dec22               *
+      *                 CLE138             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR918343           Date 25Apr12               *
       *                 MD027517           Date 08Jul14               *
       *               . MD053093           Date 03Sep19               *
@@ -78,6 +82,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042752 - Facility currency being picked up to calculate    *
+      *             interest rather than loan currency                *
+      *  227174 - Int. Basis should default to loan ccy during loan   *
+      *           input                                               *
+      *         - Applied for MD042752                                *
+      *  MD021699A - Additional changes relating to closing date.     *
+      *  259227 - Default closing date to facility start date instead *
+      *           of facility expiry date. Applied fix 126246.        *
+      *           Applied for MD021699.                               *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR918343 - Tried to remove drawing types from facility but   *
@@ -1261,16 +1274,20 @@
 
      C     DDACTN        IFEQ      'I'
      C     DDDICB        ANDEQ     *BLANKS
+     C     DDMCCY        ANDEQ     'N'                                                      MD042752
      C                   MOVEL     DDFCCY        WCURR
      C                   EXSR      SRCURR
      C                   MOVE      A6DICB        DDDICB
      C                   ENDIF
 
      C     DDDICB        IFEQ      *BLANKS
-     C                   Move      'N'           DDDICBOK
-     C                   Add       1             Idx
-     C                   Movel     'DDDICB'      FldNamXAr(Idx)
-     C                   Movel     'LEF0071'     MsgIDXAr(Idx)
+      *                                                                                       227174
+      ** If Blank do nothing.  This field is now optional                                     227174
+      *                                                                                       227174
+     C**********         Move      'N'           DDDICBOK                                     227174
+     C**********         Add       1             Idx                                          227174
+     C**********         Movel     'DDDICB'      FldNamXAr(Idx)                               227174
+     C**********         Movel     'LEF0071'     MsgIDXAr(Idx)                                227174
       *
      C                   ELSE
       *
@@ -1724,11 +1741,11 @@
       *
      C     DDCDTE        IFEQ      *BLANKS
       * Default to start date
-     C     CLE106        IFEQ      'Y'                                                        CLE106
-     C                   MOVE      W#DTEX        ZDAYNO                                       CLE106
-     C                   ELSE                                                                 CLE106
+     C*****CLE106        IFEQ      'Y'                                                 CLE106 259227
+     C**********         MOVE      W#DTEX        ZDAYNO                                CLE106 259227
+     C**********         ELSE                                                          CLE106 259227
      C                   MOVE      W#DTAP        ZDAYNO
-     C                   ENDIF                                                                CLE106
+     C**********         ENDIF                                                         CLE106 259227
       *                                                                                       CLE106
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
@@ -1756,10 +1773,14 @@
 
      C     ZDAYNO        IFLT      W#DTAP
      C     ZDAYNO        ORGT      W#DTEX
-     C                   Move      'N'           DDCDTEOK
-     C                   Add       1             Idx
-     C                   Movel     'DDCDTE'      FldNamXAr(Idx)
-     C                   Movel     'LEF0083'     MsgIDXAr(Idx)
+     C**********         Move      'N'           DDCDTEOK                                  MD021699A
+     C**********         Add       1             Idx                                       MD021699A
+     C**********         Movel     'DDCDTE'      FldNamXAr(Idx)                            MD021699A
+     C**********         Movel     'LEF0083'     MsgIDXAr(Idx)                             MD021699A
+      ** Closing date passed from java layer (DS/TranInSeco)                               MD021699A
+      ** Not set by user. Closing date cannot be seen on User Input Screen                 MD021699A
+      ** Set Closing Date = Start Date                                                     MD021699A
+     C                   MOVE      W#DTAP        ZDAYNO                                    MD021699A
      C                   ENDIF
      C                   ENDIF
 

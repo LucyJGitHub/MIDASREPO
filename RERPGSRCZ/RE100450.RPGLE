@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059561           Date 21Feb22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1068429          Date 01Dec22               *
+      *  Prev Amend No. MD059561           Date 21Feb22               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068429- Subfile selection not correct. Allow lower case.  *
+      *             Recompile due to changes in DSPF/RE100450DF.      *
+      *             (Child: AR1069384)                                *
       *  MD059561 - Manual sweeps are failing with decimal data error *
       *             in field I_CCUS.                                  *
       *  MD046248 - Finastra Rebranding                               *

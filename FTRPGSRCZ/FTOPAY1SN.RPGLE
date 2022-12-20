@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW122             Date 04Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 230453             Date 01Dec22               *
+      *  Prev Amend No. CSW122             Date 04Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD054131           Date 13Sep19               *
@@ -175,6 +176,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  230453 - Extend details for the Third Reimbursement          *
+      *         - Applied for MD020977.                               *
       *  CSW122 - SWIFT ISO 20022                                     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -9085,6 +9088,12 @@
      C                   MOVEL     INB3          SINB3                                        195220
      C                   MOVEL     INB4          SINB4                                        195220
      C                   MOVEL     INB5          SINB5                                        195220
+      *                                                                                       230453
+     C                   MOVEL     OPTRI1        STRI1                                        230453
+     C                   MOVEL     OPTRI2        STRI2                                        230453
+     C                   MOVEL     OPTRI3        STRI3                                        230453
+     C                   MOVEL     OPTRI4        STRI4                                        230453
+     C                   MOVEL     OPTRI5        STRI5                                        230453
       *                                                                                       195220
      C                   ENDIF                                                                195220
       *

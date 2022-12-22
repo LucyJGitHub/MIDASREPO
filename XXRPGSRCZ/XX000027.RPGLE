@@ -26,8 +26,9 @@
       ***(C)*COPYRIGHT*MKI*LIMITED*1993,*1994**************************                       LUC109
       *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
-      *  Last Amend No. LUC109CC1          Date 12Sep19               *
-      *  Prev Amend No. LUC109             Date 20Sep16               *
+      *  Last Amend No. LUC109CC2          Date 20Dec22               *
+      *  Prev Amend No. LUC109CC1          Date 12Sep19               *
+      *                 LUC109             Date 20Sep16               *
       *                 MUI011             Date 19May04               *
       *                 197893             Date 01Oct01               *
       *                 LUC010             Date 22Aug01               *
@@ -45,6 +46,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  LUC109CC2 - New York Amendments LE Extract (MD-60852)        *
+      *              Amend C6145 flag value.                          *
       *  LUC109CC1 - New York Amendments                              *
       *         - Use DLFS for facility start date.                   *
       *         - Ensure that C6145 Fix/Var Flag is never blank.      *
@@ -2171,6 +2174,12 @@
      C                   ELSE                                                              LUC109CC1
      C                   MOVE      'V'           C6145                                     LUC109CC1
      C                   ENDIF                                                             LUC109CC1
+      *                                                                                    LUC109CC2
+     C     FRBC          IFEQ      *ZERO                                                   LUC109CC2
+     C                   MOVE      'V'           C6145                                     LUC109CC2
+     C                   ELSE                                                              LUC109CC2
+     C                   MOVE      'F'           C6145                                     LUC109CC2
+     C                   ENDIF                                                             LUC109CC2
       *                                                                                    LUC109CC1
      C                   ELSE                                                              LUC109CC1
      C     INTR          IFNE      *ZERO

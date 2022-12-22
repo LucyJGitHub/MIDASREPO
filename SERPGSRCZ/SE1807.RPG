@@ -25,8 +25,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046998A          Date 15Apr21               *
+      *  Last Amend No. MD060721           Date 10Nov22               *
+      *  Prev Amend No. MD058081           Date 11May21               *
+      *                 MD058285           Date 22Jun21               *
+      *                 MD046998A          Date 15Apr21               *
       *                 MD057247           Date 01Feb21               *
       *                 MD046248           Date 27Oct17               *
       *                 226449             Date 24Jun15               *
@@ -114,6 +116,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060721 - Program does not compile                          *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046998A - Recompiled due to changes in /COPY ZDYYRZ3       *
       *            - Applied fix for MD057480                         *
@@ -239,7 +243,7 @@
      F            DPTMVDD1                          KRENAMERTVIDX
      FDPTMVDZ3IF  E           K        DISK         KCOMIT                                    201230
      F            DPTMVDD2                          KRENAMERTVIDX2                            201230
-     FMGECONL0IF  E           K        DISK
+     F*MGECONL0IF  E           K        DISK                                                MD058081
      F/COPY WNCPYSRC,SE1807F002
      FSE1807DFCF  E                    WORKSTN
      F/COPY WNCPYSRC,SE1807F003
@@ -535,6 +539,7 @@
      ISDCUST    E DSSDCUSTPD
      I** Customer details
       *
+     IMGECON    E DSMGCONJW0                                                                MD058081
      IPDATA     E DSSE70DT
       ** Data structure to receive parameters from SE0070 for MT5xxs
       *
@@ -5939,8 +5944,13 @@
      C                     END
       *
       * Check instructions sub-type depending of type of delivering
-     C           KMGECO    CHAINMGECONL0             86
-     C           *IN86     IFEQ '1'
+     C********** KMGECO    CHAINMGECONL0             86                                     MD060721
+     C                     CALL 'MGCONRTV'                                                  MD060721
+     C                     PARM *BLANKS   WRTCD   7                                         MD060721
+     C                     PARM KMGECO    WKEYX  20                                         MD060721
+     C           MGECON    PARM MGECON    DSSDY                                             MD060721
+     C********** *IN86     IFEQ '0'                                                         MD060721
+     C           WRTCD     IFEQ *BLANKS                                                     MD060721
       *
      C           WWINST    IFEQ 'RECFREE'
      C                     MOVEL'SEW5107' ZAMSID
@@ -6489,8 +6499,13 @@
       * Check combinations between instructions and fungibility codes
       * (for Cedel)
      C           WWSENT    IFEQ 'CEDEL'
-     C           KMGECO    CHAINMGECONL0             85
-     C           *IN85     IFEQ '0'
+     C********** KMGECO    CHAINMGECONL0             85                                     MD058081
+     C                     CALL 'MGCONRTV'                                                  MD058081
+     C                     PARM *BLANKS   WRTCD   7                                         MD058081
+     C                     PARM KMGECO    WKEYX  20                                         MD058081
+     C           MGECON    PARM MGECON    DSSDY                                             MD058081
+     C********** *IN85     IFEQ '0'                                                         MD058081
+     C           WRTCD     IFEQ *BLANKS                                                     MD058081
      C                     MOVEAMGXFUN    MGFUN
      C           SFCOD     LOKUPMGFUN                    85
      C           *IN85     IFEQ '0'

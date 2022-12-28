@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD060626             Date 13Oct22             *
-      *  Prev Amend No. MD059942             Date 16May22             *
+      *  Last Amend No. MD060848             Date 28Dec22             *
+      *  Prev Amend No. MD060547             Date 12Dec22             *
+      *                 MD060626             Date 13Oct22             *
+      *                 MD059942             Date 16May22             *
       *                 MD059554             Date 09Feb22             *
       *                 MD059572             Date 14Feb22             *
       *                 MD058986             Date 11Oct21             *
@@ -37,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060848 - Consider field SDLIBRTD.ROUPAL                    *
+      *  MD060547 - Issue with column A1FTPT in SDRETRPD              *
       *  MD060626 - CGC2030 fails when RGZPFM CGCSTRPD                *
       *  MD059942 - Ignore column DJLOGD                              *
       *  MD059554 - Need to remove old core deliverable that were     *
@@ -93,6 +97,8 @@
      D TotRow          S             13  0
      D FldData       E DS                  EXTNAME(UPFFDSTPD)
      D LibMov          S             10A                                                    MD055681
+     D RcdCount        S              2  0                                                  MD060547
+     D OLDSCHEMA       S             10A                                                    MD060547
        /EJECT
       *****************************************************************
       *                                                               *
@@ -269,8 +275,27 @@
      C                             or WHFLDI = 'DJLOGD'                                     MD058986
      C                             or WHFLDI = 'DKLOGD'                                     MD058986
      C                   else                                                               MD055891
+                                                                                            MD060547
+      ** if processing A1FTPT, check same field exists in SDRETRPD                          MD060547
+     C                   If        WHFLDI = 'A1FTPT'                                        MD060547
+     C                   eval      OLDSCHEMA = '#.' + KMSCHEMA                              MD060547
+     C/EXEC SQL                                                                             MD060547
+     C+ select count(*) into :RcdCount                                                      MD060547
+     C+ from QADBILLB WHERE DBILIB = :OLDSCHEMA and DBIFIL                                  MD060547
+     C+ = :OLDFILE and DBIFLD = 'A1FTPT'                                                    MD060547
+     C/END-EXEC                                                                             MD060547
+     C                   If        RcdCount = 0                                             MD060547
+     C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI               MD060547
+     C                   eval      PSELECT = %trimr(PSELECT) + ', '  + ''' '''              MD060547
+     C                   Else                                                               MD060547
+     C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI               MD060547
+     C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI               MD060547
+     C                   Endif                                                              MD060547
+     C                   Else                                                               MD060547
+                                                                                            MD060547
      C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI
      C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI
+     C                   Endif                                                              MD060547
      C                   Endif                                                              MD055891
      C                   ENDIF
      C                   ENDIF
@@ -418,8 +443,36 @@
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI                 MD058986
      C                   eval      PSELECT = %trimr(PSELECT) + ', ' + '''N'''               MD058986
      C                   else                                                               MD058986
+                                                                                            MD060547
+      ** if processing A1FTPT, check same field exists in SDRETRPD                          MD060547
+     C                   If        WHFLDI = 'A1FTPT'                                        MD060547
+     C                             or WHFLDI = 'ROUAPL'                                     MD060848
+     C                   eval      OLDSCHEMA = '#.' + KMSCHEMA                              MD060547
+     C                   If        WHFLDI = 'A1FTPT'                                        MD060848
+     C/EXEC SQL                                                                             MD060547
+     C+ select count(*) into :RcdCount                                                      MD060547
+     C+ from QADBILLB WHERE DBILIB = :OLDSCHEMA and DBIFIL                                  MD060547
+     C+ = :OLDFILE and DBIFLD = 'A1FTPT'                                                    MD060547
+     C/END-EXEC                                                                             MD060547
+     C                   else                                                               MD060848
+     C/EXEC SQL                                                                             MD060848
+     C+ select count(*) into :RcdCount                                                      MD060848
+     C+ from QADBILLB WHERE DBILIB = :OLDSCHEMA and DBIFIL                                  MD060848
+     C+ = :OLDFILE and DBIFLD = 'ROUAPL'                                                    MD060848
+     C/END-EXEC                                                                             MD060848
+     C                   Endif                                                              MD060848
+     C                   If        RcdCount = 0                                             MD060547
+     C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI               MD060547
+     C                   eval      PSELECT = %trimr(PSELECT) + ', '  + ''' '''              MD060547
+     C                   Else                                                               MD060547
+     C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI               MD060547
+     C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI               MD060547
+     C                   Endif                                                              MD060547
+     C                   Else                                                               MD060547
+                                                                                            MD060547
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI
      C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI
+     C                   Endif                                                              MD060547
      C                   ENDIF                                                              MD058986
      C                   ENDIF                                                              MD055681
      C                   ENDIF

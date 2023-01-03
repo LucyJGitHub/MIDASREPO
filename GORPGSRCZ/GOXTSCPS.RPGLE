@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060087           Date 07Nov22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 264185             Date 19Aug14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060087 - FM2.1 SP22 - Incorrect securities book positions  *
+      *             are extracted to GPPOSNPD.                        *
+      *           - Change design of 246221 since it will cause an    *
+      *             error where events with processing date is less   *
+      *             less than run date are not processed. Based on    *
+      *             fix 263109.                                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -803,6 +810,7 @@
       *
       * CLEAR EVENT
      C                   CLEAR                   E_EVNT
+     C                   IF        TINC = 'C'                                               MD060087
       *
       * Processing Date
      C     I#TVDI        IFEQ      'T'
@@ -851,6 +859,8 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
+      *                                                                                     MD060087
+     C                   ENDIF                                                              MD060087
       *
       * Read next live record
       *

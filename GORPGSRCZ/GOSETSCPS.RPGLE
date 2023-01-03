@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058440           Date 31Jan22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060087           Date 07Nov22               *
+      *  Prev Amend No. MD058440           Date 31Jan22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060087 - FM2.1 SP22 - Incorrect securities book positions  *
+      *             are extracted to GPPOSNPD.                        *
+      *           - Change design of 246221 since it will cause an    *
+      *             error where events with processing date is less   *
+      *             less than run date are not processed. Based on    *
+      *             fix 263109.                                       *
       *  MD058440 - Dumps are generated after inserting a Full Trade  *
       *             Settlement.                                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -167,10 +174,18 @@
      C                   MOVEL     SCOR          T_CNCD
       * Transaction Date
      C**********         Z-ADD     CSDA          T_TDAT
+     C                   IF        CSDA = 0                                                 MD060087
      C                   Z-ADD     BJRDNB        T_TDAT                                     BUG13281
+     C                   ELSE                                                               MD060087
+     C                   Z-ADD     CSDA          T_TDAT                                     MD060087
+     C                   ENDIF                                                              MD060087
       * Start Date
      C**********         Z-ADD     CSDA          T_SDAT
+     C                   IF        CSDA = 0                                                 MD060087
      C                   Z-ADD     BJRDNB        T_SDAT                                     BUG13281
+     C                   ELSE                                                               MD060087
+     C                   Z-ADD     CSDA          T_SDAT                                     MD060087
+     C                   ENDIF                                                              MD060087
       * End Date
      C                   Z-ADD     MATY          T_EDAT
       * Issuer Exposure

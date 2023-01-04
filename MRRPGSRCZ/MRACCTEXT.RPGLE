@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD047670           Date 07Dec22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CRN001             Date 20Jul05               *
       *                 CDL038             Date 10May05               *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047670 - MRC0210 Failed Due to MRACCTEXT DBASE error 003   *
+      *           - Applied for MD-60759                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -681,6 +684,8 @@
      C     SDCUST        PARM      *BLANKS       DSSDY
  
      C                   IF        PRetCode <> *BLANKS
+     C                             AND PRetCode <> '*CUSDEL'                                MD047670
+     C                             AND PRetCode <> '*CUSCLS'                                MD047670
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBKEY = PCust

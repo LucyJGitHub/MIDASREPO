@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR898442           Date 24Feb12               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD060344           Date 08Oct22               *
+      *  Prev Amend No. AR898442           Date 24Feb12               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD021108A          Date 16Jul13               *
       *                 CMG006             Date 15Oct19               *
       *                 MD052633           Date 08Oct19               *
@@ -55,6 +56,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060344 - Paris MGOMSGPD Tag 25 reconciliation Difference.  *
+      *           - Pattern the fix after MG0000940.                  *
       *  AR898442 - MT940 nacked if narrative starts with a /         *
       *             (Child: AR898443)                                 *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
@@ -627,7 +630,8 @@
      C                   Eval      ACFMTPGM =  'MGFLD25'                                      CMG006
      C                   Exsr      ACNTFMT                                                    CMG006
      C                   ELSE                                                                 CMG006
-     C                   If        CER030 = 'Y'                                             BUG25799
+      *                                                                                     MD060344
+     C**********         If        CER030 = 'Y'                                    BUG25799 MD060344
       *                                                                                     BUG25799
      C*  Output IBAN, RE or GL account.
      C                   SELECT                                                             BUG23740
@@ -659,23 +663,37 @@
      C                                        PAcctcde + PAcctSeq                           BUG23740
      C                   ENDIF                                                              BUG23740
       *                                                                                     BUG23740
+     C                   WHEN      EDACNF = '*BLZ'                                          MD060344
+      *                                                                                     MD060344
+     C                   IF        CER030 = 'Y' AND EDMCNW = 'Y'                            MD060344
+      *                                                                                     MD060344
+     C                   IF        MGACNO <> *ZEROS                                         MD060344
+     C                   EVAL      WAccount   = BBBLCD + '/' + %CHAR(MGACNO)                MD060344
+     C                   ELSE                                                               MD060344
+     C                   EVAL      WAccount   = BBBLCD + '/' + MGBRCA +                     MD060344
+     C                                      PCusN + MGCCY + PAcctcde +                      MD060344
+     C                                      PAcctSeq                                        MD060344
+     C                   ENDIF                                                              MD060344
+      *                                                                                     MD060344
+     C                   ENDIF                                                              MD060344
+      *                                                                                     MD060344
      C                   ENDSL                                                              BUG23740
       *                                                                                     BUG25799
       ** CER030 = 'N'                                                                       BUG25799
-     C                   Else                                                               BUG25799
-      *                                                                                     BUG25799
-     C                   Select                                                             BUG25799
-     C                   When      MGIBAN <> *Blank                                         BUG25799
-     C                   Movel     MGIBAN        WAccount                                   BUG25799
-     C                   When      MGACNO <> 0                                              BUG25799
-     C                   Movel     MGACNO        WAccount                                   BUG25799
-     C                   Other                                                              BUG25799
-     C                   Eval      WAccount = MGBRCA + PCusN + MGCCY +                      BUG25799
-     C                                        PAcctCde + PAcctSeq                           BUG25799
-     C                   Endsl                                                              BUG25799
+     C**********         Else                                                      BUG25799 MD060344
+      **********                                                                   BUG25799 MD060344
+     C**********         Select                                                    BUG25799 MD060344
+     C**********         When      MGIBAN <> *Blank                                BUG25799 MD060344
+     C**********         Movel     MGIBAN        WAccount                          BUG25799 MD060344
+     C**********         When      MGACNO <> 0                                     BUG25799 MD060344
+     C**********         Movel     MGACNO        WAccount                          BUG25799 MD060344
+     C**********         Other                                                     BUG25799 MD060344
+     C**********         Eval      WAccount = MGBRCA + PCusN + MGCCY +             BUG25799 MD060344
+     C**********                              PAcctCde + PAcctSeq                  BUG25799 MD060344
+     C**********         Endsl                                                     BUG25799 MD060344
      C/COPY WNCPYSRC,MGH00049
       *                                                                                     BUG25799
-     C                   EndIf                                                              BUG25799
+     C**********         EndIf                                                     BUG25799 MD060344
      C                   ENDIF                                                                CMG006
 
      C                   ENDSR

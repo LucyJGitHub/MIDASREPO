@@ -177,8 +177,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060729 - Warning message should not be displayed when      *
-      *             principal amount does not exceed ten billion.     *
+      *  MD060729 - Warning message is still displayed even if        *
+      *             principal amount is less than the ten billion     *
+      *             threshold.Format the Ten Billion constant to      *
+      *             consider the loan currency no. of decimal places. *
       *  MD057537 - Return a warning message when principal amount    *
       *             exceeds ten billion.                              *
       *  MD051827 - System allows maturity date of a parts purchased  *
@@ -718,8 +720,6 @@
      D  RUNS                   1     30P 0
      D                                     DIM(10) ASCEND
       *
-     D WrkTenB         S             13P 0                                                  MD060729
-      *                                                                                     MD060729
      D                 DS                                                                     CSD027
       ** General data structure to handle OLNO field now that is alpha.                       CSD027
      D OLNOAlpha               1      6                                                       CSD027
@@ -1216,6 +1216,7 @@
      D @KEY2           S              2                                                       CLE134
      D WPEAInd         S              1A                                                      CSC054
      D CSC054          S              1A                                                      CSC054
+     D WrkTenB         S             13P 0                                                  MD060729
       ***  Work field for APR Required Flag warning message                                   CER050
      D WfAPRC          S              1                                                       CER050
      D CER050          S              1A                                                      CER050

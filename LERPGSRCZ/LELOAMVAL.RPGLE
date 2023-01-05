@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057537           Date 13Sep22               *
-      *  Prev Amend No. 257949             Date 05Jul22               *
+      *  Last Amend No. MD060729           Date 20Dec22               *
+      *  Prev Amend No. MD057537           Date 13Sep22               *
+      *                 257949             Date 05Jul22               *
       *                 256362             Date 09Jun22               *
       *                 CLE125             Date 02Nov21               *
       *                 MD057739           Date 28Apr22               *
@@ -110,6 +111,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060729 - Warning message should not be displayed when      *
+      *             principal amount does not exceed ten billion.     *
       *  MD057537 - Return a warning message when the total of        *
       *             principal amount and event amount exceeds ten     *
       *             billion.                                          *
@@ -626,6 +629,7 @@
      D @VDAYNO         S              5S 0                                                    CLE158
      D WK_FAMT         S             14  0                                                  MD058307
      D WKC_FAMT        S             14  0                                                  MD058307
+     D WrkTenB         S             13P 0                                                  MD060729
 
       /COPY WNCPYSRC,LELOAMV002
 
@@ -2650,8 +2654,10 @@
       *                                                                                     MD057537
      C                   Z-ADD     0             HLAMT            13 0                      MD057537
      C     SVCPAM        ADD       WLAMT         HLAMT                                      MD057537
+     C                   EVAL      WrkTenB = TenBillion * (10**CDPL)                        MD060729
       *                                                                                     MD057537
-     C     HLAMT         IFGT      TenBillion                                               MD057537
+     C*****HLAMT         IFGT      TenBillion                                      MD057537 MD060729
+     C     HLAMT         IFGT      WrkTenB                                                  MD060729
      C                   MOVE      'W'           DDAMNTOK                                   MD057537
      C                   ADD       1             WIdx                                       MD057537
      C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'                              MD057537

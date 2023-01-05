@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057537           Date 13Sep22               *
-      *  Prev Amend No. MD051827           Date 03Mar22               *
+      *  Last Amend No. MD060729           Date 20Dec22               *
+      *  Prev Amend No. MD057537           Date 13Sep22               *
+      *                 MD051827           Date 03Mar22               *
       *                 MD058763           Date 08Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -176,6 +177,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060729 - Warning message should not be displayed when      *
+      *             principal amount does not exceed ten billion.     *
       *  MD057537 - Return a warning message when principal amount    *
       *             exceeds ten billion.                              *
       *  MD051827 - System allows maturity date of a parts purchased  *
@@ -715,6 +718,8 @@
      D  RUNS                   1     30P 0
      D                                     DIM(10) ASCEND
       *
+     D WrkTenB         S             13P 0                                                  MD060729
+      *                                                                                     MD060729
      D                 DS                                                                     CSD027
       ** General data structure to handle OLNO field now that is alpha.                       CSD027
      D OLNOAlpha               1      6                                                       CSD027
@@ -3759,7 +3764,9 @@ E001 C                   ENDIF
      C                   ENDIF                                                                CLE106
      C                   ENDIF                                                                CLE106
       *
-     C     WSVAM         IFGT      TenBillion                                               MD057537
+     C                   EVAL      WrkTenB = TenBillion * (10**WCDPL)                       MD060729
+     C*****WSVAM         IFGT      TenBillion                                      MD057537 MD060729
+     C     WSVAM         IFGT      WrkTenB                                                  MD060729
      C                   MOVE      'W'           DDCPAMOK                                   MD057537
      C                   ADD       1             WId                                        MD057537
      C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)                             MD057537

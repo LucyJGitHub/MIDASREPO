@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 254841A            Date 14May20               *
-      *  Prev Amend No. 254841             Date 14May20               *
+      *  Last Amend No. MD060724           Date 25Nov22               *
+      *  Prev Amend No. 254841A            Date 14May20               *
+      *                 254841             Date 14May20               *
       *                 MD046248           Date 27Oct17               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -50,6 +51,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060724 - STP screen crashes after route payment for FT.    *
+      *             Populate value of W#SLSH when ordering customer   *
+      *             type is IBAN. Enhance fix 254841.                 *
       *  254841A - Error message BAW0001 is returned as warning.      *
       *            Introduce FT0805A to imitate RABC processing.      *
       *          - Applied for MD055654.                              *
@@ -82,7 +86,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -101,52 +105,52 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.                                                           CRE008
      D WFldNmXAr       S             10A   DIM(XArrayMax)                                     CRE008
                                                                                               CRE008
@@ -158,33 +162,33 @@
                                                                                               CRE008
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       * External DS for General Ledger details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       * External DS Midas SD Trading ICD data
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External data structure for currency codes
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
                                                                                               CRE008
       ** Externally described DS for SAR details                                              CRE008
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRE008
      D SLCD          E                     EXTFLD(LCD)                                        CRE008
- 
+
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs (short)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Define full account to be passed for RE101901 parameters                             CRE008
      D***WkORCDS         DS            18                                              CRE008 CGL029
      D WkORCDS         DS                                                                     CGL029
@@ -213,25 +217,25 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIdx            S              3P 0                                                    CRE008
- 
+
      D C#CURR          S              3
      D C#OPTN          S              7
      D C#RTCD          S              7
- 
+
      D ZalignOK        S              1
      D ZFIELD          S             16
      D ZADEC           S              1  0
      D ZADIG           S              2  0
- 
+
       ** Parameters used for call to RE101901                                                 CRE008
      D PRetCode        S              7                                                       CRE008
      D PInBranch       S              3                                                       CRE008
@@ -277,7 +281,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *BlankS
@@ -286,11 +290,11 @@
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      Idx = 0
      C                   Eval      WIdx = 0                                                  254841A
- 
+
       * Settle currency validation
       *
      C                   Exsr      VSETCUR
- 
+
       * Settle amount validation
       *
      C                   If        OKSmcy = 'Y'
@@ -300,13 +304,13 @@
      C                   Move      *Blank        ZFIELD
      C                   Move      SSMAM         ZFIELD
      C                   Exsr      VZALIGN
- 
+
      C                   If        ZalignOK = 'Y'
      C                   Move      ZFIELD        @SMAM
      C                   End
      C                   End
      C                   End
- 
+
       ** If CRE008 is on, ordering customer is valid and settlement amount is valid           CRE008
       ** Check the overdraft limit for the account                                            CRE008
                                                                                               CRE008
@@ -338,7 +342,7 @@
      C                             OKSMAM = 'W'                                               CRE008
      C                   EVAL      RetCodeIn = 'WARN'                                         CRE008
      C                   ENDIF                                                                CRE008
- 
+
       * RETURN
       *
      C                   RETURN
@@ -350,39 +354,39 @@
      C******************************************************************
      C*
      C     VSETCUR       BEGSR
- 
+
      C                   If        SSMCY = *Blanks and
      C                             @NINEU = 'I'
      C                   Eval      SSMCY = BKEURO
      C                   End
- 
+
       ** access currency file
      C                   CALLB     'AOCURRR0'
      C                   Parm      *BlankS       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm      SSMCY         C#CURR
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   If        C#RTCD <> *BlankS
       * Send error to screen
      C                   Move      'N'           OKSmcy
      C                   Add       1             Idx
      C                   Movel     'SSMCY'       FldNamXAr(Idx)
      C                   Movel     'MMA0921'     MsgIdXAr(Idx)
- 
+
      C* If not on file must set up decimal places etc for
      C* validation of other field
      C                   Eval      @PCDP = 0
      C                   Eval      @PSPOT = 1
      C                   Eval      @PMDIN = 0
      C                   Else
- 
+
      C                   Move      C#CURR        SSMCY
- 
+
      C                   If        A6INCY = 'Y'
      C                   Eval      @NTPSD = A6TPSD
      C                   End
- 
+
      C                   If        @NINEU = 'I' and
      C                             SSMCY <> BKEURO or
      C                             @NINEU = 'E' and
@@ -392,9 +396,9 @@
      C                   Add       1             Idx
      C                   Movel     'SSMCY'       FldNamXAr(Idx)
      C                   Movel     'MMA0922'     MsgIdXAr(Idx)
- 
+
      C                   End
- 
+
      C*
      C** Move new standing data field into field used in program
      C*
@@ -403,27 +407,27 @@
      C                   Else
      C                   Eval      @PMDIN= 0
      C                   End
- 
+
      C* Store decimal places spot rate multiply/divide ind
      C                   Eval      @PCDP = A6NBDP
      C                   Eval      @PSPOT = A6SPRT
- 
+
      C* Change spot rate by buy spread
      C                   If        A6BYSS = '+'
      C                   Eval      @PBRAT = A6SPRT + A6BYSR
      C                   Else
      C                   Eval      @PBRAT = A6SPRT - A6BYSR
      C                   End
- 
+
      C* Change spot rate by sell spread
      C                   If        A6SLSS = '+'
      C                   Eval      @PSRAT = A6SPRT + A6SLSR
      C                   Else
      C                   Eval      @PSRAT = A6SPRT - A6SLSR
      C                   End
- 
+
      C                   End
- 
+
      C* If settlement type is 10 must be sterling
      C                   If        SSTTP = '10' and
      C                             SSMCY <> BLCYCD
@@ -433,7 +437,7 @@
      C                   Movel     'SSMCY'       FldNamXAr(Idx)
      C                   Movel     'MMA0923'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   ENDSR
      C*****************************************************************
      C* END OF SETTLE CURRENCY VALIDATION                             *
@@ -446,9 +450,9 @@
      C     VSETAMT       BEGSR
      C*
      C                   If        SPYTP = 'RP'
- 
+
       * Mandatory if pay amount not entered otherwise not permitted
- 
+
      C                   If        SSMAM = *Blank  and
      C**********                   SPYAM = *Blank  or                                        BUG8068
      C                             SPYAM = *Blank                                            BUG8068
@@ -460,28 +464,28 @@
      C                   Movel     'SSMAM '      FldNamXAr(Idx)
      C                   Movel     'MMA0928'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   End
- 
+
      C                   If        OKSmam = 'Y'
- 
+
      C* If entered validate
      C                   If        SSMAM <> *Blank
      C                   Move      *Blank        ZFIELD
      C                   Move      SSMAM         ZFIELD
      C                   Exsr      VZALIGN
- 
+
      C                   If        ZalignOK = 'Y'
      C                   Move      ZFIELD        @SMAM
      C                   Move      'P'           @FAIN
      C                   End
- 
+
      C                   Else
      C                   Eval      @SMAM = 0
      C                   End
      C*
      C                   End
- 
+
      C                   ENDSR
      C*****************************************************************
      C* END OF SETTLE AMOUNT VALIDATION                               *
@@ -494,7 +498,7 @@
      C*
      C                   Eval      ZADIG = 13 - @PCDP
      C                   Eval      ZADEC = @PCDP
- 
+
       * Validate amount as numeric with correct d.p.
      C                   CALLB     'ZALIGN'
      C                   Parm                    ZalignOK          1
@@ -509,7 +513,7 @@
      C                   Movel     'SSMAM'       FldNamXAr(Idx)
      C                   Movel     'MMA0924'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   ENDSR
      C*****************************************************************
      C* END OF PAY AMOUNT VALIDATION                                  *
@@ -631,6 +635,7 @@
      C                             @ORCT  <> 'A'                                              254841
      C                   SELECT                                                               254841
      C                   When      @ORCT = 'I'                                                254841
+     C                   Eval      W#SLSH = %subst(SORC1:1)                                 MD060724
      C                   If        W#SLSH = '/'                                               254841
      C                   Eval      PIBAN = %subst(SORC1:2)                                    254841
      C                   Else                                                                 254841
@@ -725,21 +730,21 @@
      C                   Endif                                                                254841
       *                                                                                       254841
      C                   EndSR                                                                254841
-     C/EJECT                                                                                  254841 
+     C/EJECT                                                                                  254841
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       ** Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -749,13 +754,13 @@
      C                   Parm                    WFldNmXAr                                    CRE008
      C                   Parm                    WMsgIDXAr                                    CRE008
      C                   Parm                    WMsgDtXAr                                    CRE008
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** ACCESS GENERAL LEDGER DETAILS
       *
      C**********         CALL      'AOGELRR0'                                                 CGL029
@@ -779,7 +784,7 @@
      C                   Parm      '*DBERR'      @RTCD
      C                   Parm      '*FIRST'      @OPTN
      C     SDTRAD        Parm      SDTRAD        DSFDY
- 
+
       ** Access SCSARDPD to determint if CRE008 is installed                                  CRE008
                                                                                               CRE008
      C                   EVAL      CRE008 = 'N'                                               CRE008
@@ -809,9 +814,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

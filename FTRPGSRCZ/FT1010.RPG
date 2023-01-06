@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR1001970          Date 07Dec20               *
+      *  Last Amend No. CFT166             Date 02Nov22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR1001970          Date 07Dec20               *
       *                 MD056935           Date 27Oct20               *
       *                 MD046248           Date 27Oct17               *
       *                 CAP212             Date 15Sep14               *
@@ -84,6 +85,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CFT166 - Amendment to FT A/C Balance Check on Authorisation  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR1001970 - DBASE Error 901 on SDCURRPD when OPCHGC is blank.*
@@ -288,6 +290,8 @@
      FFT101DL0UF  E           K        DISK                               CFT006
      FFT102DL0UF  E           K        DISK                               CFT006
      FMEIRFTL2UF  E           K        DISK                                                 MD056935
+     FFTABOVL0UF  E           K        DISK                                                   CFT166
+      ** FT Account Balance Override                                                          CFT166
      FFT1010AUO   E                    PRINTER      KINFDS SPOOLU         S01117
      FFT1010P2O   E                    PRINTER      KINFDS SPOOL2         S01117
      FFT1010P3O   E                    PRINTER      KINFDS SPOOL3         S01117
@@ -332,6 +336,7 @@
      F*                                                                   S01117
      F*      39       Core Feature S01499 is switched ON                  S01499
      F*      42       Overflow Indicator for FT1010P6                                         CSW209
+     F*      44       CHAIN to FTABOVL0 File                                                  CFT166
      F*      51       COUNT INDICATOR FOR HEADINGS
      F*      52         "       "      "     "
      F*      53         "       "      "     "
@@ -1676,6 +1681,31 @@
      C                     ENDIF                                                              CFT120
       *                                                                                       CFT120
      C                     ENDIF                                                              CFT120
+      *                                                                                       CFT166
+      ** Check If CFT166 is ON                                                                CFT166
+      *                                                                                       CFT166
+     C                     MOVE 'N'       CFT166  1                                           CFT166
+      *                                                                                       CFT166
+     C                     CALL 'AOSARDR0'                                                    CFT166
+     C                     PARM *BLANKS   PRTCD                                               CFT166
+     C                     PARM '*VERIFY' POPTN                                               CFT166
+     C                     PARM 'CFT166'  PSARD                                               CFT166
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CFT166
+      *                                                                                       CFT166
+     C           PRTCD     IFEQ *BLANKS                                                       CFT166
+     C                     MOVE 'Y'       CFT166                                              CFT166
+     C                     ELSE                                                               CFT166
+      *                                                                                       CFT166
+      ** else, database error                                                                 CFT166
+      *                                                                                       CFT166
+     C           PRTCD     IFNE '*NRF   '                                                     CFT166
+     C                     MOVE 'SCSARDPD'WBFILE                                              CFT166
+     C                     MOVELPSARD     WBKEY                                               CFT166
+     C                     Z-ADD906       WBASE                                               CFT166
+     C                     EXSR ABORT                                                         CFT166
+     C                     ENDIF                                                              CFT166
+      *                                                                                       CFT166
+     C                     ENDIF                                                              CFT166
      C/COPY WNCPYSRC,FT1010C013
      C*                                                                   S01414
      C* Move the conditional IF so that AOGELRR0 is always called.        S01414
@@ -2057,12 +2087,22 @@
      C                     EXSR INPREP
      C                     MOVE *BLANKS   WPREF  13                                          BUG4776
      C                     MOVELPREF      WPREF                                              BUG4776
+     C                     MOVELPREF      OVREF  15                                           CFT166
      C/COPY WNCPYSRC,FT1010C001
      C                     DELETINPAYDDF                                  E32894
      C           WPREF     CHAINFTPREFL1             42                                      BUG4776
      C           *IN42     IFEQ '0'                                                          BUG4776
      C                     DELETFTPREFDF                                                     BUG4776
      C                     ENDIF                                                             BUG4776
+      *                                                                                       CFT166
+      ** Purge from FT Account Balance Override file                                          CFT166
+      *                                                                                       CFT166
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+     C           OVREF     CHAINFTABOVL0             44                                       CFT166
+     C           *IN44     IFEQ '0'                                                           CFT166
+     C                     DELETFTABOVD0                                                      CFT166
+     C                     ENDIF                                                              CFT166
+     C                     ENDIF                                                              CFT166
      C/COPY WNCPYSRC,FT1010C006
      C                     END                             ## E002        E32894
      C                     END                             ## E001
@@ -2120,6 +2160,7 @@
      C                     EXSR OTPREP
      C                     MOVE *BLANKS   WPREF                                              BUG4776
      C                     MOVELPREF      WPREF                                              BUG4776
+     C                     MOVELPREF      OVREF                                               CFT166
      C*                                                                   S01408
      C/COPY WNCPYSRC,FT1010CCP2                                           S01408
      C*                                                                   S01408
@@ -2143,6 +2184,15 @@
      C           *IN42     IFEQ '0'                                                          BUG4776
      C                     DELETFTPREFDF                                                     BUG4776
      C                     ENDIF                                                             BUG4776
+      *                                                                                       CFT166
+      ** Purge from FT Account Balance Override file                                          CFT166
+      *                                                                                       CFT166
+     C           CFT166    IFEQ 'Y'                                                           CFT166
+     C           OVREF     CHAINFTABOVL0             44                                       CFT166
+     C           *IN44     IFEQ '0'                                                           CFT166
+     C                     DELETFTABOVD0                                                      CFT166
+     C                     ENDIF                                                              CFT166
+     C                     ENDIF                                                              CFT166
      C/COPY WNCPYSRC,FT1010C004
      C                     END                             ## E002        E32894
      C                     END                             ## E001

@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD056198           Date 08Jul20               *
+      *  Last Amend No. MD058755           Date 01Sep21               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD056198           Date 08Jul20               *
       *                 MD035074           Date 13May20               *
       *                 255449             Date 21Apr20               *
       *                 MD050452           Date 11Feb20               *
@@ -109,6 +110,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  MD056198 - STOR was processed despite insufficient balance,  *
@@ -914,7 +916,8 @@
      I**  External DS for Customer details                                S01522
      I              QQDFAC                          QQDFA1                                    CGL029
      I*                                                                   S01522
-     ISDRETR    E DSSDRETRPD                                              S01466
+     I*SDRETR*** E DSSDRETRPD                                              S01466           MD058755
+     ISDRETR    E DSSDRTRJW0                                                                MD058755
      I**  External DS for Retail Transaction types                        S01466
      I*                                                                   209995
      ISDRETL    E DSSDRETLPD                                              209995
@@ -1050,7 +1053,19 @@
 0290 C*    CHECK FOR TRANSACTION TYPE 91000 IF CUST ORIGINATED            E15459
 0291 C                     MOVEL'41    '  TABKEY                          E15459
 0292 C                     MOVE ' 91000'  TABKEY                          E15459
-0293 C                     EXSR TABCHN                                    E15459
+     C                     MOVEL'91000'   @KEY                                              MD058755
+0293 C**********           EXSR TABCHN                                    E15459            MD058755
+     C                     CALL 'AORETRR0'                                                  MD058755
+     C                     PARM *BLANKS   PRTCD                                             MD058755
+     C                     PARM '*KEY    'POPTN                                             MD058755
+     C                     PARM           @KEY    5                                         MD058755
+     C           SDRETR    PARM SDRETR    DSFDY                                             MD058755
+     C                     SETOF                     89                                     MD058755
+     C                     SETON                     26                                     MD058755
+     C           PRTCD     IFNE *BLANKS                                                     MD058755
+     C                     SETON                     89                                     MD058755
+     C                     SETOF                     26                                     MD058755
+     C                     ENDIF                                                            MD058755
      C*                                                                   E17948
      C* IF TRANSACTION TYPE RECORD DELETED OR FLAGGED, OUTPUT ERROR REPORTE17948
      C           *IN89     IFEQ '1'                                       E17948
@@ -1082,7 +1097,8 @@
      C*                                                                   S01466
 0294 C                     MOVEL'      '  TABKEY                          E15459
 0295 C                     MOVE '      '  TABKEY                          E15459
-0298 C           CUOR      COMP 'Y'                      29               E15459
+0298 C********** CUOR      COMP 'Y'                      29               E15459            MD058755
+0298 C           A1COIN    COMP 'Y'                      29               E15459            MD058755
 0299 C                     BITOF'01234567'PRIN    1                       E15459
 0300 C   29                BITON'0'       PRIN                            E15459
 0306 C**                                                                  RE0730

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD058755           Date 01Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154             Date 13Oct14               *
       *                 MD039864           Date 02Aug16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *  Prev Amend No. BUG27473           Date 21Apr10               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD039864 - Allow dummy entries not to be generated. If       *
@@ -76,7 +78,7 @@
      F                                     INFDS(D@WKS)
       *
      FGLIPDFPD  UF A E             DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -100,10 +102,10 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
      D/COPY ZSRSRC,ZALIGNZ1LE
       *
@@ -113,13 +115,13 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
      D N@NUMB          C                   CONST('0123456789')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -131,28 +133,28 @@
      D  D@FMTN               261    270
      D  D@0099               271    369
      D  D@CRSR               370    371B 0
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * Definition: First DS for Access Programs, Short Data Structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Definition: Second DS for Access Programs, Short Data Structure
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Definition: Bank Details Accessed Via Access Program.
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       * Definition: Branch Details Accessed Via Access Program.
- 
+
      D SDDEPT        E DS                  EXTNAME(SDDEPTPD)
       * Definition: Dept Details Accessed Via Access Program.
- 
+
      D SDRETR        E DS                  EXTNAME(SDRETRPD)
       * Definition: Retail Details Accessed Via Access Program.
- 
+
      D  DSBTNB                 1      3  0
       * Data Structure: Batch Number defined as a Zoned field
- 
+
      D                 DS             3
       * Data Structure: Split 3 Char field for Numeric Validation.
      D  DSCHR3                 1      3
@@ -161,22 +163,22 @@
      D  D@PO3                  3      3
      D  D@PO12                 1      2
      D  D@PO23                 2      3
- 
+
      D P@TRAT          DS
      D  @TRAT                  1      5  0
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D WKERR           S              9  0
- 
+
      ** Access Object Parameters
      D @RTCD           S              7
      D @OPTN           S              7
      D P@DPCD          S              3
- 
+
      ** Message Queues Parameter
      D P@PMSQ          S             10
      D P@PMSL          S              5
@@ -184,12 +186,12 @@
      D P@MSGF          S             10
      D P@MDTA          S            132
      D P@MTYP          S              7
- 
+
      D WTRTY           S              5S 0
      D WTRAT           S              5S 0
      D WPSTA           S             13S 0
      D Warning         S              1                                                     MD039864
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -200,7 +202,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -225,7 +227,7 @@
      C                   ENDIF
      C                   ENDDO
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -238,9 +240,9 @@
       *                                                               *
       *****************************************************************
      C     SrPFK03       BEGSR
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -254,12 +256,12 @@
       *                                                               *
       *****************************************************************
      C     SrPFK05       BEGSR
- 
+
      C                   EVAL      WKERR = *ZERO
      C                   MOVEA     '0000000'     *IN(51)
      C                   MOVEA     '1000'        *IN(58)
      C                   EXSR      SrXSDFD1
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -273,10 +275,10 @@
       *                                                               *
       *****************************************************************
      C     SrPFK12       BEGSR
- 
+
      C                   EVAL      WKERR = *ZERO
      C                   EVAL      *INLR = *ON
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -290,17 +292,17 @@
       *                                                               *
       *****************************************************************
      C     SrPDFD1       BEGSR
- 
+
      C                   MOVEA     '0000000'     *IN(51)
      C                   MOVEA     '0000'        *IN(58)
      C                   EVAL      P@MSGI = *BLANKS
- 
+
       ** Validate Input
      C                   EXSR      SrXVDFD1
- 
+
       * If there are any errors, redisplay detail screen,
       * otherwise update the file.
- 
+
      C                   IF        WKERR = *ZERO
      C                             and Warning = ' '                                        MD039864
      C                   EXSR      SrXUIPDF
@@ -311,9 +313,9 @@
      C                   WRITE     GL009000F1
      C                   WRITE     MSGCTL
      C                   WRITE     GL009000D1
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -327,11 +329,11 @@
       *                                                               *
       *****************************************************************
      C     SrXSDFD1      BEGSR
- 
+
       * Set Data Area details.
- 
+
      C                   EXSR      SrXRIPDF
- 
+
      C                   EVAL      SCBRCH = BDBRCH
      C                   EVAL      SCTRTY = BDTRTY
      C                   EVAL      SCDPCD = BDDPCD
@@ -347,14 +349,14 @@
      C                   MOVEL     ZFIELD        SCPSTA
      C                   EVAL      SCDICR = BDDICR                                           CGL114A
      C                   EVAL      SCPNAR = BDPNAR
- 
+
       * Display Detail Screen.
- 
+
      C                   WRITE     GL009000H1
      C                   WRITE     GL009000F1
      C                   WRITE     MSGCTL
      C                   WRITE     GL009000D1
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -368,11 +370,11 @@
       *                                                               *
       *****************************************************************
      C     SrXVDFD1      BEGSR
- 
+
      C                   EVAL      WKERR = 0
- 
+
       * Validate 'Branch Code'. Must not be blank and must be valid.
- 
+
      C                   IF        SCBRCH = *BLANKS
       **********         EVAL      P@MSGI = 'XX00013'                                       BUG27219
      C                   EVAL      P@MSGI = 'ATU0013'                                       BUG27219
@@ -380,11 +382,11 @@
      C                   ADD       1             WKERR
      C                   EVAL      *IN54 = *ON
      C                   EVAL      *IN61 = *ON
- 
+
      C                   ELSE
      C                   EVAL      WKBRCH = SCBRCH
      C                   EXSR      SrXRBRCH
- 
+
      C                   IF        @RTCD <> *BLANKS
       **********         EVAL      P@MSGI = 'XX00014'                                       BUG27219
      C                   EVAL      P@MSGI = 'ATU0014'                                       BUG27219
@@ -394,11 +396,11 @@
      C                   EVAL      *IN61 = *ON
      C                   ENDIF
      C                   ENDIF
- 
+
       * Validate 'Transaction Type'
- 
+
      C                   MOVE      SCTRTY        WTRTY
- 
+
      C                   IF        SCTRTY <> *BLANKS OR
      C                             WTRTY <> *ZEROS
      C                   TESTN                   SCTRTY               25
@@ -409,14 +411,15 @@
      C                   ADD       1             WKERR
      C                   EVAL      *IN55 = *ON
      C                   EVAL      *IN62 = *ON
- 
+
      C                   ELSE
-     C                   CALL      'AOTRNTR0'
+     C**********         CALL      'AOTRNTR0'                                               MD058755
+     C                   CALL      'AORETRR0'                                               MD058755
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      WTRTY         @TRAT
      C                   PARM                    DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      P@MSGI = 'GLX0059'
      C                   EXSR      SrXSPMSQ
@@ -426,9 +429,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       * Validate 'Department Code'
- 
+
      C                   IF        SCDPCD <> *BLANKS
      C                   CALL      'AODEPTR0'
      C                   PARM      *BLANKS       @RTCD
@@ -436,7 +439,7 @@
      C**********         PARM      SCDPCD        P@DPCD                                     BUG27473
      C     SCDPCD        PARM      SCDPCD        P@DPCD                                     BUG27473
      C                   PARM                    DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      P@MSGI = 'GLX0031'
      C                   EXSR      SrXSPMSQ
@@ -445,11 +448,11 @@
      C                   EVAL      *IN63 = *ON
      C                   ENDIF
      C                   ENDIF
- 
+
       * Validate 'Dummy DR/CR Entries Transaction Type'
- 
+
      C                   MOVE      SCTRAT        WTRAT
- 
+
      C                   IF        SCTRAT <> *BLANKS OR
      C                             WTRAT <> *ZEROS
      C                   TESTN                   SCTRAT               25
@@ -460,14 +463,15 @@
      C                   ADD       1             WKERR
      C                   EVAL      *IN57 = *ON
      C                   EVAL      *IN64 = *ON
- 
+
      C                   ELSE
-     C                   CALL      'AOTRNTR0'
+     C**********         CALL      'AOTRNTR0'                                               MD058755
+     C                   CALL      'AORETRR0'                                               MD058755
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      WTRAT         @TRAT
      C                   PARM                    DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      P@MSGI = 'GLX0059'
      C                   EXSR      SrXSPMSQ
@@ -477,11 +481,11 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       * Validate 'Posting Amount'
- 
+
      C                   MOVE      SCPSTA        WPSTA
- 
+
      C                   IF        WPSTA = *ZEROS OR
      C                             SCPSTA = *BLANKS
       **********         EVAL      P@MSGI = 'XX00054'                                       BUG27219
@@ -496,7 +500,7 @@
      C                   ELSE                                                               MD039864
      C                   EVAL      Warning = ' '                                            MD039864
      C                   ENDIF                                                              MD039864
- 
+
      C                   ELSE
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     SCPSTA        ZFIELD
@@ -504,12 +508,12 @@
      C                   Z-ADD     13            ZADIG
      C                   EVAL      *IN99 = *OFF
      C                   EXSR      ZALIGN
- 
+
      C                   CALL      'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   MOVE      ZFIELD        WPSTA
- 
+
      C                   IF        *IN99 = *ON
       **********         EVAL      P@MSGI = 'XX00054'                                       BUG27219
      C                   EVAL      P@MSGI = 'ATU0054'                                       BUG27219
@@ -519,7 +523,7 @@
      C                   EVAL      *IN65 = *ON
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Request for Capitalisation                                                 CGL114A
                                                                                              CGL114A
      C                   IF        SCDICR <> 'Y' AND                                         CGL114A
@@ -544,13 +548,13 @@
       *                                                               *
       *****************************************************************
      C     SrXUIPDF      BEGSR
- 
+
       * Retrieve Default data.
- 
+
      C                   EXSR      SrXRIPDF
- 
+
       * Set Default data details.
- 
+
      C                   EVAL      BDBRCH = SCBRCH
      C                   EVAL      BDTRTY = SCTRTY
      C                   EVAL      BDTRAT = WTRAT
@@ -559,9 +563,9 @@
      C                   EVAL      BDPNAR = SCPNAR
      C                   EVAL      BDDICR = SCDICR                                           CGL114A
      C
- 
+
       * Update Default Data.
- 
+
      C                   UPDATE    GLIPDFD0
      C                   ENDSR
       **********************************************************************
@@ -576,11 +580,11 @@
       *                                                               *
       *****************************************************************
      C     SrXRIPDF      BEGSR
- 
+
       * Retrieve GL Posting Interface Details.
- 
+
      C     1             CHAIN     GLIPDFPD                           2021
- 
+
      C     *IN21         IFEQ      *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GLIPDFPD'
@@ -590,14 +594,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * If record not found, first time round so create blank one.
- 
+
      C                   IF        *IN20 = *ON
      C                   CLEAR                   GLIPDFD0
      C                   WRITE     GLIPDFD0
      C                   ENDIF
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -611,16 +615,16 @@
       *                                                               *
       *****************************************************************
      C     SrXRBRCH      BEGSR
- 
+
       * Retrieve/Select Branch Code. If the Branch Code field
       * contains a ? then a selection list is displayed.
- 
+
      C                   CALL      'AOBRCHR0'
      C                   PARM      '*BLANKS'     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      WKBRCH        WKBRCH
      C     SDBRCH        PARM      SDBRCH        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS AND
      C                             @RTCD <> '*NRF' AND
      C                             @RTCD <> '*NOSEL'
@@ -631,7 +635,7 @@
      C                   EVAL      DBASE = 002
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   EVAL      SCBRCH = WKBRCH
      C                   ENDIF
@@ -648,14 +652,14 @@
       *                                                               *
       *****************************************************************
      C     SrXCPMSQ      BEGSR
- 
+
      C                   CALL      'Y2CLMSC'
      C                   PARM      @PGM          P@PMSQ
      C                   PARM      '*SAME'       P@PMSL
- 
+
      C                   MOVEA     '00000000'    *IN(61)
      C                   MOVEA     '00000'       *IN(69)
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -669,7 +673,7 @@
       *                                                               *
       *****************************************************************
      C     SrXSPMSQ      BEGSR
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM      @PGM          P@PMSQ
      C                   PARM      '*SAME'       P@PMSL
@@ -677,7 +681,7 @@
      C                   PARM      'GLUSRMSG'    P@MSGF
      C                   PARM                    P@MDTA
      C                   PARM      '*INFO'       P@MTYP
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -690,34 +694,34 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C     *DTAARA       DEFINE                  LDA
      C                   IN        RUNDAT
- 
+
       * Define Variables.
- 
+
      C     *LIKE         DEFINE    @OPTN         WKOPTN
      C     *LIKE         DEFINE    SCBRCH        WKBRCH
- 
+
       ** Set Date Format Indicator *IN98  on if date format is MMDDYY
- 
+
      C                   IF        AGDFF = 'M'
      C                   EVAL      *IN98 = *ON
      C                   ENDIF
- 
+
      C                   MOVEL     'GL009000'    @PGM
      C     *LOCK         IN        LDA
      C                   CLEAR                   LDA
      C                   MOVEL     @PGM          DBPGM
      C                   OUT       LDA
- 
+
       * Retrieve Bank Details.
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*BLANKS'     @RTCD
      C                   PARM      '*FIRST '     @OPTN
@@ -733,13 +737,13 @@
      C                   EXSR      *PSSR
      C                   END
      C                   MOVE      BJMRDT        SCDAT#
- 
+
      C                   IF        BJDFIN = 'M'
      C                   EVAL      *IN98 = *ON
      C                   ENDIF
- 
+
       * Initialise parameters, work fields, etc.
- 
+
      C                   EVAL      *IN10 = *ON
      C                   EVAL      *IN80 = *ON
      C                   ENDSR

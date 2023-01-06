@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD059426           Date 20Jan22               *
-      *  Prev Amend No. 251863             Date 22May20               *
+      *  Last Amend No. MD060717           Date 23Nov22               *
+      *  Prev Amend No. MD059426           Date 20Jan22               *
+      *                 251863             Date 22May20               *
       *                 248024             Date 22May20               *
       *                 MD057657           Date 09Mar21               *
       *                 MD046248           Date 27Oct17               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060717 - Changed FXM4003 to warning instead of error       *
       *  MD059426 - Exchange rate and amounts do not agree.           *
       *  248024 - Change in processing to determine 'Normally Quoted  *
       *           Decimal Places' for Forward Points. Applied fix     *
@@ -1010,10 +1012,13 @@
      C     AMTOK         IFNE      'Y'
      C                   MOVE      'N'           DDBamtOK
      C                   MOVE      'N'           DDSamtOK
-     C                   ADD       1             Idx
+     C**********         ADD       1             Idx                                        MD060717
+     C                   ADD       1             WIx                                        MD060717
      C**********         MOVEL     'DDRATE'      FldNamXAr(Idx)                               224474
-     C                   MOVEL     'DDRAT1'      FldNamXAr(Idx)                               224474
-     C                   MOVEL     'FXM4003'     MsgIdXAr(Idx)
+     C**********         MOVEL     'DDRAT1'      FldNamXAr(Idx)                      224474 MD060717
+     C**********         MOVEL     'FXM4003'     MsgIdXAr(Idx)                              MD060717
+     C                   MOVEL     'DDRAT1'      WFldNmXAr(WIx)                             MD060717
+     C                   MOVEL     'FXM4003'     WMsgIdXAr(WIx)                             MD060717
      C                   END
      C*
      C     #ZID9         ENDSR                                                  #ZID9 TAG

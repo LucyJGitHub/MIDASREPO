@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044271           Date 21Mar17               *
       *                 MD000091           Date 14May13               *
       *                 CER059             Date 19Jul10               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044271 - (1) if MT940 is not to be generated, default      *
@@ -154,9 +156,11 @@
       *
       ** Network details record format data structure
       *
-     D DSNwrk        E DS                  EXTNAME(SDNWRKPD)
+     D*DSNwrk***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DSNwrk        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       *
-     D DSNwrkN       E DS                  EXTNAME(SDNWRKPD)
+     D*DSNwrkN**     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DSNwrkN       E DS                  EXTNAME(SDNWKJW0)                                MD058830
      D                                     PREFIX(N_)
       *
       ** Long Access Object Data Structure

@@ -6,13 +6,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD045952           Date 06Jul17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD045952           Date 06Jul17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD024415           Date 20Jan14               *
       *                 CGL146A *CREATE    Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD045952 - Ensure that COB MT940s only generated if          *
       *              calling pgm is GLC001430.                        *
       *  MD046248 - Finastra Rebranding                               *
@@ -20,16 +22,23 @@
       *  CGL146A - MT940/MT950 Production in Input Cycle              *
       *                                                               *
       *****************************************************************
- 
+
       ** Access Network extension details
- 
+
      C                   IF        CGL146 = 'Y'
-     C     EDNWRK        CHAIN     SDNWRKI0
- 
+     C*****EDNWRK        CHAIN     SDNWRKI0                                                 MD058830
+     C/EXEC SQL                                                                             MD058830
+     C+ SELECT *                                                                            MD058830
+     C+ into :NewFilRcdEx                                                                   MD058830
+     C+ from SDNW1JW0                                                                       MD058830
+     C+ where EDNWR1 = :EDNWRK                                                              MD058830
+     C/END-EXEC                                                                             MD058830
+
       ** Check if network allows generation of MT940
- 
-     C                   IF        %FOUND
- 
+
+     C**********         IF        %FOUND                                                   MD058830
+     C                   IF        SQLCODE = 0                                              MD058830
+
      C**********         SELECT                                                             MD024415
      C**********         WHEN      PHASE = 'A' AND EDP940 = 'Y'                             MD024415
      C**********                   OR PHASE <> 'A' AND EDA940 = 'Y'                         MD024415
@@ -38,7 +47,7 @@
      C**********                   OR PHASE <> 'A' AND EDA940 = 'N'                         MD024415
      C**********         EVAL      *IN40 = *ON                                              MD024415
      C**********         ENDSL                                                              MD024415
- 
+
       ** If the network does not allow production of more than one MT940/MT950              MD024415
       ** per day, the MT940 is generated in I/C or in COB.                                  MD024415
       *                                                                                     MD024415
@@ -57,7 +66,7 @@
      C                   ENDIF                                                              MD024415
      C                   ENDIF
      C                   ENDIF
- 
+
       *****************************************************************
       * End of /COPY CGL146_076                                       *
       *****************************************************************

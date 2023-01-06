@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
@@ -157,7 +159,8 @@
      D  QQDFAC1      E                     EXTFLD(QQDFAC)                                     CGL029
       ** External DS for Customer Details
 
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       ** External DS for Network Details
 
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)

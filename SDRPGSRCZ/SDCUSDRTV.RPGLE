@@ -30,8 +30,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059520           Date 21Feb22               *
-      *  Prev Amend No. 254109             Date 01Jun20               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD059520           Date 21Feb22               *
+      *                 254109             Date 01Jun20               *
       *                 AR1088819          Date 03Jun20               *
       *                 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *
@@ -154,6 +156,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records. (Recompile)      *
       *  254109 - Introduce new err msgs; one for the 'D' action code *
@@ -398,10 +402,10 @@
      FSDCRWCL1  IF   E           K DISK    INFSR(*PSSR)
 
       * RTV : Midas SD Message type descriptions retrieval
-     FSDMTPYL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDMTPYL1* IF   E           K DISK    INFSR(*PSSR)                                    MD060008
 
       * RTV : Message Network Details   Retrieval index
-     FSDNWRKL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDNWRKL1* IF   E           K DISK    INFSR(*PSSR)                                    MD058830
                                                                                               CSD012
       * RTV : Authorisation Log - by Function                                                 CSD012
      FSDAULGL2  IF   E           K DISK    INFSR(*PSSR)                                       CSD012

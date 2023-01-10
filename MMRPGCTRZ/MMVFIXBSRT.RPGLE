@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD020624A          Date 12Dec13               *
+      *  Last Amend No. AR1079461          Date 18Jan13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD020624A          Date 12Dec13               *
       *                 AR1082657          Date 30Jan13               *
       *                 263678             Date 05Feb10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1079461 - Time deposit validation to enhance               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020624A - Prevent MMM0799 warning message from showing     *
       *              when user inserts a TD Deal.                     *
@@ -77,10 +79,10 @@
       *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
       *                                                               *
       *****************************************************************
- 
+
      FFDDTSTL1  IF   E           K DISK
       ** Midas FD Deal type/subtype file
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -99,66 +101,66 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field received as a parameter
      D Msgid1          S                   LIKE(#MsgID)
- 
+
       ** Fix Base Rate indicator received as a parameter
      D DDFBRT          S              1A
- 
+
       ** Deal Type received as a parameter
      D DDTYPE          S              2A
- 
+
       ** Deal Subtype received as a parameter
      D DDSTYP          S              2A
- 
+
       ** Deal Class received as a parameter                                                   CDL038
      D DDCLAS          S              4A                                                      CDL038
                                                                                               CDL038
       ** Base rate code received as a parameter
      D DDBSRC          S              2A
- 
+
       ** Maturity date received as a parameter
      D IKMATD          S              5  0
                                                                                              BUG5812
@@ -167,7 +169,7 @@
                                                                                               241873
       ** For backing up the original Fixed Base Rate Code                                     241873
      D DDFBRTBK        S                   Like(DDFBRT)                                       241873
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -175,7 +177,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -183,12 +185,12 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error flags & msgs to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
      C                   RESET                   Defaulted                                   BUG5812
- 
+
       *                                                                                       263678
       ** Do not default fix base rate immediately to 'N'.  Check                              263678
       ** FDDTSTL1 first.                                                                      263678
@@ -222,7 +224,7 @@
      C                   MOVEL     'MMM0346'     Msgid1
      C                   GOTO      ERROR
      C                   ENDIF
- 
+
       ** Default value from Deal type/subtype table
      C*****DDBSRC        IFNE      *BLANKS                                                    263678
      C*****DDFBRT        ANDEQ     *BLANKS                                                    263678
@@ -269,14 +271,16 @@
      C                   ENDIF                                                             MD020624A
       *                                                                                       263678
       ** User override the default value of DDFBRT                                            263678
+     C                   IF        WFBRT <> *BLANKS                                        AR1079461
      C                   IF        DDFBRT <> WFBRT                                            263678
      C**********         MOVEL     'MMM0799'     Msgid1                             263678 AR1082657
      C                   MOVEL     '5045889'     Msgid1                                    AR1082657
      C                   EVAL      RetCodeIn = 'Warning'                                      263678
      C                   ENDIF                                                                263678
+     C                   ENDIF                                                             AR1079461
      C                   ENDIF                                                                263678
      C                   ENDIF
- 
+
       ***Fix*Base*Rate*must*be*'Y'*or*'N'*or*blanks********************                     BUG10938
       ** Fix Base Rate must be 'Y' or 'N'                                                   BUG10938
      C                   IF        (DDTYPE = 'IT') OR                                       BUG12810
@@ -289,7 +293,7 @@
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0327'     Msgid1
      C                   ELSE
- 
+
       ***If*Base*Rate*or*Maturity*Date*not*entered,********************                     BUG10938
       ***Fix*Base*Rate*must*be*blanks.***                                                   BUG10938
      C*****DDBSRC        IFEQ      *BLANKS                                                  BUG10938
@@ -299,7 +303,7 @@
      C**********         EVAL      ErrorFound = 'Y'                                         BUG10938
      C**********         MOVEL     'MMM0333'     Msgid1                                     BUG10938
      C**********         ELSE                                                               BUG10938
- 
+
       ** If Base Rate and Maturity Date entered,
       ** Fix Base Rate must be 'Y' or 'N'.
      C     DDBSRC        IFNE      *BLANKS
@@ -308,12 +312,12 @@
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0334'     Msgid1
      C                   ENDIF
- 
+
      C**********         ENDIF                                                              BUG10938
- 
+
      C                   ENDIF
      C                   ENDIF                                                              BUG12810
- 
+
       ** If an error was found, set the return code appropriately
      C     ERROR         TAG
      C                   IF        ErrorFound = 'Y'
@@ -325,9 +329,9 @@
      C                   EVAL      RetCodeIn = 'Error'
      C                   EndIf                                                               BUG5812
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -339,9 +343,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -351,23 +355,23 @@
      C                   PARM                    DDCLAS                                       CDL038
      C                   PARM                    DDBSRC
      C                   PARM                    IKMATD
- 
+
       ** Key List for Loan Type/Subtype and Deal Type/Subtype
- 
+
      C     KLDTST        KLIST
      C                   KFLD                    DDTYPE
      C                   KFLD                    DDSTYP
      C                   KFLD                    DDCLAS                                       CDL038
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

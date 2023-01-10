@@ -17,7 +17,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD058517 *CREATE    Date 17Oct22              *
+      *  Last Amend No. MD060897 *AMEND     Date 10Jan23              *
+      *  Prev Amend No. MD058517 *CREATE    Date 17Oct22              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -111,6 +112,7 @@
 
       ** Work Data Structures
      D LoanDS          DS
+     D  DSRECI                        1A                                                    MD060897
      D  DSCNUM                        6A
      D  DSCPAM                       13P 0
      D  DSCCY                         3A
@@ -238,7 +240,9 @@
      C/exec SQL
      C+ declare CLOA cursor for
      C+ select
-     C+   CNUM
+     C+   RECI                                                                              MD060897
+     C**********+   CNUM                                                                    MD060897
+     C+ , CNUM                                                                              MD060897
      C+ , CPAM
      C+ , CCY
      C+ , SLID
@@ -275,7 +279,7 @@
      C+ into :LoanDS
      C/end-exec
 
-     C                   IF        SQLCOD <> NO_RECORD                                      MD060897
+     C                   IF        SQLCOD <> NO_RECORD AND DSRECI = 'D'                     MD060897
       ** Transaction Reference
      C                   EVAL      P1LNRF = KTRNID
 
@@ -620,6 +624,17 @@ I    C                   ENDIF
 
       ** Rate Rounding Precision
      C                   MOVEL     DSRRDP        P1RRDP
+     C                   EVAL      isRndApplies = 'N'                                       MD060897
+     C                   IF        DSCALM = 'NCCR'                                          MD060897
+     C                   CALL      'ZAGETRDAPL'                                             MD060897
+     C                   PARM                    DSRFRR                                     MD060897
+     C                   PARM                    isRndApplies      1                        MD060897
+     C                   ENDIF                                                              MD060897
+     C                   IF        isRndApplies = 'Y'                                       MD060897
+     C                   EVAL      P1RLBL = 'Rate Rounding Precision'                       MD060897
+     C                   ELSE                                                               MD060897
+     C                   EVAL      P1RLBL = 'Rate Rounding Decimals '                       MD060897
+     C                   ENDIF                                                              MD060897
 
       ** Write out detail record
      C                   WRITE     DETLP2

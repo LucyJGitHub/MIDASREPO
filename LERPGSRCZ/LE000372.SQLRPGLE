@@ -221,8 +221,6 @@
      D P@OP10          S             20
      D P@VL10          S            200
      D PrintP3         S              1
-                                                                                            MD060897
-     D NO_ERROR        c                   const(0)                                         MD060897
      D NO_RECORD       c                   const(100)                                       MD060897
 
       *****************************************************************
@@ -496,9 +494,10 @@ I    C                   ENDIF
      C                   EVAL      KSPLFP  = 'Y'
      C                   EVAL      KPINTA  = KCINTA
      C                   UPDATE    SDRTKNT0
+     C                   ENDIF                                                              MD060897
      C                   ENDIF
 
-     C                   ENDIF                                                              MD060897
+
      C                   READ      SDRTKNTD                               40
      C                   ENDDO
 

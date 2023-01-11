@@ -171,6 +171,7 @@
      D WOPNP1          S              1A
      D PSEQ            S              5A
      D SENTY           S              3A
+     D RPRNT           S              1A
      D ZFILE           S             10A
      D ZSERR           S              1A
      D ZSNUM           S              6  0
@@ -224,7 +225,8 @@
      C                   READ      SDRTKNTD                               40
      C     *IN40         DOWEQ     *OFF
      C                   IF        KMODID = 'LE' AND KRTKNI = 'Y' AND
-     C                             (KCINTA <> KPINTA OR KSPLFP <> 'Y')
+     C                             (KCINTA <> KPINTA OR KSPLFP <> 'Y'
+     C                              OR RPRNT = 'Y')
      C/exec SQL
      C+ declare CLOA cursor for
      C+ select
@@ -479,10 +481,13 @@ I    C                   ENDIF
       ** Close file
      C                   EXSR      SREndRPT
 
-      ** Update SDRTKNTD file
+      ** Update SDRTKNTD file if not requested from i/c
+     C     RPRNT         IFNE      'Y'
      C                   EVAL      KSPLFP  = 'Y'
      C                   EVAL      KPINTA  = KCINTA
      C                   UPDATE    SDRTKNT0
+     C                   ENDIF
+
      C                   ENDIF
 
      C                   READ      SDRTKNTD                               40
@@ -890,7 +895,8 @@ I    C                   ENDIF
       ** If report file is opened, write the End of Report line
      C                   IF        WOPNP1 = 'Y'
 
-      ** Write out trailer format
+      ** Write out end of report format
+     C                   Z-ADD     2             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C     *IN01         OREQ      *ON
@@ -927,6 +933,7 @@ I    C                   ENDIF
      C     *ENTRY        PLIST
      C                   PARM                    PSEQ
      C                   PARM                    SENTY
+     C                   PARM                    RPRNT
 
       ** Initialize Work fields
      C                   EVAL      DBPGM = 'LE000372'

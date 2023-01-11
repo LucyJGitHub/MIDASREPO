@@ -1216,7 +1216,7 @@
      D @KEY2           S              2                                                       CLE134
      D WPEAInd         S              1A                                                      CSC054
      D CSC054          S              1A                                                      CSC054
-     D WrkTenB         S             13P 0                                                  MD060729
+     D WrkTenB         S             15P 0                                                  MD060729
       ***  Work field for APR Required Flag warning message                                   CER050
      D WfAPRC          S              1                                                       CER050
      D CER050          S              1A                                                      CER050

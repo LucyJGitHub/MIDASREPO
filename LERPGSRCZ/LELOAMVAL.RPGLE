@@ -631,7 +631,7 @@
      D @VDAYNO         S              5S 0                                                    CLE158
      D WK_FAMT         S             14  0                                                  MD058307
      D WKC_FAMT        S             14  0                                                  MD058307
-     D WrkTenB         S             13P 0                                                  MD060729
+     D WrkTenB         S             15P 0                                                  MD060729
 
       /COPY WNCPYSRC,LELOAMV002
 

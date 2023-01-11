@@ -18,13 +18,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD060899           Date 09Jan23               *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060899 - Matured loans not housekept in SDRTKNTD file      *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates.            *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -140,6 +142,13 @@
      C                   SETON                                            90
      C                   EXSR      *PSSR
      C                   ENDIF
+     C/EXEC SQL                                                                             MD060899
+     C+ EXECUTE IMMEDIATE :thisSQL6                                                         MD060899
+     C/END-EXEC                                                                             MD060899
+     C                   IF         SQLCOD <> 0 AND SQLCOD <> 100                           MD060899
+     C                   SETON                                            90                MD060899
+     C                   EXSR      *PSSR                                                    MD060899
+     C                   ENDIF                                                              MD060899
      C/EXEC SQL
      C+ EXECUTE IMMEDIATE :thisSQL1
      C/END-EXEC

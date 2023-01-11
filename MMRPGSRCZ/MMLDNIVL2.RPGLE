@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD059049           Date 08Nov21               *
-      *  Prev Amend No. MD058547           Date 10Aug21               *
+      *  Last Amend No. MD060858           Date 10Jan23               *
+      *  Prev Amend No. MD059049           Date 08Nov21               *
+      *                 MD058547           Date 10Aug21               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD055010           Date 04Mar20               *
@@ -61,6 +62,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060858 - CDL033 details from unauthorised TD floating deal *
+      *             are wrote in to the amendment of the deal.        *
+      *             Initialized work field WRCDT for Rate Change Date *
+      *             at the start of module.                           *
       *  MD059049 - Time Deposit - Update on Tax Indicator field      *
       *  MD058547 - User cannot amend a call notice deposit taken     *
       *             because of error 45049507. Add DDACTN on call to  *
@@ -431,6 +436,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
+      *                                                                                     MD060858
+      **  Initialize work fields used in the program to avoid from being                    MD060858
+      **  pick up (when still in WIP) by other processing.                                  MD060858
+      *                                                                                     MD060858
+     C                   EVAL      WRCDT = *Zero                                            MD060858
 
       * Call Validation Modules in Sequence
 

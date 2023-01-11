@@ -326,8 +326,8 @@
       *                                                                                     MD060727
      D CalDate         DS                                                                   MD060727
      D  CalDD                  1      2  0                                                  MD060727
-     D  CalMM                  3      5  0                                                  MD060727
-     D  CalYY                  6      7  0                                                  MD060727
+     D  CalMM                  3      4  0                                                  MD060727
+     D  CalYY                  5      6  0                                                  MD060727
                                                                                 CAP006
      D/COPY WNCPYSRC,FXFXDLFD04
       ** Dummy message ID and message file fields for use on the calls to       CAP006
@@ -447,7 +447,7 @@
      D CER043          S              1A                                                      CER043
      D CDL099          S              1A                                                      CDL099
                                                                                             MD060727
-      ** Fields used in call to ZF2C                                                        MD060727
+      ** Fields used in call to ZF2C, ZCHKH                                                 MD060727
      D DateIn          S              5  0                                                  MD060727
      D FirstCcy        S              3A                                                    MD060727
      D FirstLoc        S              3A                                                    MD060727
@@ -459,6 +459,8 @@
      D ZDATE           S              6  0                                                  MD060727
      D ZADATE          S              7A                                                    MD060727
      D ValueDate       S              5  0                                                  MD060727
+     D InCurrency      S              3A                                                    MD060727
+     D LocationCode    S              3A                                                    MD060727
 
      D/COPY WNCPYSRC,FXH00076
       /EJECT
@@ -771,9 +773,11 @@
       *                                                                                       CDL099
      C                   IF        F3VS2Y = *ZEROS                                            CDL099
       *                                                                                     MD060727
-      ** Check if deal value date is a holiday                                              MD060727
+      ** Check if sale value date is a holiday                                              MD060727
       *                                                                                     MD060727
      C                   Z-ADD     FHVDDN        ValueDate                                  MD060727
+     C                   MOVE      FHCCY2        InCurrency                                 MD060727
+     C                   MOVE      *BLANKS       LocationCode                               MD060727
      C                   EXSR      SrZCHKH                                                  MD060727
       *                                                                                     MD060727
      C                   IF        HolidayInd = 'H'                                         MD060727
@@ -781,9 +785,9 @@
      C                   Z-ADD     FHVDDN        DateIn                                     MD060727
      C                   MOVE      BJLCCY        FirstCCy                                   MD060727
      C                   MOVE      *BLANKS       FirstLoc                                   MD060727
-     C                   MOVE      BJLCCY        SecondCcy                                  MD060727
+     C                   MOVE      FHCCY2        SecondCcy                                  MD060727
      C                   MOVE      *BLANKS       SecondLoc                                  MD060727
-     C                   Z-ADD     1             NumDaysFwd                                 MD060727
+     C                   Z-ADD     0             NumDaysFwd                                 MD060727
      C                   RESET                   ReturnCode                                 MD060727
       *                                                                                     MD060727
       ** Calculate next working day for both local and sale currency                        MD060727
@@ -2959,8 +2963,8 @@
                                                                                             MD060727
      C                   CALLB     'ZCHKH'                                                  MD060727
      C                   PARM                    ValueDate                                  MD060727
-     C                   PARM                    BJLCCY                                     MD060727
-     C                   PARM                    BJSLCD                                     MD060727
+     C                   PARM                    InCurrency                                 MD060727
+     C                   PARM                    LocationCode                               MD060727
      C                   PARM                    HolidayInd                                 MD060727
                                                                                             MD060727
      C                   ENDSR                                                              MD060727

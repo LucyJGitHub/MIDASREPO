@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR1079461          Date 10Jan23               *
-      *  Prev Amend No. MD059049           Date 08Nov21               *
+      *  Last Amend No. MD046446           Date 11Jan23               *
+      *  Prev Amend No. AR1079461          Date 10Jan23               *
+      *                 MD059049           Date 08Nov21               *
       *                 MD058547           Date 10Aug21               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046446 - FLR0022 Encountered even with correct rate fix    *
+      *             day and value date input                          *
       *  AR1079461 - Time deposit validation to enhance               *
       *  MD059049 - Time Deposit - Update on Tax Indicator field      *
       *  MD058547 - User cannot amend a call notice deposit taken     *
@@ -645,6 +648,7 @@
      C                   EXSR      ValidRcfR                                                  CDL033
      C                   EXSR      ValidRcDt                                                  CDL033
      C                   EXSR      ValidRcDm                                                  CDL033
+     C                   EXSR      ValidFxDm                                                MD046446
      C**********         EXSR      ValidStRt                                         CDL033 BUG24317
      C                   EXSR      ValidStRt                                                AR851172
                                                                                             BUG10810
@@ -929,7 +933,7 @@
      C                   ENDIF                                                              BUG10810
                                                                                             BUG10810
      C                   IF        CDL033 = 'Y'                                             AR851172
-     C                   EXSR      ValidFxDm                                                  CDL033
+     C**********         EXSR      ValidFxDm                                         CDL033 MD046446
      C                   EXSR      ValidFYld                                                  CDL033
      C                   MOVE      'Y'           WValidOk                                     CDL033
      C                   ENDIF                                                              AR851172

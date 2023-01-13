@@ -942,7 +942,7 @@
      C                   ENDIF                                                              BUG10810
                                                                                             BUG10810
      C                   IF        CDL033 = 'Y'                                             AR851172
-     C                   EXSR      ValidFxDm                                                  CDL033
+     C**********         EXSR      ValidFxDm                                         CDL033 MD046446
      C                   EXSR      ValidFYld                                                  CDL033
      C                   MOVE      'Y'           WValidOk                                     CDL033
      C                   ENDIF                                                              AR851172

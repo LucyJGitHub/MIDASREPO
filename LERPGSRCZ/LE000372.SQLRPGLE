@@ -17,7 +17,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060897 *AMEND     Date 10Jan23              *
+      *  Last Amend No. MD060897            Date 10Jan23              *
       *  Prev Amend No. MD058517 *CREATE    Date 17Oct22              *
       *                                                               *
       *---------------------------------------------------------------*
@@ -266,7 +266,7 @@
      C+ , LBDY
      C+ , OPSH
      C+ , RRDP
-     C+   INTO   :LoanDS
+     C+   INTO   :LoanDS                                                                    MD060897
      C+ from CLOANCL
      C+ where
      C+     LNRF = :KTRNID

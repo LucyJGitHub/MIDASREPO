@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046446           Date 11Jan23               *
-      *  Prev Amend No. AR1079461          Date 10Jan23               *
+      *  Last Amend No. MD054313           Date 11Jan23               *
+      *  Prev Amend No. MD049864           Date 11Jan23               *
+      *                 MD046446           Date 11Jan23               *
+      *                 AR1079461          Date 10Jan23               *
       *                 MD059049           Date 08Nov21               *
       *                 MD058547           Date 10Aug21               *
       *                 MD058379           Date 12Jul21               *
@@ -63,6 +65,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054313 - FRN testing - it is possible to insert MM deal    *
+      *             type IT with Actual Interest Rate <>0 and Short   *
+      *             term Rate = 0 but not possible to authorise it.   *
+      *             Set Short Term Rate flag to Y when Short Term Rate*
+      *             is entered.                                       *
+      *  MD049864 - Amendment causes LDNI Rate to not reset           *
       *  MD046446 - FLR0022 Encountered even with correct rate fix    *
       *             day and value date input                          *
       *  AR1079461 - Time deposit validation to enhance               *
@@ -138,7 +146,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
-
+     FMMDEALLL  IF   E           K DISK    INFSR(*PSSR)                                     MD049864
 
       *****************************************************************
       ** +--------------------------------------+
@@ -656,7 +664,8 @@
       ** use this to populate Actual Interest field and then                                BUG10810
       ** Recompute Total Interest                                                           BUG10810
                                                                                             BUG10810
-     C     WSTRT         IFNE      0                                                        BUG10810
+     C*****WSTRT         IFNE      0                                               BUG10810 MD049864
+     C     DDSTRT        IFNE      *blanks                                                  MD049864
      C                   Z-ADD     0             IKINTR                                     BUG10810
      C**********         MOVE      WSTRT         IKINTR                              BUG10810 247452
      C                   MOVE      WSTRT         IKINTR                                       247452
@@ -1016,6 +1025,7 @@
      C                   MOVE      *Blank        IKINFF                                       CDL033
                                                                                               CDL033
      C                   IF        DDACTN = 'I'                                               CDL033
+     C                             OR DDACTN = 'A' AND  DDSTRT <> *blanks                   MD054313
                                                                                               CDL033
      C                   EVAL      IKSTRF = *Blank                                            CDL033
      C                   EVAL      IKSTVF = *Blank                                            CDL033
@@ -1025,8 +1035,12 @@
      C                   MOVE      *Zeros        IKBSRF                                       CDL033
      C                   BITOFF    '01234567'    IKFRCI                                       CDL033
                                                                                               CDL033
-     C                   IF        WSTRT  <> STRate                                           CDL033
-     C                             OR STRate <> *zeros                                      BUG13223
+      *                                                                                     MD054313
+      ** Short Term rate Flag is Y when Short Term Rate is entered                          MD054313
+      *                                                                                     MD054313
+     C**********         IF        WSTRT  <> STRate                                  CDL033 MD054313
+     C**********                   OR STRate <> *zeros                             BUG13223 MD054313
+     C                   IF        DDSTRT <> *Blanks                                        MD054313
      C                   EVAL      IKSTRF = 'Y'                                               CDL033
      C                   EVAL      IKSTVF = 'Y'                                               CDL033
      C                   EVAL      IKBSVF = 'Y'                                               CDL033
@@ -1732,6 +1746,11 @@
      C                   PARM      'Y'           DDStRtOK                                     CDL033
      C                   PARM                    ReturnCode                                   CDL033
      C                   PARM                    WarnGlobal                                   CDL033
+      *                                                                                     MD049864
+     C     DDACTN        IFEQ      'A'                                                      MD049864
+     C                   MOVE      DDDLNO        @@DLNO            6 0                      MD049864
+     C     @@DLNO        CHAIN     MMDEALLL                           65                    MD049864
+     C                   ENDIF                                                              MD049864
                                                                                               CDL033
      C                   ENDSR                                                                CDL033
       *****************************************************************                       CDL033

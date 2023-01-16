@@ -325,9 +325,9 @@
       ** Calendar Date                                                                      MD060727
       *                                                                                     MD060727
      D CalDate         DS                                                                   MD060727
-     D  CalDD                  1      2  0                                                  MD060727
-     D  CalMM                  3      4  0                                                  MD060727
-     D  CalYY                  5      6  0                                                  MD060727
+     D  CalYY                  1      4  0                                                  MD060727
+     D  CalMM                  5      6  0                                                  MD060727
+     D  CalDD                  7      8  0                                                  MD060727
                                                                                 CAP006
      D/COPY WNCPYSRC,FXFXDLFD04
       ** Dummy message ID and message file fields for use on the calls to       CAP006
@@ -456,8 +456,6 @@
      D NumDaysFwd      S              2S 0                                                  MD060727
      D DayNumber       S              5  0                                                  MD060727
      D HolidayInd      S              1A                                                    MD060727
-     D ZDATE           S              6  0                                                  MD060727
-     D ZADATE          S              7A                                                    MD060727
      D ValueDate       S              5  0                                                  MD060727
      D InCurrency      S              3A                                                    MD060727
      D LocationCode    S              3A                                                    MD060727
@@ -794,13 +792,15 @@
       *                                                                                     MD060727
      C                   EXSR      SrZF2C                                                   MD060727
       *                                                                                     MD060727
-     C                   Z-ADD     DayNumber     FHS2DN                                     MD060727
+      ** Convert Midas Date into YYYYMMDD                                                   MD060727
       *                                                                                     MD060727
-      ** Convert Midas Date into DDMMYY                                                     MD060727
+     C                   Z-ADD     DayNumber     @DAYN                                      MD060727
+     C                   CALLB     'ZDATE9'                                                 MD060727
+     C                   PARM                    @DAYN                                      MD060727
+     C                   PARM                    @YMD                                       MD060727
+     C                   PARM                    @RETN                                      MD060727
       *                                                                                     MD060727
-     C                   EXSR      SrZDATE2                                                 MD060727
-      *                                                                                     MD060727
-     C                   MOVE      ZDATE         CalDate                                    MD060727
+     C                   MOVE      @YMD          CalDate                                    MD060727
       *                                                                                     MD060727
      C                   Z-ADD     CalYY         FHVS2Y                                     MD060727
      C                   Z-ADD     CalMM         FHVS2M                                     MD060727
@@ -2966,20 +2966,6 @@
      C                   PARM                    InCurrency                                 MD060727
      C                   PARM                    LocationCode                               MD060727
      C                   PARM                    HolidayInd                                 MD060727
-                                                                                            MD060727
-     C                   ENDSR                                                              MD060727
-      *********************************************************************                 MD060727
-      *                                                                   *                 MD060727
-      * SrZDATE2 - Convert Midas Date into DDMMYY                         *                 MD060727
-      *                                                                   *                 MD060727
-      *********************************************************************                 MD060727
-     C     SrZDATE2      BEGSR                                                              MD060727
-      *                                                                                     MD060727
-     C                   CALLB     'ZDATE2'                                                 MD060727
-     C                   PARM                    DayNumber                                  MD060727
-     C                   PARM                    BJDFIN                                     MD060727
-     C                   PARM      *ZEROS        ZDATE                                      MD060727
-     C                   PARM      *BLANK        ZADATE                                     MD060727
                                                                                             MD060727
      C                   ENDSR                                                              MD060727
       *********************************************************************                 MD060727

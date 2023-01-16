@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD060488           Date 08Sep22              */
-/*       Prev Amend No. MD060435           Date 31Aug22              */
+/*       Last Amend No. MD058769           Date 01Sep21              */
+/*       Prev Amend No. MD060488           Date 08Sep22              */
+/*                      MD060435           Date 31Aug22              */
 /*                      MD058087           Date 11May21              */
 /*                      MD058085           Date 11May21              */
 /*                      MD058069           Date 11May21              */
@@ -75,6 +76,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058769 - Deliverable Data Split for SDNARRPD and TABLETP  */
 /*       MD060488 - Deliverable Data Split for UTMENUPD              */
 /*       MD060435 - No data take-on for SDBROKPD                     */
 /*       MD058087 - Deliverable Data Split for System Control        */
@@ -3541,6 +3543,20 @@
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD058087*/
              ENDDO                                                                      /*MD058087*/
                                                                                         /*MD058087*/
+/* SDNARCTD */                                                                          /*MD058769*/
+             IF         COND(&FILE *EQ 'SDNARCTD') THEN(DO)                             /*MD058769*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD058769*/
+             CHKOBJ     OBJ(&LIBMOV/SDNARRPD) OBJTYPE(*FILE)                            /*MD058769*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD058769*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD058769*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD058769*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD058769*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SDNARRPD')                                           /*MD058769*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD058769*/
+             ENDDO                                                                      /*MD058769*/
+                                                                                        /*MD058769*/
              ENDDO                                                                      /*MD054560*/
                                                                                         /*MD054955*/
 /* If No Display Condition fields */                                                    /*MD056564*/

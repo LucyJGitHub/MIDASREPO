@@ -15,8 +15,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD055914           Date 10Aug20               *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD055914           Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD025682           Date 19Aug14               *
       *                 MD020569           Date 28May13               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD055914 - Incorrect TRLR menu processing in Bridge for      *
       *             SDCUSTPD. Replaced DOU condition with DOW NOT.    *
@@ -106,7 +108,8 @@
       * ... and SDNARRPD.
      C**********         IF        RECT = 90                                                  CUP003
      C                   IF        RECT = '90'                                                CUP003
-     C                   EVAL      File = 'SDNARRPD'
+     C**********         EVAL      File = 'SDNARRPD'                                        MD058769
+     C                   EVAL      File = 'SDNARXTD'                                        MD058769
      C                   EXSR      GetNoOfRecs
      C                   EVAL      NREC = NoOfRecs
      C                   EVAL      NarrRecs = NoOfRecs

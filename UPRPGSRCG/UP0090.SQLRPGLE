@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSC059               Date 10Oct22             *
-      *  Prev Amend No. CUP046               Date 01Jun22             *
+      *  Last Amend No. MD058769             Date 21Sep21             *
+      *  Prev Amend No. CSC059               Date 10Oct22             *
+      *                 CUP046               Date 01Jun22             *
       *                 MD060488             Date 08Sep22             *
       *                 MD058085             Date 11May21             *
       *                 MD058069             Date 11May21             *
@@ -91,6 +92,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  CSC059 - Replace QDLS processing by IFS                      *
       *  CUP046 - One Touch Bridge - migration                        *
       *  MD060488 - Deliverable Data Split for UTMENUPD               *
@@ -1273,6 +1275,7 @@
      C                             or ChkFile = 'UTMNUXTD'                                  MD060488
      C                             or ChkFile = 'SMOTCXTD'                                    CUP046
      C                             or ChkFile = 'SCFFDXTD'                                    CSC059
+     C                             or ChkFile = 'SDNARXTD'                                  MD058769
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1589,6 +1592,7 @@
      C                             or Member = 'SCRMVCTD'                                   MD058087
      C                             or Member = 'SCSVPCTD'                                   MD058087
      C                             or Member = 'SCFFDCTD'                                     CSC059
+     C                             or Member = 'SDNARCTD'                                   MD058769
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C/exec SQL                                                                             MD057943

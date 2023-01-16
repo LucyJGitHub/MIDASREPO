@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR898167           Date 07Nov14               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR898167           Date 07Nov14               *
       *                 AR905067           Date 05Nov14               *
       *                 CSW213             Date 03Jun13               *
       *                 AR895223           Date 19Nov12               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR898167 - Outgoing payment has inconsistent rate in fld 36  *
       *             (Child: AR898168)                                 *
@@ -95,12 +97,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
-     FMEISOCL1  IF   E           K DISK                                         CFT014
+     F*MEISOCL1* IF   E           K DISK                                         CFT014     MD058081
       ** ISO Country Codes file                                                 CFT014
                                                                                 CFT014
      FACNUMA    IF   E           K DISK    RENAME(ACCNTABF:ACNUMAF)             CFT014
       ** Retail Accounts file                                                   CFT014
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -119,49 +121,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                               CSD089
@@ -176,19 +178,19 @@
                                                                                 CFT014
       ** Array for charges conversion routines                                  CFT014
      D Power           S              7  3 DIM(7) CTDATA PERRCD(1)              CFT014
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
                                                                                 CFT014
       * Incoming Transaction                                                    CFT014
      D TranInPrmX    E DS                  EXTNAME(FTOPY1APD)                   CFT014
- 
+
       * Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       ** External data structure for currency codes
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
                                                                                 CFT014
@@ -207,33 +209,34 @@
       ** Customer detail file format data structure                             CFT014
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                    CFT014
      D  QQDFAC1      E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
       ** External data structure for access programs (short)
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                 CFT014
       ** External data structure for access programs (short)                    CFT014
      D DSFDY         E DS                  EXTNAME(DSFDY)                       CFT014
- 
+     D MEISOC        E DS                  EXTNAME(MEISOJW0)                                MD058081
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of warning message ids etc                                          CSD089
      D WIx             S              3P 0                                                    CSD089
- 
+
      D C#K101          S              3
      D C#OPTN          S              7
      D C#RTCD          S              7
      D C#MSGID         S              7
- 
+
      D ZalignOK        S              1
      D ZFIELD          S             16
      D ZADIG           S              2  0
@@ -242,12 +245,12 @@
      D ZMDIX           S              1
      D ZMDI1           S              1
      D ZMDI2           S              1
- 
+
      D WRATE0          S             13  0
- 
+
       **  Data Structure for input/output parameters
      D/COPY FTCPYSRC,FT0010D001
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -262,7 +265,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *BlankS
@@ -274,12 +277,12 @@
      C                   Eval      WMsgDtXAr = *BlankS                                        CSD089
      C                   Eval      Idx = 0
      C                   Eval      WIx = 0                                                    CSD089
- 
+
       * Entered amounts agree validation
       *
      C                   Exsr      VEUXCHK
- 
- 
+
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKNdam = 'N' or
@@ -293,7 +296,7 @@
      C                   Eval      RetCodeIn = 'Warning'                                      CSD089
      C                   End                                                                  CSD089
      C                   End
- 
+
       * RETURN
       *
      C                   RETURN
@@ -305,15 +308,15 @@
       * Currencies and amounts should br valid before calling this routine.
       * Checks entered amounts agree and also calculates an amount which
       * has been left blank.
- 
+
      C     VEUXCHK       BEGSR
- 
+
       ** Set paramaters for call to FT0010
- 
+
      C                   Clear                   P#0010
- 
+
      C                   Movel     'FTVAMAM'     P#PMSQ
- 
+
      C                   Eval      P#NDCY = SNDCY
      C                   Eval      P#NDAM = @NDAM
      C                   Eval      P#DBCY = SSMCY
@@ -326,7 +329,7 @@
      C                   Eval      P#PDAM = @PDAM
      C                   EndIf                                                  CFT014
      C                   Eval      P#CRDT = @PVDT
- 
+
      C                   Move      SRATE         ZFIELD
      C**********         Eval      ZADIG = 4                                                AR895223
      C                   EVAL      ZADIG = 5                                                AR895223
@@ -336,63 +339,63 @@
      C                   Parm                    ZFIELD
      C                   Parm                    ZADEC1
      C                   Parm                    ZADIG
- 
+
      C                   If        ZalignOK = 'N'
       * Send error to screen
      C                   Move      'N'           OKRate
      C                   Add       1             Idx
      C                   Movel     'SRATE'       FldNamXAr(Idx)
      C                   Movel     'MMA1014'     MsgIdXAr(Idx)
- 
+
      C                   Else
      C                   Move      ZFIELD        @RATE
      C                   Eval      P#RATE = @RATE
      C                   Eval      P#OVRT = SOVRD
      C                   Eval      P#SDIN = 'Y'
      C                   Eval      P#RTDS = @RATDIS
- 
+
      C                   Call      'FT0010'
      C                   Parm                    P#0010
- 
+
      C                   If        P#RTCD <> *Blanks
      C                   Movel     'AOCURRR0'    DBFILE
      C                   Movel     '*CALL'       DBKEY
      C                   Eval       DBASE = 41
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   Eval      @MDIN = P#MDIN
       * Set Notified delivery amount (Formatted for screen)
      C                   If        SNDCY <> *Blanks
      C                   Eval      C#K101 = SNDCY
      C                   Exsr      CURRED
- 
- 
+
+
      C                   Eval      @NDAM = P#NDAM
      C                   Move(P)   P#NDAM        ZFIELD
      C                   Eval      ZADEC2 = A6NBDP
      C                   CALLB     'ZAEDITM'
      C                   Parm                    ZFIELD
      C                   Parm                    ZADEC2
- 
+
      C                   Move      ZFIELD        SNDAM
      C                   Else
      C                   Move      *Blanks       SNDAM
      C                   End
- 
+
       * Set Settle amount (Formatted for screen)
      C                   If        SSMCY <> *Blanks
      C                   Eval      C#K101 = SSMCY
      C                   Exsr      CURRED
- 
- 
+
+
      C                   Eval      @SMAM = P#DBAM
      C                   Move(P)   P#DBAM        ZFIELD
      C                   Eval      ZADEC2 = A6NBDP
      C                   CALLB     'ZAEDITM'
      C                   Parm                    ZFIELD
      C                   Parm                    ZADEC2
- 
+
      C                   IF        @CFT009 = 'N'                                CFT009
      C                             OR @CFT009 = 'Y' AND SSMAM <> *BLANK         CFT009
      C                             OR @CFT009 = 'Y' AND SSMAM = *BLANK          CFT009
@@ -402,19 +405,19 @@
      C                   Else
      C                   Move      *Blanks       SSMAM
      C                   End
- 
+
       * Set Pay amount (Formatted for screen)
      C                   If        SPCCY <> *Blanks
      C                   Eval      C#K101 = SPCCY
      C                   Exsr      CURRED
- 
+
      C                   Eval      @PYAM = P#CRAM
      C                   Move(P)   P#CRAM        ZFIELD
      C                   Eval      ZADEC2 = A6NBDP
      C                   CALLB     'ZAEDITM'
      C                   Parm                    ZFIELD
      C                   Parm                    ZADEC2
- 
+
      C                   IF        @CFT009 = 'N'                                CFT009
      C                             OR @CFT009 = 'Y' AND SPYAM <> *BLANK         CFT009
      C                             OR @CFT009 = 'Y' AND SPYAM = *BLANK          CFT009
@@ -424,27 +427,27 @@
      C                   Else
      C                   Move      *Blanks       SPYAM
      C                   End
- 
+
       * Set Pay delivery amount (Formatted for screen)
      C                   If        (@CFT014 <> 'Y')                             CFT014
      C                   If        SPDCY <> *Blanks
      C                   Eval      C#K101 = SPDCY
      C                   Exsr      CURRED
- 
- 
+
+
      C                   Eval      @PDAM = P#PDAM
      C                   Move      P#PDAM        ZFIELD
      C                   Eval      ZADEC2 = A6NBDP
      C                   CALLB     'ZAEDITM'
      C                   Parm                    ZFIELD
      C                   Parm                    ZADEC2
- 
+
      C                   Move      ZFIELD        SPDAM
      C                   Else
      C                   Move      *Blanks       SPDAM
      C                   End
      C                   EndIf                                                  CFT014
- 
+
       * Set Rate (Formatted for screen)
      C                   Eval      @RATE = P#RATE
      C                   Move      P#RATE        WRATE0
@@ -453,36 +456,36 @@
      C                   CALLB     'ZAEDITM'
      C                   Parm                    ZFIELD
      C                   Parm                    ZADEC2
- 
+
      C                   IF        @CFT009 = 'N'                                CFT009
      C                             OR @CFT009 = 'Y' AND SRATE <> *BLANK         CFT009
      C                   Move      ZFIELD        SRATE
      C                   ENDIF                                                  CFT009
- 
+
       * Error processing for erros from FT0010
      C                   If        P#INDC <> '00000'
- 
+
       * Set screen error indicators from  FT0010
       * Notified Delivery amount
      C                   If        %subst(P#INDC:1:1) = '1'
      C                   Move      'N'           OKNdam
      C                   End
- 
+
       * Settlement amount
      C                   If        %subst(P#INDC:2:1) = '1'
      C                   Move      'N'           OKSmam
      C                   End
- 
+
       * Pay amount
      C                   If        %subst(P#INDC:3:1) = '1'
      C                   Move      'N'           OKPyam
      C                   End
- 
+
       * Pay Delivery amount
      C                   If        %subst(P#INDC:4:1) = '1'
      C                   Move      'N'           OKPdam
      C                   End
- 
+
       * Rate
      C                   If        %subst(P#INDC:5:1) = '1'
      C                   If        P#PMSQ = 'FTM2577' or P#PMSQ = 'FTM2578'                   CSD089
@@ -491,32 +494,32 @@
      C                   Move      'N'           OKRate
      C                   End                                                                  CSD089
      C                   End
- 
+
       * Set error message Ids from  FT0010
      C                   If        P#PMSQ = 'FTM2572   '
      C                   Add       1             Idx
      C                   Movel     'SSMAM'       FldNamXAr(Idx)
      C                   Movel     'MMA1015'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2573   '
      C                   Add       1             Idx
      C                   Movel     'SRATE'       FldNamXAr(Idx)
      C                   Movel     'MMA1016'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2574   '
      C                   Add       1             Idx
      C                   Movel     'SRATE'       FldNamXAr(Idx)
      C                   Movel     'MMA1017'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2575   '
      C                   Add       1             Idx
      C                   Movel     'SRATE'       FldNamXAr(Idx)
      C                   Movel     'MMA1018'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2577   '
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRATE'       FldNamXAr(Idx)                               CSD089
@@ -525,7 +528,7 @@
      C                   Movel     'SRATE'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1019'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2578   '
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRATE'       FldNamXAr(Idx)                               CSD089
@@ -534,47 +537,47 @@
      C                   Movel     'SRATE'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1020'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2579   '
      C                   Add       1             Idx
      C                   Movel     'SSMAM'       FldNamXAr(Idx)
      C                   Movel     'MMA1021'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2580   '
      C                   Add       1             Idx
      C                   Movel     'SSMAM'       FldNamXAr(Idx)
      C***********        Movel     'MMA1022'     MsgIdXAr(Idx)                  CFT014
      C                   Movel     'FTM3257'     MsgIdXAr(Idx)                  CFT014
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2581   '
      C                   Add       1             Idx
      C                   Movel     'SPYAM'       FldNamXAr(Idx)
      C***********        Movel     'MMA1023'     MsgIdXAr(Idx)                  CFT014
      C                   Movel     'FTM3258'     MsgIdXAr(Idx)                  CFT014
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2582   '
      C                   Add       1             Idx
      C                   Movel     'SPYAM'       FldNamXAr(Idx)
      C                   Movel     'MMA1023'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2583   '
      C                   Add       1             Idx
      C                   Movel     'SPYAM'       FldNamXAr(Idx)
      C                   Movel     'MMA1024'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   If        P#PMSQ = 'FTM2587   '
      C                   Add       1             Idx
      C                   Movel     'SRATE'       FldNamXAr(Idx)
      C                   Movel     'MMA1100'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   End
- 
+
       ** Default Instructed Amount                                              CFT014
                                                                                 CFT014
      C                   If        @CFT014 = 'Y'                                CFT014
@@ -808,9 +811,9 @@
      C                   EndIf                                                  CFT014
      C                   EndIf                                                  CFT014
                                                                                 CFT014
- 
+
      C                   End
- 
+
      C                   ENDSR
       *****************************************************************         CFT014
       /Title Sr/SrRISO                                                          CFT014
@@ -1183,8 +1186,14 @@
                                                                                 CFT014
      C                   Move      *Off          *IN60                          CFT014
      C                   Move      *Blank        WTRANS            1            CFT014
-     C     WISOC         Chain     MEISOCL1                           60        CFT014
-     C                   If        *IN60 = False                                CFT014
+     C*****WISOC         Chain     MEISOCL1                           60        CFT014      MD058081
+     C                   CALL      'AOMSOCR0'                                               MD058081
+     C                   PARM      *BLANKS       @RTCD             7                        MD058081
+     C                   PARM      '*KEY   '     @OPTN             7                        MD058081
+     C                   PARM      WISOC         @Isoc             2                        MD058081
+     C     MEISOC        PARM      MEISOC        DSFDY                                      MD058081
+     C**********         If        *IN60 = False                                CFT014      MD058081
+     C     @RTCD         IFEQ      *BLANKS                                                  MD058081
      C                   Movel     M3SCHT        WTRANS                         CFT014
      C                   EndIf                                                  CFT014
                                                                                 CFT014
@@ -1199,13 +1208,13 @@
       *****************************************************************
      C*
      C     CURRED        BEGSR
- 
+
      C                   CALLB     'AOCURRR0'
      C                   Parm      '*DBERR '     C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm                    C#K101
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   ENDSR
      C*
      C************************************************************
@@ -1216,7 +1225,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -1225,7 +1234,7 @@
       *  Screen fields
      C                   Parm                    TranInPrim
      C                   Parm                    TranInPrmX                     CFT014
- 
+
       * OUTPUTS
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -1235,21 +1244,21 @@
      C                   Parm                    WFldNmXAr                                    CSD089
      C                   Parm                    WMsgIDXAr                                    CSD089
      C                   Parm                    WMsgDtXAr                                    CSD089
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** =================================================================
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

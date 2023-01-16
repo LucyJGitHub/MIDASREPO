@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 261402             Date 11May16               *
       *                 CSW214             Date 25Nov14               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
@@ -164,7 +166,7 @@
      F                                     COMMIT
      FMGOMSGPD  O    E             DISK    INFSR(*PSSR)
      F                                     COMMIT
-     FMEISOCL1  IF   E           K DISK    INFSR(*PSSR)
+     F*MEISOCL1* IF   E           K DISK    INFSR(*PSSR)                                    MD058081
      FDPTMVDL1  IF   E           K DISK    INFSR(*PSSR)
      FMG051NA1  O    E             PRINTER INFDS(OVRFL1)
      F                                     INFSR(*PSSR)
@@ -471,6 +473,7 @@
      D                                     UVWXYZ0123456789')
       *                                                                                       CSW210
      D SDMTAG        E DS                  EXTNAME(SDMTGJW0)                                MD056560
+     D MEISOC        E DS                  EXTNAME(MEISOJW0)                                MD058081
       *****************************************************************
       /TITLE Main Processing
       *****************************************************************
@@ -3419,7 +3422,13 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *                                                                                       CSW207
-     C     DVCNCD        CHAIN     MEISOCL1                           56
+     C*****DVCNCD        CHAIN     MEISOCL1                           56                    MD058081
+     C/EXEC SQL                                                                             MD058081
+     C+ SELECT *                                                                            MD058081
+     C+ into :MEISOC                                                                        MD058081
+     C+ from MEISOJW0                                                                       MD058081
+     C+ where M3ISOC = :DVCNCD                                                              MD058081
+     C/END-EXEC                                                                             MD058081
      C     M3MFID        IFEQ      'Y'
      C     BFCLAS        ANDEQ     'S'
      C     M3MFID        OREQ      'Y'
@@ -6113,8 +6122,15 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *                                                                                       CSW207
-     C     DVCNCD        CHAIN     MEISOCL1                           56
-     C     *IN56         IFEQ      '1'
+     C*****DVCNCD        CHAIN     MEISOCL1                           56                    MD058081
+     C/EXEC SQL                                                                             MD058081
+     C+ SELECT *                                                                            MD058081
+     C+ into :MEISOC                                                                        MD058081
+     C+ from MEISOJW0                                                                       MD058081
+     C+ where M3ISOC = :DVCNCD                                                              MD058081
+     C/END-EXEC                                                                             MD058081
+     C******IN56         IFEQ      '1'                                                      MD058081
+     C     SQLCODE       IFNE      0                                                        MD058081
      C     *LOCK         IN        LDA
      C                   Z-ADD     048           DBASE                          ***************
      C                   MOVEL     'MEISOCPD'    DBFILE                         *DB ERROR 048 *
@@ -6149,8 +6165,15 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *                                                                                       CSW207
-     C     BBCOLC        CHAIN     MEISOCL1                           56
-     C     *IN56         IFEQ      '1'
+     C*****BBCOLC        CHAIN     MEISOCL1                           56                    MD058081
+     C/EXEC SQL                                                                             MD058081
+     C+ SELECT *                                                                            MD058081
+     C+ into :MEISOC                                                                        MD058081
+     C+ from MEISOJW0                                                                       MD058081
+     C+ where M3ISOC = :BBCOLC                                                              MD058081
+     C/END-EXEC                                                                             MD058081
+     C******IN56         IFEQ      '1'                                                      MD058081
+     C     SQLCODE       IFNE      0                                                        MD058081
      C     *LOCK         IN        LDA
      C                   Z-ADD     053           DBASE                          ***************
      C                   MOVEL     'MEISOCPD'    DBFILE                         *DB ERROR 053 *

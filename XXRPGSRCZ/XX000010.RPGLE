@@ -23,12 +23,14 @@
       ***(C)*COPYRIGHT*MKI*LIMITED*1998********************************                       LUC109
       *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
-      *  Last Amend No. LUC109             Date 21Sep16               *
-      *  Prev Amend No. MUI009             Date 16Feb04               *
+      *  Last Amend No. MD060623           Date 12Jan23               *
+      *  Prev Amend No. LUC109             Date 21Sep16               *
+      *                 MUI009             Date 16Feb04               *
       *                 MMI043   *Create   Date 12Jan99               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060623 - Use location code to find previous working day.   *
       *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
       *  MUI009 - R4.1 Upgrade:                                       *
       *           Added I specs requireds by ZCBDYS                   *
@@ -270,7 +272,8 @@
       * ... find previous working day and convert to YYYYMMDD
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   MOVE      BJCYCD        ZCCY
-     C                   MOVE      *BLANKS       ZLOC
+     C**********         MOVE      *BLANKS       ZLOC                                    MD060623
+     C                   MOVEL     BJSLCD        ZLOC                                    MD060623
      C                   Z-ADD     1             ZNRDYS
      C                   EXSR      ZBKDT
      C                   Z-ADD     ZDYNBR        @@DAYN

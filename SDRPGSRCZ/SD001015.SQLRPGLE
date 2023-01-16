@@ -75,6 +75,7 @@
       * Initialization of indicators
      C                   SETOFF                                           90
      C                   SETOFF                                           91
+     C                   SETOFF                                           92                MD060899
                                                                                               CDL102
       ** Check if switchable feature CLE172 is switched on.                                   CDL102
                                                                                               CDL102
@@ -146,7 +147,7 @@
      C+ EXECUTE IMMEDIATE :thisSQL6                                                         MD060899
      C/END-EXEC                                                                             MD060899
      C                   IF         SQLCOD <> 0 AND SQLCOD <> 100                           MD060899
-     C                   SETON                                            90                MD060899
+     C                   SETON                                            92                MD060899
      C                   EXSR      *PSSR                                                    MD060899
      C                   ENDIF                                                              MD060899
      C/EXEC SQL
@@ -237,6 +238,7 @@
       *
      C   90              MOVE      'SDHSDRTD'    DBFILE
      C   91              MOVE      'SDARRLOGTD'  DBFILE
+     C   92              MOVE      'SDRTKNTD'    DBFILE                                     MD060899
      C                   EVAL      DBKEY  = 'SQL ERROR'
      C                   EVAL      DBPGM  = 'SD001015'
      C                   EVAL      DBASE  = SQLCODE

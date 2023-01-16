@@ -45,8 +45,9 @@
       *  MD060823 -  Rolled over loan using SARR calculation method   *
       *              was not processed by calculator and reported     *
       *              as an exception.                                 *
-      *              Remove call to checking of duplicate records     *
-      *              in SDARRLOGTD when module id is 'LE'             *
+      *              Amended SQL statement in second ARR calculator   *
+      *              call so that risk free rate is also retrieved    *
+      *              on rollover                                      *
       *  MD060033 - Rates Known flag set a day late.  Add 1 day to    *
       *             SumLBLO.  Introduce new system value              *
       *             ARRUseSysOrMidasDate.                             *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 251029             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060727           Date 01Dec22               *
+      *  Prev Amend No. 251029             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060727 - Ensure that sale value date is a working day      *
       *  251029 - Applied fix 231306.                                 *
       *  231306 - Handle file locking properly.                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -319,6 +321,13 @@
      D  @MLUP                  3      5
      D  @YLUP                  6      7  0
      D  @MBIN                 13     13
+      *                                                                                     MD060727
+      ** Calendar Date                                                                      MD060727
+      *                                                                                     MD060727
+     D CalDate         DS                                                                   MD060727
+     D  CalYY                  1      4  0                                                  MD060727
+     D  CalMM                  5      6  0                                                  MD060727
+     D  CalDD                  7      8  0                                                  MD060727
                                                                                 CAP006
      D/COPY WNCPYSRC,FXFXDLFD04
       ** Dummy message ID and message file fields for use on the calls to       CAP006
@@ -437,6 +446,20 @@
                                                                                               CRE020
      D CER043          S              1A                                                      CER043
      D CDL099          S              1A                                                      CDL099
+                                                                                            MD060727
+      ** Fields used in call to ZF2C, ZCHKH                                                 MD060727
+     D DateIn          S              5  0                                                  MD060727
+     D FirstCcy        S              3A                                                    MD060727
+     D FirstLoc        S              3A                                                    MD060727
+     D SecondCcy       S              3A                                                    MD060727
+     D SecondLoc       S              3A                                                    MD060727
+     D NumDaysFwd      S              2S 0                                                  MD060727
+     D DayNumber       S              5  0                                                  MD060727
+     D HolidayInd      S              1A                                                    MD060727
+     D ValueDate       S              5  0                                                  MD060727
+     D InCurrency      S              3A                                                    MD060727
+     D LocationCode    S              3A                                                    MD060727
+
      D/COPY WNCPYSRC,FXH00076
       /EJECT
      C*****************************************************************
@@ -747,10 +770,53 @@
      C                   IF        CDL099 = 'Y'                                               CDL099
       *                                                                                       CDL099
      C                   IF        F3VS2Y = *ZEROS                                            CDL099
+      *                                                                                     MD060727
+      ** Check if sale value date is a holiday                                              MD060727
+      *                                                                                     MD060727
+     C                   Z-ADD     FHVDDN        ValueDate                                  MD060727
+     C                   MOVE      FHCCY2        InCurrency                                 MD060727
+     C                   MOVE      *BLANKS       LocationCode                               MD060727
+     C                   EXSR      SrZCHKH                                                  MD060727
+      *                                                                                     MD060727
+     C                   IF        HolidayInd = 'H'                                         MD060727
+      *                                                                                     MD060727
+     C                   Z-ADD     FHVDDN        DateIn                                     MD060727
+     C                   MOVE      BJLCCY        FirstCCy                                   MD060727
+     C                   MOVE      *BLANKS       FirstLoc                                   MD060727
+     C                   MOVE      FHCCY2        SecondCcy                                  MD060727
+     C                   MOVE      *BLANKS       SecondLoc                                  MD060727
+     C                   Z-ADD     0             NumDaysFwd                                 MD060727
+     C                   RESET                   ReturnCode                                 MD060727
+      *                                                                                     MD060727
+      ** Calculate next working day for both local and sale currency                        MD060727
+      *                                                                                     MD060727
+     C                   EXSR      SrZF2C                                                   MD060727
+      *                                                                                     MD060727
+      ** Convert Midas Date into YYYYMMDD                                                   MD060727
+      *                                                                                     MD060727
+     C                   Z-ADD     DayNumber     @DAYN                                      MD060727
+     C                   CALLB     'ZDATE9'                                                 MD060727
+     C                   PARM                    @DAYN                                      MD060727
+     C                   PARM                    @YMD                                       MD060727
+     C                   PARM                    @RETN                                      MD060727
+      *                                                                                     MD060727
+     C                   MOVE      @YMD          CalDate                                    MD060727
+      *                                                                                     MD060727
+     C                   Z-ADD     CalYY         FHVS2Y                                     MD060727
+     C                   Z-ADD     CalMM         FHVS2M                                     MD060727
+     C                   Z-ADD     CAlDD         FHVS2D                                     MD060727
+     C                   Z-ADD     DayNumber     FHS2DN                                     MD060727
+     C                   ELSE                                                               MD060727
+      *                                                                                     MD060727
+      ** Not a holiday, use value date as sale date                                         MD060727
+      *                                                                                     MD060727
      C                   Z-ADD     FHVDYY        FHVS2Y                                       CDL099
      C                   Z-ADD     FHVDMM        FHVS2M                                       CDL099
      C                   Z-ADD     FHVDDD        FHVS2D                                       CDL099
      C                   Z-ADD     FHVDDN        FHS2DN                                       CDL099
+     C                   ENDIF                                                              MD060727
+      *                                                                                     MD060727
+      ** Sale date is entered via prompt, guaranteed a working day                          MD060727
       *                                                                                       CDL099
      C                   ELSE                                                                 CDL099
       *                                                                                       CDL099
@@ -2888,6 +2954,39 @@
       *****************************************************************                       CSD015
       /EJECT
      C/COPY WNCPYSRC,FXFXDLFC09
+      *********************************************************************                 MD060727
+      *                                                                   *                 MD060727
+      * SrZCHKH - Check whether date is a holiday in specified currency   *                 MD060727
+      *                                                                   *                 MD060727
+      *********************************************************************                 MD060727
+     C     SrZCHKH       BEGSR                                                              MD060727
+                                                                                            MD060727
+     C                   CALLB     'ZCHKH'                                                  MD060727
+     C                   PARM                    ValueDate                                  MD060727
+     C                   PARM                    InCurrency                                 MD060727
+     C                   PARM                    LocationCode                               MD060727
+     C                   PARM                    HolidayInd                                 MD060727
+                                                                                            MD060727
+     C                   ENDSR                                                              MD060727
+      *********************************************************************                 MD060727
+      *                                                                   *                 MD060727
+      * SrZF2C - Find the number of working days forward for 2 ccys       *                 MD060727
+      *                                                                   *                 MD060727
+      *********************************************************************                 MD060727
+     C     SrZF2C        BEGSR                                                              MD060727
+                                                                                            MD060727
+     C                   CALLB     'ZF2C'                                                   MD060727
+     C                   PARM                    ReturnCode                                 MD060727
+     C                   PARM                    DateIn                                     MD060727
+     C                   PARM                    FirstCcy                                   MD060727
+     C                   PARM                    FirstLoc                                   MD060727
+     C                   PARM                    SecondCcy                                  MD060727
+     C                   PARM                    SecondLoc                                  MD060727
+     C                   PARM                    NumDaysFwd                                 MD060727
+     C                   PARM                    DayNumber                                  MD060727
+                                                                                            MD060727
+     C                   ENDSR                                                              MD060727
+      *****************************************************************
       *********************************************************************
       ** FIELD LOG
       *********************************************************************

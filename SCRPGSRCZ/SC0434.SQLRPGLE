@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060352           Date 22Aug22               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CUP023             Date 17Mar11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060352 - Deliverable Data Split for GP/SCRELCTD            *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CUP023 - Addition of sequence numbers for release levels     *
@@ -44,7 +46,7 @@
      F*SCSARDL1* IF   E           K DISK                                                    MD055681
       * Switchable features held on file
       *
-     FSCRELHL0  IF   E           K DISK
+     F*SCRELHL0* IF   E           K DISK                                                    MD060352
       * List of all core switchable features available
       *
       * List of all non-core switchable features for this branch
@@ -61,6 +63,8 @@
       *
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D                                     PREFIX(AB)                                       MD055681
+     D SCRELH        E DS                  EXTNAME(SCRELJW0)                                MD060352
+     D                                     PREFIX(X)                                        MD060352
      D PSDS           SDS
       *
       ** Program Status Data Structure
@@ -162,7 +166,13 @@
      C     RELL          BEGSR
      C*
       *
-     C     AXRELL        CHAIN     SCRELHL0                           93
+     C*****AXRELL        CHAIN     SCRELHL0                           93                    MD060352
+     C/EXEC SQL                                                                             MD060352
+     C+ SELECT  AXIREL into :AXIREL                                                         MD060352
+     C+ from SCRELJW0  where AXRELL = :AXRELL                                               MD060352
+     C+ order by AXRELL desc, AXIREL desc                                                   MD060352
+     C+ fetch first row only                                                                MD060352
+     C/END-EXEC                                                                             MD060352
       *
       *
      C                   ENDSR

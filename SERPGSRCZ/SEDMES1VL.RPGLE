@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG21221           Date 27Sep08               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  BUG21221 - Applied fix BUG19956                              *
@@ -41,12 +43,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
-     FMGECONL0  IF   E           K DISK    INFSR(*PSSR)
+
+     F*MGECONL0* IF   E           K DISK    INFSR(*PSSR)                                    MD058081
       ** Midas MG Cedel/Euroclear restrictions file
- 
+
       /COPY WNCPYSRC,SEDME1V001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -58,20 +60,20 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -83,44 +85,46 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array used in EUCL validations
      D VA0             S              1    DIM(10) CTDATA PERRCD(10)
- 
+
       ** Array for Instructions type validation (alphabetic)
      D VA1             S              3    DIM(10) CTDATA PERRCD(10)
- 
+
       ** Array for Cedel codes validation (numeric)
      D VA2             S              3    DIM(30) CTDATA PERRCD(10)
- 
+
       ** Array for Euroclear codes validation (numeric)
      D VA3             S              3    DIM(20) CTDATA PERRCD(10)
- 
+
       ** Array used to split DSEUCL into individual characters
      D EU1             S              1    DIM(6)
- 
+
       ** Array used to check Fungibility Codes
      D MGFUN           S              1    DIM(50)
- 
+
      D NewDPMVFld    E DS                  EXTNAME(SEDMWIPD)
       ** New fields in screen format (whole API message from/to Caller)
- 
+
      D DPMVOkFlags   E DS                  EXTNAME(SEEDMWIPD)
       ** SEDPMV Error Indicators flags
- 
+
      D NewSEDMX1     E DS                  EXTNAME(SEVDMX1PD)
       ** New Extension File in file format
- 
+
+     D MGECON        E DS                  EXTNAME(MGCONJW0)                                MD058081
+     D DSSDY         E DS                  EXTNAME(DSSDY)                                   MD058081
       ** Euroclear/Cedel code validation
      D SEUCL           DS            10
      D   SEU11                 1      1
@@ -129,35 +133,35 @@
      D   SEU27                 2      7
      D   SEU59                 5      9
      D   SEU51                 5     10
- 
+
       ** Safekeeping Account
      D SSAFA           DS             6
      D   SSA26                 2      6
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for error message arrays
      D Idx             S              3P 0
- 
+
       ** Index for warning message arrays
      D WIdx            S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       /COPY WNCPYSRC,SEDME1V002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -165,15 +169,15 @@
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SEDME1V003
- 
+
       ** Validate Settlement message request
       *
      C                   EXSR      SRGMES
- 
+
       /COPY WNCPYSRC,SEDME1V004
- 
+
  B1  C     DS1522        IFNE      'Y'
      C*****CSE028        OREQ      'N'                                                        225421
      C     DSGMES        ANDEQ     'Y'                                                        225421
@@ -211,27 +215,27 @@
       /COPY WNCPYSRC,SEDME1V010
       *
  E1  C                   ENDIF
- 
+
       /COPY WNCPYSRC,SEDME1V011
- 
+
       ** Validate Free or Against Payment
       *
      C                   EXSR      SRFIND
- 
+
       /COPY WNCPYSRC,SEDME1V012
- 
+
       ** Validate confirmation message request
       *
      C                   EXSR      SRGMEC
- 
+
       /COPY WNCPYSRC,SEDME1V013
- 
+
       ** Validate Time of transaction
       *
      C                   EXSR      SRTRTT
- 
+
       /COPY WNCPYSRC,SEDME1V014
- 
+
  B1  C     DS1522        IFNE      'Y'
      C*****CSE028        OREQ      'N'                                                        225421
      C     DSGMES        ANDEQ     'Y'                                                        225421
@@ -245,15 +249,15 @@
       /COPY WNCPYSRC,SEDME1V016
       *
  E1  C                   ENDIF
- 
+
       /COPY WNCPYSRC,SEDME1V017
- 
+
       ** Validate Fungibility Code
       *
      C                   EXSR      SRFCOD
- 
+
       /COPY WNCPYSRC,SEDME1V018
- 
+
  B1  C     DS1522        IFNE      'Y'
      C*****CSE028        OREQ      'N'                                                        225421
      C     DSGMES        ANDEQ     'Y'                                                        225421
@@ -267,9 +271,9 @@
       /COPY WNCPYSRC,SEDME1V020
       *
  E1  C                   ENDIF
- 
+
       /COPY WNCPYSRC,SEDME1V021
- 
+
       ** Validate ISO15022 Message
       ** If SWIFT 2002 Standards Update (CSW202) enhancement is on, bypass
       ** validation of ISO15022 message
@@ -285,15 +289,15 @@
       /COPY WNCPYSRC,SEDME1V023
       *
  E1  C                   ENDIF
- 
+
       /COPY WNCPYSRC,SEDME1V024
- 
+
       ** Check if safekeeping account is entered on the second screen
       *
      C                   EXSR      SRVAL2
- 
+
       /COPY WNCPYSRC,SEDME1V025
- 
+
       ** If no error found, set up the valid file fields
       *
  B1  C                   IF        Idx = 0
@@ -305,15 +309,15 @@
       /COPY WNCPYSRC,SEDME1V027
       *
  E1  C                   ENDIF
- 
+
       /COPY WNCPYSRC,SEDME1V028
- 
+
       ** Return to the caller
       *
      C                   RETURN
- 
+
       /COPY WNCPYSRC,SEDME1V029
- 
+
       *
       *****************************************************************
       /EJECT
@@ -542,9 +546,14 @@
       *
       ** Check instructions sub-type depending of type of delivering
       *
-     C     KMGECO        CHAIN     MGECOND1                           86
+     C*****KMGECO        CHAIN     MGECOND1                           86                    MD058081
+     C                   CALL      'MGCONRTV'                                               MD058081
+     C                   PARM      *BLANKS       WRTCD             7                        MD058081
+     C                   PARM      KMGECO        WKEYX            20                        MD058081
+     C     MGECON        PARM      MGECON        DSSDY                                      MD058081
       *
- B3  C     *IN86         IFEQ      '1'
+ B3  C******IN86         IFEQ      '1'                                                      MD058081
+ B3  C     WRTCD         IFNE      *BLANKS                                                  MD058081
      C                   EVAL      DSINSSOK = 'N'
      C     Idx           COMP      ArrayMax                             99      -Lower-
      C   99              ADD       1             Idx
@@ -1042,9 +1051,14 @@
       ** (for Cedel)
       *
  B3  C     @CLAS         IFEQ      'C'
-     C     KMGECO        CHAIN     MGECOND1                           85
+     C*****KMGECO        CHAIN     MGECOND1                           85                    MD058081
+     C                   CALL      'MGCONRTV'                                               MD058081
+     C                   PARM      *BLANKS       WRTCD             7                        MD058081
+     C                   PARM      KMGECO        WKEYX            20                        MD058081
+     C     MGECON        PARM      MGECON        DSSDY                                      MD058081
       *
- B4  C     *IN85         IFEQ      '0'
+ B4  C******IN85         IFEQ      '0'                                                      MD058081
+ B4  C     WRTCD         IFEQ      *BLANKS                                                  MD058081
      C                   MOVEA     MGXFUN        MGFUN
      C     DSFCOD        LOOKUP    MGFUN                                  85
       *

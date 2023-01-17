@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD023678           Date 21Nov13               *
+      *  Last Amend No. MD058081           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD023678           Date 21Nov13               *
       *                 MD023120           Date 12Nov13               *
       *                 MD022852           Date 16Oct13               *
       *                 MD021816           Date 26Aug13               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023678 - IBAN is incorrectly generated due to wrong        *
       *             BBAN Bank Length                                  *
@@ -35,7 +37,7 @@
       *                                                               *
       *****************************************************************
       *
-     FMEISOCL2  UF A E           K DISK
+     F*MEISOCL2* UF A E           K DISK                                                    MD058081
      FSDCTRYL2  UF A E           K DISK
      FMEIBNSL0  IF   E           K DISK                                                     MD023120
       *
@@ -85,7 +87,7 @@
      D PRtCd           S              7                                                     MD023120
      D POptn           S              7                                                     MD023120
      D PSard           S              6                                                     MD023120
- 
+
       *****************************************************************                     MD023120
       *                                                               *                     MD023120
       *  SRMain - Main Subroutine                                     *                     MD023120
@@ -106,37 +108,38 @@
      C                   IF        %EOF(MEIBNSL0)                                           MD023120
       *                                                                                     MD023120
      C                   EVAL      Ix = 1
- 
+
      C                   DOW       Ix <= 83
      C                   MOVE      ISOCtyCdAR(Ix)ISOCtyCdDS
- 
-     C     DSISOC        CHAIN     MEISOCL2
-     C                   IF        %FOUND(MEISOCL2)
-     C                   IF        Mode = '1' AND M3IBAC = *BLANKS                          MD023120
-     C                   EXSR      SRNewFlds
-     C                   EXSR      SRJobFlds                                                MD022852
-     C                   EVAL      M3ACTY = 'A'                                             MD022852
-     C                   UPDATE    MEISOCD0
-     C                   ENDIF                                                              MD023120
-     C                   ELSE
-     C                   CLEAR                   MEISOCD0                                   MD022852
-     C                   EXSR      SROldFlds
-     C                   EXSR      SRNewFlds
-     C                   EXSR      SRJobFlds                                                MD022852
-     C                   EVAL      M3ACTY = 'I'                                             MD022852
-     C                   WRITE     MEISOCD0
-     C                   ENDIF
- 
+
+     C*****DSISOC        CHAIN     MEISOCL2                                                 MD058081
+     C**********         IF        %FOUND(MEISOCL2)                                         MD058081
+     C**********         IF        Mode = '1' AND M3IBAC = *BLANKS                 MD023120 MD058081
+     C**********         EXSR      SRNewFlds                                                MD058081
+     C**********         EXSR      SRJobFlds                                       MD022852 MD058081
+     C**********         EVAL      M3ACTY = 'A'                                    MD022852 MD058081
+     C**********         UPDATE    MEISOCD0                                                 MD058081
+     C**********         ENDIF                                                     MD023120 MD058081
+     C**********         ELSE                                                               MD058081
+     C**********         CLEAR                   MEISOCD0                          MD022852 MD058081
+     C**********         EXSR      SROldFlds                                                MD058081
+     C**********         EXSR      SRNewFlds                                                MD058081
+     C**********         EXSR      SRJobFlds                                       MD022852 MD058081
+     C**********         EVAL      M3ACTY = 'I'                                    MD022852 MD058081
+     C**********         WRITE     MEISOCD0                                                 MD058081
+     C**********         ENDIF                                                              MD058081
+
      C     DSISOC        CHAIN     SDCTRYL2
      C                   IF        %FOUND(SDCTRYL2)
-     C                             AND (Mode = '1' OR NOT %FOUND(MEISOCL2))                 MD023120
- 
+     C**********                   AND (Mode = '1' OR NOT %FOUND(MEISOCL2))        MD023120 MD058081
+     C                             AND (Mode = '1' )                                        MD058081
+
      C                   IF        DSISOC = DSIBAC
      C                   EVAL      A4BBAN = DSBBLN
      C**********         EVAL      A4BBRL = DSBILN                                          MD023678
      C                   EVAL      A4BBRL = DSTBLN                                          MD023678
      C                   ELSE
- 
+
      C                   SELECT
      C                   WHEN      DSIBAC = 'FI'
      C                   EVAL      A4BBAN = 14
@@ -155,18 +158,18 @@
      C                   EVAL      A4BBRL = 4
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   UPDATE    SDCTRYD0
      C                   ENDIF
- 
+
      C                   EVAL      Ix = Ix + 1
      C                   ENDDO
                                                                                             MD023120
      C                   ENDIF                                                              MD023120
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR                                                              MD023120
       *****************************************************************
       *                                                               *
@@ -175,38 +178,38 @@
       *  Called By: Main                                              *
       *                                                               *
       *****************************************************************
- 
-     C     SRNewFlds     BEGSR
- 
-     C                   EVAL      M3SCHT = DSSCHT
-     C                   EVAL      M3SEPA = DSSEPA
-     C                   EVAL      M3IBAC = DSIBAC
-     C                   EVAL      M3IBAR = DSIBAR
-     C                   EVAL      M3OCDT = 0
-     C                   EVAL      M3MCDT = 0
-     C                   EVAL      M3CCSP = 1
-     C                   EVAL      M3CCLN = 2
-     C                   EVAL      M3ICSP = 3
-     C                   EVAL      M3ICLN = 2
- 
-     C                   IF        DSBBLN <> 0
-     C                   EVAL      M3BBSP = 5
-     C                   ELSE
-     C                   EVAL      M3BBSP = 0
-     C                   ENDIF
- 
-     C                   EVAL      M3BISP = DSBISP
-     C                   EVAL      M3BILN = DSBILN
-     C                   EVAL      M3BRSP = DSBRSP
-     C                   EVAL      M3BRLN = DSBRLN
-     C                   EVAL      M3INLN = DSINLN
-     C                   EVAL      M3ACSP = DSACSP
-     C                   EVAL      M3ACLN = DSACLN
-     C                   EVAL      M3TILN = DSTILN
-     C                   EVAL      M3BBLN = DSBBLN
-     C                   EVAL      M3TBLN = DSTBLN
- 
-     C                   ENDSR
+
+     C*****SRNewFlds     BEGSR                                                              MD058081
+      **********                                                                            MD058081
+     C**********         EVAL      M3SCHT = DSSCHT                                          MD058081
+     C**********         EVAL      M3SEPA = DSSEPA                                          MD058081
+     C**********         EVAL      M3IBAC = DSIBAC                                          MD058081
+     C**********         EVAL      M3IBAR = DSIBAR                                          MD058081
+     C**********         EVAL      M3OCDT = 0                                               MD058081
+     C**********         EVAL      M3MCDT = 0                                               MD058081
+     C**********         EVAL      M3CCSP = 1                                               MD058081
+     C**********         EVAL      M3CCLN = 2                                               MD058081
+     C**********         EVAL      M3ICSP = 3                                               MD058081
+     C**********         EVAL      M3ICLN = 2                                               MD058081
+      **********                                                                            MD058081
+     C**********         IF        DSBBLN <> 0                                              MD058081
+     C**********         EVAL      M3BBSP = 5                                               MD058081
+     C**********         ELSE                                                               MD058081
+     C**********         EVAL      M3BBSP = 0                                               MD058081
+     C**********         ENDIF                                                              MD058081
+      **********                                                                            MD058081
+     C**********         EVAL      M3BISP = DSBISP                                          MD058081
+     C**********         EVAL      M3BILN = DSBILN                                          MD058081
+     C**********         EVAL      M3BRSP = DSBRSP                                          MD058081
+     C**********         EVAL      M3BRLN = DSBRLN                                          MD058081
+     C**********         EVAL      M3INLN = DSINLN                                          MD058081
+     C**********         EVAL      M3ACSP = DSACSP                                          MD058081
+     C**********         EVAL      M3ACLN = DSACLN                                          MD058081
+     C**********         EVAL      M3TILN = DSTILN                                          MD058081
+     C**********         EVAL      M3BBLN = DSBBLN                                          MD058081
+     C**********         EVAL      M3TBLN = DSTBLN                                          MD058081
+      **********                                                                            MD058081
+     C**********         ENDSR                                                              MD058081
       *****************************************************************
       *                                                               *
       *  SROldFlds - Set up old MEISOCPD fields                       *
@@ -214,18 +217,18 @@
       *  Called By: Main                                              *
       *                                                               *
       *****************************************************************
- 
-     C     SROldFlds     BEGSR
- 
-     C                   EVAL      M3ISOC = DSISOC
-     C**********         EVAL      M3ISOD = DSISOD                                          MD022852
-     C                   EVAL      M3ISOD = %XLATE(LoCase:UpCase:DSISOD)                    MD022852
-     C                   EVAL      M3EEAM = 'N'
-     C                   EVAL      M3FATF = 'N'
-     C                   EVAL      M3MFID = 'N'
-     C                   EVAL      M3M205 = 'N'
- 
-     C                   ENDSR
+
+     C*****SROldFlds     BEGSR                                                              MD058081
+      **********                                                                            MD058081
+     C**********         EVAL      M3ISOC = DSISOC                                          MD058081
+     C**********         EVAL      M3ISOD = DSISOD                                 MD022852 MD058081
+     C**********         EVAL      M3ISOD = %XLATE(LoCase:UpCase:DSISOD)           MD022852 MD058081
+     C**********         EVAL      M3EEAM = 'N'                                             MD058081
+     C**********         EVAL      M3FATF = 'N'                                             MD058081
+     C**********         EVAL      M3MFID = 'N'                                             MD058081
+     C**********         EVAL      M3M205 = 'N'                                             MD058081
+      **********                                                                            MD058081
+     C**********         ENDSR                                                              MD058081
       *****************************************************************                     MD022852
       *                                                               *                     MD022852
       *  SRJobFlds - Set up job MEISOCPD fields                       *                     MD022852
@@ -233,14 +236,14 @@
       *  Called By: Main                                              *                     MD022852
       *                                                               *                     MD022852
       *****************************************************************                     MD022852
-     C     SRJobFlds     BEGSR                                                              MD022852
-                                                                                            MD022852
-     C                   EVAL      M3ACJN = PSJobName                                       MD022852
-     C                   EVAL      M3ACUN = PSUser                                          MD022852
-     C                   EVAL      M3ACTM = PSRunTime                                       MD022852
-     C                   EVAL      M3ACDA = AGMRDT                                          MD022852
-                                                                                            MD022852
-     C                   ENDSR                                                              MD022852
+     C*****SRJobFlds     BEGSR                                                     MD022852 MD058081
+      **********                                                                   MD022852 MD058081
+     C**********         EVAL      M3ACJN = PSJobName                              MD022852 MD058081
+     C**********         EVAL      M3ACUN = PSUser                                 MD022852 MD058081
+     C**********         EVAL      M3ACTM = PSRunTime                              MD022852 MD058081
+     C**********         EVAL      M3ACDA = AGMRDT                                 MD022852 MD058081
+      **********                                                                   MD022852 MD058081
+     C**********         ENDSR                                                     MD022852 MD058081
       *****************************************************************                     MD023120
       *                                                               *                     MD023120
       *  *INZSR - Initialization Subroutine                           *                     MD023120
@@ -330,9 +333,9 @@
       *  Called By: Various                                           *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
       ** Check to see that *PSSR has not already been called.
      C     *INLR         IFNE      *ON
      C                   EVAL      *INLR = *ON
@@ -340,9 +343,9 @@
      C                   EVAL      *INU8 = *ON
      C                   DUMP
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       ** Added ADADYY Andorra and BRBR   Brazil

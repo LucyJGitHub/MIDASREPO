@@ -15,8 +15,9 @@
       *  Called By:                                                   *
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CFB001             Date 12Nov14               *
+      *  Last Amend No. MD058188           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CFB001             Date 12Nov14               *
       *                 CTP011             Date 10Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058188 - Deliverable Data Split for Global files           *
       *  MD046248 - Finastra Rebrandin                                *
       *  CFB001 - FuisonBanking Midas Rebranding                      *
       *  CTP011 - Bank Fusion Midas Rebranding                        *
@@ -68,7 +70,8 @@
      C+ A6FRDS, A6FRNT, A6BODS, A6BOID, A6LEDS, A6LEID, A6DTFR, A6TLEX,
      C+ A6SETD, A6IRDP, A6FXDY, A6ZONE, A6SPAE, A6FTAE, A6SWAE, A6TAC4,
      C+ A6TAC5, A6CSCD, A6IUSR, A6XUSR, A6AACC, A6EACC, A6GPDT  FROM SDCURRPD)
-     C+ T INNER JOIN GPICURRPD ON T.A6CYCD = CYCYCD WHERE NOT EXISTS
+     C**T*INNER*JOIN*GPICURRPD*ON*T.A6CYCD*=*CYCYCD*WHERE*NOT*EXISTS                        MD058188
+     C+ T INNER JOIN GPICRJW0  ON T.A6CYCD = CYCYCD WHERE NOT EXISTS                        MD058188
      C+ (SELECT GCCYCD FROM GPCURRPD WHERE A6CYCD = GCCYCD)
      C/End-Exec
 

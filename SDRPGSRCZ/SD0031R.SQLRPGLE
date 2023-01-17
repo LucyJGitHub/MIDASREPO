@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058188           Date 11May21               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 AR672002           Date 11Jan22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD039031           Date 22May20               *
       *                 MD055821           Date 12May20               *
       *                 MD046248           Date 27Oct17               *
@@ -112,7 +114,15 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058188 - Deliverable Data Split for Global files           *
       *  MD058085 - Deliverable Data Split for Standing Data          *
+      *  AR672002 - Account Section Maintenance.                      *
+      *             Reapply the fixes of 263398B and 263398.          *
+      *             - Make sure that indicator 70 is properly set-on  *
+      *             when action code is 'I'.                          *
+      *             - Apply fix of 243107. Protect Account Section    *
+      *             field during amend mode.                          *
+      *             (Child: AR672004)                                 *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD039031 - A5TOIN and A5ACTY fields used by CGL010 contain   *
@@ -477,7 +487,8 @@
      D  PDGCHT       E                     EXTFLD(PDCHTP)
       ** Global Product Code Details Data Structure                                           CGP001
       *                                                                                       CGP001
-     D GPINST        E DS                  EXTNAME(GPINSTPD)
+     D*GPINST***     E DS                  EXTNAME(GPINSTPD)                                MD058188
+     D GPINST        E DS                  EXTNAME(GPINSJW0)                                MD058188
       ** Global Instrument Code Details Data Structure                                        CGP001
       *                                                                                       CGP001
      D SDRETD        E DS                  EXTNAME(SDRETRPD)
@@ -1368,6 +1379,7 @@
       *
      C     P2ANCD        IFEQ      'I'
      C**********           SETON                     70                                199078 210207
+     C                   SETON                                        70                    AR672002
      C                   SETON                                        80
      C                   ENDIF
      C*                                                                                       199078
@@ -2763,6 +2775,11 @@
      C     YSETCS        IFEQ      'Y'
      C                   EXSR      Y1SET
      C                   END
+      *                                                                                     AR672002
+     C     P2ANCD        IFEQ      'A'                                                      AR672002
+     C                   MOVE      '0'           *IN70                                      AR672002
+     C                   ENDIF                                                              AR672002
+      *                                                                                     AR672002
      C                   WRITE     #MSGCTL
      C/COPY WNCPYSRC,SD0031RC16
      C                   WRITE     #CMDTXT2

@@ -15,7 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 259451A            Date 07Feb22               *
+      *  Last Amend No. MD058188           Date 11May21               *
+      *  Prev Amend No. 259451A            Date 07Feb22               *
       *                 259451             Date 07Feb22               *
       *                 MD056555           Date 31Aug20               *
       *                 MD056992           Date 04Nov20               *
@@ -91,6 +92,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058188 - Deliverable Data Split for Global files           *
       *  259451A - Make sure that 'N' or Blank input on Type Amort is *
       *            allowed for all DTST combination and only MM and   *
       *            NA DTST combination will allow input of 'Y'.       *
@@ -323,7 +325,8 @@
      D  PDGCHT       E                     EXTFLD(PDCHTP)
       ** Global Product Code Details Data Structure                                           CGP001
       *                                                                                       CGP001
-     D GPINST        E DS                  EXTNAME(GPINSTPD)
+     D*GPINST***     E DS                  EXTNAME(GPINSTPD)                                MD058188
+     D GPINST        E DS                  EXTNAME(GPINSJW0)                                MD058188
       ** Global Instrument Code Details Data Structure                                        CGP001
       *                                                                                       CGP001
      D PGMDS         ESDS                  EXTNAME(Y2PGDSP)
@@ -927,7 +930,7 @@
      C                   EXSR      ZASNMS                                       Send message
      C                   ELSE
       *                                                                                       CAS009
-     C     #1ACAI        IFEQ      'Y'                                                            
+     C     #1ACAI        IFEQ      'Y'
      C*****#1ACAI        OREQ      'N'                                                       259451A
       *                                                                                       CAS009
      C     #1DTPE        LOOKUP    @DL                                    85

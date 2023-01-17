@@ -17,10 +17,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD058517 *CREATE    Date 17Oct22              *
+      *  Last Amend No. MD060897            Date 10Jan23              *
+      *  Prev Amend No. MD058517 *CREATE    Date 17Oct22              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060897 - CC10 Loan Interest Confirmation Spool file issues *
+      *             - Loan record is reported twice                   *
+      *             - Reprint function failed for matured loans       *
+      *             - Some labels does not match user story reqmnt    *
+      *             Amended this program as follows                   *
+      *             - Do not perform print routine if record is not   *
+      *               found in loans file                             *
+      *             - Use union to combine current and forward rates  *
+      *               excluding records which exist on both files     *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates             *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -102,6 +112,7 @@
 
       ** Work Data Structures
      D LoanDS          DS
+     D  DSRECI                        1A                                                    MD060897
      D  DSCNUM                        6A
      D  DSCPAM                       13P 0
      D  DSCCY                         3A
@@ -213,6 +224,7 @@
      D P@OP10          S             20
      D P@VL10          S            200
      D PrintP3         S              1
+     D NO_RECORD       c                   const(100)                                       MD060897
 
       *****************************************************************
       /EJECT
@@ -228,9 +240,11 @@
      C                             (KCINTA <> KPINTA OR KSPLFP <> 'Y'
      C                              OR RPRNT = 'Y')
      C/exec SQL
-     C+ declare CLOA cursor for
+     C**********+ declare CLOA cursor for                                                   MD060897
      C+ select
-     C+   CNUM
+     C+   RECI                                                                              MD060897
+     C**********+   CNUM                                                                    MD060897
+     C+ , CNUM                                                                              MD060897
      C+ , CPAM
      C+ , CCY
      C+ , SLID
@@ -252,21 +266,23 @@
      C+ , LBDY
      C+ , OPSH
      C+ , RRDP
+     C+   INTO   :LoanDS                                                                    MD060897
      C+ from CLOANCL
      C+ where
      C+     LNRF = :KTRNID
      C/end-exec
 
-     C/exec SQL
-     C+ open CLOA
-     C/end-exec
+     C**********/exec SQL                                                                   MD060897
+     C**********+ open CLOA                                                                 MD060897
+     C**********/end-exec                                                                   MD060897
+                                                                                            MD060897
+     C**********/exec SQL                                                                   MD060897
+     C**********+ fetch next                                                                MD060897
+     C**********+ from CLOA                                                                 MD060897
+     C**********+ into :LoanDS                                                              MD060897
+     C**********/end-exec                                                                   MD060897
 
-     C/exec SQL
-     C+ fetch next
-     C+ from CLOA
-     C+ into :LoanDS
-     C/end-exec
-
+     C                   IF        SQLCOD <> NO_RECORD AND DSRECI = 'D'                     MD060897
       ** Transaction Reference
      C                   EVAL      P1LNRF = KTRNID
 
@@ -487,6 +503,7 @@ I    C                   ENDIF
      C                   EVAL      KPINTA  = KCINTA
      C                   UPDATE    SDRTKNT0
      C                   ENDIF
+     C                   ENDIF                                                              MD060897
 
      C                   ENDIF
 
@@ -612,6 +629,17 @@ I    C                   ENDIF
 
       ** Rate Rounding Precision
      C                   MOVEL     DSRRDP        P1RRDP
+     C                   EVAL      isRndApplies = 'N'                                       MD060897
+     C                   IF        DSCALM = 'NCCR'                                          MD060897
+     C                   CALL      'ZAGETRDAPL'                                             MD060897
+     C                   PARM                    DSRFRR                                     MD060897
+     C                   PARM                    isRndApplies      1                        MD060897
+     C                   ENDIF                                                              MD060897
+     C                   IF        isRndApplies = 'Y'                                       MD060897
+     C                   EVAL      P1RLBL = 'Rate Rounding Precision'                       MD060897
+     C                   ELSE                                                               MD060897
+     C                   EVAL      P1RLBL = 'Rate Rounding Decimals '                       MD060897
+     C                   ENDIF                                                              MD060897
 
       ** Write out detail record
      C                   WRITE     DETLP2
@@ -648,8 +676,31 @@ I    C                   ENDIF
      C+     CMODID = 'LE'
      C+ and CTRNID = :KTRNID
      C+ and CINFLG = 'Y'
-     C+ order by
-     C+     CINPDT asc
+     C**********+ order by                                                                  MD060897
+     C**********+     CINPDT asc                                                            MD060897
+     C+ union all                                                                           MD060897
+     C+ select                                                                              MD060897
+     C+   FINPSD                                                                            MD060897
+     C+ , FINPED                                                                            MD060897
+     C+ , FINPDT AS CINPDT                                                                  MD060897
+     C+ , FINPDY                                                                            MD060897
+     C+ , FOBPDT                                                                            MD060897
+     C+ , FOBPDY                                                                            MD060897
+     C+ , FPBRFR                                                                            MD060897
+     C+ , FRTEAP                                                                            MD060897
+     C+ , FCALCM                                                                            MD060897
+     C+ , FAVCRT                                                                            MD060897
+     C+ , FDCMRT                                                                            MD060897
+     C+ , FSMPAV                                                                            MD060897
+     C+ from SDFWDRTD T2                                                                    MD060897
+     C+ where                                                                               MD060897
+     C+ not exists (                                                                        MD060897
+     C+ select * from SDHSDRTD T1                                                           MD060897
+     C+ where T1.CINPDT = T2.FINPDT )                                                       MD060897
+     C+ and FMODID = 'LE'                                                                   MD060897
+     C+ and FTRNID = :KTRNID                                                                MD060897
+     C+ order by                                                                            MD060897
+     C+ CINPDT asc                                                                          MD060897
      C/end-exec
 
      C/exec SQL
@@ -756,130 +807,130 @@ I    C                   ENDIF
      C+ close SDHS
      C/end-exec
 
-      ** Process ARR Forward Rates
-     C                   EVAL      XCINPDT = 0
-     C/exec SQL
-     C+ declare SDFW cursor for
-     C+ select
-     C+   FINPSD
-     C+ , FINPED
-     C+ , FINPDT
-     C+ , FINPDY
-     C+ , FOBPDT
-     C+ , FOBPDY
-     C+ , FPBRFR
-     C+ , FRTEAP
-     C+ , FCALCM
-     C+ , FAVCRT
-     C+ , FDCMRT
-     C+ , FSMPAV
-     C+ from SDFWDRTD
-     C+ where
-     C+     FMODID = 'LE'
-     C+ and FTRNID = :KTRNID
-     C+ and FINPSD = :XCINPSD
-     C+ order by
-     C+     FINPDT asc
-     C/end-exec
+      ***Process*ARR*Forward*Rates************************************                      MD060897
+     C**********         EVAL      XCINPDT = 0                                              MD060897
+     C**********/exec SQL                                                                   MD060897
+     C**********+ declare SDFW cursor for                                                   MD060897
+     C**********+ select                                                                    MD060897
+     C**********+   FINPSD                                                                  MD060897
+     C**********+ , FINPED                                                                  MD060897
+     C**********+ , FINPDT                                                                  MD060897
+     C**********+ , FINPDY                                                                  MD060897
+     C**********+ , FOBPDT                                                                  MD060897
+     C**********+ , FOBPDY                                                                  MD060897
+     C**********+ , FPBRFR                                                                  MD060897
+     C**********+ , FRTEAP                                                                  MD060897
+     C**********+ , FCALCM                                                                  MD060897
+     C**********+ , FAVCRT                                                                  MD060897
+     C**********+ , FDCMRT                                                                  MD060897
+     C**********+ , FSMPAV                                                                  MD060897
+     C**********+ from SDFWDRTD                                                             MD060897
+     C**********+ where                                                                     MD060897
+     C**********+     FMODID = 'LE'                                                         MD060897
+     C**********+ and FTRNID = :KTRNID                                                      MD060897
+     C**********+ and FINPSD = :XCINPSD                                                     MD060897
+     C**********+ order by                                                                  MD060897
+     C**********+     FINPDT asc                                                            MD060897
+     C**********/end-exec                                                                   MD060897
 
-     C/exec SQL
-     C+ open SDFW
-     C/end-exec
+     C**********/exec SQL                                                                   MD060897
+     C**********+ open SDFW                                                                 MD060897
+     C**********/end-exec                                                                   MD060897
 
-     C/exec SQL
-     C+ fetch next
-     C+ from SDFW
-     C+ into :DlyDS
-     C/end-exec
+     C**********/exec SQL                                                                   MD060897
+     C**********+ fetch next                                                                MD060897
+     C**********+ from SDFW                                                                 MD060897
+     C**********+ into :DlyDS                                                               MD060897
+     C**********/end-exec                                                                   MD060897
+                                                                                            MD060897
+     C**********         DOW       SQLCOD <> 100                                            MD060897
+     C**********         EVAL      XCINPDT = Dintd                                          MD060897
+                                                                                            MD060897
+      ***Interest*Period*Date*****************************************                      MD060897
+     C**********         MOVE      Dintd         ZDayNo                                     MD060897
+     C**********         CALL      'ZDATE2'                                                 MD060897
+     C**********         PARM                    ZDayNo                                     MD060897
+     C**********         PARM                    BJDFIN                                     MD060897
+     C**********         PARM      *ZERO         ZDate                                      MD060897
+     C**********         PARM      *BLANKS       ZADate                                     MD060897
 
-     C                   DOW       SQLCOD <> 100
-     C                   EVAL      XCINPDT = Dintd
+     C**********         EVAL      DSDATE = ZADate                                          MD060897
+     C*****DSDy1         IFEQ      ' '                                                      MD060897
+     C**********         EVAL      DSDy1 = '0'                                              MD060897
+     C**********         ENDIF                                                              MD060897
+     C**********         EVAL      P2INTD = DSDay + '-' + DSMth + '-' + DSYear              MD060897
+                                                                                            MD060897
+      ***Interest*Period*Days*****************************************                      MD060897
+     C**********         MOVE      Dindy         WWIndyChar                                 MD060897
+     C**********         EVAL      P2INDY =  %triml(WWIndyChar:'0')                         MD060897
 
-      ** Interest Period Date
-     C                   MOVE      Dintd         ZDayNo
-     C                   CALL      'ZDATE2'
-     C                   PARM                    ZDayNo
-     C                   PARM                    BJDFIN
-     C                   PARM      *ZERO         ZDate
-     C                   PARM      *BLANKS       ZADate
+      ***Published*Risk*Free*Rate*************************************
+     C**********         Z-ADD     Dbrfr         WrkRate                                    MD060897
+     C**********         Z-ADD     0             ZFLD15                                     MD060897
+     C**********         MOVE      WrkRate       ZFLD15                                     MD060897
+     C**********         EVAL      ZDECS = 7                                                MD060897
+     C**********         CALL      'ZSEDIT'                                                 MD060897
+     C**********         PARM                    ZFLD15                                     MD060897
+     C**********         PARM                    ZDECS                                      MD060897
+     C**********         PARM      'J'           ZECODE                                     MD060897
+     C**********         PARM                    ZOUT21                                     MD060897
+     C**********         EVAL      P2BRFR  = (%trim(ZOUT21))                                MD060897
 
-     C                   EVAL      DSDATE = ZADate
-     C     DSDy1         IFEQ      ' '
-     C                   EVAL      DSDy1 = '0'
-     C                   ENDIF
-     C                   EVAL      P2INTD = DSDay + '-' + DSMth + '-' + DSYear
+      ***Rate*Applied*************************************************                      MD060897
+     C**********         Z-ADD     Drtap         WrkRate                                    MD060897
+     C**********         Z-ADD     0             ZFLD15                                     MD060897
+     C**********         MOVE      WrkRate       ZFLD15                                     MD060897
+     C**********         EVAL      ZDECS = 7                                                MD060897
+     C**********         CALL      'ZSEDIT'                                                 MD060897
+     C**********         PARM                    ZFLD15                                     MD060897
+     C**********         PARM                    ZDECS                                      MD060897
+     C**********         PARM      'J'           ZECODE                                     MD060897
+     C**********         PARM                    ZOUT21                                     MD060897
+     C**********         EVAL      P2RTAP  = (%trim(ZOUT21))                                MD060897
 
-      ** Interest Period Days
-     C                   MOVE      Dindy         WWIndyChar
-     C                   EVAL      P2INDY =  %triml(WWIndyChar:'0')
+      ***Average/Compound Rate****************************************                      MD060897
+     C**********         SELECT                                                             MD060897
+     C**********         WHEN      Dcalm = 'CCR'                                            MD060897
+     C**********         Z-ADD     Davcr         WrkRate                                    MD060897
+     C**********         WHEN      Dcalm = 'NCCR'                                           MD060897
+     C**********         Z-ADD     Dcmrt         WrkRate                                    MD060897
+     C**********         WHEN      Dcalm = 'SAVG'                                           MD060897
+     C**********         Z-ADD     Dsmav         WrkRate                                    MD060897
+     C**********         WHEN      Dcalm = 'SARR'                                           MD060897
+     C**********         Z-ADD     Drtap         WrkRate                                    MD060897
+     C**********         ENDSL                                                              MD060897
 
-      ** Published Risk Free Rate
-     C                   Z-ADD     Dbrfr         WrkRate
-     C                   Z-ADD     0             ZFLD15
-     C                   MOVE      WrkRate       ZFLD15
-     C                   EVAL      ZDECS = 7
-     C                   CALL      'ZSEDIT'
-     C                   PARM                    ZFLD15
-     C                   PARM                    ZDECS
-     C                   PARM      'J'           ZECODE
-     C                   PARM                    ZOUT21
-     C                   EVAL      P2BRFR  = (%trim(ZOUT21))
+     C**********         Z-ADD     0             ZFLD15                                     MD060897
+     C**********         MOVE      WrkRate       ZFLD15                                     MD060897
+     C**********         EVAL      ZDECS = 7                                                MD060897
+     C**********         CALL      'ZSEDIT'                                                 MD060897
+     C**********         PARM                    ZFLD15                                     MD060897
+     C**********         PARM                    ZDECS                                      MD060897
+     C**********         PARM      'J'           ZECODE                                     MD060897
+     C**********         PARM                    ZOUT21                                     MD060897
+     C**********         EVAL      P2AVCR  = (%trim(ZOUT21))                                MD060897
 
-      ** Rate Applied
-     C                   Z-ADD     Drtap         WrkRate
-     C                   Z-ADD     0             ZFLD15
-     C                   MOVE      WrkRate       ZFLD15
-     C                   EVAL      ZDECS = 7
-     C                   CALL      'ZSEDIT'
-     C                   PARM                    ZFLD15
-     C                   PARM                    ZDECS
-     C                   PARM      'J'           ZECODE
-     C                   PARM                    ZOUT21
-     C                   EVAL      P2RTAP  = (%trim(ZOUT21))
+      ***Write*out*detail*record**************************************                      MD060897
+     C**********         Z-ADD     1             RQDLN1                                     MD060897
+     C*****OFLLN1        SUB       PRTLN1        DIFLN1                                     MD060897
+     C*****DIFLN1        IFLE      RQDLN1                                                   MD060897
+     C******IN01         OREQ      *ON                                                      MD060897
+     C**********         WRITE     HEADP3                                                   MD060897
+     C**********         MOVE      *OFF          *IN01                                      MD060897
+     C**********         ENDIF                                                              MD060897
+     C**********         WRITE     DETLP3                                                   MD060897
 
-      ** Average/Compound Rate
-     C                   SELECT
-     C                   WHEN      Dcalm = 'CCR'
-     C                   Z-ADD     Davcr         WrkRate
-     C                   WHEN      Dcalm = 'NCCR'
-     C                   Z-ADD     Dcmrt         WrkRate
-     C                   WHEN      Dcalm = 'SAVG'
-     C                   Z-ADD     Dsmav         WrkRate
-     C                   WHEN      Dcalm = 'SARR'
-     C                   Z-ADD     Drtap         WrkRate
-     C                   ENDSL
+     C**********/exec SQL                                                                   MD060897
+     C**********+ fetch next                                                                MD060897
+     C**********+ from SDFW                                                                 MD060897
+     C**********+ into :DlyDS                                                               MD060897
+     C**********/end-exec                                                                   MD060897
 
-     C                   Z-ADD     0             ZFLD15
-     C                   MOVE      WrkRate       ZFLD15
-     C                   EVAL      ZDECS = 7
-     C                   CALL      'ZSEDIT'
-     C                   PARM                    ZFLD15
-     C                   PARM                    ZDECS
-     C                   PARM      'J'           ZECODE
-     C                   PARM                    ZOUT21
-     C                   EVAL      P2AVCR  = (%trim(ZOUT21))
+     C**********         ENDDO                                                              MD060897
 
-      ** Write out detail record
-     C                   Z-ADD     1             RQDLN1
-     C     OFLLN1        SUB       PRTLN1        DIFLN1
-     C     DIFLN1        IFLE      RQDLN1
-     C     *IN01         OREQ      *ON
-     C                   WRITE     HEADP3
-     C                   MOVE      *OFF          *IN01
-     C                   ENDIF
-     C                   WRITE     DETLP3
-
-     C/exec SQL
-     C+ fetch next
-     C+ from SDFW
-     C+ into :DlyDS
-     C/end-exec
-
-     C                   ENDDO
-
-     C/exec SQL
-     C+ close SDFW
-     C/end-exec
+     C**********/exec SQL                                                                   MD060897
+     C**********+ close SDFW                                                                MD060897
+     C**********/end-exec                                                                   MD060897
 
      C                   ENDSR
       *****************************************************************

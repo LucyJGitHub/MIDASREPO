@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
-      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *  Last Amend No. MD060823           Date 12Dec22               *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 MD059624           Date 20Jul22               *
       *                 249385             Date 01Aug22               *
       *                 MD059424           Date 29Mar22               *
       *                 MD059104           Date 02Dec21               *
@@ -27,6 +28,11 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060823 -  Rolled over loan using SARR calculation method   *
+      *              was not processed by calculator and reported     *
+      *              as an exception.                                 *
+      *              Remove call to checking of duplicate records     *
+      *              in SDARRLOGTD when module id is 'LE'             *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates             *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -1822,7 +1828,7 @@
                                : AuditLogDS.SJEXMS,
                                : logData
                           );
-                         // End of change MD059424
+                      // End of change MD059424
                           if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                              AuditLogDS.SJTMST = %timestamp();
                              AuditLogDS.SJEXMS = 'Error in access SDARRLOGTD';
@@ -1996,6 +2002,11 @@
      D isDuplicate     pi             1n                                                    MD059424
      D    fileToCheck                10a   value                                            MD059424
       /free
+                   // Start of change MD060823
+                   if moduleID = 'LE';
+                      return False;
+                   endif;
+                   // End of change MD060823
                    // Start of change MD059424
                    if fileToCheck = 'IRLIBEPD';
                         wSQLStr = 'select * from IRLIBEPD ' +

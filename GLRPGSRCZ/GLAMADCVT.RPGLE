@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD058854           Date 21Oct21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
@@ -67,6 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058854 - Deliverable Data Split for TABLEV4                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -143,7 +145,8 @@
      FRESTCHPD  IF   E           K DISK    INFSR(*PSSR)
 
       ** Customer Group Code
-     FTABLEV4   IF   E             DISK    INFSR(*PSSR)
+     F*TABLEV4** IF   E             DISK    INFSR(*PSSR)                                    MD058854
+     FTABV4XTD  IF   E             DISK    INFSR(*PSSR)                                     MD058854
                                                                                               CRE015
      FSDACD1L0  IF   E           K DISK    INFSR(*PSSR)                                       CRE015
 
@@ -2323,10 +2326,12 @@
       *
      C                   Z-ADD     0             IDX1
      C                   Move      *Off          *IN10
-     C     1             SETLL     TABLEV4F
+     C*****1****         SETLL     TABLEV4F                                                 MD058854
+     C     1             SETLL     TABV4XT0                                                 MD058854
       *
      C     *IN10         DOUEQ     *On
-     C                   READ      TABLEV4F                               10
+     C**********         READ      TABLEV4F                               10                MD058854
+     C                   READ      TABV4XT0                               10                MD058854
      C     *IN10         IFEQ      *Off
      C                   ADD       1             Idx1
      C                   MOVE      CGRP          GRP(Idx1)

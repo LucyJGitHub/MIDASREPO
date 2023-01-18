@@ -17,7 +17,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060824           Date 10Jan23               *
+      *  Last Amend No. MD060824            Date 10Jan23              *
       *  Prev Amend No. MD060897            Date 10Jan23              *
       *                 MD058517 *CREATE    Date 17Oct22              *
       *                                                               *
@@ -437,7 +437,7 @@
      C                   MULT(H)   WRK_139       WIntr
      C     DSSPIN        WHENEQ    *BLANK
      C**********         ADD(H)    DSRTSP        WIntr                                      MD060824
-     C                   ADD(H)    DSRTSP        WIntr                                      MD060824
+     C                   ADD       DSRTSP        WIntr                                      MD060824
      C                   ENDSL
 
      C                   MOVE      WIntr         ZFLD15

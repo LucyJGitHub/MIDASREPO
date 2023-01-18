@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD049636           Date 13Mar18               *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD049636           Date 13Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 215959             Date 21Mar16               *
       *                 AR1056730          Date 15Nov12               *
@@ -129,6 +130,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD049636 - New Narrative codes in 1-50 interval              *
       *  MD046248 - Finastra Rebranding                               *
@@ -599,6 +601,7 @@
      I*  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE               S01522
       *                                                                                       229342
      IDSLDY     E DSDSLDY                                                                     229342
+     ISDNARR    E DSSDNARRPD                                                                MD058769
      I*                                                                   S01522
      IRUNDAT      DS                                                      S01117
      I** Data area RUNDAT                                                 S01117
@@ -2715,10 +2718,28 @@
      C                     MOVE BLK012    ZTABKY
      C                     MOVEL'90'      ZTABKY
      C                     MOVE NC,I      ZTABKY
-     C                     EXSR TABCHN
+     C**********           EXSR TABCHN                                                      MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM NC,I      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    DSFDY                                             MD058769
+      *                                                                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C           *LOCK     IN   LDA                                                         MD058769
+     C                     SETON                     U7U8                                   MD058769
+     C                     MOVE 'SDNARJW0'DBFILE           ***************                  MD058769
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 33 *                  MD058769
+     C                     Z-ADD33        DBASE            ***************                  MD058769
+     C                     OUT  LDA                                                         MD058769
+     C                     DUMP                                                             MD058769
+     C                     GOTO DBERR                                                       MD058769
+     C                     END                                                              MD058769
+      *                                                                                     MD058769
      C*
      C                     MOVEABLK030    NAR
-     C                     MOVEANARDTP    NAR
+     C**********           MOVEANARDTP    NAR                                               MD058769
+     C                     MOVEAALDON     NAR                                               MD058769
      C*                                                                   S01522
      C                     MOVE *ZEROS    ##MGID                          S01522
      C                     MOVE NC,I      ##WK4   4                       S01522

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059887           Date 20May22               *
-      *  Prev Amend No. CRE100A            Date 08Nov21               *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. MD059887           Date 20May22               *
+      *                 CRE100A            Date 08Nov21               *
       *                 260545             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD049120           Date 22Oct20               *
@@ -234,6 +235,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  MD059887 - REC64N failed due to database error               *
       *  CRE100A - Additional flexibility for CRE100                  *
       *            Value of 'I'in system value RET_INTAC_CUST_LVL     *
@@ -876,7 +878,8 @@
      FSDBRCHL1IF  E                    DISK                                                 CRE083BK
      F**********SDCURRL1IF  E                    DISK                                 CRE083BKCGL165
      FSDCURRL1IF  E                    DISK                           UC                      CGL165
-     FSDNARRL1IF  E                    DISK                                                 CRE083BK
+     F*SDNARRL1IF  E                   DISK                                        CRE083BK MD058769
+     FSDNARJW0IT  F       2           EDISK                                                 MD058769
      FSDWTRCL0IF  E           K        DISK                                                   CGL165
      F*
      F*                                                                   S01408
@@ -975,6 +978,7 @@
      E/COPY ZSRSRC,ZDATE2Z1
      E/COPY ZSRSRC,ZHOLE
      E*
+     E    SDNARJW0        XNCD    1 300  2               Narrative code                     MD058769
      E                    ZA1        16  1               ZEDIT ARRAY
      E                    ZA2        16  1               ZEDIT ARRAY
      E                    CPY@    1   1 80
@@ -5251,16 +5255,23 @@
      C                     Z-ADD300       B       30                                        CRE083BK
      C           B         OCUR SDNARR                                                      CRE083BK
       *                                                                                     CRE083BK
-     C                     READ SDNARRL1                 14                                 CRE083BK
+     C**********           READ SDNARRL1                 14                        CRE083BK MD058769
+     C                     Z-ADD1         WW      30                                        MD058769
       *                                                                                     CRE083BK
-     C           *IN14     DOWEQ*OFF                                                        CRE083BK
+     C********** *IN14     DOWEQ*OFF                                               CRE083BK MD058769
+     C           XNCD,WW   DOWNE*BLANKS                                                     MD058769
      C********** B         ANDGT1                                                  CRE083BK MD021155
      C           B         ANDGT2                                                           MD021155
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY   ' @OPTN                                             MD058769
+     C                     PARM XNCD,WW   @NVCD                                             MD058769
+     C           SDNARR    PARM SDNARR    DSFDY                                             MD058769
      C                     MOVE ALNVCD    ANAR,B                                            CRE083BK
-     C                     MOVE ALDON     NARD                                              CRE083BK
      C                     SUB  1         B                                                 CRE083BK
      C           B         OCUR SDNARR                                                      CRE083BK
-     C                     READ SDNARRL1                 14                                 CRE083BK
+     C**********           READ SDNARRL1                 14                        CRE083BK MD058769
+     C                     ADD  1         WW                                                MD058769
      C********** *IN14     IFEQ *ON                                               CRE083BK AR1096650
      C**********           ADD  1         B                                       CRE083BK AR1096650
      C**********           ENDIF                                                  CRE083BK AR1096650
@@ -5268,7 +5279,8 @@
       *                                                                                     CRE083BK
       ** If count less than array size                                                     AR1096650
       *                                                                                    AR1096650
-     C           *IN14     IFEQ *ON                                                        AR1096650
+     C********** *IN14     IFEQ *ON                                               AR1096650 MD058769
+     C           WW        IFLE 300                                                         MD058769
      C           B         ANDLT300                                                        AR1096650
      C                     ADD  1         B                                                AR1096650
      C                     ENDIF                                                           AR1096650
@@ -5278,7 +5290,7 @@
      C********** B         IFEQ 1                                                 AR1096650 MD021155
      C           B         IFEQ 2                                                           MD021155
      C                     MOVE ALNVCD    ANAR,B                                           AR1096650
-     C                     MOVE ALDON     NARD                                              MD021155
+     C**********           MOVE ALDON     NARD                                     MD021155 MD058769
      C                     ENDIF                                                           AR1096650
       *                                                                                    AR1096650
      C                     Z-ADDB         CUNARA  30                                        CRE083BK

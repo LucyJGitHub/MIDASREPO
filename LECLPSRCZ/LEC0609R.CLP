@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                    */
 /*                                                                  */
-/*       Last Amend No. CLE071             Date 18Jul18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058769           Date 01Sep21              */
+/*       Prev Amend No. CLE071             Date 18Jul18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD021605           Date 22Aug13              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD058769 - Deliverable Data Split for SDNARRPD and TABLETP  */
 /*       CLE071 - Value Dating of Rate Changes to Fees (Recompile)   */
 /*       MD046248 - Finastra Rebranding                              */
 /*     MD021605 - Add a parameter for LE0480.                       */
@@ -54,8 +56,8 @@
 
 /************IF         COND(&EEOB *NE 'Y') THEN(DO)                    ER_R10*/
 /**********  IF         COND(&BPGEEB *NE 'Y') THEN(DO)  *ER_R10*        124371*/
-             OVRDBF     FILE(TABLE) TOFILE(TABLEEI)
-             OVRDBF     FILE(TABLED) TOFILE(TABLEEI) SHARE(*NO)
+/**********  OVRDBF     FILE(TABLE) TOFILE(TABLEEI) */                                  /*MD058769*/
+/**********  OVRDBF     FILE(TABLED) TOFILE(TABLEEI) SHARE(*NO) */                      /*MD058769*/
              OVRDBF     FILE(LVNTXHH) TOFILE(ERLVENHH)
              OVRDBF     FILE(LVNTXEL) TOFILE(ERLVENPD) SEQONLY(*YES +
                           100)

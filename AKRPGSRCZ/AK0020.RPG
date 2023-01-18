@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054576           Date 14Oct19               *
-      *  Prev Amend No. MD053762           Date 16Jun19               *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. MD054576           Date 14Oct19               *
+      *                 MD053762           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
@@ -93,6 +94,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  MD054576 - Account keys not displayed in DKEYSDP report      *
       *             (DL0280) and GEDLPD (DL0295) after Day 1 COBDL    *
       *  MD053762 - Tiered Witholding Tax System Values               *
@@ -238,7 +240,7 @@
      FAK0020DFCF  E                    WORKSTN
      FSDCURRL1IF  E           K        DISK
      FZACKEYALO   E                    DISK                      A
-     FSDNARRL1IF  E           K        DISK
+     F*SDNARRL1IF  E           K        DISK                                                MD058769
      FSDDLSTL1IF  E           K        DISK
      FFDDTSTL1IF  E           K        DISK                               080603
      FSDBRTDL1IF  E           K        DISK                               080603
@@ -603,6 +605,7 @@
      I** DATA STRUCTURE FOR ROLLOVER SWITCH ON FILE                       S01460
      I*                                                                   S01460
      ISDTCLS    E DSSDTCLSPD                                                                  CDL038
+     ISDNARR    E DSSDNARRPD                                                                MD058769
      I/COPY WNCPYSRC,AKH00131
      I** Transaction Classes                                                                  CDL038
      I              'AllowPIPDforITIPD'   C         PSVAL1                                  MD027308
@@ -12338,7 +12341,17 @@ E001 C                     ENDIF                                          S01460
      C           N         DOWLTMAXN                                      080603
      C*
      C           N         ADD  1         N
-     C           NR,N      CHAINSDNARRL1             11
+     C********** NR,N      CHAINSDNARRL1             11                                     MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM NR,N      @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    DSFDY                                             MD058769
+     C                     SETOF                     11                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     11                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C           *IN11     IFEQ '1'
      C                     MOVE NR,N      PN,N
      C                     END

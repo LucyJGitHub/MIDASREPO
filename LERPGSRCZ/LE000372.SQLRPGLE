@@ -17,11 +17,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060897            Date 10Jan23              *
-      *  Prev Amend No. MD058517 *CREATE    Date 17Oct22              *
+      *  Last Amend No. MD060824           Date 10Jan23               *
+      *  Prev Amend No. MD060897            Date 10Jan23              *
+      *                 MD058517 *CREATE    Date 17Oct22              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060824 - Future rates were rounded up on rates known date  *
+      *             on LOAC and LEFWBRPD                              *
+      *             Amended rate computation to follow ZAGETCALRT     *
+      *             logic.                                            *
       *  MD060897 - CC10 Loan Interest Confirmation Spool file issues *
       *             - Loan record is reported twice                   *
       *             - Reprint function failed for matured loans       *
@@ -225,6 +230,8 @@
      D P@VL10          S            200
      D PrintP3         S              1
      D NO_RECORD       c                   const(100)                                       MD060897
+     D wFinalRate      S             15P 9 INZ(0)                                           MD060824
+     D wCurrRate       S             11P 7 INZ(0)                                           MD060824
 
       *****************************************************************
       /EJECT
@@ -400,28 +407,37 @@
 
      C                   EVAL      P1NRDY = '('+(%trim(WWNrdyChar))+' days'+ ')'
 
+     C                   CLEAR                   wCurrRate                                  MD060824
+     C                   CLEAR                   wFinalRate                                 MD060824
       ** Interest Rate
      C     DSCalm        IFEQ      'CCR'
      C     DSCalm        OREQ      'SAVG'
 
      C                   SELECT
      C     DSCalm        WHENEQ    'CCR'
-     C     Davcr         ADD(H)    DSBADJ        WIntr
+     C*****Davcr         ADD(H)    DSBADJ        WIntr                                      MD060824
+     C                   EVAL      wCurrRate =  Davcr                                       MD060824
 
      C     DSCalm        WHENEQ    'SAVG'
-     C     Dsmav         ADD(H)    DSBADJ        WIntr
+     C*****Dsmav         ADD(H)    DSBADJ        WIntr                                      MD060824
+     C                   EVAL      wCurrRate =  Dsmav                                       MD060824
      C                   ENDSL
+     C                   EVAL      wFinalRate = wCurrRate + DSBADJ                          MD060824
+     C                   EVAL(H)   WIntr      = wFinalRate                                  MD060824
 
      C                   SELECT
      C     DSSPIN        WHENEQ    'A'
-     C                   ADD(H)    DSRTSP        WIntr
+     C**********         ADD(H)    DSRTSP        WIntr                                      MD060824
+     C                   ADD       DSRTSP        WIntr                                      MD060824
      C     DSSPIN        WHENEQ    'S'
-     C                   SUB(H)    DSRTSP        WIntr
+     C**********         SUB(H)    DSRTSP        WIntr                                      MD060824
+     C                   SUB       DSRTSP        WIntr                                      MD060824
      C     DSSPIN        WHENEQ    'P'
      C     DSRTSP        DIV       100           WRK_139          13 9
      C                   MULT(H)   WRK_139       WIntr
      C     DSSPIN        WHENEQ    *BLANK
-     C                   ADD(H)    DSRTSP        WIntr
+     C**********         ADD(H)    DSRTSP        WIntr                                      MD060824
+     C                   ADD(H)    DSRTSP        WIntr                                      MD060824
      C                   ENDSL
 
      C                   MOVE      WIntr         ZFLD15

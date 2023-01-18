@@ -1,7 +1,9 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
-/*STD *  RPGBASEMOD                                                   *
+/**** *  RPGBASEMOD                                                   *                     MD058830
+/*STD *  RPGSQLMOD                                                    *                     MD058830
+/*EXI *  CLOSQLCSR(*ENDMOD)                                           *                     MD058830
 /*EXI *  TEXT('Midas GL MT940 File Extract')                          *
       *****************************************************************
       *                                                               *
@@ -14,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057965           Date 28May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060685           Date 27Oct22               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD057965           Date 28May21               *
+      *                 CSD103             Date 10Aug20               *
       *                 223783             Date 28May12               *
       *                 222088             Date 28May12               *
       *                 216936             Date 28May12               *
@@ -64,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060685 - Program ends with decimal data error due to blank *
+      *             field QQACCD                                      *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD057965 - Next Statement Date is set to 11months later when *
       *             MT940 statement frequency is 'E'                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -277,7 +284,8 @@
       **  Data Structure for SD General ledger ICD
      D QQACD1        E                     EXTFLD(QQACCD)                                     CGL029
 
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       **  Data Structure for Network Details.
 
      D GLACCNT       E DS                  EXTNAME(ACCNTAB)
@@ -610,6 +618,7 @@
      C                             PRtcd = *BLANKS                                            CER030
      C/COPY WNCPYSRC,GLH00177
 
+     C                   eval      QQACCD = 0                                               MD060685
       ** Add record in MT940 Generation Extract - Posting Detail
 
      C                   WRITE     MGX940D0
@@ -684,6 +693,7 @@
      C                   EVAL      MGACSQ = N4ACSQ                              Account sequence num
      C                   EVAL      MGNATY = N4NATY                              Network Account Type
      C                   EVAL      MGDSTN = N4DSTN                              Destination
+     C                   eval      QQACCD = 0                                               MD060685
      C                   IF        ED0DMS <> *BLANKS
      C                   EVAL      MGDMST = ED0DMS                              Default Message Stat
      C                   ELSE
@@ -776,6 +786,7 @@
      C                   EVAL      MGACSQ = N4ACSQ                              Account sequence num
      C                   EVAL      MGNATY = N4NATY                              Network Account Type
      C                   EVAL      MGDSTN = N4DSTN                              Destination
+     C                   eval      QQACCD = 0                                               MD060685
 
      C                   EVAL      MGFAMT = CLBL                                Available Fund
 

@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD053990           Date 12Jan21               *
-      *  Prev Amend No. MD052955           Date 15Jul19               *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. MD058755           Date 01Sep21               *
+      *                 MD053990           Date 12Jan21               *
+      *                 MD052955           Date 15Jul19               *
       *                 MD033917           Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD032075           Date 23Jun15               *
@@ -44,6 +46,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
+      *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  MD053990 - GLC1721 Loan IQ data had invalid.                 *
       *           - Validate account sequence.                        *
       *  MD052955 - COB - Failed Component GLC2000 00001              *
@@ -107,13 +111,13 @@
      F            ACCNTABF                          KRENAMEACCNTF
      F            ACCNTACF                          KIGNORE
      FSDACODL1IF  E           K        DISK
-     FSDRETRL1IF  E           K        DISK
+     F*SDRETRL1IF  E           K        DISK                                                MD058755
      FSDPRFCL1IF  E           K        DISK
      FSDBRCHL1IF  E           K        DISK
      FSDBOOKL1IF  E           K        DISK
      F***SDCUSTL5IF  E           K        DISK                                              MD052955
      FSDCURRL1IF  E           K        DISK
-     FSDNARRL1IF  E           K        DISK                                                   248076
+     F*SDNARRL1IF  E           K        DISK                                         248076 MD058769
      FGL1721AUO   E             99     PRINTER      KINFDS SPOOLU     UC
      FGL1721P1O   E             98     PRINTER      KINFDS SPOOL1     UC
      FGL1721P2O   E             97     PRINTER      KINFDS SPOOL2     UC
@@ -238,6 +242,8 @@
       *                                                                                     MD052995
       ** Customer Details for assigning data from Access                                    MD052995
       *                                                                                     MD052995
+     ISDRETR    E DSSDRTRJW0                                                                MD058755
+     ISDNARR    E DSSDNARRPD                                                                MD058769
      ISPOOL1      DS
      I** File information data structure
      I                                       83  92 SFILE1
@@ -936,8 +942,14 @@
       ** Only validate transaction type for Retail Accounts                                   246864
      C           ATYP      IFEQ 'R'                        B1
      C           BTTRTY    IFNE '     '                    B1
-     C           BTTRTY    CHAIN@A1RECX              05
-     C           *IN05     IFEQ *ON                        B2
+     C********** BTTRTY    CHAIN@A1RECX              05                                     MD058755
+     C                     CALL 'AORETRR0'                                                  MD058755
+     C                     PARM *BLANKS   PRTCD                                             MD058755
+     C                     PARM '*KEY    'POPTN                                             MD058755
+     C                     PARM BTTRTY    @KEY    5                                         MD058755
+     C           SDRETR    PARM SDRETR    DSFDY                                             MD058755
+     C********** *IN05     IFEQ *ON                        B2                               MD058755
+     C           PRTCD     IFNE *BLANKS                                                     MD058755
      C                     MOVE 'Y'       FAIL
      C                     MOVELNAR08     ERNAR
      C                     EXSR RPTERR
@@ -1335,7 +1347,17 @@
       *                                                                                       248076
       **  Validate narrative code if entered                                                  248076
      C           BTNVCD    IFNE '  '                       B1                                 248076
-     C           BTNVCD    CHAIN@ALREC0              08                                       248076
+     C********** BTNVCD    CHAIN@ALREC0              08                              248076 MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM BTNVCD    @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    DSFDY                                             MD058769
+     C                     SETOF                     08                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     08                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C           *IN08     IFEQ *ON                        B2                                 248076
      C                     MOVE 'Y'       FAIL                                                248076
      C                     MOVELNAR34     ERNAR                                               248076

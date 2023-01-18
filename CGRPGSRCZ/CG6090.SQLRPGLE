@@ -15,11 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
-      *  Prev Amend No. MD059320 *CREATE   Date 06Dec2021             *
+      *  Last Amend No. MD060830           Date 17Jan23               *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 MD059320 *CREATE   Date 06Dec2021             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060830 - Do not update spool file flag                     *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates.            *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -118,7 +120,7 @@
      C     SQLCODE       DOWEQ     0
 
       ** Check if an interest event created today exists in HISTSHP
-     C**********/EXEC SQL                                                                   MD058517 
+     C**********/EXEC SQL                                                                   MD058517
      C**********+ SELECT INTA, VDAT into :XINTA, :XVDAT                                     MD058517
      C**********+ from HISTSHP                                                              MD058517
      C**********+ where AMTP = 'MA' and LNRF = :XLNRF and LCD = :BJRDNB                     MD058517
@@ -128,17 +130,17 @@
       **  If no interest if found, skip                                                     MD058517
      C*****SQLCODE       IFEQ      100                                                      MD058517
      C**********         else                                                               MD058517
-      ****************************************************************                      MD058517 
+      ****************************************************************                      MD058517
       ** Here below are the initial conditions for the extract...                           MD058517
       ****Call extract program if one of the 3 conditions (a or b or c) is satisfied        MD058517
-      **********                                                                            MD058517 
+      **********                                                                            MD058517
      C**********/exec SQL                                                                   MD058517
      C**********+ select CINPDT, CINPSD, CINPED  into :XCINPDT, :XCINPSD, :XCINPED          MD058517
      C**********+ from SDHSDRTD                                                             MD058517
-     C**********+ where CMODID = 'LE' and CTRNID = :XLNRF                                   MD058517 
+     C**********+ where CMODID = 'LE' and CTRNID = :XLNRF                                   MD058517
      C**********+ and (CINPDT + CINPDY - 1 = CINPED or CINPDT = CINPED)                     MD058517
      C**********+ ORDER BY CINPDT desc                                                      MD058517
-     C**********+ fetch first row only                                                      MD058517 
+     C**********+ fetch first row only                                                      MD058517
      C**********/end-exec                                                                   MD058517
       **********
       ****a.*if*Additional Day Indicator = B and latest Interest Period Date = MDAT
@@ -202,12 +204,15 @@
      C                   EXSR      SRERR
      C                   END
 
+     C                   IF        ##COPD = 'Y'                                             MD060830
      C/exec SQL                                                                             MD058517
      C+ update SDRTKNTD                                                                     MD058517
-     C+    set KCORMP  = 'Y', KSPLFP = 'Y',                                                 MD058517
+     C*****set KCORMP  = 'Y', KSPLFP = 'Y',                                        MD058517 MD060830
+     C+    set KCORMP  = 'Y',                                                               MD060830
      C+        KPINTA = KCINTA                                                              MD058517
      C+  where KTRNID = :XLNRF                                                              MD058517
      C/end-exec                                                                             MD058517
+     C                   ENDIF                                                              MD060830
 
      C**********         Endif                                                              MD058517
 

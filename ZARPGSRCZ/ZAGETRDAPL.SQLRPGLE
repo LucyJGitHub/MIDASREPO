@@ -11,9 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD059624           Date 20Jul22               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD059624           Date 20Jul22               *
       *****************************************************************
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *                                                               *
       *****************************************************************
@@ -96,9 +98,12 @@
 
                    isRoundApply = 'N';
 
-                   wSQLStr = 'select ROUAPL from SDLIBRTD' +
+      **********   wSQLStr = 'select ROUAPL from SDLIBRTD' +
+      **********                ' where SCRFLD  = ' + QUO + CONST_RFR + QUO +
+      **********                ' and INTVAL = ' + QUO + RiskFreeRate + QUO;              //MD060008
+                   wSQLStr = 'select ROUAPL from SDLIBJW0' +
                                 ' where SCRFLD  = ' + QUO + CONST_RFR + QUO +
-                                ' and INTVAL = ' + QUO + RiskFreeRate + QUO;
+                                ' and INTVAL = ' + QUO + RiskFreeRate + QUO;              //MD060008
 
                    exec sql prepare P1 from :wSQLStr;
                    exec sql declare P1 cursor for P1;

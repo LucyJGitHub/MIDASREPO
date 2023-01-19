@@ -16,8 +16,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056752           Date 20Sep20               *
-      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD056752           Date 20Sep20               *
+      *                 MD056560           Date 31Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -46,6 +48,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD056752 - Deliverable Data Split for MEINFMPD               *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
@@ -178,11 +182,13 @@
      D*
      D* Data Structures used by Access Programs
      D*
-     D DSNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*DSNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DSNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
      D*
      D* Data Structures for Network definition
      D*
-     D DSMTPY        E DS                  EXTNAME(SDMTPYPD)
+     D*DSMTPY***     E DS                  EXTNAME(SDMTPYPD)                                MD060008
+     D DSMTPY        E DS                  EXTNAME(SDMTYJW0)                                MD060008
      D*
      D* Data Structures for Message Type Definition
      D*
@@ -232,8 +238,8 @@
       * Data to be passed to window processing
       *
      I*****/COPY WNCPYSRC,ME1160WDTA                                      CPK001
-     I*COPY*QWINDSRC,ME1160WDTA                                           CPK001            MD056752
-     I/COPY QWINDSRC,ME1160WDTL                                                             MD056752
+     I*COPY*QWINDSRC,ME1160WDTA                                           CPK001            MD056560
+     I/COPY QWINDSRC,ME1160WDTL                                                             MD056560
       *****************************************************************
       * Entry parameters
      C     *ENTRY        PLIST

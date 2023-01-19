@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060033           Date 25Sep22               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD060008           Date 11May21               *
+      *  Prev Amend No. MD060033           Date 25Sep22               *
+      *                 249385             Date 01Aug22               *
       *                 MD059424           Date 29Mar22               *
       *                 MD059375           Date 20Dec21               *
       *                 MD059270           Date 16Dec21               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD060033 - Rates Known flag set a day late.  Add 1 day to    *
       *             SumLBLO.  Introduce new system value              *
       *             ARRUseSysOrMidasDate.                             *
@@ -127,7 +129,7 @@
       *****************************************************************
 
       ** ARR Calculator Parameter Details File
-     FSDLIBRTD  IF   E           K DISK    INFSR(*PSSR)
+     F*SDLIBRTD* IF   E           K DISK    INFSR(*PSSR)                                    MD060008
 
       *****************************************************************
       /EJECT
@@ -293,6 +295,7 @@
      D RPubTim         S                   LIKE(PUBTIM)
      D SysDate         S               D   DATFMT(*ISO)                                     MD060033
      D SysOrMidas      S              1A                                                    MD060033
+     D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD060008
 
       *****************************************************************
       /EJECT
@@ -1383,16 +1386,39 @@
       ** Publication Time in an array
      C                   EVAL      Idx = 1
      C                   EVAL      KRFRR = 'RFR'
-     C     KRFRR         SETLL     SDLIBRTD
-     C     KRFRR         READE     SDLIBRTD
-     C                   DOW       NOT %EOF(SDLIBRTD)
+     C*****KRFRR         SETLL     SDLIBRTD                                                 MD060008
+     C*****KRFRR         READE     SDLIBRTD                                                 MD600008
+     C/EXEC SQL                                                                             MD060008
+     C+ declare ACursor insensitive scroll cursor for                                       MD060008
+     C+ select * from SDLIBJW0                                                              MD060008
+     C+ where SCRFLD = 'RFR'                                                                MD060008
+     C+ order by INTVAL                                                                     MD060008
+     C/END-EXEC                                                                             MD060008
+                                                                                            MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ open ACursor                                                                        MD060008
+     C/END-EXEC                                                                             MD060008
+                                                                                            MD060008
+     C/EXEC SQL                                                                             MD060008
+     C+ fetch next from ACursor into :SDLIBR                                                MD060008
+     C/END-EXEC                                                                             MD060008
+                                                                                            MD060008
+     C***********        DOW       NOT %EOF(SDLIBRTD)                                       MD060008
+     C                   DOW       SQLCODE = 0                                              MD060008
      C                   EVAL      ArrRFR(Idx) = INTVAL
      C                   EVAL      ArrPubLag(Idx) = PUBLAG
      C                   EVAL      ArrPubTim(Idx) = PUBTIM
      C                   EVAL      Idx = Idx + 1
-     C     KRFRR         READE     SDLIBRTD
+     C*****KRFRR         READE     SDLIBRTD                                                 MD600008
+     C/EXEC SQL                                                                             MD060008
+     C+ fetch next from ACursor into :SDLIBR                                                MD060008
+     C/END-EXEC                                                                             MD060008
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD060008
+     C+ close ACursor                                                                       MD060008
+     C/END-EXEC                                                                             MD060008
+                                                                                            MD060008
      C                   ENDSR
       *****************************************************************
       /EJECT

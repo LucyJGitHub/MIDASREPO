@@ -12,10 +12,13 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD054605   *CREATE   Date 17Oct19             *
+      *  Last Amend No. MD060870             Date 24Dec22             *
+      *  Prev Amend No. MD054605   *CREATE   Date 17Oct19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060870 - Field name in UTFLDDPD is only 6 char long, hence *
+      *             field name longer than 6 are reported             *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *                                                               *
       *****************************************************************
@@ -40,6 +43,7 @@
      D ReturnData      S            180
      D Library         S             10
      D ObjectType      S             10
+     D WHFLD6          S              6                                                     MD060870
        /EJECT
       *****************************************************************
       *                                                               *
@@ -170,11 +174,13 @@
       ** Ignore if field is part of key fields
      C     WHFLDI        SCAN      KeyFld                                 99
      C                   IF        *IN99  = '0'
+     C                   eval      WHFLD6 = %SUBST(WHFLDI:1:6)                              MD060870
      C/exec SQL
      C+ update AUTFLDDPD
      C+ set
      C+   FDSEQN = 999
-     C+ where FDFILE = :XINDEX and FDRPGN = :WHFLDI
+     C**where*FDFILE = :XINDEX and FDRPGN = :WHFLDI                                         MD060870
+     C+ where FDFILE = :XINDEX and FDRPGN = :WHFLD6                                         MD060870
      C/end-exec
      C                   ENDIF
       *

@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060344           Date 08Oct22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058830           Date 01Oct21               *      
+      *  Prev Amend No. MD060344           Date 08Oct22               *
+      *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *      
       *  MD060344 - Paris MGOMSGPD Tag 25 reconciliation Difference.  *
       *           - Pattern the fix after MG000942.                   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -160,7 +162,8 @@
      D SDMGME        E DS                  EXTNAME(SDMGMEPD)
       **  Data structure for message management data.
 
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       **  Data Structure for Network Details.
 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)

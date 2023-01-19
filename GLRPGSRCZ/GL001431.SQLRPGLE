@@ -16,6 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
+<<<<<<< HEAD
       *  Last Amend No. MD060784           Date 02Dec22               *
       *  Prev Amend No. MD058830           Date 01Oct21               *
       *                 CSD103             Date 10Aug20               *
@@ -562,6 +563,550 @@
       /COPY OFCPYSRCZ,CGL146_072                                                             CGL146A
 
      C                   eval      QQACCD = 0                                               MD060784
+=======
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 223783             Date 28May12               *
+      *                 MD049134           Date 27Jul20               *
+      *                 CMG008             Date 20Feb20               *
+      *                 AR401845           Date 12Mar20               *
+      *                 MD045952           Date 06Jul17               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL178             Date 04Aug16               *
+      *                 AR549926           Date 19Aug14               *
+      *                 CGL146A            Date 10Jun13               *
+      *                 CRE075             Date 06Dec10               *
+      *                 AR702741           Date 02Feb11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG26810           Date 04Dec09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 216937             Date 28Apr03               *
+      *                 CRE008             Date 31May02               *
+      *                 216935             Date 15Apr03               *
+      *                 CGL013  *CREATE    Date 25Apr02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
+      *  MD049134 - Retrieve History Balance from Retail History      *
+      *             instead of CLBL from ACCNTAB for the correct      *
+      *             Available Balance in Field 64.                    *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
+      *  AR401845 - MT940 generation does not take into account       *
+      *             regional holidays (CHILD: AR401846)               *
+      *           - Replace ZFREQB with ZFRQB2 which considers        *
+      *             system location.                                  *
+      *  MD045952 - Ensure that COB MT940s only generated if          *
+      *             calling pgm is GLC001430.                         *
+      *           - Recompile due to changes to CGL146_043, CGL146_044*
+      *             CGL146_068, CGL146_070, CGL146_077                *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL178 - Generate MT942 based on MT950.                      *
+      *  AR549926 - GLPOSTPD and MGX950PD tables have a total size    *
+      *             of about 1.4GB. These tables hold  records printed*
+      *             on the MT9xx SWIFT messages. Amended program to   *
+      *             tag records in GLPOSTPD file as processed even    *
+      *             though there is a conflict between MT Generate    *
+      *             flags in Network File and in Message Suppression  *
+      *             in Customer Details File.                         *
+      *  CGL146A - MT940/MT950 Production in Input Cycle              *
+      *            Added hooks: CGL146_043, CGL146_044, CGL146_068    *
+      *                         CGL146_069, CGL146_070, CGL146_071    *
+      *                         CGL146_072, CGL146_077, CGL146_079    *
+      *                         CGL146_080, CGL146_081, CGL146_082    *
+      *                         CGL146_083, CGL146_084, CGL146_085    *
+      *                         CGL146_086, CGL146_112                *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  AR702741 - Include location as parameter in ZFREQB to        *
+      *             determine the next settlement date                *
+      *             (Child: AR702742)                                 *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26810 - MT940/950 should be independent of the network    *
+      *             "activity"                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  216937 - If GA account, include source account (recompile)   *
+      *  CRE008 - Cash Management  (Recompile Only)                   *
+      *  216935 - Correct the processing for frequency 'On Movement   *
+      *  CGL013 - MT94x Messages Generation                           *
+      *                                                               *
+      *****************************************************************
+
+     FGLNWACL4  IF   E           K DISK                   INFSR(*PSSR)
+      ** Midas GL Network Accounts - MT950 - Live/Accnt+Dst. - Retrieve
+
+     FGLPOSTL0  UF   E           K DISK    COMMIT         INFSR(*PSSR)
+     F                                     PREFIX(GL)
+      ** Midas GL Posting sorted by Network Account, Message Type, destination.
+
+     FGLNWKAPD  IF   E           K DISK                   INFSR(*PSSR)
+      ** Midas GL Network Activity Control File.
+                                                                                            MD049134
+     FREHISDL   IF   E           K DISK                   INFSR(*PSSR)                      MD049134
+     F                                     PREFIX(RX)                                       MD049134
+      ** Midas RE Retail History Header and Position                                        MD049134
+                                                                                            MD049134
+     FGLNW94L5  IF   E           K DISK                   INFSR(*PSSR)                        CGL178
+      ** Midas GL Network accounts - MT94x - live+gen.MT940                                   CGL178
+
+     FGLNWACL0  UF   E           K DISK    COMMIT         INFSR(*PSSR)
+     F                                     PREFIX(Up)
+     F                                     RENAME(GLNWACD0:UpGLNWACD0)
+      ** Midas GL Network Accounts - MT950 - Live/Accnt+Dst. - Update
+
+     FMGF950PD  O    E             DISK    COMMIT         INFSR(*PSSR)
+      ** Midas MG MT950 Generation Extract - Account Detail.
+
+     FMGX950PD  O    E             DISK    COMMIT         INFSR(*PSSR)
+      ** Midas MG MT950 Generation Extract - Posting Detail.
+
+     FGL001431AUO    E             PRINTER OFLIND(*IN21)  INFSR(*PSSR)
+      ** Midas GL MT950 File Extract - Audit Report.
+
+      /COPY OFCPYSRCZ,CGL146_079                                                             CGL146A
+      *========================================================================*
+      *                                                                        *
+      * Use of Indicators                                                      *
+      *                                                                        *
+      * Database Access Indicators                                             *
+      *                                                                        *
+      * 21 - Audit report overflow indicator                                   *
+      * 27 - Access Network Account (LF/GLNWACL4)                              *
+      * 28 - Access Postings        (LF/GLPOSTL0)                              *
+      * 40 - General Error                                                     *
+      *    41         For tagging as Processed                        *                     AR549926
+      *                                                                        *
+      * Database Error Indicators                                              *
+      *                                                                        *
+      * U7 - Abnormal Completion                                               *
+      * U8 - File Out of Balance                                               *
+      * U7 + U8 - Database Error                                               *
+      *                                                                        *
+      * Other Indicators                                                       *
+      *                                                                        *
+      * 99 - Multi-purpose                                                     *
+      *                                                                        *
+      *========================================================================*
+
+      *========================================================================*
+      ** Automatically included D-specs
+      ** ==============================
+
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indcator processing)
+      **    False      logical = *off (for indcator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+
+     D/COPY ZACPYSRC,STD_D_SPEC
+
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+
+     D/COPY ZACPYSRC,PSDS
+
+      ** Manually included D-specs
+      ** =========================
+
+      ** Named constants
+      ** ---------------
+
+      ** Arrays and Data Structures
+      ** --------------------------
+
+      /COPY OFCPYSRCZ,CGL146_043                                                             CGL146A
+                                                                                             CGL146A
+     D GLposting     E DS                  EXTNAME(GLPOSTPD) PREFIX(GL)
+      **  Data Structure for Posting detail in General Ledger format.
+     D   EXMGADI1    E                     EXTFLD(MGADI1)                       Additional Inf 1
+     D   EXMGADI2    E                     EXTFLD(MGADI2)                       Additional Inf 2
+     D   EXMGADI3    E                     EXTFLD(MGADI3)                       Additional Inf 3
+     D   EXMGADI4    E                     EXTFLD(MGADI4)                       Additional Inf 4
+     D   EXMGADI5    E                     EXTFLD(MGADI5)                       Additional Inf 5
+     D   EXMGADI6    E                     EXTFLD(MGADI6)                       Additional Inf 6
+     D   EXMGAERI    E                     EXTFLD(MGAERI)                       ERI Indicator
+
+     D MGposting     E DS                  EXTNAME(MGX940PD)
+      **  Data Structure for Posting detail in Message Genration Format.
+      ********************************************************************
+      **  THIS DATA STRUCTURE USES MGX940PD, IT IS NOT AN ERROR         **
+      **  MGX940PD CONTAINS THE SAME FIELDS AS MGX950PD PLUS FEW FIELDS **
+      ********************************************************************
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      **  Data Structure for Bank Details.
+
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)
+     D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
+      **  Data Structure for SD General ledger ICD
+
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
+      **  Data Structure for Network Details.
+
+     D GLACCNT       E DS                  EXTNAME(ACCNTAB)
+      **  Data Structure for Account Details.
+
+     D SDCUST        E DS                  EXTNAME(SDCUSTPD)
+      **  Data Structure for Customer Details.
+
+     D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SS)
+      **  Data Structure for Switchable features descriptions.
+
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      **  First DS for access programs, long data structure.
+
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      **  Second DS for access programs, short data structure.
+
+     D DSLDY         E DS                  EXTNAME(DSLDY)
+      **  Third DS for access programs, very long data structure.
+
+      ** Define an array for the non generated messages number
+      ** contained in the DsCUST data structure
+      *
+     D  BBNGEN         S              3A   DIM(15)
+     D                                     BASED(Pointer1)
+     D  Pointer1       S               *   INZ(%Addr(BBNG01))
+
+      ** Declared variables
+      ** ------------------
+
+     D KeyNWRK         S                   LIKE(GLMGNWRK)                       Network
+     D KeyBRCA         S                   LIKE(GLBRCA)                         Branch Code - Alpha
+     D KeyCNUM         S                   LIKE(GLCNUM)                         Customer number
+     D KeyCCY          S                   LIKE(GLCCY)                          Currency code
+     D KeyACOD         S                   LIKE(GLACOD)                         Account code
+     D KeyACSQ         S                   LIKE(GLACSQ)                         Account sequence num
+     D KeyNATY         S                   LIKE(GLMGNATY)                       Network Account Type
+     D KeyDSTN         S                   LIKE(GLMGDSTN)                       Destination
+     D KeyMTPY         S                   LIKE(GLMGMTPY)                       Message Type
+
+     D KeyNwNWRK       S                   LIKE(NANWRK)                         Network
+     D KeyNwBRCA       S                   LIKE(NABRCH)                         Branch Code - Alpha
+     D KeyNwCNUM       S                   LIKE(NACNUM)                         Customer number
+     D KeyNwCCY        S                   LIKE(NACCY)                          Currency code
+     D KeyNwACCD       S                   LIKE(NAACOD)                         Account code
+     D KeyNwACSQ       S                   LIKE(NAACSQ)                         Account sequence num
+     D KeyNwNATY       S                   LIKE(NANATY)                         Network Account Type
+
+     D P@RTCD          S              7A                                        Return Code
+     D P@OPTN          S              7A                                        Option
+     D P@RETL          S             10A                                        Retail Number
+     D P@CNUM          S              6A                                        Customer
+     D P@CUCD          S              3A                                        Currency
+     D*P@ACCD***       S              4A                                        Account code  CGL029
+     D P@ACCD          S             10A                                                      CGL029
+     D P@ACSQ          S              2A                                        Account Sequence
+     D P@BRCA          S              3A                                        Branch Code
+     D P@KEY1          S             10A                                        Customer
+     D P@KYST          S              7A                                        Key Status
+     D P@SARD          S              6A                                        Feature Ref.
+     D P@NWRK          S              6A                                        Network
+
+     D ZFREQ           S              1A                                        Frequence
+     D ZDAYNO          S              5  0                                      Day Number
+     D ZCCY            S              3A                                        Currency
+     D ZLOC            S              3A                                                    AR702741
+     D ZMDAY           S              2  0                                      Day in month
+     D ZDFIN           S              1A                                        Date Format
+
+     D CSW022          S              1A                                        Feature CSW022
+     D WkBalance       S             15P 0                                      Intermediary Balance
+     D WkNbMvts        S             10U 0                                      Nb. Movements
+     D SavNWRK         S                   LIKE(EDNWRK) INZ(*BLANKS)            Network
+     D WkNxtStatDt     S                   LIKE(NA5NSD)                         Next Statement Date
+     D WkErrRpt        S              1A   INZ('N')                             Error Reported
+     D X               S              5U 0                                      Working Index
+
+      ** Input Specs
+      ** -----------
+
+
+      *------------------------------------------------------------------------*
+      ** C Spec. Declaratives
+      ** ====================
+
+      *========================================================================*
+      *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
+      *========================================================================*
+
+      ** Init processing uses the standard *INZSR subroutine
+
+      ** Read each Live Network Account.
+
+      /COPY OFCPYSRCZ,CGL146_044                                                             CGL146A
+                                                                                             CGL146A
+     C     *LOVAL        SETLL     GLNWACL4
+     C                   READ      GLNWACL4                               27
+                                                                                             CGL146A
+      /COPY OFCPYSRCZ,CGL146_080                                                             CGL146A
+
+     C                   DOW       NOT *IN27
+
+      ** Initialize working fields.
+
+     C                   EXSR      $InitWkFld
+
+     C                   DO
+
+      ** If the next statement date is greater than or equal to the next working date,
+      ** and there is no demand,
+      ** read the next record.
+
+     C                   IF        NA5NSD >= BJDNWD AND NA5DSI <> 'Y'
+      /COPY OFCPYSRCZ,CGL146_081                                                             CGL146A
+     C                   LEAVE
+     C                   ENDIF
+
+      ** Check if the network is active
+
+     C                   EXSR      $ChkNwrk
+
+     C   40              LEAVE
+
+      ** Check Account Details.
+
+     C                   EXSR      $ChkAccnt
+
+     C   40              LEAVE
+
+      ** Check if the customer allows MT950 generation.
+
+     C                   EXSR      $ChkCust
+
+     C   40              LEAVE
+
+      ** Process Posting Details
+
+     C                   EXSR      $MGX950PD
+
+     C   40              LEAVE
+
+     C*********          IF        CSW022 <> 'Y'                                Feature Off   216935
+     C*********                    OR WkNbMvts > *ZEROS                         Or Movements  216935
+     C                   IF        WkNbMvts > *ZEROS                            Movements     216935
+     C                             OR CSW022 <> 'Y'                             Feature Off   216935
+     C                             AND NA5SFQ <> *blanks                        On Movement F.216935
+
+      ** Process Account Details
+
+     C                   EXSR      $MGF950PD
+
+     C   40              LEAVE
+
+     C                   ENDIF
+
+      ** Update Network Account details.
+
+     C                   EXSR      $GLNWACPD
+
+     C   40              LEAVE
+                                                                                              CGL178
+      ** Update MT941 & MT942 Postings for the Network Account                                CGL178
+                                                                                              CGL178
+     C                   EXSR      $GLPOSTPD                                                  CGL178
+                                                                                              CGL178
+     C   40              LEAVE                                                                CGL178
+
+     C                   ENDDO
+
+     C**N40*****         COMMIT                                                             AR549926
+     C  N40                                                                                 AR549926
+     COR 41              COMMIT                                                             AR549926
+     C***40*****         ROLBK                                                              AR549926
+     C   40                                                                                 AR549926
+     CANN41              ROLBK                                                              AR549926
+
+      ** Read next Live Network Account.
+
+      /COPY OFCPYSRCZ,CGL146_068                                                             CGL146A
+     C                   READ      GLNWACL4                               27
+      /COPY OFCPYSRCZ,CGL146_069                                                             CGL146A
+
+     C                   ENDDO
+
+      ** End of processing
+
+     C                   IF        WkErrRpt = 'N'
+     C                   WRITE     NODTLS
+     C                   ENDIF
+
+     C                   WRITE     ENDRPT
+
+     C                   EVAL      *INLR = *ON
+
+      *========================================================================*
+      * $MGX950PD: Extract Posting Details                                     *
+      *------------------------------------------------------------------------*
+
+     C     $MGX950PD     BEGSR
+      *    ---------     -----
+
+     C                   EVAL      KeyNWRK = NANWRK                             Network
+     C                   EVAL      KeyBRCA = NABRCH                             Branch Code - Alpha
+     C                   EVAL      KeyCNUM = NACNUM                             Customer number
+     C                   EVAL      KeyCCY  = NACCY                              Currency code
+     C                   EVAL      KeyACOD = NAACOD                             Account code
+     C                   EVAL      KeyACSQ = NAACSQ                             Account sequence num
+     C                   EVAL      KeyNATY = NANATY                             Network Account Type
+     C                   EVAL      KeyDSTN = *BLANKS                            Destination
+     C                   EVAL      KeyMTPY = '950'                              Message Type
+
+      ** Read Postings for this Network Account.
+
+     C     KeyPost       SETLL     GLPOSTD0
+     C     KeyPost       READE     GLPOSTD0                               28
+
+     C                   DOW       NOT *IN28 AND NOT *IN40
+                                                                                             CGL146A
+      /COPY OFCPYSRCZ,CGL146_070                                                             CGL146A
+
+      ** Report only movements in General Ledger (from EODPOPD)
+
+     C                   IF        GLRECI = 'P'
+     C                             AND GLMGPROC <> 'Y'
+
+     C                   EVAL      WkNbMvts = WkNbMvts + 1
+
+      ** Calculate the new balance
+
+     C                   IF        GLDRCR = 0                                   Debit
+     C                   EVAL      WkBalance = WkBalance + GLPSTA
+     C                   ELSE                                                   Credit
+     C                   EVAL      WkBalance = WkBalance - GLPSTA
+     C                   ENDIF
+
+      ** If Extended narrative is allowed for the Network.
+
+     C                   IF        EDENRA = 'Y'
+     C                   EVAL      EXMGADI1 =  GLMGADI1                         Additional Inf 1
+     C                   EVAL      EXMGADI2 =  GLMGADI2                         Additional Inf 2
+     C                   EVAL      EXMGADI3 =  GLMGADI3                         Additional Inf 3
+     C                   EVAL      EXMGADI4 =  GLMGADI4                         Additional Inf 4
+     C                   EVAL      EXMGADI5 =  GLMGADI5                         Additional Inf 5
+     C                   EVAL      EXMGADI6 =  GLMGADI6                         Additional Inf 6
+     C                   EVAL      EXMGAERI =  GLMGAERI                         ERI Indicator
+     C                   ELSE
+     C                   EVAL      EXMGADI1 =  *BLANKS                          Additional Inf 1
+     C                   EVAL      EXMGADI2 =  *BLANKS                          Additional Inf 2
+     C                   EVAL      EXMGADI3 =  *BLANKS                          Additional Inf 3
+     C                   EVAL      EXMGADI4 =  *BLANKS                          Additional Inf 4
+     C                   EVAL      EXMGADI5 =  *BLANKS                          Additional Inf 5
+     C                   EVAL      EXMGADI6 =  *BLANKS                          Additional Inf 6
+     C                   EVAL      EXMGAERI =  *BLANKS                          ERI Indicator
+     C                   ENDIF
+
+      ** Format the posting details
+
+     C                   CALLB     'GL001432'                           99
+     C                   PARM      *BLANKS       ReturnCode                     Return Code
+     C                   PARM                    GLPosting                      GL Posting Detail
+     C                   PARM      *BLANKS       MGPosting                      MG Posting Detail
+
+     C                   IF        ReturnCode = 'PSSR_ERROR'
+     C                             OR *IN99 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C                   IF        ReturnCode = *BLANKS
+
+      ** Add record in MT950 Generation Extract - Posting Detail
+
+     C                   WRITE     MGX950D0
+
+     C                   ELSE
+
+      ** Add the issue on the audit report.
+
+     C                   EVAL      *IN40 = *ON
+     C                   EVAL      PACMNT = 'Posting extract failed'
+     C                   DUMP
+     C                   EXSR      $AuditRpt                                    Report Issue
+     C                   GOTO      @MGX950PD
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Mark the posting as processed
+
+     C                   EVAL      GLMGPROC = 'Y'
+     C                   UPDATE    GLPOSTD0
+      /COPY OFCPYSRCZ,CGL146_071                                                             CGL146A
+
+      ** Read Next Posting for this Network Account.
+
+     C     KeyPost       READE     GLPOSTD0                               28
+
+     C                   ENDDO
+
+      *    ---------     -----
+     C     @MGX950PD     ENDSR
+
+      *========================================================================*
+      * $MGF950PD: Extract Account Details                                     *
+      *------------------------------------------------------------------------*
+
+     C     $MGF950PD     BEGSR
+      *    ---------     -----
+
+     C                   EVAL      MGNWRK = NANWRK                              Network
+     C                   EVAL      MGBRCA = NABRCH                              Branch Code - Alpha
+     C                   EVAL      MGCNUM = NACNUM                              Customer number
+     C                   EVAL      MGCCY  = NACCY                               Currency code
+     C                   EVAL      MGACCD = NAACOD                              Account code
+     C                   EVAL      MGACSQ = NAACSQ                              Account sequence num
+     C                   EVAL      MGNATY = NANATY                              Network Account Type
+     C                   IF        ED5DMS <> *BLANKS
+     C                   EVAL      MGDMST = ED5DMS                              Default Message Stat
+     C                   ELSE
+     C                   EVAL      MGDMST = 'C'                                 Default Message Stat
+     C                   ENDIF
+     C                   EVAL      MGACNO = ACNO                                Retail account numbe
+     C                   EVAL      MGIBAN = IBAN                                IBAN
+     C                   EVAL      MGSTNO = NA5LSN + 1                          Last Statement Page
+     C                   EVAL      MGLSDT = NA5LSD                              Last Statement Date
+     C                   EVAL      MGIOBL = NA5LCB                              Initial Opening Bala
+     C                   EVAL      MGFCBL = NA5LCB + WkBalance                  Final Closing Balanc
+     C                   EVAL      MGCLBL = CLBL                                Available Balance
+                                                                                            MD049134
+     C     KeyRetHis     CHAIN     REHISDL                            98                    MD049134
+                                                                                            MD049134
+     C                   IF        *IN98 = *OFF                                             MD049134
+     C                   EVAL      MGCLBL = RXHISB                                          MD049134
+     C                   ELSE                                                               MD049134
+     C     KeyRetHis     SETLL     REHISDL                                                  MD049134
+     C                   READP     REHISDL                                                  MD049134
+     C                   EVAL      MGCLBL = RXHISB                                          MD049134
+     C                   ENDIF                                                              MD049134
+                                                                                            MD049134
+                                                                                             CGL146A
+      /COPY OFCPYSRCZ,CGL146_072                                                             CGL146A
+
+>>>>>>> branch 'feature/MDSC-39745' of http://blrvslalm0006:7990/scm/md/midasrpg.git
      C                   WRITE     MGF950D0
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_082                                                             CGL146A

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD060547             Date 12Dec22             *
-      *  Prev Amend No. MD060626             Date 13Oct22             *
+      *  Last Amend No. MD058830             Date 01Oct21             *      
+      *  Prev Amend No. MD060547             Date 12Dec22             *
+      *                 MD060626             Date 13Oct22             *
       *                 MD059942             Date 16May22             *
       *                 MD059554             Date 09Feb22             *
       *                 MD059572             Date 14Feb22             *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *      
       *  MD060547 - Issue with column A1FTPT in SDRETRPD              *
       *  MD060626 - CGC2030 fails when RGZPFM CGCSTRPD                *
       *  MD059942 - Ignore column DJLOGD                              *
@@ -82,11 +84,14 @@
      D WIdx            S              3P 0
      D KeyFld          S            200A
      D*WHERE****       S            300A                                                    MD054955
-     D WHERE           S            600A                                                    MD054955
+     D*WHERE****       S            600A                                           MD054955 MD058830
+     D WHERE           S           2000A                                                    MD058830
      D*PINSERT**       S            300A                                                    MD054955
-     D PINSERT         S            600A                                                    MD054955
+     D*PINSERT**       S            600A                                           MD054955 MD058830
+     D PINSERT         S           2000A                                                    MD058830
      D*PSELECT**       S            300A                                                    MD054955
-     D PSELECT         S            600A                                                    MD054955
+     D*PSELECT**       S            600A                                           MD054955 MD058830
+     D PSELECT         S           2000A                                                    MD058830
      D SQLDynStmt      S           5000A
      D Outfile         S             10A
      D OFMbr           S             10A

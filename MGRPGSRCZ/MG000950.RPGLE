@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060344           Date 08Oct22               *
-      *  Prev Amend No. AR898442           Date 24Feb12               *
+      *  Last Amend No. MD058830           Date 01Oct21               *      
+      *  Prev Amend No. MD060344           Date 08Oct22               *
+      *                 AR898442           Date 24Feb12               *
       *                 CMG008             Date 20Feb20               *
       *                 MD021108A          Date 16Jul13               *
       *                 CMG006             Date 15Oct19               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *      
       *  MD060344 - Paris MGOMSGPD Tag 25 reconciliation Difference.  *
       *           - Pattern the fix after MG0000940.                  *
       *  AR898442 - MT940 nacked if narrative starts with a /         *
@@ -170,7 +172,7 @@
      F                                     COMMIT                                           MD042041
      F                                     PREFIX(X_)                                       MD042041
      F                                     RENAME(MGX950D0:MGX950D1)                        MD042041
-     FSDNWRKL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDNWRKL1* IF   E           K DISK    INFSR(*PSSR)                                    MD058830
      FGLNWACL0  IF   E           K DISK    INFSR(*PSSR)
      FMGOREFL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(E_)
@@ -257,6 +259,8 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS for access objects - long data structure
 
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD058830
      D                 DS
      D   WCrlf                 1      2
      D   WWCr                  1      1
@@ -552,7 +556,16 @@
      C     Get_NwrkDet   BEGSR
 
       *  Access Network Details to retrieve message settings
-     C     MGNWRK        Chain     SDNWRKL1                           02
+     C*****MGNWRK        Chain     SDNWRKL1                           02                    MD058830
+     C                   CALLB     'AONWRKR1'                                               MD058830
+     C                   PARM      *BLANKS       P@RTCD                                     MD058830
+     C                   PARM      '*KEY'        P@OPTN                                     MD058830
+     C                   PARM      MGNWRK        P@NWRK            6                        MD058830
+     C     SDNWRK        PARM      SDNWRK        DSLDY                                      MD058830
+     C                   setoff                                       02                    MD058830
+     C                   if        P@RTCD <> *BLANKS                                        MD058830
+     C                   seton                                        02                    MD058830
+     C                   endif                                                              MD058830
 
      C                   If        *IN02 = *ON
      C     *Lock         In        LDA

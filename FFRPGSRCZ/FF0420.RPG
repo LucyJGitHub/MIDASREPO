@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR988246           Date 04Dec12               *
+      *  Last Amend No. MD058769           Date 21Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR988246           Date 04Dec12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 247740             Date 15May07               *
@@ -76,6 +77,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD058769 - Deliverable Data Split for SDNARRPD and TABLETP   *
       *  MD046248 - Finastra Rebranding                               *
       *  AR988246 - The BF APOST file does not generate account keys     *
       *             for the lending module.                              *
@@ -188,7 +190,7 @@
      F            TABLET2F                          KIGNORE
      F* BRANCHES  TABLETRF                          KIGNORE
      F            TABLETRF                          KIGNORE               S01117
-     FTABLETP IF  E           K        DISK
+     F*TABLETP IF  E           K        DISK                                                MD058769
      FFOKEYA  IF  E           K        DISK
      FMKCTL   IF  E           K        DISK
      FMARKT   IF  E           K        DISK
@@ -505,6 +507,7 @@
      ICGPNAR    E DSCGPNARPD                                              S01522
      I* UDC Multi-Language Narrative Data Structure                       S01522
      I*                                                                   S01522
+     ISDNARR    E DSSDNARRPD                                                                MD058769
      I##PRM1      DS                                                      086125
       **  Data Structure for Customer and Branch                          086125
       *                                                                   086125
@@ -2529,7 +2532,8 @@
      C           NAARY,N   OREQ 'FI'
      C           NAARY,N   OREQ 'FJ'
      C*
-     C                     MOVEL*BLANK    NARD
+     C**********           MOVEL*BLANK    NARD                                              MD058769
+     C                     MOVEL*BLANK    NARD   30                                         MD058769
      C                     Z-ADD1         X       20
      C           NAARY,N   LOKUPNARTB1,X                 40
      C                     MOVELNARTB2,X  NARD
@@ -2777,13 +2781,24 @@
      C**   ELSE, IF NOT FF NARRATIVE CODE (FA - FO OR 01), ACCESS         E23097
      C**     TABLETP FOR NARRATIVE                                        E23097
      C*                                                                   E23097
-     C                     MOVE NAARY,N   NARC1                           E23097
-     C           NARC1     CHAINTABLETP              40                   E23097
+     C**********           MOVE NAARY,N   NARC1                           E23097            MD058769
+     C                     MOVE NAARY,N   NARC1   2                                         MD058769
+     C********** NARC1     CHAINTABLETP              40                   E23097            MD058769
+     C                     CALL 'AONARRR0'                                                  MD058769
+     C                     PARM *BLANKS   @RTCD                                             MD058769
+     C                     PARM '*KEY    '@OPTN                                             MD058769
+     C                     PARM NARC1     @NRCD   2                                         MD058769
+     C           SDNARR    PARM SDNARR    @DSFDY                                            MD058769
+     C                     SETOF                     40                                     MD058769
+     C           @RTCD     IFNE *BLANKS                                                     MD058769
+     C                     SETON                     40                                     MD058769
+     C                     ENDIF                                                            MD058769
+      *                                                                                     MD058769
      C*                                                                   E23097
      C**  IF - NOT A VALID RECORD                                         E23097
      C*                                                                   E23097
      C           *IN40     IFEQ '1'                                       E23097
-     C           RECI      ORNE 'D'                                       E23097
+     C********** RECI      ORNE 'D'                                       E23097            MD058769
      C*                                                                   E23097
      C                     MOVE '17'      DBASE                           E23097
      C                     MOVE 'TABLE'   DBFILE           ***DBERR 17*** E23097
@@ -2791,7 +2806,8 @@
      C                     EXSR DBERR                                     E23097
      C                     END                                            E23097
      C*                                                                   E23097
-     C                     MOVE NARD      PNAR                            E23097
+     C**********           MOVE NARD      PNAR                            E23097            MD058769
+     C                     MOVE ALDON     PNAR                                              MD058769
      C                     END                                            E23097
      C**   IF - RECORD IS A REVERSAL
      C*

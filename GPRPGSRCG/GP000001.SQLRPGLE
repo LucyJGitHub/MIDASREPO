@@ -4,7 +4,7 @@
 /*XBI *  OVRDBF FILE(GBEGINJRNF) TOFILE(UPOBJDTPD)                    *
 /**** *  RPGBASEBND                                                   *                     MD058188
 /*STD *  RPGSQLBND                                                    *                     MD058188
-/*EXI *  DBGVIEW(*LIST)                                               *
+/**** *  DBGVIEW(*LIST)                                               *                     MD060711
 /*EXI *  TEXT('Midas GP Remove recs. for objs. not to be journd')
       *****************************************************************
       *                                                               *
@@ -15,13 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD058188           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060711           Date 09Nov22               *
+      *  Prev Amend No. MD058188           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       *                 BUG27134 *CREATE   Date 01Oct08               *
       *                 xxxxxx             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060711 - Program does not compile                          *
       *  MD058188 - Deliverable Data Split for Global files           *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27134- Rewrite of GPBEGINJRN.                             *

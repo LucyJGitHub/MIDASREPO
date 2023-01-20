@@ -18,10 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. CLE071  *CREATE    Date 18Jul18               *
+      *  Last Amend No. MD060750           Date 18Jan23               *
+      *  Prev Amend No. CLE071  *CREATE    Date 18Jul18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060750 - Duplicate record key in member LEFHSTLB during    *
+      *             migration. (Recompile)                            *
       *  CLE071 - Value Dating Of Rate Changes to Fees                *
       *                                                               *
       *****************************************************************

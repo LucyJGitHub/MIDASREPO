@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058755           Date 01Sep21               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD003 - Synon Closedown Project (SD):                       *
@@ -54,9 +56,9 @@
      F**********                           INFSR(*PSSR)                                     MD058085
       * RTV : Midas SD RTS function codes file retrieval
       *
-     FSDRETRL1  IF   E           K DISK    USROPN
-     F                                     INFDS(ID0001)
-     F                                     INFSR(*PSSR)
+     F*SDRETRL1* IF   E           K DISK    USROPN                                          MD058755
+     F**********                           INFDS(ID0001)                                    MD058755
+     F**********                           INFSR(*PSSR)                                     MD058755
       * RTV : Midas SD Retail transaction types retrieval
       *
      FSDMMODL1  IF   E           K DISK    USROPN
@@ -122,6 +124,7 @@
      D @1DBRC        E DS                  EXTNAME(SDFNCJW0)                                MD058085
      D                                     PREFIX(X)                                        MD058085
      D SDFNCD        E DS                  EXTNAME(SDFNCJW0)                                MD058085
+     D SDRETR        E DS                  EXTNAME(SDRTRJW0)                                MD058755
       * UPD : Midas SD RTS function codes file update
       * Current/previous master file format fields for change control
       *
@@ -2352,7 +2355,18 @@
      C                   KFLD                    A1RTTY                         Retail Transact
       * Move fields to key list
      C                   MOVEL     WURTTY        A1RTTY                         Retail Transact
-     C     KRSSB         CHAIN     @A1RECX                            90        *
+     C*****KRSSB         CHAIN     @A1RECX                            90        *           MD058755
+     C/EXEC SQL                                                                             MD058755
+     C+ SELECT *                                                                            MD058755
+     C+ into :SDRETR                                                                        MD058755
+     C+ from SDRTRJW0                                                                       MD058755
+     C+ where A1RTTY = :A1RTTY                                                              MD058755
+     C/END-EXEC                                                                             MD058755
+     C                   SETOFF                                       90                    MD058755
+     C                   If        SQLCODE = 100                                            MD058755
+     C                   SETON                                        90                    MD058755
+     C                   ENDIF                                                              MD058755
+                                                                                            MD058755
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR0061'     W0RTN             7
@@ -2380,7 +2394,18 @@
      C                   KFLD                    A1RTTY                         Retail Transact
       * Move fields to key list
      C                   MOVEL     WURTTY        A1RTTY                         Retail Transact
-     C     KRSSC         CHAIN     @A1RECX                            90        *
+     C*****KRSSC         CHAIN     @A1RECX                            90        *           MD058755
+     C/EXEC SQL                                                                             MD058755
+     C+ SELECT *                                                                            MD058755
+     C+ into :SDRETR                                                                        MD058755
+     C+ from SDRTRJW0                                                                       MD058755
+     C+ where A1RTTY = :A1RTTY                                                              MD058755
+     C/END-EXEC                                                                             MD058755
+     C                   SETOFF                                       90                    MD058755
+     C                   If        SQLCODE = 100                                            MD058755
+     C                   SETON                                        90                    MD058755
+     C                   ENDIF                                                              MD058755
+                                                                                            MD058755
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR0061'     W0RTN             7
@@ -2408,7 +2433,18 @@
      C                   KFLD                    A1RTTY                         Retail Transact
       * Move fields to key list
      C                   MOVEL     WURTTY        A1RTTY                         Retail Transact
-     C     KRSSD         CHAIN     @A1RECX                            90        *
+     C*****KRSSD         CHAIN     @A1RECX                            90        *           MD058755
+     C/EXEC SQL                                                                             MD058755
+     C+ SELECT *                                                                            MD058755
+     C+ into :SDRETR                                                                        MD058755
+     C+ from SDRTRJW0                                                                       MD058755
+     C+ where A1RTTY = :A1RTTY                                                              MD058755
+     C/END-EXEC                                                                             MD058755
+     C                   SETOFF                                       90                    MD058755
+     C                   If        SQLCODE = 100                                            MD058755
+     C                   SETON                                        90                    MD058755
+     C                   ENDIF                                                              MD058755
+                                                                                            MD058755
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR0061'     W0RTN             7
@@ -2436,7 +2472,18 @@
      C                   KFLD                    A1RTTY                         Retail Transact
       * Move fields to key list
      C                   MOVEL     WURTTY        A1RTTY                         Retail Transact
-     C     KRSSE         CHAIN     @A1RECX                            90        *
+     C*****KRSSE         CHAIN     @A1RECX                            90        *           MD058755
+     C/EXEC SQL                                                                             MD058755
+     C+ SELECT *                                                                            MD058755
+     C+ into :SDRETR                                                                        MD058755
+     C+ from SDRTRJW0                                                                       MD058755
+     C+ where A1RTTY = :A1RTTY                                                              MD058755
+     C/END-EXEC                                                                             MD058755
+     C                   SETOFF                                       90                    MD058755
+     C                   If        SQLCODE = 100                                            MD058755
+     C                   SETON                                        90                    MD058755
+     C                   ENDIF                                                              MD058755
+                                                                                            MD058755
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR0061'     W0RTN             7
@@ -2464,7 +2511,18 @@
      C                   KFLD                    A1RTTY                         Retail Transact
       * Move fields to key list
      C                   MOVEL     WURTTY        A1RTTY                         Retail Transact
-     C     KRSSF         CHAIN     @A1RECX                            90        *
+     C*****KRSSF         CHAIN     @A1RECX                            90        *           MD058755
+     C/EXEC SQL                                                                             MD058755
+     C+ SELECT *                                                                            MD058755
+     C+ into :SDRETR                                                                        MD058755
+     C+ from SDRTRJW0                                                                       MD058755
+     C+ where A1RTTY = :A1RTTY                                                              MD058755
+     C/END-EXEC                                                                             MD058755
+     C                   SETOFF                                       90                    MD058755
+     C                   If        SQLCODE = 100                                            MD058755
+     C                   SETON                                        90                    MD058755
+     C                   ENDIF                                                              MD058755
+                                                                                            MD058755
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR0061'     W0RTN             7
@@ -2492,7 +2550,18 @@
      C                   KFLD                    A1RTTY                         Retail Transact
       * Move fields to key list
      C                   MOVEL     WURTTY        A1RTTY                         Retail Transact
-     C     KRSSG         CHAIN     @A1RECX                            90        *
+     C*****KRSSG         CHAIN     @A1RECX                            90        *           MD058755
+     C/EXEC SQL                                                                             MD058755
+     C+ SELECT *                                                                            MD058755
+     C+ into :SDRETR                                                                        MD058755
+     C+ from SDRTRJW0                                                                       MD058755
+     C+ where A1RTTY = :A1RTTY                                                              MD058755
+     C/END-EXEC                                                                             MD058755
+     C                   SETOFF                                       90                    MD058755
+     C                   If        SQLCODE = 100                                            MD058755
+     C                   SETON                                        90                    MD058755
+     C                   ENDIF                                                              MD058755
+                                                                                            MD058755
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR0061'     W0RTN             7
@@ -2520,7 +2589,18 @@
      C                   KFLD                    A1RTTY                         Retail Transact
       * Move fields to key list
      C                   MOVEL     WURTTY        A1RTTY                         Retail Transact
-     C     KRSSH         CHAIN     @A1RECX                            90        *
+     C*****KRSSH         CHAIN     @A1RECX                            90        *           MD058755
+     C/EXEC SQL                                                                             MD058755
+     C+ SELECT *                                                                            MD058755
+     C+ into :SDRETR                                                                        MD058755
+     C+ from SDRTRJW0                                                                       MD058755
+     C+ where A1RTTY = :A1RTTY                                                              MD058755
+     C/END-EXEC                                                                             MD058755
+     C                   SETOFF                                       90                    MD058755
+     C                   If        SQLCODE = 100                                            MD058755
+     C                   SETON                                        90                    MD058755
+     C                   ENDIF                                                              MD058755
+                                                                                            MD058755
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR0061'     W0RTN             7
@@ -2548,7 +2628,18 @@
      C                   KFLD                    A1RTTY                         Retail Transact
       * Move fields to key list
      C                   MOVEL     WURTTY        A1RTTY                         Retail Transact
-     C     KRSSI         CHAIN     @A1RECX                            90        *
+     C*****KRSSI         CHAIN     @A1RECX                            90        *           MD058755
+     C/EXEC SQL                                                                             MD058755
+     C+ SELECT *                                                                            MD058755
+     C+ into :SDRETR                                                                        MD058755
+     C+ from SDRTRJW0                                                                       MD058755
+     C+ where A1RTTY = :A1RTTY                                                              MD058755
+     C/END-EXEC                                                                             MD058755
+     C                   SETOFF                                       90                    MD058755
+     C                   If        SQLCODE = 100                                            MD058755
+     C                   SETON                                        90                    MD058755
+     C                   ENDIF                                                              MD058755
+                                                                                            MD058755
      C     *IN90         IFEQ      '1'
       * Data record not found
      C                   MOVEL     'USR0061'     W0RTN             7
@@ -3976,7 +4067,7 @@
      C                   PARM                    ZZFQL            21            LIBRARY/FILE
      C                   OPEN      SD0681R#
      C**********         OPEN      SDFNCDL1                                                 MD058085
-     C                   OPEN      SDRETRL1
+     C**********         OPEN      SDRETRL1                                                 MD058755
      C                   OPEN      SDMMODL1
      C**********         OPEN      SDFNCDL0                                                 MD058085
      C                   OPEN      SDFCTLL0

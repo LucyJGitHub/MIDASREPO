@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058830             Date 01Oct21             *      
+      *  Last Amend No. MD058830             Date 01Oct21             *
       *  Prev Amend No. MD060547             Date 12Dec22             *
+      *                 MD056602             Date 04Sep20             *
       *                 MD060626             Date 13Oct22             *
       *                 MD059942             Date 16May22             *
       *                 MD059554             Date 09Feb22             *
@@ -39,8 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058830 - Deliverable Data Split for SDNWRKPD               *      
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD060547 - Issue with column A1FTPT in SDRETRPD              *
+      *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  MD060626 - CGC2030 fails when RGZPFM CGCSTRPD                *
       *  MD059942 - Ignore column DJLOGD                              *
       *  MD059554 - Need to remove old core deliverable that were     *
@@ -494,6 +496,7 @@
                                                                                             MD054346
       * for T_WIPACT migration                                                              MD056891
      C                   if        EXTINDEX = 'GPWATBTD'                                    MD056891
+     C                             or EXTINDEX = 'T_APIBTD'                                 MD056602
      C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD056891
      C                             ' overriding user value (select ' +                      MD056891
      C                             %trimr(PSELECT) + ' from ' + OLDFILE +                   MD056891

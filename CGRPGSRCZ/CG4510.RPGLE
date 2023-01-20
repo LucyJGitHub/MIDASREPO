@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059859A          Date 28Jun22               *
-      *  Prev Amend No. MD059859           Date 11May22               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. MD059859A          Date 28Jun22               *
+      *                 MD059859           Date 11May22               *
       *                 MD059908           Date 06May22               *
       *                 CCG025             Date 04Apr22               *
       *                 CGL193             Date 02Nov21               *
@@ -106,6 +107,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059859A - Apply change to both credit and debit side.      *
       *              If no entries prior to last posting date, check  *
       *              for the first entry after last posting date.     *
@@ -449,7 +451,8 @@
      D DSLDY         E DS                  EXTNAME(DSLDY)                                   AR864876
       **  Third DS for access programs, very long data structure                            AR864876
       *                                                                                     AR864876
-     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)                                AR864876
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                       AR864876 MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
      D*                                                                                     AR864876
      D** Message network details                                                            AR864876
      D*                                                                                     AR864876

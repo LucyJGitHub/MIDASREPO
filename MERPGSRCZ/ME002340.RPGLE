@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CGL094             Date 02Nov21               *
-      *  Prev Amend No. MD057679           Date 24Mar21               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CGL094             Date 02Nov21               *
+      *                 MD057679           Date 24Mar21               *
       *                 CMG008             Date 20Feb20               *
       *                 MD050698           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CGL094 - Allow External Destination for MT940 Message.       *
       *           If the destination entered matches the value on     *
       *           the System Value Parameter, then do not issue       *
@@ -162,7 +164,8 @@
       ** Key Screen Layout
       *
 
-     D DsNWRK        E DS                  EXTNAME(SDNWRKPD)
+     D*DsNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DsNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       ** Network details record format data structure
       *
 

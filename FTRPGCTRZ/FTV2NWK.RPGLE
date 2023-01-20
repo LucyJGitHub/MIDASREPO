@@ -11,19 +11,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW209 - SWIFT changes 2009                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -47,22 +49,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -72,43 +74,44 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Header record datastructure
      D HdrRcdIn      E DS                  EXTNAME(FT102HSPD)
- 
-     D SDNWRK        E DS                  Extname(SDNWRKPD)
- 
+
+     D*SDNWRK***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * OK Flags for first screen - Header
      D OKFlagHs2     E DS                  EXTNAME(FTE102H2PD)
- 
+
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
      D PMOption        S              7A
      D PMNetwork       S              6A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -116,18 +119,18 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Eval      RetCodeIn  = *Blanks
      C                   Eval      Idx        = 0
      C                   Eval      WIx        = 0
- 
+
       ** If Network is entered...
      C                   If        PSNWRK <> *BLANKS
      C                   If        PCCTTYP <> 'BI'
@@ -149,7 +152,7 @@
      C                   Parm      '*KEY'        PMOption
      C                   Parm                    PMNetwork
      C     SDNWRK        Parm      SDNWRK        DSLDY
- 
+
      C                   If        RetCodeIn <> *Blanks and *IN99 = *OFF
       **    Network must be a valid network defined in the system
      C                   Eval      Idx            =   Idx+1
@@ -162,8 +165,8 @@
      C                   EndIf
      C                   EndIf
      C                   EndIf
- 
- 
+
+
      C                   Return
       *****************************************************************
       /EJECT
@@ -176,20 +179,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        Begsr
- 
+
      C     *Entry        PLIST
- 
+
       ** INPUTS
- 
+
      C                   Parm                    RetCodeIn
      C                   Parm                    RespMode          1
      C                   Parm                    ActionCode
- 
+
       ** Screen fields
      C                   Parm                    HdrRcdIn
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -200,16 +203,16 @@
      C                   Parm                    WMsgDtXAr
      C                   Parm                    DDSName          10
      C                   PARM                    OKFlagHs2
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   Endsr                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

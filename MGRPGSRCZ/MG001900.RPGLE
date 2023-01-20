@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. MD058830           Date 01Oct21               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD054605           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031691           Date 22Jan15               *
       *                 AR877174A          Date 21Dec11               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
@@ -238,9 +240,11 @@
       *
       ** Network details record format data structure
       *
-     D DSNwrk        E DS                  EXTNAME(SDNWRKPD)
+     D*DSNwrk***     E DS                  EXTNAME(SDNWRKPD)                                MD058830
+     D DSNwrk        E DS                  EXTNAME(SDNWKJW0)                                MD058830
       *                                                                                    BUG23445A
-     D DSNwrkN       E DS                  EXTNAME(SDNWRKPD)                               BUG23445A
+     D*DSNwrkN**     E DS                  EXTNAME(SDNWRKPD)                      BUG23445A MD058830
+     D DSNwrkN       E DS                  EXTNAME(SDNWKJW0)                                MD058830
      D                                     PREFIX(N_)                                      BUG23445A
       *                                                                                     BUG26814
      D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                       BUG26814 MD054605

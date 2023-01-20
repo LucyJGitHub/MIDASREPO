@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. MD060121           Date 18Jun22               *
+      *  Last Amend No. MD056602           Date 04Sep20               *
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 MD060121           Date 18Jun22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD034146           Date 17May22               *
       *                 AR928430           Date 17May22
@@ -78,6 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
@@ -257,7 +259,7 @@
       ** Compliance Watch Hit List by Function Type/Identifier/Branch                       BUG4555
       *                                                                                     BUG4555
       ** Midas AP API Configuration                                                           CAP185
-     FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
+     F*APICFGL0* IF   E           K DISK    INFSR(*PSSR)                             CAP185 MD056602
       ***Midas*LE*Facilities*Ext*File*by*Facility*********************               CLE138 MD060092
      F***LEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                           CLE138 MD060092
       ** Midas LE Aggregate Facilities Ext File by Facility                                 MD060121
@@ -451,6 +453,7 @@
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
+     D APICFG        E DS                  EXTNAME(T_APIJW0)                                MD056602
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -2403,8 +2406,15 @@
       ** Determine if Auto-authorise                                                          CAP185
      C     *LIKE         DEFINE    APNAME        @APINAME                                     CAP185
      C                   MOVEL     'FCIP'        @APINAME                                     CAP185
-     C     @APINAME      CHAIN     APICFGL0                                                   CAP185
-     C                   IF        %FOUND(APICFGL0)                                           CAP185
+     C*****@APINAME      CHAIN     APICFGL0                                          CAP185 MD056602
+     C/EXEC SQL                                                                             MD056602
+     C+ SELECT *                                                                            MD056602
+     C+ into :APICFG                                                                        MD056602
+     C+ from T_APIJW0                                                                       MD056602
+     C+ where APNAME = :@APINAME                                                            MD056602
+     C/END-EXEC                                                                             MD056602
+     C**********         IF        %FOUND(APICFGL0)                                  CAP185 MD056602
+     C                   IF        SQLCODE = 0                                              MD056602
      C                   MOVE      APAUT         @AUTHO            1                          CAP185
      C                   ENDIF                                                                CAP185
       *                                                                                       CAP185

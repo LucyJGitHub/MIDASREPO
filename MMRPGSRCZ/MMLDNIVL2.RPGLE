@@ -1025,7 +1025,8 @@
      C                   MOVE      *Blank        IKINFF                                       CDL033
                                                                                               CDL033
      C                   IF        DDACTN = 'I'                                               CDL033
-     C                             OR DDACTN = 'A' AND  DDSTRT <> *blanks                   MD054313
+     C                             OR (DDACTN = 'A' AND WSTRT <> HKSTRT                     MD049864
+     C                             AND DDSTRT <> *blanks)                                   MD049864
                                                                                               CDL033
      C                   EVAL      IKSTRF = *Blank                                            CDL033
      C                   EVAL      IKSTVF = *Blank                                            CDL033

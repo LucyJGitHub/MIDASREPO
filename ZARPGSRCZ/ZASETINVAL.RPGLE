@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057916           Date 18May21               *
+      *  Last Amend No. MD060819           Date 23Jan23               *
       *  Prev Amend No. MD051567           Date 26Sep20               *
       *                 MD056313           Date 21Sep20               *
       *                 MD052922           Date 03Mar19               *
@@ -145,8 +145,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057916 - No defaulting process should be performed during  *
+      *  MD060819 - No defaulting process should be performed during  *
       *             settlement details amendment.                     *
+      *           - Applied fix MD-57916.                             *
       *  MD051567 - ISDA Rules version must be a valid year starting  *
       *             with 199 or 20.                                   *
       *           - Applied for MD056763                              *
@@ -877,24 +878,24 @@
      C     DDRSTM        IFEQ      '01'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
-     C*****DDRSTM        OREQ      '01'                                              186433 MD057916
-     C*****##ACCD        ANDEQ     'A'                                               186433 MD057916
-     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD057916
-     C*****##PREC        ANDNE     'Y'                                             MD039348 MD057916
+     C*****DDRSTM        OREQ      '01'                                              186433 MD060819
+     C*****##ACCD        ANDEQ     'A'                                               186433 MD060819
+     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD060819
+     C*****##PREC        ANDNE     'Y'                                             MD039348 MD060819
      C     DDRSTM        OREQ      '07'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
-     C*****DDRSTM        OREQ      '07'                                              186433 MD057916
-     C*****##ACCD        ANDEQ     'A'                                               186433 MD057916
-     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD057916
-     C*****##PREC        ANDNE     'Y'                                             MD039348 MD057916
+     C*****DDRSTM        OREQ      '07'                                              186433 MD060819
+     C*****##ACCD        ANDEQ     'A'                                               186433 MD060819
+     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD060819
+     C*****##PREC        ANDNE     'Y'                                             MD039348 MD060819
      C     DDRSTM        OREQ      '08'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
-     C*****DDRSTM        OREQ      '08'                                              186433 MD057916
-     C*****##ACCD        ANDEQ     'A'                                               186433 MD057916
-     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD057916
-     C*****##PREC        ANDNE     'Y'                                             MD039348 MD057916
+     C*****DDRSTM        OREQ      '08'                                              186433 MD060819
+     C*****##ACCD        ANDEQ     'A'                                               186433 MD060819
+     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD060819
+     C*****##PREC        ANDNE     'Y'                                             MD039348 MD060819
      C                   EXSR      DEFREC
      C                   END
       *
@@ -903,24 +904,24 @@
      C     DDPSTM        IFEQ      '01'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
-     C*****DDPSTM        OREQ      '01'                                              186433 MD057916
-     C*****##ACCD        ANDEQ     'A'                                               186433 MD057916
-     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD057916
-     C*****##PPAY        ANDNE     'Y'                                             MD039348 MD057916
+     C*****DDPSTM        OREQ      '01'                                              186433 MD060819
+     C*****##ACCD        ANDEQ     'A'                                               186433 MD060819
+     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD060819
+     C*****##PPAY        ANDNE     'Y'                                             MD039348 MD060819
      C     DDPSTM        OREQ      '07'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
-     C*****DDPSTM        OREQ      '07'                                              186433 MD057916
-     C*****##ACCD        ANDEQ     'A'                                               186433 MD057916
-     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD057916
-     C*****##PPAY        ANDNE     'Y'                                             MD039348 MD057916
+     C*****DDPSTM        OREQ      '07'                                              186433 MD060819
+     C*****##ACCD        ANDEQ     'A'                                               186433 MD060819
+     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD060819
+     C*****##PPAY        ANDNE     'Y'                                             MD039348 MD060819
      C     DDPSTM        OREQ      '08'
      C     ##ACCD        ANDEQ     'I'                                                        166888
      C     ##ValIter     ANDEQ     '1ST'                                                      166888
-     C*****DDPSTM        OREQ      '08'                                              186433 MD057916
-     C*****##ACCD        ANDEQ     'A'                                               186433 MD057916
-     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD057916
-     C*****##PPAY        ANDNE     'Y'                                             MD039348 MD057916
+     C*****DDPSTM        OREQ      '08'                                              186433 MD060819
+     C*****##ACCD        ANDEQ     'A'                                               186433 MD060819
+     C*****##ValIter     ANDEQ     '1ST'                                             186433 MD060819
+     C*****##PPAY        ANDNE     'Y'                                             MD039348 MD060819
      C                   EXSR      DEFPAY
      C                   END
       *

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060664           Date 28Dec22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060664 - Unexpected warning messages in SECS maintenance   *
+      *             Correct some code change of MD000091.             *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -315,6 +318,7 @@
      C                   ADD       1             WIx
      C                   MOVEL     'DDISIN'      WFldNmXAr(WIx)
      C**********         MOVEL     'SEA0252'     WMsgIdXAr(WIx)                             MD000091
+     C                   MOVEL     'SEA0252'     WMsgIdXAr(WIx)                             MD060664
      C                   EVAL      WMsgDtXAr(WIx) = ISIN + SESN + '(' +                     MD000091
      C                                              SRPN + ')'                              MD000091
      C                   EVAL      BLen = %Len(%Trim(ISIN))                                 MD000091

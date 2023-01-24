@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD060352             Date 22Aug22             *
-      *  Prev Amend No. MD058188             Date 11May21             *
+      *  Last Amend No. MD060964             Date 24Jan23             *
+      *  Prev Amend No. MD060352             Date 22Aug22             *
+      *                 MD058188             Date 11May21             *
       *                 MD060008             Date 11May21             *
       *                 MD058830             Date 01Oct21             *
       *                 MD058081             Date 11May21             *
@@ -101,6 +102,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060964 - Program does not compile                          *
       *  MD060352 - Deliverable Data Split for GP/SCRELCTD            *
       *  MD058188 - Deliverable Data Split for Global files           *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *
@@ -1341,7 +1343,7 @@
      C                             or ChkFile = 'GPNJRXTD'                                  MD058188
      C                             or ChkFile = 'SCRELXTD'                                  MD060352
      C                             or ChkFile = 'GPRELXTD'                                  MD060352
-     
+
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1488,7 +1490,7 @@
      C                             or Member = 'SMCNUCTD'                                   MD058089
      C                             or Member = 'UTMNUCTD'                                   MD060488
      C                             or Member = 'SMOTCCTD'                                     CUP046
-     C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
+     C**********         EVAL      AUDTLB = '*GLOBAL'                              MD055081 MD060964
      C                             or Member = 'T_APICTD'                                   MD056602
      C                             or Member = 'T_ALACTD'                                   MD058088
      C                             or Member = 'T_ALMCTD'                                   MD058088

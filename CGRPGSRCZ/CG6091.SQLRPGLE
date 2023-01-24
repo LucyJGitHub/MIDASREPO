@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
-      *  Prev Amend No. MD060590           Date 04Oct22               *
+      *  Last Amend No. MD060883           Date 22Jan23               *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 MD060590           Date 04Oct22               *
       *                 MD059624           Date 20Jul22               *
       *                 MD059564           Date 14Feb22               *
       *                 MD059552           Date 08Feb22               *
@@ -24,6 +25,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060883 - Invalid rate displayed against the rate used      *
+      *             in computing the the final interest.              *
+      *             Compute for the interest rate using rate spread,  *
+      *             benchmark adjustment and the last rate outputted  *
+      *             from the union of SDHSDRTD and SDFWDRTD.          *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates.            *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -321,6 +327,14 @@
      DWPLON            S              6
      DWSDAT            S              5  0
      D P1LNRF          S              6A
+     D wFinalRate      S             15p 9 inz(0)                                           MD060883
+     D wCurrRate       S             11p 7 inz(0)                                           MD060883
+     D WIntr           S             11p 7 inz(0)                                           MD060883
+     D wDcalm          S              4a                                                    MD060883
+     D wDrtap          S             17p12                                                  MD060883
+     D wDavcr          S             17p12                                                  MD060883
+     D wDcmrt          S             17p12                                                  MD060883
+     D wDsmav          S             17p12                                                  MD060883
 
      I/EJECT
 
@@ -995,6 +1009,10 @@
 
       **  Set up subroutine stack name.
 
+     C                   CLEAR                   wCurrRate                                  MD060883
+     C                   CLEAR                   wFinalRate                                 MD060883
+     C                   CLEAR                   wIntr                                      MD060883
+                                                                                            MD060883
      C                   ADD       1             Q
      C                   MOVEL     'LOAN  '      @STK(Q)
 
@@ -1145,6 +1163,30 @@
      C                   MOVEL     R#DEFN        ##R(R1)
 
       **  Interest Rate.
+     C                   SELECT                                                             MD060883
+     C     wDcalm        WHENEQ    'NCCR'                                                   MD060883
+     C                   EVAL      wCurrRate =  wDcmrt                                      MD060883
+     C     wDcalm        WHENEQ    'CCR'                                                    MD060883
+     C                   EVAL      wCurrRate =  wDavcr                                      MD060883
+     C     wDcalm        WHENEQ    'SARR'                                                   MD060883
+     C                   EVAL      wCurrRate =  wDrtap                                      MD060883
+     C     wDcalm        WHENEQ    'SAVG'                                                   MD060883
+     C                   EVAL      wCurrRate =  wDsmav                                      MD060883
+     C                   ENDSL                                                              MD060883
+     C                   EVAL      wFinalRate = wCurrRate + BADJ                            MD060883
+     C                   EVAL(H)   WIntr      = wFinalRate                                  MD060883
+      ** Compute final value of interest rate                                               MD060883
+     C                   SELECT                                                             MD060883
+     C     ##SPIN        WHENEQ    'A'                                                      MD060883
+     C                   ADD       ##RTSP        WIntr                                      MD060883
+     C     ##SPIN        WHENEQ    'S'                                                      MD060883
+     C                   SUB       ##RTSP        WIntr                                      MD060883
+     C     ##SPIN        WHENEQ    'P'                                                      MD060883
+     C     ##RTSP        DIV       100           WRK_139          13 9                      MD060883
+     C                   MULT(H)   WRK_139       WIntr                                      MD060883
+     C     ##SPIN        WHENEQ    *BLANK                                                   MD060883
+     C                   ADD       ##RTSP        WIntr                                      MD060883
+     C                   ENDSL                                                              MD060883
 
      C                   ADD       1             R1
      C                   CLEAR                   R#DATA
@@ -1152,7 +1194,8 @@
      C                   CLEAR                   #@RDE
      C                   MOVEL     'INT RATE'    #@RDE
      C     ##RDE         CAT       #@RDE:1       ##RDE
-     C                   MOVEL     ##INTR        ##DATA
+     C**********         MOVEL     ##INTR        ##DATA                                     MD060883
+     C                   MOVEL     wIntr         ##DATA                                     MD060883
      C                   MOVEL     'Rate  '      ##RDEC
      C                   MOVEL     'L'           ##RDET
      C                   MOVEL     '7'           ##DCPA
@@ -1383,7 +1426,7 @@
      C/exec SQL
      C+ open SDHS
      C/end-exec
-     
+
      C/exec SQL
      C+ fetch next
      C+ from SDHS
@@ -1630,6 +1673,7 @@
      C                   MOVEL     '9'           ##DCPA
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
+     C                   Z-ADD     Drtap         wDrtap                                     MD060883
 
       **  Calculation Method
      C*
@@ -1643,6 +1687,7 @@
      C                   MOVEL     Dcalm         R#DATA
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
+     C                   MOVEL     Dcalm         wDcalm                                     MD060883
 
       **  Average Compounded Rate
 
@@ -1659,6 +1704,7 @@
      C                   MOVEL     '9'           ##DCPA
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
+     C                   Z-ADD     Davcr         wDavcr                                     MD060883
 
       **  Daily Compounded Rate
 
@@ -1675,6 +1721,7 @@
      C                   MOVEL     '9'           ##DCPA
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
+     C                   Z-ADD     Dcmrt         wDcmrt                                     MD060883
 
       **  Simple Average
 
@@ -1691,6 +1738,7 @@
      C                   MOVEL     '9'           ##DCPA
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
+     C                   Z-ADD     Dsmav         wDsmav                                     MD060883
 
       **  All-in-rate                                                                       MD059552
       * If Floor rate is greater than Risk free rate, use Floor, else Risk Free rate        MD059552

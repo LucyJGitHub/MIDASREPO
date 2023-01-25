@@ -14,11 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD020167           Date 23Apr13               *
-      *  Prev Amend No. CSC054  *CREATE    Date 23Feb12               *
+      *  Last Amend No. MD060927           Date 23Jan23               *
+      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *                 CSC054  *CREATE    Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060927 - Two loan events transferred to PEA event though   *
+      *             PEA was closed. Amend IF clause to include update *
+      *             to GPDWNLPD only when SCPEASPD is updated when    *
+      *             all IF conditions has been passed.                *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  CSC054 - Periodic End Adjustments.                           *
       *                                                               *
@@ -195,7 +200,7 @@
      C                   UPDATE    SCPEASD0
      C                   ENDIF
      C                   CLOSE     SCPEASPD
-     C                   ENDIF
+     C**********         ENDIF                                                              MD060927
 
       ** Update GP Downloaded data file
 
@@ -224,7 +229,8 @@
      C                   WRITE     @DWNLL0
      C                   ENDIF
      C                   CLOSE     GPDWNLL0
-
+                                                                                            MD060927
+     C                   ENDIF                                                              MD060927
      C                   ENDDO
 
      C                   ENDIF

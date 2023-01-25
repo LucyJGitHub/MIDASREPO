@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060008           Date 11May21               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. MD060968           Date 25Jan23               *
+      *  Prev Amend No. MD060008           Date 11May21               *
+      *                 MD058830           Date 01Oct21               *
       *                 MD058081           Date 11May21               *
       *                 MD058890           Date 21Sep21               *
       *                 MD056560           Date 31Aug20               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060968 - Re-deliver correct source                         *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD058081 - Deliverable Data Split for ME and MS              *
@@ -169,11 +171,7 @@
      F** ME User Repair
      F*SDMTAGL1* IF   E           K DISK    INFSR(SRFILE)                                   MD056560
      F**********                           RENAME(@EFREJ5:@MTAGL1)                          MD056560
-<<<<<<< HEAD
      F*MEINMVL2* IF   E           K DISK                                           MD020057 MD058081
-=======
-     F*MEINMVL2* IF   E           K DISK                                                 MD MD058081
->>>>>>> branch 'feature/MDSC-39745' of http://blrvslalm0006:7990/scm/md/midasrpg.git
      F** Midas Incoming Valid Messages by Message Type                                      MD020057
      F/EJECT
       *****************************************************************

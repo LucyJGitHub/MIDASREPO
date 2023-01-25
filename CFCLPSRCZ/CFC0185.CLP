@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD027509           Date 10Oct22              */
-/*       Prev Amend No. CSC059             Date 10Oct22              */
+/*       Last Amend No. MD060952           Date 19Jan23              */
+/*       Prev Amend No. MD027509           Date 10Oct22              */
+/*                      CSC059             Date 10Oct22              */
 /*                      247251             Date 24Aug21              */
 /*                      MD056206           Date 24Sep20              */
 /*                      MD055267           Date 16Mar20              */
@@ -50,6 +51,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060952 - Error with CSC059 on as CPYTOPCD is still being  */
+/*                  executed                                         */
 /*       MD027509 - Change folder calculation to use absolute path.  */
 /*                  Applied for MD-38096                             */
 /*       CSC059 - Replace QDLS processing by IFS                     */
@@ -309,6 +312,7 @@
              CALL       CFG003                                                            /*CSW051*/
              CHGVAR     VAR(&CPYSTATUS) VALUE('PENDING')                                  /*CSW051*/
              CHGVAR     VAR(&QDLSFLR) VALUE(&FLR)                                         /*CSW051*/
+             IF         COND(&CSC059 *NE 'Y') THEN(DO)                                  /*MD060952*/
              CPYTOPCD   FROMFILE(*LIBL/CFTRAMPD) TOFLR(&QDLSFLR) +
                           TODOC(TRAMHOST.DAT)                                             /*CSW051*/
              MONMSG     MSGID(IWS1612 CPF9999) EXEC(DO)
@@ -320,6 +324,14 @@
              MONMSG     MSGID(CPFA093) EXEC(DO)                                           /*CSW051*/
              CHGVAR     VAR(&CPYSTATUS) VALUE('DELAYED')                                  /*CSW051*/
              ENDDO                                                                        /*CSW051*/
+             ENDDO                                                                      /*MD060952*/
+             ELSE (DO)                                                                  /*MD060952*/
+             CHGVAR VAR(&FILE) VALUE(&FLR *TCAT '/CFTRAMPD')                            /*MD060952*/
+             CPYTOIMPF  FROMFILE(*LIBL/CFTRAMPD *FIRST) +
+                          TOSTMF(&FILE)  +
+                          STMFCODPAG(*PCASCII) RCDDLM(*CRLF) +
+                          DTAFMT(*FIXED)                                                /*MD060952*/
+             ENDDO                                                                      /*MD060952*/
              IF         COND(&CPYSTATUS *NE 'DELAYED') THEN(CLRPFM +
                           FILE(CFTRAMPD))                                                 /*CSW051*/
              ENDDO                                                                        /*CSW051*/

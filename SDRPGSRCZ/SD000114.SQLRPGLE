@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060823           Date 12Dec22               *
-      *  Prev Amend No. MD060033           Date 25Sep22               *
+      *  Last Amend No. MD060883           Date 22Jan23               *
+      *  Prev Amend No. MD060823           Date 12Dec22               *
+      *                 MD060033           Date 25Sep22               *
       *                 MD058517           Date 17Oct22               *
       *                 249385             Date 01Aug22               *
       *                 MD059424           Date 29Mar22               *
@@ -42,6 +43,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060883 -  Matured loans are still processed/reported by    *
+      *              the ARR calculator.                              *
+      *              Do not process the loan record if the interest   *
+      *              period start date is equal to maturiy date of    *
+      *              the loan.                                        *
       *  MD060823 -  Rolled over loan using SARR calculation method   *
       *              was not processed by calculator and reported     *
       *              as an exception.                                 *
@@ -353,6 +359,12 @@
       ** Determine Interest Period Dates
      C                   EVAL      WZeroMDATFlag = 'N'
      C                   EXSR      SRDetINTDATE
+                                                                                            MD060883
+     C                   IF        TRMODI = 'LE' AND IntPerSDATE = TRMDAT                   MD060883
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD060883
+     C                   EXSR      SRReadNEXT                                               MD060883
+     C                   ITER                                                               MD060883
+     C                   ENDIF                                                              MD060883
 
       ***If*the*backward-looking*rate*parameters*are*changed*via******              CLE172 MD058040A
       ***Rollover,*this*will*be*applied*to*the*whole*interest*period.*              CLE172 MD058040A

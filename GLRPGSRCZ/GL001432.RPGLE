@@ -14,14 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-<<<<<<< HEAD
-      *  Last Amend No. MD060784           Date 02Dec22               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. MD060966           Date 25Jan23               *
+      *  Prev Amend No. MD060784           Date 02Dec22               *
+      *                 MD058830           Date 01Oct21               *
       *                 MD058285           Date 22Jun21               *
-=======
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
->>>>>>> branch 'feature/MDSC-39745' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 MD055642A          Date 27May20               *
@@ -64,10 +60,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-<<<<<<< HEAD
+      *  MD060966 - Re-deliver correct source                         *
       *  MD060784 - Program fails with decimal data error             *
-=======
->>>>>>> branch 'feature/MDSC-39745' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *

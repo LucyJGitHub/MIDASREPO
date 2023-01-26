@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD054313           Date 11Jan23               *
-      *  Prev Amend No. MD049864           Date 11Jan23               *
+      *  Last Amend No. AR959687           Date 24Jan23               *
+      *  Prev Amend No. MD054313           Date 11Jan23               *
+      *                 MD049864           Date 11Jan23               *
       *                 MD046446           Date 11Jan23               *
       *                 AR1079461          Date 10Jan23               *
       *                 MD059049           Date 08Nov21               *
@@ -65,6 +66,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR959687 - Parameter added to MMVACTINTR for warning message *
+      *             (Child: AR959689)                                 *
       *  MD054313 - FRN testing - it is possible to insert MM deal    *
       *             type IT with Actual Interest Rate <>0 and Short   *
       *             term Rate = 0 but not possible to authorise it.   *
@@ -1025,7 +1028,8 @@
      C                   MOVE      *Blank        IKINFF                                       CDL033
                                                                                               CDL033
      C                   IF        DDACTN = 'I'                                               CDL033
-     C                             OR DDACTN = 'A' AND  DDSTRT <> *blanks                   MD054313
+     C                             OR (DDACTN = 'A' AND WSTRT <> HKSTRT                     MD049864
+     C                             AND DDSTRT <> *blanks)                                   MD049864
                                                                                               CDL033
      C                   EVAL      IKSTRF = *Blank                                            CDL033
      C                   EVAL      IKSTVF = *Blank                                            CDL033
@@ -1890,6 +1894,7 @@
      C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    CDL102            1                          CDL102
      C                   PARM                    DDACTN                                     MD058547
+     C                   PARM                    WMSGID1                                    AR959687
                                                                                             BUG10810
      C                   IF        MSG1 <> *Blanks                                          BUG10810
      C                   EVAL      Idx = Idx + 1                                            BUG10810
@@ -1897,6 +1902,12 @@
      C                   EVAL      MsgIDArr(Idx) = MSG1                                     BUG10810
      C                   ENDIF                                                              BUG10810
                                                                                             BUG10810
+     C                   IF        WMSGID1 <> *Blanks                                       AR959687
+     C                   EVAL      WIdx = WIdx + 1                                          AR959687
+     C                   EVAL      WFldNamArr(WIdx) = 'DDAIR'                               AR959687
+     C                   EVAL      WMsgIDArr(WIdx) = WMSGID1                                AR959687
+     C                   ENDIF                                                              AR959687
+      *                                                                                     AR959687
       ** Use the return code's value to set the field's OK flag                             BUG10810
      C                   CALLB     'ZASETOKFLG'                                             BUG10810
      C                   PARM                    DDAIROK                                    BUG10810

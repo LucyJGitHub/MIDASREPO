@@ -1,11 +1,11 @@
 /*********************************************************************/
-/*STD    CLPBASE                                                     */
-/*EXI    TEXT('CL Program to populate SCRMVDPD')                     */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CL Program to to populate SCRMVDPD')                  */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - General Ledger Module                               */
 /*                                                                   */
-/*       SMUC90014 - CL Program to populate SCRMVDPD                 */
+/*       SMUC90014 - CL Program to to populate SCRMVDPD              */
 /*                                                                   */
 /*       (c) Finastra International Limited 2023                     */
 /*                                                                   */
@@ -22,13 +22,9 @@
 
              DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&WGLOB) TYPE(*CHAR) LEN(2) VALUE(' ')
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&SQL) TYPE(*CHAR) LEN(80)
-
-/*/COPY GPCPYSRCG,GPSVALDCL   */
 
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
                           International Limited 2023')
@@ -59,24 +55,6 @@
                 CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
                 CHGVAR     VAR(&DTALIB) VALUE(&PRE *TCAT 'DTALIB')
 
-/** Call AOSVALR0 to get system values for 'BrgMidasSystemPrefix' */
-
-             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
-                          'BrgMidasGlobalPrefix' &SVAL1 +
-                          &SVALK2 &SVAL2 &SVALK3 +
-                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
-                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
-                          &SVAL8 &SVALK9 &SVAL9 &SVALK10 &SVAL10)
-
-
-             CHGVAR     VAR(&WGLOB) VALUE(&SVAL1)
-
-/** Set up library names for the PFs and LFs used in this program  */
-
-             CHGVAR     VAR(&GTALIB) VALUE(&WGLOB *TCAT 'GTALIB')
-
-
-
                 CRTDUPOBJ  OBJ(SCRMVDPD) FROMLIB(&DTALIB) +
                              OBJTYPE(*FILE) TOLIB(&DILIB) +
                              NEWOBJ(SCRMVDPDBK) DATA(*YES)
@@ -98,8 +76,6 @@
 
              DSPOBJD    OBJ(&DTALIB/*ALL) OBJTYPE(*FILE) +
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/DDSFILEZ)
-             DSPOBJD    OBJ(&GTALIB/*ALL) OBJTYPE(*FILE) +
-                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DDSFILEG)
 
  /* Insert Zonal  BTD files */
              CHGVAR     VAR(&SQL) VALUE('INSERT INTO SCRMVDPD +
@@ -127,51 +103,6 @@
 
              CHGVAR     VAR(&SQL) VALUE('INSERT INTO SCRMVDPD +
                           (PEOBJ) SELECT ODOBNM FROM DDSFILEZ WHERE')
-             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
-             CHGVAR     VAR(&SQL) VALUE('ODOBNM LIKE ''%CTD%''')
-             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
-
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*CHG) NAMING(*SYS)
-             MONMSG     MSGID(SQL9010) EXEC(GOTO ABNOR)
-
-             CHGVAR     VAR(&SQL) VALUE('UPDATE SCRMVDPD  SET +
-                          PEOBJ = REPLACE(PEOBJ,''CTD'', ''XTD'') +
-                          WHERE')
-             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
-             CHGVAR     VAR(&SQL) VALUE('PEOBJ LIKE ''%CTD%''')
-             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
-
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*CHG) NAMING(*SYS)
-             MONMSG     MSGID(SQL9010) EXEC(GOTO ABNOR)
-
-  /* Insert Global  BTD files */
-             CHGVAR     VAR(&SQL) VALUE('INSERT INTO SCRMVDPD +
-                          (PEOBJ) SELECT ODOBNM FROM DDSFILEG WHERE')
-             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
-             CHGVAR     VAR(&SQL) VALUE('ODOBNM LIKE ''%CTD%''')
-             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
-
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*CHG) NAMING(*SYS)
-             MONMSG     MSGID(SQL9010) EXEC(GOTO ABNOR)
-
-             CHGVAR     VAR(&SQL) VALUE('UPDATE SCRMVDPD  SET +
-                          PEOBJ = REPLACE(PEOBJ,''CTD'', ''BTD'') +
-                          WHERE')
-             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
-             CHGVAR     VAR(&SQL) VALUE('PEOBJ LIKE ''%CTD%''')
-             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
-
-             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
-                          COMMIT(*CHG) NAMING(*SYS)
-             MONMSG     MSGID(SQL9010) EXEC(GOTO ABNOR)
-
-  /* Insert Global XTD files */
-
-             CHGVAR     VAR(&SQL) VALUE('INSERT INTO SCRMVDPD +
-                          (PEOBJ) SELECT ODOBNM FROM DDSFILEG WHERE')
              CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
              CHGVAR     VAR(&SQL) VALUE('ODOBNM LIKE ''%CTD%''')
              CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')

@@ -21,8 +21,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 230217             Date 17Mar22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD021359B          Date 20Jan23               *
+      *  Prev Amend No. MD021359           Date 20Jan23               *
+      *                 230217             Date 17Mar22               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR635480           Date 17Oct19               *
       *                 MD049609           Date 21Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -114,6 +116,11 @@
       *             switched on.  Any changes made to this program    *
       *             should be duplicated in DL0410.                   *
       *                                                               *
+      *  MD021359B - Previous fix caused FOOB in GLC30.  Enhance fix  *
+      *              by moving the ENDIF.                             *
+      *  MD021359 - When PCA is switched on, FWD revaluation reversal *
+      *             is done via GE-PC, suppress reversal from GE-FR to*
+      *             avoid duplicate reversal.                         *
       *  230217 - Remove reversal processing by IAS.                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR635480 - Failed Component DLC0608 due to CPF5004 in        *
@@ -3534,13 +3541,21 @@
      C**********           ENDIF                                                       CAS005 230217
       *                                                                                       CAS005
      C**********           Z-ADD1         VOIN                                         CAS005 230217
+     C                     MOVE PRFC      WPRFC   4                                         MD021359
       *                                                                                       CAS005
       ** Prevent printer file exception output.                                               CAS005
       *                                                                                       CAS005
      C                     MOVE *IN37     WIN37   1                                           CAS005
      C                     MOVE *OFF      *IN37                                               CAS005
       *                                                                                       CAS005
+      ** Suppress generation of GEFRPD when PCA is switched on                              MD021359
+      ** Reversal of revaluation will be done in MCC0370                                    MD021359
+      *                                                                                     MD021359
+     C           BGNVST    IFEQ 'Y'                                                         MD021359
+     C           BGN0ST    ANDEQ'Y'                                                         MD021359
+     C                     ELSE                                                             MD021359
      C**********           EXCPT                                                       CAS005 230217
+     C**********           ENDIF                                                  MD021359 MD021359B
       *                                                                                       CAS005
      C                     MOVE WIN37     *IN37                                               CAS005
       *                                                                                       CAS005
@@ -3553,6 +3568,7 @@
      C**********           Z-ADD2         S                                            CAS005 230217
      C********** PSTA      DIV  1000      ZZAMT                                        CAS005 230217
      C**********           EXSR HASH                                                   CAS005 230217
+     C                     ENDIF                                                           MD021359B
       *                                                                                       CAS005
       ** Delete records                                                                       CAS005
       *                                                                                       CAS005
@@ -6091,6 +6107,7 @@
      O                                  129 'F'
      O***********              PRFC     134                               124860
      O                         RPRFC    134                               124860
+     O                 17 U1   WPRFC    134                                                 MD021359
      O                                  140 '235959'
      O                         VOIN     141
      O                         A5ACSC   146

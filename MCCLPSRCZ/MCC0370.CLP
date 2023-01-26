@@ -9,8 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 259402             Date 06Jun20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD021359           Date 20Jan23              */
+/*       Prev Amend No. 227690             Date 20Jan23              */
+/*                      227662             Date 20Jan23              */
+/*                      259402             Date 06Jun20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +27,13 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD021359 - No reversal of FR posting when CAS005 is         */
+/*                  switched on.                                     */
+/*       227690 - Fwd Reval Reversal not done on the first working   */
+/*                day of month. Applied fix 196578.                  */
+/*              - Applied for MD021359                               */
+/*       227662 - Ensure that EVDT is equal to system rundate.       */
+/*              - Applied for MD021359                               */
 /*       259402 - No Reversal on first day of the month for          */
 /*                Forward Revaluation posted on last day of          */
 /*                previous month. Applied fix 220292 to address      */
@@ -82,6 +92,15 @@
              DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)                                  /*259402*/
              DCL        VAR(&ACSC) TYPE(*CHAR) LEN(2)                                     /*259402*/
              DCL        VAR(&ACSCD) TYPE(*CHAR) LEN(4)                                    /*259402*/
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)                                  /*MD021359*/
+             DCL        VAR(&CAS005) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD021359*/
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                  /*MD021359*/
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)                                  /*MD021359*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                               /*MD021359*/
+             DCL        VAR(&FCAC) TYPE(*CHAR) LEN(10) +
+                          VALUE('0000000000')                                           /*MD021359*/
+             DCL        VAR(&FRLA) TYPE(*CHAR) LEN(10) +
+                          VALUE('0000000000')                                           /*MD021359*/
              DCLF       FILE(SDBANKPD) /* Bank ICD */
 /**/
 /* Global monitor message */
@@ -115,9 +134,27 @@
                           VALUE(&PSTD))
 
 /**/
+/* Access SCSARDPD to check CAS005 */
+/**/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                    /*MD021359*/
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                    /*MD021359*/
+             CHGVAR     VAR(&PSARD) VALUE('CAS005')                                     /*MD021359*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)                /*MD021359*/
+                                                                                        /*MD021359*/
+             IF         COND(&PRTCD *NE '       ' *AND &PRTCD *NE +
+                          '*NRF   ') THEN(DO)                                           /*MD021359*/
+               SNDPGMMSG  MSG('AOSARDR0 - PROGRAM ERROR') +
+                 TOMSGQ(MOPERQ)                                                         /*MD021359*/
+               GOTO   CMDLBL(ABNOR)                                                     /*MD021359*/
+             ENDDO                                                                      /*MD021359*/
+                                                                                        /*MD021359*/
+             IF         COND(&PRTCD *EQ '      ') THEN(CHGVAR +
+                          VAR(&CAS005) VALUE('Y'))                                      /*MD021359*/
+/**/
 /* Access Dealing ICD for Foward Revaluation A/c and Contra */
 /**/
-             CALL       PGM(AODEALR0) PARM(&RTCD '*FIRST' &DSFDY)
+/**********  CALL       PGM(AODEALR0) PARM(&RTCD '*FIRST' &DSFDY)                       /*MD021359*/
+             CALL       PGM(AODEALR1) PARM(&RTCD '*FIRST' &DSSDY)                       /*MD021359*/
 /**********  CHGVAR     VAR(&FACC) VALUE(%SST(&DSFDY 11 4))          */                   /*CGL029*/
 /**********  CHGVAR     VAR(&FRPL) VALUE(%SST(&DSFDY 15 4))          */                   /*CGL029*/
 /*           CHGVAR     VAR(&FACC) VALUE(%SST(&DSFDY 122 10))  */                 /*CGL029 BUG7578*/
@@ -132,6 +169,13 @@
                           &DSSDY)                                                         /*259402*/
              CHGVAR     VAR(&ACSC) VALUE(%SST(&DSSDY 72 2))                               /*259402*/
 
+/**/
+/* Access forward loss account code when CAS005 is switched on */
+/**/
+             IF         COND(&CAS005 *EQ 'Y') THEN(DO)                                  /*MD021359*/
+             CHGVAR     VAR(&FRLA) VALUE(%SST(&DSSDY 203 10))                           /*MD021359*/
+             CHGVAR     VAR(&FCAC) VALUE(%SST(&DSSDY 213 10))                           /*MD021359*/
+             ENDDO                                                                      /*MD021359*/
 /**/
 /* Access PCA ICD for Primary Mgmt A/c Control Group */
 /**/
@@ -157,7 +201,12 @@
                 CHGVAR     VAR(&PDYR) VALUE(%SST(&DSFDY 4 2))                             /*259402*/
                 CHGVAR     VAR(&PDNY) VALUE(%SST(&DSFDY 6 2))                             /*259402*/
              ENDDO                                                                        /*259402*/
-                                                                                          /*259402*/
+
+/**/                                                                                      /*227662*/
+/* Ensure that EVDT is equal system rundate */                                            /*227662*/
+/**/                                                                                      /*227662*/
+             CHGVAR     VAR(&DEVD) VALUE(&BJRDNB)                                         /*227662*/
+/**/                                                                                      /*227662*/
 /* Set up OPNQRYF to Fwd Trade A/c balances */
 
 /*********** OPNQRYF    FILE((GLHIBLPD &PGCD)) FORMAT(MCPCACPD) +      *140486*/
@@ -312,6 +361,16 @@
              CPYFRMQRYF FROMOPNID(GLHIBLPD) TOFILE(MCFREXPD) +
                           MBROPT(*ADD) FMTOPT(*MAP *DROP)
 /**/
+
+
+             IF         COND(&FCAC *NE &FACC *AND &CAS005 *EQ 'Y') +
+                        THEN(DO)                                                        /*MD021359*/
+             CLOF       OPNID(GLHIBLPD)                                                 /*MD021359*/
+             MONMSG     MSGID(CPF4520)                                                  /*MD021359*/
+             CPYFRMQRYF FROMOPNID(GLHIBLPD) TOFILE(MCFREXPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)                               /*MD021359*/
+
+             ENDDO                                                                      /*MD021359*/
              GOTO       CMDLBL(END)
 /**/
 /* Abnormal Termination Processing */

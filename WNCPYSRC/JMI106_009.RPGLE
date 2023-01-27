@@ -1,10 +1,14 @@
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. JMI106 *CREATE     Date 24May18               *
-      *  Prev Amend No. nnnnnn             Date ddmmmnn               *
+      *  Last Amend No. MD060816           Date 15Dec22               *
+      *  Prev Amend No. JMI106 *CREATE     Date 24May18               *
+      *                 nnnnnn             Date ddmmmnn               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060816 - FT route from GCMS message to OPAY shifted the    *
+      *             values for tags 32B and 33B. Change the length of *
+      *             DP32B & DP33B to match the length of P32B & P33B. *
       *  JMI106 - Split FT Sequence Number based on Settlement Type   *
       *           (Upgrade to FB Midas)                               *
       *                                                               *
@@ -19,7 +23,8 @@
      D   UPSEQ3                       5A                                                      JMI113
      D   DNWRK                        6A                                                      JMI113
      D   WDP32B                      42A                                                      JMI106
-     D   DP33B                       42A                                                      JMI113
+     D***DP33B**                     42A                                             JMI113 MD060816
+     D   DP33B                       50A                                                    MD060816
      D   DP57                       255A                                                      JMI113
      D   DSPCCY                       3A                                                      JMI113
      D   DPYAMA                      14A                                                      JMI113
@@ -139,7 +144,8 @@
      D   DIN99                99     99                                                       JMI106
                                                                                               JMI106
      D DATAF1          DS          5000                                                       JMI106
-     D   DP32B                       48A                                                      JMI106
+     D***DP32B**                     48A                                             JMI106 MD060816
+     D   DP32B                       50A                                                    MD060816
      D   DP59                       255A                                                      JMI106
      D   DSTR35                      35A                                                      JMI106
      D DATAF2          DS          5000                                                       JMI106

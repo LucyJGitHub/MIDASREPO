@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. JMI113             Date 19Feb20               *
-      *  Prev Amend No. JMI106             Date 16May19               *       
+      *  Last Amend No. MD060816           Date 15Dec22               *
+      *  Prev Amend No. JMI113             Date 19Feb20               *
+      *                 JMI106             Date 16May19               *
       *                 CSD103             Date 10Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -176,6 +177,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060816 - FT route from GCMS message to OPAY shifted the    *
+      *             values for tags 32B and 33B. Recompiled due to    *
+      *             changes in /COPY JMI106_009.                      *
       *  JMI113 - Midas-GCMS Interface. Upgrade to FBM 2.1            *
       *           (It includes SC254598)                              *
       *           Amendment of hook JMI106_009                        *
@@ -189,7 +193,7 @@
       *           Addition of hook JMI106_010                         *
       *           Addition of hook JMI106_011                         *
       *           Addition of hook JMI106_012                         *
-      *           (Upgrade to FB Midas)                               *      
+      *           (Upgrade to FB Midas)                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *

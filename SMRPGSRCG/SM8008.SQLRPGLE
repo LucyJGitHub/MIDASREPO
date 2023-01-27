@@ -14,10 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CUP045 *CREATE     Date 01Jun22               *
+      *  Last Amend No. MD060979           Date 27Jan23               *
+      *  Prev Amend No. CUP045 *CREATE     Date 01Jun22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060979 - Monitor does not refresh                          *
       *  CUP045 - One Touch Bridge - refresh                          *
       *                                                               *
       *****************************************************************
@@ -31,9 +33,12 @@
      D NoCmp           S              3S 0
      D RETURN          S             10A
      D DBASE           S              3A
+     D TSTMT           S               Z                                                    MD060979
+     D TSTMTA          S             30A                                                    MD060979
      D ##TMEDS         DS
      D   TMST                  1      6
      D   TMSD                  7     12
+     D   TM12                  1     12                                                     MD060979
      D   ##TME                 1     12  0
        /EJECT
       *****************************************************************
@@ -169,9 +174,13 @@
 
       * finally update timestamp for monitor refresh
      C                   TIME                    ##TME
+     C                   TIME                    TSTMT                                      MD060979
+     C                   eval      TSTMTA = %char(TSTMT:*ISO)                               MD060979
+     C                   eval      TM12 = %subst(TSTMTA:12:12)                              MD060979
      C/exec SQL
      C+ update SMOTMMTD
-     C+ set DUTMST = :TMST
+     C**set*DUTMST = :TMST                                                                  MD060979
+     C+ set DUTMST = :TM12                                                                  MD060979
      C/end-exec
      C                   If        SQLCode <> 0
      C                   eval      DBASE = '106'

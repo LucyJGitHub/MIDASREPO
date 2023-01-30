@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. AR700044           Date 04Mar22               *
+      *  Last Amend No. AR992380A          Date 26Jan23               *
+      *  Prev Amend No. AR992380           Date 26Jan23               *
+      *                 249385             Date 01Aug22               *
+      *                 AR700044           Date 04Mar22               *
       *                 CGL077             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055785           Date 20May20               *
@@ -196,6 +198,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR992380A- Initialize FRNT and REPA. (Child: AR993207)       *
+      *  AR992380 - Issues encountered when system opens an account.  *
+      *             FRNT, REPA are not initialised and TMST has       *
+      *             incorrect value. Generate TMST when account is    *
+      *             opened by the system and initialise FRNT, REPA,   *
+      *             AFRT to *BLANKS. (Child: AR993207)                *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  AR700044 - GL-uncorrectly initialized field FEEPCT. Amended  *
@@ -967,6 +975,7 @@
      D/COPY WNCPYSRC,GL0600IIP2
 
      D PSYSVL          C                   CONST('AllowCOBGLTlrImblnce')
+     D TimeStamp       S               Z                                                    AR992380
      I/COPY ZSRSRC,ZHOLELE
 
      IZACCNTAB  NS  02    1 CD
@@ -1975,6 +1984,19 @@
      C                   WRITE     GLACNTD0
      C/COPY WNCPYSRC,GLH00527
      C                   ENDIF
+      *                                                                                     AR992380
+      ** Generate Timestamp                                                                 AR992380
+      *                                                                                     AR992380
+     C     *IN85         IFEQ      '1'                                                      AR992380
+     C                   CALLB     'ZAGENTMSTM'                                             AR992380
+     C                   PARM                    TimeStamp                                  AR992380
+     C                   EVAL      TMST = TimeStamp                                         AR992380
+     C                   ENDIF                                                              AR992380
+                                                                                            AR992380
+     C                   MOVE      *BLANKS       BLANKS           20                        AR992380
+     C                   MOVE      *BLANKS       FRNT                                       AR992380
+     C                   MOVE      *BLANKS       AFRT                                       AR992380
+     C                   MOVE      *BLANKS       REPA                                       AR992380
 
      C/COPY WNCPYSRC,GL0600C005
 
@@ -4444,10 +4466,14 @@
      O                       IBAN               482
      O                       IBSEQN             485
      O                       FRNT               505
+     O               85      BLANKS             505                                        AR992380A
      O                       AFRT               525
+     O               85      BLANKS             525                                        AR992380A
      O                       REPA               526
+     O               85                         526 ' '                                    AR992380A
      O                       TSTAMP             552
      O              N03      TMST               552
+     O               85      TMST               552                                         AR992380
      O                       REPI               553
      O                       LTAC               573
      O                       FCCU               579

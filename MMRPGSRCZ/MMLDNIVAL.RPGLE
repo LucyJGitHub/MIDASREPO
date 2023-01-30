@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060583           Date 13Oct22               *
-      *  Prev Amend No. MD059368           Date 18Dec21               *
+      *  Last Amend No. AR959687           Date 24Jan23               *
+      *  Prev Amend No. MD060583           Date 13Oct22               *
+      *                 MD059368           Date 18Dec21               *
       *                 MD058543A          Date 09Sep21               *
       *                 MD058734           Date 03Sep21               *
       *                 MD058644           Date 31Aug21               *
@@ -167,6 +168,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR959687 - Parameter added to MMVACTINTR for warning message *
+      *             (Child: AR959689)                                 *
       *  MD060583 - Calculation of total interest not working.        *
       *             Enhanced the validation of Short Term Rate field  *
       *             for Total interest to be calculated.              *
@@ -5804,6 +5807,7 @@
      C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    CDL102                                       CDL102
      C                   PARM                    DDACTN                                     MD058547
+     C                   PARM                    WMSGID1                                    AR959687
                                                                                             AR876535
      C                   IF        MSG1 <> *Blanks                                          AR876535
      C                   EVAL      Idx = Idx + 1                                            AR876535

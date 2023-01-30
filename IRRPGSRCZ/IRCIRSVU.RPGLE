@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059314           Date 22Feb22               *
-      *  Prev Amend No. MD059100A          Date 23Dec21               *
+      *  Last Amend No. MD021871           Date 27Jan23               *
+      *  Prev Amend No. MD060981           Date 27Jan23               *
+      *                 MD059314           Date 22Feb22               *
+      *                 MD059100A          Date 23Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058398           Date 20Aug21               *
       *                 MD058492           Date 06Aug21               *
@@ -114,6 +116,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021871 - Yearly frequency are generated as monthly freq.   *
+      *  MD060981 - CIRS buffer issue                                 *
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059100A - Incorrect deal status on pre-confirmation        *
@@ -2431,18 +2435,26 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6030)+TPCSAST          MD044553 MD056546
      C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1029)                  MD044553 MD056546
      C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11028)                 MD044553 MD056546
-     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1661)+OPDATEAST               MD056546
+     C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1661)+OPDATEAST      MD056546 MD060981
+     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1561)+OPDATEAST               MD060981
      C                                      + TRDATEAST                                     MD056546
-     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:2060)+TPDATEAST               MD056546
+     C**********         EVAL      BufferEx3=%SUBST(TRDATEAST:2060)+TPDATEAST      MD056546 MD060981
+     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:1960)+TPDATEAST               MD060981
      C                                         +OCFSAST                                     MD056546
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2459)                           MD056546
-     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12458)                          MD056546
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:2459)                  MD056546 MD060981
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2359)                           MD056546
+     C**********         EVAL      BufferEx5=%SUBST(OCFSAST:12458)                 MD056546 MD060981
+     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12358)                          MD060981
      C                                      + TCFSAST                                       MD056546
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9257)                           MD056546
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:9257)                  MD056546 MD060981
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9157)                           MD060981
      C                                      + OPCSAST                                       MD056546
-     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST                   MD056546
-     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1055)                           MD056546
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11054)                          MD056546
+     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST          MD056546 MD060981
+     C                   EVAL      BufferEx7=%SUBST(OPCSAST:5956)+TPCSAST                   MD060981
+     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1055)                  MD056546 MD060981
+     C                   EVAL      BufferEx8=%SUBST(TPCSAST:955)                            MD060981
+     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11054)                 MD056546 MD060981
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:10954)                          MD060981
      C                   ENDIF                                                               BUG6377
 
      C                   RETURN
@@ -6742,7 +6754,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ADD       6             MTHN                                        BUG5449
      C                   ENDIF                                                               BUG5449
      C                   IF        SFREQF = 'Y'                                              BUG5449
-     C                   ADD       1             MTHN                                        BUG5449
+     C**********         ADD       1             MTHN                               BUG5449 MD021871
+     C                   ADD       1             YRNO                                       MD021871
      C                   ENDIF                                                               BUG5449
      C*                                                                                      BUG5449
      C**  If past end of year                                                                BUG5449

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059314           Date 22Feb22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD021871           Date 27Jan23               *
+      *  Prev Amend No. MD059314           Date 22Feb22               *
+      *                 MD059304           Date 11Nov21               *
       *                 MD059183A          Date 21Dec21               *
       *                 MD059100           Date 28Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -123,6 +124,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021871 - Yearly frequency are generated as monthly freq.   *
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -5073,7 +5075,8 @@ RGC                                                                             
      C                   ADD       6             MTHN                           BUG4646
      C                   ENDIF                                                  BUG4646
      C                   IF        SFREQF = 'Y'                                 BUG4646
-     C                   ADD       1             MTHN                           BUG4646
+     C**********         ADD       1             MTHN                               BUG4646 MD021871
+     C                   ADD       1             YRNO                                       MD021871
      C                   ENDIF                                                  BUG4646
      C*                                                                         BUG4646
      C**  If past end of year                                                   BUG4646

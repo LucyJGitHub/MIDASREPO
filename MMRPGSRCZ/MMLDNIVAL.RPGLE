@@ -16,6 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD060583           Date 13Oct22               *
       *  Last Amend No. MD060532           Date 27Sep22               *
       *  Prev Amend No. MD060283           Date 22Aug22               *
       *                 MD059368           Date 18Dec21               *
@@ -168,6 +169,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060583 - Calculation of total interest not working.        *
+      *             Enhanced the validation of Short Term Rate field  *
+      *             for Total interest to be calculated.              *      
       *  MD060532 - Unable to insert MM deal. Error 45049506 occured. *
       *             Amended validation Fixed Base Rate must be 'N' if *
       *             Backward-Looking Rate is 'Y'.                     *
@@ -904,6 +908,8 @@
      D                                     LIKE(FldNameArr)                                   CDL096
      D CER069          S              1A                                                    MD030409
      D CER050          S              1A                                                      CER050
+      ** Work variable for Short Term Rate                                                  MD060583
+     D WHSTRT          S             11P 7                                                  MD060583
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -2654,6 +2660,26 @@
      C                   EVAL      NEW_TOTI = @@AMT                                         MD037869
      C                   ENDIF                                                              MD037869
                                                                                             MD037869
+      *                                                                                     MD060583
+      ** Initialize invalid flag and work variable for Short Term Rate.                     MD060583
+      *                                                                                     MD060583
+     C                   MOVE      'N'           INVFLG            1                        MD060583
+     C                   EVAL      WHSTRT = 0                                               MD060583
+      *                                                                                     MD060583
+      ** Convert the Short Term Rate to decimal with error monitor.                         MD060583
+      *                                                                                     MD060583
+     C     DDSTRT        IFNE      *BLANKS                                                  MD060583
+     C                   MONITOR                                                            MD060583
+     C                   EVAL      WHSTRT = %DEC(DDSTRT:11:7)                               MD060583
+      *                                                                                     MD060583
+      ** Catch error for invalid entry during conversion and set in-                        MD060583
+      ** valid flag to 'Y'.                                                                 MD060583
+      *                                                                                     MD060583
+     C                   ON-ERROR                                                           MD060583
+     C                   EVAL      INVFLG = 'Y'                                             MD060583
+     C                   END                                                                MD060583
+     C                   ENDIF                                                              MD060583
+      *                                                                                     MD060583
       ***(Only*on*insertion.*Note*that*total*interest*is*not*amendable)** CAP004151977
       *  (Note that total interest is amendable in 'Amend' and 'Insert')        151977
 
@@ -2692,8 +2718,10 @@
      C                   ENDIF                                                                CDL033
                                                                                               CDL033
      C     DDSTRT        IFNE      *BLANKS                                                    259981
-     C     DDSTRT        ANDNE     '0.0000000'                                                259981
-     C     DDSTRT        ANDNE     '.0000000'                                              MD058543A
+     C*****DDSTRT        ANDNE     '0.0000000'                                       259981 MD060583
+     C*****DDSTRT        ANDNE     '.0000000'                                     MD058543A MD060583
+     C     WHSTRT        ANDNE     0                                                        MD060583
+     C     INVFLG        ANDNE     'Y'                                                      MD060583
                                                                                               259981
       ** Initialize Actual Interest to *BLANKS                                              BUG10810
                                                                                             BUG10810
@@ -2750,7 +2778,9 @@
       ** total interest until after short term rate has been processed                      BUG10810
                                                                                             BUG10810
      C     DDSTRT        IFEQ      *BLANKS                                                  BUG10810
-     C     DDSTRT        OREQ      '0.0000000'                                                247452
+     C*****DDSTRT        OREQ      '0.0000000'                                       247452 MD060583
+     C     WHSTRT        OREQ      0                                                        MD060583
+     C     INVFLG        ANDEQ     'N'                                                      MD060583
                                                                                               259981
       ** Check if Actual Interest or Spread Rate and Base Rate is present                     259981
                                                                                               259981

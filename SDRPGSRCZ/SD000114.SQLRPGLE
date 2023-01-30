@@ -48,7 +48,7 @@
       *              reported as Rates Known 'Y' in SDRTKNTD.         *
       *              Amend subroutine SRChk2ndCall to include         *
       *              records whose payment date is greater than       *
-      *              previous run date and less than current rundate  *
+      *              previous run date and less than current rundate. *
       *  MD060883 -  Matured loans are still processed/reported by    *
       *              the ARR calculator.                              *
       *              Do not process the loan record if the interest   *

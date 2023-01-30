@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056982           Date 12Oct20               *
-      *  Prev Amend No. MD056719           Date 16Sep20               *
+      *  Last Amend No. MD060329           Date 30Jan23               *
+      *  Prev Amend No. MD056982           Date 12Oct20               *
+      *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
       *                 MD026746           Date 05Feb20               *
       *                 MD025022           Date 05Feb20               *
@@ -155,6 +156,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060329 - API Performance degradation FM2021.A              *   
       *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
       *             file SDCRSHL0 for update                          *
       *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
@@ -382,7 +384,7 @@
      F                                     RENAME(SDCUSTX0:SDCUSTX1)                          CGL132
                                                                                               CGL132
       * UPD : Midas SD Standing Data Controls index
-     FSDFCTLL0  UF A E           K DISK    COMMIT
+     F***SDFCTLL0  UF A E           K DISK    COMMIT                                        MD060329
                                                                                               CGL132
       ** FATCA Customer details file                                                          CGL132
      FSDFTCSL0  UF A E           K DISK    COMMIT                                             CGL132
@@ -3071,13 +3073,13 @@
      C                   ENDIF                                                                CGP001
                                                                                               CGP001
      C/COPY WNCPYSRC,SDCUSDDC03
-     C                   Z-ADD     1             WUNORC            5 0          No of records
-     C                   Z-ADD     *ZERO         WUNOAM            5 0          No of Amend
-     C                   Z-ADD     *ZERO         WUNODL            5 0          No of delete
-     C                   Z-ADD     1             WUNOIN            5 0          No of Insert
+     C**********         Z-ADD     1             WUNORC            5 0        No of records MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM            5 0        No of Amend   MD060329
+     C**********         Z-ADD     *ZERO         WUNODL            5 0        No of delete  MD060329
+     C**********         Z-ADD     1             WUNOIN            5 0        No of Insert  MD060329
       * Change Standing Data Cont - Standing Data Controls  *
-     C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete
-     C                   EXSR      SNCHRC
+     C**********         MOVEL     'SDCUSTPD'    WFLNAME           8          No of delete  MD060329
+     C**********         EXSR      SNCHRC                                                   MD060329
       *                                                                                      BUG3362
      C                   EXSR      UPDTID                                                    BUG3362
       *
@@ -4321,16 +4323,16 @@
      C                   EXSR      UPDTID                                                    BUG3362
       *                                                                                      BUG3362
       * USER: Processing after Data update
-     C     B_BBTYLC      IFNE      'A'                                                      MD025022
-     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
-     C                   Z-ADD     *ZERO         WUNORC                         No of records
-     C                   Z-ADD     1             WUNOAM                         No of Amend
-     C                   Z-ADD     *ZERO         WUNOIN                         No of delete
-     C                   Z-ADD     *ZERO         WUNODL                         No of Insert
+     C*****B_BBTYLC      IFNE      'A'                                             MD025022 MD060329
+     C*****B_BBLCD       ORNE      BJRDNB                                          MD025022 MD060329
+     C**********         Z-ADD     *ZERO         WUNORC                       No of records MD060329
+     C**********         Z-ADD     1             WUNOAM                       No of Amend   MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                       No of delete  MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                       No of Insert  MD060329
       * Change Standing Data Cont - Standing Data Controls  *
-     C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete
-     C                   EXSR      SNCHRC
-     C                   ENDIF                                                              MD025022
+     C**********         MOVEL     'SDCUSTPD'    WFLNAME           8          No of delete  MD060329
+     C**********         EXSR      SNCHRC                                                   MD060329
+     C**********         ENDIF                                                     MD025022 MD060329
       * Pass parameters for marketing groups to SDCLINT to update CLINTCB
       * Customer marketing groups - Customer Marketing Groups  *
      C                   EXSR      SORVGN
@@ -5449,13 +5451,13 @@
      C                   EXSR      SRERR                                        ************
      C                   END
 
-     C                   Z-ADD     -1            WUNORC                         No of records
-     C                   Z-ADD     *ZERO         WUNOAM                         No of Amend
-     C                   Z-ADD     *ZERO         WUNOIN                         No of delete
-     C                   Z-ADD     1             WUNODL                         No of Insert
+     C**********         Z-ADD     -1            WUNORC                        No of recordsMD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                        No of Amend  MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                        No of delete MD060329
+     C**********         Z-ADD     1             WUNODL                        No of Insert MD060329
       * Change Standing Data Cont - Standing Data Controls  *
-     C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete
-     C                   EXSR      SNCHRC
+     C**********         MOVEL     'SDCUSTPD'    WFLNAME           8           No of delete MD060329
+     C**********         EXSR      SNCHRC                                                   MD060329
 
      C                   EXSR      UPDTID                                                    BUG3362
       *                                                                                      BUG3362
@@ -5674,16 +5676,16 @@
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSD007
-     C     B_BBTYLC      IFNE      'A'                                                      MD026746
-     C     B_BBLCD       ORNE      BJRDNB                                                   MD026746
-     C                   Z-ADD     *ZERO         WUNORC                         No of records CSD007
-     C                   Z-ADD     1             WUNOAM                         No of Amend   CSD007
-     C                   Z-ADD     *ZERO         WUNOIN                         No of Inserts CSD007
-     C                   Z-ADD     *ZERO         WUNODL                         No of Deletes CSD007
+     C*****B_BBTYLC      IFNE      'A'                                             MD026746 MD060329
+     C*****B_BBLCD       ORNE      BJRDNB                                          MD026746 MD060329
+     C**********         Z-ADD     *ZERO         WUNORC                No of records CSD007 MD060329
+     C**********         Z-ADD     1             WUNOAM                No of Amend   CSD007 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                No of Inserts CSD007 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                No of Deletes CSD007 MD060329
       * Change Standing Data Cont - Standing Data Controls  *                                 CSD007
-     C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete  CSD007
-     C                   EXSR      SNCHRC                                                     CSD007
-     C                   ENDIF                                                              MD026746
+     C**********         MOVEL     'SDCUSTPD'    WFLNAME           8  No of delete   CSD007 MD060329
+     C**********         EXSR      SNCHRC                                            CSD007 MD060329
+     C**********         ENDIF                                                     MD026746 MD060329
                                                                                               CSD007
      C                   ENDSR                                                                CSD007
      C****************************************************************                        CSD007
@@ -5760,16 +5762,16 @@
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSD007
-     C     B_BBTYLC      IFNE      'A'                                                      MD026746
-     C     B_BBLCD       ORNE      BJRDNB                                                   MD026746
-     C                   Z-ADD     *ZERO         WUNORC                         No of records CSD007
-     C                   Z-ADD     1             WUNOAM                         No of Amend   CSD007
-     C                   Z-ADD     *ZERO         WUNOIN                         No of Inserts CSD007
-     C                   Z-ADD     *ZERO         WUNODL                         No of Deletes CSD007
+     C*****B_BBTYLC      IFNE      'A'                                             MD026746 MD060329
+     C*****B_BBLCD       ORNE      BJRDNB                                          MD026746 MD060329
+     C**********         Z-ADD     *ZERO         WUNORC                No of records CSD007 MD060329
+     C**********         Z-ADD     1             WUNO                  No of Amend   CSD007 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                No of Inserts CSD007 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                No of Deletes CSD007 MD060329
       * Change Standing Data Cont - Standing Data Controls  *                                 CSD007
-     C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete  CSD007
-     C                   EXSR      SNCHRC                                                     CSD007
-     C                   ENDIF                                                              MD026746
+     C**********         MOVEL     'SDCUSTPD'    WFLNAME           8  No of delete   CSD007 MD060329
+     C**********         EXSR      SNCHRC                                            CSD007 MD060329
+     C**********         ENDIF                                                     MD026746 MD060329
                                                                                               CSD007
      C                   ENDSR                                                                CSD007
      C****************************************************************                        CSD007
@@ -5779,42 +5781,42 @@
      C* SNCHRC - Change Standing Data Controls                        *
      C*                                                               *
      C*****************************************************************
-     C     SNCHRC        BEGSR
+     C*****SNCHRC        BEGSR                                                              MD060329
 
-     C                   MOVEL     *BLANK        W0RTN             7
+     C**********         MOVEL     *BLANK        W0RTN             7                        MD060329
       *
       * Move key fields to @AHREAU
-     C                   MOVEL     *BLANK        AHFLNM
-     C                   MOVEL     WFLNAME       AHFLNM
+     C**********         MOVEL     *BLANK        AHFLNM                                     MD060329
+     C**********         MOVEL     WFLNAME       AHFLNM                                     MD060329
       *
-     C     KLCHSN        KLIST
-     C                   KFLD                    AHFLNM
-     C     KLCHSN        CHAIN     @AHREAU                            90
+     C*****KLCHSN        KLIST                                                              MD060329
+     C**********         KFLD                    AHFLNM                                     MD060329
+     C*****KLCHSN        CHAIN     @AHREAU                            90                    MD060329
 
       ** DATABASE ERROR
 
-     C     *IN90         IFEQ      '1'
-     C                   MOVEL     AHFLNM        DBKEY
-     C                   MOVEL     'SDFCTLL0'    DBFILE                         ************
-     C                   MOVEL     '017'         DBASE                          * DBERR 017*
-     C                   EXSR      SRERR                                        ************
-     C                   END
+     C******IN90         IFEQ      '1'                                                      MD060329
+     C**********         MOVEL     AHFLNM        DBKEY                                      MD060329
+     C**********         MOVEL     'SDFCTLL0'    DBFILE                         ************MD060329
+     C**********         MOVEL     '017'         DBASE                          * DBERR 017*MD060329
+     C**********         EXSR      SRERR                                        ************MD060329
+     C**********         END                                                                MD060329
 
       * USER: Processing after Data read
-     C                   ADD       AHNORC        WUNORC
-     C                   ADD       AHNOIN        WUNOIN
-     C                   ADD       AHNOAM        WUNOAM
-     C                   ADD       AHNODL        WUNODL
+     C**********         ADD       AHNORC        WUNORC                                     MD060329
+     C**********         ADD       AHNOIN        WUNOIN                                     MD060329
+     C**********         ADD       AHNOAM        WUNOAM                                     MD060329
+     C**********         ADD       AHNODL        WUNODL                                     MD060329
       * Move non-key fields to @AHREAU
-     C                   Z-ADD     WUNORC        AHNORC
-     C                   Z-ADD     WUNOIN        AHNOIN
-     C                   Z-ADD     WUNOAM        AHNOAM
-     C                   Z-ADD     WUNODL        AHNODL
+     C**********         Z-ADD     WUNORC        AHNORC                                     MD060329
+     C**********         Z-ADD     WUNOIN        AHNOIN                                     MD060329
+     C**********         Z-ADD     WUNOAM        AHNOAM                                     MD060329
+     C**********         Z-ADD     WUNODL        AHNODL                                     MD060329
       *
       * Update record
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD060329
       *
-     C                   ENDSR
+     C**********         ENDSR
      C*****************************************************************
       /EJECT
      C*****************************************************************
@@ -5930,13 +5932,13 @@
       * Update record
      C                   UPDATE    @BCREDD
       * USER: Processing after Data read
-     C                   Z-ADD     -1            WUNORC
-     C                   Z-ADD     *ZERO         WUNOIN
-     C                   Z-ADD     *ZERO         WUNOAM
-     C                   Z-ADD     1             WUNODL
+     C**********         Z-ADD     -1            WUNORC                                     MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                                     MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                                     MD060329
+     C**********         Z-ADD     1             WUNODL                                     MD060329
       * Change Standing Data Cont - Standing Data Controls  *
-     C                   MOVEL     'SDALTNPD'    WFLNAME           8            No of delete
-     C                   EXSR      SNCHRC
+     C**********         MOVEL     'SDALTNPD'    WFLNAME           8            No of deleteMD060329
+     C**********         EXSR      SNCHRC                                                   MD060329
       * Update CLINTCC - Alternate Names & Address  *
      C                   CALL      'CLINTCC'
      C                   PARM      *BLANK        @RTCD             7
@@ -6557,10 +6559,10 @@
      C                   WRITE     @TICSL0                                                   BUG3362
       *                                                                                      BUG3362
      C**********         Z-ADD     *ZERO         WUNORC                              BUG3362 BUG4201
-     C                   Z-ADD     1             WUNORC                                      BUG4201
-     C                   Z-ADD     *ZERO         WUNOAM                                      BUG3362
-     C                   Z-ADD     1             WUNOIN                                      BUG3362
-     C                   Z-ADD     *ZERO         WUNODL                                      BUG3362
+     C**********         Z-ADD     1             WUNORC                             BUG4201 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                             BUG3362 MD060329
+     C**********         Z-ADD     1             WUNOIN                             BUG3362 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                             BUG3362 MD060329
      C                   ENDIF                                                               BUG3362
       *                                                                                      BUG3362
      C                   ELSE                                                                BUG3362
@@ -6575,10 +6577,10 @@
       *                                                                                      BUG3362
       ** USER: Processing after Data update                                                  BUG3362
       *                                                                                      BUG3362
-     C                   Z-ADD     *ZERO         WUNORC                                      BUG3362
-     C                   Z-ADD     1             WUNOAM                                      BUG3362
-     C                   Z-ADD     *ZERO         WUNOIN                                      BUG3362
-     C                   Z-ADD     *ZERO         WUNODL                                      BUG3362
+     C**********         Z-ADD     *ZERO         WUNORC                             BUG3362 MD060329
+     C**********         Z-ADD     1             WUNOAM                             BUG3362 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                             BUG3362 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                             BUG3362 MD060329
      C                   ENDIF                                                               BUG3362
       *                                                                                      BUG3362
      C                   ELSE                                                                BUG3362
@@ -6626,17 +6628,17 @@
      C                   EXSR      SRERR                                        ************ BUG3362
      C                   END                                                                 BUG3362
                                                                                              BUG3362
-     C                   Z-ADD     -1            WUNORC                         No of recordsBUG3362
-     C                   Z-ADD     *ZERO         WUNOAM                         No of Amend  BUG3362
-     C                   Z-ADD     *ZERO         WUNOIN                         No of delete BUG3362
-     C                   Z-ADD     1             WUNODL                         No of Insert BUG3362
+     C**********         Z-ADD     -1            WUNORC                No of recordsBUG3362 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                No of Amend  BUG3362 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                No of delete BUG3362 MD060329
+     C**********         Z-ADD     1             WUNODL                No of Insert BUG3362 MD060329
       * Change Standing Data Cont - Standing Data Controls  *                                BUG3362
      C                   ENDIF                                                               BUG3362
      C                   ENDIF                                                               BUG3362
      C                   ENDIF                                                               BUG3362
       * Change Standing Data Cont - Standing Data Controls  *                                BUG3362
-     C                   MOVEL     'SDTICSPD'    WFLNAME                                     BUG3362
-     C                   EXSR      SNCHRC                                                    BUG3362
+     C**********         MOVEL     'SDTICSPD'    WFLNAME                            BUG3362 MD060329
+     C**********         EXSR      SNCHRC                                           BUG3362 MD060329
      C**********         ENDIF                                                       BUG3362 BG12238
      C                   ENDIF                                                               BG12238
      C                   ENDIF                                                               BUG3362
@@ -8483,10 +8485,10 @@
                                                                                               CSD079
       ** USER: Processing after Insert                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     1             WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     1             WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     1             WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
       *                                                                                       CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -8499,10 +8501,10 @@
                                                                                               CSD079
       ** USER: Processing after Update                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     *ZERO         WUNORC                                       CSD079
-     C                   Z-ADD     1             WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     *ZERO         WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Delete                                                                               CSD079
@@ -8550,19 +8552,19 @@
      C                   EXSR      SRERR                                                      CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
-     C                   Z-ADD     -1            WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     1             WUNODL                                       CSD079
+     C**********         Z-ADD     -1            WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
-     C     B_BBTYLC      IFNE      'A'                                                      MD025022
-     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
-     C                   MOVEL     'SDCMRKPD'    WFLNAME                                      CSD079
-     C                   EXSR      SNCHRC                                                     CSD079
-     C                   ENDIF                                                              MD025022
+     C*****B_BBTYLC      IFNE      'A'                                             MD025022 MD060329
+     C*****B_BBLCD       ORNE      BJRDNB                                          MD025022 MD060329
+     C**********         MOVEL     'SDCMRKPD'    WFLNAME                             CSD079 MD060329
+     C**********         EXSR      SNCHRC                                            CSD079 MD060329
+     C**********         ENDIF                                                     MD025022 MD060329
       *                                                                                       CSD079
      C                   ENDSR                                                                CSD079
       *                                                                                       CSD079
@@ -9066,10 +9068,10 @@
                                                                                               CSD079
       ** USER: Processing after Insert                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     1             WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     1             WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     1             WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
                                                                                               CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -9083,10 +9085,10 @@
                                                                                               CSD079
       ** USER: Processing after Update                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     *ZERO         WUNORC                                       CSD079
-     C                   Z-ADD     1             WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     *ZERO         WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Delete                                                                               CSD079
@@ -9135,16 +9137,16 @@
      C                   EXSR      SRERR                                                      CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
-     C                   Z-ADD     -1            WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     1             WUNODL                                       CSD079
+     C**********         Z-ADD     -1            WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
-     C                   MOVEL     'SDCFCDPD'    WFLNAME                                      CSD079
-     C                   EXSR      SNCHRC                                                     CSD079
+     C**********         MOVEL     'SDCFCDPD'    WFLNAME                             CSD079 MD060329
+     C**********         EXSR      SNCHRC                                            CSD079 MD060329
                                                                                               CSD079
      C                   ENDSR                                                                CSD079
                                                                                               CSD079
@@ -9267,10 +9269,10 @@
                                                                                               CSD079
       ** USER: Processing after Insert                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     1             WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     1             WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     1             WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
       *                                                                                       CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -9285,10 +9287,10 @@
                                                                                               CSD079
       ** USER: Processing after Update                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     *ZERO         WUNORC                                       CSD079
-     C                   Z-ADD     1             WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     *ZERO         WUNORC                                       CSD079
+     C**********         Z-ADD     1             WUNOAM                                       CSD079
+     C**********         Z-ADD     *ZERO         WUNOIN                                       CSD079
+     C**********         Z-ADD     *ZERO         WUNODL                                       CSD079
                                                                                               CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -9302,19 +9304,19 @@
                                                                                               CSD079
      C                   UPDATE    SDCHEQPF                                                   CSD079
                                                                                               CSD079
-     C                   Z-ADD     -1            WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     1             WUNODL                                       CSD079
+     C**********         Z-ADD     -1            WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
-     C     B_BBTYLC      IFNE      'A'                                                      MD025022
-     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
-     C                   MOVEL     'SDCHEQPD'    WFLNAME                                      CSD079
-     C                   EXSR      SNCHRC                                                     CSD079
-     C                   ENDIF                                                              MD025022
+     C*****B_BBTYLC      IFNE      'A'                                             MD025022 MD060329
+     C*****B_BBLCD       ORNE      BJRDNB                                          MD025022 MD060329
+     C**********         MOVEL     'SDCHEQPD'    WFLNAME                             CSD079 MD060329
+     C**********         EXSR      SNCHRC                                            CSD079 MD060329
+     C**********         ENDIF                                                     MD025022 MD060329
                                                                                               CSD079
      C                   ENDSR                                                                CSD079
                                                                                               CSD079
@@ -9391,10 +9393,10 @@
       *                                                                                       CSD079
       ** USER: Processing after Insert                                                        CSD079
       *                                                                                       CSD079
-     C                   Z-ADD     1             WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     1             WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     1             WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
                                                                                               CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -9407,10 +9409,10 @@
                                                                                               CSD079
       ** USER: Processing after Update                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     *ZERO         WUNORC                                       CSD079
-     C                   Z-ADD     1             WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     *ZERO         WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Delete                                                                               CSD079
@@ -9424,19 +9426,19 @@
                                                                                               CSD079
      C                   MOVEL     B_CUFOF       WUDELR                                       CSD079
                                                                                               CSD079
-     C                   Z-ADD     -1            WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     1             WUNODL                                       CSD079
+     C**********         Z-ADD     -1            WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
-     C     B_BBTYLC      IFNE      'A'                                                      MD025022
-     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
-     C                   MOVEL     'SDSAFEPD'    WFLNAME                                      CSD079
-     C                   EXSR      SNCHRC                                                     CSD079
-     C                   ENDIF                                                              MD025022
+     C*****B_BBTYLC      IFNE      'A'                                             MD025022 MD060329
+     C*****B_BBLCD       ORNE      BJRDNB                                          MD025022 MD060329
+     C**********         MOVEL     'SDSAFEPD'    WFLNAME                             CSD079 MD060329
+     C**********         EXSR      SNCHRC                                            CSD079 MD060329
+     C**********         ENDIF                                                     MD025022 MD060329
                                                                                               CSD079
      C                   ENDSR                                                                CSD079
                                                                                               CSD079
@@ -9522,10 +9524,10 @@
                                                                                               CSD079
       ** USER: Processing after Insert                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     1             WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     1             WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     1             WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
                                                                                               CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -9539,10 +9541,10 @@
                                                                                               CSD079
       ** USER: Processing after Update                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     *ZERO         WUNORC                                       CSD079
-     C                   Z-ADD     1             WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     *ZERO         WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Delete                                                                               CSD079
@@ -9591,16 +9593,16 @@
      C                   EXSR      SRERR                                                      CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
-     C                   Z-ADD     -1            WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     1             WUNODL                                       CSD079
+     C**********         Z-ADD     -1            WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
-     C                   MOVEL     'SDFOCSPD'    WFLNAME                                      CSD079
-     C                   EXSR      SNCHRC                                                     CSD079
+     C**********         MOVEL     'SDFOCSPD'    WFLNAME                             CSD079 MD060329
+     C**********         EXSR      SNCHRC                                            CSD079 MD060329
                                                                                               CSD079
       ** Update FOCLT - Futures & Options Clients                                             CSD079
       *                                                                                      BG12238
@@ -9766,10 +9768,10 @@
                                                                                               CSD079
       ** USER: Processing after Insert                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     1             WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     1             WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     1             WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
                                                                                               CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -9783,10 +9785,10 @@
                                                                                               CSD079
       ** USER: Processing after Update                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     *ZERO         WUNORC                                       CSD079
-     C                   Z-ADD     1             WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     *ZERO         WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Delete                                                                               CSD079
@@ -9834,10 +9836,10 @@
      C                   EXSR      SRERR                                                      CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
-     C                   Z-ADD     -1            WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     1             WUNODL                                       CSD079
+     C**********         Z-ADD     -1            WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ***Change*Standing*Data*Cont*-*Standing*Data*Controls************              CSD079 BUG27943
@@ -10068,10 +10070,10 @@
                                                                                               CSD079
       ** USER: Processing after Insert                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     1             WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     1             WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     1             WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
                                                                                               CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -10107,10 +10109,10 @@
                                                                                               CSD079
       ** USER: Processing after Update                                                        CSD079
                                                                                               CSD079
-     C                   Z-ADD     *ZERO         WUNORC                                       CSD079
-     C                   Z-ADD     1             WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     *ZERO         WUNODL                                       CSD079
+     C**********         Z-ADD     *ZERO         WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNODL                              CSD079 MD060329
                                                                                               CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -10161,16 +10163,16 @@
      C                   EXSR      SRERR                                                      CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
-     C                   Z-ADD     -1            WUNORC                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOAM                                       CSD079
-     C                   Z-ADD     *ZERO         WUNOIN                                       CSD079
-     C                   Z-ADD     1             WUNODL                                       CSD079
+     C**********         Z-ADD     -1            WUNORC                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOAM                              CSD079 MD060329
+     C**********         Z-ADD     *ZERO         WUNOIN                              CSD079 MD060329
+     C**********         Z-ADD     1             WUNODL                              CSD079 MD060329
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
-     C                   MOVEL     'SDPLCSPD'    WFLNAME                                      CSD079
-     C                   EXSR      SNCHRC                                                     CSD079
+     C**********         MOVEL     'SDPLCSPD'    WFLNAME                             CSD079 MD060329
+     C**********         EXSR      SNCHRC                                            CSD079 MD060329
       *                                                                                       CSD079
      C                   ENDSR                                                                CSD079
       *                                                                                       CSD079

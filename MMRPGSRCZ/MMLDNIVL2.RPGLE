@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD054313           Date 11Jan23               *
-      *  Prev Amend No. MD049864           Date 11Jan23               *
+      *  Last Amend No. MD060858           Date 30Jan23               *
+      *  Prev Amend No. MD054313           Date 11Jan23               *
+      *                 MD049864           Date 11Jan23               *
       *                 MD046446           Date 11Jan23               *
       *                 AR1079461          Date 10Jan23               *
       *                 MD059049           Date 08Nov21               *
@@ -65,6 +66,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060858 - Initialize work fields used in the program to     *
+      *             avoid from being pick up (when still in WIP) by   *
+      *             other processing.                                 *
+      *             Applied for MD-60787                              *
       *  MD054313 - FRN testing - it is possible to insert MM deal    *
       *             type IT with Actual Interest Rate <>0 and Short   *
       *             term Rate = 0 but not possible to authorise it.   *
@@ -452,6 +457,12 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
 
+      *                                                                                     MD060858
+      **  Initialize work fields used in the program to avoid from being                    MD060858
+      **  pick up (when still in WIP) by other processing.                                  MD060858
+      *                                                                                     MD060858
+     C                   EVAL      WRCDT = *Zero                                            MD060858
+                                                                                            MD060858
       * Call Validation Modules in Sequence
 
       *  *--------------------------*

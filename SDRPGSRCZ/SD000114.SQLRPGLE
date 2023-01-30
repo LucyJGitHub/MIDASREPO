@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060883           Date 22Jan23               *
-      *  Prev Amend No. MD060823           Date 12Dec22               *
+      *  Last Amend No. MD060959           Date 26Jan23               *
+      *  Prev Amend No. MD060883           Date 22Jan23               *
+      *                 MD060823           Date 12Dec22               *
       *                 MD060033           Date 25Sep22               *
       *                 MD058517           Date 17Oct22               *
       *                 249385             Date 01Aug22               *
@@ -43,6 +44,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060959 -  Loans whose repayment falls on a holiday is      *
+      *              reported as Rates Known 'Y' in SDRTKNTD.         *
+      *              Amend subroutine SRChk2ndCall to include         *
+      *              records whose payment date is greater than       *
+      *              previous run date and less than current rundate  *
       *  MD060883 -  Matured loans are still processed/reported by    *
       *              the ARR calculator.                              *
       *              Do not process the loan record if the interest   *
@@ -231,6 +237,9 @@
      D  ReturnCode                   20A
      D RTKNOWDS      e ds                  extname(SDRTKNTD)                                MD058517
      D RateKnownDS     ds                  likeds(RTKNOWDS)                                 MD058517
+      ** Data area to read previous run date                                                MD060959
+     D JNSTAT          DS           200                                                     MD060959
+     D  PRUN                 103    105P 0                                                  MD060959
 
       ** Constants declaration
      D NO_ERROR        c                   const(0)
@@ -1432,6 +1441,11 @@
      C                   EVAL      Idx = Idx + 1
      C     KRFRR         READE     SDLIBRTD
      C                   ENDDO
+      *                                                                                     MD060959
+      ** Get PRUN from data area JNSTAT                                                     MD060959
+      *                                                                                     MD060959
+     C     *DTAARA       DEFINE                  JNSTAT                                     MD060959
+     C                   IN        JNSTAT                                                   MD060959
 
      C                   ENDSR
       *****************************************************************
@@ -1453,6 +1467,20 @@
      C+   and BLRT = 'Y'                                                                    MD059190
      C+   and NBLRT <> 'N'                                                                  MD059190
      C/end-exec                                                                             MD059190
+      **                                                                                    MD060959
+     C                   IF        NoOfRecs = 0                                             MD060959
+     C/exec SQL                                                                             MD060959
+     C+ select count(*) into :NoOfRecs                                                      MD060959
+     C+ from CLOANCL                                                                        MD060959
+     C+ where LNRF = :TrTRAN                                                                MD060959
+     C+   and ((NIDT > :PRUN and NIDT < :BJRDNB)                                            MD060959
+     C+   or  (NRPD > :PRUN and NRPD <:BJRDNB and REPT <> 2))                               MD060959
+     C+   and (RLDT > :PRUN and RLDT < :BJRDNB or RLDT = 0)                                 MD060959
+     C+   and BLRT = 'Y'                                                                    MD060959
+     C+   and NBLRT <> 'N'                                                                  MD060959
+     C/end-exec                                                                             MD060959
+     C                   ENDIF                                                              MD060959
+      **                                                                                    MD060959
      C                   IF        NoOfRecs <> 0                                            MD059190
      C/exec SQL                                                                             MD059190
      C+ select NCALM, NBADJ, NFLOR, NLBDY,                                                  MD059190

@@ -14,10 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CUP046 *CREATE     Date 18Jul22               *
+      *  Last Amend No. MD060979           Date 27Jan23               *
+      *  Prev Amend No. CUP046 *CREATE     Date 18Jul22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060979 - Monitor does not refresh (recompile)              *
       *  CUP046 - One Touch Bridge - migration                        *
       *                                                               *
       *****************************************************************

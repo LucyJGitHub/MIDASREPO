@@ -10,12 +10,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD059958           Date 17May22              */
-/*       Prev Amend No. MD059758           Date 18Apr22              */
+/*       Last Amend No. MD060906           Date 25Jan23              */
+/*       Prev Amend No. MD059958           Date 17May22              */
+/*                      MD059758           Date 18Apr22              */
 /*                      CSD103    *CREATE  Date 10Aug20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060906 - Base Rate with '00' was not converted to blanks  */
+/*                  in PF/STRAN. It caused REC7B to fail as RE0743   */
+/*                  process base rate with '00' which doesn't exist. */
+/*                  Create a program to convert the '00' base rate   */
+/*                  to blank when upgrading to a release with CSD103.*/
 /*       MD059958 - GPST and ZPST successfully run but produced dump.*/
 /*                  Error in SQL insert in DEALSDG due to added      */
 /*                  fields by CIR020.                                */
@@ -184,6 +190,12 @@
 
              CALL       PGM(SMU01051) PARM(&LAYER)
 
+/* Call SMU01000 to blank out base rate in STRAN if equal to '00' */                    /*MD060906*/
+                                                                                        /*MD060906*/
+             IF         COND(&LAYER *EQ 'Zonal ') THEN(DO)                              /*MD060906*/
+             CALL       PGM(SMU01000)                                                   /*MD060906*/
+             ENDDO                                                                      /*MD060906*/
+                                                                                        /*MD060906*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))                                                /*MD059758*/
                                                                                         /*MD059758*/

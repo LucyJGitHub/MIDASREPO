@@ -1,0 +1,136 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT to Housekeep 24x7 DZ Objects')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000247 - Midas UT to Housekeep 24x7 DZ Objects           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD058904 *CREATE    Date 19Dec22             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058904 - 24x7 Housekeeping and Clearout of the zzDZLIB    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+
+
+             DCL        VAR(&MODE)     TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PREFIX)   TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZZDZLIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZZDPLIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NOREP)    TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&NOERR)    TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&STMNT)    TYPE(*CHAR) LEN(1000) VALUE(' ')
+             DCLF       FILE(QADSPOBJ) OPNID(F1)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          Systems Ltd. 2022')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             SNDPGMMSG  MSG('UTC000247 - LMidas UT to Housekeep +
+                             24x7 DZ Objects') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Access SDSTAT to get the zone system prefix */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+
+/** Set the appropriate zonal libraries */
+
+             CHGVAR     VAR(&ZZDZLIB) VALUE(&PREFIX *CAT 'DZLIB')
+             CHGVAR     VAR(&ZZDPLIB) VALUE(&PREFIX *CAT 'DPLIB')
+
+/** Delete temporary files, if previously created: */
+
+/** File list of objects to be moved */
+             DLTF       FILE(QTEMP/DZOBJDVPD)
+             MONMSG     MSGID(CPF2105)
+
+/** File list of objects that failed to move */
+             DLTF       FILE(QTEMP/DZERRMVPD)
+             MONMSG     MSGID(CPF2105)
+
+/** Set the driving file of DZ objects to be moved */
+
+             DSPOBJD    OBJ(&ZZDZLIB/*ALL) OBJTYPE(*ALL) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/DZOBJDVPD)
+             MONMSG     MSGID(CPF2123 CPF2110) EXEC(DO)
+             CHGVAR     VAR(&NOREP) VALUE('Y')
+             GOTO       CMDLBL(REPORT)
+             ENDDO
+
+             STRJRNPF   FILE(QTEMP/DZOBJDVPD) JRN(ICJRN) +
+                           IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF0000)
+
+             OVRDBF     FILE(QADSPOBJ) TOFILE(DZOBJDVPD)
+
+ READ:
+/** Move each object from zzDZLIB to zzDPLIB */
+
+             IF         COND(&MODE *EQ 'U') THEN(DO)
+             RCVF       OPNID(F1)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
+             MOVOBJ     OBJ(&ZZDZLIB/&F1_ODOBNM) OBJTYPE(&F1_ODOBTP) +
+                          TOLIB(&ZZDPLIB)
+             MONMSG     MSGID(CPF2105 CPF2112 CPF2114 CPF3201) EXEC(DO)
+
+             CHGVAR     VAR(&STMNT) VALUE('UPDATE QTEMP.DZOBJDVPD +
+                        SET ODDDAT = ''FAILED'' WHERE ODOBNM =  +
+                        ''' || &F1_ODOBNM || ''' AND ODOBTP =  +
+                        ''' || &F1_ODOBTP || '''')
+             RUNSQL     SQL(&STMNT) COMMIT(*NONE) NAMING(*SQL)
+             ENDDO
+
+             GOTO       CMDLBL(READ)
+
+ EOF:
+/** Get the list of remaining objects in DZ library */
+
+             DSPOBJD    OBJ(&ZZDZLIB/*ALL) OBJTYPE(*ALL) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/DZERRMVPD)
+             MONMSG     MSGID(CPF2123 CPF2110) EXEC(DO)
+             CHGVAR     VAR(&NOERR) VALUE('Y')
+             ENDDO
+
+             ENDDO
+
+ REPORT:
+/** Generate housekeeping report */
+
+             CALL       PGM(UT000247) PARM(&MODE &PREFIX &NOREP &NOERR)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+
+/** Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                        UTC000247 ended abnormally - see job log') +
+                        TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+ ENDPGM:
+             ENDPGM

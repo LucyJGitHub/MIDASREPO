@@ -18,8 +18,9 @@
       *                                                               *
       *  (C) Copyright Finastra International Limited 2007            *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060750           Date 18Jan23               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD043383           Date 30Mar17               *
       *                 AR632102B          Date 21Dec12               *
       *                 AR632103B          Date 21Dec12               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060750 - Duplicate record key in member LEFHSTLB during    *
+      *             migration. (Recompile)                            *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043383 - Only the fee maturity event should have a record  *

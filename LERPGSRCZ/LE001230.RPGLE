@@ -21,11 +21,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD021377           Date 18Jul18               *
-      *  Prev Amend No. CLE071  *CREATE    Date 18Jul18               *
+      *  Last Amend No. MD060750           Date 18Jan23               *
+      *  Prev Amend No. MD021377           Date 18Jul18               *
+      *                 CLE071  *CREATE    Date 18Jul18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060750 - Duplicate record key in member LEFHSTLB during    *
+      *             migration. (Recompile)                            *
       *  MD021377 - Reversed Fee Rate Changes have FCRECI = 'R'.      *
       *             Amend program to change the checking for reversed *
       *             Fee Rate changes from '*' to 'R'.                 *

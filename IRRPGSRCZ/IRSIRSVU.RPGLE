@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD021871           Date 27Jan23               *
-      *  Prev Amend No. MD059314           Date 22Feb22               *
+      *  Last Amend No. MD021870A          Date 30Jan23               *
+      *  Prev Amend No. MD021871           Date 27Jan23               *
+      *                 MD059314           Date 22Feb22               *
       *                 MD059304           Date 11Nov21               *
       *                 MD059183A          Date 21Dec21               *
       *                 MD059100           Date 28Oct21               *
@@ -124,6 +125,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021870A - 31 will be considered as invalid input. It should*
+      *              be either 31+ or 31- just like other numbers.    *
       *  MD021871 - Yearly frequency are generated as monthly freq.   *
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
@@ -4876,24 +4879,29 @@ RGC                                                                             
      C*                                                                         BUG4646
      C**  Validate position 3                                                   BUG4646
      C*                                                                         BUG4646
-     C**  If position 1/2 is 31, pos 3 must be blank, or 4,5,6 have entry       BUG4646
+     C****If*position*1/2*is*31,*pos*3*must*be*blank,*or*4,5,6*have*entry          BUG4646 MD021870A
      C**  If position 1 and 2 are not '31' pos.3 must be '+' or '-'             BUG4646
+     C**  If position 1 and 2 is '31', pos. 3 must be '+' or '-'                           MD021870A
      C*                                                                         BUG4646
      C*                                                                         BUG4646
-     C                   IF        SDN1 = '31' AND SWRK3 <> *BLANK              BUG4646
-     C                             AND S456 = *BLANK                            BUG4646
-     C                   EVAL      *IN99=*ON                                    BUG4646
-     C                   ENDIF                                                  BUG4646
+     C**********         IF        SDN1 = '31' AND SWRK3 <> *BLANK                 BUG4646 MD021870A
+     C**********                   AND S456 = *BLANK                               BUG4646 MD021870A
+     C**********         EVAL      *IN99=*ON                                       BUG4646 MD021870A
+     C**********         ENDIF                                                     BUG4646 MD021870A
+     C                   IF        SDN1 = '31' AND SWRK3 <> '+'                            MD021870A
+     C                             AND SWRK3 <> '-'                                        MD021870A
+     C                   EVAL      *IN99=*ON                                               MD021870A
+     C                   ENDIF                                                             MD021870A
      C*                                                                         BUG4646
      C                   IF        SDN1 <> '31' AND SWRK3 <> '+'                BUG4646
      C                             AND SWRK3 <> '-'                             BUG4646
      C                   EVAL      *IN99=*ON                                    BUG4646
      C                   ENDIF                                                  BUG4646
      C*                                                                         BUG4646
-     C                   IF        SDN1 = '31' AND SWRK3 <> '+'                 BUG4646
-     C                             AND SWRK3 <> '-' AND SWRK3 <> ' '            BUG4646
-     C                   EVAL      *IN99=*ON                                    BUG4646
-     C                   ENDIF                                                  BUG4646
+     C**********         IF        SDN1 = '31' AND SWRK3 <> '+'                    BUG4646 MD021870A
+     C**********                   AND SWRK3 <> '-' AND SWRK3 <> ' '               BUG4646 MD021870A
+     C**********         EVAL      *IN99=*ON                                       BUG4646 MD021870A
+     C**********         ENDIF                                                     BUG4646 MD021870A
      C*                                                                         BUG4646
      C**  Validate positions 4 and 5                                            BUG4646
      C**    If entered must be numeric, between 1 and 28 inclusive              BUG4646

@@ -11,8 +11,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD027395           Date 06Nov19               *
+      *  Last Amend No. MD058517           Date 17Oct22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD027395           Date 06Nov19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -68,6 +69,9 @@
      F*                                                               *
 0011 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058517 - CLE172 LIBOR Lending - Change Control CC3.1       *
+      *             Interest Projection Using Known Rates             *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD027395 - Risk loans incorrectly included                   *
       *  MD046248 - Finastra Rebranding                               *
@@ -169,6 +173,7 @@
 0014 F***CFTLX** IS  F     200 20AI     2 DISK                                         S01117 CGL029
      F*CFTLX***IS**F*****232 20AI     2 DISK                                           CGL029 CLE042
      FCFTLX   IS  F     236 20AI     2 DISK                                                   CLE042
+     FSDRTKNL0IF  E           K        DISK                                                 MD058517
 0015 F*TABLE***IF  F      96 12AI     2 DISK                              S01194
      F*CLINT***IF  F     256  7AI     2 DISK                          U4  S01194
 0016 FLETX1HH O   F     180            DISK
@@ -263,6 +268,7 @@
 0055 F*    74         AMMENDMENT TYPE = 'IN'
 0067 F*       75      PAY/RECEIVE TYPE IS 'P' - PAYMENT OR 'C' - CREDIT.  S2659
 0068 F*       76      O/P TO LETX6, SETTLEMENT TYPE 07 - CHIPS PAY/CREDIT.S2659
+0055 F*    77         CHAIN TO SDRTKNL0                                                     MD058517
 0056 F*****80*******  DEFAULT BRANCH CODE = 0                             S01194
      F*    81         CREDIT TELEX
 0058 F*    83         LETLX FILE OUT OF BALANCE
@@ -998,6 +1004,35 @@
      C                     ELSE                                                               CLE028
      C                     MOVE 'N'       CLE028                                              CLE028
      C                     ENDIF                                                              CLE028
+      *                                                                                     MD058517
+      ** Check if LIBOR Deregulation (CLE172) is installed                                  MD058517
+      *                                                                                     MD058517
+     C                     CALL 'AOSARDR0'                                                  MD058517
+     C                     PARM *BLANKS   PRTCD                                             MD058517
+     C                     PARM '*VERIFY' POPTN                                             MD058517
+     C                     PARM 'CLE172'  PSARD                                             MD058517
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD058517
+      *                                                                                     MD058517
+     C           PRTCD     IFEQ *BLANKS                                                     MD058517
+     C                     MOVE 'Y'       CLE172  1                                         MD058517
+     C                     ELSE                                                             MD058517
+      *                                                                                     MD058517
+     C                     MOVE 'N'       CLE172                                            MD058517
+     C           PRTCD     IFNE '*NRF    '                                                  MD058517
+     C                     MOVE *ON       *INU7                                             MD058517
+     C                     MOVE *ON       *INU8                                             MD058517
+     C           *LOCK     IN   LDA                                                         MD058517
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD058517
+     C                     Z-ADD18        DBASE                                             MD058517
+     C                     MOVELPSARD     DBKEY                                             MD058517
+     C                     OUT  LDA                                                         MD058517
+     C                     GOTO ENDDET                                                      MD058517
+     C                     ENDIF                                                            MD058517
+     C                     ENDIF                                                            MD058517
+      *                                                                                     MD058517
+     C           KYRTKN    KLIST                                                            MD058517
+     C                     KFLD           KYMODU  2                                         MD058517
+     C                     KFLD           KYTRAN  6                                         MD058517
      C*                                                                   S01194
      C******CHECK*LCYN*INDICATOR                                          S01194
      C**    CHECK LOCAL CCY NOSTRO INDICATOR FOR                          S01194
@@ -1373,6 +1408,43 @@
      C           *IN85     OREQ '1'                                                           244461
      C           TAMT      SUB  PRAM      EAMT                                                244461
      C                     ENDIF                                                              244461
+      *                                                                                     MD058517
+     C           CLE172    IFEQ 'Y'                                                         MD058517
+     C                     MOVE 'LE'      KYMODU                                            MD058517
+     C                     MOVE LNRF      KYTRAN                                            MD058517
+     C           KYRTKN    CHAINSDRTKNL0             77                                     MD058517
+     C           *IN77     IFEQ '0'                                                         MD058517
+     C           KRTKNI    ANDEQ'Y'                                                         MD058517
+      ** If Rates Known is Y, override the Interest Amount                                  MD058517
+     C                     SELEC                                                            MD058517
+     C           AMTP      WHEQ 'IN'                                                        MD058517
+     C           REPT      ANDEQ2                                                           MD058517
+     C           INTA      ANDNE0                                                           MD058517
+     C                     Z-ADDKCINTA    EAMT                                              MD058517
+     C           AMTP      WHEQ 'RE'                                                        MD058517
+     C           REPT      ANDEQ1                                                           MD058517
+     C           INTA      ANDNE0                                                           MD058517
+     C           AMTP      OREQ 'MA'                                                        MD058517
+     C           INTA      ANDNE0                                                           MD058517
+     C           *IN70     ANDEQ'0'                                                         MD058517
+     C           *IN82     ANDEQ'0'                                                         MD058517
+     C           *IN85     ANDEQ'0'                                                         MD058517
+     C           PRAM      ADD  KCINTA    EAMT                                              MD058517
+     C           AMTP      WHEQ 'RE'                                                        MD058517
+     C           REPT      ANDEQ3                                                           MD058517
+     C           TAMT      ANDNEPRAM                                                        MD058517
+     C           TAMT      SUB  KCINTA    EAMT                                              MD058517
+     C                     ADD  KCINTA    EAMT                                              MD058517
+     C           AMTP      WHEQ 'MA'                                                        MD058517
+     C           *IN70     ANDEQ'1'                                                         MD058517
+     C           INTA      ANDNE0                                                           MD058517
+     C           *IN82     OREQ '1'                                                         MD058517
+     C           *IN85     OREQ '1'                                                         MD058517
+     C                     Z-ADDKCINTA    EAMT                                              MD058517
+     C                     ENDSL                                                            MD058517
+      *                                                                                     MD058517
+     C                     ENDIF                                                            MD058517
+     C                     ENDIF                                                            MD058517
      C***
      C***  FOR START OF A DISCOUNT OUTPUT PRINCIPAL MINUS DISCOUNT
      C***

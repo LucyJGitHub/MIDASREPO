@@ -11,12 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060867           Date 20Jan23               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
-      *                 AR582888           Date 10Aug22               *
-      *                 250588             Date 19Jul22               *
-      *                 250587             Date 15Jul22               *
-      *                 MD058815           Date 28Sep21               *
+      *  Last Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 241243             Date 07Mar08               *
@@ -259,17 +255,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060867 - Missing projection in PAMV for internal parts     *
-      *             purchased. Remove CLE004 codes that set the IN/OUT*
-      *             indicator of an IPP event to blanks.              *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
-      *  AR582888 - Incorrect loan interest due events in GL0580P1.   *
-      *             Do not process DL forward rate if INTR = 0.       *
-      *  250588 - Settlement instructions should be blank for         *
-      *           principal transfer.                                 *
-      *  250587 - In/Out indicator on risk part. sold principal events*
-      *           should be blank.                                    *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -4697,16 +4684,16 @@
 1039 C*
 1040 C           MISSIT    TAG                             ** MISSIT TAG**
      C/COPY WNCPYSRC,LE0480C014
-      **********                                                                     CLE004 MD060867
-      ***If*CLE004*is*installed,*the*incoming/outgoing*indicator*******              CLE004 MD060867
-      ***for*internal*parts.*purchased*should*be*blank*****************              CLE004 MD060867
-      **********                                                                     CLE004 MD060867
-     C********** CLE004    IFEQ 'Y'                                                  CLE004 MD060867
-     C********** WLIPP     IFEQ 'Y'                                                  CLE004 MD060867
-     C**********           MOVE *BLANKS   INOUT                                      CLE004 MD060867
-     C**********           MOVE '0'       *IN71                                      CLE004 MD060867
-     C**********           ENDIF                                                     CLE004 MD060867
-     C**********           ENDIF                                                     CLE004 MD060867
+      *                                                                   CLE004
+      ** If CLE004 is installed, the incoming/outgoing indicator          CLE004
+      ** for internal parts. purchased should be blank                    CLE004
+      *                                                                   CLE004
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C           WLIPP     IFEQ 'Y'                                       CLE004
+     C                     MOVE *BLANKS   INOUT                           CLE004
+     C                     MOVE '0'       *IN71                           CLE004
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          CLE004
      C**
      C** CONDITION OUTPUT TO EMTE1 -
      C****CHECK*IF*EVENT*TYPE*IS*M1,*R1,*V1,*V3************************                       CLE134
@@ -5033,13 +5020,6 @@
 1064 C**   DETERMINE 'OTHER AMOUNT'
 1065 C                     MOVE AMT,EA    EVOAMT 130
 1066 C**
-     C           PTYP      IFEQ 72                                                            250587
-     C           EVTYPE    ANDNE'I2'                                                          250587
-     C           EVTYPE    ANDNE'R2'                                                          250587
-     C           EVTYPE    ANDNE'M2'                                                          250587
-     C                     MOVE ' '       INOUT                                               250587
-     C                     END                                                                250587
-     C**                                                                                      250587
 1067 C**   SET INDICATOR 71 IF INCOMING/OUTGOING INDICATOR = 'I'
 1068 C           INOUT     COMP 'I'                      71
 1069 C**
@@ -5059,15 +5039,6 @@
 1077 C**
 1078 C**   PROCESSING AS PER LEP0480-AA
 1079 C           INSIND    COMP 0                        83
-1084 C*                                                                                       250588
-1084 C**Principal transfer is done internally no settlement                                   250588
-1084 C* instructions needed.                                                                  250588
-1079 C  N83      EVTYPE    IFEQ 'R7'                                                          250588
-1079 C           EVTYPE    OREQ 'V5'                                                          250588
-1079 C                     SETON                     83                                       250588
-1079 C                     MOVE ' '       INOUT                                               250588
-0079 C                     END                                                                250588
-1084 C*                                                                                       250588
 1080 C   83                MOVE ' '       FININD  1        FULL INSTRNS.
      C                     MOVE *BLANKS   SETTLE                                              CGL029
 1081 C   83                MOVEL'00'      SETTLE
@@ -8688,13 +8659,10 @@
      C**********           ENDIF                                                       228806 246747
       *                                                                                       CAS005
      C           RLFQ      IFNE ' '                                                           229938
-     C           INTR      ANDEQ0                                                           AR582888
      C           EVDATE    ANDGTWNXRO                                                         229938
      C           EVDATE    ORGT NROD                                                          229938
      C           NROD      ANDGT0                                                             229938
      C                     MOVE 'N'       WFXDR                                               229938
-     C                     ELSE                                                             AR582888
-     C                     MOVE 'Y'       WFXDR                                             AR582888
      C                     ENDIF                                                              229938
       *                                                                                       229938
       ** When ccy, yield curve and interest calculation basis have changed due                226261
@@ -9093,13 +9061,10 @@
      C                     ENDIF                                                              CAS005
       *                                                                                       CAS005
      C           RLFQ      IFNE ' '                                                           229938
-     C           INTR      ANDEQ0                                                           AR582888
      C           EVDATE    ANDGTWNXRO                                                         229938
      C           EVDATE    ORGT NROD                                                          229938
      C           NROD      ANDGT0                                                             229938
      C                     MOVE 'N'       WFXDR                                               229938
-     C                     ELSE                                                             AR582888
-     C                     MOVE 'Y'       WFXDR                                             AR582888
      C                     ENDIF                                                              229938
       *                                                                                       229938
       ** When ccy, yield curve and interest calculation basis have changed due                226261

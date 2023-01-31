@@ -11,9 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
-      *  Prev Amend No. MD060867           Date 20Jan23               *
-      *                 249385             Date 01Aug22               *
+      *  Last Amend No. MD060867           Date 20Jan23               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 AR582888           Date 10Aug22               *
+      *                 250588             Date 19Jul22               *
+      *                 250587             Date 15Jul22               *
       *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -257,13 +259,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
-      *             Interest Projection Using Known Rates             *
       *  MD060867 - Missing projection in PAMV for internal parts     *
       *             purchased. Remove CLE004 codes that set the IN/OUT*
       *             indicator of an IPP event to blanks.              *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
+      *  AR582888 - Incorrect loan interest due events in GL0580P1.   *
+      *             Do not process DL forward rate if INTR = 0.       *
+      *  250588 - Settlement instructions should be blank for         *
+      *           principal transfer.                                 *
+      *  250587 - In/Out indicator on risk part. sold principal events*
+      *           should be blank.                                    *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -785,8 +791,7 @@
      F***CLOAN** IP  F    1782  7AI     2 DISK                                         CER020 CRE073
      F***CLOAN** IP  F    1829  7AI     2 DISK                                         CRE073 CLE134
      F***CLOAN** IP  F    1874  7AI     2 DISK                                         CLE134 CLE141
-     F***CLOAN** IP  F    2025  7AI     2 DISK                                       CLE141 MD058517
-     FCLOAN   IP  F    2110  7AI     2 DISK                                                 MD058517
+     FCLOAN   IP  F    2025  7AI     2 DISK                                                   CLE141
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE0480FFP2                                           S01408
      F*                                                                   S01408
@@ -853,11 +858,9 @@
      F            CLOANCLF                          KRENAMECLONCLF                          MD021605
      F            CLOANCKF                          KRENAMECLONCKF                          MD021605
      F            CLOANZ1F                          KIGNORE                                 MD021605
-     FSDRTKNL0UF  E           K        DISK                                                 MD058517
      F***LELWNEPDO   F    1905            DISK                                       MD021605 CLE141
      F***LELWNEPDO   F    2025            DISK                                         CLE141 CER050
-     F***LELWNEPDO   F    2039            DISK                                       CER050 MD058517
-     FLELWNEPDO   F    2110            DISK                                                 MD058517
+     FLELWNEPDO   F    2039            DISK                                                   CER050
      FLELWNEPKO   F    1319            DISK                                                 MD021605
      FLELWNEZ1O   F     400            DISK                                                 MD021605
      F/COPY WNCPYSRC,LE0480FFP1                                           S01408
@@ -1267,8 +1270,7 @@
      I                                     19661995 PICUR                                     CLE141
      I                                     19962025 PILOC                                     CLE141
      I**********                              11874 LONL                             MD021605 CLE141
-     I**********                              12025 LONL                             CLE141 MD058517
-     I                                        12110 LONL                                    MD058517
+     I                                        12025 LONL                                      CLE141
 0205 I*
 0206 I*    CUSTOMER LENDING LOANS FILE - DETAIL RECORD 2
 0207 I*
@@ -2013,10 +2015,6 @@
      C                     KFLD           LNRF                                              MD021605
      C                     KFLD           RCDT                                              MD021605
       *                                                                                     MD021605
-     C           KRTKN     KLIST                                                            MD058517
-     C                     KFLD           MODID   2                                         MD058517
-     C                     KFLD           LNRF                                              MD058517
-      *                                                                                     MD058517
 0607 C**   FIRST CYCLE PROCESSING
 0608 C   40                GOTO DETAIL
       *                                                                                     MD021605
@@ -2449,35 +2447,6 @@
       *                                                                   CLE011
      C                     ENDIF                                          CLE011
       *                                                                   CLE011
-      ** Determine if CLE172 is installed                                                   MD058517
-      *                                                                                     MD058517
-     C                     CALL 'AOSARDR0'                                                  MD058517
-     C                     PARM *BLANKS   W0RTCD                                            MD058517
-     C                     PARM '*VERIFY' W0OPTN                                            MD058517
-     C                     PARM 'CLE172'  W0SARD                                            MD058517
-     C           SCSARD    PARM SCSARD    DSFDY                                             MD058517
-     C                     MOVE 'N'       CLE172  1                                         MD058517
-      *                                                                                     MD058517
-      ** If feature is on, set up SAR work flag                                             MD058517
-      *                                                                                     MD058517
-     C           W0RTCD    IFEQ *BLANKS                                                     MD058517
-     C                     MOVE 'Y'       CLE172                                            MD058517
-     C                     ELSE                                                             MD058517
-      *                                                                                     MD058517
-      ** else, database error (return code other than *NRF)                                 MD058517
-      *                                                                                     MD058517
-     C           W0RTCD    IFNE '*NRF   '                                                   MD058517
-     C                     MOVEL'LE0480'  DBPGM                                             MD058517
-     C                     MOVEL'SCSARDPD'DBFILE                                            MD058517
-     C                     MOVEL'CLE172  'DBKEY                                             MD058517
-     C                     Z-ADD75        DBASE                                             MD058517
-     C                     MOVE *ON       *INU7                                             MD058517
-     C                     MOVE *ON       *INU8                                             MD058517
-     C                     MOVE *ON       *INLR                                             MD058517
-     C                     GOTO END                                                         MD058517
-     C                     ENDIF                                                            MD058517
-      *                                                                                     MD058517
-     C                     ENDIF                                                            MD058517
       *                                                                   CLE031
       ** Determine if Lending Enhancements is                             CLE031
       ** installed                                                        CLE031
@@ -3852,7 +3821,6 @@
      C                     Z-ADDRBDT      WWREP   50                                         BUG9241
 0808 C**
 0809 C                     Z-ADDIACD      LSTEVD  50       LAST EVENT DATE
-     C                     MOVE ' '       WUPDRT  1                                         MD058517
       *                                                                                       CAS005
      C           CAS005    IFEQ 'Y'                                                           CAS005
       *                                                                                       CAS005
@@ -5065,6 +5033,13 @@
 1064 C**   DETERMINE 'OTHER AMOUNT'
 1065 C                     MOVE AMT,EA    EVOAMT 130
 1066 C**
+     C           PTYP      IFEQ 72                                                            250587
+     C           EVTYPE    ANDNE'I2'                                                          250587
+     C           EVTYPE    ANDNE'R2'                                                          250587
+     C           EVTYPE    ANDNE'M2'                                                          250587
+     C                     MOVE ' '       INOUT                                               250587
+     C                     END                                                                250587
+     C**                                                                                      250587
 1067 C**   SET INDICATOR 71 IF INCOMING/OUTGOING INDICATOR = 'I'
 1068 C           INOUT     COMP 'I'                      71
 1069 C**
@@ -5084,6 +5059,15 @@
 1077 C**
 1078 C**   PROCESSING AS PER LEP0480-AA
 1079 C           INSIND    COMP 0                        83
+1084 C*                                                                                       250588
+1084 C**Principal transfer is done internally no settlement                                   250588
+1084 C* instructions needed.                                                                  250588
+1079 C  N83      EVTYPE    IFEQ 'R7'                                                          250588
+1079 C           EVTYPE    OREQ 'V5'                                                          250588
+1079 C                     SETON                     83                                       250588
+1079 C                     MOVE ' '       INOUT                                               250588
+0079 C                     END                                                                250588
+1084 C*                                                                                       250588
 1080 C   83                MOVE ' '       FININD  1        FULL INSTRNS.
      C                     MOVE *BLANKS   SETTLE                                              CGL029
 1081 C   83                MOVEL'00'      SETTLE
@@ -5621,11 +5605,6 @@
 1298 C**   FOR SPREAD/BASE RATE AMENDMENTS NO EVENT IS REQUIRED,BUT
 1299 C**   EFFECTIVE INTEREST RATE IS TO BE UPDATED
 1300 C           AMTP      COMP 'BC'                     87
-     C           CLE172    IFEQ 'Y'                                                         MD058517
-     C           AMTP      ANDEQ'BR'                                                        MD058517
-     C                     SETON                     87                                     MD058517
-     C                     GOTO CLEBR                                                       MD058517
-     C                     ENDIF                                                            MD058517
 1301 C  N87                GOTO SPREAD
 1302 C********** BRTTLA    COMP 0                    87                                       CSD103
 1302 C           BRTTLA    COMP *BLANKS              87                                       CSD103
@@ -5637,7 +5616,6 @@
 1306 C   87 55             Z-ADD12        DBASE
 1307 C   87 55             GOTO ENDAM
 1308 C**
-     C           CLEBR     TAG                                                              MD058517
 1309 C   87                Z-ADDBRTE      BRATE            BASE RATE
 1310 C  N87                Z-ADD0         BRATE            BASE RATE
       *                                                                                       CLE036
@@ -5858,19 +5836,6 @@
      C                     EXSR SRAIR                                                         CAS005
      C                     ENDIF                                                              CAS005
 1374 C                     EXSR INTCAL
-     C           CLE172    IFEQ 'Y'                                                         MD058517
-     C           WUPDRT    ANDEQ' '                                                         MD058517
-     C           EVDATE    ANDEQNIDT                                                        MD058517
-     C           RERUN     ANDEQ'N'                                                         MD058517
-     C                     MOVE 'Y'       WUPDRT                                            MD058517
-     C                     MOVE 'LE'      MODID                                             MD058517
-     C           KRTKN     CHAINSDRTKNL0             81                                     MD058517
-     C           *IN81     IFEQ '0'                                                         MD058517
-     C           KRTKNI    ANDEQ'Y'                                                         MD058517
-     C                     MOVE INTDUE    KCINTA                                            MD058517
-     C                     UPDATSDRTKNT0                                                    MD058517
-     C                     ENDIF                                                            MD058517
-     C                     ENDIF                                                            MD058517
      C/COPY WNCPYSRC,LE0480C026
       *****************************************************************               133914 BUG8552
       ***For*CLE005,*if*payment*taken*date*is*'P',*find*previous*******               133914 BUG8552
@@ -6314,19 +6279,6 @@
      C                     ELSE                                                               CLE028
       *                                                                                       CLE028
 1433 C  N50                EXSR INTCAL
-     C           CLE172    IFEQ 'Y'                                                         MD058517
-     C           WUPDRT    ANDEQ' '                                                         MD058517
-     C           EVDATE    ANDEQNRPD                                                        MD058517
-     C           RERUN     ANDEQ'N'                                                         MD058517
-     C                     MOVE 'Y'       WUPDRT                                            MD058517
-     C                     MOVE 'LE'      MODID                                             MD058517
-     C           KRTKN     CHAINSDRTKNL0             81                                     MD058517
-     C           *IN81     IFEQ '0'                                                         MD058517
-     C           KRTKNI    ANDEQ'Y'                                                         MD058517
-     C                     MOVE INTDUE    KCINTA                                            MD058517
-     C                     UPDATSDRTKNT0                                                    MD058517
-     C                     ENDIF                                                            MD058517
-     C                     ENDIF                                                            MD058517
       *                                                                                       223215
       ** Include repayments that are valuing on holiday but with                              223215
       ** INDATE on next working date on the projected account movements.                      223215
@@ -8154,19 +8106,6 @@
      C                     ELSE                                                               CLE028
       *                                                                                       CLE028
 1598 C                     EXSR INTCAL
-     C           CLE172    IFEQ 'Y'                                                         MD058517
-     C           WUPDRT    ANDEQ' '                                                         MD058517
-     C           EVDATE    ANDEQMDAT                                                        MD058517
-     C           RERUN     ANDEQ'N'                                                         MD058517
-     C                     MOVE 'Y'       WUPDRT                                            MD058517
-     C                     MOVE 'LE'      MODID                                             MD058517
-     C           KRTKN     CHAINSDRTKNL0             81                                     MD058517
-     C           *IN81     IFEQ '0'                                                         MD058517
-     C           KRTKNI    ANDEQ'Y'                                                         MD058517
-     C                     MOVE INTDUE    KCINTA                                            MD058517
-     C                     UPDATSDRTKNT0                                                    MD058517
-     C                     ENDIF                                                            MD058517
-     C                     ENDIF                                                            MD058517
       *                                                                                       CLE028
      C                     ENDIF                                                              CLE028
      C/COPY WNCPYSRC,LE0480C027
@@ -8749,10 +8688,13 @@
      C**********           ENDIF                                                       228806 246747
       *                                                                                       CAS005
      C           RLFQ      IFNE ' '                                                           229938
+     C           INTR      ANDEQ0                                                           AR582888
      C           EVDATE    ANDGTWNXRO                                                         229938
      C           EVDATE    ORGT NROD                                                          229938
      C           NROD      ANDGT0                                                             229938
      C                     MOVE 'N'       WFXDR                                               229938
+     C                     ELSE                                                             AR582888
+     C                     MOVE 'Y'       WFXDR                                             AR582888
      C                     ENDIF                                                              229938
       *                                                                                       229938
       ** When ccy, yield curve and interest calculation basis have changed due                226261
@@ -9151,10 +9093,13 @@
      C                     ENDIF                                                              CAS005
       *                                                                                       CAS005
      C           RLFQ      IFNE ' '                                                           229938
+     C           INTR      ANDEQ0                                                           AR582888
      C           EVDATE    ANDGTWNXRO                                                         229938
      C           EVDATE    ORGT NROD                                                          229938
      C           NROD      ANDGT0                                                             229938
      C                     MOVE 'N'       WFXDR                                               229938
+     C                     ELSE                                                             AR582888
+     C                     MOVE 'Y'       WFXDR                                             AR582888
      C                     ENDIF                                                              229938
       *                                                                                       229938
       ** When ccy, yield curve and interest calculation basis have changed due                226261
@@ -12800,8 +12745,7 @@
 2722 O**********               HSHDC2    16P                                               AR1078776
      OLELWNEPDD        05                                                                   MD021605
      O**********               LONL    1874                                          MD021605 CLE141
-     O**********               LONL    2025                                          CLE141 MD058517
-     O                         LONL    2110                                                 MD058517
+     O                         LONL    2025                                                   CLE141
      O***LELWNEPKD        06                                                       MD021605 MD031481
      OLELWNEPKD        14                                                                   MD031481
      O                         LONK    1319                                                 MD021605

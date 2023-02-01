@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054660           Date 19Nov19               *
+      *  Last Amend No. MD060292           Date 03Aug22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054660           Date 19Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 06Aug12               *
@@ -70,6 +71,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD060292 - RFR 11 Correspondence Manager - Lending Rollover  *
+      *             confirmations do not include Risk Free Rate data. *
+      *             Include extract of Libor De-Regulation fields.    *
+      *             Based from fix MD059320.                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054660 - Incorrect Next Interest Repayment Date for loans  *
@@ -1324,6 +1329,169 @@
      C                     ENDIF                                                              CRE073
       *                                                                                       CRE073
      C                     EXSR SRADTA
+      *                                                                                     MD060292
+      ** Include the following Libor De-Regulation fields.                                  MD060292
+      *                                                                                     MD060292
+     C           CLE172    IFEQ 'Y'                                                         MD060292
+      *                                                                                     MD060292
+      ** Initialize array counter                                                           MD060292
+      *                                                                                     MD060292
+     C                     Z-ADD0         R1                                                MD060292
+      *                                                                                     MD060292
+      ** Risk Free Rate                                                                     MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'RSK FREE'#@RDE                                             MD060292
+     C                     MOVE 'RT'      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELRFRR      ##DATA                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Lookback days                                                                      MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'LOOK BAC'#@RDE                                             MD060292
+     C                     MOVE 'K '      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELLBDY      ##DATA                                            MD060292
+     C                     MOVEL'Day   '  ##RDEC                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Lockout days                                                                       MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'LOCK OUT'#@RDE                                             MD060292
+     C                     MOVE ' D'      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELLODY      ##DATA                                            MD060292
+     C                     MOVEL'Day   '  ##RDEC                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Rate rounding decimals                                                             MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'RT RDNG '#@RDE                                             MD060292
+     C                     MOVE 'DC'      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELRRDP      ##DATA                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Day Basis for Average                                                              MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'DAYS B A'#@RDE                                             MD060292
+     C                     MOVE 'VG'      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELDBAV      ##DATA                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Floor                                                                              MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'FLOOR   '#@RDE                                             MD060292
+     C                     MOVE '  '      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELFLOR      ##DATA                                            MD060292
+     C                     MOVEL'Rate  '  ##RDEC                                            MD060292
+     C                     MOVEL'L'       ##RDET                                            MD060292
+     C                     MOVEL'7'       ##DCPA                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Observation Period Shift                                                           MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'OBS PER '#@RDE                                             MD060292
+     C                     MOVE 'SH'      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELOPSH      ##DATA                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Rates Known Indicator                                                              MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'RT KWN I'#@RDE                                             MD060292
+     C                     MOVE 'ND'      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELRTKN      ##DATA                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Benchmark Adjustment                                                               MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'BENCH AD'#@RDE                                             MD060292
+     C                     MOVE 'J '      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELBADJ      ##DATA                                            MD060292
+     C                     MOVEL'Rate  '  ##RDEC                                            MD060292
+     C                     MOVEL'L'       ##RDET                                            MD060292
+     C                     MOVEL'7'       ##DCPA                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Calculation Method                                                                 MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'CALC MET'#@RDE                                             MD060292
+     C                     MOVE 'HD'      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELCALM      ##DATA                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+      ** Backward Looking Rate                                                              MD060292
+      *                                                                                     MD060292
+     C                     ADD  1         R1                                                MD060292
+     C                     CLEARR#DATA                                                      MD060292
+     C                     CLEARR#DEFN                                                      MD060292
+     C                     CLEAR#@RDE                                                       MD060292
+     C                     MOVEL'BACK LK '#@RDE                                             MD060292
+     C                     MOVE 'RT'      #@RDE                                             MD060292
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                             MD060292
+     C                     MOVELBLRT      ##DATA                                            MD060292
+     C                     MOVELR#DATA    ##D,R1                                            MD060292
+     C                     MOVELR#DEFN    ##R,R1                                            MD060292
+      *                                                                                     MD060292
+     C                     EXSR SRADTA                                                      MD060292
+     C                     ENDIF                                                            MD060292
+      *                                                                                     MD060292
      C                     EXSR SRODTA
      C*
      C**  Decrement Path DS index
@@ -2074,6 +2242,20 @@
      C                     MOVEL'N'       CER050                                              CER050
      C                     END                                                                CER050
       *                                                                                       CER050
+      ** Check if CLE172 is ON.                                                             MD060292
+      *                                                                                     MD060292
+     C                     CALL 'AOSARDR0'                                                  MD060292
+     C                     PARM *BLANKS   ##RTCD                                            MD060292
+     C                     PARM '*VERIFY '##OPTN                                            MD060292
+     C                     PARM 'CLE172'  PSARD                                             MD060292
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD060292
+      *                                                                                     MD060292
+     C           ##RTCD    IFEQ *BLANKS                                                     MD060292
+     C                     MOVE 'Y'       CLE172  1                                         MD060292
+     C                     ELSE                                                             MD060292
+     C                     MOVE 'N'       CLE172                                            MD060292
+     C                     ENDIF                                                            MD060292
+      *                                                                                     MD060292
      C/COPY WNCPYSRC,CG6025C004
      C*                                                                   CEU014
      C           EXINIT    TAG

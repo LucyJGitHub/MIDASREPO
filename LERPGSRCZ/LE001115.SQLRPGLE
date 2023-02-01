@@ -8,7 +8,7 @@
       *                                                               *
       *  Midas - Customer Lending Module                              *
       *                                                               *
-      *  LE001114 - Midas LE Future ARR rate BR events                *
+      *  LE001115 - Midas LE Future ARR rate BR events                *
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR322731           Date 01Aug12              */
+/*       Last Amend No. MD058517           Date 17Oct22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR322731           Date 01Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -33,6 +34,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1       */
+/*                  Interest Projection Using Known Rates            */
+/*                  CC10 CLE172 Spool File Correspondence (MD059817) */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR322731 - LEC0212A and APISERVER locks LTRIX file. Apply   */
 /*                  fix 252833A (Child:AR322732)                     */
@@ -83,6 +87,7 @@
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                 /*S01465*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)            /*S01465*/
              DCL        VAR(&CLE044) TYPE(*CHAR) LEN(1)                                   /*CLE044*/
+             DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD058517*/
 /*/COPY WNCPYSRC,LEC0212B04                                          */
 /************DCLDTAARA  DTAARA(LESTAT)                             */ /*S01179*/
 /************DCLDTAARA  DTAARA(LDA)                                */ /*S01179*/
@@ -90,7 +95,7 @@
              CHGJOB     SWS(00000000)
 /*/COPY WNCPYSRC,LEH01027                                            */
 /*    IF PRINT ALREADY ACTIVE - STOP PRINT                   */
- 
+
 /************RTVDTAARA  DTAARA(LESTAT) RTNVAR(&LESTAT)                /*124684*/
 /**/
 /************IF         COND(%SUBSTRING(&LESTAT 6 1) *EQ Y) THEN(DO)  /*124684*/
@@ -140,6 +145,15 @@
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CLE044*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CLE044) VALUE('Y'))                                        /*CLE044*/
+/**/                                                                                    /*MD058517*/
+/** Access SAR file to determine if switchable feature CLE172     */                    /*MD058517*/
+/**/                                                                                    /*MD058517*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD058517*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD058517*/
+             CHGVAR     VAR(&SAR) VALUE('CLE172')                                       /*MD058517*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*MD058517*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CLE172) VALUE('Y'))                                      /*MD058517*/
 /**/                                                                 /*S01465*/
 /**/                                                                 /*S01465*/
 /** Access SAR file to determine if switchable feature S01465     */ /*S01465*/
@@ -154,6 +168,11 @@
              IF         COND((&RTCD *EQ '       ') *AND +
                         (&CLE044 *NE 'Y')) THEN(DO)                                       /*CLE044*/
 /*/COPY WNCPYSRC,LEC0212B03                                          */
+/** Override LE1150P1 attributes to increase page size and overflow */                  /*MD058517*/
+                                                                                        /*MD058517*/
+                 IF        COND(&CLE172 *EQ 'Y') THEN(OVRPRTF +
+                           FILE(LE1150P1) PAGESIZE(68 90) OVRFLW(68))                   /*MD058517*/
+                                                                                        /*MD058517*/
                 OVRDBF     FILE(CLOAN2) TOFILE(CLOAN) SHARE(*NO)     /*S01465*/
                 CALL       PGM(LE1150) PARM(&RSEQ &RENT)             /*S01465*/
 /*/COPY WNCPYSRC,LEC0212B05                                          */
@@ -167,6 +186,11 @@
 /**                                                                   /*S01408*/
 /*/COPY WNCPYSRC,LEC0212B01                                           /*S01408*/
 /**                                                                   /*S01408*/
+/** Override LE0130P1 attributes to increase page size and overflow */                  /*MD058517*/
+                                                                                        /*MD058517*/
+                IF         COND(&CLE172 *EQ 'Y') THEN(OVRPRTF +
+                           FILE(LE0130P1) PAGESIZE(68 90) OVRFLW(68))                   /*MD058517*/
+                                                                                        /*MD058517*/
              CALL       PGM(LE0130) PARM(&RSEQ &RENT)                 /*LN0470*/
 /**                                                                   /*S01408*/
 /*/COPY WNCPYSRC,LEC0212B02                                           /*S01408*/

@@ -18,12 +18,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
-      *       Amend No. CSD103    *CREATE  Date 10Aug20               *
+      *  Last Amend No. MD060899           Date 09Jan23               *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
+      *                 CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060899 - Matured loans not housekept in SDRTKNTD file      *
+      *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
+      *             Interest Projection Using Known Rates.            *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -50,6 +56,7 @@
      D thisSQL3        S            500                                                       CDL102
      D thisSQL4        S            500                                                       CIR020
      D thisSQL5        S            500                                                       CIR020
+     D thisSQL6        S            500                                                     MD058517
                                                                                               CDL102
      D PRtCd           S              7A                                                      CDL102
      D POptn           S              7A                                                      CDL102
@@ -68,6 +75,7 @@
       * Initialization of indicators
      C                   SETOFF                                           90
      C                   SETOFF                                           91
+     C                   SETOFF                                           92                MD060899
                                                                                               CDL102
       ** Check if switchable feature CLE172 is switched on.                                   CDL102
                                                                                               CDL102
@@ -120,6 +128,10 @@
      C                              CMODID = ''LE'' AND CTRNID not in +
      C                              (select LNRF from CLOANCL) AND CTRNID +
      C                              not in (select LNRF from MCLONCL)'
+     C                   EVAL      thisSQL6= 'Delete from SDRTKNTD where +                  MD058517
+     C                              KMODID = ''LE'' AND KTRNID not in +                     MD058517
+     C                              (select LNRF from CLOANCL) AND KTRNID +                 MD058517
+     C                              not in (select LNRF from MCLONCL)'                      MD058517
      C                   EVAL      thisSQL1 = 'Delete from SDARRLOGTD where +
      C                              SJMODI = ''LE'' AND SJTREF not in +
      C                              (select LNRF from CLOANCL)'
@@ -131,6 +143,13 @@
      C                   SETON                                            90
      C                   EXSR      *PSSR
      C                   ENDIF
+     C/EXEC SQL                                                                             MD060899
+     C+ EXECUTE IMMEDIATE :thisSQL6                                                         MD060899
+     C/END-EXEC                                                                             MD060899
+     C                   IF         SQLCOD <> 0 AND SQLCOD <> 100                           MD060899
+     C                   SETON                                            92                MD060899
+     C                   EXSR      *PSSR                                                    MD060899
+     C                   ENDIF                                                              MD060899
      C/EXEC SQL
      C+ EXECUTE IMMEDIATE :thisSQL1
      C/END-EXEC
@@ -219,6 +238,7 @@
       *
      C   90              MOVE      'SDHSDRTD'    DBFILE
      C   91              MOVE      'SDARRLOGTD'  DBFILE
+     C   92              MOVE      'SDRTKNTD'    DBFILE                                     MD060899
      C                   EVAL      DBKEY  = 'SQL ERROR'
      C                   EVAL      DBPGM  = 'SD001015'
      C                   EVAL      DBASE  = SQLCODE

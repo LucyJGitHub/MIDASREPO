@@ -9,7 +9,8 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058517           Date 17Oct22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,7 +18,7 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      CPK009             Date 09Aug99              */
 /*                      124684             Date 06Jan98              */
 /*                    S01408              DATE 14MAY96              */
 /*                    S01117              DATE 08FEB90              */
@@ -25,6 +26,9 @@
 /*                    S01179              DATE 11SEP88               */
 /*                                                                  */
 /********************************************************************/
+/*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1       */
+/*                  Interest Projection Using Known Rates            */
+/*                  CC10 CLE172 Spool File Correspondence (MD059817) */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
@@ -52,6 +56,10 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*S01194*/
 /************DCL        VAR(&LESTAT) TYPE(*CHAR) LEN(256)             /*124684*/
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                   /*MD058517*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                   /*MD058517*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                    /*MD058517*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                               /*MD058517*/
 /*           DCLDTAARA  DTAARA(LESTAT)                             */ /*S01179*/
 /*           DCLDTAARA  DTAARA(LDA)                                */ /*S01179*/
 /*/COPY WNCPYSRC,LEC0212D03                                          */
@@ -76,6 +84,17 @@
 /**                                                                   /*S01408*/
 /*/COPY WNCPYSRC,LEC0212D01                                           /*S01408*/
 /**                                                                   /*S01408*/
+/**/                                                                                    /*MD058517*/
+/** Access SAR file to determine if switchable feature CLE172       */                  /*MD058517*/
+/** If on, ovverride attributes to increase page size and overflow  */                  /*MD058517*/
+/**/                                                                                    /*MD058517*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD058517*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD058517*/
+             CHGVAR     VAR(&SAR) VALUE('CLE172')                                       /*MD058517*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*MD058517*/
+                IF         COND(&RTCD *EQ '       ') THEN(OVRPRTF +
+                           FILE(LE0130P1) PAGESIZE(68 90) OVRFLW(68))                   /*MD058517*/
+                                                                                        /*MD058517*/
              CALL       PGM(LE0130) PARM('     ' 'ALL')               /*S01117*/
 /**                                                                   /*S01408*/
 /*/COPY WNCPYSRC,LEC0212D02                                           /*S01408*/

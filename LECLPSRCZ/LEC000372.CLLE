@@ -1,0 +1,86 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Loan Advice with Fwd ARR Rates')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000372 - LE Loan Advice with Fwd ARR Rates               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD058517 *CREATE    Date 17Oct22             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1       */
+/*                  Interest Projection Using Known Rates            */
+/*                  CC10 CLE172 Spool File Correspondence (MD059817) */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT)
+
+
+             DCL        VAR(&RSEQ)   TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT)   TYPE(*CHAR) LEN(3)
+             DCL        VAR(&SDMMOD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RPRNT)  TYPE(*CHAR) LEN(1) VALUE('N')
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          Systems Ltd. 2022')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             SNDPGMMSG  MSG('LEC000372 - Loan Advice with Fwd +
+                             ARR Rates') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
+/** Call Loan Advice with Fwd ARR Rates report program */
+/** when UDC is not installed */
+
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')
+             CHGVAR     VAR(&OPTION) VALUE('*FIRST ')
+             CALL       PGM(AOMMODR0) PARM(&RTNCDE &OPTION &SDMMOD)
+             IF         COND(%SST(&SDMMOD 101 1) *EQ 'N') THEN(DO)
+
+                  CALL       PGM(LE000372) PARM(&RSEQ &RENT &RPRNT)
+
+                  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                  GOTO       CMDLBL(ABNOR)
+                  ENDDO
+
+             ENDDO
+
+/** Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                        LEC000372 ended abnormally - see job log') +
+                        TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+
+ENDPGM:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

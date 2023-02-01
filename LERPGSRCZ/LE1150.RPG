@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD058517           Date 17Oct22               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056750           Date 04Nov20               *
       *                 AR847806           Date 12Jan15               *
@@ -129,6 +130,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058517 - CLE172 LIBOR Lending - Change Control CC3.1       *
+      *             Interest Projection Using Known Rates             *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -328,7 +332,8 @@
      F*CLOAN***UF**F****1644  7AI     2 DISK                                           CLE036 CLE042
      F***CLOAN** UF  F    1773  7AI     2 DISK                                         CLE042 CER020
      F***CLOAN** UF  F    1773  7AI     2 DISK                                         CLE042 CLE134
-     FCLOAN   UF  F    1874  7AI     2 DISK                                                   CLE134
+     F***CLOAN** UF  F    1874  7AI     2 DISK                                       CLE134 MD058517
+     FCLOAN   UF  F    2040  7AI     2 DISK                                                 MD058517
      F                                              KCOMIT
      F***CLOAN2**IF  F     458  7AI     2 DISK                            S01518
      F***CLOAN2  IF  F    1087  7AI     2 DISK                     S01518 CLE004
@@ -349,6 +354,7 @@
      F***LOAMS** IF  F    1230 14AI     2 DISK                                         CGL029 CLE036
      F*LOAMS***IF**F****1268 14AI     2 DISK                                           CLE036 CLE042
      FLOAMS   IF  F    1291 14AI     2 DISK                                                   CLE036
+     FSDARRTTDIF  E           K        DISK                                                 MD058517
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE1150FFP1                                           S01408
      F*                                                                   S01408
@@ -393,7 +399,8 @@
      F*   26  -  Decimal places for 2nd set ccy = 3                   *                       CLE031
      F*   27  -  Stop Confirmation Indicator ON                       *
      F*   28  -  Interest Payment Freq. Blank - CLOAN                 *
-     F*   29  -  Next Interest Date Zero  - CLOAN                     *
+     F****29**-* Next Interest Date Zero  - CLOAN                     *                     MD058517
+     F*   29  -  When CLE172 LIBOR Lending is enabled                 *                     MD058517
      F*   30  -  Next Repayment Date Non-zero - CLOAN                 *
      F*   31  -  Repayment Freq. Blank - CLOAN                        *
      F*   32  -  Processing Type of CLOAN = 61                        *
@@ -723,7 +730,8 @@
      I                                      297 2970ICBS
      I                                      298 298 IPFR            28
      I                                    P 299 3050TOTI
-     I                                    P 306 3080NIDT            29
+     I**********                          P 306 3080NIDT            29                      MD058517
+     I                                    P 306 3080NIDT                                    MD058517
      I                                    P 309 3110IBDT
      I                                    P 312 3140SLID
      I                                    P 315 3210AIPD
@@ -852,6 +860,7 @@
       *                                                                                       CLE134
      I                                     18621864 XRFI                                      CLE134
      I                                     186518740XRFN                                      CLE134
+     I                                     20402040 BLRT                                    MD058517
      I*
      I** 'LOTL1' & 'LOTL2' used for logging
      I*
@@ -1254,6 +1263,8 @@
      ISCSARD    E DSSCSARDPD                                              S01518
      I** SAR Details                                                      S01518
      I              LCD                             LCDX                  S01518
+     ISDARRT    E DSSDARRTTD                                                                MD058517
+      ** Array of Text Table                                                                MD058517
      I*                                                                   S01408
      I/COPY WNCPYSRC,LE1150IIP2                                           S01408
      I*                                                                   S01408
@@ -1546,6 +1557,29 @@
      C                     GOTO END                                                           CLE031
      C                     ENDIF                                                              CLE031
      C                     ENDIF                                                              CLE031
+      *                                                                                     MD058517
+      **  Access SAR details file to see if CLE172 is installed                             MD058517
+      *                                                                                     MD058517
+     C                     CALL 'AOSARDR0'                                                  MD058517
+     C                     PARM '       ' @RTCD                                             MD058517
+     C                     PARM '*VERIFY' @OPTN                                             MD058517
+     C                     PARM 'CLE172'  @SARD                                             MD058517
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD058517
+      *                                                                                     MD058517
+     C           @RTCD     IFEQ *BLANKS                                                     MD058517
+     C                     MOVE 'Y'       CLE172  1                                         MD058517
+     C                     MOVE '0'       *IN29                                             MD058517
+     C                     ELSE                                                             MD058517
+     C                     MOVE 'N'       CLE172                                            MD058517
+     C                     MOVE '0'       *IN29                                             MD058517
+     C           @RTCD     IFNE '*NRF   '                                                   MD058517
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD058517
+     C                     MOVEL'CLE172 ' DBKEY                                             MD058517
+     C                     Z-ADD33        DBASE                                             MD058517
+     C                     SETON                     U7U8LR                                 MD058517
+     C                     GOTO END                                                         MD058517
+     C                     ENDIF                                                            MD058517
+     C                     ENDIF                                                            MD058517
      C*                                                                   CLE033
      C**  Access SAR details file to see if CLE033 is installed           CLE033
      C*                                                                   CLE033
@@ -2958,6 +2992,20 @@
      C                     ENDIF                                                              CLE031
      C                     ENDIF                                                              CLE031
      C                     ENDIF                                                              218782
+      *                                                                                     MD058517
+      ** If CLE172 is enabled and a backward looking rate,                                  MD058517
+      ** retrieve and print the predefined text fields.                                     MD058517
+      *                                                                                     MD058517
+     C                     MOVE '0'       *IN29                                             MD058517
+     C           CLE172    IFEQ 'Y'                                                         MD058517
+     C           BLRT      ANDEQ'Y'                                                         MD058517
+     C                     CLEARSDARRT                                                      MD058517
+     C                     MOVEL'LOANCONF'WCALLP 10                                         MD058517
+     C           WCALLP    CHAINSDARRTTD             99                                     MD058517
+     C           *IN99     IFEQ '0'                                                         MD058517
+I    C                     MOVE '1'       *IN29                                             MD058517
+     C                     ENDIF                                                            MD058517
+     C                     ENDIF                                                            MD058517
      C*
      C                     EXSR EXCPT
      C                     SETOF                     25
@@ -4484,6 +4532,60 @@
      O                 25      BTB1      91                               110641
      O                 U4 96             78 '** AUTO TRANSMISSION -'
      O                 U4 96             93 'DO NOT SEND **'
+     O        E 11     69 71 29                                                             MD058517
+     O                 29      ARRT01    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT02    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT03    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT04    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT05    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT06    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT07    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT08    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT09    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT10    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT11    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT12    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT13    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT14    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT15    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT16    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT17    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT18    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT19    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT20    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT21    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT22    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT23    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT24    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT25    90                                                 MD058517
+     O        E  1     69 71 29                                                             MD058517
+     O                 29      ARRT26    90                                                 MD058517
+     O        E        69 71 29                                                             MD058517
+     O                 29      ARRT27    90                                                 MD058517
      O*                                                                   S01408
      O/COPY WNCPYSRC,LE1150OOP2                                           S01408
      O*                                                                   S01408

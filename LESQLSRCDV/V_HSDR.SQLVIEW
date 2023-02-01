@@ -6,12 +6,16 @@
 /*                                                                             */
 /*       (c) Finastra International Limited 2020                               */
 /*                                                                             */
-/*       Last Amend No. MD058103           Date 19May21                        */
-/*       Prev Amend No. MD057935           Date 29Apr21                        */ 
+/*       Last Amend No. MD058517           Date 17Oct22                        */
+/*       Prev Amend No. MD058103           Date 19May21                        */
+/*                      MD057935           Date 29Apr21                        */ 
 /*                      CLE172  *CREATE    Date 01Oct20                        */
 /*                                                                             */
 /*-----------------------------------------------------------------------------*/
 /*                                                                             */
+/*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1                 */
+/*                  Interest Projection Using Known Rates                      */
+/*                  CC10 CLE172 Spool File Correspondence (MD059817)           */
 /*       MD058103 - ARR Daily Rates History content for NCCR SARR and          */
 /*                  SAVG are not correct                                       */
 /*       MD057935 - Add field Rate Applied and Current int. prd. for prefilter */ 
@@ -20,6 +24,19 @@
 /*******************************************************************************/
   CREATE VIEW                                                                   :
   **********/**********                                                         :
+  (                                                                             :   MD058517
+    CTRNID                                                                      :   MD058517
+  , CINFLG                                                                      :   MD058517
+  , CINPDT                                                                      :   MD058517
+  , CINPDY                                                                      :   MD058517
+  , COBPDT                                                                      :   MD058517
+  , COBPDY                                                                      :   MD058517
+  , CPBRFR                                                                      :   MD058517
+  , CRTEAP                                                                      :   MD058517
+  , CAVCRT                                                                      :   MD058517
+  , CMINPDT                                                                     :   MD058517
+  , CMOBPDT                                                                     :   MD058517
+  )                                                                             :   MD058517
   AS                                                                            :
   SELECT                                                                        :
   CTRNID,                                                                       :
@@ -41,7 +58,33 @@
   CASE WHEN COBPDT = 0 THEN NULL ELSE DATE(COBPDT+719892) END AS CMOBPDT        :
   FROM                                                                          :
   SDHSDRTD                                                                      :
-  WHERE CMODID = 'LE';                                                          :                                                                  
+**WHERE CMODID = 'LE';                                                          :   MD058517
+  WHERE CMODID = 'LE'                                                           :   MD058517
+  UNION ALL                                                                     :   MD058517
+  SELECT                                                                        :   MD058517
+  FTRNID,                                                                       :   MD058517
+  FINFLG,                                                                       :   MD058517
+  FINPDT,                                                                       :   MD058517
+  FINPDY,                                                                       :   MD058517
+  FOBPDT,                                                                       :   MD058517
+  FOBPDY,                                                                       :   MD058517
+  FPBRFR,                                                                       :   MD058517
+  FRTEAP,                                                                       :   MD058517
+  CASE FCALCM                                                                   :   MD058517
+     WHEN 'NCCR' THEN FDCMRT                                                    :   MD058517
+     WHEN 'SARR' THEN FRTEAP                                                    :   MD058517
+     WHEN 'CCR'  THEN FAVCRT                                                    :   MD058517
+     WHEN 'SAVG' THEN FSMPAV                                                    :   MD058517
+     END AS FAVCRT,                                                             :   MD058517
+     CASE WHEN FINPDT = 0 THEN NULL ELSE DATE(FINPDT+719892) END AS FMINPDT,    :   MD058517
+     CASE WHEN FOBPDT = 0 THEN NULL ELSE DATE(FOBPDT+719892) END AS FMOBPDT     :   MD058517
+  FROM                                                                          :   MD058517
+  SDFWDRTD T2                                                                   :   MD058517
+  WHERE                                                                         :   MD058517
+  NOT EXISTS (                                                                  :   MD058517
+  SELECT * FROM SDHSDRTD T1                                                     :   MD058517
+  WHERE T2.FINPDT = T1.CINPDT)                                                  :   MD058517
+  AND FMODID = 'LE';                                                            :   MD058517
                                                                                 : 
   LABEL ON COLUMN **********/**********                                         :   MD058103
    (CAVCRT IS 'Average/Compounded  Rate');                                      :   MD058103 

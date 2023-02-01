@@ -17,8 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060008           Date 11May21               *
-      *  Prev Amend No. MD060033           Date 25Sep22               *
+      *  Last Amend No. MD060959           Date 26Jan23               *
+      *  Prev Amend No. MD060883           Date 22Jan23               *
+      *                 MD060823           Date 12Dec22               *      
+      *                 MD058517           Date 17Oct22               *
+      *                 MD060008           Date 11May21               *
+      *                 MD060033           Date 25Sep22               *
       *                 249385             Date 01Aug22               *
       *                 MD059424           Date 29Mar22               *
       *                 MD059375           Date 20Dec21               *
@@ -41,6 +45,25 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060959 -  Loans whose repayment falls on a holiday is      *
+      *              reported as Rates Known 'Y' in SDRTKNTD.         *
+      *              Amend subroutine SRChk2ndCall to include         *
+      *              records whose payment date is greater than       *
+      *              previous run date and less than current rundate. *
+      *  MD060883 -  Matured loans are still processed/reported by    *
+      *              the ARR calculator.                              *
+      *              Do not process the loan record if the interest   *
+      *              period start date is equal to maturiy date of    *
+      *              the loan.                                        *
+      *  MD060823 -  Rolled over loan using SARR calculation method   *
+      *              was not processed by calculator and reported     *
+      *              as an exception.                                 *
+      *              Amended SQL statement in second ARR calculator   *
+      *              call so that risk free rate is also retrieved    *
+      *              on rollover                                      *
+      *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
+      *             Interest Projection Using Known Rates             *
+      *             CC10 CLE172 Spool File Correspondence (MD059817)  *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD060033 - Rates Known flag set a day late.  Add 1 day to    *
       *             SumLBLO.  Introduce new system value              *
@@ -214,11 +237,21 @@
      D  BenchMarkAdj                 20A
      D  RatesKnownInd                 1A
      D  ReturnCode                   20A
+     D RTKNOWDS      e ds                  extname(SDRTKNTD)                                MD058517
+     D RateKnownDS     ds                  likeds(RTKNOWDS)                                 MD058517
+      ** Data area to read previous run date                                                MD060959
+     D JNSTAT          DS           200                                                     MD060959
+     D  PRUN                 103    105P 0                                                  MD060959
 
       ** Constants declaration
      D NO_ERROR        c                   const(0)
      D NO_RECORD       c                   const(100)
      D EC              c                   const('  0 .       ')                            MD057946
+     D AMP             c                   const('&')                                       MD058517
+     D INSERT          c                   const(0)                                         MD058517
+     D QUE             c                   const('?')                                       MD058517
+     D QUO             c                   const('''')                                      MD058517
+     D UPDATE          c                   const(1)                                         MD058517
 
       ** Reference Rates Array
      D ArraySize       C                   CONST(10)
@@ -277,6 +310,7 @@
      D PublTime        S              8A
      D EventCtrlDate   S              5S 0                                                  MD058040
      D ControlDate     S              5A                                                    MD058182
+     D wEvntCtrlDate   S              5A                                                    MD058517
      D WrkMigrate      S              1A                                                    MD059137
      D Wrk2ndCall      S              1A   INZ('N')                                         MD059190
      D WrkEndDate      S              5P 0                                                  MD059190
@@ -293,6 +327,8 @@
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
+     D wSqlStr         S           2000A   INZ(*BLANKS)                                     MD058517
+     D action          s              1s 0                                                  MD058517
      D SysDate         S               D   DATFMT(*ISO)                                     MD060033
      D SysOrMidas      S              1A                                                    MD060033
      D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD060008
@@ -335,6 +371,12 @@
       ** Determine Interest Period Dates
      C                   EVAL      WZeroMDATFlag = 'N'
      C                   EXSR      SRDetINTDATE
+                                                                                            MD060883
+     C                   IF        TRMODI = 'LE' AND IntPerSDATE = TRMDAT                   MD060883
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD060883
+     C                   EXSR      SRReadNEXT                                               MD060883
+     C                   ITER                                                               MD060883
+     C                   ENDIF                                                              MD060883
 
       ***If*the*backward-looking*rate*parameters*are*changed*via******              CLE172 MD058040A
       ***Rollover,*this*will*be*applied*to*the*whole*interest*period.*              CLE172 MD058040A
@@ -757,6 +799,10 @@
      C                   EVAL      DBASE  = 008                                               CIR020
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                            MD058517
+     C                   IF        CLE172 = 'Y'                                             MD058517
+     C                   EXSR      SRupdRTKN                                                MD058517
+     C                   ENDIF                                                              MD058517
 
      C                   ENDSR
       *****************************************************************
@@ -1186,6 +1232,7 @@
      C                   PARM                    BenchMarkAdj
      C                   PARM                    RatesKnownInd
      C                   PARM                    ControlDate                                MD058182
+     C                   PARM                    wEvntCtrlDate                              MD058517
      C                   PARM      *BLANKS       ReturnCode
 
       ** End program if there's a connection error
@@ -1284,6 +1331,7 @@
      C                   IF        BKAPDT < EventCtrlDate                                   MD058040
      C                   EVAL      EventCtrlDate = BKAPDT                                   MD058040
      C                   ENDIF                                                              MD058040
+     C                   MOVE      EventCtrlDate wEvntCtrlDate                              MD058517
                                                                                             MD058040
      C                   IF        BKANWD = '0' or BKANWD = '1'                             MD058182
      C                   EVAL      EventCtrlDate = BJDNWD - 1                               MD058182
@@ -1414,6 +1462,11 @@
      C+ fetch next from ACursor into :SDLIBR                                                MD060008
      C/END-EXEC                                                                             MD060008
      C                   ENDDO
+      *                                                                                     MD060959
+      ** Get PRUN from data area JNSTAT                                                     MD060959
+      *                                                                                     MD060959
+     C     *DTAARA       DEFINE                  JNSTAT                                     MD060959
+     C                   IN        JNSTAT                                                   MD060959
 
      C/EXEC SQL                                                                             MD060008
      C+ close ACursor                                                                       MD060008
@@ -1439,12 +1492,28 @@
      C+   and BLRT = 'Y'                                                                    MD059190
      C+   and NBLRT <> 'N'                                                                  MD059190
      C/end-exec                                                                             MD059190
+      **                                                                                    MD060959
+     C                   IF        NoOfRecs = 0                                             MD060959
+     C/exec SQL                                                                             MD060959
+     C+ select count(*) into :NoOfRecs                                                      MD060959
+     C+ from CLOANCL                                                                        MD060959
+     C+ where LNRF = :TrTRAN                                                                MD060959
+     C+   and ((NIDT > :PRUN and NIDT < :BJRDNB)                                            MD060959
+     C+   or  (NRPD > :PRUN and NRPD <:BJRDNB and REPT <> 2))                               MD060959
+     C+   and (RLDT > :PRUN and RLDT < :BJRDNB or RLDT = 0)                                 MD060959
+     C+   and BLRT = 'Y'                                                                    MD060959
+     C+   and NBLRT <> 'N'                                                                  MD060959
+     C/end-exec                                                                             MD060959
+     C                   ENDIF                                                              MD060959
+      **                                                                                    MD060959
      C                   IF        NoOfRecs <> 0                                            MD059190
      C/exec SQL                                                                             MD059190
      C+ select NCALM, NBADJ, NFLOR, NLBDY,                                                  MD059190
-     C+        NLODY, NOPSH, NRRDP, NDBAV                                                   MD059190
+     C***+        NLODY, NOPSH, NRRDP, NDBAV                                       MD059190 MD060823
+     C+           NLODY, NOPSH, NRRDP, NDBAV, NRFRR                                         MD060823
      C+ into :TrCALM, :TrBADJ, :TrFLOR, :TrLBDY,                                            MD059190
-     C+      :TrLODY, :TrOPSH, :TrRRDP, :TrDBAV                                             MD059190
+     C***+      :TrLODY, :TrOPSH, :TrRRDP, :TrDBAV                                 MD059190 MD060823
+     C+      :TrLODY, :TrOPSH, :TrRRDP, :TrDBAV, :TrRFRR                                    MD060823
      C+ from CLOANCL                                                                        MD059190
      C+ where LNRF = :TrTRAN                                                                MD059190
      C+   and NBLRT = 'Y'                                                                   MD059190
@@ -1472,6 +1541,175 @@
      C                   PARM      *ZEROS        WrkBasDate                                 MD059190
                                                                                             MD059190
      C                   ENDSR                                                              MD059190
+      // Start of change MD058517
+      /free
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // SrupdRTKN  - Update Rates Known File                       *
+       // ==========                                                 *
+       //                                                            *
+       // Called by: SrUpdFile                                       *
+       //                                                            *
+       // Calls: checkExist                                          *
+       //                                                            *
+       //*************************************************************
+
+       begsr SrupdRTKN;
+
+                   exsr checkExist;
+
+                   if action = INSERT;
+
+                      exsr insertRecord;
+
+                   elseif action = UPDATE;
+
+                      exsr updateRecord;
+
+                   endif;
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // insertRecord                                               *
+       // ============                                               *
+       //                                                            *
+       // Called by: SRupdRTKN                                       *
+       //                                                            *
+       // Calls: none                                                *
+       //                                                            *
+       //*************************************************************
+
+       begsr insertRecord;
+
+                   clear RateKnownDS;
+                   RateKnownDS.KMODID = TrModi;
+                   RateKnownDS.KTRNID = TrTran;
+                   RateKnownDS.KRTKNI = RatesKnown;
+                   RateKnownDS.KINTPE = 0;
+                   RateKnownDS.KCINTA = 0;
+                   RateKnownDS.KPINTA = 0;
+                   RateKnownDS.KCORMP = 'N';
+                   RateKnownDS.KSPLFP = 'N';
+                   exec sql insert into SDRTKNTD
+                   values (:RateKnownDS);
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      dbFile = 'SDRTKNTD';
+                      dbkey = *blanks;
+                      dbase = 005;
+                      exsr *pssr;
+                   endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // updateRecord                                               *
+       // ============                                               *
+       //                                                            *
+       // Called by: SRupdRTKN                                       *
+       //                                                            *
+       // Calls: none                                                *
+       //                                                            *
+       //*************************************************************
+
+       begsr updateRecord;
+
+                   clear RateKnownDS;
+                   RateKnownDS.KMODID = trModi;
+                   RateKnownDS.KTRNID = trTran;
+                   RateKnownDS.KRTKNI = RatesKnown;
+                   if RatesKnown = 'N';
+                      RateKnownDS.KINTPE = 0;
+                      RateKnownDS.KCINTA = 0;
+                      RateKnownDS.KPINTA = 0;
+                      RateKnownDS.KCORMP = 'N';
+                      RateKnownDS.KSPLFP = 'N';
+                      wSqlStr = 'update SDRTKNTD A SET '  +
+                              'A.KRTKNI = ' + QUO + %trim(RateKnownDS.KRTKNI) +
+                               QUO + ' , ' +
+                              'A.KINTPE = ' + %char(RateKnownDS.KINTPE) +
+                               ' , ' +
+                              'A.KCINTA = ' + %char(RateKnownDS.KCINTA) +
+                               ' , ' +
+                              'A.KPINTA = ' + %char(RateKnownDS.KPINTA) +
+                               ' , ' +
+                              'A.KCORMP = ' + QUO + RateKnownDS.KCORMP  + QUO +
+                              ' , ' +
+                              'A.KSPLFP = ' + QUO + RateKnownDS.KSPLFP  + QUO +
+                              ' where KMODID = '  + QUO + TrMODI   + QUO +
+                              '  and KTRNID = ' + QUO + TrTRAN      + QUO;
+                   else;
+                      wSqlStr = 'update SDRTKNTD A SET '  +
+                              'A.KRTKNI = ' + QUO + %trim(RateKnownDS.KRTKNI) +
+                               QUO +
+                               ' where KMODID = '  + QUO + TrMODI   + QUO +
+                               '  and KTRNID = ' + QUO + TrTRAN      + QUO;
+                   endif;
+
+                   exec sql
+                   execute immediate :wSqlStr;
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      dbFile = 'SDRTKNTD';
+                      dbkey = *blanks;
+                      dbase = 006;
+                      exsr *pssr;
+                   endif;
+
+       endsr;
+
+       //*************************************************************
+       /EJECT
+       //*************************************************************
+       //                                                            *
+       // checkExist - Check if a record exist on a given file       *
+       // ==========                                                 *
+       //                                                            *
+       // Called by: Output File                                     *
+       //                                                            *
+       // Calls: None                                                *
+       //                                                            *
+       //*************************************************************
+
+       begsr checkExist;
+
+                   wSQLStr = 'select * from SDRTKNTD ' +
+                             'where KMODID = '  + QUO + TrMODI   + QUO +
+                             ' and KTRNID = ' + QUO + TrTRAN      + QUO;
+
+                   exec sql prepare P1 from :wSQLStr;
+                   exec sql declare P1 cursor for P1;
+                   exec sql open P1;
+
+                   exec sql fetch next From P1 into :RateKnownDS;
+
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                      dbFile = 'SDRTKNTD';
+                      dbkey = *blanks;
+                      dbase = 004;
+                      exsr *pssr;
+                   endif;
+
+                   if sqlCod = NO_RECORD;
+                      action = INSERT;
+                   else;
+                      action = UPDATE;
+                   endif;
+
+                   exec sql close P1;
+
+       endsr;
+      /end-free
+      // End of change MD058517
+
       *****************************************************************                     MD059190
       /EJECT                                                                                MD059190
       *****************************************************************

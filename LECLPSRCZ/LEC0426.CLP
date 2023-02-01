@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058517           Date 17Oct22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,13 +18,16 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             Date 15May96              */
+/*                      S01408             Date 15May96              */
 /*                      084617             Date 13Apr95              */
 /*                      S01465             DATE  22MAR94             */
 /*                      BH3413             DATE  15JUL92             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1       */
+/*                  Interest Projection Using Known Rates            */
+/*                  CC10 CLE172 Spool File Correspondence (MD059817) */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - Core hook LEC0426002 added                         */
 /*                Core hook LEC0426001 added                         */
@@ -43,14 +47,24 @@
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                /*S01465*/
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                 /*S01465*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)            /*S01465*/
+             DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD058517*/
 /*/COPY WNCPYSRC,LEC0426004                                          */
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))                              /*084617*/
                                                                       /*084617*/
 /*/COPY WNCPYSRC,LEC0426005                                          */
 /**          CHGJOB     SWS(XX1XXXXX)                          0085**/
- 
+
+/**/                                                                                    /*MD058517*/
+/** Access SAR file to determine if CLE172 feature is ON             */                 /*MD058517*/
+/**/                                                                                    /*MD058517*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD058517*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD058517*/
+             CHGVAR     VAR(&SAR) VALUE('CLE172')                                       /*MD058517*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*MD058517*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CLE172) VALUE('Y'))                                      /*MD058517*/
 /**/                                                                 /*S01465*/
 /**  Access SAR file to determine if the switchable feature for   */ /*S01465*/
 /**  S01465 is switched on                                           /*S01465*/
@@ -63,32 +77,45 @@
 /**  If switchable feature is on, call LE1170.  Else, call LE0426 */ /*S01465*/
 /**/                                                                 /*S01465*/
 /*/COPY WNCPYSRC,LEC0426003                                          */
-             IF         COND(&RTCD *EQ '       ') THEN(+
-                CALL       PGM(LE1170))                              /*S01465*/
+/**********  IF         COND(&RTCD *EQ '       ') THEN(+             */                 /*MD058517*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD058517*/
+                                                                                        /*MD058517*/
+/** Override LE1170P1 attributes to increase page size and overflow  */                 /*MD058517*/
+                 IF        COND(&CLE172 *EQ 'Y') THEN(OVRPRTF +
+                           FILE(LE1170P1) PAGESIZE(68 90) OVRFLW(68))                   /*MD058517*/
+                                                                                        /*MD058517*/
+/**********     CALL       PGM(LE1170))                              */          /*S01465 MD058517*/
+                CALL       PGM(LE1170)                                                  /*MD058517*/
+             ENDDO                                                                      /*MD058517*/
              ELSE       CMD(DO)                                      /*S01465*/
 /**                                                                  /*S01408*/
 /*/COPY WNCPYSRC,LEC0426002                                          /*S01408*/
 /**                                                                  /*S01408*/
+                                                                                        /*MD058517*/
+/** Override LE0426P1 attributes to increase page size and overflow  */                 /*MD058517*/
+                 IF        COND(&CLE172 *EQ 'Y') THEN(OVRPRTF +
+                           FILE(LE0426P1) PAGESIZE(68 90) OVRFLW(68))                   /*MD058517*/
+                                                                                        /*MD058517*/
              CALL       PGM(LE0426)
 /**                                                                  /*S01408*/
 /*/COPY WNCPYSRC,LEC0426001                                          /*S01408*/
 /**                                                                  /*S01408*/
              ENDDO                                                   /*S01465*/
 /*/COPY WNCPYSRC,LEC0426006                                          */
- 
+
 /**          CHGJOB     SWS(XX0XXXXX)                          0085**/
 /**          IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +    0085**/
 /**                       CMDLBL(ERROR))                       0085**/
- 
+
 /**          IF         COND(%SWITCH(XXXXXX00)) THEN(GOTO +
                           CMDLBL(END))                         BH3413*/
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)     /*BH3413*/
              CLRPFM     FILE(ROLRECS)                        /*BH3413*/
              GOTO         CMDLBL(END)                        /*BH3413*/
              ENDDO                                           /*BH3413*/
- 
+
 /* IF THERE ARE ERRORS OUTPUT THE DETAILS TO THE MESSAGE QUEUE */
- 
+
    ERROR:
            IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                /*084617*/
              RTVDTAARA DTAARA(LDA) RTNVAR(&LDA)
@@ -112,5 +139,5 @@
    END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
    ENDPGM

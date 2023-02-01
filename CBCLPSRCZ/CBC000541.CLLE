@@ -1,0 +1,92 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Create Retail Int. Capitalisation Extract')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBC000541 - Midas CB COB Phase change from COB to IC        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD060659  *CREATE  Date 28Nov22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD060659 - To protect CBC0540 from interactive calling.     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('COB +
+                          Phase change from COB to Input Cycle') +
+                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/* Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+/* Clear CBCOBRPD file */
+
+             CLRPFM     FILE(CBCOBRPD)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+/* Changed Standing Data status to 'BEGIN' */
+
+             CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('BEGIN')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* Changed COB phase to Input Cycle ('A') */
+
+             CHGDTAARA  DTAARA(MPHAS (1 1)) VALUE('A')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* Changed COB event text */
+             SCWRTJREG EVENT(MPHAS) FLAG(A) TEXT('MPHAS changed from G to A')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* Changed COB statuses (halt, reopen i/c and cob status to 'N' */
+
+             CHGDTAARA  DTAARA(CBSTAT (20 1)) VALUE('N')
+             CHGDTAARA  DTAARA(CBSTAT (32 1)) VALUE('N')
+             CHGDTAARA  DTAARA(CBSTAT (45 1)) VALUE('N')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             CLRMSGQ    MSGQ(MSPECIAL)
+
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+
+ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          CBC000541 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+END:
+             ENDPGM

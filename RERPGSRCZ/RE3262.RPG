@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058854           Date 21Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 230911             Date 04Jan23               *      
+      *  Prev Amend No. MD058854           Date 21Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 230844             Date 16Dec04               *
       *                 262850             Date 26Nov09               *
@@ -63,6 +64,10 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  230911 - Wrong interest adjustments are generated because of *
+      *           two REHISPS records: HISD = cap. date + 1 (in case  *
+      *           of 1st day accruals) and HISD = unlink date.        *
+      *         - Applied for MD-59815.                               *     
       *  MD058854 - Deliverable Data Split for TABLEV4                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
@@ -621,7 +626,8 @@
      C/COPY WNCPYSRC,RE3262C009
      C                     KFLD           LTAC
      C                     KFLD           LTAS
-     C                     KFLD           VALU
+     C**********           KFLD           VALU                                                230911
+     C                     KFLD           KDAT2                                               230911
      C           REYKEY    KLIST
      C                     KFLD           BRCA
      C                     KFLD           ZZCNUM
@@ -989,6 +995,9 @@
      C*
      C                     MOVE '0'       *IN63                           144977
      C                     Z-ADDVALU      KDATE
+     C           BMLDAI    IFNE 'Y'                                                           230911
+     C                     ADD  1         KDATE                                               230911
+     C                     END                                                                230911
      C                     Z-ADD08        DBASE
      C           DCKEY     SETLLREHISDL                  61
      C*
@@ -1065,6 +1074,9 @@
      C*
      C                     Z-ADDRUND      PSTD
      C                     Z-ADDVALU      VALD
+     C           BMLDAI    IFNE 'Y'                                                           230911
+     C                     ADD  1         VALD                                                230911
+     C                     END                                                                230911
      C                     MOVE 'P'       RECI
      C                     MOVE '00001'   TRAT
      C                     MOVE '1'       RIND
@@ -1350,10 +1362,14 @@
      C*
      C                     Z-ADDVALU      HISD
      C*
+     C           BMLDAI    IFNE 'Y'                                                           230911
+     C                     ADD  1         HISD                                                230911
+     C                     END                                                                230911
      C                     Z-ADD22        DBASE
      C           REDKEY    CHAINREHISLS              59
      C*
      C           *IN59     IFEQ '1'                        - B1
+     C                     Z-ADDVALU      HISD                                                230911
      C*
      C                     Z-ADD23        DBASE
      C           REDKEY    SETGTREHISL
@@ -1379,6 +1395,9 @@
      C                     Z-ADDHISB      STBL
      C                     MOVE 'S'       RECI
      C                     Z-ADDVALU      HISD
+     C           BMLDAI    IFNE 'Y'                                                           230911
+     C                     ADD  1         HISD                                                230911
+     C                     END                                                                230911
      C                     Z-ADDLDID      PDID
      C                     Z-ADDLCID      PCID
      C                     MOVE 'Y'       SDICI
@@ -1393,6 +1412,9 @@
      C                     Z-ADD*ZEROS    CAIC
      C                     Z-ADDHISB      STBL
      C                     Z-ADDVALU      HISD
+     C           BMLDAI    IFNE 'Y'                                                           230911
+     C                     ADD  1         HISD                                                230911
+     C                     END                                                                230911
      C                     Z-ADDLDID      PDID
      C                     Z-ADDLCID      PCID
      C                     MOVE 'Y'       SDICI
@@ -1421,6 +1443,9 @@
      C                     Z-ADDHISB      STBL
      C                     MOVE 'S'       RECI
      C                     Z-ADDVALU      HISD
+     C           BMLDAI    IFNE 'Y'                                                           230911
+     C                     ADD  1         HISD                                                230911
+     C                     END                                                                230911
      C                     Z-ADDLDID      PDID
      C                     Z-ADDLCID      PCID
      C                     MOVE 'Y'       SDICI
@@ -1446,6 +1471,9 @@
      C                     Z-ADDHISB      STBL
      C                     MOVE 'S'       RECI
      C                     Z-ADDVALU      HISD
+     C           BMLDAI    IFNE 'Y'                                                           230911
+     C                     ADD  1         HISD                                                230911
+     C                     END                                                                230911
      C                     Z-ADDLDID      PDID
      C                     Z-ADDLCID      PCID
      C                     MOVE 'Y'       SDICI
@@ -1463,8 +1491,8 @@
      C                     ADD  CAIC      CRIS
      C                     Z-ADD*ZEROS    DAIC
      C                     Z-ADD*ZEROS    CAIC
-     C                     Z-ADDLDID      PDID
-     C                     Z-ADDLCID      PCID
+     C**********           Z-ADDLDID      PDID                                                230911
+     C**********           Z-ADDLCID      PCID                                                230911
      C*                    UPDATREHISLPF
      C                     Z-ADD29        DBASE
      C                     UPDATREHISSF
@@ -1532,6 +1560,10 @@
      C                     Z-ADDLTAC      WLTAC
      C                     Z-ADDLTAS      WLTAS
      C                     MOVE LTCUST    WLTCUS
+     C                     Z-ADDVALU      KDAT2   50                                          230911
+     C           BMLDAI    IFNE 'Y'                                                           230911
+     C                     ADD  1         KDAT2                                               230911
+     C                     END                                                                230911
      C/COPY WNCPYSRC,RE3262C005
      C*
      C** SETLL REDETM TO FIND POSTINGS IF EXISTS

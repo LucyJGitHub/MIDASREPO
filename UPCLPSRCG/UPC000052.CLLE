@@ -9,10 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CUT017 *CREATE     Date 17Mar20              */
+/*       Last Amend No. MD060960           Date 16Jan23              */
+/*       Prev Amend No. CUT017 *CREATE     Date 17Mar20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060960 - Some dependents do not exist yet as their        */
+/*                  CRTDUPOBJ has not been executed yet. Fix is to   */
+/*                  rebuild the order.                               */
 /*       CUT017 - Adapptive Database Upgrade                         */
 /*                                                                   */
 /*********************************************************************/
@@ -157,8 +161,17 @@ LOOP:
              CALL       PGM(UP000080) PARM(&PRFX &REFSYS 'R' &ERROR)
              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
 
-             CALL       PGM(UP000070) PARM(&PRFX &REFSYS &ERROR)
-             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+/* Call new program to review the rebuild order */                                      /*MD060960*/
+             CLRPFM     FILE(UPGDEPTD)                                                  /*MD060960*/
+             CALL       PGM(UP000078) PARM(&REFSYS &ERROR)                              /*MD060960*/
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)                  /*MD060960*/
+             CALL       PGM(UP000079) PARM(&ERROR)                                      /*MD060960*/
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)                  /*MD060960*/
+                                                                                        /*MD060960*/
+/**********  CALL       PGM(UP000070) PARM(&PRFX &REFSYS &ERROR) */                     /*MD060960*/
+/**********  IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR) */               /*MD060960*/
+             CALL       PGM(UP000170) PARM(&PRFX &REFSYS &ERROR)                        /*MD060960*/
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)                  /*MD060960*/
 
 /* Send DONE message to server */
              CALL       PGM(QSNDDTAQ) PARM('ADBU_GSVR' '*LIBL     ' +

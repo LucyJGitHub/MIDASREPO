@@ -13,11 +13,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059742             Date 23Mar22             *
-      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD060994             Date 01Feb23             *
+      *  Prev Amend No. MD059742             Date 23Mar22             *
+      *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060994 - Missing character is label                        *
       *  MD059742 - Cope with change in Alternative field name        *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
@@ -115,6 +117,9 @@
      D  wCHD1                  1     20
      D  wCHD2                 21     40
      D  wCHD3                 41     60
+     D Ch19            S              1A                                                    MD060994
+     D Ch20            S              1A                                                    MD060994
+     D UseCh           S              2A                                                    MD060994
 
      D/COPY ZACPYSRC,PSDS
 
@@ -779,17 +784,28 @@
      C                   ENDIF
      C                   ENDIF
 
+     C                   eval      Ch19 =  %subst(WHCHD2:19:1)                              MD060994
+     C                   eval      Ch20 =  %subst(WHCHD2:20:1)                              MD060994
+     C                   eval      UseCh = *blanks                                          MD060994
      C                   EVAL      xpos = %SCAN(Quote:WHCHD2:1)
      C                   If        xpos > 0
      C                   eval      WHCHD2 = %subst(WHCHD2:1:xpos) + Quote +
      C                             %subst(WHCHD2:xpos+1:20-xpos-1)
+     C                   eval      UseCh = '20'                                             MD060994
      C                   EVAL      xpos = %SCAN(Quote:WHCHD2:xpos+2)
      C                   If        xpos > 0
      C                   eval      WHCHD2 = %subst(WHCHD2:1:xpos) + Quote +
      C                             %subst(WHCHD2:xpos+1:20-xpos-1)
+     C                   eval      UseCh = '19'                                             MD060994
      C                   ENDIF
      C                   ENDIF
 
+     C                   If        UseCh = '19'                                             MD060994
+     C                   eval      WHCHD3 = %triml(Ch19 + Ch20 + WHCHD3)                    MD060994
+     C                   Endif                                                              MD060994
+     C                   If        UseCh = '20'                                             MD060994
+     C                   eval      WHCHD3 = %triml(Ch20 + WHCHD3)                           MD060994
+     C                   Endif                                                              MD060994
      C                   EVAL      xpos = %SCAN(Quote:WHCHD3:1)
      C                   If        xpos > 0
      C                   eval      WHCHD3 = %subst(WHCHD3:1:xpos) + Quote +

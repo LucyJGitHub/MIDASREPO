@@ -11,10 +11,14 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD060960             Date 16Jan23             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060960 - Some dependents do not exist yet as their         *
+      *             CRTDUPOBJ has not been executed yet. Fix is to    *
+      *             rebuild the order.                                *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -49,7 +53,8 @@
      C+ declare Cursor1 cursor for
      C+ select *
      C+ from UPZSCRTD where SCTYPE = 'RB'
-     C+ order by SCLIB, SCFILE, SCSEQ
+     C**order*by*SCLIB, SCFILE, SCSEQ                                                       MD060960
+     C+ order by SCSEQ                                                                      MD060960
      C/end-exec
 
      C/exec SQL

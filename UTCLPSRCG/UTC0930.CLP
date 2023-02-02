@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD060488           Date 08Sep22              */
-/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*       Last Amend No. MD061004           Date 02Feb23              */
+/*       Prev Amend No. MD060488           Date 08Sep22              */
+/*                      MD054605           Date 17Oct19              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061004 - Adding CCSID for database objects                */
 /*       MD060488 - Deliverable Data Split for UTMENUPD              */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
@@ -94,8 +96,10 @@
 /**********     ENDDO */                                                        /*CUP006**MD060488*/
              CPYF       FROMFILE(UTMNUCTDX) TOFILE(UTMNUCTD) +
                           MBROPT(*REPLACE)                                              /*MD060488*/
-             CPYF       FROMFILE(UTMNUCTDX) TOFILE(UTMNUCTD) +
-                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD060488*/
+/**********  CPYF       FROMFILE(UTMNUCTDX) TOFILE(UTMNUCTD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP) */              /*MD060488**MD061004*/
+             CPYF       FROMFILE(UTMNUCTDX) TOFILE(UTMNUXTD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD061004*/
                 CHGDTAARA DTAARA(UPSTAT (55 1)) VALUE(' ')                                /*CUP006*/
              ENDDO                                                                        /*CUP006*/
                                                                                           /*CUP006*/

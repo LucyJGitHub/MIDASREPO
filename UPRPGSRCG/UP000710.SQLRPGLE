@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD060848             Date 28Dec22             *      
-      *  Prev Amend No. MD060547             Date 12Dec22             *
+      *  Last Amend No. MD061005             Date 02Feb23             *
+      *  Prev Amend No. MD060848             Date 28Dec22             *
+      *                 MD060547             Date 12Dec22             *
       *                 MD060626             Date 13Oct22             *
       *                 MD059702             Date 15Mar22             *
       *                 MD057231             Date 18Nov20             *
@@ -22,7 +23,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060848 - Consider field SDLIBRTD.ROUPAL                    *      
+      *  MD061005 - Merging issue with MD060848                       *
+      *  MD060848 - Consider field SDLIBRTD.ROUPAL                    *
       *  MD060547 - Issue with column A1FTPT in SDRETRPD              *
       *  MD060626 - CGC2030 fails when RGZPFM CGCSTRPD                *
       *  MD059702 - Align UP000710 (migration) with UP000703 (upgrade)*
@@ -380,20 +382,20 @@
                                                                                             MD060547
       ** if processing A1FTPT, check same field exists in SDRETRPD                          MD060547
      C                   If        X_Field = 'A1FTPT'                                       MD060547
-      C                             or WHFLDI = 'ROUAPL'                                     MD060848
-     C                   If        WHFLDI = 'A1FTPT'                                        MD060848    
+     C                             or WHFLDI = 'ROUAPL'                                     MD060848
+     C                   If        WHFLDI = 'A1FTPT'                                        MD060848
      C/EXEC SQL                                                                             MD060547
      C+ select count(*) into :RcdCount                                                      MD060547
      C+ from QADBILLB WHERE DBILIB = :OSCHEMA and DBIFIL                                    MD060547
      C+ = :OLDFILE and DBIFLD = 'A1FTPT'                                                    MD060547
      C/END-EXEC                                                                             MD060547
-      C                   else                                                               MD060848
+     C                   else                                                               MD060848
      C/EXEC SQL                                                                             MD060848
      C+ select count(*) into :RcdCount                                                      MD060848
      C+ from QADBILLB WHERE DBILIB = :OSCHEMA and DBIFIL                                    MD060848
      C+ = :OLDFILE and DBIFLD = 'ROUAPL'                                                    MD060848
      C/END-EXEC                                                                             MD060848
-     C                   Endif                                                              MD060848    
+     C                   Endif                                                              MD060848
      C                   If        RcdCount = 0                                             MD060547
      C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD060547
      C                   eval      PSELECTB = %trimr(PSELECTB) + ', '  + ''' '''            MD060547

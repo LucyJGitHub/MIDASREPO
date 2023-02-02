@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD021359           Date 20Jan23              */
-/*       Prev Amend No. 227690             Date 20Jan23              */
+/*       Last Amend No. MD026618           Date 27Jan23              */
+/*       Prev Amend No. MD021359           Date 20Jan23              */
+/*                      227690             Date 20Jan23              */
 /*                      227662             Date 20Jan23              */
 /*                      259402             Date 06Jun20              */
 /*                      MD046248           Date 27Oct17              */
@@ -27,6 +28,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD026618 - When CAS005 is ON, the same fix should apply to  */
+/*                  &FRLA and &FCAC.                                 */
 /*       MD021359 - No reversal of FR posting when CAS005 is         */
 /*                  switched on.                                     */
 /*       227690 - Fwd Reval Reversal not done on the first working   */
@@ -367,9 +370,47 @@
                         THEN(DO)                                                        /*MD021359*/
              CLOF       OPNID(GLHIBLPD)                                                 /*MD021359*/
              MONMSG     MSGID(CPF4520)                                                  /*MD021359*/
+             OPNQRYF    FILE((GLHIBLPD &PGCD)) FORMAT(MCPCACPD) +
+                          QRYSLT(' HBPDCT *EQ ''' *CAT &PDCT *CAT +
+                          ''' *AND HBPDYR *EQ ''' *CAT &PDYR *CAT +
+                          ''' *AND HBPDNY *EQ ''' *CAT &PDNY *CAT +
+                          ''' *AND (HBACCD *EQ ''' *CAT &FCAC *CAT +
+                          ''')') MAPFLD((BRCA HBBRCD) (CCY HBCYCD) +
+                          (ACOD HBACCD) (CNUM HBCUST) (ACSQ HBACSN) +
+                          (PRFC HBPCCD) (BOKC HBBKCD) (OTTP HBOTTP) +
+                          (OTST HBTSTY) (ASOC HBACNB) (ACSC HBACSC) +
+                          (PAMT 'HBPDCB * -1') (VOIN 1) (GETP +
+                          '''F''') (ATYP ''' ''') (CPNB (&PDCT *CAT +
+                          &PDYR *CAT &PDNY)) (PNAR '''FWD P&L +
+                          VALUATION REVERSAL''') (EVDT &DEVD) (PDTM +
+                          (&PSTD *CAT '235959')) (DRCR 0) (ACODQQ +
+                          0))                                                           /*MD026618*/
              CPYFRMQRYF FROMOPNID(GLHIBLPD) TOFILE(MCFREXPD) +
                           MBROPT(*ADD) FMTOPT(*MAP *DROP)                               /*MD021359*/
+                                                                                        /*MD026618*/
+/** Reversal for &FCAC against &FRLA                                                    /*MD026618*/
+                                                                                        /*MD026618*/
+             CLOF       OPNID(GLHIBLPD)                                                 /*MD026618*/
+             MONMSG     MSGID(CPF4520)                                                  /*MD026618*/
+             OPNQRYF    FILE((GLHIBLPD &PGCD)) FORMAT(MCPCACPD) +
+                          QRYSLT(' HBPDCT *EQ ''' *CAT &PDCT *CAT +
+                          ''' *AND HBPDYR *EQ ''' *CAT &PDYR *CAT +
+                          ''' *AND HBPDNY *EQ ''' *CAT &PDNY *CAT +
+                          ''' *AND (HBACCD *EQ ''' *CAT &FCAC *CAT +
+                          ''')') MAPFLD((BRCA HBBRCD) (CCY HBCYCD) +
+                          (ACOD &FRLA) (CNUM HBCUST) (ACSQ HBACSN) +
+                          (PRFC HBPCCD) (BOKC HBBKCD) (OTTP HBOTTP) +
+                          (OTST HBTSTY) (ASOC HBACNB) (ACSC HBACSC) +
+                          (PAMT 'HBPDCB * 1') (VOIN 1) (GETP +
+                          '''F''') (ATYP ''' ''') (CPNB (&PDCT *CAT +
+                          &PDYR *CAT &PDNY)) (PNAR '''FWD P&L +
+                          VALUATION REVERSAL''') (EVDT &DEVD) (PDTM +
+                          (&PSTD *CAT '235959')) (DRCR 1) (ACODQQ +
+                          0))                                                           /*MD026618*/
+                                                                                        /*MD026618*/
 
+             CPYFRMQRYF FROMOPNID(GLHIBLPD) TOFILE(MCFREXPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)                               /*MD026618*/
              ENDDO                                                                      /*MD021359*/
              GOTO       CMDLBL(END)
 /**/

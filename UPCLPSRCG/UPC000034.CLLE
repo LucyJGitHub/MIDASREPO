@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD056633           Date 07Sep20              */
-/*       Prev Amend No. CUP041   *CREATE   Date 23Aug13              */
+/*       Last Amend No. MD061004           Date 02Feb23              */
+/*       Prev Amend No. MD056633           Date 07Sep20              */
+/*                      CUP041   *CREATE   Date 23Aug13              */
 /*                      xxxxxxxx           Date ddMmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061004 - Adding CCSID for database objects                */
 /*       MD056633 - Deliverable Data Split for SDFACCTD (re-work)    */
 /*       CUP041 - New Bridge methodology to combine menu options     */
 /*                                                                   */
@@ -35,6 +37,8 @@
              DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NEWNAME) TYPE(*CHAR) LEN(10)
              DCL        VAR(&EXIST) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CHGCCSID) TYPE(*CHAR) LEN(1) VALUE('N')                    /*MD061004*/
+             DCL        VAR(&CCSID) TYPE(*DEC) LEN(5 0)                                 /*MD061004*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2013')
@@ -79,6 +83,12 @@ CRTOBJ:
                 GOTO       CMDLBL(ERROR)
              ENDDO
 
+/* Check if CCSID is to be changed */                                                   /*MD061004*/
+             CALL       PGM(UP6012) PARM(&CHGCCSID &CCSID)                              /*MD061004*/
+             IF         COND(&CHGCCSID *EQ 'Y') THEN(DO)                                /*MD061004*/
+                CHGPF      FILE(&OBJLIB/&FILE) CCSID(&CCSID)                            /*MD061004*/
+             ENDDO                                                                      /*MD061004*/
+                                                                                        /*MD061004*/
 /* If the object did not originally exist then there is no copy needed. */
              IF         COND(&EXIST *EQ 'N') THEN(DO)
                 GOTO       CMDLBL(ENDPGM)

@@ -17,12 +17,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060824            Date 10Jan23              *
-      *  Prev Amend No. MD060897            Date 10Jan23              *
+      *  Last Amend No. MD061006            Date 02Feb23              *
+      *  Prev Amend No. MD060824            Date 10Jan23              *
+      *                 MD060897            Date 10Jan23              *
       *                 MD058517 *CREATE    Date 17Oct22              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061006 - Compilation failed on LE000372 due to SDLIBRTD    *
+      *             made redundant                                    *
+      *             Amended all calls to SDLIBRTD to access           *
+      *             SDLIBJW0 instead                                  *
       *  MD060824 - Future rates were rounded up on rates known date  *
       *             on LOAC and LEFWBRPD                              *
       *             Amended rate computation to follow ZAGETCALRT     *
@@ -63,7 +68,7 @@
      FSDARRTTD  IF   E           K DISK    INFSR(*PSSR)
       *
       ** Midas SD ARR Calculator Parameter Details
-     FSDLIBRTD  IF   E           K DISK    INFSR(*PSSR)
+     F***SDLIBRTD  IF   E           K DISK    INFSR(*PSSR)                                  MD061006
       *
       ** Midas LE Loan Advice with Fwd ARR Rates Report File
      FLE000372P1O    E             PRINTER USROPN
@@ -232,6 +237,7 @@
      D NO_RECORD       c                   const(100)                                       MD060897
      D wFinalRate      S             15P 9 INZ(0)                                           MD060824
      D wCurrRate       S             11P 7 INZ(0)                                           MD060824
+     D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD061006
 
       *****************************************************************
       /EJECT
@@ -589,7 +595,16 @@ I    C                   ENDIF
       ** Calculation Method
      C                   MOVEL     'METHOD  '    KSCFLD
      C                   MOVEL     DSCALM        KINVAL
-     C     KLIBR         CHAIN     SDLIBRTD                           42
+     C*****KLIBR         CHAIN     SDLIBRTD                           42                    MD061006
+     C/EXEC SQL                                                                             MD061006
+     C+ SELECT *                                                                            MD061006
+     C+ into :SDLIBR                                                                        MD061006
+     C+ from SDLIBJW0                                                                       MD061006
+     C+ where SCRFLD = :KSCFLD and INTVAL = :KINVAL                                         MD061006
+     C/END-EXEC                                                                             MD061006
+     C                   IF        SQLCODE = 100                                            MD061006
+     C                   SETON                                        42                    MD061006
+     C                   ENDIF                                                              MD061006
      C     *IN42         IFEQ      '0'
      C                   MOVEL     DSPVAL        P1CALM
      C                   ENDIF
@@ -610,7 +625,16 @@ I    C                   ENDIF
      C                   MOVEL     *BLANKS       KINVAL
      C                   MOVEL     'DAYCOUNT'    KSCFLD
      C                   MOVEL     DSDBAV        KINVAL
-     C     KLIBR         CHAIN     SDLIBRTD                           42
+     C*****KLIBR         CHAIN     SDLIBRTD                           42                    MD061006
+     C/EXEC SQL                                                                             MD061006
+     C+ SELECT *                                                                            MD061006
+     C+ into :SDLIBR                                                                        MD061006
+     C+ from SDLIBJW0                                                                       MD061006
+     C+ where SCRFLD = :KSCFLD and INTVAL = :KINVAL                                         MD061006
+     C/END-EXEC                                                                             MD061006
+     C                   IF        SQLCODE = 100                                            MD061006
+     C                   SETON                                        42                    MD061006
+     C                   ENDIF                                                              MD061006
      C     *IN42         IFEQ      '0'
      C                   MOVEL     DSPVAL        P1DBAV
      C                   ENDIF

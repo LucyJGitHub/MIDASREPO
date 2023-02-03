@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD021870A          Date 30Jan23               *
-      *  Prev Amend No. MD021871           Date 27Jan23               *
+      *  Last Amend No. MD021868           Date 02Feb23               *
+      *  Prev Amend No. MD021870A          Date 30Jan23               *
+      *                 MD021871           Date 27Jan23               *
       *                 MD060981           Date 27Jan23               *
       *                 MD059314           Date 22Feb22               *
       *                 MD059100A          Date 23Dec21               *
@@ -117,6 +118,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021868 - Default the cashflow amount when control date is  *
+      *             being defaulted.                                  *
       *  MD021870A - 31 will be considered as invalid input. It should*
       *              be either 31+ or 31- just like other numbers.    *
       *  MD021871 - Yearly frequency are generated as monthly freq.   *
@@ -4356,9 +4359,22 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      I=1                                                       BUG5449
      C                   EXSR      SRGetCtlDate                                              BUG5449
       * Default with control date                                               BUG5964
+      * and amount                                                                          MD021868
      C                   IF        X=1                                          BUG5964
      C                             and SUNIPD <> *blanks                                     BUG7621
      C                   EVAL      OCFSA(X)=SUNIPD                              BUG5964
+     C                   IF        SFORMAMTOC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTOC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTOC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(OCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ELSE                                                   BUG5964
       * Check if all dates are processed                                        BUG5964
@@ -4376,6 +4392,18 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                             and SUNIPD <> *blanks                                     BUG7621
      C                             and SUIPFR <> 'Z'                                         BUG7621
      C                   EVAL      OCFSA(X)=SUNIPD                              BUG5964
+     C                   IF        SFORMAMTOC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTOC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTOC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(OCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ENDIF                                                  BUG5964
      C                   ENDIF                                                  BUG5964
@@ -4587,9 +4615,22 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      I=1                                                       BUG5449
      C                   EXSR      SRGetCtlDate                                              BUG5449
       * Default with control date                                               BUG5964
+      * amount                                                                              MD021868
      C                   IF        X=1                                          BUG5964
      C                             and STNIPD <> *blanks                                     BUG7621
      C                   EVAL      TCFSA(X)=STNIPD                              BUG5964
+     C                   IF        SFORMAMTTC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTTC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTTC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(TCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ELSE                                                   BUG5964
       * Check if all dates are processed                                        BUG5964
@@ -4607,6 +4648,18 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                             and STNIPD <> *blanks                                     BUG7621
      C                             and STIPFR <> 'Z'                                         BUG7621
      C                   EVAL      TCFSA(X)=STNIPD                              BUG5964
+     C                   IF        SFORMAMTTC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTTC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTTC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(TCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ENDIF                                                  BUG5964
      C                   ENDIF                                                  BUG5964

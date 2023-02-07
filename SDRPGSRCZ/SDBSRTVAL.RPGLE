@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059368           Date 17Dec21               *
-      *  Prev Amend No. MD057746           Date 18Mar21               *
+      *  Last Amend No. MD060620           Date 26Jan23               *
+      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *                 MD057746           Date 18Mar21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 03May13               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
+      *           - Applied for MD-60687                              *
       *  MD059368 - Inhibit LIBOR fields if feature CSD103 is         *
       *             switched off                                      *
       *  MD057746 - Field in error should be the base rate code       *
@@ -228,6 +231,19 @@
                                                                                               CSD103
       * LIBOR Screen Fields                                                                   CSD103
      D LiborScnFld     DS            49                                                       CSD103
+      *                                                                                     MD060620
+      ** Check Libor Fields                                                                 MD060620
+     D ChkLiborFlds    DS                                                                   MD060620
+     D  LBBLRT                        1A                                                    MD060620
+     D  LBRFRR                       10A                                                    MD060620
+     D  LBCALM                        4A                                                    MD060620
+     D  LBBADJ                       13S 0                                                  MD060620
+     D  LBFLOR                       13S 0                                                  MD060620
+     D  LBLBDY                        2S 0                                                  MD060620
+     D  LBLODY                        2S 0                                                  MD060620
+     D  LBOPSH                        1A                                                    MD060620
+     D  LBRRDP                        2S 0                                                  MD060620
+     D  LBDBAV                        1S 0                                                  MD060620
                                                                                               CSD103
       * LIBOR Valid Fields                                                                    CSD103
      D LiborValFld     DS                                                                     CSD103
@@ -469,11 +485,26 @@
       *                                                                                     MD059368
      C                   IF        CSD103 = 'N'                                             MD059368
      C                   IF        LiborScnFld <> *BLANKS                                   MD059368
+      *                                                                                     MD060620
+     C                   CLEAR                   ChkLiborFlds                               MD060620
+     C                   MOVEL     LiborScnFld   ChkLiborFlds                               MD060620
+     C                   IF        LBBLRT <> *BLANKS OR                                     MD060620
+     C                             LBRFRR <> *BLANKS OR                                     MD060620
+     C                             LBCALM <> *BLANKS OR                                     MD060620
+     C                             LBBADJ <> *ZEROS  OR                                     MD060620
+     C                             LBFLOR <> *ZEROS  OR                                     MD060620
+     C                             LBLBDY <> *ZEROS  OR                                     MD060620
+     C                             LBLODY <> *ZEROS  OR                                     MD060620
+     C                             LBOPSH <> *BLANKS OR                                     MD060620
+     C                             LBRRDP <> *ZEROS  OR                                     MD060620
+     C                             LBDBAV <> *ZEROS                                         MD060620
+      *                                                                                     MD060620
      C                   EXSR      RESETERRS                                                MD059368
      C                   EVAL      Idx = Idx + 1                                            MD059368
      C                   EVAL      FldNamXAr(Idx) = 'DDNBRT'                                MD059368
      C                   EVAL      MsgIdXAr(Idx) = '5049527'                                MD059368
      C                   EXSR      UPDATERRS                                                MD059368
+     C                   ENDIF                                                              MD060620
      C                   ENDIF                                                              MD059368
      C                   ENDIF                                                              MD059368
       *  *-------------------------------------------------------*

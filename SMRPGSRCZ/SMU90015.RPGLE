@@ -7,7 +7,8 @@
       *                                                               *
       *  Midas - Money Market Module                                  *
       *                                                               *
-      *  UTMM0001 - Utility to Correct HKRCFR and HKRCDM of MMDELDPP  *
+      *  SMU90015 - Midas DL MD-45018 Utility to Correct HKRCFR and   *
+      *             HKRCDM of MMDELDPP                                *
       *                                                               *
       *  Function:  This program lists and updates all fixed-term     *
       *             deals on PF/MMDELDPP that have different values   *
@@ -54,7 +55,7 @@
      F                                     INCLUDE(DEALSDCF)
 
       ** Midas MM Default Reporting Information Report - List
-     FUTMM0001P1O    E             PRINTER INFDS(SPOOL1)
+     FSMU90015P1O    E             PRINTER INFDS(SPOOL1)
      F                                     INFSR(*PSSR)
 
       *****************************************************************
@@ -311,7 +312,7 @@
 
       ** Define LDA
      C     *LOCK         IN        LDA
-     C                   EVAL      DBPGM = 'UTMM0001  '
+     C                   EVAL      DBPGM = 'SMU90015  '
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY =  *BLANKS
      C                   EVAL      DBASE = 1
@@ -327,7 +328,7 @@
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBKEY  = POptn
-     C                   EVAL      DBPGM  = 'UTMM0001  '
+     C                   EVAL      DBPGM  = 'SMU90015  '
      C                   EVAL      DBASE  = 2
      C                   OUT       LDA
      C                   EXSR      *PSSR

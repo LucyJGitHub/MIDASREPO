@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *  Last Amend No. AR1096206          Date 02Feb23               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
       *                 257879             Date 12May22               *
       *                 MD059275           Date 23May22               *
@@ -436,6 +437,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1096206 - YTD average on LE1040P1 is wrong for loans with  *
+      *              principal transfers. Consider PT/PF events as    *
+      *              principal aggregates needed for the computation  *
+      *              of average balance ABLN. (Child: AR1096207)      *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
@@ -17938,10 +17943,12 @@ C    C                   ENDIF                                                  
      C     AMTPH         IFEQ      'PI'                                           B2           13152
      C     AMTPH         OREQ      'IN'                                                        13152
      C     INTC          ANDEQ     'Y'                                                         13152
+     C     AMTPH         OREQ      'PT'                                                    AR1096206
      C     PRNCPL        ADD       PRAMH         PRNCPL                                        13152
      C                   END                                                      E2           13152
      C     AMTPH         IFEQ      'MR'                                           B2           13152
      C     AMTPH         OREQ      'RE'                                                        13152
+     C     AMTPH         OREQ      'PF'                                                    AR1096206
      C     PRNCPL        SUB       PRAMH         PRNCPL                                        13152
      C                   END                                                      E2           13152
      C     AMTPH         IFEQ      'RO'                                           B2           13152
@@ -17957,6 +17964,8 @@ C    C                   ENDIF                                                  
      C     INTC          ANDEQ     'Y'                                                         13152
      C     AMTPH         OREQ      'RO'                                                        13152
      C     HPTYP         ANDEQ     63                                                          13152
+     C     AMTPH         OREQ      'PT'                                                    AR1096206
+     C     AMTPH         OREQ      'PF'                                                    AR1096206
      C     LOAN          ORNE      LOANH                                                       13152
      C     *IN38         OREQ      '1'                                                         13152
      C                   READ      HISTR                                  38                   13152

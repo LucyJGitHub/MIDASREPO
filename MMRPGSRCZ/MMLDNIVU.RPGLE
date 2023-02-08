@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 26Jan22               *
-      *  Prev Amend No. MD059321           Date 21Dec21               *
+      *  Last Amend No. MD060788           Date 01Feb23               *
+      *  Prev Amend No. MD059304           Date 26Jan22               *
+      *                 MD059321           Date 21Dec21               *
       *                 MD059368           Date 17Dec21               *
       *                 MD058975           Date 20Oct21               *
       *                 MD058379           Date 12Jul21               *
@@ -148,10 +149,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060788 - Records in the Interest Rate Payment and Interest *
+      *             Rate Change Schedule tabs are missing upon        *
+      *             Authorisation of a TD/ CF deal                    *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
-      *             the Beneficiary.                                  *      
+      *             the Beneficiary.                                  *
       *  MD059321 - Changed Processing to RepoFlag before reaching    *
       *             main validation module.                           *
       *  MD058368 - Inhibit the LIBOR Deregulation fields if CDL102   *
@@ -1206,8 +1210,13 @@
      C**********         EVAL      PFormula = %SUBST(Buffer:759:8)                    CDL096  CGL165
      C                   EVAL      RFormula = %SUBST(Buffer:755:8)                            CGL165
      C                   EVAL      PFormula = %SUBST(Buffer:763:8)                            CGL165
-     C                   MOVEA     SfBuff20      RatDATEA                                     CDL033
-     C                   MOVEA     SfBuff21      PayDATEA                                     CDL033
+     C                   EVAL      RatDateDS = %SUBST(BufferEx2:2586)                       MD060788
+     C                   EVAL      PayDateDS = %SUBST(BufferEx2:7386)                       MD060788
+     C                                         + BufferEx3                                  MD060788
+     C**********         MOVEA     SfBuff20      RatDATEA                            CDL033 MD060788
+     C**********         MOVEA     SfBuff21      PayDATEA                            CDL033 MD060788
+     C                   MOVEA     RatDateDS     RatDATEA                                   MD060788
+     C                   MOVEA     PayDateDS     PayDATEA                                   MD060788
      C                   DO        600           N                                            CDL033
      C                   EVAL      S = (N - 1) * 6 + 1                                        CDL033
      C                   IF        RatDATEA(N) = *BLANK                                       CDL033
@@ -1514,9 +1523,11 @@
      C**********         EVAL      BufferEx2 = RatDateDS + PayDateDS                   244784 CSF011
      C**********                              + RegData                                244784 CSF011
      C**********                              + ExtData                                248297 CSF011
-     C                   EVAL      BufferEx2 = %SUBST(FIDTScnRpt:2438)                        CSF011
-     C                                        + RatDateDS + PayDateDS                         CSF011
-     C                   EVAL      BufferEx3 = %SUBST(PayDateDS:2885)                         CSF011
+     C**********         EVAL      BufferEx2 = %SUBST(FIDTScnRpt:2438)               CSF011 MD060788
+     C                   EVAL      BufferEx2 = %SUBST(FIDTScnRpt:2168)                      MD060788
+     C                                         + RatDateDS + PayDateDS                        CSF011
+     C**********         EVAL      BufferEx3 = %SUBST(PayDateDS:2885)                CSF011 MD060788
+     C                   EVAL      BufferEx3 = %SUBST(PayDateDS:2615)                       MD060788
      C                                        + RegData + ExtData                             CSF011
      C                   ENDIF                                                               BUG4808
 
@@ -3820,7 +3831,8 @@
       ** Check if at least one date exist in array RatDATEA() and                             CDL033
       ** Rate Change                                                                          CDL033
       *                                                                                       CDL033
-     C                   IF        SfBuff20 <> *BLANK AND                                     CDL033
+     C**********         IF        SfBuff20 <> *BLANK AND                            CDL033 MD060788
+     C                   IF        RatDateDS <> *BLANK AND                                  MD060788
      C                             DDRCFR   <> 'Z'                                            CDL033
      C                   ADD       1             Idx                                          CDL033
      C                   EVAL      FldNameArr(Idx) = 'DDRCFR'                                 CDL033
@@ -3831,7 +3843,8 @@
       ** If Frequency is 'Z' and no date specified on the schedule,                           CDL033
       ** always put the rate change date on top of the array                                  CDL033
       *                                                                                       CDL033
-     C                   IF        SfBuff20 = *BLANK AND                                      CDL033
+     C**********         IF        SfBuff20 = *BLANK AND                             CDL033 MD060788
+     C                   IF        RatDateDS = *BLANK AND                                   MD060788
      C                             DDRCFR = 'Z'                                               CDL033
      C                   EVAL      RatDATEA(1) = DDRCDT                                       CDL033
      C                   EVAL      %Subst(Rindates:1:6) = DDRCDT                              CDL033
@@ -3953,7 +3966,8 @@
       ** Check if at least one date exist in array PayDATEA() and                             CDL033
       ** Interest Payment Frequency                                                           CDL033
       *                                                                                       CDL033
-     C                   IF        SfBuff21 <> *BLANK AND                                     CDL033
+     C**********         IF        SfBuff21 <> *BLANK AND                            CDL033 MD060788
+     C                   IF        PayDateDS <> *BLANK AND                                  MD060788
      C                             DDIPFQ <> 'Z'                                              CDL033
      C                   ADD       1             Idx                                          CDL033
      C                   EVAL      FldNameArr(Idx) = 'DDIPFQ'                                 CDL033
@@ -3964,7 +3978,8 @@
       ** If Frequency is 'Z' and no date specified on the schedule,                           CDL033
       ** always put the rate change date on top of the array                                  CDL033
       *                                                                                       CDL033
-     C                   IF        SfBuff21 = *BLANK AND                                      CDL033
+     C**********         IF        SfBuff21 = *BLANK AND                             CDL033 MD060788
+     C                   IF        PayDateDS = *BLANK AND                                   MD060788
      C                             DDIPFQ = 'Z'                                               CDL033
      C                   EVAL      PayDATEA(1) = DDNDAT                                       CDL033
      C                   EVAL      %Subst(Pindates:1:6) = DDNDAT                              CDL033

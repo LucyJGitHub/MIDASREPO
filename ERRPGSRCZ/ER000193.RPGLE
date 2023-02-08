@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. MD043895           Date 19Jan23               *
+      *  Prev Amend No. CER050             Date 18Jan23               *
+      *                 MD054605           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 MD030247           Date 26Jan15               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043895 - Classification Type is not extracted to           *
+      *             GSTIFF_GSART                                      *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -117,7 +120,7 @@
                                                                                             BUG26870
       ** Midas MM Loan/deposit/CD issued                                                    BUG26870
                                                                                             BUG26870
-     FMMDELDL2  IF   E           K DISK    INFSR(*PSSR)                                     BUG26870
+     F***MMDELDL2  IF   E           K DISK    INFSR(*PSSR)                         BUG26870 MD043895
 
       ** Midas LE Customer loans
 
@@ -623,7 +626,7 @@
      C                   EVAL      B3KTON = ACACNO
      C                   ENDIF
      C                   MOVEL     PSVal1        B3BILK
-     C                   EVAL      B3GSAR = '00'
+     C**********         EVAL      B3GSAR = '00'                                            MD043895
      C                   EVAL      B3VERK = '0'
      C                   EVAL      B3KZRE = 'J'
      C                   EVAL      B3HBKZ = 'A'
@@ -765,8 +768,9 @@
       *                                                                                     BUG26254
      C                   WHEN      WMod   = 'MM'
      C**********         EVAL      WBal   = DLOPAM                                          BUG26254
-     C     DLDLNO        CHAIN     MMDELDL2                                                 BUG26870
-     C                   IF        HKAMNP >= 0                                              BUG26870
+     C*****DLDLNO        CHAIN     MMDELDL2                                        BUG26870 MD043895
+     C**********         IF        HKAMNP >= 0                                     BUG26870 MD043895
+     C                   IF        DLRCDC = 16                                              MD043895
      C                   EVAL      WBal   = DLPCPL                                          BUG26254
      C                   ELSE                                                               BUG26870
      C                   EVAL      WBal   = 0 - DLPCPL                                      BUG26870

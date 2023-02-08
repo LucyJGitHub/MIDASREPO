@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD058547           Date 10Aug21               *
-      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *  Last Amend No. AR959687           Date 24Jan23               *
+      *  Prev Amend No. MD058547           Date 10Aug21               *
+      *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -57,6 +58,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR959687 - Parameter added to MMVACTINTR for warning message *
+      *             (Child: AR959689)                                 *
       *  MD058547 - User cannot amend a call notice deposit taken     *
       *             because of error 45049507. Add DDACTN on call to  *
       *             MMVACTINTR.                                       *
@@ -1010,13 +1013,26 @@
      C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    CDL102            1                          CDL102
      C                   PARM                    DDACTN                                     MD058547
+     C                   PARM                    WMSGID1                                    AR959687
                                                                                              BUG5169
      C                   IF        MSG1 <> *Blanks                                           BUG5169
+     C     MSG1          LOOKUP    MsgIDArr                               99                AR959687
+     C     *IN99         IFEQ      '0'                                                      AR959687
      C                   EVAL      Idx = Idx + 1                                             BUG5169
      C                   EVAL      FldNameArr(Idx) = 'DDAIR'                                 BUG5169
      C                   EVAL      MsgIDArr(Idx) = MSG1                                      BUG5169
+     C                   ENDIF                                                              AR959687
      C                   ENDIF                                                               BUG5169
                                                                                              BUG5169
+     C                   IF        WMSGID1 <> *Blanks                                       AR959687
+     C     WMSGID1       LOOKUP    WMsgIDArr                              99                AR959687
+     C     *IN99         IFEQ      '0'                                                      AR959687
+     C                   EVAL      WIdx = WIdx + 1                                          AR959687
+     C                   EVAL      WFldNamArr(WIdx) = 'DDAIR'                               AR959687
+     C                   EVAL      WMsgIDArr(WIdx) = WMSGID1                                AR959687
+     C                   ENDIF                                                              AR959687
+     C                   ENDIF                                                              AR959687
+      *                                                                                     AR959687
       ** Use the return code's value to set the field's OK flag                              BUG5169
      C                   CALLB     'ZASETOKFLG'                                              BUG5169
      C                   PARM                    DDAIROK                                     BUG5169

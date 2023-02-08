@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058543A          Date 09Sep21               *
-      *  Prev Amend No. MD058547           Date 10Aug21               *
+      *  Last Amend No. AR959687           Date 24Jan23               *
+      *  Prev Amend No. MD058543A          Date 09Sep21               *
+      *                 MD058547           Date 10Aug21               *
       *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
@@ -47,6 +48,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR959687 - Check when user entered and system calculated     *
+      *             interest rate is the same. If not, issue warning  *
+      *             message. (Child: AR959689)                        *
       *  MD058543A - BADJ not included in DDAIR during amend of deal. *
       *              Compute DDAIR/IKINTR when action type is Insert. *
       *  MD058547 - User cannot amend a call notice deposit taken     *
@@ -173,6 +177,9 @@
       ** Error message code 1 received as a parameter
      D Msgid1          S                   LIKE(#MSGID)
 
+      ** Warning message code 1 received as a parameter                                     AR959687
+     D WMsgid1         S                   LIKE(#MSGID)                                     AR959687
+                                                                                            AR959687
       ** Interest Rate/Spread received as a parameter
      D DDAIR           S             12A
 
@@ -201,6 +208,12 @@
       ** Interest Rate returned to caller
      D IKINTR          S             11  7
 
+      ** Interest Rate/Spread inputted by user                                              AR959687
+     D IKINTRU         S             11  7                                                  AR959687
+                                                                                            AR959687
+      ** Interest Rate/Spread calculated by system                                          AR959687
+     D IKINTRS         S             11  7                                                  AR959687
+                                                                                            AR959687
       ** Fields used in call to Module ZA0840
 
       ** Alpha field for numeric validation
@@ -251,6 +264,7 @@
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
+     C                   RESET                   WMsgid1                                    AR959687
       *
       *  *-------------------------------*
       *  * Validate Actual Interest Rate *
@@ -291,6 +305,7 @@
      C                   END                                                                  CDL102
      C                   ENDIF                                                              MD023416
       *                                                                                     MD023416
+     C                   Z-ADD     *ZEROS        IKINTRU                                    AR959687
      C                   Z-ADD     *ZEROS        WkBaseRate       11 7                       BUG5169
      C                   MOVE      *BLANKS       @RETURN                                     BUG5169
                                                                                              BUG5169
@@ -392,7 +407,7 @@
       *                                                                                     AR876535
      C     @RETURN       IFEQ      *BLANKS
      C     DDBSRC        ANDNE     *BLANKS                                                   BUG5169
-     C     DDAIR         ANDEQ     *BLANKS                                                   BUG5169
+     C*****DDAIR         ANDEQ     *BLANKS                                          BUG5169 AR959687
      C     CDL102        OREQ      'Y'                                                        CDL102
      C     DDBSRC        ANDNE     *BLANKS                                                   BUG5169
      C     DDACTN        ANDEQ     'I'                                                     MD058543A
@@ -406,6 +421,7 @@
      C                   EVAL      IKINTR = IKINTR + wBADJ                                  MD058547
      C                   EVAL      WAIR = WAIR + wBADJ                                        CDL102
      C                   ENDIF                                                              MD058547
+     C                   Z-ADD     IKINTR        IKINTRS                                    AR959687
      C                   Z-ADD     0             PAmtIn
      C                   MOVE      WAIR          PAmtIn
      C                   Z-ADD     7             PNoOfDecPl
@@ -469,6 +485,7 @@
      C     ErrorFound    IFNE      'Y'
      C     DDAIR         IFNE      *BLANKS
      C     @@Amt         DIV       10000000      IKINTR
+     C                   Z-ADD     IKINTR        IKINTRU                                    AR959687
      C                   MOVE      @@ALPH        DDAIR
      C                   ELSE
      C                   Z-ADD     0             IKINTR
@@ -477,6 +494,14 @@
 
      C                   ENDIF
      C**********         ENDIF                                                               BUG5169
+      *                                                                                     AR959687
+      ** Check if user input is same with system calculated interest                        AR959687
+      *                                                                                     AR959687
+     C                   IF        IKINTRS <> IKINTRU                                       AR959687
+     C                             AND IKINTRU <> *ZEROS                                    AR959687
+     C                   MOVEL     'MMM1081'     WMsgid1                                    AR959687
+     C                   EVAL      RetCodeIn = 'Warning'                                    AR959687
+     C                   ENDIF                                                              AR959687
 
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
@@ -516,6 +541,7 @@
      C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    CDL102            1                          CDL102
      C                   PARM                    DDACTN            1                        MD058547
+     C                   PARM                    WMsgid1                                    AR959687
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

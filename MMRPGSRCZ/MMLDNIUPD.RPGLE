@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD036339           Date 27Jan23               *      
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
       *                 CER050             Date 16Jun19               *
@@ -106,6 +107,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036339 - DL Error amending Maturity date.                  *
+      *           - Ensure Interest rate field is updated when Short  *
+      *             Term rate is amended.                             *      
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -1426,6 +1430,16 @@
       *                                                                                       CDL033
      C     CDL033        IFEQ      'Y'                                                        CDL033
      C     IKMTYP        ANDEQ     'CF'                                                       CDL033
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'CI'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'IP'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'IT'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'TI'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'TD'                                                     MD036339
       *                                                                                       CDL033
       ** Update effective rate.                                                               CDL033
       *                                                                                       CDL033

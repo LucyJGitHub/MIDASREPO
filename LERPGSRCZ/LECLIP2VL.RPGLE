@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059368           Date 17Dec21               *
-      *  Prev Amend No. MD057917           Date 02Jul21               *
+      *  Last Amend No. MD060620           Date 26Jan23               *
+      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *                 MD057917           Date 02Jul21               *
       *                 CLE172             Date 01Oct20               *
       *                 MD042329           Date 04May21               *
       *                 CSD103             Date 10Aug20               *
@@ -136,6 +137,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
+      *           - Applied for MD060687                              *
       *  MD059368 - Inhibit the LIBOR fields if the feature CLE172 is *
       *             switched off                                      *
       *  MD057917 - Allow entry of next interest payment date for     *
@@ -851,6 +854,21 @@
      D  WCLDBAV                       1A                                                      CLE172
      D  WCLRTKN                       1A                                                      CLE172
       *                                                                                       CLE172
+      *                                                                                     MD060620
+      ** Check Libor Fields                                                                 MD060620
+     D ChkLiborFlds    DS                                                                   MD060620
+     D  LBBLRT                        1A                                                    MD060620
+     D  LBRFRR                       10A                                                    MD060620
+     D  LBCALM                        4A                                                    MD060620
+     D  LBBADJ                       13S 0                                                  MD060620
+     D  LBFLOR                       13S 0                                                  MD060620
+     D  LBLBDY                        2S 0                                                  MD060620
+     D  LBLODY                        2S 0                                                  MD060620
+     D  LBOPSH                        1A                                                    MD060620
+     D  LBRRDP                        2S 0                                                  MD060620
+     D  LBDBAV                        1S 0                                                  MD060620
+     D  LBRTKN                        1A                                                    MD060620
+      *                                                                                     MD060620
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -1191,10 +1209,26 @@
       ** Inhibit the LIBOR fields if CLE172 is switched off                                 MD059368
       *                                                                                     MD059368
      C                   IF        LoanScnBlrt <> *Blanks                                   MD059368
+      *                                                                                     MD060620
+     C                   CLEAR                   ChkLiborFlds                               MD060620
+     C                   MOVEL     LoanScnBlrt   ChkLiborFlds                               MD060620
+     C                   IF        LBBLRT <> *BLANKS OR                                     MD060620
+     C                             LBRFRR <> *BLANKS OR                                     MD060620
+     C                             LBCALM <> *BLANKS OR                                     MD060620
+     C                             LBBADJ <> *ZEROS  OR                                     MD060620
+     C                             LBFLOR <> *ZEROS  OR                                     MD060620
+     C                             LBLBDY <> *ZEROS  OR                                     MD060620
+     C                             LBLODY <> *ZEROS  OR                                     MD060620
+     C                             LBOPSH <> *BLANKS OR                                     MD060620
+     C                             LBRRDP <> *ZEROS  OR                                     MD060620
+     C                             LBDBAV <> *ZEROS  OR                                     MD060620
+     C                             LBRTKN <> *BLANKS                                        MD060620
+      *                                                                                     MD060620
      C                   MOVEL     'N'           DDBRTTOK                                   MD059368
      C                   ADD       1             Idx                                        MD059368
      C                   MOVEL     'DDBRTT'      FldNamXAr(Idx)                             MD059368
      C                   MOVEL     '5049527'     MsgIDXAr(Idx)                              MD059368
+     C                   ENDIF                                                              MD060620
      C                   ENDIF                                                              MD059368
      C                   ENDIF                                                              MD059368
      C                   ENDIF                                                                CLE172

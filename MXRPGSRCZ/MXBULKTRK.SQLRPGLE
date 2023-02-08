@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD045481           Date 07Feb23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045481 - Increase counters to accomodate 1 million         *
+      *             or more records                                   *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -512,7 +515,8 @@
       * as many times as there are composites in the message.
       * If extract type is 'A' the following processing will be done once.
 
-     C                   z-add     1             totctr            6 0
+     C**********         z-add     1             totctr            6 0                      MD045481
+     C                   z-add     1             totctr            9 0                      MD045481
 
      C     totctr        DOUGT     COM_cnt
      C     I#EXTT        OREQ      'A'
@@ -865,9 +869,12 @@
       * Zeroize count of composites
       * Zeroize count of messages
 
-     C                   Z-ADD     *ZERO         rec_cnt           6 0
-     C                   Z-ADD     *ZERO         COM_cnt           6 0
-     C                   Z-ADD     *ZERO         MSG_cnt           6 0
+     C**********         Z-ADD     *ZERO         rec_cnt           6 0                      MD045481
+     C**********         Z-ADD     *ZERO         COM_cnt           6 0                      MD045481
+     C**********         Z-ADD     *ZERO         MSG_cnt           6 0                      MD045481
+     C                   Z-ADD     *ZERO         rec_cnt           9 0                      MD045481
+     C                   Z-ADD     *ZERO         COM_cnt           9 0                      MD045481
+     C                   Z-ADD     *ZERO         MSG_cnt           9 0                      MD045481
 
       * Key lists
 

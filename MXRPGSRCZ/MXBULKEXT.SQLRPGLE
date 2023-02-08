@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD045481           Date 07Feb23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045481 - Increase counters to accomodate 1 million         *
+      *             or more records                                   *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -174,7 +177,8 @@
 
       * Add 1 to the count of records
 
-     C                   ADD       1             RCD_cnt           6 0
+     C**********         ADD       1             RCD_cnt           6 0                      MD045481
+     C                   ADD       1             RCD_cnt           9 0                      MD045481
 
       * If Trace Bulk Extract is YES
       * Report details of the extract
@@ -223,7 +227,8 @@
 
       * Add 1 to the count of COMs
 
-     C                   ADD       1             COM_cnt           6 0
+     C**********         ADD       1             COM_cnt           6 0                      MD045481
+     C                   ADD       1             COM_cnt           9 0                      MD045481
 
       * If Trace Bulk Extract is YES
       * Report details of the extract

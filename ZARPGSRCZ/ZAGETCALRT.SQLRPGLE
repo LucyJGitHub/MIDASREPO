@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059624           Date 20Jul22               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD060441           Date 01Feb23               *
+      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *                 249385             Date 01Aug22               *
       *                 MD059424           Date 29Mar22               *
       *                 MD059104           Date 02Dec21               *
       *                 CIR020             Date 02Aug21               *
@@ -26,6 +27,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD059624 - CCR Rounding parameters for NCCR calculation CC8  *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
@@ -165,6 +168,8 @@
       ** Rates Known Indicator
      D  controlDate                   5a                                                    MD058182
       ** Event Control Date                                                                 MD058182
+     D  isRework                      1a                                                    MD060441
+      ** Is rework needed?                                                                  MD060441
      D  returnCD                     20a
       ** Return Code
 
@@ -217,6 +222,8 @@
       ** Rates Known Indicator
      D  controlDate                   5a                                                    MD058182
       ** Event Control Date                                                                 MD058182
+     D  isRework                      1a                                                    MD060441
+      ** Is rework needed?                                                                  MD060441
      D  returnCD                     20a
       ** Return Code
 
@@ -669,6 +676,14 @@
        //*************************************************************
 
        begsr processTransaction;
+
+                   // Start of change MD060441
+                   if moduleID = 'LE';
+                      if isRework;
+                          exsr deleteHstFileRec;
+                      endif;
+                   endif;
+                   // End of change MD060441
 
                    // Start of change MD059624
                    //** This will check if rounding appplies for NCCR
@@ -1719,7 +1734,32 @@
                    endif;
 
        endsr;
+       //*************************************************************                      MD060441
+       /EJECT                                                                               MD060441
+       //*************************************************************                      MD060441
+       //                                                            *                      MD060441
+       //   deleteHstFileRec  - Delete History File Records.         *                      MD060441
+       //                                                            *                      MD060441
+       //   Called By: ProcessTransaction                            *                      MD060441
+       //                                                            *                      MD060441
+       //*************************************************************                      MD060441
+                                                                                            MD060441
+       begsr deleteHstFileRec;                                                              MD060441
 
+             exec sql delete from SDHSDRTD
+             where CINFLG = 'Y';
+
+             if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                AuditLogDS.SJTMST = %timestamp();
+                AuditLogDS.SJEXMS = 'Error in access SDHSDRTD '
+                                    + 'SQL ERROR ' + %char(sqlCod);
+                AuditLogDS.SJCODE = '014';
+                isError = true;
+                exsr errorHandler;
+             endif;
+
+       endsr;                                                                               MD060441
+                                                                                            MD060441
        //*************************************************************
        /EJECT
        //*************************************************************

@@ -19,12 +19,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060591           Date 05Oct22               *
-      *  Prev Amend No. MD059190           Date 08Nov21               *
+      *  Last Amend No. MD060441           Date 01Feb23               *
+      *  Prev Amend No. MD060591           Date 05Oct22               *
+      *                 MD059190           Date 08Nov21               *
       *                 CLE172  *CREATE    Date 01Oct20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD060591 - No confirmation/extract generated on loan's       *
       *             maturity date.                                    *
       *             Subtract 1 from end period if add ind is not 'B'  *
@@ -125,7 +128,8 @@
      C+ insert into LEROBLPD
      C+ select LNRF,  RLDT,
      C+        NBLRT, NRFRR, NCALM, NBADJ, NFLOR,
-     C+        NLBDY, NLODY, NOPSH, NRRDP, NDBAV
+     C****     NLBDY, NLODY, NOPSH, NRRDP, NDBAV                                            MD060441
+     C+        NLBDY, NLODY, NOPSH, NRRDP, NDBAV, 'N'                                       MD060441
      C+ from CLOANCL
      C+ where RLDT <> 0 and RLDT < :BJDNWD and NBLRT = 'Y'
      C+   and LNRF not in (select * from LEWIPROLL)
@@ -148,7 +152,8 @@
      C+ insert into LEROBLPD
      C+ select LNRF, RLDT,
      C+        BLRT, RFRR, CALM, BADJ, FLOR,
-     C+        LBDY, LODY, OPSH, RRDP, DBAV
+     C***      LBDY, LODY, OPSH, RRDP, DBAV                                                MD060441
+     C+        LBDY, LODY, OPSH, RRDP, DBAV, 'N'                                           MD060441
      C+ from CLOANCL
      C+ where RLDT <> 0 and RLDT < :BJDNWD and BLRT = 'Y'
      C+   and LNRF in (select * from LEWIPROLL)
@@ -169,7 +174,8 @@
      C+ insert into LEROBLPD                                                                MD059190
      C+ select LNRF,  RLDT,                                                                 MD059190
      C+        BLRT, RFRR, CALM, BADJ, FLOR,                                                MD059190
-     C+        LBDY, LODY, OPSH, RRDP, DBAV                                                 MD059190
+     C***      LBDY, LODY, OPSH, RRDP, DBAV                                        MD059190 MD060441
+     C+        LBDY, LODY, OPSH, RRDP, DBAV, 'N'                                            MD060441
      C+ from CLOANCL                                                                        MD059190
      C+ where RLDT <> 0 and RLDT < :BJDNWD                                                  MD059190
      C+   and LNRF not in (select * from LEWIPROLL)                                         MD059190
@@ -192,7 +198,8 @@
      C+ insert into LEROBLPD                                                                MD059190
      C+ select LNRF,  RLDT,                                                                 MD059190
      C+        NBLRT, NRFRR, NCALM, NBADJ, NFLOR,                                           MD059190
-     C+        NLBDY, NLODY, NOPSH, NRRDP, NDBAV                                            MD059190
+     C***      NLBDY, NLODY, NOPSH, NRRDP, NDBAV                                   MD059190 MD060441
+     C+        NLBDY, NLODY, NOPSH, NRRDP, NDBAV, 'N'                                       MD060441
      C+ from CLOANCL                                                                        MD059190
      C+ where RLDT <> 0 and RLDT < :BJDNWD                                                  MD059190
      C+   and LNRF not in (select * from LEWIPROLL)                                         MD059190

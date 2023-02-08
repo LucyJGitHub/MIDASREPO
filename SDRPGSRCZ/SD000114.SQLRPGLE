@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060008           Date 11May21               *
-      *  Prev Amend No. MD060033           Date 25Sep22               *
+      *  Last Amend No. MD060441           Date 01Feb23               *
+      *  Prev Amend No. MD060008           Date 11May21               *
+      *                 MD060033           Date 25Sep22               *
       *                 249385             Date 01Aug22               *
       *                 MD059424           Date 29Mar22               *
       *                 MD059375           Date 20Dec21               *
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD060033 - Rates Known flag set a day late.  Add 1 day to    *
       *             SumLBLO.  Introduce new system value              *
@@ -213,6 +216,7 @@
      D  CalcTillDate                 10A
      D  BenchMarkAdj                 20A
      D  RatesKnownInd                 1A
+     D  isRework                      1A                                                    MD060441
      D  ReturnCode                   20A
 
       ** Constants declaration
@@ -296,6 +300,7 @@
      D SysDate         S               D   DATFMT(*ISO)                                     MD060033
      D SysOrMidas      S              1A                                                    MD060033
      D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD060008
+     D isRework        S              1A   INZ('N')                                         MD060441
 
       *****************************************************************
       /EJECT
@@ -501,7 +506,8 @@
      C+        NIDT, NRPD, REPT, SLID, ADDI, BLRT,                                            CDL102
      C+        RFRR, CALM, BADJ, FLOR, LBDY,
      C*********LODY, OPSH, RRDP, DBAV                                                       MD058708
-     C+        LODY, OPSH, RRDP, DBAV, BRTT                                                 MD058708
+     C***      LODY, OPSH, RRDP, DBAV, BRTT                                        MD058708 MD060441
+     C+        LODY, OPSH, RRDP, DBAV, BRTT, 'N'                                            MD060441
      C+ from CLOANCL
      C+ where RECI = 'D' and VDAT < :BJDNWD
      C+   and BLRT = 'Y' and CALM <> 'MANL'
@@ -514,7 +520,8 @@
      C+        NIDT,   NRPD,   REPT,   SLID,   ADDI,   ROBLRT,                                CDL102
      C+        RORFRR, ROCALM, ROBADJ, ROFLOR, ROLBDY,                                        CLE172
      C*********ROLODY, ROOPSH, RORRDP, RODBAV                                        CLE172 MD058708
-     C+        ROLODY, ROOPSH, RORRDP, RODBAV, BRTT                                         MD058708
+     C***      ROLODY, ROOPSH, RORRDP, RODBAV, BRTT                                MD058708 MD060441
+     C+        LODY, OPSH, RRDP, DBAV, BRTT, RORWRK                                         MD060441
      C+ from LEROBLPD                                                                         CLE172
      C+ left join CLOANCL                                                                     CLE172
      C+ on ROLNRF = LNRF                                                                      CLE172
@@ -1155,6 +1162,8 @@
      C                   ELSE                                                               MD057946
      C                   EVAL      BenchMarkAdj = %TRIM(%EDITW(TrBADJ:EC))                  MD057946
      C                   ENDIF                                                              MD057946
+                                                                                            MD060441
+     C                   EVAL      isRework = TRRWRK                                        MD060441
 
      C                   ENDSR
       *****************************************************************
@@ -1186,6 +1195,7 @@
      C                   PARM                    BenchMarkAdj
      C                   PARM                    RatesKnownInd
      C                   PARM                    ControlDate                                MD058182
+     C                   PARM                    isRework                                   MD060441
      C                   PARM      *BLANKS       ReturnCode
 
       ** End program if there's a connection error

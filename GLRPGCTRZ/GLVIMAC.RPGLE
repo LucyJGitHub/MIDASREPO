@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055515           Date 13Apr20               *
+      *  Last Amend No. MD060989           Date 06Feb23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055515           Date 13Apr20               *
       *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031707           Date 02Jul15               *
@@ -55,6 +56,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060989 - Add validation for Account Sequnece to ensure     *
+      *             that it only contains numbers.                    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD055515 - Batch Item allows customer as blank to be         *
@@ -247,6 +250,8 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
       *                                                                                     MD000091
+     D Numbers         S             10    INZ('0123456789')                                MD060989
+      *                                                                                     MD060989
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -660,6 +665,16 @@
      C                   MOVEL     'GLX0125'     MsgIdXAr(Idx)
       /COPY OFCPYSRCZ,CGL135_115                                                            MD024136
      C                   ENDIF
+      *
+      ** Account Sequence must be in the range 01-99                                        MD060989
+      *                                                                                     MD060989
+     C                   IF        %CHECK(Numbers:DDACSN) > 0                               MD060989
+     C                             OR DDACSN = '00'                                         MD060989
+     C                   MOVE      'N'           DDAcsnOK                                   MD060989
+     C                   ADD       1             Idx                                        MD060989
+     C                   MOVEL     'DDACSN'      FldNamXAr(Idx)                             MD060989
+     C                   MOVEL     '5049559'     MsgIdXAr(Idx)                              MD060989
+     C                   ENDIF                                                              MD060989
       *
      C                   ENDSR
       *

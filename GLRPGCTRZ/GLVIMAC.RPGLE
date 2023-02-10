@@ -56,7 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060989 - Add validation for Account Sequnece to ensure     *
+      *  MD060989 - Add validation for Account Sequence to ensure     *
       *             that it only contains numbers.                    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

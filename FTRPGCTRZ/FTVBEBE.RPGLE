@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD026333           Date 29Apr14               *
+      *  Last Amend No. MD060908           Date 31Jan23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD026333           Date 29Apr14               *
       *                 MD046248           Date 27Oct17               *
       *                 MD021337           Date 25May16               *
       *                 CSW215             Date 06Apr15               *
@@ -67,6 +68,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060908 - Unable to send SWIFT payment from Midas to MMM.   *
+      *           - Do not allow ':' (colon) on 1st char of Ben field.*
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD026333 - Beneficiary field on Settlement screen allows     *
@@ -799,6 +802,13 @@
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ELSE                                                               MD060908
+     C                   IF        %SUBST(ADCHK1:1:1) = ':'                                 MD060908
+     C                   Move      'N'           OKBnc1                                     MD060908
+     C                   Add       1             Idx                                        MD060908
+     C                   Movel     'SBNC1'       FldNamXAr(Idx)                             MD060908
+     C                   Movel     'MMA0938'     MsgIdXAr(Idx)                              MD060908
+     C                   ENDIF                                                              MD060908
      C                   End
 
      C                   If        AD#2 = 'Y'
@@ -810,6 +820,13 @@
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ELSE                                                               MD060908
+     C                   IF        %SUBST(ADCHK2:1:1) = ':'                                 MD060908
+     C                   Move      'N'           OKBnc2                                     MD060908
+     C                   Add       1             Idx                                        MD060908
+     C                   Movel     'SBNC2'       FldNamXAr(Idx)                             MD060908
+     C                   Movel     'MMA0939'     MsgIdXAr(Idx)                              MD060908
+     C                   ENDIF                                                              MD060908
      C                   End
 
      C                   If        AD#3 = 'Y'
@@ -821,6 +838,13 @@
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ELSE                                                               MD060908
+     C                   IF        %SUBST(ADCHK3:1:1) = ':'                                 MD060908
+     C                   Move      'N'           OKBnc3                                     MD060908
+     C                   Add       1             Idx                                        MD060908
+     C                   Movel     'SBNC3'       FldNamXAr(Idx)                             MD060908
+     C                   Movel     'MMA0940'     MsgIdXAr(Idx)                              MD060908
+     C                   ENDIF                                                              MD060908
      C                   End
 
      C                   If        AD#4 = 'Y'
@@ -832,6 +856,13 @@
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC4'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ELSE                                                               MD060908
+     C                   IF        %SUBST(ADCHK4:1:1) = ':'                                 MD060908
+     C                   Move      'N'           OKBnc4                                     MD060908
+     C                   Add       1             Idx                                        MD060908
+     C                   Movel     'SBNC4'       FldNamXAr(Idx)                             MD060908
+     C                   Movel     'MMA0941'     MsgIdXAr(Idx)                              MD060908
+     C                   ENDIF                                                              MD060908
      C                   End
 
      C                   If        AD#5 = 'Y'
@@ -843,6 +874,13 @@
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC5'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ELSE                                                               MD060908
+     C                   IF        %SUBST(ADCHK5:1:1) = ':'                                 MD060908
+     C                   Move      'N'           OKBnc5                                     MD060908
+     C                   Add       1             Idx                                        MD060908
+     C                   Movel     'SBNC5'       FldNamXAr(Idx)                             MD060908
+     C                   Movel     'MMA0942'     MsgIdXAr(Idx)                              MD060908
+     C                   ENDIF                                                              MD060908
      C                   End
 
       *  If no errors then customer is an address

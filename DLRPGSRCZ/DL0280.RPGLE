@@ -10128,6 +10128,9 @@
      C*   IF NOT IN PRINT ONLY MODE                                       S01119
      C     PRONLY        IFNE      'Y'                                                         S0111
 2377 C     KYAMT         COMP      0                                  7070
+     C     *IN70         IFEQ      *OFF                                                     MD021315
+     C                   SETON                                        70                    MD021315
+     C                   ENDIF                                                              MD021315
 2378 C  N70              GOTO      ENDEX
      C                   END                                                                   S0111
      C*   SET OFF A/C KEY GENERATION IND IF PRINT ONLY                    S01119
@@ -10342,10 +10345,15 @@
      C                   MOVE      '  '          BRTT                                       MD059879
      C                   ENDIF                                                              MD031017
 2150 C                   EXCEPT
+     C     KYAMT         COMP      0                                  7070                  MD021315
+     C     *IN70         IFEQ      *ON                                                      MD021315
+     C                   EXCEPT    DKYUPD                                                   MD021315
+     C                   ENDIF                                                              MD021315
      C                   SETOFF                                       OF                       S0111
      C                   Z-ADD     0             RPAGE1                                        S0111
      C   04              SETOFF                                       71
      C     PRONLY        IFNE      'Y'                                                         S0111
+     C     *IN70         ANDEQ     *ON                                                      MD021315
 2151 C     DKREC         ADD       1             DKREC             5 0
 2152 C     DKRECD        ADD       1             DKRECD            5 0
      C                   END                                                                   S0111
@@ -34130,7 +34138,8 @@
      O/COPY WNCPYSRC,DL0280O020
 4278 O                                            1 'H'
 4279 O*
-4280 ODKEYSDP   EADD 70
+4280 O***DKEYSDP   EADD 70                                                                  MD021315
+     ODKEYSDP   EADD         DKYUPD                                                         MD021315
 4281 O                                            1 'D'
 4282 O                       AKY                 11
 4283 O                       DTYP                 3

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD033687A          Date 08Feb23               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD046932           Date 08Feb23               *
+      *  Prev Amend No. MD033687A          Date 08Feb23               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046932 - COB Component GOC0020 seq 00003 is looping        *
       *  MD033687A - Error on call to GOWRKEDTA due to wrong proce-   *
       *              ssing of Irregular Frequency dates.              *
       *              Added the processin for frequency type 'Z'       *
@@ -840,12 +842,17 @@
      C                   ELSE                                                              MD033687A
      C                   EVAL      RCIP = 'P'                                              MD033687A
      C     DLFRKEYG      SETGT     DLFRSCL3                                                MD033687A
+     C                   IF        %FOUND(DLFRSCL3)                                         MD046932
      C     DLFRKEYE      READE     DLFRSCL3                                                MD033687A
-     C                   IF        %FOUND(DLFRSCL3)                                        MD033687A
+     C**********         IF        %FOUND(DLFRSCL3)                               MD033687A MD046932
+     C                   IF        NOT %EOF(DLFRSCL3)                                       MD046932
      C                   EVAL      ZFRNXD = HHPRDT                                         MD033687A
      C                   ELSE                                                              MD033687A
      C                   EVAL      ZFRNXD = ZFRMDT                                         MD033687A
      C                   ENDIF                                                             MD033687A
+     C                   ELSE                                                               MD046932
+     C                   EVAL      ZFRNXD = ZFRMDT                                          MD046932
+     C                   ENDIF                                                              MD046932
      C                   ENDIF                                                             MD033687A
       *
      C                   ENDSR

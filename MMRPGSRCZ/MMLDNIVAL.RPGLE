@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060283           Date 22Aug22               *
-      *  Prev Amend No. MD059368           Date 18Dec21               *
+      *  Last Amend No. MD060840           Date 08Feb23               *
+      *  Prev Amend No. MD060283           Date 22Aug22               *
+      *                 MD059368           Date 18Dec21               *
       *                 MD058543A          Date 09Sep21               *
       *                 MD058734           Date 03Sep21               *
       *                 MD058644           Date 31Aug21               *
@@ -167,6 +168,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060840 - Unable to complete a TD/CF deal with              *
+      *             regular/irregular interest rate change and/or     *
+      *             interest payment                                  *
       *  MD060283 - Error on Open Repo Confirmation - Maturity Event. *
       *           - TOTI was double eventhough DDBSRC was blank or    *
       *             not amended during REPO maturity date change.     *
@@ -1193,8 +1197,12 @@
      C                   ENDIF                                                                CGL058
 
       /COPY WNCPYSRC,MMLDNIV007
+      *                                                                                     MD060840
+      ** Validate Business Day Convention fields when CDL096 is ON and CDL033 is OFF        MD060840
+     C                   IF        CDL096 = 'Y' AND CDL033 = 'N'                            MD060840
      C                   EXSR      VBDYCCY                                                    CDL096
      C                   EXSR      VPAMCNV                                                    CDL096
+     C                   ENDIF                                                              MD060840
 
       *  *------------------------*
       *  * Validate All Dates     *  #03
@@ -5841,9 +5849,9 @@
                                                                                               CDL096
      C                   EXSR      RESETERRS                                                  CDL096
                                                                                               CDL096
-     C                   IF        CDL096  <> 'Y'                                             CDL096
-     C                   LEAVESR                                                              CDL096
-     C                   ENDIF                                                                CDL096
+     C**********         IF        CDL096  <> 'Y'                                    CDL096 MD060840
+     C**********         LEAVESR                                                     CDL096 MD060840
+     C**********         ENDIF                                                       CDL096 MD060840
       *                                                                                       CDL096
       ** Call validation module for Payment Convention Currencies                             CDL096
      C                   CALLB     'MMVBDYCCY'   PMMvBDyCcy                                   CDL096
@@ -5879,9 +5887,9 @@
                                                                                               CDL096
      C                   EXSR      RESETERRS                                                  CDL096
                                                                                               CDL096
-     C                   IF        CDL096  <> 'Y'                                             CDL096
-     C                   LEAVESR                                                              CDL096
-     C                   ENDIF                                                                CDL096
+     C**********         IF        CDL096  <> 'Y'                                    CDL096 MD060840
+     C**********         LEAVESR                                                     CDL096 MD060840
+     C**********         ENDIF                                                       CDL096 MD060840
       *                                                                                       CDL096
       ** Call validation module for Payment and Amount Convention                             CDL096
      C                   CALLB     'MMVPAMCNV'   PMMvPAmCnv                                   CDL096

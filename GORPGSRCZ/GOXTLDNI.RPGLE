@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD033687A          Date 08Feb23               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -48,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033687A - Error on call to GOWRKEDTA due to wrong proce-   *
+      *              ssing of Irregular Frequency dates.              *
+      *              Added the processin for frequency type 'Z'       *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -89,6 +93,10 @@
 
      FMMDEAMLL  IF   E           K DISK    INFSR(*PSSR)
 
+     FDLFRSCL3  IF   E           K DISK    INFSR(*PSSR)                                    MD033687A
+      *                                                                                    MD033687A
+      ** Midas DL FRCD Date Schedule Retrieval                                             MD033687A
+      *                                                                                    MD033687A
 
      D/COPY ZACPYSRC,STD_D_SPEC
 
@@ -800,6 +808,10 @@
       * DETERMINE NEXT DAY
       ********************************************************************
      C     DETNXD        BEGSR
+      *                                                                                    MD033687A
+      ** If Frequency is not Irregular, Call standard Frequency program                    MD033687A
+      *                                                                                    MD033687A
+     C                   If        ZFRFRQ <> 'Z'                                           MD033687A
       *
      C                   CALL      'DLZFRQ'
      C                   PARM      *BLANK        ZFRRTC            5
@@ -822,6 +834,19 @@
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO DLZFRQ'
      C                   EXSR      *PSSR
      C                   END
+      *                                                                                    MD033687A
+      ** Otherwise use DLFRSCPD to determine next day                                      MD033687A
+      *                                                                                    MD033687A
+     C                   Else                                                              MD033687A
+     C                   Eval      RCIP = 'P'                                              MD033687A
+     C     DLFRKEYG      SetGT     DLFRSCL3                                                MD033687A
+     C     DLFRKEYE      ReadE     DLFRSCL3                                                MD033687A
+     C                   If        %Found(DLFRSCL3)                                        MD033687A
+     C                   Eval      ZFRNXD = HHPRDT                                         MD033687A
+     C                   Else                                                              MD033687A
+     C                   Eval      ZFRNXD = ZFRMDT                                         MD033687A
+     C                   Endif                                                             MD033687A
+     C                   EndIf                                                             MD033687A
       *
      C                   ENDSR
       *****************************************************************
@@ -880,6 +905,17 @@
      C                   PARM      '*FIRST  '    @OPTN             7
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
+      *                                                                                    MD033687A
+      ** Access Midas DL FRCD Date Schedule Retrieval file                                 MD033687A
+      *                                                                                    MD033687A
+     C     DLFRKEYG      KList                                                             MD033687A
+     C                   KFld                    HKDN38                                    MD033687A
+     C                   KFld                    RCIP              1                       MD033687A
+     C                   KFld                    ZFRDAT                                    MD033687A
+      *                                                                                    MD033687A
+     C     DLFRKEYE      KList                                                             MD033687A
+     C                   KFld                    HKDN38                                    MD033687A
+     C                   KFld                    RCIP                                      MD033687A
       *
      C                   ENDSR
       *****************************************************************

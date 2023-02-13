@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update UTMNUCTD')                            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00601 - Midas SM Update UTMNUCTD                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD061019 *CREATE   Date 07Feb23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061019 - Update UTMNUCTD with FM 2021.G delivery          */
+/*                  as UTC0930 was corrected in that release         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&Q) TYPE(*CHAR) LEN(1) VALUE('''')
+             COPYRIGHT  TEXT('(C) Finastra International Limited 2023')
+
+/* Global Monitor Message                                           */
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNORMAL)
+
+/* Set Switches                                                     */
+
+             CHGJOB     SWS(XXXXX000)
+
+/* Main Process                                                     */
+
+             RUNSQL     SQL('UPDATE UTMNUCTD SET PCMD = ''CALL UPC6010'' +
+                          WHERE ICDE = ''INSP''') COMMIT(*NC)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+             RUNSQL     SQL('UPDATE UTMNUCTD SET PARA = '''  +
+                         *CAT &Q   *CAT  '''  ''' *CAT &Q *CAT      +
+                         ''' WHERE ICDE = ''OTRI''') COMMIT(*NC)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+             GOTO       CMDLBL(ENDCLPGM)
+
+/* Abnormal termination processing                                  */
+
+ABNORMAL:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+             SNDPGMMSG  MSG('Program SMUC00601 ended abnormally') TOMSGQ(MOPERQ +
+                          MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+ENDCLPGM:
+             ENDPGM

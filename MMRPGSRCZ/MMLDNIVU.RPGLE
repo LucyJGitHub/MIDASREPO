@@ -3869,14 +3869,14 @@
       *                                                                                    MD033687A
       ** Check for duplicate schedule dates                                                MD033687A
       *                                                                                    MD033687A
-     C                   MoveL     *BLANKS       SCHEDNAME        35                       MD033687A
-     C                   MoveL     RatSchd       SCHEDNAME                                 MD033687A
-     C                   Do        600           N                                         MD033687A
-     C                   If        RatDATEA(N) = *Blanks                                   MD033687A
-     C                   Leave                                                             MD033687A
-     C                   EndIf                                                             MD033687A
+     C                   MOVEL     *BLANKS       SCHEDNAME        35                       MD033687A
+     C                   MOVEL     RatSchd       SCHEDNAME                                 MD033687A
+     C                   DO        600           N                                         MD033687A
+     C                   IF        RatDATEA(N) = *BLANKS                                   MD033687A
+     C                   LEAVE                                                             MD033687A
+     C                   ENDIF                                                             MD033687A
      C     RatDate(N)    LOOKUP    DateRateA                              92               MD033687A
-     C                   If        *IN92                                                   MD033687A
+     C                   IF        *IN92                                                   MD033687A
      C                   ADD       1             Idx                                       MD033687A
      C                   MOVEL     '5049567'     MsgIDArr(Idx)                             MD033687A
      C                   MOVEL     RatDate(N)    CharDate                                  MD033687A
@@ -3886,11 +3886,11 @@
      C                   EVAL      MsgDtaArr(Idx) = %TRIM(MsgDtaArr(Idx))                  MD033687A
      C                                            + LenStr +%TRIM(SCHEDNAME)               MD033687A
      C                   EVAL      FldNameArr(Idx) = 'RCDATE'                              MD033687A
-     C                   Leave                                                             MD033687A
-     C                   Else                                                              MD033687A
-     C                   Eval      DateRateA(N) = RatDate(N)                               MD033687A
-     C                   EndIf                                                             MD033687A
-     C                   EndDo                                                             MD033687A
+     C                   LEAVE                                                             MD033687A
+     C                   ELSE                                                              MD033687A
+     C                   EVAL      DateRateA(N) = RatDate(N)                               MD033687A
+     C                   ENDIF                                                             MD033687A
+     C                   ENDDO                                                             MD033687A
       *                                                                                       CDL033
       ** convert maturity date screen format to MIDAS day no.                                 CDL033
       *                                                                                       CDL033
@@ -4031,14 +4031,14 @@
       *                                                                                    MD033687A
       ** Check for duplicate schedule date                                                 MD033687A
       *                                                                                    MD033687A
-     C                   MoveL     *BLANKS       SCHEDNAME        35                       MD033687A
-     C                   MoveL     PaySchd       SCHEDNAME                                 MD033687A
-     C                   Do        600           N                                         MD033687A
-     C                   If        PayDATEA(N) = *Blanks                                   MD033687A
-     C                   Leave                                                             MD033687A
-     C                   EndIf                                                             MD033687A
+     C                   MOVEL     *BLANKS       SCHEDNAME        35                       MD033687A
+     C                   MOVEL     PaySchd       SCHEDNAME                                 MD033687A
+     C                   DO        600           N                                         MD033687A
+     C                   IF        PayDATEA(N) = *BLANKS                                   MD033687A
+     C                   LEAVE                                                             MD033687A
+     C                   ENDIF                                                             MD033687A
      C     PayDate(N)    LOOKUP    DatePayA                               93               MD033687A
-     C                   If        *IN93                                                   MD033687A
+     C                   IF        *IN93                                                   MD033687A
      C                   ADD       1             Idx                                       MD033687A
      C                   MOVEL     '5049568'     MsgIDArr(Idx)                             MD033687A
      C                   MOVEL     PayDate(N)    CharDate          6                       MD033687A
@@ -4048,11 +4048,11 @@
      C                   EVAL      MsgDtaArr(Idx) = %TRIM(MsgDtaArr(Idx))                  MD033687A
      C                                            + LenStr +%TRIM(SCHEDNAME)               MD033687A
      C                   EVAL      FldNameArr(Idx) = 'PCDATE'                              MD033687A
-     C                   Leave                                                             MD033687A
-     C                   Else                                                              MD033687A
-     C                   Eval      DatePayA(N) = PayDate(N)                                MD033687A
-     C                   EndIf                                                             MD033687A
-     C                   EndDo                                                             MD033687A
+     C                   LEAVE                                                             MD033687A
+     C                   ELSE                                                              MD033687A
+     C                   EVAL      DatePayA(N) = PayDate(N)                                MD033687A
+     C                   ENDIF                                                             MD033687A
+     C                   ENDDO                                                             MD033687A
       *                                                                                       CDL033
       ** convert maturity date screen format to MIDAS day no.                                 CDL033
       *                                                                                       CDL033

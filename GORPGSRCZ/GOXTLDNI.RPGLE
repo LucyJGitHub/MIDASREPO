@@ -811,7 +811,7 @@
       *                                                                                    MD033687A
       ** If Frequency is not Irregular, Call standard Frequency program                    MD033687A
       *                                                                                    MD033687A
-     C                   If        ZFRFRQ <> 'Z'                                           MD033687A
+     C                   IF        ZFRFRQ <> 'Z'                                           MD033687A
       *
      C                   CALL      'DLZFRQ'
      C                   PARM      *BLANK        ZFRRTC            5
@@ -837,16 +837,16 @@
       *                                                                                    MD033687A
       ** Otherwise use DLFRSCPD to determine next day                                      MD033687A
       *                                                                                    MD033687A
-     C                   Else                                                              MD033687A
-     C                   Eval      RCIP = 'P'                                              MD033687A
-     C     DLFRKEYG      SetGT     DLFRSCL3                                                MD033687A
-     C     DLFRKEYE      ReadE     DLFRSCL3                                                MD033687A
-     C                   If        %Found(DLFRSCL3)                                        MD033687A
-     C                   Eval      ZFRNXD = HHPRDT                                         MD033687A
-     C                   Else                                                              MD033687A
-     C                   Eval      ZFRNXD = ZFRMDT                                         MD033687A
-     C                   Endif                                                             MD033687A
-     C                   EndIf                                                             MD033687A
+     C                   ELSE                                                              MD033687A
+     C                   EVAL      RCIP = 'P'                                              MD033687A
+     C     DLFRKEYG      SETGT     DLFRSCL3                                                MD033687A
+     C     DLFRKEYE      READE     DLFRSCL3                                                MD033687A
+     C                   IF        %FOUND(DLFRSCL3)                                        MD033687A
+     C                   EVAL      ZFRNXD = HHPRDT                                         MD033687A
+     C                   ELSE                                                              MD033687A
+     C                   EVAL      ZFRNXD = ZFRMDT                                         MD033687A
+     C                   ENDIF                                                             MD033687A
+     C                   ENDIF                                                             MD033687A
       *
      C                   ENDSR
       *****************************************************************
@@ -908,14 +908,14 @@
       *                                                                                    MD033687A
       ** Access Midas DL FRCD Date Schedule Retrieval file                                 MD033687A
       *                                                                                    MD033687A
-     C     DLFRKEYG      KList                                                             MD033687A
-     C                   KFld                    HKDN38                                    MD033687A
-     C                   KFld                    RCIP              1                       MD033687A
-     C                   KFld                    ZFRDAT                                    MD033687A
+     C     DLFRKEYG      KLIST                                                             MD033687A
+     C                   KFLD                    HKDN38                                    MD033687A
+     C                   KFLD                    RCIP              1                       MD033687A
+     C                   KFLD                    ZFRDAT                                    MD033687A
       *                                                                                    MD033687A
-     C     DLFRKEYE      KList                                                             MD033687A
-     C                   KFld                    HKDN38                                    MD033687A
-     C                   KFld                    RCIP                                      MD033687A
+     C     DLFRKEYE      KLIST                                                             MD033687A
+     C                   KFLD                    HKDN38                                    MD033687A
+     C                   KFLD                    RCIP                                      MD033687A
       *
      C                   ENDSR
       *****************************************************************

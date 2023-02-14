@@ -14,10 +14,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP046   *CREATE   Date 18Jul22              */
+/*       Last Amend No. MD060980           Date 30Jan23              */
+/*       Prev Amend No. CUP046   *CREATE   Date 18Jul22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060980 - Improvement to CUP046                            */
+/*                  1. make sure subsystem is started                */
+/*                  2. send different msg depending on scenarios     */
+/*                  3. add option to cancel process                  */
 /*       CUP046 - One Touch Bridge Automation Changes - Version Upg  */
 /*                                                                   */
 /*********************************************************************/
@@ -106,6 +111,22 @@
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
+/* Start subsystem */                                                                   /*MD060980*/
+             STRSBS     SBSD(&BRGBRGLIB/&BRGBRGLIB)                                     /*MD060980*/
+             MONMSG     MSGID(CPF1010)                                                  /*MD060980*/
+/* Send message: Migration is currently being run. Access the monitor?                  /*MD060980*/
+             RTVMSG     MSGID(SMM6002) MSGF(UTMSGF) MSG(&MESSAGE)                       /*MD060980*/
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                       /*MD060980*/
+             RTVMSG     MSGID(SMM6003) MSGF(UTMSGF) MSG(&MESSAGE)                       /*MD060980*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)                       /*MD060980*/
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'OPTION' &REPLY1)                     /*MD060980*/
+             IF         COND(&REPLY1 *EQ 'N') THEN(DO)                                  /*MD060980*/
+                GOTO       CMDLBL(ENDPGM)                                               /*MD060980*/
+             ENDDO                                                                      /*MD060980*/
+             IF         COND(&REPLY1 *EQ 'Y') THEN(DO)                                  /*MD060980*/
+                GOTO       CMDLBL(MONITOR)                                              /*MD060980*/
+             ENDDO                                                                      /*MD060980*/
+                                                                                        /*MD060980*/
                 GOTO       CMDLBL(MONITOR)
 
 CHECK:
@@ -120,6 +141,8 @@ CHECK:
 /* If record, ask if previous monitor should be displayed */
              RTVMSG     MSGID(SMM6001) MSGF(UTMSGF) MSG(&MESSAGE)
              CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(SMM6004) MSGF(UTMSGF) MSG(&MESSAGE)                       /*MD060980*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)                       /*MD060980*/
              CALL       PGM(SCC0010) PARM(&ERRPGM 'OPTION' &REPLY1)
              IF         COND(&REPLY1 *EQ 'N') THEN(DO)
                 GOTO       CMDLBL(SELECT)
@@ -129,6 +152,20 @@ CHECK:
              ENDDO
 
 SELECT:
+/* Send message: A new migration is going to be run from the start                      /*MD060980*/
+             RTVMSG     MSGID(SMM6005) MSGF(UTMSGF) MSG(&MESSAGE)                       /*MD060980*/
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                       /*MD060980*/
+             RTVMSG     MSGID(SMM6006) MSGF(UTMSGF) MSG(&MESSAGE)                       /*MD060980*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)                       /*MD060980*/
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'OPTION' &REPLY1)                     /*MD060980*/
+             IF         COND(&REPLY1 *EQ 'N') THEN(DO)                                  /*MD060980*/
+                GOTO       CMDLBL(ENDPGM)                                               /*MD060980*/
+             ENDDO                                                                      /*MD060980*/
+             IF         COND(&REPLY1 *EQ 'Y') THEN(DO)                                  /*MD060980*/
+                GOTO       CMDLBL(PROCEED)                                              /*MD060980*/
+             ENDDO                                                                      /*MD060980*/
+                                                                                        /*MD060980*/
+PROCEED:                                                                                /*MD060980*/
 /* Stop triggering on SDSVLXTD to avoid lock */
              RMVPFTRG FILE(SDSVLXTD)
              MONMSG     MSGID(CPF0000)

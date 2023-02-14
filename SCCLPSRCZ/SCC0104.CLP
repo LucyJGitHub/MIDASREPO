@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSD103             Date 10Aug20              */
-/*       Prev Amend No. MD039086           Date 24Oct16              */
+/*       Last Amend No. AR989454           Date 14Feb23              */
+/*       Prev Amend No. CSD103             Date 10Aug20              */
+/*                      MD039086           Date 24Oct16              */
 /*                      MD055683           Date 21May20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD031644           Date 08Jan15              */
@@ -50,6 +51,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR989454 - Drip Feed Jobs MXOLEXT, MXOLTRM should auto-start*/
+/*                  on Subsystem Start. (Child: AR989455)            */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*       MD039086 - Submit GO_ONL_ABC background updater             */
 /*                  Applied for MD-57273.                            */
@@ -651,6 +654,11 @@
                 CALL      PGM(SDC000113)                                                  /*CSD103*/
              ENDDO                                                                        /*CSD103*/
                                                                                           /*CSD103*/
+/** Start drip-feed jobs */                                                             /*AR989454*/
+             IF         COND(&MPHAS *EQ 'A') THEN(DO)                                   /*AR989454*/
+             CALL       PGM(MXC0600)                                                    /*AR989454*/
+             ENDDO                                                                      /*AR989454*/
+/**/                                                                                    /*AR989454*/
 /*/COPY WNCPYSRC,SCC0104MPE                                          */
 
              GOTO       CMDLBL(END)

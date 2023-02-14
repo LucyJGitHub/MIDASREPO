@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1052011          Data 14Feb23              */
-/*       Prev Amend No. 258347             Date 04Apr12              */
+/*       Last Amend No. AR1097127          Date 14Feb23              */
+/*       Prev Amend No. AR1052011          Data 14Feb23              */
+/*                      258347             Date 04Apr12              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD046737           Date 15Aug17              */
 /*                      MD033971           Date 05Aug15              */
@@ -78,6 +79,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       AR1097127 - Midas Export not used but the COB started the   */
+/*                   component that failed. Check if module is *ON   */
+/*                   before ending drip feed. (Child: AR1097128)     */
 /*       AR1052011 - Midas Export chip feed jobs are not ended.      */
 /*                   Amend program to automatically end              */
 /*                   drip feed jobs. (Child: AR1052012)              */
@@ -243,7 +247,9 @@
              DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(132)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
-             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE(*FIRST)
+/**********  DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE(*FIRST)  */                /*AR1097127*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ')                 /*AR1097127*/
+             DCL        VAR(&EXPMOD) TYPE(*CHAR) LEN(1) VALUE('N')                     /*AR1097127*/
 /************DCL        VAR(&CAP002) TYPE(*CHAR) LEN(1) VALUE('N' )            /*136442*/ /*CPK014*/
 /************DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)                        /*136442*/ /*CPK014*/
              DCL        VAR(&HCONT) TYPE(*CHAR) LEN(1) VALUE('N')     /*CFT003*/
@@ -282,6 +288,8 @@
 
 /* Access PF/SDMMODPD to determine which modules are live */
 
+             CHGVAR     VAR(&RTCD) VALUE(' ')                                          /*AR1097127*/
+             CHGVAR     VAR(&MMOD) VALUE(' ')                                          /*AR1097127*/
              CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &MMOD)
 
 /*  Database error handling  */
@@ -289,6 +297,11 @@
              IF         COND(&RTCD *NE '       ') THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
+                                                                                       /*AR1097127*/
+            IF         COND(%SST(&MMOD 99 1) *EQ 'Y') THEN(DO)                         /*AR1097127*/
+            CHGVAR     VAR(&EXPMOD) VALUE('Y')                                         /*AR1097127*/
+            ENDDO                                                                      /*AR1097127*/
+                                                                                       /*AR1097127*/
 /*/COPY WNCPYSRC,SCC0400008                                          */
 /** Check to see if automatic scheduling is on                     */                     /*CCB014*/
                                                                                           /*CCB014*/
@@ -992,7 +1005,9 @@ TAGUSC01:                                                                       
 /**/                                                                                   /*AR1052011*/
 /* If CMX001 is on */                                                                  /*AR1052011*/
 /**/                                                                                   /*AR1052011*/
-             IF         COND(&SRTCD *EQ '       ') THEN(DO)                            /*AR1052011*/
+/**********  IF         COND(&SRTCD *EQ '       ') THEN(DO)          */      /*AR1052011 AR1097127*/
+             IF         COND((&SRTCD *EQ '       ') *AND +
+                        (&EXPMOD *EQ 'Y')) THEN(DO)                                    /*AR1097127*/
 /**/                                                                                   /*AR1052011*/
 /* End job MXC0610 and MXC0620 */                                                      /*AR1052011*/
 /**/                                                                                   /*AR1052011*/

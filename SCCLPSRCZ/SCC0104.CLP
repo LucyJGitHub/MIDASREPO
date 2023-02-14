@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR989454           Date 14Feb23              */
-/*       Prev Amend No. CSD103             Date 10Aug20              */
+/*       Last Amend No. AR1097127          Date 14Feb23              */
+/*       Prev Amend No. AR989454           Date 14Feb23              */
+/*                      CSD103             Date 10Aug20              */
 /*                      MD039086           Date 24Oct16              */
 /*                      MD055683           Date 21May20              */
 /*                      MD046248           Date 27Oct17              */
@@ -51,6 +52,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR1097127 - Midas Export not used but the COB started the   */
+/*                   component that failed. Check if module is *ON   */
+/*                   before running MXC0600. (Child: AR1097128)      */
 /*       AR989454 - Drip Feed Jobs MXOLEXT, MXOLTRM should auto-start*/
 /*                  on Subsystem Start. (Child: AR989455)            */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
@@ -135,6 +139,7 @@
                           ')                                          /*CTI001*/
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*CTI001*/
              DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*193083*/
+             DCL        VAR(&EXPMOD) TYPE(*CHAR) LEN(1) VALUE('N')                     /*AR1097127*/
 /**********  DCL        VAR(&RTN) TYPE(*CHAR) LEN(7) */                        /*193083*/ /*211819*/
 /**********  DCL        VAR(&OPN) TYPE(*CHAR) LEN(7) */                        /*193083*/ /*211819*/
 /**********  DCL        VAR(&OPTN2) TYPE(*CHAR) LEN(7) + */
@@ -200,6 +205,16 @@
              CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &FMT)          /*CTI001*/
                                                                       /*CTI001*/
 /*/COPY WNCPYSRC,SCC0104MPS                                          */
+            IF         COND(&RTCD *NE '       ') THEN(DO)                              /*AR1097127*/
+            SNDPGMMSG  MSG('AOMMODR0 - PROGRAM ERROR') +
+                       TOMSGQ(MOPERQ)                                                  /*AR1097127*/
+            CHGJOB     JOB(XXXXXX11)                                                   /*AR1097127*/
+            GOTO       CMDLBL(END)                                                     /*AR1097127*/
+            ENDDO                                                                      /*AR1097127*/
+                                                                                       /*AR1097127*/
+            IF         COND(%SST(&FMT 99 1) *EQ 'Y') THEN(DO)                          /*AR1097127*/
+            CHGVAR     VAR(&EXPMOD) VALUE('Y')                                         /*AR1097127*/
+            ENDDO                                                                      /*AR1097127*/
                                                                       /*122661*/
 /**/                                                                  /*122661*/
 /**Determine*if*CLE004*installed***/                                           /*122661*/ /*193083*/
@@ -655,7 +670,9 @@
              ENDDO                                                                        /*CSD103*/
                                                                                           /*CSD103*/
 /** Start drip-feed jobs */                                                             /*AR989454*/
-             IF         COND(&MPHAS *EQ 'A') THEN(DO)                                   /*AR989454*/
+/**********  IF         COND(&MPHAS *EQ 'A') THEN(DO)                */       /*AR989454 AR1097127*/
+             IF         COND((&MPHAS *EQ 'A') *AND (&EXPMOD *EQ +
+                        'Y')) THEN(DO)                                                 /*AR1097127*/
              CALL       PGM(MXC0600)                                                    /*AR989454*/
              ENDDO                                                                      /*AR989454*/
 /**/                                                                                    /*AR989454*/

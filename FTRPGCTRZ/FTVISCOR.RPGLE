@@ -339,8 +339,8 @@
      C                   MOVEL     'N'           OKSNC1                                     AR666005
      C                   ADD       1             IDX                                        AR666005
      C                   MOVEL     'DDSNC1'      FldNamXAR(IDX)                             AR666005
-     C                   EVAL      BLen = %Len(%Trim(CLSWTK))                               MD000091
-     C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(CLSWTK)                   MD000091
+     C                   EVAL      BLen = %Len(%Trim(CLSWTK))                               AR666005
+     C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(CLSWTK)                   AR666005
      C                   MOVEL     'FTM7119'     MsgIdXAr(IDX)                              AR666005
       *                                                                                     AR666005
      C     ADSLSH        IFNE      '/'                                                      AR666005

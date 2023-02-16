@@ -21,8 +21,9 @@
       ***(c)*Misys*International*Banking*Systems*Ltd.*2008*************                  HUT105
       *  (c) Finastra International Systems Ltd. 2020                 *                  HUT105
       *                                                               *
-      *  Last Amend No. HUT111             Date 07Apr20               *
-      *  Prev Amend No. HUT105             Date 06Apr20               *
+      *  Last Amend No. MD060838           Date 15Feb23               *
+      *  Prev Amend No. HUT111             Date 07Apr20               *
+      *                 HUT105             Date 06Apr20               *
       *                 MD043182           Date 14Dec16               *
       *                 HUT024             Date 21Oct16               *
       *                 AR1027562          Date 12Sep12               *
@@ -46,6 +47,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060838 - Decimal Data Error due to SECTYD file change.     *
+      *             Recompile.                                        *
       *  HUT111 - 4 Eyes on Bulk Position Settlement                  *
       *           (Upgrade of HUT015 to FM2.1)                        *
       *  HUT105 - Bulk Position Settlements                           *

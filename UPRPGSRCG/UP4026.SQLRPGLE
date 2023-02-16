@@ -12,10 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD059751 *CREATE   Date 25Mar22               *
+      *  Last Amend No. MD060961           Date 23Jan23               *
+      *  Prev Amend No. MD059751 *CREATE   Date 25Mar22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060961 - View name should not include blank character      *
       *  MD059751 - SQL view statement change is not detected by aDBU *
       *                                                               *
       *****************************************************************
@@ -23,6 +25,7 @@
 
      D XVIEW           S             10
 
+     D pos             S              5  0                                                  MD060961
      D PSDS           SDS
       *
       ** Program Status Data Structure
@@ -56,7 +59,12 @@
 
      C                   DOW       SQLCODE = 0
 
-
+      * check for blank character                                                           MD060961
+     C                   eval      pos = 0                                                  MD060961
+     C                   eval      pos = %scan(' ':XVIEW)                                   MD060961
+     C                   if        pos > 0                                                  MD060961
+     C                   eval      XVIEW = %subst(XVIEW:1:pos-1)                            MD060961
+     C                   endif                                                              MD060961
      C/EXEC SQL
      C+ insert into UPGLOGPD
      C+ (

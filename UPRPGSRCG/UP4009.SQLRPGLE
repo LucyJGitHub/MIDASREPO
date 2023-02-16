@@ -12,13 +12,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059751             Date 25Mar22             *
-      *  Prev Amend No. MD059742             Date 23Mar22             *
+      *  Last Amend No. MD060961             Date 23Jan23             *
+      *  Prev Amend No. MD059751             Date 25Mar22             *
+      *                 MD059742             Date 23Mar22             *
       *                 MD058585             Date 17Aug21             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060961 - File is not created when both DTAARA and file     *
+      *             have the same name.                               *
+      *             Discard LF if dependency is not found in the      *
+      *             current system in case 'File missing'             *
       *  MD059751 - SQL view statement change is not detected by aDBU *
       *  MD059742 - Cope with change in Alternative field name        *
       *  MD058585 - aDBU does not detect if LF has different keys     *
@@ -43,6 +48,8 @@
      D RcdCount        S              5  0
      D RcdCount2       S              5  0
      D @Like           S              3
+     D @LikeP          S              3                                                     MD060961
+     D RcdCount3       S              5  0                                                  MD060961
      D @DTAQ           S              1
      D @DTAARA         S              1
 
@@ -55,6 +62,7 @@
      C                   PARM                    RefSys            2
 
      C                   eval      @Like = RefSys + '%'
+     C                   eval      @LikeP = Lib1  + '%'                                     MD060961
 
       * Read log file and process for each entry
      C/exec SQL
@@ -84,11 +92,26 @@
      C+ where PDEPF = :RdFile
      C/end-exec
 
+     C                   eval      RcdCount3 = 0                                            MD060961
+      * check if 'File missing'                                                             MD060961
+     C/exec SQL                                                                             MD060961
+     C+ select count(*) into :RcdCount3 from UPGLOGPD                                       MD060961
+     C+ where WFILE  = :RdFile and WDESC = 'File missing'                                   MD060961
+     C/end-exec                                                                             MD060961
+     C                   if        RcdCount3 = 1                                            MD060961
+      * also, it can be ignored if its dependency does not exist yet                        MD060961
+      * in the Prod system (not in the reference system)                                    MD060961
+     C/exec SQL                                                                             MD060961
+     C+ select count(*) into :RcdCount2 from QADBFDEP                                       MD060961
+     C+ where DBFFDP = :RdFile and DBFLDP like :@LikeP                                      MD060961
+     C/end-exec                                                                             MD060961
+     C                   else                                                               MD060961
       * also, it can be ignored if its dependency does not exist yet
      C/exec SQL
      C+ select count(*) into :RcdCount2 from QADBFDEP
      C+ where DBFFDP = :RdFile and DBFLDP like :@Like
      C/end-exec
+     C                   endif                                                              MD060961
 
      C                   ENDIF
 
@@ -183,6 +206,10 @@
 
      C                   DOW       SQLCODE = 0
 
+      ** As UPZLOGPD is read with DISTINCT, only one record is processed in case            MD060961
+      ** both File and DTAARA are new. In that case, check @NwFl. If set to 'Y' and         MD060961
+      ** WDESC is now 'New DTAARA', both objects are to be created.                         MD060961
+                                                                                            MD060961
       * if new PF file
      C                   if        (WDESC = 'New file'
      C                             and %SUBST(WJOB:4:1) <> 'V')
@@ -633,6 +660,36 @@
      C                   ENDIF
 
      C                   if        @DTAARA = 'N'
+      ** Check first @NwFl. If set to 'Y' then 2 records must be written in the driver      MD060961
+     C                   if        @NwFl = 'Y'                                              MD060961
+     C/EXEC SQL                                                                             MD060961
+     C+ insert into UPGDRVTD                                                                MD060961
+     C+ (                                                                                   MD060961
+     C+   DRPRFX                                                                            MD060961
+     C+  ,DRFILE                                                                            MD060961
+     C+  ,DRLIB                                                                             MD060961
+     C+  ,DRACTN                                                                            MD060961
+     C+  ,DRALLC                                                                            MD060961
+     C+  ,DRFLCH                                                                            MD060961
+     C+  ,DREXCP                                                                            MD060961
+     C+  ,DRSCRP                                                                            MD060961
+     C+  ,DRUPDD                                                                            MD060961
+     C+ )                                                                                   MD060961
+     C+ Values                                                                              MD060961
+     C+ (                                                                                   MD060961
+     C+   :Lib1                                                                             MD060961
+     C+  ,:WFILE                                                                            MD060961
+     C+  ,:WJOB                                                                             MD060961
+     C+  ,:DRACTN                                                                           MD060961
+     C+  ,:DRALLC                                                                           MD060961
+     C+  ,:DRFLCH                                                                           MD060961
+     C+  ,:DREXCP                                                                           MD060961
+     C+  ,' '                                                                               MD060961
+     C+  ,' '                                                                               MD060961
+     C+ )                                                                                   MD060961
+     C/END-EXEC                                                                             MD060961
+     C                                                                                      MD060961
+     C                   ENDIF                                                              MD060961
      C                   eval      DRACTN = 'New DTAARA will be duplicated'
      C                   eval      DRALLC = 'N'
      C                   ENDIF

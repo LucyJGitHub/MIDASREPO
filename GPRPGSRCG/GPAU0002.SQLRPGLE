@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058228           Date 31May21               *
-      *  Prev Amend No. MD056611           Date 20Sep20               *
+      *  Last Amend No. MD026937           Date 17Feb23               *
+      *  Prev Amend No. MD058228           Date 31May21               *
+      *                 MD056611           Date 20Sep20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026937 - Underscore is being flagged as an invalid filename*
+      *             character. Include _ and $ as possible characters *
+      *             for file naming in the CHAR array.                *
       *  MD058228 - Decimal data error when creating a file           *
       *  MD056611 - Deliverable Data Split for Audit Reporting        *
       *  MD046248 - Finastra Rebranding                               *
@@ -41,7 +45,8 @@
      D WKV             S              1    DIM(10)
      D ERR             S             76    DIM(20) CTDATA PERRCD(1)
      D HLP             S             76    DIM(2) CTDATA PERRCD(1)
-     D CHAR            S              1    DIM(39) CTDATA PERRCD(39)
+     D**CHAR****        S              1    DIM(39) CTDATA PERRCD(39)                       MD026937
+     D CHAR            S              1    DIM(41) CTDATA PERRCD(41)                        MD026937
      D CHK             S              1    DIM(47) CTDATA PERRCD(47)
 
      D                 DS
@@ -547,6 +552,6 @@ Active must be 'Y' or 'N'
 Enter File Name; CK/3=Exit
 Enter details; CK/3=Exit, CK/12=Abandon,
 ** CHAR
- ABCDEFGHIJKLMNOPQRSTUVWXYZ#@0123456789
+ ABCDEFGHIJKLMNOPQRSTUVWXYZ#@0123456789_$
 ** CHK
 CHKOBJ OBJ(          ) OBJTYPE(*FILE) AUT(*USE)

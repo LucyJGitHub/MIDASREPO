@@ -11,8 +11,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD060746           Date 22Nov22              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060909           Date 14Feb23              */
+/*       Prev Amend No. MD060746           Date 22Nov22              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD034158           Date 04Jun15              */
 /*                      MD026169           Date 04Apr14              */
 /*                      MD025679A          Date 21Mar14              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060909 - After COB job FTC0630 go in MSGW.                */
 /*       MD060746 - Incorrect source type                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD034158 - Job SCC007001 missing due to lock on SCBKJOBMON. */
@@ -58,6 +60,12 @@
              GOTO       CMDLBL(END)                                                     /*MD025679*/
              ENDDO                                                                      /*MD025679*/
                                                                                         /*MD025679*/
+/* Allocate SCBKJOBMEM */                                                               /*MD060909*/
+             ALCOBJ     OBJ((SCBKJOBMEM *DTAQ *EXCLRD)) WAIT(0)                         /*MD060909*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)                         /*MD060909*/
+             GOTO       CMDLBL(END)                                                     /*MD060909*/
+             ENDDO                                                                      /*MD060909*/
+                                                                                        /*MD060909*/
 /**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS) */                                 /*AR687098*/
 /**********  CHGVAR     VAR(&PREFIX) VALUE(%SUBSTRING(&LIB 1 2)) */            /*AR687098 MD025679*/
 /**********  RTVDTAARA  DTAARA((&PREFIX *CAT 'DMLIB')/MPHAS) RTNVAR(&MPHAS) */ /*AR687098 MD025679*/
@@ -84,9 +92,15 @@
                           JOBQ(&LIB/INTERFACE) PRTDEV(*CURRENT) +
                           OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
                           RQSDTA('CALL SCC007001') INLLIBL(*JOBD)                       /*MD025679*/
+             DLCOBJ     OBJ((SCBKJOBMEM *DTAQ   *EXCLRD))                               /*MD060909*/
+             SBMJOB     JOB(SCC007003) JOBD(&LIB/MBATCH) +
+                          JOBQ(&LIB/INTERFACE) PRTDEV(*CURRENT) +
+                          OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
+                          RQSDTA('CALL SCC007003') INLLIBL(*JOBD)                       /*MD060909*/
              ENDDO                                                                      /*MD034158*/
              ELSE       CMD(DO)                                                         /*MD034158*/
                 DLCOBJ     OBJ((SCBKJOBMON *DTAQ *EXCLRD))                              /*MD034158*/
+                DLCOBJ     OBJ((SCBKJOBMEM *DTAQ *EXCLRD))                              /*MD060909*/
              ENDDO
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060909           Date 14Feb23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034505           Date 26May15               *
       *                 AR868380           Date 10Jun13               *
       *                 CLE134             Date 01Aug12               *
@@ -75,6 +76,8 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
       *                                                               *
+      *  MD060909 - After COB job FTC0630 go in MSGW.                 *
+      *           - Call AOMEMSU1 instead of AOMEMSU0.                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -1254,22 +1257,35 @@
       *
      C     W#MEMS        IFEQ      *BLANKS
      C**********         CALLB     'AOMEMSU0'                           9090                  248460
-     C                   CALL      'AOMEMSU0'                           9090                  248460
-     C     R#RTN         PARM      *BLANKS       O#RTN             7
+     C**********         CALL      'AOMEMSU0'                           9090         248460 MD060909
+     C*****R#RTN         PARM      *BLANKS       O#RTN             7                        MD060909
      C***********          PARM W#RRNM    O#RRN   70                      CCB002
-     C                   PARM      W#ACNO        O#ACNO           10 0                         CCB00
+     C**********         PARM      W#ACNO        O#ACNO           10 0                CCB00 MD060909
      C**********         PARM      W#CNUM        O#CNUM            6 0                  CCB00 CSD027
-     C                   PARM      W#CNUM        O#CNUM            6                          CSD027
-     C                   PARM      W#CCY         O#CCY             3                           CCB00
+     C**********         PARM      W#CNUM        O#CNUM            6                  CSD027 MD06090
+     C**********         PARM      W#CCY         O#CCY             3                   CCB00 MD06090
      C**********         PARM      W#ACOD        O#ACOD            4 0                  CCB00 CGL029
-     C                   PARM      W#ACOD        O#ACOD           10 0                        CGL029
-     C                   PARM      W#ACSQ        O#ACSQ            2 0                         CCB00
-     C                   PARM      W#BRCA        O#BRCA            3                           CCB00
-     C                   PARM      W#PSTD        O#PSTD            5 0
-     C                   PARM      W#VDAT        O#VDAT            5 0
-     C                   PARM      W#AMT         O#AMT            15 0
-     C                   PARM      W#FTOV        O#FTOV            1
-      *
+     C**********         PARM      W#ACOD        O#ACOD           10 0                CGL029 MD06090
+     C**********         PARM      W#ACSQ        O#ACSQ            2 0                CCB00 MD060909
+     C**********         PARM      W#BRCA        O#BRCA            3                  CCB00 MD060909
+     C**********         PARM      W#PSTD        O#PSTD            5 0                      MD060909
+     C**********         PARM      W#VDAT        O#VDAT            5 0                      MD060909
+     C**********         PARM      W#AMT         O#AMT            15 0                      MD060909
+     C**********         PARM      W#FTOV        O#FTOV            1                        MD060909
+      *                                                                                     MD060909
+     C                   CALL      'AOMEMSU1'                           9090                MD060909
+     C     R#RTN         PARM      *BLANKS       O#RTN             7                        MD060909
+     C                   PARM      W#ACNO        O#ACNO           10 0                      MD060909
+     C                   PARM      W#CNUM        O#CNUM            6                        MD060909
+     C                   PARM      W#CCY         O#CCY             3                        MD060909
+     C                   PARM      W#ACOD        O#ACOD           10 0                      MD060909
+     C                   PARM      W#ACSQ        O#ACSQ            2 0                      MD060909
+     C                   PARM      W#BRCA        O#BRCA            3                        MD060909
+     C                   PARM      W#PSTD        O#PSTD            5 0                      MD060909
+     C                   PARM      W#VDAT        O#VDAT            5 0                      MD060909
+     C                   PARM      W#AMT         O#AMT            15 0                      MD060909
+     C                   PARM      W#FTOV        O#FTOV            1                        MD060909
+      *                                                                                     MD060909
      C     *IN90         IFEQ      '1'
      C     R#RTN         ORNE      *BLANKS
      C                   MOVEL     '*CALL   '    W0FILE

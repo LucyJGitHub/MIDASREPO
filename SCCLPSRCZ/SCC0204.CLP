@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD039086           Date 27Jan21              */
-/*       Prev Amend No. MD022132           Date 05Mar15              */
+/*       Last Amend No. MD060909           Date 14Feb23              */
+/*       Prev Amend No. MD039086           Date 27Jan21              */
+/*                      MD022132           Date 05Mar15              */
 /*                      MD046248           Date 05Feb18              */
 /*                      MD045731           Date 27Sep17              */
 /*                      MD031644           Date 08Jan15              */
@@ -37,6 +38,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060909 - After COB job FTC0630 go in MSGW.                */
+/*                - call GLC007003 and will submit GO_ONL_MEM job.   */
 /*       MD039086 - Submit GLC007011 when CAP205 is switched *ON.    */
 /*                  Applied for MD-57273.                            */
 /*       MD022132 - Triggers don't pick up Rollback deletes of ABC   */
@@ -383,6 +386,9 @@ NEXT:                                                                           
                                                                                         /*MD025679*/
              CALL       PGM(GLC007001)                                                 /*MD025679A*/
                                                                                        /*MD025679A*/
+                                                                                        /*MD060909*/
+             CALL       PGM(GLC007003)                                                  /*MD060909*/
+                                                                                        /*MD060909*/
 /* Submit the background updater */                                                     /*MD022132*/
                                                                                         /*MD022132*/
              IF         COND(&CAP205 *EQ 'Y') THEN(DO)                                  /*MD039086*/

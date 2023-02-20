@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Background Job Monitor - MEMOS')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       SCC007003 - Background Job Monitor (MEMOS)                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD060909  *CREATE  Date 14Feb23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD060909 - After COB job FTC0630 go in MSGW.                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(10)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(600)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2023')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Allocate SCBKJOBMON */
+
+             ALCOBJ     OBJ((SCBKJOBMEM *DTAQ *EXCLRD)) WAIT(0)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+             SNDPGMMSG  MSG('Attempt to start Background Job Monitor +
+                          failed. Probable cause: process is active +
+                          already.') TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+             CHGVAR     VAR(&DTAQLIBL) VALUE('*LIBL')
+             CHGVAR     VAR(&RCVDTAQ) VALUE('SCBKJOBMEM')
+
+ LOOP:
+
+ /* Call SCC0204 */
+
+             CALL       PGM(SCC0204)
+
+             CALL     PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                      &MSGLENGTH &MSGDATA &RCVWAIT)
+
+             IF       COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)
+             GOTO     CMDLBL(END)
+             ENDDO
+
+             GOTO     CMDLBL(LOOP)
+
+/* Abnormal termination */
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                        SCC007001 ended abnormally - see job log') +
+                        TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ END:
+             ENDPGM

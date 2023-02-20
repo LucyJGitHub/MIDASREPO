@@ -69,7 +69,8 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD060908 - Unable to send SWIFT payment from Midas to MMM.   *
-      *           - Do not allow ':' (colon) on 1st char of Ben field.*
+      *           - Do not allow ':' (colon) or '-' (hyphen) on 1st   *
+      *             character of Beneficiary fields.                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD026333 - Beneficiary field on Settlement screen allows     *
@@ -804,10 +805,11 @@
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   ELSE                                                               MD060908
      C                   IF        %SUBST(ADCHK1:1:1) = ':'                                 MD060908
+     C                             OR %SUBST(ADCHK1:1:1) = '-'                              MD060908
      C                   Move      'N'           OKBnc1                                     MD060908
      C                   Add       1             Idx                                        MD060908
      C                   Movel     'SBNC1'       FldNamXAr(Idx)                             MD060908
-     C                   Movel     'MMA0938'     MsgIdXAr(Idx)                              MD060908
+     C                   Movel     '5049570'     MsgIdXAr(Idx)                              MD060908
      C                   ENDIF                                                              MD060908
      C                   End
 
@@ -822,10 +824,11 @@
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   ELSE                                                               MD060908
      C                   IF        %SUBST(ADCHK2:1:1) = ':'                                 MD060908
+     C                             OR %SUBST(ADCHK2:1:1) = '-'                              MD060908
      C                   Move      'N'           OKBnc2                                     MD060908
      C                   Add       1             Idx                                        MD060908
      C                   Movel     'SBNC2'       FldNamXAr(Idx)                             MD060908
-     C                   Movel     'MMA0939'     MsgIdXAr(Idx)                              MD060908
+     C                   Movel     '5049570'     MsgIdXAr(Idx)                              MD060908
      C                   ENDIF                                                              MD060908
      C                   End
 
@@ -840,10 +843,11 @@
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   ELSE                                                               MD060908
      C                   IF        %SUBST(ADCHK3:1:1) = ':'                                 MD060908
+     C                             OR %SUBST(ADCHK3:1:1) = '-'                              MD060908
      C                   Move      'N'           OKBnc3                                     MD060908
      C                   Add       1             Idx                                        MD060908
      C                   Movel     'SBNC3'       FldNamXAr(Idx)                             MD060908
-     C                   Movel     'MMA0940'     MsgIdXAr(Idx)                              MD060908
+     C                   Movel     '5049570'     MsgIdXAr(Idx)                              MD060908
      C                   ENDIF                                                              MD060908
      C                   End
 
@@ -858,10 +862,11 @@
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   ELSE                                                               MD060908
      C                   IF        %SUBST(ADCHK4:1:1) = ':'                                 MD060908
+     C                             OR %SUBST(ADCHK4:1:1) = '-'                              MD060908
      C                   Move      'N'           OKBnc4                                     MD060908
      C                   Add       1             Idx                                        MD060908
      C                   Movel     'SBNC4'       FldNamXAr(Idx)                             MD060908
-     C                   Movel     'MMA0941'     MsgIdXAr(Idx)                              MD060908
+     C                   Movel     '5049570'     MsgIdXAr(Idx)                              MD060908
      C                   ENDIF                                                              MD060908
      C                   End
 
@@ -876,10 +881,11 @@
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   ELSE                                                               MD060908
      C                   IF        %SUBST(ADCHK5:1:1) = ':'                                 MD060908
+     C                             OR %SUBST(ADCHK5:1:1) = '-'                              MD060908
      C                   Move      'N'           OKBnc5                                     MD060908
      C                   Add       1             Idx                                        MD060908
      C                   Movel     'SBNC5'       FldNamXAr(Idx)                             MD060908
-     C                   Movel     'MMA0942'     MsgIdXAr(Idx)                              MD060908
+     C                   Movel     '5049570'     MsgIdXAr(Idx)                              MD060908
      C                   ENDIF                                                              MD060908
      C                   End
 

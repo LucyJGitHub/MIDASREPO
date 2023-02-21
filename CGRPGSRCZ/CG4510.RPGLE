@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD031405           Date 20Feb23               *
-      *  Prev Amend No. MD059859A          Date 28Jun22               *
+      *  Last Amend No. MD042258           Date 20Feb23               *
+      *  Prev Amend No. MD031405           Date 20Feb23               *
+      *                 MD059859A          Date 28Jun22               *
       *                 MD059859           Date 11May22               *
       *                 MD059908           Date 06May22               *
       *                 CCG025             Date 04Apr22               *
@@ -107,6 +108,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042258 - available/cleared balance is incorrect on the     *
+      *             Account statements for December 2015 and January  *
+      *             2016                                              *
       *  MD031405 - CFSB is incorrect. Ensure that backvalued postings*
       *             are included.                                     *
       *  MD059859A - Apply change to both credit and debit side.      *
@@ -986,7 +990,8 @@
      C                   ENDIF
       *
       **  Set up Statement Date
-     C                   MOVEL     BJRDNB        ##D(1)
+     C**********         MOVEL     BJRDNB        ##D(1)                                     MD042258
+     C                   MOVEL     NSTDAB        ##D(1)                                     MD042258
       *
       **  Set up Last Statement Date
       **  For turnover statements, use the last movement date instead                         239823
@@ -3336,9 +3341,12 @@
       *
       **  If the Value Date is between the First Statement Date and the
       **  Last and the Posting is dated before Run Date...
-     C     VALD          IFGE      ##FPDT
-     C     VALD          ANDLE     ##LPDT
-     C     PSTD          ANDLE     BJRDNB
+     C*****VALD          IFGE      ##FPDT                                                   MD042258
+     C*****VALD          ANDLE     ##LPDT                                                   MD042258
+     C*****PSTD          ANDLE     BJRDNB                                                   MD042258
+     C     PSTD          IFGT      SDLSTD                                                   MD042258
+     C     VALD          ANDLE     SDNSTD                                                   MD042258
+     C     VALD          ANDLE     ##LPDT                                                   MD042258
       *
       **  ... total the Clearing Amounts.
      C     DRCR          IFEQ      *ZEROS
@@ -3359,7 +3367,8 @@
      C*****VALD          ANDGT     PSTD                                                     MD031405
      C     PSTD          IFGT      SDLSTD                                                   MD031405
      C     VALD          ANDLE     SDNSTD                                                   MD031405
-     C     VALD          ANDLE     ##LPDT                                                   MD031405
+     C*****VALD          ANDLE     ##LPDT                                          MD031405 MD042258
+     C     VALD          ANDGT     ##LPDT                                                   MD042258
       *
       **  ... total the Clearing Amounts.
      C     DRCR          IFEQ      *ZEROS

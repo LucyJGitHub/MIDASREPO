@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD056612           Date 12Sep20              */
-/*       Prev Amend No. AR397085A          Date 01Jun20              */
+/*       Last Amend No. AR792326           Date 16Feb23              */
+/*       Prev Amend No. MD056612           Date 12Sep20              */
+/*                      AR397085A          Date 01Jun20              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -26,6 +27,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR792326 - FlatFiles for any format and composite           */
+/*                  (Child: AR830959)                                */
 /*       MD056612 - Deliverable Data Split for MX group              */
 /*       AR397085A - MS_MID2MMM reached max limit. Clear the data    */
 /*                   queue when MQ is used by MM4. (Child: AR397086) */
@@ -57,10 +60,13 @@
                                                                                /*CMX011*/
              DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(20)                         /*CMX011*/
              DCL        VAR(&KDTAQ) TYPE(*CHAR) LEN(1)                         /*CSW034*/
+             DCL        VAR(&FLATFIL) TYPE(*CHAR) LEN(10)                               /*AR792326*/
+             DCL        VAR(&FLATLIB) TYPE(*CHAR) LEN(10)                               /*AR792326*/
 
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN( 7)
              DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
              DCL        VAR(&CMX011) TYPE(*CHAR) LEN(1) VALUE(' ')             /*CMX011*/
+             DCL        VAR(&CMX010) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*AR792326*/
              DCL        VAR(&CSW038) TYPE(*CHAR) LEN(1) VALUE(' ')                     /*AR397085A*/
              DCL        VAR(&DTQNAME) TYPE(*CHAR) LEN(10)                              /*AR397085A*/
              DCL        VAR(&DTQLIB) TYPE(*CHAR) LEN(10)                               /*AR397085A*/
@@ -89,6 +95,11 @@
              CALL (AOSARDR0) PARM(&RTCD '*VERIFY' 'CMX011')                    /*CMX011*/
              IF (&RTCD *EQ ' ') (CHGVAR (&CMX011) VALUE('Y'))                  /*CMX011*/
                                                                                /*CMX011*/
+/** Access Switchable Features file to see if CMX010 present. */                        /*AR792326*/
+                                                                                        /*AR792326*/
+             CALL (AOSARDR0) PARM(&RTCD '*VERIFY' 'CMX010')                             /*AR792326*/
+             IF (&RTCD *EQ ' ') (CHGVAR (&CMX010) VALUE('Y'))                           /*AR792326*/
+                                                                                        /*AR792326*/
 /***  Access Switchable Features file to see if CSW038 present.                        /*AR397085A*/
                                                                                        /*AR397085A*/
              CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CSW038')                   /*AR397085A*/
@@ -104,9 +115,12 @@
 /*********** CALL       PGM(MXGETEXTP) PARM(&RTCD &ERMS &COMI &EXTT +            CSW034*/
 /***********              &FMT &DTAG &MEMBR &DRVACT &DRIVFL &MODI +              CSW034*/
 /***********              &DTAQ)                                          CMX011 CSW034*/
+/**********  CALL       PGM(MXGETEXTP) PARM(&RTCD &ERMS &COMI &EXTT + */                /*AR792326*/
+/**********               &FMT &DTAG &MEMBR &DRVACT &DRIVFL &MODI + */                  /*AR792326*/
+/**********               &DTAQ &KDTAQ) */                                       /*CSW034 AR792326*/
              CALL       PGM(MXGETEXTP) PARM(&RTCD &ERMS &COMI &EXTT +
                           &FMT &DTAG &MEMBR &DRVACT &DRIVFL &MODI +
-                          &DTAQ &KDTAQ)                                        /*CSW034*/
+                          &DTAQ &KDTAQ &FLATFIL &FLATLIB)                               /*AR792326*/
 
 
 /* If there was an error getting the extract parameters then end */
@@ -153,8 +167,19 @@
              ENDDO                                                                     /*AR397085A*/
              ENDDO                                                             /*CMX011*/
              ELSE (DO)                                                         /*CMX011*/
+             IF ((&CMX010 *EQ 'Y') *AND (&FLATFIL *NE ' ')) THEN(DO)                    /*AR792326*/
+             DLTF       FILE(&FLATLIB/&FLATFIL)                                         /*AR792326*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR792326*/
+             CPYF       FROMFILE(*LIBL/MXFLFLPD) +
+                          TOFILE(&FLATLIB/&FLATFIL) CRTFILE(*YES)                       /*AR792326*/
+             OVRDBF     FILE(MXFLFLPD) TOFILE(&FLATLIB/&FLATFIL) SHARE(*NO)             /*AR792326*/
+             CALL       PGM(MXBULKTRX) PARM(&RTCD &ERMS &MODE &COMI +
+                          &EXTT &FMT)                                                   /*AR792326*/
+             ENDDO                                                                      /*AR792326*/
+             ELSE (DO)                                                                  /*AR792326*/
              CALL       PGM(MXBULKTRM) PARM(&RTCD &ERMS &MODE &COMI +
                           &EXTT &FMT)
+             ENDDO                                                                      /*AR792326*/
              ENDDO                                                             /*CMX011*/
 
              DLTOVR *ALL

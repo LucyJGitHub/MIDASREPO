@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR792326           Date 16Feb23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR792326 - FlatFiles for any format and composite            *
+      *             (Child: AR830959)                                 *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -134,6 +137,8 @@
      C                   PARM                    ModuleID          3
      C                   PARM                    DataQueue        20            CMX011
      C                   PARM                    KeyedDTAQ         1            CSW034
+     C                   PARM                    FlatFil          10                        AR792326
+     C                   PARM                    FlatLib          10                        AR792326
 
       * Clear outputs
 
@@ -187,6 +192,16 @@
      C                   EVAL      QName=%SUBST(CDMSGQ:TextLen+1:10)            205751
      C                   EVAL      DataQueue = LibName + QName                  205751
      C                   ENDIF                                                  205751
+      *                                                                                     AR792326
+      ** Check if the output is to a File                                                   AR792326
+      *                                                                                     AR792326
+     C                   IF        QueueType = 'FILE/'                                      AR792326
+     C                   EVAL      TextLen = %SCAN('/':CDMSGQ:6)                            AR792326
+     C                   IF        TextLen <> 0                                             AR792326
+     C                   EVAL      FlatLib = %SUBST(CDMSGQ:6:TextLen-6)                     AR792326
+     C                   ENDIF                                                              AR792326
+     C                   EVAL      FlatFil = %SUBST(CDMSGQ:TextLen+1:10)                    AR792326
+     C                   ENDIF                                                              AR792326
 
       * WHEN PROCESSING A COMPOSITE
       * ---------------------------
@@ -228,6 +243,16 @@
      C                   EVAL      QName=%SUBST(CDMSGQ:TextLen+1:10)            CMX011
      C                   EVAL      DataQueue = LibName + QName                  CMX011
      C                   ENDIF                                                  CMX011
+      *                                                                                     AR792326
+      ** Check if the output is to a File                                                   AR792326
+      *                                                                                     AR792326
+     C                   IF        QueueType = 'FILE/'                                      AR792326
+     C                   EVAL      TextLen = %SCAN('/':CDMSGQ:6)                            AR792326
+     C                   IF        TextLen <> 0                                             AR792326
+     C                   EVAL      FlatLib = %SUBST(CDMSGQ:6:TextLen-6)                     AR792326
+     C                   ENDIF                                                              AR792326
+     C                   EVAL      FlatFil = %SUBST(CDMSGQ:TextLen+1:10)                    AR792326
+     C                   ENDIF                                                              AR792326
 
       * If an activity extract
 

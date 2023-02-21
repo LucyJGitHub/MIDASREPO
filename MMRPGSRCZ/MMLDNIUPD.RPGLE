@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 255899A            Date 21Jun22               *
-      *  Prev Amend No. 263173             Date 20Jun22               *
+      *  Last Amend No. MD029131           Date 21Feb23               *
+      *  Prev Amend No. 255899A            Date 21Jun22               *
+      *                 263173             Date 20Jun22               *
       *                 AR637449           Date 16Jun22               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
@@ -109,6 +110,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD029131 - MT202 not created when AURO was changed from Y to *
+      *             N.                                                *
       *  255899A - Remove the CSW050 condition when checking for      *
       *            confo request                                      *
       *  263173 - No Cancellation Confirmation: apply 226737          *
@@ -1984,6 +1987,9 @@
      C     IKCHTP        OREQ      'A'                                                      AR582922
      C     PaySd         ANDEQ     'Y'                                                      AR582922
      C     RCDC          ANDEQ     15                                                       AR582922
+      *                                                                                     MD029131
+     C     IKCHTP        OREQ      'A'                                                      MD029131
+     C     CHAURO        ANDEQ     'Y'                                                      MD029131
       *
       ** Determine if local or deal currency to be used
       ** in holiday checking
@@ -2160,6 +2166,9 @@
      C     IKPSTM        ANDNE     *ZERO                                                    AR582922
      C     RCDC          ANDEQ     16                                                       AR582922
      C     IKMATD        ANDEQ     @@MDAT                                                   AR582922
+      *                                                                                     MD029131
+     C     IKCHTP        OREQ      'A'                                                      MD029131
+     C     CHAURO        ANDEQ     'Y'                                                      MD029131
       *
       ** Determine if local or deal currency to be used
       ** in holiday checking
@@ -2210,6 +2219,8 @@
      C     IKAURO        IFNE      'Y'
      C     IKAURO        OREQ      'Y'
      C     IKROBY        ANDNE     *BLANKS
+     C     CHAURO        OREQ      'Y'                                                      MD029131
+     C     IKCHTP        ANDEQ     'A'                                                      MD029131
      C                   Z-ADD     1             @@PRI3
      C                   END
       *
@@ -2261,6 +2272,7 @@
       *                                                                                       155792
      C                   MOVE      'N'           @@CNRQ                                       155792
      C                   TESTB     '2'           DNSI                     99                  261319
+     C                   MOVE      'N'           CHAURO            1                        MD029131 
       *
       * IF SETTLEMENT INSTRUCTIONS WERE PREVIOUSLY PRESENT
       * OR IF 2 LEVEL INPUT NOT PRESENT
@@ -2271,6 +2283,14 @@
      C     IKPSTM        ORNE      *ZERO                                                      209895
      C     BLL2II        OREQ      'N'
      C     CAP042        OREQ      'Y'                                                        CAP042
+      *                                                                                     MD029131
+     C     IKAURO        ORNE      AURO                                                     MD029131
+      *                                                                                     MD029131
+     C     IKAURO        IFNE      AURO                                                     MD029131
+     C     IKMTYP        ANDNE     'IL'                                                     MD029131
+     C     IKMTYP        ANDNE     'ID'                                                     MD029131
+     C                   MOVE      'Y'           CHAURO                                     MD029131
+     C                   ENDIF                                                              MD029131
       *
       ** If settlement instruction fields have changed
       *
@@ -2343,6 +2363,7 @@
       ** or if interest adjustment is present                                                 261319
       *                                                                                       261319
      C     *IN99         OREQ      *ON                                                        261319
+     C     CHAURO        OREQ      'Y'                                                      MD029131 
       *
       ** Produce a confirmation now
       *

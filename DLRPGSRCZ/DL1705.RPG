@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. 203695             Date 21Feb23               *
+      *  Prev Amend No. 178272             Date 21Feb23               *
+      *                 261302             Date 21Feb23               *
+      *                 MD058815           Date 28Sep21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058396           Date 12Jul21               *
       *                 CSD103             Date 10Aug20               *
@@ -215,6 +218,17 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  203695 - Pay/receive message should be generated for the     *
+      *           Interest Paid Separately because the deal has been  *
+      *           rolled over.                                        *
+      *         - Applied for MD029131.                               *
+      *  178272 - MT202/MT210 not generated for rollover deal.        *
+      *           Applied fix 175629.  Core fix 138388 was also       *
+      *           applied to prevent the 2nd pay/rcv message to be    *
+      *           generated during EOD.                               *
+      *         - Applied for MD029131.                               *
+      *  261302 - Avoid duplicate MT202 in COB.                       *
+      *         - Applied for MD029131.                               *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -3790,6 +3804,9 @@
      C************IN57     ANDEQ'1'                                 087084087655
      C           *IN89     ANDEQ'0'                                       087655
      C************IN79     ANDEQ'1'                                       087655             BUG7056
+     C           RLDIFF    ORGT *ZEROS                                                        178272
+     C           *IN79     ANDEQ'0'                                                           178272
+     C           *IN89     ANDEQ'0'                                                           178272
      C                     MOVE 'Y'       RLSCND                          079139
      C                     SETON                     31                   042844
      C** Core Hook moved to correct position - replaced with a new name   S01408
@@ -3833,7 +3850,8 @@
      C           *IN89     IFEQ '0'                                       087655
      C/COPY WNCPYSRC,DL1705C061
      C           *IN89     OREQ '1'                                       087655
-     C           *IN79     ANDEQ'1'                                       087655
+     C********** *IN79     ANDEQ'1'                                                    087655 261302
+     C           *IN79     ANDEQ'0'                                                           261302
      C                     MOVE 'Y'       RLINTP  1                       S01434
      C*                                                                   S01434
      C           IMET      IFNE *BLANKS                                   S01434
@@ -4023,6 +4041,8 @@
      C* MATURITY DATE PROCESSING
      C           MATBA     TAG                             ** MATBA TAG **
      C**N23******          GOTO ENDBA                                     042844
+      *                                                                                       203695
+     C                     TESTB'1'       TLXI           81                                   203695
      C*                                                                   042844
      C** Need to produce maturity messages for rolled over deal number.   042844
      C** and not produce maturity messages for non rolled over automatic  077557
@@ -4033,6 +4053,15 @@
      C           *IN23     OREQ '1'                                       077557
      C           RBDN      ANDEQ0                                         077557
      C           AURO      ANDEQ'Y'                                       077557
+     C           *IN23     OREQ '1'                                                           178272
+     C           *IN89     ANDEQ'0'                                                           178272
+     C           RBDN      ANDNE0                                                             178272
+     C           AURO      ANDEQ'Y'                                                           178272
+      *                                                                                       203695
+      ** And maturity messages still not generated                                            203695
+      *                                                                                       203695
+     C           *IN81     ANDEQ'0'                                                           203695
+      *                                                                                       203695
      C                     GOTO ENDBA                                     042844
      C                     END                                            042844
      C*                                                                   042844
@@ -4417,7 +4446,8 @@
      C           *IN89     IFEQ '0'                                       087655
      C/COPY WNCPYSRC,DL1705C065
      C           *IN89     OREQ '1'                                       087655
-     C           *IN79     ANDEQ'1'                                       087655
+     C********** *IN79     ANDEQ'1'                                                    087655 261302
+     C           *IN79     ANDEQ'0'                                                           261302
      C                     MOVE 'Y'       RLINTP  1                       S01434
      C*                                                                   S01434
      C           IMET      IFNE *BLANKS                                   S01434
@@ -4627,6 +4657,8 @@
      C* MATURITY DATE PROCESSING
      C           MATBB     TAG                             ** MTABB TAG **
      C**N23******          GOTO ENDBB                                     042844
+      *                                                                                       203695
+     C                     TESTB'1'       TLXI           81                                   203695
      C*                                                                   042844
      C** Need to produce maturity messages for rolled over deal number.   042844
      C** and not produce maturity messages for non rolled over automatic  077557
@@ -4637,6 +4669,15 @@
      C           *IN23     OREQ '1'                                       077557
      C           RBDN      ANDEQ0                                         077557
      C           AURO      ANDEQ'Y'                                       077557
+     C           *IN23     OREQ '1'                                                           178272
+     C           *IN89     ANDEQ'0'                                                           178272
+     C           RBDN      ANDNE0                                                             178272
+     C           AURO      ANDEQ'Y'                                                           178272
+      *                                                                                       203695
+      ** And maturity messages still not generated                                            203695
+      *                                                                                       203695
+     C           *IN81     ANDEQ'0'                                                           203695
+      *                                                                                       203695
      C                     GOTO ENDBB                                     042844
      C                     END                                            042844
      C*                                                                   042844

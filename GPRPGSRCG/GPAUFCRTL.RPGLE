@@ -11,16 +11,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD026937           Date 17Feb23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CGP004  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026937 - GOC0304 failed due to array index out of range.   *
+      *             Extend array from 4000 to 5000.                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CGP004 - Audit Reporting                                     *
@@ -42,7 +45,8 @@
      D/COPY GPCPYSRCG,GPAUFDCON
  
  
-     D IN              S              1    DIM(4000)
+     D*IN*******       S              1    DIM(4000)                                        MD026937
+     D IN              S              1    DIM(5000)                                        MD026937
      D OUT             S              1    DIM(100) ASCEND
      D OUTW            S              1    DIM(100)
  
@@ -536,7 +540,8 @@
       * Record
       * Field Attributes
       * Field Shortnames
-     C                   PARM                    InRecord       4000
+     C**********         PARM                    InRecord       4000                        MD026937
+     C                   PARM                    InRecord       5000                        MD026937
      C                   PARM                    #_FDATRB
      C                   PARM                    #_FDSNAM
  

@@ -18,11 +18,15 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP212  *CREATE    Date 15Sep14               *
+      *  Last Amend No. AR666005           Date 14Feb23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP212  *CREATE    Date 15Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents closed customers  *
+      *           from being inserted in the account with bank field. *
+      *           Applied fix 229380. (Recompile)                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API                              *
       *                                                               *
@@ -42,85 +46,85 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Transfer Details in screen format
      D TrnDets       E DS                  EXTNAME(FTFTNTPD)
      D  InterBanks            63    309
      D  InterBanks25         170    309
- 
+
       ** Transfer Details OK indicators
      D OKTrnDets     E DS                  EXTNAME(FTEFTNTPD)
- 
+
       ** Valid Transfer Details layout
      D ValidNoTr     E DS                  EXTNAME(FTVFTNTPD)
      D  ValidBanks           406    580
- 
+
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Counterparty Nostros
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
- 
+
       ** External DS for BIC Directory
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
- 
+
       ** Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D/COPY FTCPYSRC,SFTADDRILE
      D/COPY FTCPYSRC,SFTVALCSLL
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIdx            S              3P 0
- 
+
      D PRTCD           S              7
      D POPTN           S              7
      D PCNUM           S             10
@@ -133,7 +137,7 @@
      D ADLINE          S              1
      D ADFLDM          S              7
      D ADFLDF          S             10
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -148,11 +152,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        ReturnCode
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -161,20 +165,20 @@
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             Idx
      C                   Z-ADD     0             WIdx
- 
+
       *
       ** VALIDATION
- 
+
       ** If not entered, return.
      C                   IF        InterBanks = *BLANKS
      C                   GOTO      EMAIN
      C                   ENDIF
- 
+
      C                   EVAL      WCUST = *BLANK
      C                   MOVEL     NTINT1        WIntBanks
      C                   MOVE      InterBanks25  WIntBanks
      C                   MOVEL(P)  WIntBanks     ADDRSS
- 
+
       ** If first ten characters used, then check if a valid customer
      C                   IF        ADCH26 = *BLANKS AND                         B001
      C                             ADEXCS = *BLANKS AND
@@ -234,7 +238,7 @@
      C                   GOTO      EMAIN
       *
      C                   ENDIF                                                  E001
- 
+
      C     SWFTCHK       TAG
       ** If first 11 characters used, then validate as a
       ** S.W.I.F.T. Address
@@ -287,7 +291,7 @@
      C                   ENDIF                                                  E002
       *
      C                   ENDIF                                                  E001
- 
+
       ** If not a valid customer, send error
      C                   IF        WCUST = 'Y'                                  B001
       *
@@ -303,7 +307,7 @@
      C                   GOTO      EMAIN
       *
      C                   ENDIF                                                  E001
- 
+
       ** Validate as an address
      C                   MOVE      'Y'           ADLINE
      C                   MOVEL     'FTM2319'     ADFLDM
@@ -368,11 +372,11 @@
      C                   EVAL      NVINBT = 'A'
      C                   EVAL      ValidBanks = WIntBanks
      C                   ENDIF
- 
+
       * RETURN
- 
+
      C     EMAIN         TAG
- 
+
      C                   RETURN
       *****************************************************************
      C/EJECT
@@ -380,7 +384,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -408,15 +412,15 @@
       *
       * Validation Fields
      C                   PARM                    ValidNoTr
- 
+
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

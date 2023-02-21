@@ -22,12 +22,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR666005           Date 14Feb23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 17Mar06               *
       *                 CSW037A            Date 02May05               *
       *                 BUG6198            Date 04Apr05               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Checks if customer record is found but customer   *
+      *           is closed. Applied fix 229380.                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -84,14 +87,14 @@
       *       99       Send message error                             *
       *                                                               *
       *****************************************************************
- 
+
      FSDCUSTL1  IF   E           K DISK    USROPN
      F                                     RENAME(@BBREBF:@CNUM)
      FSDCUSTL2  IF   E           K DISK    USROPN
      F                                     RENAME(@CUSTD5:@CSHT)
- 
+
      F/COPY WNCPYSRC,AOCUSTR0F1
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -110,13 +113,13 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D P@MGDA          DS
      D  @MG                    1     50
      D                                     DIM(1) CTDATA PERRCD(1)
- 
+
      D PGMDS          SDS
       ** Program Status data structure
      D  PGNAME                 1     10
@@ -124,14 +127,14 @@
      D  PGJBNM               244    253
      D  PGUSER               254    263
      D  PGJBNO               264    269  0
- 
+
      D D@FMT         E DS                  EXTNAME(SDCUSTPD)                    S01230
       ** Customer record format data structure
- 
+
      D P@FMT         E DS                  EXTNAME(DSLDY)                       CDL006
       ** External Data structure to hold the outgoing record format of the
       ** file
- 
+
      D P@Key1          DS
       ** Key input data structure
      D  @IN                    1     10                                         S01117
@@ -141,54 +144,55 @@
      D  W@CNUM                 1      6
      D  W@LAST                 6      6
      D  W@BLNK                 7     10
- 
+
      C/TITLE Main Processing
       *================================================================
       *  P R O G R A M   S T A R T                                    *
       *================================================================
- 
+
       ** Set up copyright parameter
- 
+
      C                   MoveA     CPY@          CPY2@            80
- 
+
       ** Receive parameter list
- 
+
      C     *Entry        Plist
      C                   Parm                    P@RtCd            7
      C                   Parm                    P@Optn            7
      C                   Parm                    P@Key1
      C                   Parm                    P@Kyst            7
      C                   Parm                    P@FMT
- 
+
       ** Access option *SAME input
- 
+
      C     P@Optn        IfEq      '*SAME '
      C     *IN01         Comp      '0'                                    91
      C                   Goto      T@SKIP
      C                   EndIf
- 
+
       ** Reset error indicators
- 
+
      C                   SetOff                                       909192
      C                   SetOff                                       939495
      C                   SetOff                                       969798
- 
+     C                   MOVE      '0'           *IN80                                      AR666005
+
       ** Test indicators
- 
+
      C                   SetOff                                       505152
- 
+
       ** Selection indicators
- 
+
      C                   SetOff                                       535455
- 
+
       ** Key status
- 
+
      C                   Move      *BLANK        P@Kyst
- 
+
       ** Align key
- 
+
      C                   Move      *BLANK        W@ALGN           10
- 
+
       ** Check key to determine file to use :
       *****1.*Check*for*all*numeric,*no*embedded*blanks***->*Customer*No.*****                CSD027
       *****2.*Check*for*first*character*=*Alphabetic******->*Shortname********                CSD027
@@ -198,40 +202,40 @@
       *    If the check of SDCUSTPD failed or if search string is not six long                CSD027
       *         Check against the customer shortname file                                     CSD027
       *    If not found key field is in error                                                 CSD027
- 
+
      C     P@Optn        IfEq      '*KEY   '
      C     P@Optn        OrEq      '*VERIFY'
- 
+
      C/COPY WNCPYSRC,AOCUSTR0C1
- 
+
       ** a) Check for Selection request:
- 
+
       ** Set pointer
- 
+
      C                   Z-Add     1             P1                3 0
- 
+
      C     W@INIT        IfEq      '?'
      C                   Call      'SD0010S'                            55
      C                   Parm      *BLANK        P@RTC2            7
      C                   Parm      *BLANK        P@KEY2            6
- 
+
      C     P@RTC2        Comp      *BLANK                             54
      C     *IN54         CabEq     '1'           T@SKIP
      C     *IN55         CabEq     '1'           T@SKIP
      C                   Move      *BLANK        P@Key1
      C                   MoveL     P@KEY2        P@Key1
      C                   EndIf
- 
+
       ** b) Align and check number or shortname :
- 
+
       ** Set pointer
- 
+
      C                   Z-Add     1             P1
      C     *BLANK        LookUp    @IN(P1)                            97
      C     *IN97         CabEq     '0'           T@SKIP                   97
      C                   MoveA     @IN(P1)       W@ALGN
      C                   Move      W@ALGN        P@Key1
- 
+
      C*****W@INIT        IfLT      '0'                                                        CSD027
      C***********        SetOn                                        50                      CSD027
      C***********        Move      '*CSHT  '     P@Kyst                                       CSD027
@@ -242,11 +246,11 @@
      C*****W@LAST        CabLT     '0'           T@SKIP                 97                    CSD027
      C***********        Move      '*CNUM  '     P@Kyst                   97                  CSD027
      C***********        EndIf                                                                CSD027
- 
+
      C                   EndIf
- 
+
       ** First call - open files :
- 
+
      C******IN50*        IfEq      '0'                                                        CSD027
      C     *IN01         IfEq      '0'
      C                   SetOn                                        01
@@ -258,21 +262,21 @@
      C                   SetOn                                        02
      C                   Open      SDCUSTL2                             91
      C     *IN91         CabEq     '1'           T@SKIP                   LR
- 
+
       ** Open SDCUSTL1 if not already open for Customer number
       ** processing
- 
+
      C     *IN01         IfEq      '0'
      C                   SetOn                                        01
      C                   Open      SDCUSTL1                             91
      C     *IN91         CabEq     '1'           T@SKIP                   LR
      C                   EndIf
- 
+
      C                   EndIf
      C***********        EndIf                                                                CSD027
- 
+
       ** Last call - close files and terminate program :
- 
+
      C     P@Optn        IfEq      '*FREE  '
      C   01              Close     SDCUSTL1                             92
      C     *IN92         CabEq     '1'           T@SKIP                   LR
@@ -281,9 +285,9 @@
      C                   SetOn                                        LR
      C                   Return
      C                   EndIf
- 
+
       ** Caller requests first record :
- 
+
      C     P@Optn        IfEq      '*FIRST '
      C     *LOVAL        SetLL     @CNUM                              9390
      C     *IN93         CabEq     '1'           T@SKIP
@@ -301,15 +305,15 @@
      C                   END                                                   FI             CSD027
       *                                                                                       CSD027
       ** Caller requests next record :
- 
+
      C     P@Optn        IfEq      '*NEXT  '
      C                   Read      @CNUM                                9094
      C     *IN94         CabEq     '1'           T@SKIP
      C     *IN90         CabEq     '1'           T@SKIP                   LR
      C                   EndIf
- 
+
       ** Caller requests last record :
- 
+
      C     P@Optn        IfEq      '*LAST  '
      C     *HIVAL        SetGT     @CNUM                                90
      C     *IN90         CabEq     '1'           T@SKIP                   LR
@@ -325,15 +329,15 @@
      C                   END                                                   FI             CSD027
       *                                                                                       CSD027
       ** Caller requests previous record :
- 
+
      C     P@Optn        IfEq      '*PREV  '
      C                   ReadP     @CNUM                                9094
      C     *IN94         CabEq     '1'           T@SKIP
      C     *IN90         CabEq     '1'           T@SKIP                   LR
      C                   EndIf
- 
+
       ** Caller requests record indicated by key :
- 
+
      C     P@Optn        IfEq      '*KEY   '
      C     P@Optn        OrEq      '*VERIFY'
      C**N50W@CNUM*       Chain     @CNUM                              9590                    CSD027
@@ -361,22 +365,24 @@
      C                   MOVE      '*CSHT  '     P@KYST                          Short name   CSD027
      C                   END                                                                  CSD027
      C                   END                                                                  CSD027
- 
+
       ** Deleted Customer/Bank not valid.
       ** Only check date deleted if chain was successful
- 
+
      C                   If        *IN95 = *off
      C     BBDTDL        IfNe      0
-     C                   SetOn                                        95
+     C**********         SetOn                                        95                    AR666005
+     C                   MOVE      '1'           *IN80                                      AR666005
      C                   EndIf
      C                   EndIf
       *                                                                                       CSD007
      C                   If        *IN95 = *off                                               CSD007
      C                   If        BBCLST = 'Y'                                               CSD007
-     C                   Movel     '1'           *IN95                                        CSD007
+     C**********         Movel     '1'           *IN95                               CSD007 AR666005
+     C                   MOVE      '1'           *IN80                                      AR666005
      C                   EndIf                                                                CSD007
      C                   EndIf                                                                CSD007
- 
+
      C     *IN95         CabEq     '1'           T@SKIP
      C     *IN90         CabEq     '1'           T@SKIP                   LR
      C                   EndIf
@@ -388,9 +394,9 @@
      C     P@Optn        AndNE     '*FREE  '
      C                   SetOn                                          96
      C                   EndIf
- 
+
       * No record found or End of file - return error code :
- 
+
      C     T@SKIP        Tag
      C                   Move      *BLANK        P@RtCd
      C   90              Move      '*ERROR '     P@RtCd
@@ -403,10 +409,11 @@
      C   97              Move      '*KEY   '     P@RtCd
      C   54              Move      '*NOSEL '     P@RtCd
      C   55              Move      '*CALL  '     P@RtCd
+     C   80              MOVE      '*CUSDEL'     P@RTCD                                     AR666005
      C   97              Move      '*ERROR '     P@Kyst
- 
+
       ** Caller requests message sent to program queue :
- 
+
      C     W@RtCd        IfEq      '*MSG   '
      C     P@RtCd        AndNe     *BLANK
      C   90              Move      'ACO1001'     P@MGID
@@ -415,6 +422,7 @@
      C   93              Move      'ACO1004'     P@MGID
      C   94              Move      'ACO1005'     P@MGID
      C   95              Move      'ACO1006'     P@MGID
+     C   80              MOVE      'ACO1006'     P@MGID                                     AR666005
      C   96              Move      'ACO1007'     P@MGID
      C   97              Move      'ACO1008'     P@MGID
      C   54              Move      'ACO1009'     P@MGID
@@ -429,29 +437,29 @@
      C                   Parm                    P@MGDA           50
      C                   Parm      '*DIAG'       P@MGTP            7
      C                   EndIf
- 
+
       ** Caller Requests DB Error Handling
- 
+
      C     W@RtCd        IfEq      '*DBERR '
      C     P@RtCd        AndNe     *BLANK
      C                   Dump
      C                   CallB     'DBERRCTL'
      C                   EndIf
- 
+
      C     P@Optn        IfNe      '*VERIFY'
      C     P@Optn        AndNe     '*FREE  '
      C     P@RtCd        AndNe     '*OPTION'
      C                   MoveL     D@FMT         P@FMT
      C                   EndIf
- 
+
      C/COPY WNCPYSRC,AOCUSTR0C2
- 
+
       ** Return to caller :
- 
+
      C                   Return
- 
+
       *****************************************************
- 
+
 ** CTDATA @MG
 SDCUSTPD  AOCUSTR0  Customer Details
 ** CTDATA CPY@

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD042258           Date 20Feb23               *
-      *  Prev Amend No. MD031405           Date 20Feb23               *
+      *  Last Amend No. MD042378           Date 20Feb23               *
+      *  Prev Amend No. MD042258           Date 20Feb23               *
+      *                 MD031405           Date 20Feb23               *
       *                 MD059859A          Date 28Jun22               *
       *                 MD059859           Date 11May22               *
       *                 MD059908           Date 06May22               *
@@ -108,6 +109,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042378 - Account Statement for Closed account has wrong    *
+      *             period                                            *
       *  MD042258 - available/cleared balance is incorrect on the     *
       *             Account statements for December 2015 and January  *
       *             2016                                              *
@@ -991,7 +994,12 @@
       *
       **  Set up Statement Date
      C**********         MOVEL     BJRDNB        ##D(1)                                     MD042258
+     C     ACST          IFEQ      'C'                                                      MD042378
+     C     DACC          ANDNE     0                                                        MD042378
+     C                   MOVEL     DACC          ##D(1)                                     MD042378
+     C                   ELSE                                                               MD042378
      C                   MOVEL     NSTDAB        ##D(1)                                     MD042258
+     C                   ENDIF                                                              MD042378
       *
       **  Set up Last Statement Date
       **  For turnover statements, use the last movement date instead                         239823

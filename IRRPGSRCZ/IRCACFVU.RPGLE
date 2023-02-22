@@ -28,9 +28,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD049574           Date 07Feb18               *
-      *  Prev Amend No. MD047859           Date 19Sep17               *      
-      *                 AR933170           Date 19Jun13               *      
+      *  Last Amend No. MD058556           Date 16Aug21               *
+      *  Prev Amend No. MD049574           Date 07Feb18               *
+      *                 MD047859           Date 19Sep17               *
+      *                 AR933170           Date 19Jun13               *
       *                 MD057437           Date 20Jan21               *
       *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
@@ -88,12 +89,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
+      *             behavior.                                         *
+      *           - Recompile all objects affected by AR933170.       *
       *  MD049574 - Correct buffer positions for Principal Change     *
       *             schedule fields                                   *
       *  MD047859 - Correct buffer conflict of AR933171 fix           *
       *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
       *           - DDFOID as parameters. (Child: AR933171)           *
-      *           - Partially applied by MD047859.                    *      
+      *           - Partially applied by MD047859.                    *
       *  MD057437 - IRS - Their Details - Negative Principal Amount   *
       *             Fix is to not allow CIRS transaction with         *
       *             Principal change (Decrease) that will result to   *

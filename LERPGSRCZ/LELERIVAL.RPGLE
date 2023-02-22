@@ -9625,14 +9625,7 @@
                                                                                             MD060441
      C                   SELECT                                                             MD060441
                                                                                             MD060441
-     C                   WHEN      ( typeOfChange = ROLL_B2B )  OR                          MD060441
-     C                             ( typeOfChange = ROLL_F2B AND                            MD060441
-     C                               wRLDT >= BJRDNB)                                       MD060441
-      *                                                                                     MD060441
-      ** MD-60963 Fix. If next interest date or next repayment date is not zero and         MD060441
-      ** within accrual profit date, then rollover value date should be equal to            MD060441
-      ** next interest or next repayment date                                               MD060441
-      *                                                                                     MD060441
+     C                   WHEN      ( typeOfChange = ROLL_B2B )                              MD060441
                                                                                             MD060441
      C                   IF        ( NIDT <> 0 )                                            MD060441
      C                   EVAL      wNxtIntPayDat =  NIDT                                    MD060441
@@ -9640,14 +9633,20 @@
      C                   EVAL      wNxtIntPayDat =  NRPD                                    MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
+      ** MD-60963 Fix. If next interest date or next repayment date is not zero and         MD060441
+      ** within accrual profit date, then rollover value date should be equal to            MD060441
+      ** next interest or next repayment date                                               MD060441
+      ** (Blocking Error Message 3)                                                         MD060441
+                                                                                            MD060441
      C                   IF        ( wNxtIntPayDat <> 0 ) AND                               MD060441
      C                             ( wNxtIntPayDat <= EventCtrlDate ) AND                   MD060441
      C                             ( wRLDT <> wNxtIntPayDat )                               MD060441
      C                   EVAL      ErrorType = 2                                            MD060441
      C                   EVAL      MessageID = '5049556'                                    MD060441
                                                                                             MD060441
-      **  The rollover date must also not be earlier than the last interest/repayment date  MD060441
-      **  or value date (if the rundate is in the first period)                             MD060441
+      ** The rollover date must also not be earlier than the last interest/repayment date   MD060441
+      ** or value date (if the rundate is in the first period)                              MD060441
+      ** (Blocking Error Message 2)                                                         MD060441
                                                                                             MD060441
      C                   ELSEIF    ( WRLDT < VDAT ) AND                                     MD060441
      C                             ( wLstIntPayDat = 0 )                                    MD060441
@@ -9658,29 +9657,30 @@
      C                   EVAL      ErrorType = 2                                            MD060441
      C                   EVAL      MessageID = '5049555'                                    MD060441
                                                                                             MD060441
-      **  A validation overridable error/warning is displayed if the rollover value date    MD060441
-      **  is not equal to either loan value date or last interest payment date              MD060441
+      ** A validation overridable error/warning is displayed if the rollover value date     MD060441
+      ** is not equal to either loan value date or last interest payment date               MD060441
+      ** (Overridable/Warning Message 1)                                                    MD060441
                                                                                             MD060441
      C                   ELSEIF    ( wRLDT <> VDAT ) AND                                    MD060441
      C                             ( wLstIntPayDat = 0 ) AND                                MD060441
-     C                             ( typeOfChange = ROLL_B2B )                              MD060441
+     C                             ( isARRParamChg = *ON)                                   MD060441
                                                                                             MD060441
      C                   EVAL      ErrorType = 1                                            MD060441
      C                   EVAL      MessageID = '5049554'                                    MD060441
      C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
      C                             ( wRLDT <> wLstIntPayDat ) AND                           MD060441
-     C                             ( typeOfChange = ROLL_B2B )                              MD060441
+     C                             ( isARRParamChg = *ON)                                   MD060441
      C                   EVAL      ErrorType = 1                                            MD060441
      C                   EVAL      MessageID = '5049554'                                    MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
-     C                   WHEN      ( typeOfChange = ROLL_F2B ) AND                          MD060441
-     C                             ( WRLDT < BJRDNB )                                       MD060441
+     C                   WHEN      ( typeOfChange = ROLL_F2B )                              MD060441
                                                                                             MD060441
       ** When the back-valued rollover involves migrating from forward-looking rate or      MD060441
       ** fix rate, to a backward-looking rate, the back-valued rollover date must be        MD060441
       ** equal to the last interest payment date (or loan value date if                     MD060441
       ** first interest period)                                                             MD060441
+      ** (Blocking Error Message 3)                                                         MD060441
                                                                                             MD060441
      C                   IF        ( wRLDT <> VDAT ) AND                                    MD060441
      C                             ( wLstIntPayDat = 0 )                                    MD060441

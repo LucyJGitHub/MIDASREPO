@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD045481           Date 07Feb23               *
-      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *  Last Amend No. MD033134           Date 21Feb23               *
+      *  Prev Amend No. MD045481           Date 07Feb23               *
+      *                 MD056612           Date 12Sep20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033134 - File E.HBXFPP02 consuming large space. Amend to   *
+      *             utilize space usage.                              *
       *  MD045481 - Increase counters to accomodate 1 million         *
       *             or more records                                   *
       *  MD056612 - Deliverable Data Split for MX group               *
@@ -178,6 +181,8 @@
      C                   PARM                    I#COMI            8
      C                   PARM                    I#EXTT            1
      C                   PARM                    I#FMT            10
+      * File size                                                                           MD033134
+     C                   PARM                    O#FILESIZ         1                        MD033134
 
       * Add 1 to count of records read
 
@@ -278,6 +283,7 @@
 
       * Write the existing message to MXFLFLPD
 
+     C                   EXSR      FSIZ_UPD                                                 MD033134
      C                   movel     p@msgbuf      MSGBUF
      C                   WRITE     MXFLFLPF
      C                   add       1             MSG_cnt
@@ -368,6 +374,7 @@
 
       * Write the existing message to MXFLFLPD
 
+     C                   EXSR      FSIZ_UPD                                                 MD033134
      C                   movel     p@msgbuf      MSGBUF
      C                   WRITE     MXFLFLPF
      C                   add       1             MSG_cnt
@@ -392,6 +399,28 @@
 
      C                   endsr
      C*********************************************************************
+     C/SPACE 5                                                                              MD033134
+      ********************************************************************                  MD033134
+      * File size update                                                                    MD033134
+      ********************************************************************                  MD033134
+     C     FSIZ_UPD      begsr                                                              MD033134
+     C                   MOVEL     O#FILESIZ     W#FILESIZ         1                        MD033134
+     C                   SELECT                                                             MD033134
+     C                   WHEN      eoMp   >=4000                                            MD033134
+     C                   MOVE      'G'           O#FILESIZ                                  MD033134
+     C                   WHEN      eoMp   >=2000                                            MD033134
+     C                   MOVE      'L'           O#FILESIZ                                  MD033134
+     C                   WHEN      eoMp   >=1000                                            MD033134
+     C                   MOVE      'M'           O#FILESIZ                                  MD033134
+     C                   WHEN      eoMp   >=500                                             MD033134
+     C                   MOVE      'S'           O#FILESIZ                                  MD033134
+     C                   WHEN      eoMp   >=100                                             MD033134
+     C                   MOVE      'V'           O#FILESIZ                                  MD033134
+     C                   OTHER                                                              MD033134
+     C                   MOVE      'X'           O#FILESIZ                                  MD033134
+     C                   ENDSL                                                              MD033134
+     C                   endsr                                                              MD033134
+      *********************************************************************                 MD033134
      C/SPACE 5
       ********************************************************************
       *********************************************************************

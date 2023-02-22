@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR792326           Date 16Feb23              */
-/*       Prev Amend No. MD056612           Date 12Sep20              */
+/*       Last Amend No. MD033134           Date 21Feb23              */
+/*       Prev Amend No. AR792326           Date 16Feb23              */
+/*                      MD056612           Date 12Sep20              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -26,6 +27,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD033134 - File E.HBXFPP02 consuming large space. Amend to  */
+/*                  utilize space usage.                             */
 /*       AR792326 - FlatFiles for any format and composite           */
 /*                  (Child: AR830959)                                */
 /*       MD056612 - Deliverable Data Split for MX group              */
@@ -57,6 +60,7 @@
                                                                                /*CMX011*/
              DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(20)                         /*CMX011*/
              DCL        VAR(&KDTAQ) TYPE(*CHAR) LEN(1)                         /*CSW034*/
+             DCL        VAR(&FILESIZ) TYPE(*CHAR) LEN(1)                                /*MD033134*/
              DCL        VAR(&FLATFIL) TYPE(*CHAR) LEN(10)                               /*AR792326*/
              DCL        VAR(&FLATLIB) TYPE(*CHAR) LEN(10)                               /*AR792326*/
 
@@ -145,13 +149,75 @@
              ENDDO                                                             /*CMX011*/
              ELSE (DO)                                                         /*CMX011*/
              IF ((&CMX010 *EQ 'Y') *AND (&FLATFIL *NE ' ')) THEN(DO)                    /*AR792326*/
-             DLTF       FILE(&FLATLIB/&FLATFIL)                                         /*AR792326*/
+/**/                                                                                    /*MD033134*/
+/**********  DLTF       FILE(&FLATLIB/&FLATFIL)                       */       /*AR792326 MD033134*/
+             DLTF       FILE(QTEMP/&FLATFIL)                                            /*MD033134*/
              MONMSG     MSGID(CPF0000)                                                  /*AR792326*/
+/**********  CPYF       FROMFILE(*LIBL/MXFLFLPD) +                    */                /*MD033134*/
+/**********               TOFILE(&FLATLIB/&FLATFIL) CRTFILE(*YES)     */       /*AR792326 MD033134*/
              CPYF       FROMFILE(*LIBL/MXFLFLPD) +
-                          TOFILE(&FLATLIB/&FLATFIL) CRTFILE(*YES)                       /*AR792326*/
-             OVRDBF     FILE(MXFLFLPD) TOFILE(&FLATLIB/&FLATFIL) SHARE(*NO)             /*AR792326*/
+                          TOFILE(QTEMP/&FLATFIL) CRTFILE(*YES)                          /*MD033134*/
+/**/                                                                                    /*MD033134*/
+/*********** OVRDBF     FILE(MXFLFLPD) TOFILE(&FLATLIB/&FLATFIL) SHARE(*NO)    /*AR792326 MD033134*/
+             OVRDBF     FILE(MXFLFLPD) TOFILE(QTEMP/&FLATFIL) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                     /*MD033134*/
+/**/                                                                                    /*MD033134*/
+/*********** CALL       PGM(MXBULKTRX) PARM(&RTCD &ERMS &MODE &COMI +
+                          &EXTT &FMT)                            */            /*AR792326 MD033134*/
              CALL       PGM(MXBULKTRX) PARM(&RTCD &ERMS &MODE &COMI +
-                          &EXTT &FMT)                                                   /*AR792326*/
+                                            &EXTT &FMT &FILESIZ)                        /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             DLTOVR     FILE(MXFLFLPD) LVL(*JOB)
+/**/                                                                                    /*MD033134*/
+             IF COND(%SWITCH(XXXXX000)) THEN(DO)                                        /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             DLTF       FILE(&FLATLIB/&FLATFIL)                                         /*MD033134*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             /* CREATE 'GIGANTIC' FILE (32,000 BYTES) */                                /*MD033134*/
+             IF         COND(&FILESIZ = 'G') THEN(DO)                                   /*MD033134*/
+             CPYF       FROMFILE(*LIBL/MXFLGIPD) TOFILE(&FLATLIB/&FLATFIL) +
+                        TOMBR(MXFLFLPD) CRTFILE(*YES)                                   /*MD033134*/
+             ENDDO                                                                      /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             /* CREATE 'LONG' FILE (4,000 BYTES) */                                     /*MD033134*/
+             IF         COND(&FILESIZ = 'L') THEN(DO)                                   /*MD033134*/
+             CPYF       FROMFILE(*LIBL/MXFLLOPD) TOFILE(&FLATLIB/&FLATFIL) +
+                        TOMBR(MXFLFLPD) CRTFILE(*YES)                                   /*MD033134*/
+             ENDDO                                                                      /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             /* CREATE 'MEDIUM' FILE (2,000 BYTES) */                                   /*MD033134*/
+             IF         COND(&FILESIZ = 'M') THEN(DO)                                   /*MD033134*/
+             CPYF       FROMFILE(*LIBL/MXFLMEPD) TOFILE(&FLATLIB/&FLATFIL) +
+                        TOMBR(MXFLFLPD) CRTFILE(*YES)                                   /*MD033134*/
+             ENDDO                                                                      /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             /* CREATE 'SHORT' FILE (1,000 BYTES) */                                    /*MD033134*/
+             IF         COND(&FILESIZ = 'S') THEN(DO)                                   /*MD033134*/
+             CPYF       FROMFILE(*LIBL/MXFLSHPD) TOFILE(&FLATLIB/&FLATFIL) +
+                        TOMBR(MXFLFLPD) CRTFILE(*YES)                                   /*MD033134*/
+             ENDDO                                                                      /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             /* CREATE 'VERY SHORT' FILE (500 BYTES) */                                 /*MD033134*/
+             IF         COND(&FILESIZ = 'V') THEN(DO)                                   /*MD033134*/
+             CPYF       FROMFILE(*LIBL/MXFLVEPD) TOFILE(&FLATLIB/&FLATFIL) +
+                        TOMBR(MXFLFLPD) CRTFILE(*YES)                                   /*MD033134*/
+             ENDDO                                                                      /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             /* CREATE 'EXTREMELY SHORT' FILE (100 BYTES) */                            /*MD033134*/
+             IF         COND(&FILESIZ = 'X' *OR &FILESIZ = ' ') +
+                          THEN(DO)                                                      /*MD033134*/
+             CPYF       FROMFILE(*LIBL/MXFLEXPD) TOFILE(&FLATLIB/&FLATFIL) +
+                        TOMBR(MXFLFLPD) CRTFILE(*YES)                                   /*MD033134*/
+             ENDDO                                                                      /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             /* NOW COPY THE DATA */                                                    /*MD033134*/
+             CPYF       FROMFILE(QTEMP/&FLATFIL) TOFILE(&FLATLIB/&FLATFIL) +
+                        MBROPT(*ADD) FMTOPT(*NOCHK)                                     /*MD033134*/
+/**/                                                                                    /*MD033134*/
+             ENDDO                                                                      /*MD033134*/
+/**/                                                                                    /*MD033134*/
+
              ENDDO                                                                      /*AR792326*/
              ELSE (DO)                                                                  /*AR792326*/
 

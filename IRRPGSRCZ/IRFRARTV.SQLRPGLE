@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD060683           Date 15Feb23               *
+      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -72,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -311,6 +314,10 @@
      D   LenStr                1      2                                                     MD000091
                                                                                             MD000091
      D APICFG        E DS                  EXTNAME(T_APIJW0)                                MD056602
+      *                                                                                     MD060683
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
+      *                                                                                     MD060683
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -643,15 +650,18 @@
      C*******************IF        FIUSRI = USRID                                      CAP084 225811
      C*******************          or FIUSRA = USRID                                   CAP084 225811
                                                                                              BUG4756
-     C                   CALL      'SFC000026'                                               BUG4756
-     C                   PARM      *BLANKS       USER             10                         BUG4756
+     C**********         CALL      'SFC000026'                                      BUG4756 MD060683
+     C**********         PARM      *BLANKS       USER             10                BUG4756 MD060683
                                                                                              BUG4756
-     C                   IF        USER <> *BLANKS                                           BUG4756
-     C                   EVAL      PSUser = USER                                             BUG4756
-     C                   ENDIF                                                               BUG4756
+     C**********         IF        USER <> *BLANKS                                  BUG4756 MD060683
+     C**********         EVAL      PSUser = USER                                    BUG4756 MD060683
+     C**********         ENDIF                                                      BUG4756 MD060683
                                                                                              BUG4756
-     C                   IF        FIUSRI = ZUSER                                             225811
-     C                             or FIUSRA = ZUSER                                          225811
+     C**********         IF        FIUSRI = ZUSER                                    225811 MD060683
+     C**********                   or FIUSRA = ZUSER                                 225811 MD060683
+      *                                                                                     MD060683
+     C                   IF        FIUSRI = IRUSER                                          MD060683
+     C                             OR FIUSRA = IRUSER                                       MD060683
      C                   EVAL      OKDLNO = 'N'                                               CIR008
      C                   EVAL      Idx = Idx + 1                                              CIR008
      C                   EVAL      FldNameArr(Idx) = 'SDLNO '                                 CIR008
@@ -681,7 +691,8 @@
                                                                                               CSD015
      C                   ENDIF                                                                CSD015
                                                                                               225811
-     C                   EVAL      FIUSRX = ZUSER                                             225811
+     C**********         EVAL      FIUSRX = ZUSER                                    225811 MD060683
+     C                   EVAL      FIUSRX = PUser                                           MD060683
                                                                                               CSD015
      C     ESrValX       ENDSR                                                                CIR008
       *****************************************************************                       CIR008
@@ -717,7 +728,8 @@
      C                   END
      C                   ENDIF                                                              AR996631
                                                                                               225811
-     C                   EVAL      FIUSRI = ZUSER                                             225811
+     C**********         EVAL      FIUSRI = ZUSER                                    225811 MD060683
+     C                   EVAL      FIUSRI = PUser                                           MD060683
 
      C     EVALAI        ENDSR
       *****************************************************************
@@ -772,7 +784,8 @@
      C                   GOTO      EVALAA                                                     CIR008
      C                   ENDIF                                                                CIR008
                                                                                               225811
-     C                   EVAL      FIUSRA = ZUSER                                             225811
+     C**********         EVAL      FIUSRA = ZUSER                                    225811 MD060683
+     C                   EVAL      FIUSRA = PUser                                           MD060683
 
      C     EVALAA        ENDSR
       *****************************************************************
@@ -1080,6 +1093,14 @@
      C                   IN        ZMUSER                                                    BUG5268
      C                   UNLOCK    ZMUSER                                                    BUG5268
 
+     C                   MOVE      *BLANKS       PUser            10                        MD060683
+                                                                                            MD060683
+     C                   IF        IRUSER <> *BLANKS                                        MD060683
+     C                   EVAL      PUser = IRUSER                                           MD060683
+     C                   ELSE                                                               MD060683
+     C                   EVAL      PUser = PSUser                                           MD060683
+     C                   ENDIF                                                              MD060683
+                                                                                            MD060683
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -1113,6 +1134,8 @@
      C                   PARM                    SBRCA             3
       ** Switchable feature CIR008                                                            CIR008
      C                   PARM                    CIR008                                       CIR008
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
 
       * OUTPUTS
       * (Current) deal in file format

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057537           Date 13Sep22               *
-      *  Prev Amend No. 257949             Date 05Jul22               *
+      *  Last Amend No. MD024834           Date 23Feb23               *
+      *  Prev Amend No. MD057537           Date 13Sep22               *
+      *                 257949             Date 05Jul22               *
       *                 256362             Date 09Jun22               *
       *                 CLE125             Date 02Nov21               *
       *                 MD057739           Date 28Apr22               *
@@ -110,6 +111,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024834 - Subtype change resulting to processing type change*
+      *             is not possible. Allow changes for 62 to 61 and   *
+      *             vice-versa, and 64 to 68 and vice-versa if there  *
+      *             are no participations.                            *
       *  MD057537 - Return a warning message when the total of        *
       *             principal amount and event amount exceeds ten     *
       *             billion.                                          *
@@ -4020,13 +4025,29 @@
      C     SVPTYP        IFEQ      61
      C     AYLNPT        ANDEQ     62
       *
-     C     SVPTYP        OREQ      68
-     C     AYLNPT        ANDEQ     62
-     C     CLE005        ANDEQ     'Y'
+     C*****SVPTYP        OREQ      68                                                       MD024834
+     C*****AYLNPT        ANDEQ     62                                                       MD024834
+     C*****CLE005        ANDEQ     'Y'                                                      MD024834
       *
-     C     SVPTYP        OREQ      69
-     C     AYLNPT        ANDEQ     62
-     C     CLE005        ANDEQ     'Y'
+     C*****SVPTYP        OREQ      69                                                       MD024834
+     C*****AYLNPT        ANDEQ     62                                                       MD024834
+     C*****CLE005        ANDEQ     'Y'                                                      MD024834
+      *                                                                                     MD024834
+     C     SVPTYP        OREQ      68                                                       MD024834
+     C     AYLNPT        ANDEQ     64                                                       MD024834
+      *                                                                                     MD024834
+      ** Loan has no participation sales outstanding                                        MD024834
+      *                                                                                     MD024834
+     C                   MOVEL     *BLANKS       WOLNO             6                        MD024834
+     C                   MOVE      SVLNRF        WOLNO                                      MD024834
+     C     WOLNO         SETLL     PSOLDF                                                   MD024834
+     C     WOLNO         READE     PSOLDF                                 99                MD024834
+     C     *IN99         IFEQ      '0'                                                      MD024834
+     C                   MOVE      'N'           DDLOANOK                                   MD024834
+     C                   ADD       1             Idx                                        MD024834
+     C                   EVAL      FldNameArr(Idx) = 'DDLOAN'                               MD024834
+     C                   MOVEL     'LEA0526'     MsgIdArr(Idx)                              MD024834
+     C                   ENDIF                                                              MD024834
       *
       ** New Maturity Date must not be blank
      C     DDMDAT        IFEQ      *BLANKS
@@ -4162,13 +4183,29 @@
      C     SVPTYP        IFEQ      62
      C     AYLNPT        ANDEQ     61
       *
-     C     SVPTYP        OREQ      62
-     C     AYLNPT        ANDEQ     68
-     C     CLE005        ANDEQ     'Y'
+     C*****SVPTYP        OREQ      62                                                       MD024834
+     C*****AYLNPT        ANDEQ     68                                                       MD024834
+     C*****CLE005        ANDEQ     'Y'                                                      MD024834
       *
-     C     SVPTYP        OREQ      62
-     C     AYLNPT        ANDEQ     69
-     C     CLE005        ANDEQ     'Y'
+     C*****SVPTYP        OREQ      62                                                       MD024834
+     C*****AYLNPT        ANDEQ     69                                                       MD024834
+     C*****CLE005        ANDEQ     'Y'                                                      MD024834
+      *                                                                                     MD024834
+     C     SVPTYP        OREQ      64                                                       MD024834
+     C     AYLNPT        ANDEQ     68                                                       MD024834
+      *                                                                                     MD024834
+      ** Loan has no participation sales outstanding                                        MD024834
+      *                                                                                     MD024834
+     C                   MOVEL     *BLANKS       WOLNO                                      MD024834
+     C                   MOVE      SVLNRF        WOLNO                                      MD024834
+     C     WOLNO         SETLL     PSOLDF                                                   MD024834
+     C     WOLNO         READE     PSOLDF                                 99                MD024834
+     C     *IN99         IFEQ      '0'                                                      MD024834
+     C                   MOVE      'N'           DDLOANOK                                   MD024834
+     C                   ADD       1             Idx                                        MD024834
+     C                   EVAL      FldNameArr(Idx) = 'DDLOAN'                               MD024834
+     C                   MOVEL     'LEA0526'     MsgIdArr(Idx)                              MD024834
+     C                   ENDIF                                                              MD024834
       *
       ** New Maturity Date must be blank for change to call Loan
      C     DDMDAT        IFNE      '      '

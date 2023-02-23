@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058986           Date 11Oct21               *
-      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *  Last Amend No. MD061074           Date 22Feb23               *
+      *  Prev Amend No. MD058986           Date 11Oct21               *
+      *                 MD055891           Date 01Sep20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061074 - Update CBCMPXTD.DHCEMI flag for complex modules   *
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -136,6 +138,14 @@
      C                   ENDDO
       *
      C     ENDPGM        TAG
+      *                                                                                     MD061074
+      * Finally, update CBCMPXTD.DHCEMI flag (Complex Module Conds Flag)                    MD061074
+      * for any component having a complex module characteristic                            MD061074
+     C/EXEC SQL                                                                             MD061074
+     C+ update CBCMPXTD set DHCEMI = 'Y'                                                    MD061074
+     C+ where DHCEMI = 'N' and DHCOTT concat DHCSEQ in                                      MD061074
+     C+ (select DJCOTT concat DJCSEQ from CBMDCCTD)                                         MD061074
+     C/END-EXEC                                                                             MD061074
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************

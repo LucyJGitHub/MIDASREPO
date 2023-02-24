@@ -12,6 +12,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
+      *  Last Amend No. MD060441           Date 01Feb23               *
       *  Last Amend No. MD060823           Date 12Dec22               *
       *  Prev Amend No. MD058517           Date 17Oct22               *
       *                 MD059624           Date 20Jul22               *
@@ -28,6 +29,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD060823 -  Rolled over loan using SARR calculation method   *
       *              was not processed by calculator and reported     *
       *              as an exception.                                 *
@@ -177,6 +180,8 @@
       ** Event Control Date                                                                 MD058182
      D  evntCtrlDate                  5a                                                    MD058517
       ** Event Control Date                                                                 MD058517
+     D  isRework                      1n                                                    MD060441
+      ** Is rework needed?                                                                  MD058517
      D  returnCD                     20a
       ** Return Code
 
@@ -231,6 +236,8 @@
       ** Event Control Date                                                                 MD058182
      D  evntCtrlDate                  5a                                                    MD058517
       ** Event Control Date                                                                 MD058517
+     D  isRework                      1n                                                    MD060441
+      ** Is rework needed?
      D  returnCD                     20a
       ** Return Code
 
@@ -477,6 +484,7 @@
      D node            s                   like(yajl_val)
      D val             s                   like(yajl_val)
      D cStr            S             10a   Varying
+     D  ovrCC3Dot1     S              1n   inz(*Off)                                        MD060441
 
       ** +--------------------------------------+
       ** ¦ Array declaration                    ¦
@@ -627,11 +635,20 @@
                    endsl;
 
                    // Get the highest date in the Daily History file
-                   wSQLStr = 'select * from SDHSDRTD ' +
-                             ' where CMODID = ' + QUO + moduleID + QUO +
-                             ' and CTRNID = ' +  QUO + transactREF + QUO +
-                             ' order by CINPDT DESC';
-
+                   // Start of change MD060441
+                   if isRework;
+                      wSQLStr = 'select * from SDHSDRTD ' +
+                                ' where CMODID = ' + QUO + moduleID + QUO +
+                                ' and CTRNID = ' +  QUO + transactREF + QUO +
+                                ' and CINFLG <> ' + QUO + 'Y' + QUO +
+                                ' order by CINPDT DESC';
+                   else;
+                      wSQLStr = 'select * from SDHSDRTD ' +
+                                ' where CMODID = ' + QUO + moduleID + QUO +
+                                ' and CTRNID = ' +  QUO + transactREF + QUO +
+                                ' order by CINPDT DESC';
+                   endif;
+                   // End of change MD060441
                    exec sql prepare P1 from :wSQLStr;
                    exec sql declare P1 cursor for P1;
                    exec sql open P1;
@@ -653,23 +670,24 @@
                    endif;
 
                    exec sql close P1;
+                   if isRework <> *On;
+                      // Set Current Interest Period Flag to N
+                      eval strDate = %dec(intPrdStrMDAY:5:0);
+                      eval endDate = %dec(intPrdEndMDAY:5:0);
+                      exec sql  update SDHSDRTD set CINFLG = 'N'
+                       where CMODID = :moduleID
+                       and   CTRNID = :transactREF
+                       and   CINPSD <> :strDate
+                       and   CINPED <> :endDate;
 
-                   // Set Current Interest Period Flag to N
-                   eval strDate = %dec(intPrdStrMDAY:5:0);
-                   eval endDate = %dec(intPrdEndMDAY:5:0);
-                   exec sql  update SDHSDRTD set CINFLG = 'N'
-                    where CMODID = :moduleID
-                    and   CTRNID = :transactREF
-                    and   CINPSD <> :strDate
-                    and   CINPED <> :endDate;
-
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                     AuditLogDS.SJTMST = %timestamp();
-                     AuditLogDS.SJEXMS = 'Error in access SDHSDRTD '
+                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                        AuditLogDS.SJTMST = %timestamp();
+                        AuditLogDS.SJEXMS = 'Error in access SDHSDRTD '
                                        + 'SQL ERROR ' + %char(sqlCod);
-                     AuditLogDS.SJCODE = '005';
-                     isError = true;
-                     exsr errorHandler;
+                        AuditLogDS.SJCODE = '005';
+                        isError = true;
+                        exsr errorHandler;
+                      endif;
                    endif;
 
        endsr;
@@ -688,6 +706,14 @@
        //*************************************************************
 
        begsr processTransaction;
+
+                   // Start of change MD060441
+                   if moduleID = 'LE';
+                      if isRework;
+                          exsr deleteHstFileRec;
+                      endif;
+                   endif;
+                   // End of change MD060441
 
                    // Start of change MD059624
                    //** This will check if rounding appplies for NCCR
@@ -1153,6 +1179,15 @@
 
                includeRecord = 'N';
 
+               //Start of change MD060441
+               if (ModuleID = 'LE' and RatesKnownInd = 'Y')  and
+                  (calcMethod = 'CCR' or calcMethod = 'SAVG');
+                  ovrCC3Dot1 = *On;
+               else;
+                  ovrCC3Dot1 = *Off;
+               endif;
+               //End of change MD060441
+
                if result.list(i).intPDMidas <= %dec(controlDate:5:0);                     //MD058182
                                                                                           //MD058182
                    if (calcMethod = 'NCCR' or calcMethod  = 'SARR')
@@ -1186,18 +1221,30 @@
                         includeRecord = 'Y';
                    endif;
 
-                   fileToCheck = SDFWDRTD;
-                   if includeRecord = 'Y';
-                      exsr checkExist;
-                      if action = INSERT;
-                          exsr insertHistFutFile;
-                      elseif action = UPDATE;
-                          exsr updateHistFutFile;
+                   //Start of change MD060441
+                   if ovrCC3Dot1 and ModuleID = 'LE';
+                      fileToCheck = SDHSDRTD;
+                      if includeRecord = 'Y';
+                         exsr checkExist;
+                         if action = INSERT;
+                             exsr insertHistoryFile;
+                         elseif action = UPDATE;
+                             exsr updateHistoryFile;
+                         endif;
                       endif;
+                   else;
+                       fileToCheck = SDFWDRTD;
+                       if includeRecord = 'Y';
+                          exsr checkExist;
+                          if action = INSERT;
+                              exsr insertHistFutFile;
+                          elseif action = UPDATE;
+                              exsr updateHistFutFile;
+                          endif;
+                       endif;
                    endif;
-
+                   //End of change MD060441
                endif;
-
        // End of MD058517
 
        endsr;
@@ -1228,13 +1275,21 @@
        //**********               ' and LDINDT = ' +                                          CDL102
        //**********                 %char(result.list(i).intPDMidas);                         CDL102
                    elseif fileToCheck = SDHSDRTD2;                                        //MD058040
-                        wSQLStr = 'select * from SDHSDRTD ' +                             //MD058040
-                                  'where CMODID = '  + QUO + moduleID + QUO +             //MD058040
-                                  ' and CTRNID = ' + QUO + transactREF + QUO +            //MD058040
-                                  ' and CINPDT = ' +                                      //MD058040
-                                    %char(result.list(i).intPDMidas) +                    //MD058040
-                                  ' and CINPDT < '  + %char(BJRDNB)  +                    //MD058040
-                                  ' and CRORED <> ' + %char(BJRDNB);                      //MD058040
+                        if ovrCC3Dot1 = *On and ModuleID = 'LE';                          //MD060441
+                          wSQLStr = 'select * from SDHSDRTD ' +                           //MD060441
+                                     'where CMODID = '  + QUO + moduleID + QUO +          //MD060441
+                                     ' and CTRNID = ' + QUO + transactREF + QUO           //MD060441
+                                     + ' and CINPDT = ' +                                 //MD060441
+                                       %char(result.list(i).intPDMidas);                  //MD060441
+                        else;                                                             //MD060441
+                           wSQLStr = 'select * from SDHSDRTD ' +                          //MD058040
+                                     'where CMODID = '  + QUO + moduleID + QUO +          //MD058040
+                                     ' and CTRNID = ' + QUO + transactREF + QUO           //MD058040
+                                     + ' and CINPDT = ' +                                 //MD058040
+                                       %char(result.list(i).intPDMidas) +                 //MD058040
+                                     ' and CINPDT < '  + %char(BJRDNB)  +                 //MD058040
+                                     ' and CRORED <> ' + %char(BJRDNB);                   //MD058040
+                        endif;                                                            //MD060441
                    elseif fileToCheck = SDFWDRTD;                                         //MD058517
                         wSQLStr = 'select * from SDFWDRTD ' +                             //MD058517
                                   'where FMODID = '  + QUO + moduleID + QUO +             //MD058517
@@ -1554,7 +1609,7 @@
        // insertExtractFile                                          *
        // =================                                          *
        //                                                            *
-       // Called by: writeToHistoryFile                              *
+       // Called by: wNxtIntPayDat                              *
        //                                                            *
        // Calls: None                                                *
        //                                                            *
@@ -1748,7 +1803,11 @@
 
        begsr writeToExtractFile;
 
-               if result.list(i).intPDMidas <= %dec(controlDate:5:0);                     //MD058182
+               //Start of change MD060441
+               //if result.list(i).intPDMidas <= %dec(controlDate:5:0);          //MD058182 MD060441
+               if result.list(i).intPDMidas <= %dec(controlDate:5:0) or                   //MD060441
+                  (ModuleID = 'LE' and ovrCC3Dot1);                                       //MD060441
+               //End of change MD060441
                                                                                           //MD058182
        //**********fileToCheck = LELIBEPD;                                                //MD058040
        // Check if the interest period date and rate is already                           //MD058040
@@ -1946,7 +2005,32 @@
                    endif;
 
        endsr;
+       //*************************************************************                      MD060441
+       /EJECT                                                                               MD060441
+       //*************************************************************                      MD060441
+       //                                                            *                      MD060441
+       //   deleteHstFileRec  - Delete History File Records.         *                      MD060441
+       //                                                            *                      MD060441
+       //   Called By: ProcessTransaction                            *                      MD060441
+       //                                                            *                      MD060441
+       //*************************************************************                      MD060441
+                                                                                            MD060441
+       begsr deleteHstFileRec;
 
+             exec sql delete from SDHSDRTD
+             where CINFLG = 'Y' and  CTRNID = :TransactRef;
+
+
+             if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+                AuditLogDS.SJTMST = %timestamp();
+                AuditLogDS.SJEXMS = 'Error in access SDHSDRTD '
+                                    + 'SQL ERROR ' + %char(sqlCod);
+                AuditLogDS.SJCODE = '014';
+                isError = true;
+                exsr errorHandler;
+             endif;
+
+       endsr;
        //*************************************************************
        /EJECT
        //*************************************************************

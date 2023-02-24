@@ -17,9 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060959           Date 26Jan23               *
-      *  Prev Amend No. MD060883           Date 22Jan23               *
-      *                 MD060823           Date 12Dec22               *      
+      *  Last Amend No. MD060441           Date 01Feb23               *
+      *  Prev Amend No. MD060959           Date 26Jan23               *
+      *                 MD060883           Date 22Jan23               *
+      *                 MD060823           Date 12Dec22               *
       *                 MD058517           Date 17Oct22               *
       *                 MD060008           Date 11May21               *
       *                 MD060033           Date 25Sep22               *
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD060959 -  Loans whose repayment falls on a holiday is      *
       *              reported as Rates Known 'Y' in SDRTKNTD.         *
       *              Amend subroutine SRChk2ndCall to include         *
@@ -252,6 +255,7 @@
      D QUE             c                   const('?')                                       MD058517
      D QUO             c                   const('''')                                      MD058517
      D UPDATE          c                   const(1)                                         MD058517
+     D isARRParamChg   S              1N                                                    MD060441
 
       ** Reference Rates Array
      D ArraySize       C                   CONST(10)
@@ -332,6 +336,21 @@
      D SysDate         S               D   DATFMT(*ISO)                                     MD060033
      D SysOrMidas      S              1A                                                    MD060033
      D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD060008
+     D  isRework       S              1N   INZ(*OFF)                                        MD060441
+                                                                                            MD060441
+      ** Data structure for ARR Calculator (Before Image)                                   MD060441
+     D befARRDetails   DS                                                                   MD060441
+     D    B_RFRR                     10A                                                    MD060441
+     D    B_CALM                      4A                                                    MD060441
+     D    B_BADJ                     11P 7                                                  MD060441
+     D    B_FLOR                     11P 7                                                  MD060441
+     D    B_LBDY                      2  0                                                  MD060441
+     D    B_LODY                      2  0                                                  MD060441
+     D    B_OPSH                      1                                                     MD060441
+     D    B_RRDP                      2  0                                                  MD060441
+     D    B_DBAV                      1  0                                                  MD060441
+     D    B_BLRT                      1                                                     MD060441
+     D    B_NBLRT                     1                                                     MD060441
 
       *****************************************************************
       /EJECT
@@ -377,6 +396,8 @@
      C                   EXSR      SRReadNEXT                                               MD060883
      C                   ITER                                                               MD060883
      C                   ENDIF                                                              MD060883
+                                                                                            MD060441
+     C                   EXSR      srChkIfRework                                            MD060441
 
       ***If*the*backward-looking*rate*parameters*are*changed*via******              CLE172 MD058040A
       ***Rollover,*this*will*be*applied*to*the*whole*interest*period.*              CLE172 MD058040A
@@ -1203,6 +1224,104 @@
      C                   ENDIF                                                              MD057946
 
      C                   ENDSR
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srChkIfRework - Subroutine to check if need to rework         *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+     C     srChkIfRework BEGSR                                                              MD060441
+                                                                                            MD060441
+     C                   CLEAR                   isARRParamChg                              MD060441
+     C                   EVAL                    isRework = *OFF                            MD060441
+                                                                                            MD060441
+     C                   IF        (CLE172 = 'N') OR (Wrk2ndCall = 'Y')                     MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   EXSR      srChkARRChange                                           MD060441
+                                                                                            MD060441
+     C                   IF        isRework = *ON                                           MD060441
+     C/exec SQL                                                                             MD060441
+     C+ select NCALM, NBADJ, NFLOR, NLBDY,                                                  MD060441
+     C+        NLODY, NOPSH, NRRDP, NDBAV, NRFRR                                            MD060441
+     C+ into :TrCALM, :TrBADJ, :TrFLOR, :TrLBDY,                                            MD060441
+     C+      :TrLODY, :TrOPSH, :TrRRDP, :TrDBAV, :TrRFRR                                    MD060441
+     C+ from CLOANCL                                                                        MD060441
+     C+ where LNRF = :TrTRAN                                                                MD060441
+     C/end-exec                                                                             MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ENDSR                                                              MD060441
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srChkARRChange - Subroutine to check if ARR parameters        *                     MD060441
+      *                  has changed                                  *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+     C     srChkARRChangeBEGSR                                                              MD060441
+                                                                                            MD060441
+      ** Get current ARR details from CLOANCL                                               MD060441
+     C/exec SQL                                                                             MD060441
+                                                                                            MD060441
+     C+ select RFRR, CALM, BADJ, FLOR, LBDY,                                                MD060441
+     C+        LODY, OPSH, RRDP, DBAV, BLRT, NBLRT                                          MD060441
+     C+ into :befARRDetails                                                                 MD060441
+     C+ from CLOANCL                                                                        MD060441
+     C+ where LNRF = :TrTRAN                                                                MD060441
+                                                                                            MD060441
+     C/end-exec                                                                             MD060441
+                                                                                            MD060441
+     C                   IF        ( SQLCOD <> NO_RECORD ) AND                              MD060441
+     C                             ( B_BLRT = 'Y' AND                                       MD060441
+     C                               B_NBLRT = 'Y' )                                        MD060441
+                                                                                            MD060441
+     C                   EVAL      isARRParamChg = *Off                                     MD060441
+                                                                                            MD060441
+     C                   IF        B_RFRR <> TRRFRR                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        B_CALM <> TRCALM                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        B_BADJ <> TRBADJ                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        B_FLOR <> TRFLOR                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        B_LBDY <> TRLBDY                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        B_LODY <> TRLODY                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        B_OPSH <> TROPSH                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        B_RRDP <> TRRRDP                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   ENDIF                                                              MD060441
+     C                   IF        B_DBAV <> TRDBAV                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        ( isARRParamChg )                                        MD060441
+     C                   EVAL      isRework = *On                                           MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   ENDIF                                                              MD060441
+     C                                                                                      MD060441
+     C                   ENDSR                                                              MD060441
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1233,6 +1352,7 @@
      C                   PARM                    RatesKnownInd
      C                   PARM                    ControlDate                                MD058182
      C                   PARM                    wEvntCtrlDate                              MD058517
+     C                   PARM                    isRework                                   MD060441
      C                   PARM      *BLANKS       ReturnCode
 
       ** End program if there's a connection error
@@ -1242,6 +1362,8 @@
      C                   EVAL      DBASE  = 006
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                            MD060441
+     C                   EVAL      isRework = *OFF                                          MD060441
 
      C                   ENDSR
       *****************************************************************

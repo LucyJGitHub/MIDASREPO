@@ -287,6 +287,7 @@
      D QUO             c                   const('''')
      D SDHSDRTD        c                   const(0)
      D UPDATE          c                   const(1)
+     D NONE            c                   const(2)                                         MD060441
      D BLANK_FLOOR     c                   const('9999.9999999')                            MD057871
      D SDHSDRTD2       c                   const(2)                                         MD058040
      D SDFWDRTD        c                   const(3)                                         MD058517
@@ -402,8 +403,12 @@
       ** Average Compunded Rate
       ** CCR
      D   simpleAve                   17a
-      ** Simple Average
+      ** Simple A/erage
       ** SAVG
+     D   insertFlag                   1n                                                  //MD060441
+      ** insert Flag                                                                      //MD060441
+     D   updateFlag                   1n                                                  //MD060441
+      ** Update Flag                                                                      //MD060441
 
      D request_t       ds                  qualified
      D                                     template
@@ -485,6 +490,7 @@
      D val             s                   like(yajl_val)
      D cStr            S             10a   Varying
      D  ovrCC3Dot1     S              1n   inz(*Off)                                        MD060441
+     D  wrkAmount      S             17s12                                                  MD060441
 
       ** +--------------------------------------+
       ** ¦ Array declaration                    ¦
@@ -1275,21 +1281,13 @@
        //**********               ' and LDINDT = ' +                                          CDL102
        //**********                 %char(result.list(i).intPDMidas);                         CDL102
                    elseif fileToCheck = SDHSDRTD2;                                        //MD058040
-                        if ovrCC3Dot1 = *On and ModuleID = 'LE';                          //MD060441
-                          wSQLStr = 'select * from SDHSDRTD ' +                           //MD060441
-                                     'where CMODID = '  + QUO + moduleID + QUO +          //MD060441
-                                     ' and CTRNID = ' + QUO + transactREF + QUO           //MD060441
-                                     + ' and CINPDT = ' +                                 //MD060441
-                                       %char(result.list(i).intPDMidas);                  //MD060441
-                        else;                                                             //MD060441
-                           wSQLStr = 'select * from SDHSDRTD ' +                          //MD058040
-                                     'where CMODID = '  + QUO + moduleID + QUO +          //MD058040
-                                     ' and CTRNID = ' + QUO + transactREF + QUO           //MD058040
-                                     + ' and CINPDT = ' +                                 //MD058040
-                                       %char(result.list(i).intPDMidas) +                 //MD058040
-                                     ' and CINPDT < '  + %char(BJRDNB)  +                 //MD058040
-                                     ' and CRORED <> ' + %char(BJRDNB);                   //MD058040
-                        endif;                                                            //MD060441
+                        wSQLStr = 'select * from SDHSDRTD ' +                             //MD058040
+                                  'where CMODID = '  + QUO + moduleID + QUO +             //MD058040
+                                  ' and CTRNID = ' + QUO + transactREF + QUO              //MD058040
+                                  + ' and CINPDT = ' +                                    //MD058040
+                                    %char(result.list(i).intPDMidas) +                    //MD058040
+                                  ' and CINPDT < '  + %char(BJRDNB)  +                    //MD058040
+                                  ' and CRORED <> ' + %char(BJRDNB);                      //MD058040
                    elseif fileToCheck = SDFWDRTD;                                         //MD058517
                         wSQLStr = 'select * from SDFWDRTD ' +                             //MD058517
                                   'where FMODID = '  + QUO + moduleID + QUO +             //MD058517
@@ -1323,6 +1321,7 @@
                    if sqlCod = NO_RECORD;
                       action = INSERT;
                    else;
+                      exsr chkARRParamChg;                                                //MD060441
                       action = UPDATE;
                    endif;
 
@@ -1359,6 +1358,13 @@
                       endsl;                                                              //MD058040
                    endif;                                                                 //MD058040
                                                                                           //MD058040
+                   if ovrCC3Dot1;                                                         //MD060441
+                      if result.list(i).insertFlag = *On;                                 //MD060441
+                         writeRecord = 'Y';                                               //MD060441
+                      else;                                                               //MD060441
+                         writeRecord = 'N';                                               //MD060441
+                      endif;                                                              //MD060441
+                   endif;                                                                 //MD060441
                    exec sql close P1;
 
        endsr;
@@ -1424,6 +1430,7 @@
                        isError = true;
                        exsr errorHandler;
                    endif;
+                   result.list(i).insertFlag = *On;
 
        endsr;
 
@@ -1508,6 +1515,10 @@
        //*************************************************************
 
        begsr updateHistFutFile;
+
+                   if result.List(i).updateFlag = *off;
+                      leavesr;
+                   endif;
 
                    clear DailyHisFDS;
                    DailyHisFDS.FMODID = moduleID;
@@ -2003,6 +2014,7 @@
                       isError = true;
                       exsr errorHandler;
                    endif;
+                   result.list(i).insertFlag = *off;
 
        endsr;
        //*************************************************************                      MD060441
@@ -2064,6 +2076,75 @@
                    exsr writeToAuditLog;
                    *Inlr = *on;
                    return;
+       endsr;
+       //*************************************************************                      MD060441
+       /EJECT                                                                               MD060441
+       //*************************************************************                      MD060441
+       //                                                            *                      MD060441
+       // chkARRPAramChg                                             *                      MD060441
+       // ==============                                             *                      MD060441
+       //                                                            *                      MD060441
+       // Called by: checkExist                                      *                      MD060441
+       //                                                            *                      MD060441
+       // Calls: None                                                *                      MD060441
+       //                                                            *                      MD060441
+       //*************************************************************                      MD060441
+
+       begsr chkARRParamChg;
+
+                    eval result.list(i).updateFlag   = *Off;
+                    clear wrkAmount;
+
+                    if  DailyHistDS.CPBRFR <> result.list(i).pubRskFrRt;
+                        eval result.list(i).updateFlag   = *On;
+                        leavesr;
+                    endif;
+
+                    if  DailyHistDS.CRTEAP <> result.list(i).rateApplied;
+                        eval result.list(i).updateFlag   = *On;
+                        leavesr;
+                    endif;
+
+                    monitor;
+                    eval wrkAmount = %Dec(Result.List(i).dlyCompRate:17:12);
+                    on-error;
+                    endmon;
+
+                    if  DailyHistDS.CDCMRT <> wrkAmount;
+                        eval result.list(i).updateFlag   = *On;
+                        leavesr;
+                    endif;
+
+                    monitor;
+                    eval wrkAmount = %Dec(Result.List(i).compFactor:17:12);
+                    on-error;
+                    endmon;
+
+                    if  DailyHistDS.CCMFAC <> wrkAmount;
+                        eval result.list(i).updateFlag   = *On;
+                        leavesr;
+                    endif;
+
+                    monitor;
+                    eval wrkAmount = %Dec(Result.List(i).aveCompRate:17:12);
+                    on-error;
+                    endmon;
+
+                    if  DailyHistDS.CAVCRT <> wrkAmount;
+                        eval result.list(i).updateFlag   = *On;
+                        leavesr;
+                    endif;
+
+                    monitor;
+                    eval wrkAmount = %Dec(Result.List(i).simpleAve:17:12);
+                    on-error;
+                    endmon;
+
+                    if  DailyHistDS.CSMPAV <> wrkAmount;
+                        eval result.list(i).updateFlag   = *On;
+                        leavesr;
+                    endif;
+
        endsr;
 
        //*************************************************************

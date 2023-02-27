@@ -1926,6 +1926,10 @@
 
        begsr updateHistoryFile;
 
+                   if not(result.list(i).updateFlag);
+                      leavesr;
+                   endif;
+
                    clear DailyHistDS;
                    DailyHistDS.CMODID = moduleID;
                    DailyHistDS.CTRNID = transactREF;
@@ -2014,6 +2018,7 @@
                       isError = true;
                       exsr errorHandler;
                    endif;
+
                    result.list(i).insertFlag = *off;
 
        endsr;

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR762171           Date 26May11              */
+/*       Last Amend No. MD061067           Date 09Dec22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR762171           Date 26May11              */
 /*                      CUP039             Date 14Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -21,6 +22,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061067 - Missing process for UDF tables                   */
+/*                - Applied for MD060769.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR762171 - Meridian Replication jobs fails with MSGW after  */
 /*                  COB. Change to name of Meridian Replication data */
@@ -54,6 +57,8 @@
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(70)
+             DCL        VAR(&CMX001) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(100)                               /*MD061067*/
 /**/
 /* Global monitor message.                                                                        */
 /**/
@@ -307,6 +312,40 @@ eSKIPPER:
 /**/
              ENDDO
 /**/
+/* Check whether MX is present (CMX001) */                                              /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             CHGVAR     VAR(&SAR) VALUE('CMX001')                                       /*MD061067*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*MD061067*/
+/**/                                                                                    /*MD061067*/
+/* If Cash Management is present,                                                       /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD061067*/
+             CHGVAR     VAR(&CMX001) VALUE('Y')                                         /*MD061067*/
+/**/                                                                                    /*MD061067*/
+/* update MXOLEJPD */                                                                   /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE MXOLEJPD set +
+                        I#LASTSEQ = ' *BCAT '''' *TCAT &CURZSEQA *TCAT '''')            /*MD061067*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061067*/
+                                                                                        /*MD061067*/
+/* update MXOLTJPD */                                                                   /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE MXOLTJPD set +
+                        I#LASTSEQ = ' *BCAT '''' *TCAT &CURZSEQA *TCAT '''')            /*MD061067*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061067*/
+                                                                                        /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+                                                                                        /*MD061067*/
+/* update GLOLJSTD */                                                                   /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE GLOLJSTD set +
+                        OLJRCV = ' *BCAT '''' *TCAT &CURZRCV *TCAT '''')                /*MD061067*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061067*/
+                                                                                        /*MD061067*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE GLOLJSTD set +
+                        OLJSEQ = ' *BCAT '''' *TCAT &CURZSEQA *TCAT '''')               /*MD061067*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061067*/
+                                                                                        /*MD061067*/
 eABNOR:
 eENDER:
              RETURN

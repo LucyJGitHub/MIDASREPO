@@ -15,7 +15,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. MD024834           Date 23Feb23               *
-      *  Prev Amend No. MD057537           Date 13Sep22               *
+      *  Prev Amend No. AR870613           Date 23Feb23               *
+      *                 MD057537           Date 13Sep22               *
       *                 257949             Date 05Jul22               *
       *                 256362             Date 09Jun22               *
       *                 CLE125             Date 02Nov21               *
@@ -114,7 +115,11 @@
       *  MD024834 - Subtype change resulting to processing type change*
       *             is not possible. Allow changes for 62 to 61 and   *
       *             vice-versa, and 64 to 68 and vice-versa if there  *
-      *             are no participations.                            *
+      *             are no participations. This replaced the main fix *
+      *             of AR870613, but retained the fix correcting the  *
+      *             field highlight.                                  *
+      *  AR870613 - Highlight subtype field instead of maturity date  *
+      *             when PTYP change is invalid. (Child: AR870614)    *
       *  MD057537 - Return a warning message when the total of        *
       *             principal amount and event amount exceeds ten     *
       *             billion.                                          *
@@ -4329,12 +4334,16 @@
       *
      C                   ENDIF
       *
-      ** Else PTYP change is invalid (i.e. not from 61 to 62 or
-      ** vice-versa).
+      ***Else*PTYP*change*is*invalid*(i.e.*not*from*61*to*62*or********                     AR870613
+      ***vice-versa).**************************************************                     AR870613
+      ** Else PTYP change is invalid                                                        AR870613
+      *                                                                                     AR870613
      C                   ELSE
-     C                   MOVE      'N'           DDMDATOK
+     C**********         MOVE      'N'           DDMDATOK                                   AR870613
+     C                   MOVE      'N'           DDSTYPOK                                   AR870613
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = 'DDMDAT'
+     C**********         EVAL      FldNameArr(Idx) = 'DDMDAT'                               AR870613
+     C                   EVAL      FldNameArr(Idx) = 'DDSTYP'                               AR870613
      C                   MOVEL     'LEA0523'     MsgIdArr(Idx)
      C                   ENDIF
       *

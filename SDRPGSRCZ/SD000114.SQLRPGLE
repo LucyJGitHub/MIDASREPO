@@ -1228,7 +1228,9 @@
       /EJECT                                                                                MD060441
       *****************************************************************                     MD060441
       *                                                               *                     MD060441
-      * srChkIfRework - Subroutine to check if need to rework         *                     MD060441
+      * srChkIfRework - Subroutine to check if a particular           *                     MD060441
+      *                 transaction needs rework due to rollover      *                     MD060441
+      *                 event with change of ARR details              *                     MD060441
       *                                                               *                     MD060441
       *****************************************************************                     MD060441
      C     srChkIfRework BEGSR                                                              MD060441

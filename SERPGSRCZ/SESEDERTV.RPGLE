@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR660635           Date 16Jul21               *
-      *  Prev Amend No. 260191A            Date 22May20               *
+      *  Last Amend No. MD060394           Date 01Feb23               *
+      *  Prev Amend No. AR660635           Date 16Jul21               *
+      *                 260191A            Date 22May20               *
       *                 260191             Date 22May20               *
       *                 259978             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
@@ -52,6 +53,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060394 - Coupon Rate C240228.                              *
+      *             Allow SEDE entries for an Interest Rate Change    *
+      *             event type having Event Date equal to Issue Date  *
+      *             to be accepted in the system, only when Security  *
+      *             is attached to base rate code defined as backward-*
+      *             looking rate.                                     *
       *  AR660635 - Deletion of Diary Event of a matured security     *
       *             causes SEC0602 to fail. Prevent deletion.         *
       *             (Child Artifact: AR660636)                        *
@@ -235,6 +242,9 @@
       *
       ** DS for Access Objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
+      *                                                                                     MD060394
+      ** Externally described DS for Base Rate Details                                      MD060394
+     D   SDBSRT      E DS                  EXTNAME(SDBSRTPD)                                MD060394
       *
       ** Indicator Array
      D Indicators      DS                  BASED(IndicatorP)
@@ -332,6 +342,7 @@
      D Work5N          S              5P 0
      D Work2N          S              2P 0
      D Work1N          S              1P 0
+     D WkISSD          S              6A                                                    MD060394
       *
       ** Work fields for parameter
      D PReDsp          S              1A
@@ -1239,6 +1250,36 @@
      C                   ENDIF
 
      C                   ENDDO
+      *                                                                                     MD060394
+      ** Validate Securities diary entry if transaction's Security                          MD060394
+      ** attached to a base rate is a backward-looking rate.                                MD060394
+      *                                                                                     MD060394
+     C                   IF        F1BASC <> *BLANKS                                        MD060394
+     C                   CALL      'AOBSRTR0'                                               MD060394
+     C                   PARM      *BLANKS       PRtCd                                      MD060394
+     C                   PARM      '*KEY   '     POptn                                      MD060394
+     C                   PARM                    F1NMCY                                     MD060394
+     C                   PARM                    F1BASC                                     MD060394
+     C     SDBSRT        PARM      SDBSRT        DSSDY                                      MD060394
+      *                                                                                     MD060394
+      ** If no error and base rate code is a backward-looking rate,                         MD060394
+      ** format the Issue Date (similar to DDSDED) for compare.                             MD060394
+      *                                                                                     MD060394
+     C                   IF        PRtCd = *BLANKS and BABLRT = 'Y'                         MD060394
+     C                   EVAL      WkISSD = *BLANKS                                         MD060394
+     C                   EVAL      PDateIn = F1ISSD                                         MD060394
+     C                   EXSR      SrZDATE2                                                 MD060394
+     C                   MOVE      PDateOut      WkISSD                                     MD060394
+      *                                                                                     MD060394
+      ** Switch ON *IN34 if IR Event Date is equal to Issue Date.                           MD060394
+      *                                                                                     MD060394
+     C                   IF        DDSDED = WkISSD                                          MD060394
+     C                   EVAL      *IN34 = *ON                                              MD060394
+     C                   ENDIF                                                              MD060394
+      *                                                                                     MD060394
+     C                   ENDIF                                                              MD060394
+      *                                                                                     MD060394
+     C                   ENDIF                                                              MD060394
 
      C                   IF        NOT *IN34
      C                   MOVE      'N'           OKSDED

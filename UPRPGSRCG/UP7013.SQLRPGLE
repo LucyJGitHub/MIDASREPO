@@ -8,13 +8,14 @@
       *                                                               *
       *  UP7013 - Midas UP OTR check job server activity              *
       *                                                               *
-      *  (c) Finastra International Limited 2023                      *
+      *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *   Last Amend No. MD061067 *CREATE   Date 20Feb23              *
+      *   Last Amend No. MD061067 *CREATE   Date 09Dec22              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
       *  MD061067 - Missing process for UDF tables                    *
+      *           - Applied for MD060769.                             *
       *                                                               *
       *****************************************************************
       /EJECT

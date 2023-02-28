@@ -16,10 +16,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP045   *CREATE   Date 09Dec22              */
+/*       Last Amend No. MD061067           Date 09Dec22              */
+/*       Prev Amend No. CUP045   *CREATE   Date 09Dec22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061067 - Missing process for UDF tables                   */
+/*              - Applied for MD060769.                              */
 /*       CUP045 - One Touch Bridge - refresh                         */
 /*              - Applied for MD060769.                              */
 /*                                                                   */
@@ -43,6 +46,11 @@
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PRODL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&ACT) TYPE(*CHAR) LEN(1)                                    /*MD061067*/
+             DCL        VAR(&CMPA) TYPE(*CHAR) LEN(2)                                   /*MD061067*/
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)                                /*MD061067*/
+             DCL        VAR(&STATFL) TYPE(*CHAR) LEN(8)                                 /*MD061067*/
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')                      /*MD061067*/
 
              DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
              DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
@@ -64,6 +72,9 @@
              DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
              DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
              DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+                                                                                        /*MD061067*/
+             DCLF       FILE(UPOTRLTD) OPNID(C)                                         /*MD061067*/
+             DCLF       FILE(UPOTRMTD) OPNID(M)                                         /*MD061067*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2022')
@@ -118,7 +129,76 @@
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
+/* Check job activity */                                                                /*MD061067*/
+             CALL       PGM(UP7013) PARM(&BRGBRGLIB &ACT)                               /*MD061067*/
+/* If active, display monitor */                                                        /*MD061067*/
+             IF         COND(&ACT *EQ 'Y') THEN(DO)                                     /*MD061067*/
                 GOTO       CMDLBL(MONITOR)
+             ENDDO                                                                      /*MD061067*/
+/* If not active, ask if restart from the start */                                      /*MD061067*/
+             RTVMSG     MSGID(UPM7009) MSGF(UTMSGF) MSG(&MESSAGE)                       /*MD061067*/
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                       /*MD061067*/
+             RTVMSG     MSGID(UPM7010) MSGF(UTMSGF) MSG(&MESSAGE)                       /*MD061067*/
+             CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)                       /*MD061067*/
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'OPTION' &REPLY1)                     /*MD061067*/
+             IF         COND(&REPLY1 *EQ 'Y') THEN(DO)                                  /*MD061067*/
+                GOTO       CMDLBL(SELECT)                                               /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+             IF         COND(&REPLY1 *EQ 'N') THEN(DO)                                  /*MD061067*/
+/* Find out the latest component that ran and resume from that one */                   /*MD061067*/
+READ:                                                                                   /*MD061067*/
+             RCVF       OPNID(C)                                                        /*MD061067*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                         /*MD061067*/
+/* Check if zone or global */                                                           /*MD061067*/
+READ2:                                                                                  /*MD061067*/
+             RCVF       OPNID(M)                                                        /*MD061067*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                         /*MD061067*/
+             CHGVAR     VAR(&LAYER) VALUE(&M_DLAYRS)                                    /*MD061067*/
+             CHGVAR     VAR(&RPFX) VALUE(&M_DRPRFX)                                     /*MD061067*/
+             GOTO       CMDLBL(SET_CMP)                                                 /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+             GOTO       CMDLBL(READ2)                                                   /*MD061067*/
+                                                                                        /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+             GOTO       CMDLBL(READ)                                                    /*MD061067*/
+                                                                                        /*MD061067*/
+SET_CMP:                                                                                /*MD061067*/
+/* Delete the log record for that component so the monitor displays correct */          /*MD061067*/
+             CHGVAR     VAR(&CMPA) VALUE(&C_D_CMPN)                                     /*MD061067*/
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from UPOTRLTD +
+                        where D_CMPN = ' *CAT &CMPA)                                    /*MD061067*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061067*/
+                                                                                        /*MD061067*/
+/* Reset component status */                                                            /*MD061067*/
+             IF         COND(&CMPA = '01') THEN(CHGVAR VAR(&STATFL) +
+                          VALUE('DCMPG1'))                                              /*MD061067*/
+             IF         COND(&CMPA = '11') THEN(CHGVAR VAR(&STATFL) +
+                          VALUE('DCMPG11'))                                             /*MD061067*/
+             IF         COND(&CMPA = '02') THEN(CHGVAR VAR(&STATFL) +
+                          VALUE('DCMPG2'))                                              /*MD061067*/
+             IF         COND(&CMPA = '03') THEN(CHGVAR VAR(&STATFL) +
+                          VALUE('DCMPG3'))                                              /*MD061067*/
+             IF         COND(&CMPA = '04') THEN(CHGVAR VAR(&STATFL) +
+                          VALUE('DCMPG4'))                                              /*MD061067*/
+             IF         COND(&CMPA = '05') THEN(CHGVAR VAR(&STATFL) +
+                          VALUE('DCMPG5'))                                              /*MD061067*/
+             IF         COND(&CMPA = '06') THEN(CHGVAR VAR(&STATFL) +
+                          VALUE('DCMPG6'))                                              /*MD061067*/
+             IF         COND(&CMPA = '07') THEN(CHGVAR VAR(&STATFL) +
+                          VALUE('DCMPG7'))                                              /*MD061067*/
+             IF         COND(&CMPA = '08') THEN(CHGVAR VAR(&STATFL) +
+                          VALUE('DCMPG8'))                                              /*MD061067*/
+             CHGVAR     VAR(&SQLSTM) VALUE('update UPOTRMTD set ' +
+                        *BCAT &STATFL *BCAT ' = '' ''')                                 /*MD061067*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061067*/
+                                                                                        /*MD061067*/
+/* Submit server with RESUME = Y */                                                     /*MD061067*/
+                SBMJOB     CMD(CALL PGM(UPC7001) PARM(&LAYER &RPFX +
+                          &BRGBRGLIB 'Y' &CMPA)) JOB(OTBRSERVER) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) +
+                          SYSLIBL(*CURRENT) INLLIBL(*CURRENT)                           /*MD061067*/
+                GOTO       CMDLBL(MONITOR)                                              /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
 
 CHECK:
 /* Check if upgrade has been previously */
@@ -149,14 +229,20 @@ SELECT:
 
 /* Initialize work table */
              CLRPFM     FILE(UPOTRMTD)
+             CLRPFM     FILE(UPOTRLTD)                                                  /*MD061067*/
              CALL       PGM(UP7001) PARM('*WRITE' &RPFX ' ' &LAYER &ERROR)
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
 
 /* Submit server */
-             SBMJOB     CMD(CALL PGM(UPC7001) PARM(&LAYER &RPFX +
+             CHGVAR     VAR(&C_D_CMPN) VALUE(0)                                         /*MD061067*/
+/**********  SBMJOB     CMD(CALL PGM(UPC7001) PARM(&LAYER &RPFX +
                           &BRGBRGLIB)) JOB(OTBRSERVER) +
                           JOBQ(&BRGBRGLIB/SMJOBQNM) +
-                          SYSLIBL(*CURRENT) INLLIBL(*CURRENT)
+                          SYSLIBL(*CURRENT) INLLIBL(*CURRENT) */                        /*MD061067*/
+             SBMJOB     CMD(CALL PGM(UPC7001) PARM(&LAYER &RPFX +
+                          &BRGBRGLIB 'N' &C_D_CMPN)) JOB(OTBRSERVER) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) +
+                          SYSLIBL(*CURRENT) INLLIBL(*CURRENT)                           /*MD061067*/
 
 MONITOR:
 /* Display monitor */

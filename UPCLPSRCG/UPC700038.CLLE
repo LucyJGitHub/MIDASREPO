@@ -13,16 +13,21 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP045   *CREATE   Date 09Dec22              */
+/*       Last Amend No. MD061067           Date 09Dec22              */
+/*       Prev Amend No. CUP045   *CREATE   Date 09Dec22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061067 - Missing process for UDF tables                   */
+/*              - Applied for MD060769.                              */
 /*       CUP045 - One Touch Bridge - refresh                         */
 /*              - Applied for MD060769.                              */
 /*                                                                   */
 /*********************************************************************/
+/**********  PGM        PARM(&FMLIB &TOLIB &CRT &RERUN &SYSPFX +
+                           &THRESHOLD &JUMP &BRGBRGLIB) */                              /*MD061067*/
              PGM        PARM(&FMLIB &TOLIB &CRT &RERUN &SYSPFX +
-                           &THRESHOLD &JUMP &BRGBRGLIB)
+                           &THRESHOLD &JUMP &BRGBRGLIB &LAYER)                          /*MD061067*/
 
              DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
@@ -32,6 +37,7 @@
              DCL        VAR(&SYSPFX) TYPE(*CHAR) LEN(4)
              DCL        VAR(&THRESHOLD) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&JUMP) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)                                  /*MD061067*/
 
              DCL        VAR(&FMPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&TOPFX) TYPE(*CHAR) LEN(2)
@@ -138,6 +144,8 @@
              CHGVAR     VAR(&FMPFX) VALUE(%SST(&FMLIB 1 2))                            /*MD020092B*/
              CHGVAR     VAR(&TOPFX) VALUE(%SST(&TOLIB 1 2))                            /*MD020092B*/
 
+/* This is to be done for zone only */                                                  /*MD061067*/
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                               /*MD061067*/
 /* Call program to copy across multi-membered DP files. */                             /*MD020092B*/
              CALL       PGM(SM000008) PARM('SMC000008' '*PGM' +
                           '*CHECK' &STATUS)                                            /*MD020092B*/
@@ -149,6 +157,7 @@
                           JOB(SMC000008) JOBD(&BRGBRGLIB/SETUP) +
                           JOBQ(&BRGBRGLIB/SMJOBQNM)
              ENDDO                                                                     /*MD020092B*/
+             ENDDO                                                                      /*MD061067*/
 
 READNEXT:
              RCVF
@@ -207,6 +216,36 @@ READNEXT:
              GOTO       CMDLBL(READNEXT)
 
 EXTRA:
+
+/* This is to be done for global only */                                                /*MD061067*/
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                             /*MD061067*/
+/* Call program to handle UDF extension tables. */                                      /*MD061067*/
+/* Check if option has already been run. */                                             /*MD061067*/
+             CALL       PGM(SM000008) PARM('SM000075' '*PGM' +
+                          '*CHECK' &STATUS)                                             /*MD061067*/
+             IF         COND(&STATUS *NE 'PASSED' *AND &STATUS *NE +
+                          'SUBMIT') THEN(DO)                                            /*MD061067*/
+/* Update driving file and submit job. */                                               /*MD061067*/
+                CALL       PGM(SM000008) PARM('SM000075' '*PGM' +
+                             '*WRITE' 'SUBMIT')                                         /*MD061067*/
+                SBMJOB     CMD(CALL PGM(SM000075) PARM(&FMLIB &TOLIB)) +
+                             JOB(SM000075) JOBD(SETUP) JOBQ(SMJOBQNM)                   /*MD061067*/
+             ENDDO
+                                                                                        /*MD061067*/
+/* Call program to handle special migration processing. */                              /*MD061067*/
+/* Check if option has already been run. */                                             /*MD061067*/
+             CALL       PGM(SM000008) PARM('SMC000075' '*PGM' +
+                          '*CHECK' &STATUS)                                             /*MD061067*/
+             IF         COND(&STATUS *NE 'PASSED' *AND &STATUS *NE +
+                          'SUBMIT') THEN(DO)                                            /*MD061067*/
+/* Update driving file and submit job. */                                               /*MD061067*/
+                CALL       PGM(SM000008) PARM('SMC000075' '*PGM' +
+                             '*WRITE' 'SUBMIT')                                         /*MD061067*/
+                SBMJOB     CMD(CALL PGM(SMC700075) PARM(&FMPFX &TOPFX)) +
+                             JOB(SMC700075) JOBD(SETUP) JOBQ(SMJOBQNM)                  /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+
 /* Call program to copy renamed files (if any). */
              CALL       PGM(SM000008) PARM('SMC000031' '*PGM' +
                           '*CHECK' &STATUS)

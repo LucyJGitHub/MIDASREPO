@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD033134           Date 21Feb23              */
-/*       Prev Amend No. AR792326           Date 16Feb23              */
+/*       Last Amend No. AR924225           Date 22Feb23              */
+/*       Prev Amend No. MD033134           Date 21Feb23              */
+/*                      AR792326           Date 16Feb23              */
 /*                      MD056612           Date 12Sep20              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -27,6 +28,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR924225 - Export using flat file download does not create  */
+/*                  the table in the IFS folder. Copy DB2 Export     */
+/*                  table to a nominated IFS folder if CMX010 is ON  */
+/*                  and system value 'EMIFSSubdirectory' is not blank*/
+/*                  (Child : AR924227)                               */
 /*       MD033134 - File E.HBXFPP02 consuming large space. Amend to  */
 /*                  utilize space usage.                             */
 /*       AR792326 - FlatFiles for any format and composite           */
@@ -71,6 +77,36 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
+             DCL        VAR(&EMIFS) TYPE(*CHAR) LEN(200) +
+                          VALUE(*BLANKS)                                                /*AR924225*/
+             DCL        VAR(&EMLNK) TYPE(*CHAR) LEN(214) +
+                          VALUE(*BLANKS)                                                /*AR924225*/
+             DCL        VAR(&ZONEPOS) TYPE(*DEC) LEN(3 0)                               /*AR924225*/
+             DCL        VAR(&ZONEPAT) TYPE(*CHAR) LEN(4) VALUE('/xx/')                  /*AR924225*/
+             DCL        VAR(&ZONEPRF) TYPE(*CHAR) LEN(4) VALUE('/  /')                  /*AR924225*/
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                  /*AR924225*/
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0) VALUE(200)                     /*AR924225*/
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3 0) VALUE(1)                       /*AR924225*/
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0) VALUE(4)                       /*AR924225*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*AR924225*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                /*AR924225*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                /*AR924225*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                /*AR924225*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                /*AR924225*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                /*AR924225*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                /*AR924225*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                /*AR924225*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                /*AR924225*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                /*AR924225*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                /*AR924225*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                /*AR924225*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                /*AR924225*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                /*AR924225*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                /*AR924225*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                /*AR924225*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                /*AR924225*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                /*AR924225*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                               /*AR924225*/
 
 /* Global monitor message */
 
@@ -97,6 +133,37 @@
                                                                                         /*AR792326*/
              CALL (AOSARDR0) PARM(&RTCD '*VERIFY' 'CMX010')                             /*AR792326*/
              IF (&RTCD *EQ ' ') (CHGVAR (&CMX010) VALUE('Y'))                           /*AR792326*/
+                                                                                        /*AR924225*/
+/** If CMX010 is switched ON, set up the IFS path for IFS download */                   /*AR924225*/
+             IF         COND(&CMX010 *EQ 'Y') THEN(DO)                                  /*AR924225*/
+                                                                                        /*AR924225*/
+/** Retrieve system value */                                                            /*AR924225*/
+                 CALL      PGM(AOSVALR0) PARM(&RTNCDE +
+                             'EMIFSSubdirectory' &EMIFS &SVALK2 +
+                             &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                             &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                             &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                             &SVALK0 &SVAL10)                                           /*AR924225*/
+                                                                                        /*AR924225*/
+/** Process retrieved System value */                                                   /*AR924225*/
+                 IF         ((&EMIFS *NE '*NRF') *AND (&EMIFS *NE +
+                             ' ')) THEN(DO)                                             /*AR924225*/
+                                                                                        /*AR924225*/
+/** Scan for /xx/ pattern.  If existing, replace with Zone ID */                        /*AR924225*/
+                     CALL       PGM(QCLSCAN) PARM(&EMIFS &STRLEN +
+                                  &STRPOS &ZONEPAT &PATLEN '0' '1' +
+                                  ' ' &ZONEPOS)                                         /*AR924225*/
+                     IF         COND(&ZONEPOS > 0) THEN(DO)                             /*AR924225*/
+                                                                                        /*AR924225*/
+                        RTVDTAARA DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                   /*AR924225*/
+                        CHGVAR    VAR(%SUBSTRING(&ZONEPRF 2 2)) +
+                                    VALUE(&SYSID)                                       /*AR924225*/
+                        CHGVAR    VAR(%SUBSTRING(&EMIFS &ZONEPOS 4)) +
+                                    VALUE(&ZONEPRF)                                     /*AR924225*/
+                                                                                        /*AR924225*/
+                     ENDDO                                                              /*AR924225*/
+                 ENDDO                                                                  /*AR924225*/
+             ENDDO                                                                      /*AR924225*/
                                                                                         /*AR792326*/
 /* Get Extract Parameters of Composite or Format */                            /*CMX011*/
                                                                                /*CMX011*/
@@ -217,7 +284,28 @@
 /**/                                                                                    /*MD033134*/
              ENDDO                                                                      /*MD033134*/
 /**/                                                                                    /*MD033134*/
-
+                                                                                        /*AR924225*/
+/** If EMIFS has a valid path, copy &FLATFIL to the IFS folder. */                      /*AR794225*/
+             IF         ((&EMIFS *NE '*NRF') *AND (&EMIFS *NE +
+                          ' ')) THEN(DO)                                                /*AR924225*/
+                CHGVAR     VAR(&EMLNK) VALUE(&EMIFS *TCAT &FLATFIL +
+                             *TCAT '.TXT')                                              /*AR924225*/
+                CPYTOIMPF  FROMFILE(&FLATLIB/&FLATFIL) TOSTMF(&EMLNK) +
+                             MBROPT(*REPLACE) STMFCCSID(*PCASCII) +
+                             STMFAUT(*FILE) RCDDLM(*CRLF) +
+                             DTAFMT(*FIXED)                                             /*AR924225*/
+                MONMSG     MSGID(CPF2817) EXEC(DO)                                      /*AR924225*/
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA(' +
+                                Copy to IFS folder ended abnormally.+
+                                Either the user is not authorized to +
+                                the IFS folder or the IFS folder +
+                                itself is not found.See CL Dump.') +
+                                TOMSGQ(MOPERQ MRUNQ)                                    /*AR924225*/
+                   DMPCLPGM                                                             /*AR924225*/
+                   GOTO       CMDLBL(ABNOR)                                             /*AR924225*/
+                                                                                        /*AR924225*/
+                   ENDDO                                                                /*AR924225*/                                                                  
+                ENDDO                                                                   /*AR924225*/
              ENDDO                                                                      /*AR792326*/
              ELSE (DO)                                                                  /*AR792326*/
 

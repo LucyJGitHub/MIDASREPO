@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060560           Date 10Dec22               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD060441           Date 01Feb23               *
+      *  Prev Amend No. MD060560           Date 10Dec22               *
+      *                 249385             Date 01Aug22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
@@ -66,6 +67,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             Backward-Looking Rate                             *
       *  MD060560 - After a spread change and a base rate code change *
       *             on loans, the system stopped accruing. Amend Omit *
       *             selection to correctly filter records (Recompile) *
@@ -158,6 +161,7 @@
      FLEHISTLJIF  E           K        DISK                                                 MD031736
      F            HISTSHQF                          KRENAMEHISTHQ5F                         MD031736
      F            ACTN3DKF                          KRENAMEACTNDK5F                         MD031736
+     FLELIBEL0IF  E           K        DISK                                                 MD060441
      FACTN3ZX UF  E                    DISK
      FHISTSZX UF  E                    DISK
      FLE0371AUO   E             61     PRINTER
@@ -355,6 +359,74 @@
      C                     READ CLOAN                    81
       *
      C           *IN81     DOWEQ*OFF
+      *                                                                                     MD060441
+      ** Check if there is a change in ARR parm                                             MD060441
+     C                     MOVE *BLANKS   WARRP   1                                         MD060441
+      *                                                                                     MD060441
+     C           CLE172    IFEQ 'Y'                                                         MD060441
+     C           RECI      ANDEQ'D'                                                         MD060441
+     C           RLDT      ANDGT*ZERO                                                       MD060441
+      *                                                                                     MD060441
+     C           BLRT      IFEQ 'Y'                                                         MD060441
+     C           NBLRT     ANDEQ'Y'                                                         MD060441
+      *                                                                                     MD060441
+     C           RFRR      IFNE NRFRR                                                       MD060441
+     C           CALM      ORNE NCALM                                                       MD060441
+     C           BADJ      ORNE NBADJ                                                       MD060441
+     C           FLOR      ORNE NFLOR                                                       MD060441
+     C           LBDY      ORNE NLBDY                                                       MD060441
+     C           LODY      ORNE NLODY                                                       MD060441
+     C           OPSH      ORNE NOPSH                                                       MD060441
+     C           RRDP      ORNE NRRDP                                                       MD060441
+     C           DBAV      ORNE NDBAV                                                       MD060441
+     C                     MOVE 'Y'       WARRP                                             MD060441
+     C                     ENDIF                                                            MD060441
+     C                     ENDIF                                                            MD060441
+      ** If forward to backward or there is a change in ARR parm                            MD060441
+     C           BLRT      IFNE 'Y'                                                         MD060441
+     C           NBLRT     ANDEQ'Y'                                                         MD060441
+     C           WARRP     OREQ 'Y'                                                         MD060441
+      ** Retrieve check date                                                                MD060441
+     C                     Z-ADDRLDT      WRLDT   50                                        MD060441
+     C           LNRF      SETLLLELIBEL0                                                    MD060441
+     C           LNRF      READELELIBEL0                 89                                 MD060441
+      *                                                                                     MD060441
+     C           *IN89     IFEQ '0'                                                         MD060441
+     C                     Z-ADDLDVDAT    WRLDT                                             MD060441
+     C                     ENDIF                                                            MD060441
+      *                                                                                     MD060441
+     C           LNRF      SETLLLEHISTL0                                                    MD060441
+     C           LNRF      READELEHISTL0                 89                                 MD060441
+     C           *IN89     DOWEQ*OFF                                                        MD060441
+      *                                                                                     MD060441
+     C           WRLDT     IFLE VDAT                                                        MD060441
+     C           AMTP      IFNE 'MC'                                                        MD060441
+     C                     DELETHISTSHQF                                                    MD060441
+      ** Update counter for trailer deletion HISTSZX                                        MD060441
+     C                     ADD  1         C3                                                MD060441
+     C                     ENDIF                                                            MD060441
+     C                     ENDIF                                                            MD060441
+     C           LNRF      READELEHISTL0                 89                                 MD060441
+     C                     ENDDO                                                            MD060441
+      ** Update Trailer - Sub 1 from No. of records                                         MD060441
+     C           C3        IFNE 0                                                           MD060441
+     C           1         SETLLHISTSZX                                                     MD060441
+     C                     READ HISTSZX                  89                                 MD060441
+      **   Database error                                                                   MD060441
+     C           *IN89     IFEQ *ON                                                         MD060441
+     C                     Z-ADD7         DBASE                                             MD060441
+     C                     MOVEL'HISTSZX 'DBFILE                                            MD060441
+     C                     MOVE *BLANKS   DBKEY                                             MD060441
+     C                     EXSR AUDPRT                                                      MD060441
+     C                     EXSR *PSSR                                                       MD060441
+     C                     ELSE                                                             MD060441
+     C                     SUB  C3        NOREHS                                            MD060441
+     C                     UPDATHISTSZXF                                                    MD060441
+     C                     Z-ADD0         C3                                                MD060441
+     C                     ENDIF                                                            MD060441
+     C                     ENDIF                                                            MD060441
+     C                     ENDIF                                                            MD060441
+     C                     ENDIF                                                            MD060441
       *
       * Need live rec with rollover date < start last interest date.
      C           RECI      IFEQ 'D'
@@ -928,6 +1000,7 @@
      C                     MOVE *OFF      *IN63
      C                     Z-ADD0         C1      40
      C                     Z-ADD0         C2      40
+     C                     Z-ADD0         C3      40                                        MD060441
       *
      C           *LIKE     DEFN AMTP      W#AMTP
      C           *LIKE     DEFN VDAT      W#VDAT

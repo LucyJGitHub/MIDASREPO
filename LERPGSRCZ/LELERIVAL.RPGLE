@@ -788,6 +788,7 @@
      D   MsgDtaTmp                   99                                                     MD000091
                                                                                             MD000091
      D isARRParamChg   S              1N                                                    MD060441
+     D isBRTTChg       S              1N                                                    MD060441
      D EventCtrlDate   S              5P 0                                                  MD060441
       ** Rollover type of change                                                            MD060441
      D ROLL_B2B        C                   CONST(1)                                         MD060441
@@ -9662,15 +9663,18 @@
                                                                                             MD060441
      C                   ELSEIF    ( wRLDT <> VDAT ) AND                                    MD060441
      C                             ( wLstIntPayDat = 0 ) AND                                MD060441
-     C                             ( isARRParamChg = *ON)                                   MD060441
+     C                             ( isARRParamChg = *ON) AND (isBRTTChg = *Off)            MD060441
                                                                                             MD060441
      C                   EVAL      ErrorType = 1                                            MD060441
      C                   EVAL      MessageID = '5049554'                                    MD060441
      C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
      C                             ( wRLDT <> wLstIntPayDat ) AND                           MD060441
-     C                             ( isARRParamChg = *ON)                                   MD060441
+     C                             ( isARRParamChg = *ON) and (isBRTTChg = *Off)            MD060441
      C                   EVAL      ErrorType = 1                                            MD060441
      C                   EVAL      MessageID = '5049554'                                    MD060441
+     C                   ELSEIF    isBRTTChg = *ON                                          MD060441
+     C                   EVAL      ErrorType = 2                                            MD060441
+     C                   EVAL      MessageID = '5049556'                                    MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   WHEN      ( typeOfChange = ROLL_F2B )                              MD060441
@@ -9801,6 +9805,11 @@
      C     srChangeARRDetBEGSR                                                              MD060441
                                                                                             MD060441
      C                   EVAL      isARRParamChg = *Off                                     MD060441
+     C                   EVAL      isBRTTChg =  *Off                                        MD060441
+                                                                                            MD060441
+     C                   IF        BRTT <> DDNBRAB                                          MD060441
+     C                   EVAL      isBRTTChg = *On                                          MD060441
+     C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   IF        RFRR <> DDNRFRRB                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441

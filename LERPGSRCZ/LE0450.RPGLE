@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1096206          Date 02Feb23               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. AR981899           Date 27Feb23               *
+      *  Prev Amend No. AR1096206          Date 02Feb23               *
+      *                 249385             Date 01Aug22               *
       *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
       *                 257879             Date 12May22               *
@@ -437,6 +438,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR981899 - Incorrect details on LE1040P1. Prevent field ABLN *
+      *             to be zeroised for call loans, instead calculate  *
+      *             its aggregate balance. (Child: AR981900)          *
       *  AR1096206 - YTD average on LE1040P1 is wrong for loans with  *
       *              principal transfers. Consider PT/PF events as    *
       *              principal aggregates needed for the computation  *
@@ -17859,6 +17863,7 @@ C    C                   ENDIF                                                  
       *                                                                   131520
      C     MDAT          IFLT      FIRY                                          B1            13152
      C     CPAM          ANDEQ     0                                                           13152
+     C     MDAT          ANDNE     0                                                        AR981899
      C                   Z-ADD     0             ABLN                                          13152
      C                   ELSE                                                    X1            13152
       *                                                                   131520

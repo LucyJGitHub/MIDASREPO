@@ -64,7 +64,8 @@
       *****************************************************************
       *
       ** Midas LE Rate Known Loans File
-     FSDRTKNTD  UF   E             DISK    INFSR(*PSSR)
+     F***SDRTKNTD  UF   E             DISK    INFSR(*PSSR)                                  MD060441
+     FSDRTKNL0  UF   E             DISK    INFSR(*PSSR)                                     MD060441
      F                                     COMMIT
       *
       ** Midas SD Array of Text Table
@@ -161,9 +162,10 @@
 
       ** Temporary DS for SDHSDRTD/SDFWDRTD
      D DlyDS           DS
+     D Dintd                          5p 0                                                  MD060441
      D DintStart                      5p 0
      D DintEnd                        5p 0
-     D Dintd                          5p 0
+     D*** Dintd                          5p 0                                               MD060441
      D Dindy                          5p 0
      D Dobdt                          5p 0
      D Dobdy                          5p 0
@@ -248,6 +250,7 @@
      D isFirstRun      S              1N   INZ(*ON)                                         MD060441
      D wrkDec          S              1S 0 INZ(0)                                           MD060441
      D wrkVDAT         S              5P 0 INZ(0)                                           MD060441
+     D isManualComp    S              1N   INZ(*OFF)                                        MD060441
 
       *****************************************************************
       /EJECT
@@ -257,7 +260,9 @@
 
       ** Read records from LE Rate Known Loans Files File
 
-     C                   READ      SDRTKNTD                               40
+     C**********         READ      SDRTKNTD                               40                MD060441
+     C                   READ      SDRTKNL0                               40                MD060441
+
      C     *IN40         DOWEQ     *OFF
      C                   IF        KMODID = 'LE' AND KRTKNI = 'Y' AND
      C                             (KCINTA <> KPINTA OR KSPLFP <> 'Y'
@@ -339,9 +344,10 @@
      C/exec SQL
      C+ declare FWCursor cursor for
      C+ select
+     C+   FINPDT                                                                            MD060441
      C+   FINPSD
      C+ , FINPED
-     C+ , FINPDT
+     C***+ , FINPDT                                                                         MD060441
      C+ , FINPDY
      C+ , FOBPDT
      C+ , FOBPDY
@@ -519,8 +525,9 @@
 
      C     PrintP3       IFEQ      '1'
      C                   CLEAR                   curIntrstAmt     13 0                      MD060441
+     C                   CLEAR                   nxtIntrstAmt     13 0                      MD060441
+     C                   CLEAR                   wrkIntrstAmt     13 0                      MD060441
      C                   CLEAR                   prvIntrstAmt     13 0                      MD060441
-     C                   CLEAR                   wrkIntrstAmt     13 0                      MD06044
      C                   EXSR      SRReportP3
 I    C                   ENDIF
 
@@ -544,7 +551,8 @@ I    C                   ENDIF
 
      C                   ENDIF
 
-     C                   READ      SDRTKNTD                               40
+     C**********         READ      SDRTKNTD                               40                MD060441
+     C                   READ      SDRTKNL0                               40                MD060441
      C                   ENDDO
 
       ** End Program
@@ -711,51 +719,74 @@ I    C                   ENDIF
      C     SRReportP3    BEGSR
 
      C                   Z-ADD     0             XCINPSD
+     C                   EVAL      isFirstRun  = *on
      C/exec SQL
      C+ declare SDHS cursor for
      C+ select
-     C+   CINPSD
-     C+ , CINPED
-     C+ , CINPDT
-     C+ , CINPDY
-     C+ , COBPDT
-     C+ , COBPDY
-     C+ , CPBRFR
-     C+ , CRTEAP
-     C+ , CCALCM
-     C+ , CAVCRT
-     C+ , CDCMRT
-     C+ , CSMPAV
-     C+ from SDHSDRTD
-     C+ where
-     C+     CMODID = 'LE'
-     C+ and CTRNID = :KTRNID
-     C+ and CINFLG = 'Y'
+     C+ distinct CINPDT                                                                     MD060441
+     C+    ,     CINPSD                                                                     MD060441
+     C+    ,     CINPED                                                                     MD060441
+     C+    ,     CINPDY                                                                     MD060441
+     C+    ,     COBPDT                                                                     MD060441
+     C+    ,     COBPDY                                                                     MD060441
+     C+    ,     CPBRFR                                                                     MD060441
+     C+    ,     CRTEAP                                                                     MD060441
+     C+    ,     CCALCM                                                                     MD060441
+     C+    ,     CAVCRT                                                                     MD060441
+     C+    ,     CDCMRT                                                                     MD060441
+     C+    ,     CSMPAV                                                                     MD060441
+     C+    from                                                                             MD060441
+     C+    ( select * from SDHSDRTD as T1 where                                             MD060441
+     C+    CMODID = 'LE' and                                                                MD060441
+     C+    CTRNID = :KTRNID and                                                             MD060441
+     C+    CINFLG = 'Y'                                                                     MD060441
+     C+    union all select * from SDFWDRTD as T2 where                                     MD060441
+     C+    FMODID = 'LE' and                                                                MD060441
+     C+    FTRNID = :KTRNID and                                                             MD060441
+     C+    FINFLG = 'Y') as T3                                                              MD060441
+     C+    order by T3.CINPDT ASC                                                           MD060441
+     C***+   CINPSD                                                                         MD060441
+     C***+ , CINPED                                                                         MD060441
+     C***+ , CINPDT                                                                         MD060441
+     C***+ , CINPDY                                                                         MD060441
+     C***+ , COBPDT                                                                         MD060441
+     C***+ , COBPDY                                                                         MD060441
+     C***+ , CPBRFR                                                                         MD060441
+     C***+ , CRTEAP                                                                         MD060441
+     C***+ , CCALCM                                                                         MD060441
+     C***+ , CAVCRT                                                                         MD060441
+     C***+ , CDCMRT                                                                         MD060441
+     C***+ , CSMPAV                                                                         MD060441
+     C***+ from SDHSDRTD                                                                    MD060441
+     C***+ where                                                                            MD060441
+     C***+     CMODID = 'LE'                                                                MD060441
+     C***+ and CTRNID = :KTRNID                                                             MD060441
+     C***+ and CINFLG = 'Y'                                                                 MD060441
      C**********+ order by                                                                  MD060897
      C**********+     CINPDT asc                                                            MD060897
-     C+ union all                                                                           MD060897
-     C+ select                                                                              MD060897
-     C+   FINPSD                                                                            MD060897
-     C+ , FINPED                                                                            MD060897
-     C+ , FINPDT AS CINPDT                                                                  MD060897
-     C+ , FINPDY                                                                            MD060897
-     C+ , FOBPDT                                                                            MD060897
-     C+ , FOBPDY                                                                            MD060897
-     C+ , FPBRFR                                                                            MD060897
-     C+ , FRTEAP                                                                            MD060897
-     C+ , FCALCM                                                                            MD060897
-     C+ , FAVCRT                                                                            MD060897
-     C+ , FDCMRT                                                                            MD060897
-     C+ , FSMPAV                                                                            MD060897
-     C+ from SDFWDRTD T2                                                                    MD060897
-     C+ where                                                                               MD060897
-     C+ not exists (                                                                        MD060897
-     C+ select * from SDHSDRTD T1                                                           MD060897
-     C+ where T1.CINPDT = T2.FINPDT )                                                       MD060897
-     C+ and FMODID = 'LE'                                                                   MD060897
-     C+ and FTRNID = :KTRNID                                                                MD060897
-     C+ order by                                                                            MD060897
-     C+ CINPDT asc                                                                          MD060897
+     C***+ union all                                                               MD060897 MD060441
+     C***+ select                                                                  MD060897 MD060441
+     C***+   FINPSD                                                                MD060897 MD060441
+     C***+ , FINPED                                                                MD060897 MD060441
+     C***+ , FINPDT AS CINPDT                                                      MD060897 MD060441
+     C***+ , FINPDY                                                                MD060897 MD060441
+     C***+ , FOBPDT                                                                MD060897 MD060441
+     C***+ , FOBPDY                                                                MD060897 MD060441
+     C***+ , FPBRFR                                                                MD060897 MD060441
+     C***+ , FRTEAP                                                                MD060897 MD060441
+     C***+ , FCALCM                                                                MD060897 MD060441
+     C***+ , FAVCRT                                                                MD060897 MD060441
+     C***+ , FDCMRT                                                                MD060897 MD060441
+     C***+ , FSMPAV                                                                MD060897 MD060441
+     C***+ from SDFWDRTD T2                                                        MD060897 MD060441
+     C***+ where                                                                   MD060897 MD060441
+     C***+ not exists (                                                            MD060897 MD060441
+     C***+ select * from SDHSDRTD T1                                               MD060897 MD060441
+     C***+ where T1.CINPDT = T2.FINPDT )                                           MD060897 MD060441
+     C***+ and FMODID = 'LE'                                                       MD060897 MD060441
+     C***+ and FTRNID = :KTRNID                                                    MD060897 MD060441
+     C***+ order by                                                                MD060897 MD060441
+     C***+ CINPDT asc                                                              MD060897 MD060441
      C/end-exec
 
      C/exec SQL
@@ -1030,6 +1061,25 @@ I    C                   ENDIF
       *****************************************************************                     MD060441
      C     srGetTotalInt BEGSR                                                              MD060441
                                                                                             MD060441
+     C                   IF        Dcalm = 'NCCR' or Dcalm = 'SARR'                         MD060441
+     C                   EXSR      srCalculate1                                             MD060441
+     C                   ELSEIF    Dcalm = 'CCR' or Dcalm = 'SAVG'                          MD060441
+     C                   EXSR      srCalculate2                                             MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   ENDSR                                                              MD060441
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srCalculate1                                                  *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+                                                                                            MD060441
+     C     srCalculate1  BEGSR                                                              MD060441
+                                                                                            MD060441
+     C                   EVAL      isManualComp = *OFF                                      MD060441
+                                                                                            MD060441
       ** Get current interest amount from history file                                      MD060441
                                                                                             MD060441
      C/exec SQL                                                                             MD060441
@@ -1043,57 +1093,42 @@ I    C                   ENDIF
                                                                                             MD060441
      C                   IF        ( SQLCOD <> NO_RECORD )                                  MD060441
                                                                                             MD060441
-     C                   IF        isFirstRun                                               MD060441
-                                                                                            MD060441
-      ** If first run, retrieve the last interest period date from data structure           MD060441
+      ** Get next interest amount from history file                                         MD060441
      C/exec SQL                                                                             MD060441
-     C+ select MAX(CINPDT)                                                                  MD060441
-     C+ into :wrkVDAT                                                                       MD060441
-     C+ from SDHSDRTD                                                                       MD060441
-     C+ where CTRNID = :KTRNID and                                                          MD060441
-     C+       CINFLG = 'N'                                                                  MD060441
+     C+ select AITC                                                                         MD060441
+     C+ into :nxtIntrstAmt                                                                  MD060441
+     C+ from HISTSHQ                                                                        MD060441
+     C+ where LNRF = :KTRNID and                                                            MD060441
+     C+       AMTP = 'BR' and                                                               MD060441
+     C+       VDAT > :XCINPDT                                                               MD060441
+     C+ order by VDAT                                                                       MD060441
+     C+ fetch first 1 row only                                                              MD060441
      C/end-exec                                                                             MD060441
                                                                                             MD060441
      C                   IF        ( SQLCOD <> NO_RECORD )                                  MD060441
-                                                                                            MD060441
-      ** Retrieve the previous interest amount record                                       MD060441
-     C/exec SQL                                                                             MD060441
-     C+ select AITC                                                                         MD060441
-     C+ into :prvIntrstAmt                                                                  MD060441
-     C+ from HISTSHQ                                                                        MD060441
-     C+ where LNRF = :KTRNID and                                                            MD060441
-     C+       VDAT = :wrkVDAT                                                               MD060441
-     C/end-exec                                                                             MD060441
+     C                   EVAL      wrkIntrstAmt = nxtIntrstAmt - curIntrstAmt               MD060441
+     C                   ELSE                                                               MD060441
+     C                   EVAL      isManualComp = *ON                                       MD060441
      C                   ENDIF                                                              MD060441
-     C                   EVAL      isFirstRun = *OFF                                        MD060441
-                                                                                            MD060441
+     C                   ELSE                                                               MD060441
+     C                   EVAL      isManualComp = *ON                                       MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
-     C                   EVAL      wrkIntrstAmt = curIntrstAmt - prvIntrstAmt               MD060441
-     C                   EVAL      prvIntrstAmt = curIntrstAmt                              MD060441
-                                                                                            MD060441
-     C                   ELSEIF    ( SQLCOD = NO_RECORD )                                   MD060441
+     C                   IF        (isManualComp)                                           MD060441
                                                                                             MD060441
       ** If there are no record retrieve from history file, manually compute the            MD060441
       ** interest amount                                                                    MD060441
                                                                                             MD060441
-     C                   EVAL      ZLOC = *BLANKS                                           MD060441
-     C                   EVAL      ZCCY = Dsccy                                             MD060441
-     C                   EVAL      ZDAYNO = Dintd                                           MD060441
-     C                   EVAL      ZNRDYS = Dindy                                           MD060441
-     C                   EVAL      ZDYNBR = 0                                               MD060441
-                                                                                            MD060441
-     C                   EXSR      ZFWDT                                                    MD060441
                                                                                             MD060441
      C                   EVAL      ZIBEG = Dintd                                            MD060441
-     C                   EVAL      ZIEND = ZDYNBR                                           MD060441
+     C                   EVAL      ZIEND = Dintd + Dindy                                    MD060441
      C                   EVAL      ZIAMT = DSCPAM                                           MD060441
      C                   EVAL      ZICALC = DSICBS                                          MD060441
      C                   EVAL      ZIRATE = wrkAllInRate                                    MD060441
                                                                                             MD060441
      C                   EXSR      GLINTC                                                   MD060441
                                                                                             MD060441
-     C                   EVAL      wrkIntrstAmt = ZINTR                                     MD060441
+     C                   EVAL (H)  wrkIntrstAmt = ZINTR                                     MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   EVAL      ZFLD15 = wrkIntrstAmt                                    MD060441
@@ -1107,6 +1142,46 @@ I    C                   ENDIF
      C                   EVALR     P2INTA  = %trim(ZOUT21)                                  MD060441
                                                                                             MD060441
      C                   ENDSR                                                              MD060441
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srCalculate2                                                  *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+     C     srCalculate2  BEGSR                                                              MD060441
+                                                                                            MD060441
+     C                   EVAL      ZIBEG = Dintd                                            MD060441
+     C                   EVAL      ZIEND = Dintd + Dindy                                    MD060441
+     C                   EVAL      ZIAMT = DSCPAM                                           MD060441
+     C                   EVAL      ZICALC = DSICBS                                          MD060441
+     C                   EVAL      ZIRATE = wrkAllInRate                                    MD060441
+                                                                                            MD060441
+     C                   EXSR      GLINTC                                                   MD060441
+                                                                                            MD060441
+     C                   IF        isFirstRun                                               MD060441
+     C                   EVAL (H)  wrkIntrstAmt = ZINTR                                     MD060441
+     C                   EVAL      isFirstRun = *OFF                                        MD060441
+     C                   EVAL (H)  prvIntrstAmt = ZINTR                                     MD060441
+     C                   ELSE                                                               MD060441
+     C                   EVAL (H)  wrkIntrstAmt = ZINTR                                     MD060441
+     C                   EVAL      wrkIntrstAmt = wrkIntrstAmt - prvIntrstAmt               MD060441
+     C                   EVAL (H)  prvIntrstAmt = ZINTR                                     MD060441
+     C                   ENDIF                                                              MD060441
+     C                                                                                      MD060441
+                                                                                            MD060441
+     C                   EVAL      ZFLD15 = wrkIntrstAmt                                    MD060441
+     C                   EVAL      ZDECS = wrkDec                                           MD060441
+     C                   CALL      'ZSEDIT'                                                 MD060441
+     C                   PARM                    ZFLD15                                     MD060441
+     C                   PARM                    ZDECS                                      MD060441
+     C                   PARM      'J'           ZECODE                                     MD060441
+     C                   PARM                    ZOUT21                                     MD060441
+                                                                                            MD060441
+     C                   EVALR     P2INTA  = %trim(ZOUT21)                                  MD060441
+     C                                                                                      MD060441
+     C                   ENDSR                                                              MD060441
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1252,6 +1327,3 @@ I    C                   ENDIF
      C/COPY ZSRSRC,ZDATE9Z3LE
      C/COPY ZSRSRC,ZDAT10Z2LE
      C/COPY ZSRSRC,GLINTCZ1LE                                                               MD060441
-     C/COPY ZSRSRC,ZBKDT_ILE                                                                MD060441
-     C/COPY ZSRSRC,ZFWDT_ILE                                                                MD060441
-     C/COPY ZSRSRC,ZACCHLE                                                                  MD060441

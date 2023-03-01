@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
-      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *  Last Amend No. MD060441            Date 01Feb23              *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 MD059624           Date 20Jul22               *
       *                 MD059190           Date 08Nov21               *
       *                 MD059137           Date 29Oct21               *
       *                 MD058103           Date 19May21               *
@@ -21,6 +22,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates             *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -115,9 +118,10 @@
       ** Temporary DS for SDHSDRTD
 
      D DlyDS           DS
+     D Dintd                          5p 0                                                  MD060441
      D DintStart                      5p 0
      D DintEnd                        5p 0
-     D Dintd                          5p 0
+     D*** Dintd                          5p 0                                               MD060441
      D Dindy                          5p 0
      D Dobdt                          5p 0
      D Dobdy                          5p 0
@@ -317,49 +321,71 @@
      C/exec SQL
      C+ declare SDHS cursor for
      C+ select
-     C+   CINPSD
-     C+ , CINPED
-     C+ , CINPDT
-     C+ , CINPDY
-     C+ , COBPDT
-     C+ , COBPDY
-     C+ , CPBRFR
-     C+ , CRTEAP
-     C+ , CCALCM                                                                            MD058103
-     C+ , CAVCRT                                                                            MD058103
-     C+ , CDCMRT                                                                            MD058103
-     C+ , CSMPAV                                                                            MD058103
-     C+ from SDHSDRTD
-     C+ where
-     C+     CMODID = 'LE'
-     C+ and CTRNID = :P1LNRF
-     C+ and CINFLG >= 'Y'
-     C***order by                                                                           MD058517
-     C******CINPDT asc                                                                      MD058517
-     C+ union all                                                                           MD058517
-     C+ select                                                                              MD058517
-     C+   FINPSD                                                                            MD058517
-     C+ , FINPED                                                                            MD058517
-     C+ , FINPDT AS CINPDT                                                                  MD058517
-     C+ , FINPDY                                                                            MD058517
-     C+ , FOBPDT                                                                            MD058517
-     C+ , FOBPDY                                                                            MD058517
-     C+ , FPBRFR                                                                            MD058517
-     C+ , FRTEAP                                                                            MD058517
-     C+ , FCALCM                                                                            MD058517
-     C+ , FAVCRT                                                                            MD058517
-     C+ , FDCMRT                                                                            MD058517
-     C+ , FSMPAV                                                                            MD058517
-     C+ from SDFWDRTD T2                                                                    MD058517
-     C+ where                                                                               MD058517
-     C+ not exists (                                                                        MD058517
-     C+ select * from SDHSDRTD T1                                                           MD058517
-     C+ where T1.CINPDT = T2.FINPDT )                                                       MD058517
-     C+ and FMODID = 'LE'                                                                   MD058517
-     C+ and FTRNID = :P1LNRF                                                                MD058517
-     C+ and FINFLG >= 'Y'                                                                   MD058517
-     C+ order by                                                                            MD058517
-     C+     CINPDT asc                                                                      MD058517
+     C+ distinct CINPDT                                                                     MD060441
+     C+    ,     CINPSD                                                                     MD060441
+     C+    ,     CINPED                                                                     MD060441
+     C+    ,     CINPDY                                                                     MD060441
+     C+    ,     COBPDT                                                                     MD060441
+     C+    ,     COBPDY                                                                     MD060441
+     C+    ,     CPBRFR                                                                     MD060441
+     C+    ,     CRTEAP                                                                     MD060441
+     C+    ,     CCALCM                                                                     MD060441
+     C+    ,     CAVCRT                                                                     MD060441
+     C+    ,     CDCMRT                                                                     MD060441
+     C+    ,     CSMPAV                                                                     MD060441
+     C+    from                                                                             MD060441
+     C+    ( select * from SDHSDRTD as T1 where                                             MD060441
+     C+    CMODID = 'LE' and                                                                MD060441
+     C+    CTRNID = :P1LNRF and                                                             MD060441
+     C+    CINFLG = 'Y'                                                                     MD060441
+     C+    union all select * from SDFWDRTD as T2 where                                     MD060441
+     C+    FMODID = 'LE' and                                                                MD060441
+     C+    FTRNID = :P1LNRF and                                                             MD060441
+     C+    FINFLG = 'Y') as T3                                                              MD060441
+     C+    order by T3.CINPDT ASC                                                           MD060441
+     C***+   CINPSD                                                                         MD060441
+     C***+ , CINPED                                                                         MD060441
+     C***+ , CINPDT                                                                         MD060441
+     C***+ , CINPDY                                                                         MD060441
+     C***+ , COBPDT                                                                         MD060441
+     C***+ , COBPDY                                                                         MD060441
+     C***+ , CPBRFR                                                                         MD060441
+     C***+ , CRTEAP                                                                         MD060441
+     C***+ , CCALCM                                                                MD058103 MD060441
+     C***+ , CAVCRT                                                                MD058103 MD060441
+     C***+ , CDCMRT                                                                MD058103 MD060441
+     C***+ , CSMPAV                                                                MD058103 MD060441
+     C***+ from SDHSDRTD                                                                    MD060441
+     C***+ where                                                                            MD060441
+     C***+     CMODID = 'LE'                                                                MD060441
+     C***+ and CTRNID = :P1LNRF                                                             MD060441
+     C***+ and CINFLG >= 'Y'                                                                MD060441
+     C***order by                                                                  MD058517 MD060441
+     C******CINPDT asc                                                             MD058517 MD060441
+     C***+ union all                                                               MD058517 MD060441
+     C***+ select                                                                  MD058517 MD060441
+     C***+   FINPSD                                                                MD058517 MD060441
+     C***+ , FINPED                                                                MD058517 MD060441
+     C***+ , FINPDT AS CINPDT                                                      MD058517 MD060441
+     C***+ , FINPDY                                                                MD058517 MD060441
+     C***+ , FOBPDT                                                                MD058517 MD060441
+     C***+ , FOBPDY                                                                MD058517 MD060441
+     C***+ , FPBRFR                                                                MD058517 MD060441
+     C***+ , FRTEAP                                                                MD058517 MD060441
+     C***+ , FCALCM                                                                MD058517 MD060441
+     C***+ , FAVCRT                                                                MD058517 MD060441
+     C***+ , FDCMRT                                                                MD058517 MD060441
+     C***+ , FSMPAV                                                                MD058517 MD060441
+     C***+ from SDFWDRTD T2                                                        MD058517 MD060441
+     C***+ where                                                                   MD058517 MD060441
+     C***+ not exists (                                                            MD058517 MD060441
+     C***+ select * from SDHSDRTD T1                                               MD058517 MD060441
+     C***+ where T1.CINPDT = T2.FINPDT )                                           MD058517 MD060441
+     C***+ and FMODID = 'LE'                                                       MD058517 MD060441
+     C***+ and FTRNID = :P1LNRF                                                    MD058517 MD060441
+     C***+ and FINFLG >= 'Y'                                                       MD058517 MD060441
+     C***+ order by                                                                MD058517 MD060441
+     C***+     CINPDT asc                                                          MD058517 MD060441
      C/end-exec
       *
      C/exec SQL

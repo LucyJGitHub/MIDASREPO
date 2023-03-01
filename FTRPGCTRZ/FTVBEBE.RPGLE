@@ -810,6 +810,7 @@
      C                   End
 
      C                   If        AD#1 = 'Y'
+     C                             AND %SUBST(ADCHK1:1:1) <> '-'                            MD060908
      C**********         Move      'N'           OKBnc1                                       CSD089
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SBNC1'       FldNamXAr(Idx)                               CSD089
@@ -818,15 +819,23 @@
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
-     C                   ELSE                                                               MD060908
+     C                   End
      C                   IF        %SUBST(ADCHK1:1:1) = ':'                                 MD060908
-     C                             OR %SUBST(ADCHK1:1:1) = '-'                              MD060908
      C                   Move      'N'           OKBnc1                                     MD060908
      C                   Add       1             Idx                                        MD060908
      C                   Movel     'SBNC1'       FldNamXAr(Idx)                             MD060908
      C                   Movel     '5049570'     MsgIdXAr(Idx)                              MD060908
+     C                   ELSE                                                               MD060908
+     C                   IF        %SUBST(ADCHK1:1:1) =  '-'                                MD060908
+     C                             OR %SUBST(ADCHK1:1:1) =  ':'                             MD060908
+     C                   IF        SSTTP = '08' or SSTTP  = '01'                            MD060908
+     C                   Move      'W'           OKBnc1                                     MD060908
+     C                   Add       1             WIx                                        MD060908
+     C                   Movel     'SBNC1'       WFldNmXAr(WIx)                             MD060908
+     C                   Movel     '5049570'     WMsgIDXAr(WIx)                             MD060908
      C                   ENDIF                                                              MD060908
-     C                   End
+     C                   ENDIF                                                              MD060908
+     C                   ENDIF                                                              MD060908
 
      C                   If        AD#2 = 'Y'
      C**********         Move      'N'           OKBnc2                                       CSD089

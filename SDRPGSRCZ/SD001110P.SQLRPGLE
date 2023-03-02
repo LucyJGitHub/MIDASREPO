@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
-      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *  Last Amend No. MD060441            Date 01Feb23              *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 MD059624           Date 20Jul22               *
       *                 MD059190           Date 08Nov21               *
       *                 MD059137           Date 29Oct21               *
       *                 MD058103           Date 19May21               *
@@ -21,6 +22,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
       *             Interest Projection Using Known Rates             *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -336,7 +339,8 @@
      C+ and CINFLG >= 'Y'
      C***order by                                                                           MD058517
      C******CINPDT asc                                                                      MD058517
-     C+ union all                                                                           MD058517
+     C**********+ union all                                                        MD058517 MD060441
+     C+ union                                                                               MD060441
      C+ select                                                                              MD058517
      C+   FINPSD                                                                            MD058517
      C+ , FINPED                                                                            MD058517
@@ -352,10 +356,11 @@
      C+ , FSMPAV                                                                            MD058517
      C+ from SDFWDRTD T2                                                                    MD058517
      C+ where                                                                               MD058517
-     C+ not exists (                                                                        MD058517
-     C+ select * from SDHSDRTD T1                                                           MD058517
-     C+ where T1.CINPDT = T2.FINPDT )                                                       MD058517
-     C+ and FMODID = 'LE'                                                                   MD058517
+     C**********+ not exists (                                                     MD058517 MD060441
+     C**********+ select * from SDHSDRTD T1                                        MD058517 MD060441
+     C**********+ where T1.CINPDT = T2.FINPDT )                                    MD058517 MD060441
+     C**********+ and FMODID = 'LE'                                                MD058517 MD060441
+     C+     FMODID = 'LE'                                                                   MD060441
      C+ and FTRNID = :P1LNRF                                                                MD058517
      C+ and FINFLG >= 'Y'                                                                   MD058517
      C+ order by                                                                            MD058517

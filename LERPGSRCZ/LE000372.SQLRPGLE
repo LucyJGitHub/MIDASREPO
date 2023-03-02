@@ -158,10 +158,9 @@
 
       ** Temporary DS for SDHSDRTD/SDFWDRTD
      D DlyDS           DS
-     D Dintd                          5p 0                                                  MD060441
      D DintStart                      5p 0
      D DintEnd                        5p 0
-     D*** Dintd                          5p 0                                               MD060441
+     D Dintd                          5p 0
      D Dindy                          5p 0
      D Dobdt                          5p 0
      D Dobdy                          5p 0
@@ -340,10 +339,9 @@
      C/exec SQL
      C+ declare FWCursor cursor for
      C+ select
-     C+   FINPDT                                                                            MD060441
      C+   FINPSD
      C+ , FINPED
-     C***+ , FINPDT                                                                         MD060441
+     C+ , FINPDT
      C+ , FINPDY
      C+ , FOBPDT
      C+ , FOBPDY
@@ -720,70 +718,50 @@ I    C                   ENDIF
      C/exec SQL
      C+ declare SDHS cursor for
      C+ select
-     C+ distinct CINPDT                                                                     MD060441
-     C+    ,     CINPSD                                                                     MD060441
-     C+    ,     CINPED                                                                     MD060441
-     C+    ,     CINPDY                                                                     MD060441
-     C+    ,     COBPDT                                                                     MD060441
-     C+    ,     COBPDY                                                                     MD060441
-     C+    ,     CPBRFR                                                                     MD060441
-     C+    ,     CRTEAP                                                                     MD060441
-     C+    ,     CCALCM                                                                     MD060441
-     C+    ,     CAVCRT                                                                     MD060441
-     C+    ,     CDCMRT                                                                     MD060441
-     C+    ,     CSMPAV                                                                     MD060441
-     C+    from                                                                             MD060441
-     C+    ( select * from SDHSDRTD as T1 where                                             MD060441
-     C+    CMODID = 'LE' and                                                                MD060441
-     C+    CTRNID = :KTRNID and                                                             MD060441
-     C+    CINFLG = 'Y'                                                                     MD060441
-     C+    union all select * from SDFWDRTD as T2 where                                     MD060441
-     C+    FMODID = 'LE' and                                                                MD060441
-     C+    FTRNID = :KTRNID and                                                             MD060441
-     C+    FINFLG = 'Y') as T3                                                              MD060441
-     C+    order by T3.CINPDT ASC                                                           MD060441
-     C***+   CINPSD                                                                         MD060441
-     C***+ , CINPED                                                                         MD060441
-     C***+ , CINPDT                                                                         MD060441
-     C***+ , CINPDY                                                                         MD060441
-     C***+ , COBPDT                                                                         MD060441
-     C***+ , COBPDY                                                                         MD060441
-     C***+ , CPBRFR                                                                         MD060441
-     C***+ , CRTEAP                                                                         MD060441
-     C***+ , CCALCM                                                                         MD060441
-     C***+ , CAVCRT                                                                         MD060441
-     C***+ , CDCMRT                                                                         MD060441
-     C***+ , CSMPAV                                                                         MD060441
-     C***+ from SDHSDRTD                                                                    MD060441
-     C***+ where                                                                            MD060441
-     C***+     CMODID = 'LE'                                                                MD060441
-     C***+ and CTRNID = :KTRNID                                                             MD060441
-     C***+ and CINFLG = 'Y'                                                                 MD060441
+     C+   CINPSD
+     C+ , CINPED
+     C+ , CINPDT
+     C+ , CINPDY
+     C+ , COBPDT
+     C+ , COBPDY
+     C+ , CPBRFR
+     C+ , CRTEAP
+     C+ , CCALCM
+     C+ , CAVCRT
+     C+ , CDCMRT
+     C+ , CSMPAV
+     C+ from SDHSDRTD
+     C+ where
+     C+     CMODID = 'LE'
+     C+ and CTRNID = :KTRNID
+     C+ and CINFLG = 'Y'
      C**********+ order by                                                                  MD060897
      C**********+     CINPDT asc                                                            MD060897
-     C***+ union all                                                               MD060897 MD060441
-     C***+ select                                                                  MD060897 MD060441
-     C***+   FINPSD                                                                MD060897 MD060441
-     C***+ , FINPED                                                                MD060897 MD060441
-     C***+ , FINPDT AS CINPDT                                                      MD060897 MD060441
-     C***+ , FINPDY                                                                MD060897 MD060441
-     C***+ , FOBPDT                                                                MD060897 MD060441
-     C***+ , FOBPDY                                                                MD060897 MD060441
-     C***+ , FPBRFR                                                                MD060897 MD060441
-     C***+ , FRTEAP                                                                MD060897 MD060441
-     C***+ , FCALCM                                                                MD060897 MD060441
-     C***+ , FAVCRT                                                                MD060897 MD060441
-     C***+ , FDCMRT                                                                MD060897 MD060441
-     C***+ , FSMPAV                                                                MD060897 MD060441
-     C***+ from SDFWDRTD T2                                                        MD060897 MD060441
-     C***+ where                                                                   MD060897 MD060441
-     C***+ not exists (                                                            MD060897 MD060441
-     C***+ select * from SDHSDRTD T1                                               MD060897 MD060441
-     C***+ where T1.CINPDT = T2.FINPDT )                                           MD060897 MD060441
-     C***+ and FMODID = 'LE'                                                       MD060897 MD060441
-     C***+ and FTRNID = :KTRNID                                                    MD060897 MD060441
-     C***+ order by                                                                MD060897 MD060441
-     C***+ CINPDT asc                                                              MD060897 MD060441
+     C+ union                                                                               MD060441
+     C**********+ union all                                                        MD060897 MD060441
+     C+ select                                                                              MD060897
+     C+   FINPSD                                                                            MD060897
+     C+ , FINPED                                                                            MD060897
+     C+ , FINPDT AS CINPDT                                                                  MD060897
+     C+ , FINPDY                                                                            MD060897
+     C+ , FOBPDT                                                                            MD060897
+     C+ , FOBPDY                                                                            MD060897
+     C+ , FPBRFR                                                                            MD060897
+     C+ , FRTEAP                                                                            MD060897
+     C+ , FCALCM                                                                            MD060897
+     C+ , FAVCRT                                                                            MD060897
+     C+ , FDCMRT                                                                            MD060897
+     C+ , FSMPAV                                                                            MD060897
+     C+ from SDFWDRTD T2                                                                    MD060897
+     C+ where                                                                               MD060897
+     C**********+ not exists (                                                     MD060897 MD060441
+     C**********+ select * from SDHSDRTD T1                                        MD060897 MD060441
+     C**********+ where T1.CINPDT = T2.FINPDT )                                    MD060897 MD060441
+     C**********+ and FMODID = 'LE'                                                MD060897 MD060441
+     C+     FMODID = 'LE'                                                                   MD060441
+     C+ and FTRNID = :KTRNID                                                                MD060897
+     C+ order by                                                                            MD060897
+     C+ CINPDT asc                                                                          MD060897
      C/end-exec
 
      C/exec SQL

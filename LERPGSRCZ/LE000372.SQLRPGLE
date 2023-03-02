@@ -96,10 +96,6 @@
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
-                                                                                            MD060441
-      ** Holiday File Standard Subroutine Variables                                         MD060441
-     D/COPY ZSRSRC,ZHOLILE                                                                  MD060441
-     D/COPY ZSRSRC,ZHOLELE                                                                  MD060441
 
       ** File Information Data Structure for SD001112P1
      D SPOOL1          DS
@@ -177,7 +173,7 @@
      D Dsmav                         17p12
 
       ** Parameters for ZDATE2
-     D***ZDayNo          S              5P 0                                                MD060441
+     D ZDayNo          S              5P 0
      D ZDate           S              6P 0
      D ZADate          S              7A
 
@@ -523,11 +519,12 @@
      C                   EXSR      SRReportP1
      C                   EXSR      SRReportP2
 
-     C     PrintP3       IFEQ      '1'
      C                   CLEAR                   curIntrstAmt     13 0                      MD060441
      C                   CLEAR                   nxtIntrstAmt     13 0                      MD060441
      C                   CLEAR                   wrkIntrstAmt     13 0                      MD060441
      C                   CLEAR                   prvIntrstAmt     13 0                      MD060441
+                                                                                            MD060441
+     C     PrintP3       IFEQ      '1'
      C                   EXSR      SRReportP3
 I    C                   ENDIF
 

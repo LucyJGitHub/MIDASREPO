@@ -9809,14 +9809,17 @@
                                                                                             MD060441
      C                   IF        BRTT <> DDNBRAB                                          MD060441
      C                   EVAL      isBRTTChg = *On                                          MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   IF        RFRR <> DDNRFRRB                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   IF        CALM <> DDNCALMB                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   IF        DDNBADJB <> *BLANKS                                      MD060441
@@ -9824,6 +9827,7 @@
      C                   EVAL      wDDNBADJB = %DEC(DDNBADJB:11:7)                          MD060441
      C                   IF        BADJ <> wDDNBADJB                                        MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
@@ -9832,6 +9836,7 @@
      C                   EVAL      wDDNFLORB = %DEC(DDNFLORB:11:7)                          MD060441
      C                   IF        FLOR <> wDDNFLORB                                        MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
@@ -9840,6 +9845,7 @@
      C                   EVAL      wDDNLBDYB = %DEC(DDNLBDYB:2:0)                           MD060441
      C                   IF        LBDY <> wDDNLBDYB                                        MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
@@ -9848,11 +9854,13 @@
      C                   EVAL      wDDNLODYB = %DEC(DDNLODYB:2:0)                           MD060441
      C                   IF        LODY <> wDDNLODYB                                        MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   IF        OPSH <> DDNOPSHB                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   IF        DDNRRDPB <> *BLANKS                                      MD060441
@@ -9860,6 +9868,7 @@
      C                   EVAL      wDDNRRDPB = %DEC(DDNRRDPB:2:0)                           MD060441
      C                   IF        RRDP <> wDDNRRDPB                                        MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
@@ -9868,6 +9877,7 @@
      C                   EVAL      wDDNDBAVB = %DEC(DDNDBAVB:1:0)                           MD060441
      C                   IF        DBAV <> wDDNDBAVB                                        MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
      C                   ENDIF                                                              MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441

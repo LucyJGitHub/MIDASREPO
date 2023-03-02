@@ -1244,16 +1244,6 @@
                                                                                             MD060441
      C                   EXSR      srChkARRChange                                           MD060441
                                                                                             MD060441
-     C                   IF        isRework = *ON                                           MD060441
-     C/exec SQL                                                                             MD060441
-     C+ select NCALM, NBADJ, NFLOR, NLBDY,                                                  MD060441
-     C+        NLODY, NOPSH, NRRDP, NDBAV, NRFRR                                            MD060441
-     C+ into :TrCALM, :TrBADJ, :TrFLOR, :TrLBDY,                                            MD060441
-     C+      :TrLODY, :TrOPSH, :TrRRDP, :TrDBAV, :TrRFRR                                    MD060441
-     C+ from CLOANCL                                                                        MD060441
-     C+ where LNRF = :TrTRAN                                                                MD060441
-     C/end-exec                                                                             MD060441
-     C                   ENDIF                                                              MD060441
      C                   ENDSR                                                              MD060441
       *****************************************************************                     MD060441
       /EJECT                                                                                MD060441
@@ -1282,40 +1272,36 @@
                                                                                             MD060441
      C                   EVAL      isARRParamChg = *Off                                     MD060441
                                                                                             MD060441
-     C                   IF        B_RFRR <> TRRFRR                                         MD060441
-     C                   EVAL      isARRParamChg = *On                                      MD060441
-     C                   ENDIF                                                              MD060441
+     C                   SELECT                                                             MD060441
                                                                                             MD060441
-     C                   IF        B_CALM <> TRCALM                                         MD060441
+     C                   WHEN      B_RFRR <> TRRFRR                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
-     C                   ENDIF                                                              MD060441
                                                                                             MD060441
-     C                   IF        B_BADJ <> TRBADJ                                         MD060441
+     C                   WHEN      B_CALM <> TRCALM                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
-     C                   ENDIF                                                              MD060441
                                                                                             MD060441
-     C                   IF        B_FLOR <> TRFLOR                                         MD060441
+     C                   WHEN      B_BADJ <> TRBADJ                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
-     C                   ENDIF                                                              MD060441
                                                                                             MD060441
-     C                   IF        B_LBDY <> TRLBDY                                         MD060441
+     C                   WHEN      B_FLOR <> TRFLOR                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
-     C                   ENDIF                                                              MD060441
                                                                                             MD060441
-     C                   IF        B_LODY <> TRLODY                                         MD060441
+     C                   WHEN      B_LBDY <> TRLBDY                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
-     C                   ENDIF                                                              MD060441
                                                                                             MD060441
-     C                   IF        B_OPSH <> TROPSH                                         MD060441
+     C                   WHEN      B_LODY <> TRLODY                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
-     C                   ENDIF                                                              MD060441
                                                                                             MD060441
-     C                   IF        B_RRDP <> TRRRDP                                         MD060441
+     C                   WHEN      B_OPSH <> TROPSH                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
-     C                   ENDIF                                                              MD060441
-     C                   IF        B_DBAV <> TRDBAV                                         MD060441
+                                                                                            MD060441
+     C                   WHEN      B_RRDP <> TRRRDP                                         MD060441
      C                   EVAL      isARRParamChg = *On                                      MD060441
-     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   WHEN      B_DBAV <> TRDBAV                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+                                                                                            MD060441
+     C                   ENDSL                                                              MD060441
                                                                                             MD060441
      C                   IF        ( isARRParamChg )                                        MD060441
      C                   EVAL      isRework = *On                                           MD060441

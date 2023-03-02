@@ -149,6 +149,8 @@
      C                   MOVE      *BLANK        ModuleID
      C                   MOVE      *BLANK        DataQueue                      CMX011
      C                   MOVE      *BLANK        KeyedDTAQ                      CSW034
+     C                   MOVE      *BLANK        FlatFil                                    AR792326
+     C                   MOVE      *BLANK        FlatLib                                    AR792326
 
      C                   SELECT
 

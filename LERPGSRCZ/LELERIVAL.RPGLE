@@ -9642,7 +9642,7 @@
      C                             ( wNxtIntPayDat <= EventCtrlDate ) AND                   MD060441
      C                             ( wRLDT <> wNxtIntPayDat )                               MD060441
      C                   EVAL      ErrorType = 2                                            MD060441
-     C                   EVAL      MessageID = '5049556'                                    MD060441
+     C                   EVAL      MessageID = '5049566'                                    MD060441
                                                                                             MD060441
       ** The rollover date must also not be earlier than the last interest/repayment date   MD060441
       ** or value date (if the rundate is in the first period)                              MD060441
@@ -9651,11 +9651,11 @@
      C                   ELSEIF    ( WRLDT < VDAT ) AND                                     MD060441
      C                             ( wLstIntPayDat = 0 )                                    MD060441
      C                   EVAL      ErrorType = 2                                            MD060441
-     C                   EVAL      MessageID = '5049555'                                    MD060441
+     C                   EVAL      MessageID = '5049565'                                    MD060441
      C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
      C                             ( wRLDT < wLstIntPayDat )                                MD060441
      C                   EVAL      ErrorType = 2                                            MD060441
-     C                   EVAL      MessageID = '5049555'                                    MD060441
+     C                   EVAL      MessageID = '5049565'                                    MD060441
                                                                                             MD060441
       ** A validation overridable error/warning is displayed if the rollover value date     MD060441
       ** is not equal to either loan value date or last interest payment date               MD060441
@@ -9666,15 +9666,15 @@
      C                             ( isARRParamChg = *ON) AND (isBRTTChg = *Off)            MD060441
                                                                                             MD060441
      C                   EVAL      ErrorType = 1                                            MD060441
-     C                   EVAL      MessageID = '5049554'                                    MD060441
+     C                   EVAL      MessageID = '5049564'                                    MD060441
      C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
      C                             ( wRLDT <> wLstIntPayDat ) AND                           MD060441
      C                             ( isARRParamChg = *ON) and (isBRTTChg = *Off)            MD060441
      C                   EVAL      ErrorType = 1                                            MD060441
-     C                   EVAL      MessageID = '5049554'                                    MD060441
+     C                   EVAL      MessageID = '5049564'                                    MD060441
      C                   ELSEIF    isBRTTChg = *ON                                          MD060441
      C                   EVAL      ErrorType = 2                                            MD060441
-     C                   EVAL      MessageID = '5049556'                                    MD060441
+     C                   EVAL      MessageID = '5049566'                                    MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   WHEN      ( typeOfChange = ROLL_F2B )                              MD060441
@@ -9688,11 +9688,11 @@
      C                   IF        ( wRLDT <> VDAT ) AND                                    MD060441
      C                             ( wLstIntPayDat = 0 )                                    MD060441
      C                   EVAL      ErrorType = 2                                            MD060441
-     C                   EVAL      MessageID = '5049556'                                    MD060441
+     C                   EVAL      MessageID = '5049566'                                    MD060441
      C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
      C                             ( wRLDT <> wLstIntPayDat )                               MD060441
      C                   EVAL      ErrorType = 2                                            MD060441
-     C                   EVAL      MessageID = '5049556'                                    MD060441
+     C                   EVAL      MessageID = '5049566'                                    MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   ENDSL                                                              MD060441

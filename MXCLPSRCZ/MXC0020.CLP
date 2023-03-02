@@ -147,32 +147,36 @@
                           VALUE('Y'))                                                  /*AR397085A*/
                                                                                         /*AR924225*/
 /** If CMX010 is switched ON, set up the IFS path for IFS download */                   /*AR924225*/
+                                                                                        /*AR924225*/
              IF        COND(&CMX010 *EQ 'Y') THEN(DO)                                   /*AR924225*/
                                                                                         /*AR924225*/
 /** Retrieve system value */                                                            /*AR924225*/
+                                                                                        /*AR924225*/
                 CALL       PGM(AOSVALR0) PARM(&RTNCDE +
                              'EMIFSSubdirectory' &EMIFS &SVALK2 +
                              &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
                              &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
                              &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
                              &SVALK0 &SVAL10)                                           /*AR924225*/
-
+                                                                                        /*AR924225*/
 /** Process retrieved System value */                                                   /*AR924225*/
+                                                                                        /*AR924225*/
                 IF         ((&EMIFS *NE '*NRF') *AND (&EMIFS +
                              *NE ' ')) THEN(DO)                                         /*AR924225*/
-
+                                                                                        /*AR924225*/
 /** Scan for /xx/ pattern.  If existing, replace with Zone ID */                        /*AR924225*/
+                                                                                        /*AR924225*/
                    CALL    PGM(QCLSCAN) PARM(&EMIFS &STRLEN &STRPOS +
                              &ZONEPAT &PATLEN '0' '1' ' ' &ZONEPOS)                     /*AR924225*/
-
+                                                                                        /*AR924225*/
                    IF      COND(&ZONEPOS > 0) THEN(DO)                                  /*AR924225*/
-
+                                                                                        /*AR924225*/ 
                         RTVDTAARA DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                   /*AR924225*/
                         CHGVAR    VAR(%SUBSTRING(&ZONEPRF 2 2)) +
                                     VALUE(&SYSID)                                       /*AR924225*/
                         CHGVAR    VAR(%SUBSTRING(&EMIFS &ZONEPOS 4)) +
                                     VALUE(&ZONEPRF)                                     /*AR924225*/
-
+                                                                                        /*AR924225*/
                    ENDDO                                                                /*AR924225*/
                 ENDDO                                                                   /*AR924225*/
              ENDDO                                                                      /*AR924225*/                          
@@ -309,6 +313,7 @@
 /**/                                                                                    /*MD033134*/
                                                                                         /*AR924225*/
 /** If EMIFS has a valid path, copy &FLATFIL to the IFS folder. */                      /*AR924225*/
+                                                                                        /*AR924225*/
              IF         ((&EMIFS *NE '*NRF') *AND (&EMIFS *NE +
                           ' ')) THEN(DO)                                                /*AR924225*/
                 CHGVAR     VAR(&EMLNK) VALUE(&EMIFS *TCAT &FLATFIL +

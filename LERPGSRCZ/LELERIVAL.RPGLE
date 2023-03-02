@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060620           Date 14Nov22               *
-      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *  Last Amend No. MD060441           Date 01Feb23               *
+      *  Prev Amend No. MD060620           Date 14Nov22               *
+      *                 MD059368           Date 17Dec21               *
       *                 MD057871           Date 30Apr21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -127,6 +128,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
@@ -784,6 +787,15 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
                                                                                             MD000091
+     D isARRParamChg   S              1N                                                    MD060441
+     D isBRTTChg       S              1N                                                    MD060441
+     D EventCtrlDate   S              5P 0                                                  MD060441
+      ** Rollover type of change                                                            MD060441
+     D ROLL_B2B        C                   CONST(1)                                         MD060441
+     D ROLL_F2B        C                   CONST(2)                                         MD060441
+     D ROLL_B2F        C                   CONST(3)                                         MD060441
+     D ROLL_F2F        C                   CONST(4)                                         MD060441
+
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -1077,6 +1089,12 @@
       /COPY WNCPYSRC,LELERIV025
 
      C                   EXSR      SRNCHI
+      *                                                                                     MD060441
+      ** Perform LIBOR CC9 Business Rules                                                   MD060441
+      *                                                                                     MD060441
+     C                   IF        CLE172 = 'Y'                                             MD060441
+     C                   EXSR      SRCC9BR                                                  MD060441
+     C                   ENDIF                                                              MD060441
 
       /COPY WNCPYSRC,LELERIV026
 
@@ -2370,6 +2388,7 @@
      C**  recent "RO" record on HISTSHQ, if it exists. (VDAT check
      C**  is redundant since covered by existence check.)
       **
+     C                   IF        CLE172 = 'N'                                             MD060441
      C     CLE003        IFEQ      'Y'
      C     DDRldtOK      ANDNE     'N'
      C     DDRLDTB       ANDNE     *BLANK
@@ -2387,6 +2406,7 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(ZADATE)                   MD000091
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                              MD060441
       *
       * If no errors
       *
@@ -9569,6 +9589,299 @@
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   ENDSR                                                                CLE172
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * SRCC9BR- LIBOR CC9 Business Rules                             *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+                                                                                            MD060441
+     C     SRCC9BR       BEGSR                                                              MD060441
+                                                                                            MD060441
+     C                   CLEAR                   ErrorType         1 0                      MD060441
+     C                   CLEAR                   typeOfChange      1 0                      MD060441
+     C                   CLEAR                   MessageID         7                        MD060441
+     C                   CLEAR                   wNxtIntPayDat     5 0                      MD060441
+     C                   CLEAR                   wLstIntPayDat     5 0                      MD060441
+     C                   CLEAR                   wLstRollOvrDat    5 0                      MD060441
+                                                                                            MD060441
+     C                   EXSR      srDetRollover                                            MD060441
+                                                                                            MD060441
+     C                   EXSR      srChangeARRDet                                           MD060441
+                                                                                            MD060441
+     C                   IF        ( typeOfChange = ROLL_B2F ) OR                           MD060441
+     C                             ( typeOfChange = ROLL_F2F )                              MD060441
+     C                   EXSR      srMoreValdtn                                             MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ELSEIF    (( typeOfChange = ROLL_F2B ) AND                         MD060441
+     C                             ( MULTIC = *ON )) OR                                     MD060441
+     C                             (( typeOfChange = ROLL_B2B ) AND                         MD060441
+     C                             ( MULTIC = *ON))                                         MD060441
+     C                   EXSR      srMoreValdtn                                             MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   EXSR      srRetrieveHst                                            MD060441
+                                                                                            MD060441
+     C                   SELECT                                                             MD060441
+                                                                                            MD060441
+     C                   WHEN      ( typeOfChange = ROLL_B2B )                              MD060441
+                                                                                            MD060441
+     C                   IF        ( NIDT <> 0 )                                            MD060441
+     C                   EVAL      wNxtIntPayDat =  NIDT                                    MD060441
+     C                   ELSEIF    ( NRPD <> 0 )                                            MD060441
+     C                   EVAL      wNxtIntPayDat =  NRPD                                    MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+      ** MD-60963 Fix. If next interest date or next repayment date is not zero and         MD060441
+      ** within accrual profit date, then rollover value date should be equal to            MD060441
+      ** next interest or next repayment date                                               MD060441
+      ** (Blocking Error Message 3)                                                         MD060441
+                                                                                            MD060441
+     C                   IF        ( wNxtIntPayDat <> 0 ) AND                               MD060441
+     C                             ( wNxtIntPayDat <= EventCtrlDate ) AND                   MD060441
+     C                             ( wRLDT <> wNxtIntPayDat )                               MD060441
+     C                   EVAL      ErrorType = 2                                            MD060441
+     C                   EVAL      MessageID = '5049566'                                    MD060441
+                                                                                            MD060441
+      ** The rollover date must also not be earlier than the last interest/repayment date   MD060441
+      ** or value date (if the rundate is in the first period)                              MD060441
+      ** (Blocking Error Message 2)                                                         MD060441
+                                                                                            MD060441
+     C                   ELSEIF    ( WRLDT < VDAT ) AND                                     MD060441
+     C                             ( wLstIntPayDat = 0 )                                    MD060441
+     C                   EVAL      ErrorType = 2                                            MD060441
+     C                   EVAL      MessageID = '5049565'                                    MD060441
+     C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
+     C                             ( wRLDT < wLstIntPayDat )                                MD060441
+     C                   EVAL      ErrorType = 2                                            MD060441
+     C                   EVAL      MessageID = '5049565'                                    MD060441
+                                                                                            MD060441
+      ** A validation overridable error/warning is displayed if the rollover value date     MD060441
+      ** is not equal to either loan value date or last interest payment date               MD060441
+      ** (Overridable/Warning Message 1)                                                    MD060441
+                                                                                            MD060441
+     C                   ELSEIF    ( wRLDT <> VDAT ) AND                                    MD060441
+     C                             ( wLstIntPayDat = 0 ) AND                                MD060441
+     C                             ( isARRParamChg = *ON) AND (isBRTTChg = *Off)            MD060441
+                                                                                            MD060441
+     C                   EVAL      ErrorType = 1                                            MD060441
+     C                   EVAL      MessageID = '5049564'                                    MD060441
+     C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
+     C                             ( wRLDT <> wLstIntPayDat ) AND                           MD060441
+     C                             ( isARRParamChg = *ON) and (isBRTTChg = *Off)            MD060441
+     C                   EVAL      ErrorType = 1                                            MD060441
+     C                   EVAL      MessageID = '5049564'                                    MD060441
+     C                   ELSEIF    isBRTTChg = *ON                                          MD060441
+     C                   EVAL      ErrorType = 2                                            MD060441
+     C                   EVAL      MessageID = '5049566'                                    MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   WHEN      ( typeOfChange = ROLL_F2B )                              MD060441
+                                                                                            MD060441
+      ** When the back-valued rollover involves migrating from forward-looking rate or      MD060441
+      ** fix rate, to a backward-looking rate, the back-valued rollover date must be        MD060441
+      ** equal to the last interest payment date (or loan value date if                     MD060441
+      ** first interest period)                                                             MD060441
+      ** (Blocking Error Message 3)                                                         MD060441
+                                                                                            MD060441
+     C                   IF        ( wRLDT <> VDAT ) AND                                    MD060441
+     C                             ( wLstIntPayDat = 0 )                                    MD060441
+     C                   EVAL      ErrorType = 2                                            MD060441
+     C                   EVAL      MessageID = '5049566'                                    MD060441
+     C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
+     C                             ( wRLDT <> wLstIntPayDat )                               MD060441
+     C                   EVAL      ErrorType = 2                                            MD060441
+     C                   EVAL      MessageID = '5049566'                                    MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   ENDSL                                                              MD060441
+                                                                                            MD060441
+     C                   SELECT                                                             MD060441
+     C                   WHEN      ErrorType = 1                                            MD060441
+     C                   EVAL      WIdx = WIdx + 1                                          MD060441
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRLDTB'                             MD060441
+     C                   EVAL      WMsgIDArr(WIdx) = MessageID                              MD060441
+     C                   MOVE      'W'           DDRldtOK                                   MD060441
+     C                   WHEN      ErrorType = 2                                            MD060441
+     C                   ADD       1             Idx                                        MD060441
+     C                   EVAL      FldNameArr(Idx) = 'DDRLDTB'                              MD060441
+     C                   EVAL      MsgIDArr(Idx) = MessageID                                MD060441
+     C                   MOVE      'N'           DDRldtOK                                   MD060441
+     C                   ENDSL                                                              MD060441
+                                                                                            MD060441
+     C                   ENDSR                                                              MD060441
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srRetrieveHst                                                 *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+                                                                                            MD060441
+     C     srRetrieveHst BEGSR                                                              MD060441
+                                                                                            MD060441
+      ** Get last rollover date                                                             MD060441
+                                                                                            MD060441
+     C                   CALL      'LE001116'                                               MD060441
+     C                   PARM      LNRF          wrkLoan           6                        MD060441
+     C                   PARM      'RO'          wrkType           2                        MD060441
+     C                   PARM      *ZEROS        wLstRollOvrDat                             MD060441
+                                                                                            MD060441
+      ** Get last interest/repayment date                                                   MD060441
+                                                                                            MD060441
+     C                   SELECT                                                             MD060441
+     C                   WHEN      REPT = 1  OR REPT = 3                                    MD060441
+     C                   EVAL      wrkType = 'RE'                                           MD060441
+     C                   WHEN      REPT = 2                                                 MD060441
+     C                   EVAL      wrkType = 'IN'                                           MD060441
+     C                   ENDSL                                                              MD060441
+                                                                                            MD060441
+     C                   CALL      'LE001116'                                               MD060441
+     C                   PARM      LNRF          wrkLoan                                    MD060441
+     C                   PARM      wrkType       wrkType                                    MD060441
+     C                   PARM      *ZEROS        wLstIntPayDat                              MD060441
+                                                                                            MD060441
+     C                   ENDSR                                                              MD060441
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srMoreValdtn                                                  *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+     C     srMoreValdtn  BEGSR                                                              MD060441
+     C     CLE003        IFEQ      'Y'                                                      MD060441
+     C     DDRldtOK      ANDNE     'N'                                                      MD060441
+     C     DDRLDTB       ANDNE     *BLANK                                                   MD060441
+     C     WIN89         IFEQ      0                                                        MD060441
+     C     WRLDT         ANDLT     H_VDAT                                                   MD060441
+     C     WRLDT         ORLE      LMCD                                                     MD060441
+     C                   ADD       1             Idx                                        MD060441
+     C                   EVAL      FldNameArr(Idx) = 'DDRLDTB'                              MD060441
+     C                   EVAL      MsgIDArr(Idx) = 'LEV1040'                                MD060441
+     C                   MOVE      'N'           DDRldtOK                                   MD060441
+     C                   Z-ADD     H_VDAT        ZDAYNO                                     MD060441
+     C                   EXSR      ZDATE2                                                   MD060441
+     C                   EVAL      BLen = %Len(%Trim(ZADATE))                               MD060441
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(ZADATE)                   MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ENDSR                                                              MD060441
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srDetRollover                                                 *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+                                                                                            MD060441
+     C     srDetRollover BEGSR                                                              MD060441
+                                                                                            MD060441
+     C                   IF        BLRT = 'Y' AND DDNBLRTB <> 'N'                           MD060441
+     C                   EVAL      typeOfChange = ROLL_B2B                                  MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        BLRT = 'N' AND DDNBLRTB = 'Y'                            MD060441
+     C                   EVAL      typeOfChange = ROLL_F2B                                  MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        BLRT = 'Y' AND DDNBLRTB = 'N'                            MD060441
+     C                   EVAL      typeOfChange = ROLL_B2F                                  MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        BLRT = 'N' AND DDNBLRTB <> 'Y'                           MD060441
+     C                   EVAL      typeOfChange = ROLL_F2F                                  MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                                                                                      MD060441
+     C                   ENDSR                                                              MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srChangeARRDet                                                *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+                                                                                            MD060441
+     C     srChangeARRDetBEGSR                                                              MD060441
+                                                                                            MD060441
+     C                   EVAL      isARRParamChg = *Off                                     MD060441
+     C                   EVAL      isBRTTChg =  *Off                                        MD060441
+                                                                                            MD060441
+     C                   IF        BRTT <> DDNBRAB                                          MD060441
+     C                   EVAL      isBRTTChg = *On                                          MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        RFRR <> DDNRFRRB                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        CALM <> DDNCALMB                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        DDNBADJB <> *BLANKS                                      MD060441
+     C                   Z-ADD     *ZEROS        wDDNBADJB        11 7                      MD060441
+     C                   EVAL      wDDNBADJB = %DEC(DDNBADJB:11:7)                          MD060441
+     C                   IF        BADJ <> wDDNBADJB                                        MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        DDNFLORB <> *BLANKS                                      MD060441
+     C                   Z-ADD     *ZEROS        wDDNFLORB        11 7                      MD060441
+     C                   EVAL      wDDNFLORB = %DEC(DDNFLORB:11:7)                          MD060441
+     C                   IF        FLOR <> wDDNFLORB                                        MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        DDNLBDYB <> *BLANKS                                      MD060441
+     C                   Z-ADD     *ZEROS        wDDNLBDYB         2 0                      MD060441
+     C                   EVAL      wDDNLBDYB = %DEC(DDNLBDYB:2:0)                           MD060441
+     C                   IF        LBDY <> wDDNLBDYB                                        MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        DDNLODYB <> *BLANKS                                      MD060441
+     C                   Z-ADD     *ZEROS        wDDNLODYB         2 0                      MD060441
+     C                   EVAL      wDDNLODYB = %DEC(DDNLODYB:2:0)                           MD060441
+     C                   IF        LODY <> wDDNLODYB                                        MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        OPSH <> DDNOPSHB                                         MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        DDNRRDPB <> *BLANKS                                      MD060441
+     C                   Z-ADD     *ZEROS        wDDNRRDPB         2 0                      MD060441
+     C                   EVAL      wDDNRRDPB = %DEC(DDNRRDPB:2:0)                           MD060441
+     C                   IF        RRDP <> wDDNRRDPB                                        MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        DDNDBAVB <> *BLANKS                                      MD060441
+     C                   Z-ADD     *ZEROS        wDDNDBAVB         1 0                      MD060441
+     C                   EVAL      wDDNDBAVB = %DEC(DDNDBAVB:1:0)                           MD060441
+     C                   IF        DBAV <> wDDNDBAVB                                        MD060441
+     C                   EVAL      isARRParamChg = *On                                      MD060441
+     C                   LEAVESR                                                            MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   ENDSR                                                              MD060441
       *****************************************************************                       CLE172
       /EJECT                                                                                  CLE172
       *****************************************************************
@@ -10091,6 +10404,11 @@
      C                   PARM                    @Return           6
      C                   PARM                    @type             1
      C*
+      ** Determine the Event Control Date                                                   MD060441
+     C                   EVAL      EventCtrlDate = BJDNWD - 1                               MD060441
+     C                   IF        BKAPDT < EventCtrlDate                                   MD060441
+     C                   EVAL      EventCtrlDate = BKAPDT                                   MD060441
+     C                   ENDIF                                                              MD060441
 
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,LELERIV069

@@ -25,8 +25,8 @@
       ** Entry Parameters
       **=================
 
-     D PJrnRcv         S                   LIKE( OLJRCV )
-     D PJrnSeq         S                   LIKE( OLJSEQ )
+     D PJrnRcv         S                   LIKE( MEJRCV )
+     D PJrnSeq         S                   LIKE( MEJSEQ )
      D PMode           S              9A
 
       ** Standard Variables

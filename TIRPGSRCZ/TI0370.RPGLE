@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060909           Date 14Feb23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27045A          Date 13Apr10               *
@@ -39,6 +40,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060909 - After COB job FTC0630 go in MSGW.                 *
+      *           - Call AOMEMSU1 instead of AOMEMSU0.                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -299,8 +302,10 @@
      C                   Z-ADD     TIAMNT        W0AMT
      C                   ENDIF
      C*
-     C** Call Access Object AOMEMSU0
-     C                   CALL      'AOMEMSU0'
+     C***Call*Access*Object*AOMEMSU0***********************************                     MD060909
+      ** Call Access Object AOMEMSU1                                                        MD060909
+     C**********         CALL      'AOMEMSU0'                                               MD060909
+     C                   CALL      'AOMEMSU1'                                               MD060909
      C                   PARM      *BLANKS       W0RTCD
      C                   PARM      ACNO          P@RETL           10 0
      C**********         PARM      CNUM          P@CNUM            6 0                        CSD027
@@ -318,7 +323,8 @@
      C     W0RTCD        IFNE      '       '
      C     *LOCK         IN        LDA
      C                   MOVE      'TI0370'      DBPGM
-     C                   MOVEL(P)  'AOMEMSU0'    DBFILE
+     C**********         MOVEL(P)  'AOMEMSU0'    DBFILE                                     MD060909
+     C                   MOVEL(P)  'AOMEMSU1'    DBFILE                                     MD060909
      C                   MOVEL(P)  ACNERR        DBKEY                          ************
      C                   Z-ADD     06            DBASE                          *DB ERROR 06
      C                   EXSR      ERRSR                                        ************

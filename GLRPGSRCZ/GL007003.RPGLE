@@ -21,8 +21,7 @@
       *****************************************************************
 
      FGLMEJSTD  UF A E             DISK    COMMIT
-     FGLOLPST2  UF A E           K DISK    COMMIT RENAME(GLOLPST2:GLOLPST )
-     FGLPRONT2  UF A E           K DISK    COMMIT RENAME(GLPRONT2:GLPRONT )
+     FGLMEMOT2  UF A E           K DISK    COMMIT RENAME(GLMEMOT2:GLMEMOT )
 
       *****************************************************************
 
@@ -74,8 +73,7 @@
      D SVALK           S             20A   INZ DIM( 10 )
      D SVAL            S            200A   INZ DIM( 10 )
 
-     D OLPOSDS         DS                  INZ LIKEREC( GLOLPST  )
-     D PRONODS         DS                  INZ LIKEREC( GLPRONT  )
+     D MEMOSDS         DS                  INZ LIKEREC( GLMEMOT  )
 
       ** Receiver Info Storage
      D RcvInf          DS                  INZ LIKEDS( t_RcvInf )
@@ -114,17 +112,11 @@
       ** Procedures and Functions
       ** ========================
 
-      ** UpdOLPOS Procedure
+      ** UpdMEMOS Procedure
 
-     D UpdOLPOS        PR                  EXTPGM('AOOLPSU1')
+     D UpdMEMOS        PR                  EXTPGM('AOMEMSU2')
      D  pRtnCode                           LIKE( pRtnCode )
-     D  pOLPOSDS                           LIKEDS( OLPOSDS )
-
-      ** UpdPRONO Procedure
-
-     D UpdPRONO        PR                  EXTPGM('AOPRONU1')
-     D  pRtnCode                           LIKE( pRtnCode )
-     D  pPRONODS                           LIKEDS( PRONODS )
+     D  pMEMOSDS                           LIKEDS( MEMOSDS )
 
       ** UpdMEJSTD Procedure
 
@@ -185,6 +177,7 @@
      C                   WHEN      EntDtaHdr.JOCODE = UserGenerated
      C                   IF        EntDtaHdr.JOENTT = OLFlag
      C                             AND %SUBST( EntDta.JOESD : 1 : 3 ) = 'END'
+     C                             AND ENTDTAHDR.JOOBJ = 'GLMEMOTD  '
      C                   EXSR      EndBgUpd
      C                   ENDIF
 
@@ -212,17 +205,6 @@
      C     *ENTRY        PLIST
      C                   PARM                    pRcvVar
      C                   PARM                    pInfo
-
-     C     KOLPS         KLIST
-     C                   KFLD                    OLPOSDS.OLKEY
-     C                   KFLD                    OLPOSDS.OLVDAT
-     C                   KFLD                    OLPOSDS.OLAMT
-     C                   KFLD                    OLPOSDS.OLIO
-
-     C     KPRON         KLIST
-     C                   KFLD                    PRONODS.PRKEY
-     C                   KFLD                    PRONODS.PRVDAT
-     C                   KFLD                    PRONODS.PRAMT
 
      C                   EVAL      TransCounter = 0
 
@@ -262,7 +244,7 @@
      C                   EVAL      DBASE = 1
      C                   EVAL      DBFILE = 'SDSVALPD'
      C                   EVAL      DBKEY =  SVALK( 1 )
-     C                   EVAL      DBPGM = 'GL007001'
+     C                   EVAL      DBPGM = 'GL007003'
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   EVAL      CommitCtr = %DEC( SVAL( 1 ) : 10 : 0 )
@@ -295,7 +277,7 @@
      C                   EVAL      DBASE = 2
      C                   EVAL      DBFILE = 'EXSR'
      C                   EVAL      DBKEY = 'FMTRcvVar'
-     C                   EVAL      DBPGM = 'GL007001'
+     C                   EVAL      DBPGM = 'GL007003'
      C                   EXSR      *PSSR
      C                   ENDMON
 
@@ -314,14 +296,9 @@
      C                   SELECT
 
      C                   WHEN      EntDtaHdr.JOOBJ = 'GLMEMOTD'
-     C                   EVAL      OLPOSDS = %SUBST( EntDta.JOESD
+     C                   EVAL      MEMOSDS = %SUBST( EntDta.JOESD
      C                                             : 1 : EntDta.JOENTL )
-     C                   EXSR      OLPSPGM
-
-     C                   WHEN      EntDtaHdr.JOOBJ = 'GLPRONTD'
-     C                   EVAL      PRONODS = %SUBST( EntDta.JOESD
-     C                                             : 1 : EntDta.JOENTL )
-     C                   EXSR      PRONPGM
+     C                   EXSR      MEMOSPGM
 
      C                   ENDSL
 
@@ -351,60 +328,36 @@
       *************************************************************
       * OLPSPGM - Prepare call to OLPOS update program            *
       *************************************************************
-     C     OLPSPGM       BEGSR
+     C     MEMOSPGM      BEGSR
 
      C                   IF        EntDtaHdr.JOENTT = DeleteRollBack
-     C                   EVAL      OLPOSDS.OLAMT = -( OLPOSDS.OLAMT )
+     C                   EVAL      MEMOSDS.MEAMT = -( MEMOSDS.MEAMT )
      C                   ENDIF
 
-     C                   CALLP     UpdOLPOS( pRtnCode : OLPOSDS )
+     C                   CALLP     UpdMEMOS( pRtnCode : MEMOSDS )
 
      C                   IF        pRtnCode = *BLANKS
-     C                   EVAL      OLKEY  = OLPOSDS.OLKEY                                   MD031500
-     C                   EVAL      OLVDAT = OLPOSDS.OLVDAT                                  MD031500
-     C                   EVAL      OLAMT  = OLPOSDS.OLAMT                                   MD031500
-     C                   EVAL      OLIO   = OLPOSDS.OLIO                                    MD031500
-     C                   TIME                    OLTMST                                     MD031500
-     C                   EVAL      OLPROC = 'Y'
-     C                   WRITE     GLOLPST                                                  MD031500
+     C                   EVAL      MEACNO = MEMOSDS.MEACNO
+     C                   EVAL      MECNUM = MEMOSDS.MECNUM
+     C                   EVAL      MECCY  = MEMOSDS.MECCY
+     C                   EVAL      MEACOD = MEMOSDS.MEACOD
+     C                   EVAL      MEACSQ = MEMOSDS.MEACSQ
+     C                   EVAL      MEBRCA = MEMOSDS.MEBRCA
+     C                   EVAL      MERDAT = MEMOSDS.MERDAT
+     C                   EVAL      MEVDAT = MEMOSDS.MEVDAT
+     C                   EVAL      MEPDAT = MEMOSDS.MEPDAT
+     C                   EVAL      MEAMT  = MEMOSDS.MEAMT
+     C                   EVAL      MEFTOV = MEMOSDS.MEFTOV
+     C                   TIME                    METMST
+     C                   EVAL      MEPROC = 'Y'
+     C                   WRITE     GLMEMOT
      C                   EVAL      FileUpdated = True
 
      C                   ELSE
      C                   EVAL      DBASE = 4
      C                   EVAL      DBFILE = '*CALL'
-     C                   EVAL      DBKEY = 'AOMEMSU1'
+     C                   EVAL      DBKEY = 'AOMEMSU2'
      C                   EVAL      DBPGM = 'GL007003'
-     C                   EXSR      *PSSR
-     C                   ENDIF
-
-     C                   ENDSR
-      *************************************************************
-      /EJECT
-      *************************************************************
-      * PRONPGM - Prepare call to PRONO update program            *
-      *************************************************************
-     C     PRONPGM       BEGSR
-
-     C                   IF        EntDtaHdr.JOENTT = DeleteRollBack
-     C                   EVAL      PRONODS.PRAMT = -( PRONODS.PRAMT )
-     C                   ENDIF
-
-     C                   CALLP     UpdPRONO( pRtnCode : PRONODS )
-
-     C                   IF        pRtnCode = *BLANKS
-     C                   EVAL      PRKEY  = PRONODS.PRKEY                                   MD031500
-     C                   EVAL      PRVDAT = PRONODS.PRVDAT                                  MD031500
-     C                   EVAL      PRAMT  = PRONODS.PRAMT                                   MD031500
-     C                   TIME                    PRTMST                                     MD031500
-     C                   EVAL      PRPROC = 'Y'
-     C                   WRITE     GLPRONT                                                  MD031500
-     C                   EVAL      FileUpdated = True
-
-     C                   ELSE
-     C                   EVAL      DBASE = 5
-     C                   EVAL      DBFILE = '*CALL'
-     C                   EVAL      DBKEY = 'AOPRONU1'
-     C                   EVAL      DBPGM = 'GL007001'
      C                   EXSR      *PSSR
      C                   ENDIF
 

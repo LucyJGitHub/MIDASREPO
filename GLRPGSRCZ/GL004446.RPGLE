@@ -13,8 +13,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD060058           Date 21Jun22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060909           Date 14Feb23               *
+      *  Prev Amend No. MD060058           Date 21Jun22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD023889           Date 10Dic13               *
       *                 CGL135B            Date 04Nov13               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060909 - After COB job FTC0630 go in MSGW.                 *
+      *           - Call AOMEMSU1 instead of AOMEMSU0.                *
       *  MD060058 - Locking on PRONO with job GO_ONL_OLP. Call        *
       *             AOPRONU0 for updates. Fix is similar to MD027654. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -463,8 +466,10 @@
      C                   ENDIF
      C/COPY OFCPYSRCZ,CGL135_103                                                             CGL135B
       *
-      ** Call Access Object AOMEMSU0
-     C                   CALL      'AOMEMSU0'
+      ***Call*Access*Object*AOMEMSU0**********************************                      MD060909
+      ** Call Access Object AOMEMSU1                                                        MD060909
+     C**********         CALL      'AOMEMSU0'                                               MD060909
+     C                   CALL      'AOMEMSU1'                                               MD060909
      C                   PARM      *BLANKS       W0RTCD            7            I:Return code
      C                   PARM      0             W0RETL           10 0          O:Retail A/C No
      C**********         PARM                    W0CNUM            6 0         O:Customer No. CSD027

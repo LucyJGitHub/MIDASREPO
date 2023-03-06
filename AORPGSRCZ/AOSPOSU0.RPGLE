@@ -1258,38 +1258,27 @@
      C     W#MEMS        IFEQ      *BLANKS
      C**********         CALLB     'AOMEMSU0'                           9090                  248460
      C**********         CALL      'AOMEMSU0'                           9090         248460 MD060909
-     C*****R#RTN         PARM      *BLANKS       O#RTN             7                        MD060909
-     C***********          PARM W#RRNM    O#RRN   70                      CCB002
-     C**********         PARM      W#ACNO        O#ACNO           10 0                CCB00 MD060909
-     C**********         PARM      W#CNUM        O#CNUM            6 0                  CCB00 CSD027
-     C**********         PARM      W#CNUM        O#CNUM            6                  CSD027 MD06090
-     C**********         PARM      W#CCY         O#CCY             3                   CCB00 MD06090
-     C**********         PARM      W#ACOD        O#ACOD            4 0                  CCB00 CGL029
-     C**********         PARM      W#ACOD        O#ACOD           10 0                CGL029 MD06090
-     C**********         PARM      W#ACSQ        O#ACSQ            2 0                CCB00 MD060909
-     C**********         PARM      W#BRCA        O#BRCA            3                  CCB00 MD060909
-     C**********         PARM      W#PSTD        O#PSTD            5 0                      MD060909
-     C**********         PARM      W#VDAT        O#VDAT            5 0                      MD060909
-     C**********         PARM      W#AMT         O#AMT            15 0                      MD060909
-     C**********         PARM      W#FTOV        O#FTOV            1                        MD060909
-      *                                                                                     MD060909
      C                   CALL      'AOMEMSU1'                           9090                MD060909
-     C     R#RTN         PARM      *BLANKS       O#RTN             7                        MD060909
-     C                   PARM      W#ACNO        O#ACNO           10 0                      MD060909
-     C                   PARM      W#CNUM        O#CNUM            6                        MD060909
-     C                   PARM      W#CCY         O#CCY             3                        MD060909
-     C                   PARM      W#ACOD        O#ACOD           10 0                      MD060909
-     C                   PARM      W#ACSQ        O#ACSQ            2 0                      MD060909
-     C                   PARM      W#BRCA        O#BRCA            3                        MD060909
-     C                   PARM      W#PSTD        O#PSTD            5 0                      MD060909
-     C                   PARM      W#VDAT        O#VDAT            5 0                      MD060909
-     C                   PARM      W#AMT         O#AMT            15 0                      MD060909
-     C                   PARM      W#FTOV        O#FTOV            1                        MD060909
-      *                                                                                     MD060909
+     C     R#RTN         PARM      *BLANKS       O#RTN             7
+     C***********          PARM W#RRNM    O#RRN   70                      CCB002
+     C                   PARM      W#ACNO        O#ACNO           10 0                         CCB00
+     C**********         PARM      W#CNUM        O#CNUM            6 0                  CCB00 CSD027
+     C                   PARM      W#CNUM        O#CNUM            6                          CSD027
+     C                   PARM      W#CCY         O#CCY             3                           CCB00
+     C**********         PARM      W#ACOD        O#ACOD            4 0                  CCB00 CGL029
+     C                   PARM      W#ACOD        O#ACOD           10 0                        CGL029
+     C                   PARM      W#ACSQ        O#ACSQ            2 0                         CCB00
+     C                   PARM      W#BRCA        O#BRCA            3                           CCB00
+     C                   PARM      W#PSTD        O#PSTD            5 0
+     C                   PARM      W#VDAT        O#VDAT            5 0
+     C                   PARM      W#AMT         O#AMT            15 0
+     C                   PARM      W#FTOV        O#FTOV            1
+      *
      C     *IN90         IFEQ      '1'
      C     R#RTN         ORNE      *BLANKS
      C                   MOVEL     '*CALL   '    W0FILE
-     C                   MOVEL     'AOMEMSU0'    W0KEY
+     C**********         MOVEL     'AOMEMSU0'    W0KEY                                      MD060909
+     C                   MOVEL     'AOMEMSU1'    W0KEY                                      MD060909
      C                   Z-ADD     1             W0ERNB
      C                   MOVEL     ERR@(7)       W0NARR
      C                   EXSR      SRERR

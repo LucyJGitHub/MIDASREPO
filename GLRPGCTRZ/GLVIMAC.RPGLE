@@ -665,15 +665,18 @@
      C                   MOVEL     'GLX0125'     MsgIdXAr(Idx)
       /COPY OFCPYSRCZ,CGL135_115                                                            MD024136
      C                   ENDIF
-      *
+      *                                                                                     MD060989
+      ** When entered,                                                                      MD060989
       ** Account Sequence must be in the range 01-99                                        MD060989
       *                                                                                     MD060989
+     C     DDACSN        IFNE      *BLANKS                                                  MD060989
      C                   IF        %CHECK(Numbers:DDACSN) > 0                               MD060989
      C                             OR DDACSN = '00'                                         MD060989
      C                   MOVE      'N'           DDAcsnOK                                   MD060989
      C                   ADD       1             Idx                                        MD060989
      C                   MOVEL     'DDACSN'      FldNamXAr(Idx)                             MD060989
      C                   MOVEL     '5049559'     MsgIdXAr(Idx)                              MD060989
+     C                   ENDIF                                                              MD060989
      C                   ENDIF                                                              MD060989
       *
      C                   ENDSR

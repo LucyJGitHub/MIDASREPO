@@ -30,7 +30,6 @@
 
       ** Storage for data returned from RCVJRNE with RJNE0200 format
 
-     D*** pRcvVar         DS                  LIKEDS( tpRcvVar )
      D pRcvVar         DS                  LIKEDS( t_RcvVar )
 
 
@@ -72,6 +71,18 @@
      D WRETCD          S              7A
      D SVALK           S             20A   INZ DIM( 10 )
      D SVAL            S            200A   INZ DIM( 10 )
+
+     D pMEACNO         S                   INZ LIKE(MEACNO)
+     D pMECNUM         S                   INZ LIKE(MECNUM)
+     D pMECCY          S                   INZ LIKE(MECCY )
+     D pMEACOD         S                   INZ LIKE(MEACOD)
+     D pMEACSQ         S                   INZ LIKE(MEACSQ)
+     D pMEBRCA         S                   INZ LIKE(MEBRCA)
+     D pMERDAT         S                   INZ LIKE(MERDAT)
+     D pMEVDAT         S                   INZ LIKE(MEVDAT)
+     D pMEPDAT         S                   INZ LIKE(MEPDAT)
+     D pMEAMT          S                   INZ LIKE(MEAMT)
+     D pMEFTOV         S                   INZ LIKE(MEFTOV)
 
      D MEMOSDS         DS                  INZ LIKEREC( GLMEMOT  )
 
@@ -334,7 +345,30 @@
      C                   EVAL      MEMOSDS.MEAMT = -( MEMOSDS.MEAMT )
      C                   ENDIF
 
-     C                   CALLP     UpdMEMOS( pRtnCode : MEMOSDS )
+     C*                  CALLP     UpdMEMOS( pRtnCode : MEMOSDS )
+     C                   EVAL      pMEACNO = MEMOSDS.MEACNO
+     C                   EVAL      pMECNUM = MEMOSDS.MECNUM
+     C                   EVAL      pMECCY  = MEMOSDS.MECCY
+     C                   EVAL      pMEACOD = MEMOSDS.MEACOD
+     C                   EVAL      pMEACSQ = MEMOSDS.MEACSQ
+     C                   EVAL      pMEBRCA = MEMOSDS.MEBRCA
+     C                   EVAL      pMERDAT = MEMOSDS.MERDAT
+     C                   EVAL      pMEVDAT = MEMOSDS.MEVDAT
+     C                   EVAL      pMEPDAT = MEMOSDS.MEPDAT
+     C                   EVAL      pMEAMT  = MEMOSDS.MEAMT
+     C                   EVAL      pMEFTOV = MEMOSDS.MEFTOV
+     C                   CALL      'AOMEMSU0'
+     C                   PARM      *BLANKS       pRtnCode
+     C                   PARM                    pMEACNO
+     C                   PARM                    pMECNUM
+     C                   PARM                    pMECCY
+     C                   PARM                    pMEACOD
+     C                   PARM                    pMEACSQ
+     C                   PARM                    pMEBRCA
+     C                   PARM                    pMEPDAT
+     C                   PARM                    pMEVDAT
+     C                   PARM                    pMEAMT
+     C                   PARM                    pMEFTOV
 
      C                   IF        pRtnCode = *BLANKS
      C                   EVAL      MEACNO = MEMOSDS.MEACNO

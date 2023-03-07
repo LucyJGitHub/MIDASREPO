@@ -17,9 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060959           Date 26Jan23               *
-      *  Prev Amend No. MD060883           Date 22Jan23               *
-      *                 MD060823           Date 12Dec22               *      
+      *  Last Amend No. MD060424           Date 22Feb23               *
+      *  Prev Amend No. MD060959           Date 26Jan23               *
+      *                 MD060883           Date 22Jan23               *
+      *                 MD060823           Date 12Dec22               *
       *                 MD058517           Date 17Oct22               *
       *                 MD060008           Date 11May21               *
       *                 MD060033           Date 25Sep22               *
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060424 - No rate extracted from ARR calculator. Use NMDT as*
+      *             end date of ARR call parameter, else use MDAT.    *
       *  MD060959 -  Loans whose repayment falls on a holiday is      *
       *              reported as Rates Known 'Y' in SDRTKNTD.         *
       *              Amend subroutine SRChk2ndCall to include         *
@@ -324,6 +327,7 @@
      D RTKNDate        S                   LIKE(TrNIDT)
      D WrkDATE         S                   LIKE(TrNIDT)
      D IntPayDate      S                   LIKE(TrNIDT)                                     MD058106
+     D WrkNMDT         S                   LIKE(TrMDAT)                                     MD060424
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
@@ -934,7 +938,24 @@
      C                   EVAL      WrkDATE = TrNIDT
      C
      C                   OTHER
+                                                                                            MD060424
+      ** If rollover date, current maturity date and rundate are the                        MD060424
+      ** same, use new maturity date if exists else use MDAT                                MD060424
+                                                                                            MD060424
+     C                   EVAL      WrkNMDT = 0                                              MD060424
+     C/exec SQL                                                                             MD060424
+     C+ select NMDT into :WrkNMDT                                                           MD060424
+     C+ from CLOANCL                                                                        MD060424
+     C+ where LNRF = :TrTRAN                                                                MD060424
+     C+ and RLDT = :TrMDAT                                                                  MD060424
+     C+ and MDAT = :BJRDNB                                                                  MD060424
+     C/end-exec                                                                             MD060424
+                                                                                            MD060424
+     C                   IF        WrkNMDT <> 0                                             MD060424
+     C                   EVAL      WrkDATE = WrkNMDT                                        MD060424
+     C                   ELSE                                                               MD060424
      C                   EVAL      WrkDATE = TrMDAT
+     C                   ENDIF                                                              MD060424
 
      C                   ENDSL
       *                                                                                     MD059137

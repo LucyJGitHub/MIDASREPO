@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD059808           Date 29Apr22               *
-      *  Prev Amend No. MD059137           Date 29Oct21               *
+      *  Last Amend No. MD060424           Date 22Feb23               *
+      *  Prev Amend No. MD059808           Date 29Apr22               *
+      *                 MD059137           Date 29Oct21               *
       *                 MD058182           Date 25May21               *
       *                 MD058108           Date 18May21               *
       *                 CLE172             Date 01Oct20               *
@@ -167,6 +168,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060424 - No base rate change event generated for NCCR loan.*
+      *             Use NMDT in checking if maturity date is before   *
+      *             base rate change date for BR extracted from ARR   *
+      *             calculator, else use MDAT.                        *
       *  MD059808 - BR event for forward-looking rate loans appeared  *
       *             on exception report due to empty dates on array.  *
       *             Save AB2 array and restore contents after every   *
@@ -1936,11 +1941,25 @@
      C           WLIBE     ANDEQ' '                                                           CLE172
      C                     GOTO END                                       047239
      C                     END                                            047239
-     C           MDAT      IFGT 0                                                             CLE172
-     C           MDAT      ANDLEAB2,D                                                         CLE172
+      *                                                                                     MD060424
+      ** If rollover date, current maturity date and rundate are the                        MD060424
+      ** same, use new maturity date if exists else use MDAT                                MD060424
+      *                                                                                     MD060424
+     C           CLE172    IFEQ 'Y'                                                         MD060424
+     C                     Z-ADDMDAT      WMDAT   50                                        MD060424
+     C           RLDT      IFEQ MDAT                                                        MD060424
+     C           MDAT      ANDEQRUND                                                        MD060424
+     C           NMDT      ANDNE0                                                           MD060424
+     C                     Z-ADDNMDT      WMDAT                                             MD060424
+     C                     ENDIF                                                            MD060424
+     C********** MDAT      IFGT 0                                                    CLE172 MD060424
+     C********** MDAT      ANDLEAB2,D                                                CLE172 MD060424
+     C           WMDAT     IFGT 0                                                           MD060424
+     C           WMDAT     ANDLEAB2,D                                                       MD060424
      C           WLIBE     ANDEQ'Y'                                                           CLE172
      C                     GOTO LIBS                                                          CLE172
      C                     ENDIF                                                              CLE172
+     C                     ENDIF                                                            MD060424
      C*
 0744 C***46***** ACTIC     ADD  1         ACTIC                                               223823
      C   46N95   ACTIC     ADD  1         ACTIC                                               223823

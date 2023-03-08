@@ -5530,12 +5530,12 @@
      C                   ENDIF                                                  End REPLIC     CPB00
      C/COPY WNCPYSRC,DL0280C025
      C*                                                                   032104
-     C     ORED          IFLT      BJRDNB                                                      03210
+     C*****ORED          IFLT      BJRDNB                                             03210 MD033116
      C                   Z-ADD     AIPD          TOTI                                          E1043
      C     CAS005        IFEQ      'Y'
      C                   Z-ADD     FSAIPN        FSTOTN
      C                   ENDIF
-     C                   END                                                                   03210
+     C**********         END                                                          03210 MD033116
      C/COPY WNCPYSRC,DL0280C078
      C*                                                                   032104
      C                   Z-ADD     0             AIPD                                          E1043

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL015             Date 27Aug13               *
+      *  Last Amend No. MD020393           Date 01Mar23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL015             Date 27Aug13               *
       *                 245692             Date 12Dec13               *
       *                 AR569568           Date 22Nov12               *
       *                 235508             Date 20Nov12               *
@@ -75,6 +76,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD020393 - Allow negative rate                               *
+      *           - Applied for MD033116                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL015 - Daily Compounding of Interest                       *
       *  245692 - Incorrect validation of rates when the decimal se-  *
@@ -2023,16 +2026,32 @@
      C                   PARM                    BNDCSP                                       245692
                                                                                               CAS005
      C     MSG1          IFNE      *BLANK                                                     CAS005
+     C     ReturnCode    ANDEQ     '*ERROR'                                                 MD020393
      C                   ADD       1             Idx                                          CAS005
      C                   EVAL      FldNameArr(Idx) = 'DDLQPR'                                 CAS005
      C                   EVAL      MsgIDArr(Idx) = MSG1                                       CAS005
      C                   ENDIF                                                                CAS005
                                                                                               CAS005
      C     MSG2          IFNE      *BLANK                                                     CAS005
+     C     ReturnCode    ANDEQ     '*ERROR'                                                 MD020393
      C                   ADD       1             Idx                                          CAS005
      C                   EVAL      FldNameArr(Idx) = 'DDLQPS'                                 CAS005
      C                   EVAL      MsgIDArr(Idx) = MSG2                                       CAS005
      C                   ENDIF                                                                CAS005
+      *                                                                                     MD020393
+     C     MSG1          IFNE      *BLANK                                                   MD020393
+     C     ReturnCode    ANDEQ     'Warning'                                                MD020393
+     C                   ADD       1             WIdx                                       MD020393
+     C                   EVAL      WFldNamArr(WIdx)= 'DDLQPR'                               MD020393
+     C                   EVAL      WMsgIDArr(WIdx) = MSG1                                   MD020393
+     C                   ENDIF                                                              MD020393
+                                                                                            MD020393
+     C     MSG2          IFNE      *BLANK                                                   MD020393
+     C     ReturnCode    ANDEQ     'Warning'                                                MD020393
+     C                   ADD       1             Idx                                        MD020393
+     C                   EVAL      WFldNamArr(WIdx)= 'DDLQPS'                               MD020393
+     C                   EVAL      WMsgIDArr(WIdx) = MSG2                                   MD020393
+     C                   ENDIF                                                              MD020393
                                                                                               CAS005
       ** Use the return code's value to set the field's OK flag                               CAS005
                                                                                               CAS005

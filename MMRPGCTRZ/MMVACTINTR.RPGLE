@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058543A          Date 09Sep21               *
-      *  Prev Amend No. MD058547           Date 10Aug21               *
+      *  Last Amend No. MD032114           Date 01Mar23               *
+      *  Prev Amend No. MD058543A          Date 09Sep21               *
+      *                 MD058547           Date 10Aug21               *
       *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032114 - Allow negative value on interest rate             *
+      *           - Partially applied for MD033116                    *
       *  MD058543A - BADJ not included in DDAIR during amend of deal. *
       *              Compute DDAIR/IKINTR when action type is Insert. *
       *  MD058547 - User cannot amend a call notice deposit taken     *
@@ -461,7 +464,8 @@
       *
      C     @@Ercd        IFNE      0
      C                   MOVE      'Y'           ErrorFound
-     C                   MOVEL     'MMM0422'     Msgid1
+     C**********         MOVEL     'MMM0422'     Msgid1                                     MD032114
+     C                   MOVEL     'MMM9041'     Msgid1                                     MD032114
      C                   ENDIF
       *
       **  If the spread/rate is valid, determine the Actual Interest Rate

@@ -1,6 +1,6 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas MX COB Bulk Extract - 'Activty' Cmps')          */
+/*EXI *  TEXT('Midas MX COB Bulk Extract - Activty Cmps')            */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Meridian Export Module                              */
@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR792326           Date 16Feb23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSW034             Date 09Jan04              */
+/*                      CSW034             Date 09Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CMX011             Date 29Dev01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR792326 - FlatFiles for any format and composite           */
+/*                  (Child: AR830959)                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSW034 - Midas Message Manager Global Processing            */
 /*       CMX011 - Enable Meridian Export to use data queue as well   */
@@ -54,6 +57,8 @@
                                                                                /*CMX011*/
              DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(20)                         /*CMX011*/
              DCL        VAR(&KDTAQ) TYPE(*CHAR) LEN(1)                         /*CSW034*/
+             DCL        VAR(&FLATFIL) TYPE(*CHAR) LEN(10)                               /*AR792326*/
+             DCL        VAR(&FLATLIB) TYPE(*CHAR) LEN(10)                               /*AR792326*/
  
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN( 7)
              DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
@@ -83,9 +88,12 @@
 /*********** CALL       PGM(MXGETEXTP) PARM(&RTCD &ERMS &COMI &EXTT +            CSW034*/
 /***********              &FMT &DTAG &MEMBR &DRVACT &DRIVFL &MODI +              CSW034*/
 /***********              &DTAQ)                                          CMX011 CSW034*/
+/**********  CALL       PGM(MXGETEXTP) PARM(&RTCD &ERMS &COMI &EXTT + */                /*AR792326*/
+/**********               &FMT &DTAG &MEMBR &DRVACT &DRIVFL &MODI + */                  /*AR792326*/
+/**********               &DTAQ &KDTAQ) */                                       /*CSW034 AR792326*/
              CALL       PGM(MXGETEXTP) PARM(&RTCD &ERMS &COMI &EXTT +
                           &FMT &DTAG &MEMBR &DRVACT &DRIVFL &MODI +
-                          &DTAQ &KDTAQ)                                        /*CSW034*/
+                          &DTAQ &KDTAQ &FLATFIL &FLATLIB)                               /*AR792326*/
  
  
 /* If there was an error getting the extract parameters then end */

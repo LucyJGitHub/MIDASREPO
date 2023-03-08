@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR792326           Date 16Feb23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC023             Date 30Jan04              */
+/*                      CSC023             Date 30Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CPK014             Date 14Nov01              */
 /* Midas DBA 3.05 ---------------------------------------------------*/
@@ -22,6 +23,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR792326 - FlatFiles for any format and composite           */
+/*                  (Child: AR830959)                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
@@ -43,10 +46,10 @@
              DCL        VAR(&TRMNAM)  TYPE(*CHAR) LEN(10)
              DCL        VAR(&CALLTRM) TYPE(*CHAR) LEN(90)
  
-             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*CMX010*/
-             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                 /*CMX010*/
-             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                  /*CMX010*/
-             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)             /*CMX010*/
+/**********  DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) */                         /*CMX010 AR792326*/
+/**********  DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) */                         /*CMX010 AR792326*/
+/**********  DCL        VAR(&SAR) TYPE(*CHAR) LEN(6) */                          /*CMX010 AR792326*/
+/**********  DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200) */                     /*CMX010 AR792326*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
@@ -76,29 +79,29 @@
                           *CAT &COMI *CAT ' ' *CAT &EXTT *CAT ' ' +
                           *CAT &FMT *CAT ')')
  
-/* Check if switchable feature CMX010 (Flat file export) is    */     /*CMX010*/
-/* installed.                                                  */     /*CMX010*/
+/**Check*if*switchable*feature*CMX010*(Flat*file*export)*is*****/                /*CMX010 AR792326*/
+/**installed.***************************************************/                /*CMX010 AR792326*/
  
-             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CMX010*/
-             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*CMX010*/
-             CHGVAR     VAR(&SAR) VALUE('CMX010')                     /*CMX010*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)  /*CMX010*/
-             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*CMX010*/
+/**********  CHGVAR     VAR(&RTCD) VALUE('       ') */                           /*CMX010 AR792326*/
+/**********  CHGVAR     VAR(&OPTN) VALUE('*VERIFY') */                           /*CMX010 AR792326*/
+/**********  CHGVAR     VAR(&SAR) VALUE('CMX010') */                             /*CMX010 AR792326*/
+/**********  CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD) */          /*CMX010 AR792326*/
+/**********  IF         COND(&RTCD *EQ '       ') THEN(DO) */                    /*CMX010 AR792326*/
  
-/* Change variable to use 'Flat file' version of export program       /*CMX010*/
+/**Change*variable*to*use*'Flat*file'*version*of*export*program*/                /*CMX010 AR792326*/
  
-             CHGVAR     VAR(&CALLTRM) VALUE('CALL MXC0721 PARM(' +
-                          *CAT &COMI *CAT ' ' *CAT &EXTT *CAT ' ' +
-                          *CAT &FMT *CAT ')')                         /*CMX010*/
-             ENDDO                                                    /*CMX010*/
+/**********  CHGVAR     VAR(&CALLTRM) VALUE('CALL MXC0721 PARM(' + */                   /*AR792326*/
+/**********               *CAT &COMI *CAT ' ' *CAT &EXTT *CAT ' ' + */                  /*AR792326*/
+/**********               *CAT &FMT *CAT ')') */                                 /*CMX010 AR792326*/
+/**********  ENDDO */                                                            /*CMX010 AR792326*/
  
-             ELSE       CMD(DO)                                       /*CMX010*/
+/**********  ELSE       CMD(DO) */                                               /*CMX010 AR792326*/
  
              CHGVAR     VAR(&CALLTRM) VALUE('CALL MXC0720 PARM(' +
                           *CAT &COMI *CAT ' ' *CAT &EXTT *CAT ' ' +
                           *CAT &FMT *CAT ')')
  
-             ENDDO                                                    /*CMX010*/
+/**********  ENDDO */                                                            /*CMX010 AR792326*/
  
 /*/COPY WNCPYSRC,MXC0700MPS                                          */
  

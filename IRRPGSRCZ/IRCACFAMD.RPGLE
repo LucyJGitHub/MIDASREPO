@@ -16,12 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060920           Date 09Feb23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CDL039             Date 22Aug05               *
       *                 CDL038             Date 10May05               *
       *                 BUG6472            Date 23Apr05               *
@@ -38,6 +39,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060920 - FRA/IRS: incorrect reflection of interest in      *
+      *             assets and liabilities for CAPS/Coll/Floor.       *
+      *           - Condition the floor/ceiling rate when calculating *
+      *             the accrued interest. Also, system should display *
+      *             the correct side (OUR/THEIR) of deal's interest   *
+      *             details.                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CDL039 - Amendable Deal Sub Types & Classes                  *
@@ -452,7 +459,8 @@
  
      C                   IF        CrDTYP = 'RP' AND CrBYSL = 'B' OR
      C                             CrDTYP = 'RR' AND CrBYSL = 'B' OR
-     C                             CrDTYP = 'RF' AND CrBYSL = 'S'
+     C**********                   CrDTYP = 'RF' AND CrBYSL = 'S'                           MD060920
+     C                             CrDTYP = 'RF' AND CrBYSL = 'B'                           MD060920
      C                   EVAL      WSide = 'T'
      C                   ELSE
      C                   EVAL      WSide = 'U'

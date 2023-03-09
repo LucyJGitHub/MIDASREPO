@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059246           Date 03Dec21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD060920           Date 09Feb23               *
+      *  Prev Amend No. MD059246           Date 03Dec21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD054095           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -45,6 +46,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060920 - FRA/IRS: incorrect reflection of interest in      *
+      *             assets and liabilities for CAPS/Coll/Floor.       *
+      *           - Condition the floor/ceiling rate when calculating *
+      *             the accrued interest. Also, system should display *
+      *             the correct side (OUR/THEIR) of deal's interest   *
+      *             details.                                          *
       *  MD059246 - Short term rate value is not displayed correctly  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -557,7 +564,8 @@
 
      C                   IF        (DTYP = 'RP' AND BYSL = 'B')
      C                             OR (DTYP = 'RR' AND BYSL = 'B')
-     C                             OR (DTYP = 'RF' AND BYSL = 'S')
+     C**********                   OR (DTYP = 'RF' AND BYSL = 'S')                          MD060920
+     C                             OR (DTYP = 'RF' AND BYSL = 'B')                          MD060920
 
       ** Their Base Rate Code/Type
 
@@ -1276,7 +1284,8 @@
                                                                                               CIR020
      C                   IF        (DTYP = 'RP' AND BYSL = 'B')                               CIR020
      C                             OR (DTYP = 'RR' AND BYSL = 'B')                            CIR020
-     C                             OR (DTYP = 'RF' AND BYSL = 'S')                            CIR020
+     C**********                   OR (DTYP = 'RF' AND BYSL = 'S')                   CIR020 MD060920
+     C                             OR (DTYP = 'RF' AND BYSL = 'B')                          MD060920
                                                                                               CIR020
      C                   MOVE      TBLRT         DDBLRT                                       CIR020
      C                   MOVE      TRFRR         DDRFRR                                       CIR020

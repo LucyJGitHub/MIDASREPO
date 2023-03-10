@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD036615           Date 01Mar23               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
@@ -87,6 +88,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036615 - Subtract HKMTTI when HKNGVI is 'Y'                *                             *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
@@ -902,8 +904,12 @@
       *
      C     HKIPDS        IFEQ      'N'
      C     HKFUID        ANDNE     'Y'
+     C     HKNGVI        IFNE      'Y'                                                      MD036615
      C     HKAMNP        ADD       HKMTTI        NewPrinc
      C                   SUB       OldTaxAmt     NewPrinc         15 0
+     C                   ELSE                                                               MD036615
+     C     HKAMNP        SUB       HKMTTI        NewPrinc                                   MD036615
+     C                   ENDIF                                                              MD036615
       *                                                                                       CGL031
      C                   IF        CGL031 = 'Y'                                               CGL031
      C                   SUB       WEUTaxAmt     NewPrinc                                     CGL031

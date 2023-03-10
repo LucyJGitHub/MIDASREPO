@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1019919A         Date 01Mar23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1019919A - Actual interest rate should be able to handle   *
+      *               negative interest rate. (Child: AR1019920)      *
+      *             - Applied for MD033116                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG3620- Apply Base Rate at Value Date for Spread Changes    *
@@ -294,7 +298,8 @@
      C                   PARM      *BLANK        PAmtOutS         16
      C                   PARM      *BLANK        PAmtOutU         17
       *
-     C                   MOVE      PAmtOutS      DDAIR
+     C**********         MOVE      PAmtOutS      DDAIR                                    AR1019919A
+     C                   MOVE      PAmtOutU      DDAIR                                    AR1019919A
       *
      C                   ELSE
      C                   MOVE      *BLANKS       DDAIR
@@ -309,7 +314,8 @@
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDAIR         @@ALPH
      C                   MOVE      'N'           @@MTID            1
-     C                   CALLB     'ZA0840'
+     C**********         CALLB     'ZA0840'                                               AR1019919A
+     C                   CALLB     'ZA0841'                                               AR1019919A
      C                   PARM                    RetCodeIn
      C                   PARM                    @@ALPH
      C                   PARM                    @@IDP

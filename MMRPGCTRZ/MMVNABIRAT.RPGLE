@@ -23,8 +23,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR814519           Date 10Mar15               *
+      *  Last Amend No. MD033116           Date 01Mar23               *
+      *  Prev Amend No. 254030             Date 01Mar23               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR814519           Date 10Mar15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -36,6 +38,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033116 - Use a different msgid                             *
+      *  254030 - Amended program so that it will accept zero inte-   *
+      *           rest rate.                                          *
+      *         -  Applied for MD033116                               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR814519 - Allow negative base rate.                         *
       *           - Applied for MD033488                              *
@@ -214,20 +220,21 @@
  
      C     @@ERCD        IFNE      0
      C**********         MOVEL     'MMM0422'     MSGID1                                     AR814519
-     C                   MOVEL     'MMM9023'     MSGID1                                     AR814519
+     C**********         MOVEL     'MMM9023'     MSGID1                            AR814519 MD033116
+     C                   MOVEL     'MMM9041'     MSGID1                                     MD033116
      C                   EVAL      ErrorFound = 'Y'
       *
       **  If deal type is not a 'BD' and interest rate is zero
       **  then it is an error.
      C                   ELSE
      C                   MOVE      @@ALPH        DDINTR
-     C     DDMTYP        IFNE      'BD'
-     C     @@AMT         ANDEQ     0
-     C                   MOVEL     'MMM0421'     MSGID1
-     C                   EVAL      ErrorFound = 'Y'
-     C                   ELSE
+     C*****DDMTYP        IFNE      'BD'                                                       254030
+     C*****@@AMT         ANDEQ     0                                                          254030
+     C**********         MOVEL     'MMM0421'     MSGID1                                       254030
+     C**********         EVAL      ErrorFound = 'Y'                                           254030
+     C**********         ELSE                                                                 254030
      C     @@AMT         DIV       10000000      @SPRD            11 7
-     C                   END
+     C**********         END                                                                  254030
      C                   END
      C                   END
       *

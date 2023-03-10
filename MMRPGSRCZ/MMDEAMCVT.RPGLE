@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 256226             Date 11Jan22               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. AR1019919A         Date 01Mar23               *
+      *  Prev Amend No. MD035043           Date 01Mar23               *
+      *                 256226             Date 11Jan22               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 01Sep14               *
       *                 MD027637           Date 19Aug14               *
@@ -46,6 +48,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1019919A - Allow negative interest rate on actual interest *
+      *               rate field. (Child: AR1019920)                  *
+      *             - Applied for MD033166                            *
+      *  MD035043 - Allow display of -ve rate in Funding Rate field.  *
       *  256226 - Authorise a zero interest rate on Deal Amendment.   *
       *           Apply fix 255576. Reverse fix of MD027637           *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -345,9 +351,9 @@
       *
       **  Reverse sign for display if amount -ve.
       *
-     C     @@AMTW        IFLT      0
-     C                   Z-SUB     @@AMTW        @@AMTW
-     C                   ENDIF
+     C*****@@AMTW        IFLT      0                                                        MD035043
+     C**********         Z-SUB     @@AMTW        @@AMTW                                     MD035043
+     C**********         ENDIF                                                              MD035043       
       *
      C                   EXSR      FMTAMT
       *
@@ -421,11 +427,12 @@
      C     WAIR          MULT      10000000      @@AMTW                                       CDL020
      C                   Z-ADD     7             @@QECN                                       CDL020
       *                                                                                       CDL020
-      **  Reverse sign for display if amount -ve.                                             CDL020
+      ****Reverse*sign*for*display*if*amount*-ve.**********************            CDL020 AR1019919A
+      ** Allow negative sign in actual interest rate field.                               AR1019919A
       *                                                                                       CDL020
-     C     @@AMTW        IFLT      0                                                          CDL020
-     C                   Z-SUB     @@AMTW        @@AMTW                                       CDL020
-     C                   ENDIF                                                                CDL020
+     C*****@@AMTW        IFLT      0                                               CDL020 AR1019919A
+     C**********         Z-SUB     @@AMTW        @@AMTW                            CDL020 AR1019919A
+     C**********         ENDIF                                                     CDL020 AR1019919A
       *                                                                                       CDL020
      C                   EXSR      FMTAMT                                                     CDL020
      C                   MOVE      @@AMTD        DDAIR                                        CDL020
@@ -654,10 +661,6 @@
       *
       * Deam Status
      C                   PARM                    DDSTS            24
-      *                                                                                       CDL102
-      ** Backward-Looking Rate Fields                                                         CDL102
-      *                                                                                       CDL102
-     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       ** Initialize program name
       *

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059190           Date 08Nov21               *
-      *  Prev Amend No. MD059137           Date 29Oct21               *
+      *  Last Amend No. MD060424           Date 22Feb23               *
+      *  Prev Amend No. MD059190           Date 08Nov21               *
+      *                 MD059137           Date 29Oct21               *
       *                 MD059128           Date 28Oct21               *
       *                 MD058708           Date 31Aug21               *
       *                 CDL102             Date 01Jun21               *
@@ -33,18 +34,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060424 - No rate extracted from ARR calculator. Use NMDT as*
+      *             end date of ARR call parameter, else use MDAT.    *
       *  MD059190 - Do a second call of ARR calculator for existing   *
       *             backward looking rate loans and next interest due *
       *             date is equal to rundate. Use ARR rollover details*
       *             if valued on the the same date and authorised.    *
-      *             Applied for MD-59463.                             *         
+      *             Applied for MD-59463.                             *
       *  MD059137 - Determine new interest period start and end date  *
       *             of migrated loans with rollover date and interest *
       *             due date equal to rundate.                        *
-      *             Applied for MD-59463.                             *                  
+      *             Applied for MD-59463.                             *
       *  MD059128 - Also select backward looking loan with future     *
       *             rollover date.                                    *
-      *             Applied for MD-59463.                             *            
+      *             Applied for MD-59463.                             *
       *  MD058708 - SD001110P2 does not reflect BC specific changes   *
       *             (base rate code and ARR parameters). Add Base     *
       *             Rate Code field in extract file.                  *
@@ -247,7 +250,7 @@
      D PublTime        S              8A
      D EventCtrlDate   S              5S 0                                                  MD058040
      D ControlDate     S              5A                                                    MD058182
-     D WrkMigrate      S              1A                                                    MD059137     
+     D WrkMigrate      S              1A                                                    MD059137
      D Wrk2ndCall      S              1A   INZ('N')                                         MD059190
      D WrkEndDate      S              5P 0                                                  MD059190
      D WrkBasDate      S              5P 0                                                  MD059190
@@ -258,6 +261,7 @@
      D RTKNDate        S                   LIKE(TrNIDT)
      D WrkDATE         S                   LIKE(TrNIDT)
      D IntPayDate      S                   LIKE(TrNIDT)                                     MD058106
+     D WrkNMDT         S                   LIKE(TrMDAT)                                     MD060424
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
@@ -745,7 +749,24 @@
      C                   EVAL      WrkDATE = TrNIDT
      C
      C                   OTHER
+                                                                                            MD060424
+      ** If rollover date, current maturity date and rundate are the                        MD060424
+      ** same, use new maturity date if exists else use MDAT                                MD060424
+                                                                                            MD060424
+     C                   EVAL      WrkNMDT = 0                                              MD060424
+     C/exec SQL                                                                             MD060424
+     C+ select NMDT into :WrkNMDT                                                           MD060424
+     C+ from CLOANCL                                                                        MD060424
+     C+ where LNRF = :TrTRAN                                                                MD060424
+     C+ and RLDT = :TrMDAT                                                                  MD060424
+     C+ and MDAT = :BJRDNB                                                                  MD060424
+     C/end-exec                                                                             MD060424
+                                                                                            MD060424
+     C                   IF        WrkNMDT <> 0                                             MD060424
+     C                   EVAL      WrkDATE = WrkNMDT                                        MD060424
+     C                   ELSE                                                               MD060424
      C                   EVAL      WrkDATE = TrMDAT
+     C                   ENDIF                                                              MD060424
 
      C                   ENDSL
       *                                                                                     MD059137

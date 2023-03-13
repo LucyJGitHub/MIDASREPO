@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059368           Date 17Dec21               *
-      *  Prev Amend No. MD058734           Date 03Sep21               *
+      *  Last Amend No. MD060876           Date 08Feb23               *
+      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *                 MD058734           Date 03Sep21               *
       *                 MD058547           Date 10Aug21               *
       *                 MD058448           Date 14Jul21               *
       *                 MD058379           Date 12Jul21               *
@@ -57,6 +58,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060876 - Internal Funding deal with a Backward-looking     *
+      *             Rate - error message "Fixed Base Rate must be N". *
       *  MD059368 - Inhibit the LIBOR Deregulation fields if CDL102   *
       *             is switched off                                   *
       *  MD058734 - Default value for Day Basis Average based         *
@@ -3363,7 +3366,8 @@
       ** Fixed Base Rate must be 'N' if Backward-Looking Rate is 'Y'                          CDL102
       *                                                                                       CDL102
      C     N1BLRT        IFEQ      'Y'                                                        CDL102
-     C     DDFBRT        ANDNE     'N'                                                        CDL102
+     C*****DDFBRT        ANDNE     'N'                                               CDL102 MD060876
+     C     DDFBRT        ANDEQ     'Y'                                                      MD060876
      C                   MOVEL     'N'           OKFBRT                                       CDL102
      C                   ADD       1             Idx                                          CDL102
      C                   MOVEL     'DDFBRT'      FldNamXAr(Idx)                               CDL102

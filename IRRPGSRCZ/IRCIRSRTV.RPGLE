@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060683           Date 15Feb23               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057061           Date 03Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -79,6 +80,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057061 - Serious Midas Error encountered in CIRS and SIRS  *
@@ -377,6 +380,9 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
       *                                                                                     MD000091
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
+      *                                                                                     MD060683
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -813,15 +819,18 @@
       ** Authorise User must be different from Original Input User                            217684
       ** and Amend User                                                                       217684
                                                                                              BUG4756
-     C                   CALL      'SFC000026'                                               BUG4756
-     C                   PARM      *BLANKS       USER             10                         BUG4756
+     C**********         CALL      'SFC000026'                                      BUG4756 MD060683
+     C**********         PARM      *BLANKS       USER             10                BUG4756 MD060683
                                                                                              BUG4756
-     C                   IF        USER <> *BLANKS                                           BUG4756
-     C                   EVAL      PSUser = USER                                             BUG4756
-     C                   ENDIF                                                               BUG4756
+     C**********         IF        USER <> *BLANKS                                  BUG4756 MD060683
+     C**********         EVAL      PSUser = USER                                    BUG4756 MD060683
+     C**********         ENDIF                                                      BUG4756 MD060683
                                                                                               CIR008
-     C                   IF        FIUSRI = PSUser                                            CIR008
-     C                             or FIUSRA = PSUser                                         217684
+     C**********         IF        FIUSRI = PSUser                                   CIR008 MD060683
+     C**********                   or FIUSRA = PSUser                                217684 MD060683
+      *                                                                                     MD060683
+     C                   IF        FIUSRI = IRUSER                                          MD060683
+     C                             OR FIUSRA = IRUSER                                       MD060683
      C                   EVAL      OKDLNO = 'N'                                               CIR008
      C                   EVAL      Idx = Idx + 1                                              CIR008
      C                   EVAL      FldNameArr(Idx) = 'SDLNO '                                 CIR008
@@ -1633,6 +1642,8 @@
      C                   PARM                    SBRCA             3
       ** Switchable feature CIR008                                                            CIR008
      C                   PARM                    CIR008                                       CIR008
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
 
       * OUTPUTS
       * (Current) deal in file format

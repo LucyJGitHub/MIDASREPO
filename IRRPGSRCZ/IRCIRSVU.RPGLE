@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059314           Date 22Feb22               *
-      *  Prev Amend No. MD059100A          Date 23Dec21               *
+      *  Last Amend No. MD060683           Date 15Feb23               *
+      *  Prev Amend No. MD059314           Date 22Feb22               *
+      *                 MD059100A          Date 23Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058398           Date 20Aug21               *
       *                 MD058492           Date 06Aug21               *
@@ -114,6 +115,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059100A - Incorrect deal status on pre-confirmation        *
@@ -1393,6 +1396,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D BufferEx8       S           9999                                                      BUG5449
      D BufferEx9       S           9999                                                      BUG5449
      D UpdateYN        S              1
+     D IRUSER          S             10A                                                    MD060683
 
       ** Fields defined
      D OKCshFlw        S              1A   INZ('Y')
@@ -2189,6 +2193,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    MsgFArray                                   BUG6377
      C                   PARM                    APIRetC                                     BUG6377
      C                   PARM                    ACTRJ                                      MD054906
+     C                   PARM                    IRUSER                                     MD060683
+      *                                                                                     MD060683
      C                   MOVEL     SACCD         Buffer                                      BUG6377
       *                                                                                      BUG6377
      C                   ELSE                                                                BUG6377
@@ -2673,6 +2679,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       ** Switchable feature CIR008
 
      C                   PARM                    CIR008
+                                                                                            MD060683
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
 
       * OUTPUTS
 
@@ -8301,6 +8310,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    CAP056
      C                   PARM                    SUEINR                                     MD054095
      C                   PARM                    STEINR                                     MD054095
+     C                   PARM                    IRUSER                                     MD060683
                                                                                               CSW213
       ** Call DLRPIFVU - Midas DL Reporting Information Validate and Update                   CSW213
                                                                                               CSW213
@@ -8656,6 +8666,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    BufferEx9                                   BUG5449
       ** API Return Code
      C                   PARM                    APIRetc
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
 
       ** Set up the name of the MSGF from which the message handler will
       **  get the messages

@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD054313           Date 10Mar23               *
+      *  Prev Amend No. MD036339           Date 06Mar23               *
+      *                 CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054028           Date 05Sep19               *
       *                 MD039617           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
@@ -76,6 +78,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054313 - FRN testing - it is possible to insert MM deal    *
+      *             type IT with Actual Interest Rate <>0 and Short   *
+      *             term Rate = 0 but not possible to authorise it.   *
+      *             Program is amended to convert Short Term Rate only*
+      *             if entered by checking the Short Term Rate Flag.  *
+      *  MD036339 - DL Error amending Maturity date.                  *
+      *           - Ensure Interest rate field is updated when Short  *
+      *             Term rate is amended.                             *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -927,10 +937,10 @@
      C                   IF        HKSTRF = 'Y'                                               CDL033
      C**********         EVAL      PZFLD15 = HKSTRT * 10000000                         CDL033 245692
      C                   EVAL      W#AMTW  = HKSTRT * 10000000                                245692
-     C                   ELSE                                                                 CDL033
+     C**********         ELSE                                                        CDL033 MD036339
      C**********         MOVE      DDSTRT        PZFLD15                               CDL033 245692
-     C                   MOVE      DDSTRT        W#AMTW                                       245692
-     C                   ENDIF                                                                CDL033
+     C**********         MOVE      DDSTRT        W#AMTW                              245692 MD036339
+     C**********         ENDIF                                                       CDL033 MD054313
       *                                                                                       CDL033
      C**********         EVAL      PZDECS  = 7                                         CDL033 245692
      C                   EVAL      W#DECP  = 7                                                245692
@@ -958,6 +968,7 @@
      C                   ELSE                                                                 245692
      C                   MOVE      W#AMTD        DDSTRT                                       245692
      C                   ENDIF                                                                245692
+     C                   ENDIF                                                              MD054313
       *                                                                                       CDL033
       ** Rate Fix Days                                                                        CDL033
       *                                                                                       CDL033

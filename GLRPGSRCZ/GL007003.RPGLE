@@ -78,7 +78,6 @@
      D pMEACOD         S                   INZ LIKE(MEACOD)
      D pMEACSQ         S                   INZ LIKE(MEACSQ)
      D pMEBRCA         S                   INZ LIKE(MEBRCA)
-     D pMERDAT         S                   INZ LIKE(MERDAT)
      D pMEVDAT         S                   INZ LIKE(MEVDAT)
      D pMEPDAT         S                   INZ LIKE(MEPDAT)
      D pMEAMT          S                   INZ LIKE(MEAMT)
@@ -188,7 +187,6 @@
      C                   WHEN      EntDtaHdr.JOCODE = UserGenerated
      C                   IF        EntDtaHdr.JOENTT = OLFlag
      C                             AND %SUBST( EntDta.JOESD : 1 : 3 ) = 'END'
-     C                             AND ENTDTAHDR.JOOBJ = 'GLMEMOTD  '
      C                   EXSR      EndBgUpd
      C                   ENDIF
 
@@ -345,14 +343,12 @@
      C                   EVAL      MEMOSDS.MEAMT = -( MEMOSDS.MEAMT )
      C                   ENDIF
 
-     C*                  CALLP     UpdMEMOS( pRtnCode : MEMOSDS )
      C                   EVAL      pMEACNO = MEMOSDS.MEACNO
      C                   EVAL      pMECNUM = MEMOSDS.MECNUM
      C                   EVAL      pMECCY  = MEMOSDS.MECCY
      C                   EVAL      pMEACOD = MEMOSDS.MEACOD
      C                   EVAL      pMEACSQ = MEMOSDS.MEACSQ
      C                   EVAL      pMEBRCA = MEMOSDS.MEBRCA
-     C                   EVAL      pMERDAT = MEMOSDS.MERDAT
      C                   EVAL      pMEVDAT = MEMOSDS.MEVDAT
      C                   EVAL      pMEPDAT = MEMOSDS.MEPDAT
      C                   EVAL      pMEAMT  = MEMOSDS.MEAMT
@@ -377,7 +373,6 @@
      C                   EVAL      MEACOD = MEMOSDS.MEACOD
      C                   EVAL      MEACSQ = MEMOSDS.MEACSQ
      C                   EVAL      MEBRCA = MEMOSDS.MEBRCA
-     C                   EVAL      MERDAT = MEMOSDS.MERDAT
      C                   EVAL      MEVDAT = MEMOSDS.MEVDAT
      C                   EVAL      MEPDAT = MEMOSDS.MEPDAT
      C                   EVAL      MEAMT  = MEMOSDS.MEAMT

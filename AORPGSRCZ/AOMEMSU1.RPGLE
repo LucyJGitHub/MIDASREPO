@@ -74,11 +74,11 @@
      C                   EVAL      MEACOD = PACOD
      C                   EVAL      MEACSQ = PACSQ
      C                   EVAL      MEBRCA = PBRCA
-     C                   EVAL      MERDAT = BJRDNB
      C                   EVAL      MEVDAT = PVDATE
      C                   EVAL      MEPDAT = PPDATE
      C                   EVAL      MEAMT  = PAMT
      C                   EVAL      MEFTOV = PFTOV
+     C                   TIME                    METMST
      C                   EVAL      MEPROC = *BLANK
       *
      C                   WRITE(E)  GLMEMOT0

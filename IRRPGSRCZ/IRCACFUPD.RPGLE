@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060069           Date 11Aug22               *
-      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *  Last Amend No. MD060920           Date 09Feb23               *
+      *  Prev Amend No. MD060069           Date 11Aug22               *
+      *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -78,6 +79,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060920 - FRA/IRS: incorrect reflection of interest in      *
+      *             assets and liabilities for CAPS/Coll/Floor.       *
+      *           - Condition the floor/ceiling rate when calculating *
+      *             the accrued interest. Also, system should display *
+      *             the correct side (OUR/THEIR) of deal's interest   *
+      *             details.                                          *
       *  MD060069 - DLC0602 00001 failed trying to divide by zero     *
       *           - Do not update the UINFD and TINFD fields on Deals *
       *             with ticked Average Rate Method.                  *
@@ -2186,7 +2193,8 @@
 
      C                   IF        DTYP = 'RP' AND BYSL = 'B' OR
      C                             DTYP = 'RR' AND BYSL = 'B' OR
-     C                             DTYP = 'RF' AND BYSL = 'S'
+     C**********                   DTYP = 'RF' AND BYSL = 'S'                               MD060920
+     C                             DTYP = 'RF' AND BYSL = 'B'                               MD060920
      C                   EVAL      TSLIP = VDAT
      C                   ELSE
      C                   EVAL      USLIP = VDAT
@@ -2247,7 +2255,8 @@
      C                   BITOFF    '01234567'    UDNSI
      C                   IF        DTYP = 'RP' AND BYSL = 'B' OR                            MD054095
      C                             DTYP = 'RR' AND BYSL = 'B' OR                            MD054095
-     C                             DTYP = 'RF' AND BYSL = 'S'                               MD054095
+     C**********                   DTYP = 'RF' AND BYSL = 'S'                      MD054095 MD060920
+     C                             DTYP = 'RF' AND BYSL = 'B'                               MD060920
      C                   EVAL      OurTheirInd = 'T'                                        MD054095
      C                   ELSE                                                               MD054095
      C                   EVAL      OurTheirInd = 'O'                                        MD054095

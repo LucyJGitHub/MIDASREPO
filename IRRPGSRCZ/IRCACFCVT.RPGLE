@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060920           Date 09Feb23               *
+      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060920 - FRA/IRS: incorrect reflection of interest in      *
+      *             assets and liabilities for CAPS/Coll/Floor.       *
+      *           - Condition the floor/ceiling rate when calculating *
+      *             the accrued interest. Also, system should display *
+      *             the correct side (OUR/THEIR) of deal's interest   *
+      *             details.                                          *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with     *
       *             zero rate                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -532,7 +539,8 @@
 
      C                   IF        (DTYP = 'RP' AND BYSL = 'B')
      C                             OR (DTYP = 'RR' AND BYSL = 'B')
-     C                             OR (DTYP = 'RF' AND BYSL = 'S')
+     C**********                   OR (DTYP = 'RF' AND BYSL = 'S')                          MD060920
+     C                             OR (DTYP = 'RF' AND BYSL = 'B')                          MD060920
 
       ** Their Base Rate Code/Type
 

@@ -24,8 +24,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. AR375396           Date 11Mar23               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD022857           Date 11Mar23               *
+      *  Prev Amend No. AR375396           Date 11Mar23               *
+      *                 MD058285           Date 22Jun21               *
       *                 248698             Date 01Jun20               *
       *                 MD050604           Date 21Feb20               *
       *                 MD046248           Date 27Oct17               *
@@ -77,6 +78,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD022857 - SE1140P1 report shows amortisation figures        *
+      *             for Processing Type = 8 with one day delay.       *
+      *             Remove parts of 375396 which recalculates         *
+      *             DPAP (Amortisation to Date) and BUDU (Amount      *
+      *             to Amortise) and use the file values instead.     *
       *  AR375396 - Discrepancy in SE1140P1 report between DBA3 and   *
       *             and MP1.4 after migration.                        *
       *           - For securities with processing type 8, use        *
@@ -638,15 +644,15 @@
      C                     ADD  DSCAMT    TTDSC
       ***  Amount Amortised to Date.
      C***********          ADD  DPFP      TTDPFP                          091183
-     C           PROT      IFEQ '8'                                                         AR375396
-     C           CFCT      ANDNE*ZERO                                                       AR375396
-     C                     ADD  DPFPX     TTDPFP                                            AR375396
-     C                     ADD  BUDUX     TTBUDU                                            AR375396
-     C                     ELSE                                                             AR375396
+     C***********PROT      IFEQ '8'                                                AR375396 MD022857
+     C***********CFCT      ANDNE*ZERO                                              AR375396 MD022857
+     C***********          ADD  DPFPX     TTDPFP                                   AR375396 MD022857
+     C***********          ADD  BUDUX     TTBUDU                                   AR375396 MD022857
+     C***********          ELSE                                                    AR375396 MD022857
      C                     ADD  DPAP      TTDPFP                          091183
       ***  Amount to Amortise.
      C                     ADD  BUDU      TTBUDU
-     C                     ENDIF                                                            AR375396
+     C***********          ENDIF                                                   AR375396 MD022857
      C/COPY WNCPYSRC,SE1140C018
      C                     END
       *
@@ -1082,9 +1088,11 @@
       *
      C/COPY WNCPYSRC,SE1140C008
      C           DAYS      IFEQ 0                                                             192084
-     C                     Z-ADDDPAP      RATE      H                                         192084
+     C***********          Z-ADDDPAP      RATE      H                                192084 MD022857
+     C                     Z-ADDDPAP      RATE                                       192084 MD022857
      C                     ELSE                                                               192084
-     C           DSCAMT    DIV  DAYS      RATE      H
+     C***********DSCAMT    DIV  DAYS      RATE      H                                       MD022857
+     C           DSCAMT    DIV  DAYS      RATE                                              MD022857
      C                     END                                                                192084
      C/COPY WNCPYSRC,SE1140C009
       *
@@ -1099,59 +1107,59 @@
      C                     MOVEL*BLANKS   RRATE                                             BUG12676
      C                     MOVE 'N/A'     RRATE                                             BUG12676
      C                     ENDIF                                                            BUG12676
-      ***********************************************************************               AR375396         
-      ** Calculate number of days between last position date and                            AR375396          
-      ** run date.                                                                          AR375396         
-      ***********************************************************************               AR375396         
-     C           PROT      IFEQ '8'                                                         AR375396         
-     C           CFCT      ANDNE*ZERO                                                       AR375396         
-     C                     Z-ADDRUND      ZEDATE                                            AR375396         
-     C                     EXSR ZDAYS                                                       AR375396         
-     C                     Z-ADDZDDAYS    DAYS1   50                                        AR375396         
-     C           ALDT      IFNE 0                                                           AR375396  
-     C           ALDT      ANDLTRUND                                                        AR375396         
-     C                     Z-ADD1         DAYS1                                             AR375396         
-     C                     Z-ADD0         RATE1                                             AR375396         
-     C                     Z-ADDDSCAMT    RATE      H                                       AR375396         
-      ***********************************************************************               AR375396         
-      ***Format Rate.                                                                       AR375396         
-      ***********************************************************************               AR375396          
-     C                     MOVE RATE1     ZFLD15                                            AR375396         
-     C                     MOVE 'L'       ZECODE                                            AR375396         
-     C                     EXSR ZSEDIT                                                      AR375396         
-     C                     MOVE ZOUT21    RRATE                                             AR375396         
-     C                     ENDIF                                                            AR375396         
-      ***********************************************************************               AR375396         
-      ** Amount amortised to date                                                           AR375396         
-      ***********************************************************************               AR375396          
-     C           RATE      MULT DAYS1     DPFPX  130                                        AR375396          
-     C                     Z-ADDDPFPX     ZFLD15                                            AR375396         
-     C                     EXSR ZSEDIT                                                      AR375396           
-     C                     MOVE ZOUT21    RDPFP                                             AR375396         
-      ***********************************************************************               AR375396         
-      ***Amount*to*amortise**************************************************               AR375396         
-      ***********************************************************************               AR375396         
-     C           DSCAMT    SUB  DPFPX     BUDUX  130                                        AR375396         
-     C           ALDT      IFNE 0                                                           AR375396         
-     C           ALDT      ANDLTRUND                                                        AR375396         
-     C                     Z-ADD*ZERO     BUDUX                                             AR375396         
-     C                     ENDIF                                                            AR375396         
-     C                     Z-ADDBUDUX     ZFLD15                                            AR375396         
-     C                     EXSR ZSEDIT                                                      AR375396         
-     C                     MOVE ZOUT21    RBUDU                                             AR375396         
-      ***********************************************************************               AR375396         
-      ** Cost basis                                                                         AR375396         
-      ***********************************************************************               AR375396         
-     C                     MOVEL'J'       ZECODE                                            AR375396         
-     C           NOMAMT    SUB  BUDUX     COBS                                              AR375396          
-     C           ALDT      IFNE 0                                                           AR375396         
-     C           ALDT      ANDLTRUND                                                        AR375396         
-     C                     Z-ADDNOMAMT    COBS                                              AR375396         
-     C                     ENDIF                                                            AR375396         
-     C                     Z-ADDCOBS      ZFLD15                                            AR375396         
-     C                     EXSR ZSEDIT                                                      AR375396         
-     C                     MOVE ZOUT21    RCOBS                                             AR375396         
-     C                     ENDIF                                                            AR375396         
+      ***********************************************************************      AR375396 MD022857
+      ***Calculate*number*of*days*between*last*position*date*and*************      AR375396 MD022857
+      ***run*date.***********************************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********PROT      IFEQ '8'                                                AR375396 MD022857
+     C***********CFCT      ANDNE*ZERO                                              AR375396 MD022857
+     C***********          Z-ADDRUND      ZEDATE                                   AR375396 MD022857
+     C***********          EXSR ZDAYS                                              AR375396 MD022857
+     C***********          Z-ADDZDDAYS    DAYS1   50                               AR375396 MD022857
+     C***********ALDT      IFNE 0                                                  AR375396 MD022857
+     C***********ALDT      ANDLTRUND                                               AR375396 MD022857
+     C***********          Z-ADD1         DAYS1                                    AR375396 MD022857
+     C***********          Z-ADD0         RATE1                                    AR375396 MD022857
+     C***********          Z-ADDDSCAMT    RATE      H                              AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+      ***Format*Rate.********************************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********          MOVE RATE1     ZFLD15                                   AR375396 MD022857
+     C***********          MOVE 'L'       ZECODE                                   AR375396 MD022857
+     C***********          EXSR ZSEDIT                                             AR375396 MD022857
+     C***********          MOVE ZOUT21    RRATE                                    AR375396 MD022857
+     C***********          ENDIF                                                   AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+      ***Amount*amortised*to*date********************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********RATE      MULT DAYS1     DPFPX  130                               AR375396 MD022857
+     C***********          Z-ADDDPFPX     ZFLD15                                   AR375396 MD022857
+     C***********          EXSR ZSEDIT                                             AR375396 MD022857
+     C***********          MOVE ZOUT21    RDPFP                                    AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+      ***Amount*to*amortise**************************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********DSCAMT    SUB  DPFPX     BUDUX  130                               AR375396 MD022857
+     C***********ALDT      IFNE 0                                                  AR375396 MD022857
+     C***********ALDT      ANDLTRUND                                               AR375396 MD022857
+     C***********          Z-ADD*ZERO     BUDUX                                    AR375396 MD022857
+     C***********          ENDIF                                                   AR375396 MD022857
+     C***********          Z-ADDBUDUX     ZFLD15                                   AR375396 MD022857
+     C***********          EXSR ZSEDIT                                             AR375396 MD022857
+     C***********          MOVE ZOUT21    RBUDU                                    AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+      ***Cost*basis**********************************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********          MOVEL'J'       ZECODE                                   AR375396 MD022857
+     C***********NOMAMT    SUB  BUDUX     COBS                                     AR375396 MD022857
+     C***********ALDT      IFNE 0                                                  AR375396 MD022857
+     C***********ALDT      ANDLTRUND                                               AR375396 MD022857
+     C***********          Z-ADDNOMAMT    COBS                                     AR375396 MD022857
+     C***********          ENDIF                                                   AR375396 MD022857
+     C***********          Z-ADDCOBS      ZFLD15                                   AR375396 MD022857
+     C***********          EXSR ZSEDIT                                             AR375396 MD022857
+     C***********          MOVE ZOUT21    RCOBS                                    AR375396 MD022857
+     C***********          ENDIF                                                   AR375396 MD022857
      C/COPY WNCPYSRC,SE1140C025
       *
       ***  Check for overflow.

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amemd No. MD059539           Date 07Mar22               *
-      *  Prev Amend No. MD058991           Date 06Oct21               *
+      *  Last Amend No. MD055649           Date 16Aug22               *
+      *  Prev Amend No. MD059539           Date 07Mar22               *
+      *                 MD058991           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058379           Date 01Jul21               *
       *                 CDL102             Date 01Jun21               *
@@ -236,6 +237,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055649 - Authorised corrective batch was not copied to     *
+      *             PEA system. Introduced New Field BPAUTH           *
       *  MD059539 - CER049 buffer issue.                              *
       *  MD058991 - Backward looking rate error encountered           *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
@@ -255,9 +258,9 @@
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
-      *  MD055446 - There are parties and fields missing from the BRT *	
-      *             details tab in Customer Input plus date of birth  *	
-      *             issues.                                           *	
+      *  MD055446 - There are parties and fields missing from the BRT *
+      *             details tab in Customer Input plus date of birth  *
+      *             issues.                                           *
       *           - Include BRT century fields on TransInEx2.         *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
@@ -1991,6 +1994,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     1             SUBST     BUFFER:Bfp    VDFLTF            1                        MD052075
      C                   ADD       1             Bfp                                        MD052075
      C
+     C     1             SUBST     BUFFER:Bfp    BPAUTH            1                        MD055649
+     C                   ADD       1             Bfp                                        MD055649
      C     BPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       BPRXLn        Bfp                                          CER001
      C     BPEXLn        SUBST     BUFFER:Bfp    ExtData
@@ -2007,6 +2012,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C/COPY OFCPYSRCZ,CGL135_044                                                             CGL135A
       ** CGL150 Default Value Date 'Y'                                                      MD052075
      C                   PARM                    VDFLTF                                     MD052075
+     C                   PARM                    BPAUTH                                     MD055649
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
      C                   PARM                    FldNameArr

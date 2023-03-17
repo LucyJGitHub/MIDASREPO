@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058466           Date 09Aug21               *
-      *  Prev Amend No. AR574704           Date 01Jun20               *
+      *  Last Amend No. MD055649           Date 23Jan23               *
+      *  Prev Amend No. MD058466           Date 09Aug21               *
+      *                 AR574704           Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056412           Date 11Aug20               *
       *                 MD052075           Date 07Jun19               *
@@ -99,6 +100,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *                                                               *
+      *  MD055649 - Authorised corrective batch was not copied to     *
+      *             PEA system. Introduced New Field BPAUTH           *
       *  MD058466 - Batch item processed before Batch header          *
       *             Delay and check again before issuing error msg.   *
       *  AR574704 - Cannot delete item if account is invalid. Neglect *
@@ -760,6 +764,7 @@
      C                                           + PEADetail                                  CSC054
       /COPY OFCPYSRCZ,CGL135_080                                                             CGL135A
      C                                           + VDFLTF                                   MD052075
+     C                                           + BPAUTH                                   MD055649
      C                                           + RegData                                    CER001
      C                                           + PExtData
       *                                                                                       CER001
@@ -849,6 +854,7 @@
      C                                           + PEADetail                                AR994584
       /COPY OFCPYSRCZ,CGL135_081                                                            MD023635
      C                                           + VDFLTF                                   MD052075
+     C                                           + BPAUTH                                   MD055649
      C                                           + RegData                                    CER001
      C                                           + PExtData
       *
@@ -1460,6 +1466,7 @@
      C                   Z-ADD     0             BRHDCC                                    AR1029481
      C                   Z-ADD     0             BRHINC                                    AR1029481
      C                   EVAL      BRBTSF = 'A'                                            AR1029481
+     C                   EVAL      BPAUTH = BRBTSF                                          MD055649
      C                   EVAL      BRIBCF = *BLANKS                                        AR1029481
      C                   EVAL      BRBHAI = 'A'                                            AR1029481
      C                   EVAL      BRTMST = PTimeStamp                                     AR1029481
@@ -1509,6 +1516,7 @@
      C/COPY OFCPYSRCZ,CGL135_077                                                             CGL135A
       ** CGL150 Default Value Date 'Y'                                                      MD052075
      C                   PARM                    VDFLTF            1                        MD052075
+     C                   PARM                    BPAUTH            1                        MD055649
      C                   PARM                    RegData500                                   CER001
      C                   PARM                    PExtData500
      C                   PARM                    FldNameArr

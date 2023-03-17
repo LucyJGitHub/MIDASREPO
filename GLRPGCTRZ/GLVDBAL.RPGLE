@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057244           Date 18Dec20               *
-      *  Prev Amend No. MD037479           Date 20Sep17               *
+      *  Last Amend No. MD058409A          Date 15Mar23               *
+      *  Prev Amend No. MD058409           Date 15Mar23               *
+      *                 MD057244           Date 18Dec20               *
+      *                 MD037479           Date 20Sep17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046635           Date 10Aug17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,6 +34,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058409A - Incorrect field use for Cap.to an A/C in diff ccy*
+      *              in Retail ICD                                    *
+      *            - Applied for MD-61148                             *
+      *  MD058409 - Add validation to allow currency of Alternate     *
+      *             interest account to be different with main, only  *
+      *             if Cap.to an A/C in diff ccy in Retail ICD is Y   *
+      *            - Applied for MD-61148                             *
       *  MD057244 - Error message for alternative account error is    *
       *             not descriptive enough. Use errror message that   *
       *             details 'selected account is using an alternate   *
@@ -68,6 +77,8 @@
       ** GL Account by Branch
      FACCNTLXX  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACCNTLXF)
+     FTABTBRE   IF   E             DISK    INFSR(*PSSR)                                     MD058409
+     F                                     PREFIX(R_)                                       MD058409
 
       *****************************************************************
       ** +--------------------------------------+
@@ -208,6 +219,11 @@
      C                   MoveL     *Blanks       MsgIDXAr
      C                   MoveL     *Blanks       MsgDtaXAr
      C                   Z-Add     0             Idx
+                                                                                            MD058409
+      ** Access Retail ICD                                                                  MD058409
+                                                                                            MD058409
+     C     1             SETLL     TABTBRE                                                  MD058409
+     C                   READ      TABTBRE                                80                MD058409
       *
       ** Validate Debit Branch
       *
@@ -358,6 +374,19 @@
      C                   ENDIF
      C                   END
      C                   END
+                                                                                            MD058409
+      ** If Cap In An Acc In Diff CCY in Retail ICD is N,                                   MD058409
+      ** alternate account and main account's ccy must be the same                          MD058409
+                                                                                            MD058409
+     C**********         IF        R_ICDFC = 'N' AND                              MD058409 MD058409A
+     C                   IF        R_CDFC = 'N' AND                                        MD058409A
+     C                             DDCCY <> WWCCYK                                          MD058409
+     C                   MOVE      'N'           DDDACPOk                                   MD058409
+     C                   ADD       1             Idx                                        MD058409
+     C                   MOVEL     'DDDACP'      FldNamXAr(Idx)                             MD058409
+     C                   MOVEL     '5049511'     MsgIDXAr(Idx)                              MD058409
+     C                   ENDIF                                                              MD058409
+                                                                                            MD058409
      C                   END
       *
       ****Rate/Spread (SDSIG) must not be '-' if a Base Rate Type (DDDRIB)                  MD037479

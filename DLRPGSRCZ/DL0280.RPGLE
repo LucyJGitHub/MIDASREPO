@@ -10347,6 +10347,7 @@
 2150 C                   EXCEPT
      C     KYAMT         COMP      0                                  7070                  MD021315
      C     *IN70         IFEQ      *ON                                                      MD021315
+     C     PRONLY        ANDNE     'Y'                                                      MD024568
      C                   EXCEPT    DKYUPD                                                   MD021315
      C                   ENDIF                                                              MD021315
      C                   SETOFF                                       OF                       S0111

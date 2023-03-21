@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Special migration processing for global')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC700075 - Special migration processing for global layer   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD061067 *CREATE   Date 09Dec22              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD061067 - Missing process for UDF tables                   */
+/*                - Applied for MD060769.                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FROMPFX &TOPFX)
+
+             DCL        VAR(&FROMPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TOPFX) TYPE(*CHAR) LEN(2)
+
+             DCL        VAR(&FGTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LEMUTN) TYPE(*CHAR) LEN(128)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2023')
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGJOB     SWS(00000000)
+
+/* Set status to ACTIVE. */
+             CALL       PGM(SM000008) PARM('SMC000075' '*PGM' +
+                          '*UPDATE' 'ACTIVE')
+
+             CHGVAR     VAR(&FGTLIB) VALUE(&FROMPFX *TCAT 'GMLIB')
+             CHGVAR     VAR(&TGMLIB) VALUE(&TOPFX *TCAT 'GMLIB')
+
+STEP01:
+/* Check if data area LEMUTN exists in 'from' GTALIB ... */
+             CHKOBJ     OBJ(&FGTLIB/LEMUTN) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/* ... if it doesn't then move to next step ... */
+                GOTO       CMDLBL(STEP02)
+             ENDDO
+/* ... otherwise change value of data area. */
+             RTVDTAARA  DTAARA(&FGTLIB/LEMUTN) RTNVAR(&LEMUTN)
+             CHGDTAARA  DTAARA(&TGMLIB/LEMUTN) VALUE(&LEMUTN)
+
+STEP02:
+
+/* If successful then update driving file. */
+SUCCESS:
+             CALL       PGM(SM000008) PARM('SMC000075' '*PGM' +
+                          '*UPDATE' 'PASSED')
+
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+/* Set status to FAILED. */
+             CALL       PGM(SM000008) PARM('SMC000075' '*PGM' +
+                          '*UPDATE' 'FAILED')
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

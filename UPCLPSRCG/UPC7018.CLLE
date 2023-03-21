@@ -1,0 +1,149 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTR post refresh')                           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC7018 - OTR post refresh                                  */
+/*                                                                   */
+/*       Function: This program restart journalling and triggering.  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD061067           Date 09Dec22              */
+/*       Prev Amend No. CUP045   *CREATE   Date 09Dec22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061067 - Missing process for UDF tables                   */
+/*              - Applied for MD060769.                              */
+/*       CUP045 - One Touch Bridge - refresh                         */
+/*              - Applied for MD060769.                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &PRFX &BRGBRGLIB &RETURN)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPL) TYPE(*CHAR) LEN(50) VALUE('COMPLETE')
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(50) VALUE('FAIL')
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10) VALUE('UP_OTBRSVR')
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CMPN) TYPE(*DEC) LEN(2 0) VALUE(08)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FAILX) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&GBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)                                /*MD061067*/
+             DCL        VAR(&ZPRX) TYPE(*CHAR) LEN(2)                                   /*MD061067*/
+             DCL        VAR(&CURGRCV) TYPE(*CHAR) LEN(10)                               /*MD061067*/
+             DCL        VAR(&CURGSEQ) TYPE(*DEC) LEN(10 0)                              /*MD061067*/
+
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2022')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC7018')
+
+/* Update monitor */
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             CALL UP7001 ('*UPDATE   ' ' '   'DCMPG8' &FLDVAL &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Log */
+             CALL UP7002 (&PRFX &CMPN &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+
+/* Start journaling. */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL       PGM(SCBEGINJRN) PARM(&PRFX '*START')
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL       PGM(GPBEGINJRN) PARM(&PRFX '*START')
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+             ENDDO
+
+/* Start triggering. */
+             CALL       PGM(UPC000149) PARM(&LAYER &RTNFLAG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+             IF         COND(&RTNFLAG *NE ' ') THEN(GOTO ERROR)
+
+
+/* Additional process for *ZONE */                                                      /*MD061067*/
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                               /*MD061067*/
+/* Set previous rundate field in JNSTAT                                                 /*MD061067*/
+             CALL       PGM(UP7012) PARM(&RTNFLAG)                                      /*MD061067*/
+             IF         COND(&RTNFLAG *NE ' ') THEN(GOTO ERROR)                         /*MD061067*/
+/* Clear SCJSEQPD */                                                                    /*MD061067*/
+             CLRPFM     FILE(SCJSEQPD)                                                  /*MD061067*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD061067*/
+             SCWRTJREG EVENT(NDSUJR) TEXT('RESET')                                      /*MD061067*/
+/* Call program to update trailers SDFCTLPA and TABLETZ. */                             /*MD061067*/
+             CALL       PGM(SM1195)                                                     /*MD061067*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)                        /*MD061067*/
+                                                                                        /*MD061067*/
+/* Update journalling sequence in various files */                                      /*MD061067*/
+             CALL       PGM(SCHAEXIT) PARM(&PRFX)                                       /*MD061067*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)                        /*MD061067*/
+                                                                                        /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+                                                                                        /*MD061067*/
+/* Additional process for *GLOBAL */                                                    /*MD061067*/
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                             /*MD061067*/
+/* Clear GPAUJCPD */                                                                    /*MD061067*/
+             CLRPFM     FILE(GPAUJCPD)                                                  /*MD061067*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD061067*/
+/* Update GPZONEPD */                                                                   /*MD061067*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ZPRX)                              /*MD061067*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE GPZONEPD set +
+                        ZOMSYS = ' *BCAT '''' *TCAT &ZPRX *TCAT '''')                   /*MD061067*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061067*/
+                                                                                        /*MD061067*/
+/* Determine the most recent global journal sequence number and currently rcv */        /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             RTVJRNE    JRN(GPJRN) FROMENT(*LAST) +
+                          RTNSEQNBR(&CURGSEQ) RTNRCV(&CURGRCV)                          /*MD061067*/
+/**/                                                                                    /*MD061067*/
+/* Call UPGPUT to update the file GPUTJSPD.                                             /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             CALL       PGM(GPUTJSEQ) PARM(&CURGRCV &CURGSEQ)                           /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+                                                                                        /*MD061067*/
+/* Start subsystem */
+             CALL       PGM(UPC000146) PARM(&LAYER &PRFX &RTNFLAG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+             IF         COND(&RTNFLAG *NE ' ') THEN(GOTO ERROR)
+
+/* Send back DTAQ COMPLETE message to server job */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &CMPL)
+
+             GOTO       CMDLBL(END)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+/* Send FAIL message to server */
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &FAIL)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+ END:        ENDPGM

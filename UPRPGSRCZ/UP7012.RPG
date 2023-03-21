@@ -1,0 +1,83 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP OTR update JNSTAT')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP7012 - Midas UP OTR update JNSTAT                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2023                      *
+      *                                                               *
+      *   Last Amend No. MD061067 *CREATE   Date 09Dec23              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD061067 - Missing process for UDF tables                    *
+      *           - Applied for MD060769.                             *
+      *                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+      /COPY ZSRSRC,ZHOLE
+      /COPY ZSRSRC,ZHOLI
+      *
+      /COPY ZSRSRC,ZHOLDS
+     ISDBANK    E DSSDBANKPD
+      *
+      *  EXTERNAL DATA STRUCTURE FOR ACCESS PROGRAM FORMAT
+      *
+     IDSFDY     E DSDSFDY
+      *
+     I** FIRST DATA STRUCTURE FOR ACCESS PROGRAM, SHORT DATA STRUCTURE
+     I*
+      *
+     IJNSTAT    E DSJNSTAT                      200
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RTN     1
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           JNSTAT
+      *
+      *    Use access program to obtain record from SDBANKPD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *    Database error if blank return code not received from access pgm
+      *
+     C           P@RTCD    IFNE *BLANK
+     C                     SETON                       U7U8
+     C                     MOVE 'E'       RTN
+     C                     RETRN
+     C                     ENDIF
+      *
+      *    Check if previous working day was in previous month
+      *
+     C                     MOVE BJMRDT    RUNDAT  7
+     C                     MOVE BJLCCY    ZCCY
+     C                     Z-ADD1         ZNRDYS
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZBKDT
+      *
+     C           *LOCK     IN   JNSTAT
+     C                     Z-ADDZDYNBR    PRUN
+     C                     OUT  JNSTAT
+      *
+      *    Set blank return code, close files and end program
+      *
+     C                     MOVE '*FREE  ' ZOPTN
+     C                     EXSR ZACCH
+     C                     MOVE ' '       RTN
+     C                     SETON                     LR
+     C                     RETRN
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZBKDT
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2023

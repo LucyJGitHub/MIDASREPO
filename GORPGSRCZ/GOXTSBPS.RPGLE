@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD024902           Date 16Mar23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 264185             Date 19Aug14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -36,6 +37,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024902 - Settlement Cash Flow is not reflecting Value Date *
+      *             movement. Set Suppress Settlement only for trade  *
+      *             date entries to reflect value date movements.     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -808,7 +812,9 @@
       *
       * Suppress Settlement Y
       *
+     C     I#TVDI        IFEQ      'T'                                                      MD024902
      C                   MOVEL     'Y'           E_SSET
+     C                   ENDIF                                                              MD024902
       *
       **  Pay or receive settlement methods, accounts & branches
       *

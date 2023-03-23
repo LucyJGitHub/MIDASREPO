@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD049835           Date 20Mar23               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1001183          Date 14Jul12               *
       *                 AR989170           Date 18Jun12               *
@@ -46,6 +47,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049835 - Securities do not reset rate for CD correctly.    *
+      *           - Ensure copy sources related to CSE071 is being    *
+      *             used by the program. Also, patterned after fix    *
+      *             251501 to ensure rate change for Coupon/Rate      *
+      *             indicator 'R' is not ignored during next interest *
+      *             rate change date calculation.                     *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -164,7 +171,8 @@
       /COPY ZSRSRC,ZEDITZ1
       /COPY ZSRSRC,ZDATE2Z1
       /COPY ZSRSRC,ZNCDZ1
-      /COPY ZSRSRC,ZHOLE
+      */COPY*ZSRSRC,ZHOLE***                                                                MD049835
+      /COPY ZSRSRC,ZHOLE1                                                                   MD049835
       *
       /SPACE 3
       *
@@ -246,7 +254,8 @@
      I              'ZACALCSPRT'          C         SPRDSR                                    CRE073
       *
       /COPY ZSRSRC,ZNCDZ2
-      /COPY ZSRSRC,ZHOLI
+      */COPY*ZSRSRC,ZHOLI***                                                                MD049835
+      /COPY ZSRSRC,ZHOLI1                                                                   MD049835
       *
       /EJECT
       *================================================================
@@ -376,6 +385,19 @@
      C                     ELSE                                                               CRE073
      C                     MOVE 'N'       CRE073                                              CRE073
      C                     ENDIF                                                              CRE073
+      *                                                                                     MD049835
+      ** Check if CSE071 is switched on.                                                    MD049835
+      *                                                                                     MD049835
+     C                     CALL 'AOSARDR0'                                                  MD049835
+     C                     PARM *BLANKS   PRTCD                                             MD049835
+     C                     PARM '*VERIFY' POPTN                                             MD049835
+     C                     PARM 'CSE071'  PSARD                                             MD049835
+      *                                                                                     MD049835
+     C           PRTCD     IFEQ *BLANKS                                                     MD049835
+     C                     MOVE 'Y'       CSE071  1                                         MD049835
+     C                     ELSE                                                             MD049835
+     C                     MOVE 'N'       CSE071                                            MD049835
+     C                     ENDIF                                                            MD049835
       *
       ** RCF Processing for Printer File P1
       *
@@ -473,7 +495,8 @@
  B3  C           SFIX      IFEQ 'Y'
       *
       ** Check if IR record exists for the required date
-     C                     MOVE NCD       KEYDT   50
+     C**********           MOVE NCD       KEYDT   50                                        MD049835
+     C                     MOVE RCD       KEYDT   50                                        MD049835
      C                     MOVE 'IR'      SDET
      C           PSEDEV    CHAINSEDEVDF              89
       *
@@ -541,6 +564,11 @@
       *
       ** Calculate Next Coupon Date
      C                     Z-ADDBJRDNB    ECD     50
+      *                                                                                     MD049835
+      ** Calculate Next Rate Change Date.                                                   MD049835
+      *                                                                                     MD049835
+     C                     EXSR ZRCD                                                        MD049835
+      *                                                                                     MD049835
      C                     EXSR ZNCD
       *
       ** Calculate if Fixing Date is Rundate
@@ -548,7 +576,8 @@
      C                     Z-ADDFIXD      ZNRDYS
      C                     MOVE VLCY      ZCCY
      C                     MOVE *BLANKS   ZLOC
-     C                     Z-ADDNCD       ZDAYNO
+     C**********           Z-ADDNCD       ZDAYNO                                            MD049835
+     C                     Z-ADDRCD       ZDAYNO                                            MD049835
      C                     EXSR ZBKDT
       *
      C********** ZDYNBR    IFEQ BJRDNB                                                      AR865929
@@ -617,7 +646,8 @@
      C                     ENDIF
       *
       ** Use new base rate if appropriate, otherwise use current rate
-     C           BAVDNR    IFLE NCD
+     C********** BAVDNR    IFLE NCD                                                         MD049835
+     C           BAVDNR    IFLE RCD                                                         MD049835
      C                     Z-ADDBANBRT    USDNC  117
      C           CAS006    IFEQ 'Y'                                                           CAS006
      C                     Z-ADDBANBRT    USDNN  117                                          CAS006
@@ -750,7 +780,8 @@
      C           *IN89     IFEQ '1'
      C                     MOVE 'D'       CRECI
      C                     MOVE SESN      SDSN
-     C                     Z-ADDNCD       SDED
+     C**********           Z-ADDNCD       SDED                                              MD049835
+     C                     Z-ADDRCD       SDED                                              MD049835
      C                     MOVELINAR      SDNV
      C                     Z-ADD*ZERO     SDVA
      C                     Z-ADD*ZERO     SDPD
@@ -957,7 +988,8 @@
      C                     Z-ADDWAD,X     ZDATE
      C                     EXSR ZDATE1
       *
-     C           NCD       IFGE ZDAYNO
+     C********** NCD       IFGE ZDAYNO                                                      MD049835
+     C           RCD       IFGE ZDAYNO                                                      MD049835
      C                     MOVE 'Y'       WAPP
      C                     LEAVE
      C                     ENDIF
@@ -1084,7 +1116,8 @@
      C                     ENDIF
       *
       ** Output Rate Change Date
-     C                     Z-ADDNCD       FNCD
+     C**********           Z-ADDNCD       FNCD                                              MD049835
+     C                     Z-ADDRCD       FNCD                                              MD049835
       *
      C                     WRITESESRNFD0
  E1  C                     ENDIF
@@ -1402,6 +1435,244 @@
      C                     RETRN
      C                     ENDSR
       *
+      *****************************************************************                     MD049835
+      *  ZRCD  - Subroutine to determine Next Interest Rate Change    *                     MD049835
+      *          Date.                                                *                     MD049835
+      *                                                               *                     MD049835
+      *  Called By: SRSFIX Subroutine.                                *                     MD049835
+      *  Calls:                                                       *                     MD049835
+      *****************************************************************                     MD049835
+      *                                                                                     MD049835
+     C           ZRCD      BEGSR                                                            MD049835
+      *                                                                                     MD049835
+      ** Initialize work variables to be used.                                              MD049835
+      *                                                                                     MD049835
+     C                     Z-ADD0         RCD     50                                        MD049835
+     C                     Z-ADDBJRDNB    ZDAYNO                                            MD049835
+      *                                                                                     MD049835
+      ** Get MMDD format of Rundate.                                                        MD049835
+      *                                                                                     MD049835
+     C                     EXSR ZDATE2                                                      MD049835
+     C                     MOVELZDATE     ZZECD4  40                                        MD049835
+     C           *IN98     IFEQ '0'                                                         MD049835
+     C                     MOVELZZECD4    ZZWRKD                                            MD049835
+     C                     MOVE ZZECD4    ZZWRKM                                            MD049835
+     C                     Z-ADDZZWRKD    ZZECD4                                            MD049835
+     C                     MOVELZZWRKM    ZZECD4                                            MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+      ** If Array of coupon dates is DDMMYY format, turn around dates                       MD049835
+      ** to MMDD format.                                                                    MD049835
+      *                                                                                     MD049835
+     C           *IN98     IFEQ '0'                                                         MD049835
+     C                     DO   12        X                                                 MD049835
+     C                     MOVE CD,X      ZZWRKM  20                                        MD049835
+     C                     MOVELCD,X      ZZWRKD  20                                        MD049835
+     C                     Z-ADDZZWRKD    CD,X                                              MD049835
+     C                     MOVELZZWRKM    CD,X                                              MD049835
+     C                     ENDDO                                                            MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+      ** Get the year of Rundate.                                                           MD049835
+      *                                                                                     MD049835
+     C                     MOVE ZDATE     ZECDYR  20                                        MD049835
+      *                                                                                     MD049835
+      ** Start search for next highest coupon from the array if RATE/                       MD049835
+      ** PAYT INDS is not blank. Consider only "C" or "R" coupon/array                      MD049835
+      ** indicators.                                                                        MD049835
+      *                                                                                     MD049835
+     C           CRDS      IFNE *BLANKS                                                     MD049835
+     C                     MOVE '0'       ZFOUND  1                                         MD049835
+     C                     Z-ADD0         TX      20                                        MD049835
+     C                     DO   12        X                                                 MD049835
+     C           CR,X      IFEQ 'C'                                                         MD049835
+     C           CR,X      OREQ 'R'                                                         MD049835
+      *                                                                                     MD049835
+      ** If 29Feb is used in the coupon array, then there is a need to                      MD049835
+      ** check if the current year is a leap year. If it is not,                            MD049835
+      ** the coupon date is changed to 28. But there is a need to store                     MD049835
+      ** the date so that it can be restored back after the check.                          MD049835
+      *                                                                                     MD049835
+     C                     MOVE CD,X      ZZWRKD                                            MD049835
+     C                     MOVELCD,X      ZZWRKM                                            MD049835
+     C           ZZWRKM    IFEQ 2                                                           MD049835
+     C           ZZWRKD    ANDEQ29                                                          MD049835
+     C                     Z-ADDZECDYR    ZZYR    20                                        MD049835
+     C           ZZYR      ADD  28        ZZYR                                              MD049835
+     C           ZZYR      DIV  4         ZZYR                                              MD049835
+     C                     MVR            ZMVR    10                                        MD049835
+     C           ZMVR      IFGT 0                                                           MD049835
+     C                     Z-ADDX         TX                                                MD049835
+     C                     MOVE '28'      CD,X                                              MD049835
+     C                     ENDIF                                                            MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+      ** Compare Rundate versus Array Coupon Dates. Leave when Rundate                      MD049835
+      ** found to be less than or equal to the Array Coupon Date.                           MD049835
+      *                                                                                     MD049835
+     C           ZZECD4    IFLE CD,X                                                        MD049835
+     C                     MOVE '1'       ZFOUND                                            MD049835
+     C                     Z-ADDZECDYR    ZDATE                                             MD049835
+     C                     MOVELCD,X      ZDATE                                             MD049835
+     C                     LEAVE                                                            MD049835
+     C                     ENDIF                                                            MD049835
+     C                     ENDIF                                                            MD049835
+     C                     ENDDO                                                            MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+      ** If not found from the array, loop again and increment the year.                    MD049835
+      *                                                                                     MD049835
+     C           ZFOUND    IFNE '1'                                                         MD049835
+     C                     EXSR ZRCD01                                                      MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+      ** Process calculate of next interest rate change date.                               MD049835
+      *                                                                                     MD049835
+     C                     EXSR ZRCD02                                                      MD049835
+      *                                                                                     MD049835
+     C                     ENDSR                                                            MD049835
+      *****************************************************************                     MD049835
+      *  ZRCD01- Determine Next Interest Rate Change Date by          *                     MD049835
+      *          incrementing the year.                               *                     MD049835
+      *                                                               *                     MD049835
+      *  Called By: ZRCD Subroutine.                                  *                     MD049835
+      *  Calls:                                                       *                     MD049835
+      *****************************************************************                     MD049835
+     C           ZRCD01    BEGSR                                                            MD049835
+      *                                                                                     MD049835
+      ** Start search for coupon dates from the array with coupon/array                     MD049835
+      ** indicators equal to "C" or "R".                                                    MD049835
+      *                                                                                     MD049835
+     C           CRDS      IFNE *BLANKS                                                     MD049835
+     C                     DO   12        X                                                 MD049835
+      *                                                                                     MD049835
+     C           CR,X      IFEQ 'R'                                                         MD049835
+     C           CR,X      OREQ 'C'                                                         MD049835
+      *                                                                                     MD049835
+      ** If 29Feb is used in the coupon array, then there is a need to                      MD049835
+      ** check if the current year is a leap year. If it is not,                            MD049835
+      ** the coupon date is changed to 28. But there is a need to store                     MD049835
+      ** the date so that it can be restored back after the check.                          MD049835
+      *                                                                                     MD049835
+     C           TX        IFNE 0                                                           MD049835
+     C                     MOVE '29'      CD,TX                                             MD049835
+     C                     Z-ADD0         TX                                                MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+     C                     MOVE CD,X      ZZWRKD                                            MD049835
+     C                     MOVELCD,X      ZZWRKM                                            MD049835
+     C           ZZWRKM    IFEQ 2                                                           MD049835
+     C           ZZWRKD    ANDEQ29                                                          MD049835
+     C           ZECDYR    ADD  1         ZZYR                                              MD049835
+     C           ZZYR      ADD  28        ZZYR                                              MD049835
+     C           ZZYR      DIV  4         ZZYR                                              MD049835
+     C                     MVR            ZMVR    10                                        MD049835
+     C           ZMVR      IFGT 0                                                           MD049835
+     C                     Z-ADDX         TX                                                MD049835
+     C                     MOVE '28'      CD,X                                              MD049835
+     C                     ENDIF                                                            MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+      ** Increment year of coupon date found in the array.                                  MD049835
+      *                                                                                     MD049835
+     C                     Z-ADDZECDYR    ZDATE                                             MD049835
+     C                     ADD  1         ZDATE                                             MD049835
+     C                     MOVELCD,X      ZDATE                                             MD049835
+     C                     MOVE '1'       ZFOUND                                            MD049835
+     C                     LEAVE                                                            MD049835
+     C                     ENDIF                                                            MD049835
+     C                     ENDDO                                                            MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+     C                     ENDSR                                                            MD049835
+      *****************************************************************                     MD049835
+      *  ZRCD02- Process calculate of next interest rate change date. *                     MD049835
+      *                                                               *                     MD049835
+      *  Called By: ZRCD Subroutine.                                  *                     MD049835
+      *  Calls:                                                       *                     MD049835
+      *****************************************************************                     MD049835
+     C           ZRCD02    BEGSR                                                            MD049835
+      *                                                                                     MD049835
+      ** Convert date to Day No using ZDATE1. If date format is DDMMYY,                     MD049835
+      ** turn around to MMDDYY format.                                                      MD049835
+      *                                                                                     MD049835
+     C           ZFOUND    IFEQ '1'                                                         MD049835
+     C           *IN98     IFEQ '0'                                                         MD049835
+     C                     MOVELZDATE     ZZWRK   40                                        MD049835
+     C                     MOVE ZZWRK     ZZWRKM                                            MD049835
+     C                     MOVELZZWRK     ZZWRKD                                            MD049835
+     C                     Z-ADDZZWRKD    ZZWRK                                             MD049835
+     C                     MOVELZZWRKM    ZZWRK                                             MD049835
+     C                     MOVELZZWRK     ZDATE                                             MD049835
+     C                     ENDIF                                                            MD049835
+     C                     EXSR ZDATE1                                                      MD049835
+     C                     Z-ADDZDAYNO    RCD                                               MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+      ** RCD should be less than or equal to Maturity Date and it                           MD049835
+      ** should be greater than or equal to the Initial Date, otherwise                     MD049835
+      ** reset RCD to value zero.                                                           MD049835
+      *                                                                                     MD049835
+     C           RCD       IFGT MATY                                                        MD049835
+     C           RCD       ORLT ITLD                                                        MD049835
+     C                     Z-ADD0         RCD                                               MD049835
+     C                     END                                                              MD049835
+      *                                                                                     MD049835
+      ** Restore 29Feb to the array if it is changed.                                       MD049835
+      *                                                                                     MD049835
+     C           TX        IFNE 0                                                           MD049835
+     C                     MOVE '29'      CD,TX                                             MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+      ** If Date format is DDMMYY turn back array of coupon dates to                        MD049835
+      ** DD/MM format.                                                                      MD049835
+      *                                                                                     MD049835
+     C           *IN98     IFEQ '0'                                                         MD049835
+     C                     DO   12        X                                                 MD049835
+     C                     MOVELCD,X      ZZWRKM  20                                        MD049835
+     C                     MOVE CD,X      ZZWRKD  20                                        MD049835
+     C                     Z-ADDZZWRKM    CD,X                                              MD049835
+     C                     MOVELZZWRKD    CD,X                                              MD049835
+     C                     ENDDO                                                            MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+      ** If BCNV is not blank then call SE0045                                              MD049835
+      ** OR BCNV is not 'N' then call SE0045                                                MD049835
+      ** but ensure that the fields used from securities file SECTYD                        MD049835
+      ** are defined as not all programs calling ZRCD use this file.                        MD049835
+      *                                                                                     MD049835
+     C                     MOVE NMCY      NMCY    3                                         MD049835
+     C                     MOVE SITP      SITP    3                                         MD049835
+     C                     MOVE BCNV      BCNV    1                                         MD049835
+      *                                                                                     MD049835
+     C           BCNV      IFNE ' '                                                         MD049835
+     C           BCNV      ANDNE'N'                                                         MD049835
+     C                     MOVE 'N'       NCI     1                                         MD049835
+     C                     CALL 'SE0045'                                                    MD049835
+     C                     PARM           SITP                                              MD049835
+     C                     PARM           ECD                                               MD049835
+     C                     PARM           ITLD                                              MD049835
+     C                     PARM           FCPN                                              MD049835
+     C                     PARM           CD                                                MD049835
+     C                     PARM           CR                                                MD049835
+     C                     PARM           NMCY                                              MD049835
+     C                     PARM           RCD                                               MD049835
+     C                     PARM           NCI                                               MD049835
+     C                     PARM           BCNV                                              MD049835
+     C                     PARM           MATY                                              MD049835
+     C                     PARM           LCPN                                              MD049835
+     C                     PARM           HCY1                                              MD049835
+     C                     PARM           HCY2                                              MD049835
+     C                     PARM           HCY3                                              MD049835
+     C                     PARM           HCY4                                              MD049835
+     C                     PARM           HCY5                                              MD049835
+     C                     PARM           HCY6                                              MD049835
+     C                     PARM           HCY7                                              MD049835
+     C                     PARM           HCY8                                              MD049835
+     C                     PARM           HCY9                                              MD049835
+     C                     ENDIF                                                            MD049835
+      *                                                                                     MD049835
+     C                     ENDSR                                                            MD049835
       *****************************************************************
       /EJECT
       /COPY ZSRSRC,ZEDITZ2
@@ -1412,7 +1683,8 @@
       /EJECT
      C/COPY ZSRSRC,ZNCDZ3
       /EJECT
-     C/COPY ZSRSRC,ZACCH
+     C*/COPY*ZSRSRC,ZACCH***                                                                MD049835
+     C/COPY ZSRSRC,ZACCH1                                                                   MD049835
       /EJECT
      C/COPY ZSRSRC,ZBKDT
       /EJECT

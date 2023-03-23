@@ -22,8 +22,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD022841           Date 15Mar23               *
+      *  Prev Amend No. 260909             Date 15Mar23               *
+      *                 MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 215959             Date 21Mar16               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -89,6 +91,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD022841 - Incorrect Consideration on A/c Key CO and Report  *
+      *             SE0325P1. Additional fix to cater for CSE085.     *
+      *  260909 - Exclude the current factor in computing the         *
+      *           consideration when processing type = 8 during       *
+      *           processing/COB as this current factor is already    *
+      *           considered during I/C of the trade.                 *
+      *         - Applied for MD022841.                               *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  215959 - Truncation error on event amount in SE2450P3.       *
@@ -1388,18 +1397,20 @@
       ***  If Asset-Backed Security, adjust Cons. for Current Factor.     E20086
       *                                                                   E20086
      C           *LIKE     DEFN TCSR      FTCSR                           E20086
-     C           PROT      IFEQ '8'                                       E20086
+     C********** PROT      IFEQ '8'                                                    E20086 260909
      C/COPY WNCPYSRC,SE2260C017
       * Half Adjust if CSE085 is switched on.                             CSE085
      C           CSE085    IFEQ 'Y'                                       CSE085
-     C           TCSR      MULT TCFC      FTCSR     H                     CSE085
+     C********** TCSR      MULT TCFC      FTCSR     H                                CSE085 MD022841
+     C                     Z-ADDTCSR      FTCSR     H                                       MD022841
      C                     ELSE                                           CSE085
-     C           TCSR      MULT TCFC      FTCSR                           E20086
-     C                     ENDIF                                          CSE085
-     C           TCSR      MULT TCFC      FTCSR                           E20086
-     C                     ELSE                                           E20086
+     C********** TCSR      MULT TCFC      FTCSR                                      E20086 MD022841
+     C**********           ENDIF                                                     CSE085 MD022841
+     C********** TCSR      MULT TCFC      FTCSR                                        E20086 260909
+     C**********           ELSE                                                        E20086 260909
      C                     Z-ADDTCSR      FTCSR                           E20086
-     C                     END                                            E20086
+     C                     ENDIF                                                            MD022841
+     C**********           END                                                         E20086 260909
      C/COPY WNCPYSRC,SE2260C016
       *                                                                   E20086
      C           *IN01     IFEQ '1'

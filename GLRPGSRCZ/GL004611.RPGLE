@@ -19,9 +19,7 @@
       *                                                               *
       *****************************************************************
 
-     FGLMEMOT2L0IF   E           K DISK    INFSR(*PSSR)
-     F*GLMEMOT2L0  UF   E           K DISK    INFSR(*PSSR)
-     F*GLMEMOT2L0UF   E           K DISK    INFSR(*PSSR)
+     FGLMEMOT2L0UF   E           K DISK    INFSR(*PSSR)
      FGL004611P1O    E             PRINTER OFLIND(*IN25)
 
       ** =======
@@ -161,7 +159,7 @@
      C                   EVAL      PAMT = MEAMT
      C                   EVAL      PTMST = METMST
      C                   EXSR      PrintDetail1
-     C*                  DELETE    GLMEMOT2
+     C                   DELETE    GLMEMOT2
      C                   ENDIF
 
      C                   READ      GLMEMOT2L0

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSD103             Date 10Aug20              */
-/*       Prev Amend No. MD039086           Date 24Oct16              */
+/*       Last Amend No. MD060909           Date 14Feb23              */
+/*       Prev Amend No. CSD103             Date 10Aug20              */
+/*                      MD039086           Date 24Oct16              */
 /*                      MD055683           Date 21May20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD031644           Date 08Jan15              */
@@ -50,6 +51,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060909 - After COB job FTC0630 go in MSGW.                */
+/*                - Submit SCC007003 and GLC007003 jobs.             */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*       MD039086 - Submit GO_ONL_ABC background updater             */
 /*                  Applied for MD-57273.                            */
@@ -164,6 +167,8 @@
 /**********  DCL        VAR(&CURR) TYPE(*CHAR) LEN(2)              */              /*214363 CCB020*/
 /**********  DCL        VAR(&SUPP) TYPE(*CHAR) LEN(2)              */              /*214363 CCB020*/
              DCL        VAR(&FRSTAT) TYPE(*CHAR) LEN(1)                                /*BUG27831A*/
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                                   /*MD060909*/
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)                                 /*MD060909*/
 
 /* Global monitor message */
 
@@ -651,6 +656,26 @@
                 CALL      PGM(SDC000113)                                                  /*CSD103*/
              ENDDO                                                                        /*CSD103*/
                                                                                           /*CSD103*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)                            /*MD060909*/
+             CHGVAR     VAR(&LIB) VALUE(&PREFIX *CAT 'XLIB')                            /*MD060909*/
+/* Allocate SCBKJOBMEM */                                                               /*MD060909*/
+             ALCOBJ     OBJ((SCBKJOBMEM *DTAQ *EXCLRD)) WAIT(0)                         /*MD060909*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)                         /*MD060909*/
+             GOTO       CMDLBL(END)                                                     /*MD060909*/
+             ENDDO                                                                      /*MD060909*/
+                                                                                        /*MD060909*/
+             IF         COND((&MPHAS *NE 'C') *AND (&MPHAS *NE 'N')) +
+             THEN(DO)                                                                   /*MD060909*/
+             DLCOBJ     OBJ((SCBKJOBMEM *DTAQ   *EXCLRD))                               /*MD060909*/
+             SBMJOB     JOB(SCC007003) JOBD(&LIB/MBATCH) +
+                          JOBQ(&LIB/INTERFACE) PRTDEV(*CURRENT) +
+                          OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
+                          RQSDTA('CALL SCC007003') INLLIBL(*JOBD)                       /*MD060909*/
+             CALL      PGM(GLC007003)                                                   /*MD060909*/
+             ENDDO                                                                      /*MD060909*/
+             ELSE       CMD(DO)                                                         /*MD060909*/
+                DLCOBJ     OBJ((SCBKJOBMEM *DTAQ *EXCLRD))                              /*MD060909*/
+             ENDDO                                                                      /*MD060909*/
 /*/COPY WNCPYSRC,SCC0104MPE                                          */
 
              GOTO       CMDLBL(END)

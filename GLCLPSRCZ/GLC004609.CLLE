@@ -50,9 +50,9 @@
              CHGVAR     VAR(&DMLIB) VALUE(&PREFIX *TCAT 'DMLIB')
              CHGVAR     VAR(&DPLIB) VALUE(&PREFIX *TCAT 'DPLIB')
 
-             CHKOBJ     OBJ(&DPLIB/XXGLMEMOTD) OBJTYPE(*FILE)
+             CHKOBJ     OBJ(&DPLIB/YYGLMEMOTD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BACKUP))
-             DLTF       FILE(XXGLMEMOTD)
+             DLTF       FILE(YYGLMEMOTD)
 
 BACKUP:
              CPYF       FROMFILE(&DMLIB/GLMEMOTD) TOFILE(&DPLIB/YYGLMEMOTD) +
@@ -62,7 +62,7 @@ BACKUP:
              ENDDO
              MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
              SNDUSRMSG  MSG('Error occurred in copying PF/GLMEMOTD to +
-                PF/GLMEMOTD. Process terminated.') MSGTYPE(*INFO)
+                PF/YYGLMEMOTD. Process terminated.') MSGTYPE(*INFO)
              GOTO       CMDLBL(END)
              ENDDO
 
@@ -78,7 +78,7 @@ BACKUP2:
              ENDDO
              MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
              SNDUSRMSG  MSG('Error occurred in copying PF/GLMEMOT2 to +
-                PF/GLMEMOT2. Process terminated.') MSGTYPE(*INFO)
+                PF/YYGLMEMOT2. Process terminated.') MSGTYPE(*INFO)
              GOTO       CMDLBL(END)
              ENDDO
 
@@ -106,19 +106,19 @@ BACKUP2:
 ABNOR:
              IF         COND(&RUNP *EQ 'YES') THEN(DO)
 
-                CPYF FROMFILE(&DPLIB/XXGLMEMOTD) TOFILE(&DMLIB/GLMEMOTD) +
+                CPYF FROMFILE(&DPLIB/YYGLMEMOTD) TOFILE(&DMLIB/GLMEMOTD) +
                      MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
-                SNDUSRMSG  MSG('Error occurred in restoring PF/GLMEMOTD +
+                SNDUSRMSG  MSG('Error occurred in restoring PF/YYGLMEMOTD +
                         from  PF/GLMEMOTD. Process terminated.  Please restore +
-                        PF/GLMEMOTD manually from PF/XXGLMEMOTD.') +
+                        PF/GLMEMOTD manually from PF/YYGLMEMOTD.') +
                         MSGTYPE(*INFO)
                 ENDDO
 
                 CPYF FROMFILE(&DPLIB/YYGLMEMOT2) TOFILE(&DMLIB/GLMEMOT2) +
                      MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
-                SNDUSRMSG  MSG('Error occurred in restoring PF/GLMEMOT2 +
+                SNDUSRMSG  MSG('Error occurred in restoring PF/YYGLMEMOT2 +
                         from  PF/GLMEMOT2. Process terminated.  Please restore +
                         PF/GLMEMOT2 manually from PF/YYGLMEMOT2.') +
                         MSGTYPE(*INFO)
@@ -129,56 +129,10 @@ ABNOR:
 /**/
 /* Abnormal Termination of the program */
 /**/
-ABNOR1:     SNDPGMMSG  MSG('Error occurred in SMUC90008 program')
+ABNOR1:     SNDPGMMSG  MSG('Error occurred in GLC004609 program')
 
 END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
-                          2022')
-             SNDPGMMSG  MSG('End of SMUC90008')
-             ENDPGM
-             PGM
-
-             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
-
-             COPYRIGHT TEXT('(c) Finastra International Limited +
                           2023')
-
-/* Global monitor message. */
-             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
-                          CMDLBL(ABNOR))
-
-             SNDPGMMSG  MSG('GLC004608 - Housekeeping of MEMOS +
-                          Shadow Files') TOMSGQ(MRUNQ)
-
-             CHGJOB     SWS(XXXXXX00)
-
-/** Create data area LDA */
-
-             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
-             MONMSG     MSGID(CPF1023)
-
-/** Call Midas GL Housekeeping of Passbook Printing Files */
-
-             CALL       PGM(GL004609)
-
-/** Database error processing */
-
-             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
-               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
-               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
-                            TOPGMQ(*EXT) TOMSGQ(MOPERQ)
-               GOTO       CMDLBL(ABNOR)
-             ENDDO
-
-             GOTO       CMDLBL(END)
-
-ABNOR:
-
-             CHGJOB     SWS(XXXXXX11)
-             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
-                          GLC004609 ended abnormally - see job log') +
-                          TOMSGQ(MOPERQ)
-             MONMSG     MSGID(CPF0000 MCH0000)
-
-END:
+             SNDPGMMSG  MSG('End of GLC004609')
              ENDPGM
 

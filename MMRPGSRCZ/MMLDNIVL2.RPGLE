@@ -14,8 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD059049           Date 08Nov21               *
-      *  Prev Amend No. MD058547           Date 10Aug21               *
+      *  Last Amend No. MD037251           Date 13Mar23               *
+      *  Prev Amend No. MD049864           Date 11Mar23               *
+      *                 MD054313           Date 10Mar23               *
+      *                 MD045018           Date 06Mar23               *
+      *                 MD036339           Date 06Mar23               *
+      *                 MD059049           Date 08Nov21               *
+      *                 MD058547           Date 10Aug21               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD055010           Date 04Mar20               *
@@ -61,6 +66,23 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037251 - Amendment of LDNI cause rate change to be skipped.*
+      *  MD049864 - Amendment causes LDNI Rate to not reset           *
+      *  MD054313 - FRN testing - it is possible to insert MM deal    *
+      *             type IT with Actual Interest Rate <>0 and Short   *
+      *             term Rate = 0 but not possible to authorise it.   *
+      *             Set Short Term Rate flag to Y when Short Term Rate*
+      *             is entered.                                       *
+      *  MD045018 - MM deal, with a Base Rate Code, could not be      *
+      *              amended due to blank Rate Change Date.           *
+      *           - Amend validation such that (1) Rate Change Date,  *
+      *             Freq and Days are no longer mandatory for Short   *
+      *             Term Rate and (2) FLR0022 is only encountered for *
+      *             fixed-term deals inserted today and deals where   *
+      *             value date is >= to rundate                       *
+      *  MD036339 - DL Error amending Maturity date.                  *
+      *           - Update rate details when Short Term rate is       *
+      *             amended.                                          *
       *  MD059049 - Time Deposit - Update on Tax Indicator field      *
       *  MD058547 - User cannot amend a call notice deposit taken     *
       *             because of error 45049507. Add DDACTN on call to  *
@@ -133,6 +155,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
+     FMMDEALLL  IF   E           K DISK    INFSR(*PSSR)                                     MD049864
 
 
       *****************************************************************
@@ -302,6 +325,9 @@
       ** Error message substitution data received as a parameter                              CDL033
      D WRCDT           S                   LIKE(IKRCDT)                                       CDL033
      D WSTRT           S                   LIKE(IKSTRT)                                       CDL033
+                                                                                            MD045018
+      ** Transaction Date variable                                                          MD045018
+     D WTDATE          S              6                                                     MD045018
                                                                                               CDL033
       ** Parameter Fields fo MMVFWDYLD                                                        CDL033
      D Rtncde          S              7                                                       CDL033
@@ -335,6 +361,7 @@
                                                                                               CDL033
       ** Error Flag for call to Standard routines                                             CDL033
      D ErrorFlag       S              1A   INZ('N')                                           CDL033
+     D ErrorFlag1      S              1A   INZ('N')                                         MD045018
 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
@@ -642,7 +669,8 @@
       ** use this to populate Actual Interest field and then                                BUG10810
       ** Recompute Total Interest                                                           BUG10810
                                                                                             BUG10810
-     C     WSTRT         IFNE      0                                                        BUG10810
+     C*****WSTRT         IFNE      0                                               BUG10810 MD049864
+     C     DDSTRT        IFNE      *blanks                                                  MD049864
      C                   Z-ADD     0             IKINTR                                     BUG10810
      C**********         MOVE      WSTRT         IKINTR                              BUG10810 247452
      C                   MOVE      WSTRT         IKINTR                                       247452
@@ -992,12 +1020,16 @@
       *                                                                                       CDL033
      C                   MOVE      DDFXDM        IKFXDM                                       CDL033
      C                   MOVE      FWDYLD        IKFYLD                                       CDL033
-     C                   MOVE      *Blank        IKBSVF                                       CDL033
-     C                   Z-ADD     *ZERO         IKINFD                                       CDL033
-     C                   MOVE      *Blank        IKINFF                                       CDL033
+     C**********         MOVE      *Blank        IKBSVF                              CDL033 MD037251
+     C**********         Z-ADD     *ZERO         IKINFD                              CDL033 MD037251
+     C**********         MOVE      *Blank        IKINFF                              CDL033 MD037251
                                                                                               CDL033
      C                   IF        DDACTN = 'I'                                               CDL033
+     C                             OR DDACTN = 'A' AND  DDSTRT <> *blanks                   MD054313
                                                                                               CDL033
+     C                   MOVE      *Blank        IKBSVF                                     MD037251
+     C                   Z-ADD     *ZERO         IKINFD                                     MD037251
+     C                   MOVE      *Blank        IKINFF                                     MD037251
      C                   EVAL      IKSTRF = *Blank                                            CDL033
      C                   EVAL      IKSTVF = *Blank                                            CDL033
                                                                                               CDL033
@@ -1006,8 +1038,12 @@
      C                   MOVE      *Zeros        IKBSRF                                       CDL033
      C                   BITOFF    '01234567'    IKFRCI                                       CDL033
                                                                                               CDL033
-     C                   IF        WSTRT  <> STRate                                           CDL033
-     C                             OR STRate <> *zeros                                      BUG13223
+      *                                                                                     MD054313
+      ** Short Term rate Flag is Y when Short Term Rate is entered                          MD054313
+      *                                                                                     MD054313
+     C**********         IF        WSTRT  <> STRate                                  CDL033 MD054313
+     C**********                   OR STRate <> *zeros                             BUG13223 MD054313
+     C                   IF        DDSTRT <> *Blanks                                        MD054313
      C                   EVAL      IKSTRF = 'Y'                                               CDL033
      C                   EVAL      IKSTVF = 'Y'                                               CDL033
      C                   EVAL      IKBSVF = 'Y'                                               CDL033
@@ -1361,6 +1397,7 @@
       ** If Rate Change Date is not blank but Base Rate code is blank                         CDL033
       *                                                                                       CDL033
      C                   IF        DDBSRC = *Blanks                                           CDL033
+     C                             AND DDRCDT <> *Blanks                                    MD045018
      C                   EVAL      Idx = Idx + 1                                              CDL033
      C                   EVAL      FldNameArr(Idx) = 'DDRCDT'                                 CDL033
      C                   EVAL      MsgIDArr(Idx) = 'FLR0003'                                  CDL033
@@ -1369,6 +1406,10 @@
      C                   ENDIF                                                                CDL033
       *                                                                                       CDL033
       ** If Rate Change Date is not blank, ensure that it is in valid format                  CDL033
+      *                                                                                     MD045018
+      ** Initialise WRCDT                                                                   MD045018
+     C                   EVAL      WRCDT = *ZEROS                                           MD045018
+     C                   IF        DDRCDT <> *Blanks                                        MD045018
      C                   CALLB     'ZDATE1'                                                   CDL033
      C                   PARM                    DDRCDT                                       CDL033
      C                   PARM                    ZDayNo                                       CDL033
@@ -1418,6 +1459,8 @@
      C                   ENDIF                                                                CDL033
       *                                                                                       CDL033
      C                   ENDIF                                                                CDL033
+      *                                                                                     MD045018
+     C                   ENDIF                                                              MD045018
       *                                                                                       CDL033
      C                   ENDDO                                                                CDL033
       *                                                                                       CDL033
@@ -1443,26 +1486,29 @@
       *                                                                                       CDL033
      C                   DO                                                                   CDL033
       *                                                                                       CDL033
-      ** If Rate Change Frequency is blank                                                    CDL033
-      *                                                                                       CDL033
-     C                   IF        DDRCFR = *Blanks                                           CDL033
-     C                   EVAL      Idx = Idx + 1                                              CDL033
-     C                   EVAL      FldNameArr(Idx) = 'DDRCFR'                                 CDL033
-     C                   EVAL      MsgIDArr(Idx) = 'FLR0009'                                  CDL033
-     C                   EVAL      ReturnCode = 'Error'                                       CDL033
-     C                   LEAVE                                                                CDL033
-     C                   ENDIF                                                                CDL033
+      ***If*Rate*Change*Frequency*is*blank****************************               CDL033 MD045018
+      **********                                                                     CDL033 MD045018
+     C**********         IF        DDRCFR = *Blanks                                  CDL033 MD045018
+     C**********         EVAL      Idx = Idx + 1                                     CDL033 MD045018
+     C**********         EVAL      FldNameArr(Idx) = 'DDRCFR'                        CDL033 MD045018
+     C**********         EVAL      MsgIDArr(Idx) = 'FLR0009'                         CDL033 MD045018
+     C**********         EVAL      ReturnCode = 'Error'                              CDL033 MD045018
+     C**********         LEAVE                                                       CDL033 MD045018
+     C**********         ENDIF                                                       CDL033 MD045018
       *                                                                                       CDL033
       ** If Rate Change Frequency is not blank                                                CDL033
+      ** or Not 'M', 'Q', 'X', 'Y', 'Z'                                                     MD045018
       *                                                                                       CDL033
      C                   IF        DDRCFR <> 'M' AND                                          CDL033
      C                             DDRCFR <> 'Q' AND                                          CDL033
      C                             DDRCFR <> 'X' AND                                          CDL033
      C                             DDRCFR <> 'Y' AND                                          CDL033
      C                             DDRCFR <> 'Z'                                              CDL033
+     C                             AND DDRCFR <> *Blanks                                    MD045018
      C                   EVAL      Idx = Idx + 1                                              CDL033
      C                   EVAL      FldNameArr(Idx) = 'DDRCFR'                                 CDL033
-     C                   EVAL      MsgIDArr(Idx) = 'FLR0007'                                  CDL033
+     C**********         EVAL      MsgIDArr(Idx) = 'FLR0007'                         CDL033 MD045018
+     C                   EVAL      MsgIDArr(Idx) = '5049561'                                MD045018
      C                   EVAL      ReturnCode = 'Error'                                       CDL033
      C                   LEAVE                                                                CDL033
      C                   ENDIF                                                                CDL033
@@ -1488,17 +1534,25 @@
      C                   EXSR      RESETERRS                                                  CDL033
       *                                                                                       CDL033
       ** If Rate Change Day is not blank and Rate Change Frequency is 'Z                      CDL033
+      ** or if Rate Change Day is not blank and Rate Change Frequency is Blank              MD045018
       *                                                                                       CDL033
      C                   Z-ADD     *ZERO         ##RCDM            2 0                        CDL033
                                                                                               CDL033
      C                   DO                                                                   CDL033
                                                                                               CDL033
      C                   IF        DDRCFR =  'Z'                                              CDL033
+     C                             OR DDRCFR = *BLANKS                                      MD045018
                                                                                               CDL033
      C                   IF        DDRCDM <> *Blanks                                          CDL033
      C                   EVAL      Idx = Idx + 1                                              CDL033
      C                   EVAL      FldNameArr(Idx) = 'DDRCDM'                                 CDL033
+      *                                                                                     MD045018
+     C                   IF        DDRCFR =  'Z'                                            MD045018
      C                   EVAL      MsgIDArr(Idx)   = 'FLR0012'                                CDL033
+     C                   ELSEIF    DDRCFR = *BLANKS                                         MD045018
+     C                   EVAL      MsgIDArr(Idx)   = '5049560'                              MD045018
+     C                   ENDIF                                                              MD045018
+      *                                                                                     MD045018
      C                   EVAL      ReturnCode      = 'Error'                                  CDL033
      C                   LEAVE                                                                CDL033
      C                   ENDIF                                                                CDL033
@@ -1575,7 +1629,7 @@
                                                                                               CDL033
      C                   EXSR      RESETERRS                                                  CDL033
                                                                                               CDL033
-     C                   Eval      WSTRT = *Zero                                            BUG11298
+     C**********         Eval      WSTRT = *Zero                                   BUG11298 MD045018
       *                                                                                       CDL033
       ** Short Term Rate should be in valid format                                            CDL033
      C                   Z-ADD     0             @@AMT                                      BUG24317
@@ -1629,6 +1683,8 @@
       *                                                                                       CDL033
      C                   Z-ADD     ZDayNo        ZINDT                                        CDL033
      C                   MOVE      DDFXDM        ZRFDY                                        CDL033
+      * Save ZDayNo (value date) to ZDayNo2 variable                                        MD045018
+     C                   Z-ADD     ZDayNo        ZDayNo2           5 0                      MD045018
       *                                                                                       CDL033
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.                          CDL033
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',                            CDL033
@@ -1648,7 +1704,35 @@
       *                                                                                       CDL033
      C                   MOVE      *BLANKS       ZLOC                                         CDL033
      C                   EXSR      DLBACK                                                     CDL033
+      *                                                                                     MD045018
+      ** Transaction date of deal                                                           MD045018
+     C                   EVAL      WTDATE = *BLANKS                                         MD045018
+     C                   IF        BJDFIN = 'M'                                             MD045018
+     C                   EVAL      WTDATE = %EDITC(IKDTMM: 'X') +                           MD045018
+     C                                      %EDITC(IKDTDD: 'X') +                           MD045018
+     C                                      %SUBST(%EDITC(IKDTYY:'X'):3:2)                  MD045018
+     C                   ELSEIF    BJDFIN = 'D'                                             MD045018
+     C                   EVAL      WTDATE = %EDITC(IKDTDD: 'X') +                           MD045018
+     C                                      %EDITC(IKDTMM: 'X') +                           MD045018
+     C                                      %SUBST(%EDITC(IKDTYY:'X'):3:2)                  MD045018
+     C                   ENDIF                                                              MD045018
+      *                                                                                     MD045018
+     C                   CALLB     'ZDATE1'                                                 MD045018
+     C                   PARM                    WTDATE                                     MD045018
+     C                   PARM                    ZDayNo1           5 0                      MD045018
+     C                   PARM                    BJDFIN                                     MD045018
+     C                   PARM                    ErrorFlag1                                 MD045018
+      *                                                                                     MD045018
+      ** FLR0022 only appears when deal is inserted today or                                MD045018
+      ** when deal’s value date is greater than or equal to rundate.                        MD045018
+      ** ZDayNo1 is Transaction Date, ZDayNo2 is Value Date                                 MD045018
      C                   IF        ZRFDT < BJRDNB                                             CDL033
+     C                             AND ZDayNo1 = BJRDNB                                     MD045018
+     C                             OR ZRFDT < BJRDNB                                        MD045018
+     C                             AND ZDayNo2 >= BJRDNB                                    MD045018
+     C                             OR ZRFDT < BJRDNB                                        MD045018
+     C                             AND ZDayNo1 = *ZERO                                      MD045018
+     C                             AND DDACTN <> 'X'                                        MD045018
      C                   EVAL      Idx = Idx + 1                                              CDL033
      C                   EVAL      FldNameArr(Idx) = 'DDSTRT'                                 CDL033
      C                   EVAL      MsgIDArr(Idx)   = 'FLR0022'                                CDL033
@@ -1688,6 +1772,11 @@
      C                   PARM      'Y'           DDStRtOK                                     CDL033
      C                   PARM                    ReturnCode                                   CDL033
      C                   PARM                    WarnGlobal                                   CDL033
+      *                                                                                     MD049864
+     C     DDACTN        IFEQ      'A'                                                      MD049864
+     C                   MOVE      DDDLNO        @@DLNO            6 0                      MD049864
+     C     @@DLNO        CHAIN     MMDEALLL                           65                    MD049864
+     C                   ENDIF                                                              MD049864
                                                                                               CDL033
      C                   ENDSR                                                                CDL033
       *****************************************************************                       CDL033

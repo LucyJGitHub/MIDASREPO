@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058440           Date 31Jan22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD024902           Date 16Mar23               *
+      *  Prev Amend No. MD058440           Date 31Jan22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024902 - Settlement Cash Flow is not reflecting Value Date *
+      *             movement. Set Start Date to Security's initial    *
+      *             date and End Date to Maturity date or Average life*
+      *             date for mortgage-backed securities.              *
       *  MD058440 - Dumps are generated after inserting a Full Trade  *
       *             Settlement.                                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -56,6 +61,7 @@
      FPRICMXX   IF   E           K DISK    INFSR(*PSSR) PREFIX(PR_) USROPN
      FGPUTXSL0  IF A E           K DISK    INFSR(*PSSR)
 
+     FINVTP     IF   E           K DISK    INFSR(*PSSR)                                     MD024902
 
      D/COPY ZACPYSRC,STD_D_SPEC
 
@@ -170,9 +176,20 @@
      C                   Z-ADD     BJRDNB        T_TDAT                                     BUG13281
       * Start Date
      C**********         Z-ADD     LPSD          T_SDAT                                     BUG13281
-     C                   Z-ADD     BJRDNB        T_SDAT                                     BUG13281
+     C**********         Z-ADD     BJRDNB        T_SDAT                            BUG13281 MD024902
+     C                   Z-ADD     ITLD          T_SDAT                                     MD024902
       * End Date
+     C                   EXSR      ACS_INVT                                                 MD024902
+     C     Proc_Type     IFEQ      '8'                                                      MD024902
+     C                   Z-ADD     ALDT          T_EDAT                                     MD024902
+     C                   ELSE                                                               MD024902
      C                   Z-ADD     MATY          T_EDAT
+     C                   ENDIF                                                              MD024902
+      *                                                                                     MD024902
+     C     Proc_Type     IFEQ      '4'                                                      MD024902
+     C                   Z-ADD     ORED          T_SDAT                                     MD024902
+     C                   ENDIF                                                              MD024902
+      *                                                                                     MD024902
       * Issuer Exposure
      C                   MOVEL     'Y'           T_ISEI
 
@@ -265,6 +282,20 @@
       *****************************************************************                     BUG11830
       /SPACE 5                                                                              BUG11830
       ********************************************************************
+      * Access investment type details                                                      MD024902
+      ********************************************************************                  MD024902
+     C     ACS_INVT      BEGSR                                                              MD024902
+      *                                                                                     MD024902
+      ** Get investment type details                                                        MD024902
+      *                                                                                     MD024902
+     C     INVTPK        CHAIN     INVTPDF                            99                    MD024902
+                                                                                            MD024902
+     C     *IN99         IFEQ      '0'                                                      MD024902
+     C                   MOVEL     PROT          Proc_Type         1                        MD024902
+     C                   ENDIF                                                              MD024902
+                                                                                            MD024902
+     C                   ENDSR                                                              MD024902
+      ********************************************************************                  MD024902
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
@@ -299,6 +330,10 @@
      C                   KFLD                    T_SESN
      C                   KFLD                    T_MKTI
 
+     C     INVTPK        KLIST                                                              MD024902
+     C                   KFLD                    NMCY                                       MD024902
+     C                   KFLD                    SITP                                       MD024902
+                                                                                            MD024902
       * Parameter lists
 
      C     OV1_Parm      PLIST

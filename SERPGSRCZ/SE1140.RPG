@@ -24,8 +24,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. 248698             Date 01Jun20               *
+      *  Last Amend No. MD022857           Date 11Mar23               *
+      *  Prev Amend No. AR375396           Date 11Mar23               *
+      *                 MD058285           Date 22Jun21               *
+      *                 248698             Date 01Jun20               *
       *                 MD050604           Date 21Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 226449             Date 24Jun15               *
@@ -76,6 +78,20 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD022857 - SE1140P1 report shows amortisation figures        *
+      *             for Processing Type = 8 with one day delay.       *
+      *             Remove parts of 375396 which recalculates         *
+      *             DPAP (Amortisation to Date) and BUDU (Amount      *
+      *             to Amortise) and use the file values instead.     *
+      *  AR375396 - Discrepancy in SE1140P1 report between DBA3 and   *
+      *             and MP1.4 after migration.                        *
+      *           - For securities with processing type 8, use        *
+      *             the computed average life date figures.           *
+      *           - Average life date of a security has been passed.  *
+      *             The program continues to amortize on SE1140P1.    *
+      *           - Amortisation figures for Processing type 8        *
+      *             securities should not be multiplied by the current*
+      *             factor.  Remove MASOUD fix.                       *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  248698 - Rounding discrepancies on some SE reports. Applied  *
       *           fix 228682.                                         *
@@ -562,6 +578,7 @@
       ***  Subroutines.
       *
      C           BHSC      CHAINSECTY                83
+     C                     SETOF                     84                                     AR375396
       *
       ***  Database Error if not found.
       *
@@ -573,6 +590,16 @@
      C                     OUT  LDA
      C                     SETON                     U7U8LR
      C                     EXSR ERROR
+     C                     ELSE                                                             AR375396
+      *                                                                                     AR375396
+      ** Set on *IN84 if mortgaged backed and current factor = 0                            AR375396
+      ** or if security has matured                                                         AR375396
+      *                                                                                     AR375396
+     C           PROT      IFEQ '8'                                                         AR375396
+     C           CFCT      ANDEQ0                                                           AR375396
+     C           RECI      ORNE 'D'                                                         AR375396
+     C                     SETON                     84                                     AR375396
+     C                     ENDIF                                                            AR375396
      C                     END
       *
       ** Save Security field.
@@ -584,17 +611,17 @@
       ***  Access Book Position file.
       *
      C           KLBKP     CHAINBKPOS                82
-     C*                                                                                       042704
-     C* SET ON *IN84 IF MORTGAGED BACKED AND CURRENT FACTOR = 0                               042704
-     C* OR IF SECURITY HAS MATURED                                                            042704
-     C*                                                                                       042704
-     C                     SETOF                     84                                       042704
-     C*                                                                                       042704
-     C           PROT      IFEQ '8'                                                           042704
-     C           CFCT      ANDEQ0                                                             042704
-     C           RECI      ORNE 'D'                                                           042704
-     C                     SETON                     84                                       042704
-     C                     END                                                                042704
+     C*****************************************************************              042704 AR375396
+     C**SET*ON**IN84*IF*MORTGAGED*BACKED*AND*CURRENT*FACTOR*=*0********              042704 AR375396
+     C**OR*IF*SECURITY*HAS*MATURED*************************************              042704 AR375396
+     C*****************************************************************              042704 AR375396
+     C**********           SETOF                     84                              042704 AR375396
+     C**********                                                                     042704 AR375396
+     C********** PROT      IFEQ '8'                                                  042704 AR375396
+     C********** CFCT      ANDEQ0                                                    042704 AR375396
+     C********** RECI      ORNE 'D'                                                  042704 AR375396
+     C**********           SETON                     84                              042704 AR375396
+     C**********           END                                                       042704 AR375396
       *
       ***  Note if a record has been found.
       *
@@ -617,9 +644,15 @@
      C                     ADD  DSCAMT    TTDSC
       ***  Amount Amortised to Date.
      C***********          ADD  DPFP      TTDPFP                          091183
+     C***********PROT      IFEQ '8'                                                AR375396 MD022857
+     C***********CFCT      ANDNE*ZERO                                              AR375396 MD022857
+     C***********          ADD  DPFPX     TTDPFP                                   AR375396 MD022857
+     C***********          ADD  BUDUX     TTBUDU                                   AR375396 MD022857
+     C***********          ELSE                                                    AR375396 MD022857
      C                     ADD  DPAP      TTDPFP                          091183
       ***  Amount to Amortise.
      C                     ADD  BUDU      TTBUDU
+     C***********          ENDIF                                                   AR375396 MD022857
      C/COPY WNCPYSRC,SE1140C018
      C                     END
       *
@@ -841,6 +874,7 @@
      C           *LIKE     DEFN APNC      DSCAMT
      C           *LIKE     DEFN LPSD      DAYS
      C           *LIKE     DEFN APNC      RATE
+     C           *LIKE     DEFN APNC      RATE1                                             AR375396
      C           *LIKE     DEFN A6NBDP    CDP
      C           *LIKE     DEFN BSPL      TTBSPL                          CSE006
      C           *LIKE     DEFN BSAPL     TTBSAP                          CSE006
@@ -999,13 +1033,13 @@
       *
      C***********          Z-ADDDPFP      ZFLD15                          091183
      C/COPY WNCPYSRC,SE1140C035
-      *                                                                                       MASOUD
-      *  APPLY THE FACTOR TO THE AMOUNT AMORTIZED TO DATE                                     MASOUD
-      *                                                                                       MASOUD
-     C           PROT      IFEQ '8'                                                           MASOUD
-     C           CFCT      ANDNE0                                                             MASOUD
-     C                     MULT CFCT      DPAP                                                MASOUD
-     C                     ENDIF                                                              MASOUD
+      *****************************************************************              MASOUD AR375396
+      ***APPLY*THE*FACTOR*TO*THE*AMOUNT*AMORTIZED*TO*DATE**************              MASOUD AR375396
+      *****************************************************************              MASOUD AR375396
+     C********** PROT      IFEQ '8'                                                  MASOUD AR375396
+     C********** CFCT      ANDNE0                                                    MASOUD AR375396
+     C**********           MULT CFCT      DPAP                                       MASOUD AR375396
+     C**********           ENDIF                                                     MASOUD AR375396
      C                     Z-ADDDPAP      ZFLD15                          091183
      C/COPY WNCPYSRC,SE1140C036
      C                     EXSR ZSEDIT
@@ -1014,13 +1048,13 @@
       ***  Amount to Amortise.
       *
      C/COPY WNCPYSRC,SE1140C006
-      *                                                                                       MASOUD
-      *  APPLY THE FACTOR TO THE AMOUNT TO AOMORTIZE                                          MASOUD
-      *                                                                                       MASOUD
-     C           PROT      IFEQ '8'                                                           MASOUD
-     C           CFCT      ANDNE0                                                             MASOUD
-     C                     MULT CFCT      BUDU                                                MASOUD
-     C                     ENDIF                                                              MASOUD
+      *****************************************************************              MASOUD AR375396
+      ***APPLY*THE*FACTOR*TO*THE*AMOUNT*TO*AOMORTIZE*******************              MASOUD AR375396
+      *****************************************************************              MASOUD AR375396
+     C********** PROT      IFEQ '8'                                                  MASOUD AR375396
+     C********** CFCT      ANDNE0                                                    MASOUD AR375396
+     C**********           MULT CFCT      BUDU                                       MASOUD AR375396
+     C**********           ENDIF                                                     MASOUD AR375396
      C                     Z-ADDBUDU      ZFLD15
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    RBUDU
@@ -1037,6 +1071,13 @@
       *
      C                     Z-ADDLPSD      ZSDATE
      C                     Z-ADDMATY      ZEDATE
+      *                                                                                     AR375396
+      ** For processing type 8, use Average Life Date                                       AR375396
+      *                                                                                     AR375396
+     C           PROT      IFEQ '8'                                                         AR375396
+     C           ALDT      ANDNE0                                                           AR375396
+     C                     Z-ADDALDT      ZEDATE                                            AR375396
+     C                     ENDIF                                                            AR375396
      C                     MOVE 'N'       DADJN                           100017
      C                     Z-ADD0         NCD     50                      102506
      C                     EXSR ZDAYS
@@ -1047,9 +1088,11 @@
       *
      C/COPY WNCPYSRC,SE1140C008
      C           DAYS      IFEQ 0                                                             192084
-     C                     Z-ADDDPAP      RATE      H                                         192084
+     C***********          Z-ADDDPAP      RATE      H                                192084 MD022857
+     C                     Z-ADDDPAP      RATE                                       192084 MD022857
      C                     ELSE                                                               192084
-     C           DSCAMT    DIV  DAYS      RATE      H
+     C***********DSCAMT    DIV  DAYS      RATE      H                                       MD022857
+     C           DSCAMT    DIV  DAYS      RATE                                              MD022857
      C                     END                                                                192084
      C/COPY WNCPYSRC,SE1140C009
       *
@@ -1064,6 +1107,59 @@
      C                     MOVEL*BLANKS   RRATE                                             BUG12676
      C                     MOVE 'N/A'     RRATE                                             BUG12676
      C                     ENDIF                                                            BUG12676
+      ***********************************************************************      AR375396 MD022857
+      ***Calculate*number*of*days*between*last*position*date*and*************      AR375396 MD022857
+      ***run*date.***********************************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********PROT      IFEQ '8'                                                AR375396 MD022857
+     C***********CFCT      ANDNE*ZERO                                              AR375396 MD022857
+     C***********          Z-ADDRUND      ZEDATE                                   AR375396 MD022857
+     C***********          EXSR ZDAYS                                              AR375396 MD022857
+     C***********          Z-ADDZDDAYS    DAYS1   50                               AR375396 MD022857
+     C***********ALDT      IFNE 0                                                  AR375396 MD022857
+     C***********ALDT      ANDLTRUND                                               AR375396 MD022857
+     C***********          Z-ADD1         DAYS1                                    AR375396 MD022857
+     C***********          Z-ADD0         RATE1                                    AR375396 MD022857
+     C***********          Z-ADDDSCAMT    RATE      H                              AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+      ***Format*Rate.********************************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********          MOVE RATE1     ZFLD15                                   AR375396 MD022857
+     C***********          MOVE 'L'       ZECODE                                   AR375396 MD022857
+     C***********          EXSR ZSEDIT                                             AR375396 MD022857
+     C***********          MOVE ZOUT21    RRATE                                    AR375396 MD022857
+     C***********          ENDIF                                                   AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+      ***Amount*amortised*to*date********************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********RATE      MULT DAYS1     DPFPX  130                               AR375396 MD022857
+     C***********          Z-ADDDPFPX     ZFLD15                                   AR375396 MD022857
+     C***********          EXSR ZSEDIT                                             AR375396 MD022857
+     C***********          MOVE ZOUT21    RDPFP                                    AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+      ***Amount*to*amortise**************************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********DSCAMT    SUB  DPFPX     BUDUX  130                               AR375396 MD022857
+     C***********ALDT      IFNE 0                                                  AR375396 MD022857
+     C***********ALDT      ANDLTRUND                                               AR375396 MD022857
+     C***********          Z-ADD*ZERO     BUDUX                                    AR375396 MD022857
+     C***********          ENDIF                                                   AR375396 MD022857
+     C***********          Z-ADDBUDUX     ZFLD15                                   AR375396 MD022857
+     C***********          EXSR ZSEDIT                                             AR375396 MD022857
+     C***********          MOVE ZOUT21    RBUDU                                    AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+      ***Cost*basis**********************************************************      AR375396 MD022857
+      ***********************************************************************      AR375396 MD022857
+     C***********          MOVEL'J'       ZECODE                                   AR375396 MD022857
+     C***********NOMAMT    SUB  BUDUX     COBS                                     AR375396 MD022857
+     C***********ALDT      IFNE 0                                                  AR375396 MD022857
+     C***********ALDT      ANDLTRUND                                               AR375396 MD022857
+     C***********          Z-ADDNOMAMT    COBS                                     AR375396 MD022857
+     C***********          ENDIF                                                   AR375396 MD022857
+     C***********          Z-ADDCOBS      ZFLD15                                   AR375396 MD022857
+     C***********          EXSR ZSEDIT                                             AR375396 MD022857
+     C***********          MOVE ZOUT21    RCOBS                                    AR375396 MD022857
+     C***********          ENDIF                                                   AR375396 MD022857
      C/COPY WNCPYSRC,SE1140C025
       *
       ***  Check for overflow.

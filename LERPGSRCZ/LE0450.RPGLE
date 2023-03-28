@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR981899           Date 27Feb23               *
-      *  Prev Amend No. AR1096206          Date 02Feb23               *
+      *  Last Amend No. AR924081           Date 23Mar23               *
+      *  Prev Amend No. AR981899           Date 27Feb23               *
+      *                 AR1096206          Date 02Feb23               *
       *                 249385             Date 01Aug22               *
       *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
@@ -438,6 +439,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR924081 - Incorrect COF accrual for loans with ADDI = 'B'.  *
+      *             Extend fix 245082 to COF. Add one day to ZIEND    *
+      *             if loan is setup with first & last day accrual.   *
+      *             (Child: AR924083)                                 *
       *  AR981899 - Incorrect details on LE1040P1. Prevent field ABLN *
       *             to be zeroised for call loans, instead calculate  *
       *             its aggregate balance. (Child: AR981900)          *
@@ -16574,7 +16579,7 @@ C    C                   ENDIF                                                  
      C                   Z-ADD     ZIEND1        ZIEND                                         CAC00
       *                                                                   CAC001
      C     ADDI          IFEQ      'B'                                                         CAC00
-     C     ZIBEG         ANDEQ     VDATL                                                       CAC00
+     C*****ZIBEG         ANDEQ     VDATL                                             CAC001 AR924081
      C     ZIEND         ADD       1             ZIEND                                         CAC00
      C                   END                                                                   CAC00
       *                                                                   CAC001

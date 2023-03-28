@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD036395           Date 18Mar23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD036598           Date 07Jan16               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036395 - Component GOC0020 00010 failed due to invalid     *
+      *             maturity date. Do not include matured Securities. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -263,6 +266,7 @@
      C     *IN99         IFEQ      '1'
      C     SE_RECI       OREQ      '*'
      C     SE_RECI       OREQ      'C'                                                      MD036598
+     C     SE_RECI       OREQ      'M'                                                      MD036395
      C                   MOVEL     'N'           Extract_POSN
      C                   ELSE
  

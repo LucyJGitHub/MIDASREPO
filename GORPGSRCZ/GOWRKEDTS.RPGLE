@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR403524           Date 18Mar23               *      
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR403524           Date 18Mar23               *
+      *  Prev Amend No. MD024902           Date 16Mar23               *      
+      *                 CSD103             Date 10Aug20               *
       *                 258638             Date 30Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD032884           Date 09Jun15               *
@@ -48,6 +49,9 @@
       *             processing of security record with maturity date  *
       *             on holiday.                                       *
       *           - Applied for MD-36395.                             *
+      *  MD024902 - Settlement Cash Flow is not reflecting Value Date *
+      *             movement. Check if Asset/Liability is blank and   *
+      *             re-default if necessary.                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *   258638 - GOC0020 00011 failed with various dumps due to     *
@@ -874,6 +878,13 @@
      C                   MOVEL     P_ID          C_ID
       * Asset/liability indicator
      C                   MOVEL     P_ASLI        C_ASLI
+                                                                                            MD024902
+     C     C_ASLI        IFEQ      *BLANK                                                   MD024902
+     C     P_NOML        ANDLT     0                                                        MD024902
+     C                   MOVEL     'L'           C_ASLI                                     MD024902
+     C                   ELSE                                                               MD024902
+     C                   MOVEL     'A'           C_ASLI                                     MD024902
+     C                   ENDIF                                                              MD024902
 
       * Date, event type, event ref
      C     E_NIND        IFNE      *ZERO

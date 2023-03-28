@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. AR758004           Date 28Mar23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR758004 - Sub account which belongs to a zero balancing     *
+      *             hierarchy was charged with debit interest.        *
+      *             Amend program to make sure that zero balancing    *
+      *             will take placed before interest calculation.     *
+      *             Applied GEMS fix 247026. (Child: AR758005)        *
+      *           - Applied for MD025417.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -321,8 +328,14 @@
  
      C     I_MODE        WHENEQ    '1  '
      C     ZLSCPI        ANDNE     'Y'                                          217028
+     C     ZLSTYP        ANDNE     'Z'                                                      AR758004
+     C     I_MODE        OREQ      '1  '                                                    AR758004
+     C     ZLSTYP        ANDEQ     'Z'                                                      AR758004
      C     I_MODE        OREQ      '5  '
      C     ZLSCPI        ANDNE     'Y'                                          217028
+     C     ZLSTYP        ANDNE     'Z'                                                      AR758004
+     C     I_MODE        OREQ      '5  '                                                    AR758004
+     C     ZLSTYP        ANDEQ     'Z'                                                      AR758004
      C     I_MODE        OREQ      '1PC'
      C     ZLSCPI        ANDEQ     'Y'
      C     I_MODE        OREQ      '5PC'

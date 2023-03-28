@@ -9,12 +9,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1089839          Date 19Feb13              */
+/*       Last Amend No. MD050948           Date 21Mar23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1089839          Date 19Feb13              */
 /*                      CSC056  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD050948 - YTD files are not cleared during yearend COB.    */
+/*                  Check if yearend so LEC1101 is executed for the  */
+/*                  clearing/recreating of YTD files on yearend COB. */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1089839 - COBOP and 2.1 source clashes                    */
 /*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
@@ -25,10 +29,16 @@
              DCL        VAR(&LESTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&LETEMP) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&WPEYD) TYPE(*DEC) LEN(5 0)                                 /*MD050948*/
+             DCL        VAR(&PRUNA) TYPE(*CHAR) LEN(3)                                  /*MD050948*/
+             DCL        VAR(&WPRUN) TYPE(*DEC) STG(*DEFINED) +
+                           LEN(5 0) DEFVAR(&PRUNA)                                      /*MD050948*/             
  
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           2012')
- 
+
+             DCLF       FILE(SDBANKPD)                                                  /*MD050948*/
+                                                                                        /*MD050948*/ 
 /* Global Monitor Message */
  
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -36,6 +46,15 @@
  
              RTVDTAARA  DTAARA(LETEMP *ALL) RTNVAR(&LETEMP)
              RTVDTAARA  DTAARA(LESTAT *ALL) RTNVAR(&LESTAT)
+             OVRDBF     FILE(SDBANKPD) SHARE(*NO)                                       /*MD050948*/
+             RCVF                                                                       /*MD050948*/
+             CHGVAR     VAR(&WPEYD) VALUE(&BJPEYD)                                      /*MD050948*/
+             RTVDTAARA  DTAARA(JNSTAT (103 3)) RTNVAR(&PRUNA)                           /*MD050948*/
+             IF         COND((%SUBSTRING(&LESTAT 14 1) *NE 'Y') +
+                        *AND (&WPRUN *LE &WPEYD)) THEN(DO)                              /*MD050948*/
+             CHGDTAARA  DTAARA(LESTAT (14 1)) VALUE('Y')                                /*MD050948*/
+             CHGVAR     VAR(%SUBSTRING(&LESTAT 14 1)) VALUE('Y')                        /*MD050948*/
+             ENDDO                                                                      /*MD050948*/             
              IF         COND(%SUBSTRING(&LESTAT 14 1) = 'Y') +
                           THEN(CALL PGM(LEC1101))
              CHGVAR     VAR(&LESTAT) VALUE(&LETEMP)

@@ -16579,7 +16579,7 @@ C    C                   ENDIF                                                  
      C                   Z-ADD     ZIEND1        ZIEND                                         CAC00
       *                                                                   CAC001
      C     ADDI          IFEQ      'B'                                                         CAC00
-     C********** ZIBEG     ANDEQVDATL                                                CAC001 AR924081
+     C*****ZIBEG         ANDEQ     VDATL                                             CAC001 AR924081
      C     ZIEND         ADD       1             ZIEND                                         CAC00
      C                   END                                                                   CAC00
       *                                                                   CAC001

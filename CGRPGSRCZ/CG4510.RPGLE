@@ -19,8 +19,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059859A          Date 28Jun22               *
-      *  Prev Amend No. MD059859           Date 11May22               *
+      *  Last Amend No. MD042378           Date 20Feb23               *
+      *  Prev Amend No. MD042258           Date 20Feb23               *
+      *                 MD031405           Date 20Feb23               *
+      *                 MD059859A          Date 28Jun22               *
+      *                 MD059859           Date 11May22               *
       *                 MD059908           Date 06May22               *
       *                 CCG025             Date 04Apr22               *
       *                 CGL193             Date 02Nov21               *
@@ -106,6 +109,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042378 - Account Statement for Closed account has wrong    *
+      *             period                                            *
+      *  MD042258 - available/cleared balance is incorrect on the     *
+      *             Account statements for December 2015 and January  *
+      *             2016                                              *
+      *  MD031405 - CFSB is incorrect. Ensure that backvalued postings*
+      *             are included.                                     *
       *  MD059859A - Apply change to both credit and debit side.      *
       *              If no entries prior to last posting date, check  *
       *              for the first entry after last posting date.     *
@@ -983,7 +993,13 @@
      C                   ENDIF
       *
       **  Set up Statement Date
-     C                   MOVEL     BJRDNB        ##D(1)
+     C**********         MOVEL     BJRDNB        ##D(1)                                     MD042258
+     C     ACST          IFEQ      'C'                                                      MD042378
+     C     DACC          ANDNE     0                                                        MD042378
+     C                   MOVEL     DACC          ##D(1)                                     MD042378
+     C                   ELSE                                                               MD042378
+     C                   MOVEL     NSTDAB        ##D(1)                                     MD042258
+     C                   ENDIF                                                              MD042378
       *
       **  Set up Last Statement Date
       **  For turnover statements, use the last movement date instead                         239823
@@ -3316,7 +3332,8 @@
       **     the first Posting Date ...
      C     PSTD          IFLE      SDLSTD
      C     VALD          ANDGT     SDLSTD
-     C     VALD          ANDLT     ##FPDT
+     C*****VALD          ANDLT     ##FPDT                                                   MD031405
+     C     VALD          ANDLE     SDNSTD                                                   MD031405
       *
       **  ... total the Clearing Amounts.
      C     DRCR          IFEQ      *ZEROS
@@ -3332,9 +3349,12 @@
       *
       **  If the Value Date is between the First Statement Date and the
       **  Last and the Posting is dated before Run Date...
-     C     VALD          IFGE      ##FPDT
-     C     VALD          ANDLE     ##LPDT
-     C     PSTD          ANDLE     BJRDNB
+     C*****VALD          IFGE      ##FPDT                                                   MD042258
+     C*****VALD          ANDLE     ##LPDT                                                   MD042258
+     C*****PSTD          ANDLE     BJRDNB                                                   MD042258
+     C     PSTD          IFGT      SDLSTD                                                   MD042258
+     C     VALD          ANDLE     SDNSTD                                                   MD042258
+     C     VALD          ANDLE     ##LPDT                                                   MD042258
       *
       **  ... total the Clearing Amounts.
      C     DRCR          IFEQ      *ZEROS
@@ -3350,9 +3370,13 @@
       *
       **  If the Value Date is after the Last Posting Date but before
       **     the Run Date, and the value Date is after the Posting Date
-     C     VALD          IFGT      ##LPDT
-     C     VALD          ANDLE     BJRDNB
-     C     VALD          ANDGT     PSTD
+     C*****VALD          IFGT      ##LPDT                                                   MD031405
+     C*****VALD          ANDLE     BJRDNB                                                   MD031405
+     C*****VALD          ANDGT     PSTD                                                     MD031405
+     C     PSTD          IFGT      SDLSTD                                                   MD031405
+     C     VALD          ANDLE     SDNSTD                                                   MD031405
+     C*****VALD          ANDLE     ##LPDT                                          MD031405 MD042258
+     C     VALD          ANDGT     ##LPDT                                                   MD042258
       *
       **  ... total the Clearing Amounts.
      C     DRCR          IFEQ      *ZEROS

@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD020393           Date 01Mar23               *
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD020393 - Allow negative rate                               *
+      *           - Applied for MD033116                              *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -314,7 +317,8 @@
      C                   MOVE      DDRTSP        PAlpha
      C                   Z-ADD     *Zero         POAmount
      C                   MOVE      'N'           PIMTID
-     C                   EXSR      SRZA0840
+     C**********         EXSR      SRZA0840                                                 MD020393
+     C                   EXSR      SRZA0841                                                 MD020393
 
      C                   IF        POErrCde <> 0
 
@@ -373,6 +377,28 @@
      C                   ENDSR
 
       *****************************************************************
+      /EJECT                                                                                MD020393
+      *****************************************************************                     MD020393
+      *                                                               *                     MD020393
+      *  SRZA0841 - Validate field is numeric, or negative            *                     MD020393
+      *                                                               *                     MD020393
+      *****************************************************************                     MD020393
+                                                                                            MD020393
+     C     SRZA0841      BEGSR                                                              MD020393
+                                                                                            MD020393
+     C                   CALLB     'ZA0841'                                                 MD020393
+     C                   PARM                    PRetCode                                   MD020393
+     C                   PARM                    PAlpha                                     MD020393
+     C                   PARM                    PIDP                                       MD020393
+     C                   PARM                    PIINT                                      MD020393
+     C                   PARM                    PIMTID                                     MD020393
+     C                   PARM                    POErrCde                                   MD020393
+     C                   PARM                    POAmount                                   MD020393
+     C                   PARM                    BNDCSP                                     MD020393
+                                                                                            MD020393
+     C                   ENDSR                                                              MD020393
+                                                                                            MD020393
+      *****************************************************************                     MD020393
       /EJECT
       *****************************************************************
       *                                                               *

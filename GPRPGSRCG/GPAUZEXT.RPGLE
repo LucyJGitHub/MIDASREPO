@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR958473           Date 16Oct12               *
-      *  Prev Amend No. MD056611           Date 20Sep20               *
+      *  Last Amend No. MD026937           Date 17Feb23               *
+      *  Prev Amend No. AR958473           Date 16Oct12               *
+      *                 MD056611           Date 20Sep20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026937 - GOC0304 failed due to array index out of range.   *
+      *             Extend array from 4000 to 5000.                   *
       *  AR958473 - Incorrect values in GPAUCHPD, field AHUSER.       *
       *             Pass the journal timestamp entry to be used       *
       *             to retrieve the correct transaction.              *
@@ -154,7 +157,8 @@
       * File
       * Record
      C                   PARM      JOOBJ         InFile           10
-     C                   PARM      JOESD         InRecord       4000
+     C**********         PARM      JOESD         InRecord       4000                        MD026937
+     C                   PARM      JOESD         InRecord       5000                        MD026937
       * OUTPUT
       * File Details
      C                   PARM                    GPAUFL
@@ -237,7 +241,8 @@
       * Record
       * Field Attributes
       * Field Shortnames
-     C                   PARM      JOESD         InRecord       4000
+     C**********         PARM      JOESD         InRecord       4000                        MD026937
+     C                   PARM      JOESD         InRecord       5000                        MD026937
      C                   PARM                    #_FDATRB
      C                   PARM                    #_FDSNAM
 

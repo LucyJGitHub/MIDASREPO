@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR666005           Date 14Feb23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -44,6 +45,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents closed customers  *
+      *           from being inserted in the third reimbursement      *
+      *           institution field. Applied fix 229380.              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -192,6 +196,7 @@
 
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   AR666005
 
      D/COPY FTCPYSRC,SFTADDRILE
 
@@ -373,12 +378,14 @@
 
       ** Call to access pgm for Customer details
 
-     C                   Callb     'AOCUSTR0'
+     C**********         Callb     'AOCUSTR0'                                               AR666005
+     C                   CALLB     'AOCUSTR1'                                               AR666005
      C                   Parm      *Blanks       W#RTCD
      C                   Parm      '*KEY   '     W#OPTN
      C                   Parm                    W#CNUM
      C                   Parm      *Blanks       W#KYST
-     C     SDCUST        Parm      *Blanks       DSSDY
+     C*****SDCUST        Parm      *Blanks       DSSDY                                      AR666005
+     C     SDCUST        PARM      *BLANKS       DSLDY                                      AR666005
 
      C                   If        W#RTCD = *Blanks
 
@@ -426,7 +433,9 @@
 
      C                   If        ##CSID = 'Y'
 
-     C                   If        *IN31 = True
+     C**********         If        *IN31 = True                                             AR666005
+     C     *IN31         IFEQ      '1'                                                      AR666005
+     C     WCUSTC        OREQ      'Y'                                                      AR666005
      C                   Add       1             Idx
      C                   If        ADSLSH <> '/'
      C                   Move      'N'           OKTRI1
@@ -435,7 +444,11 @@
      C                   Move      'N'           OKTRI2
      C                   Movel     'STRI2'       FldNamXAr(Idx)
      C                   EndIf
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   Movel     'FTM3206'     MsgIdXAr(Idx)
+     C                   ENDIF                                                              AR666005
 
      C                   Else
 
@@ -499,7 +512,12 @@
      C                   EVAL      MsgDtaXar(Idx) = LenStr +%TRIM(ADCHK2)                   MD000091
      C                   Movel     'STRI2'       FldNamXAr(Idx)
      C                   EndIf
+     C     W#RTCD        IFEQ      '*CUSDEL'                                                AR666005
+     C     BBCLST        ANDEQ     'Y'                                                      AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   Movel     'FTM3205'     MsgIdXAr(Idx)
+     C                   ENDIF                                                              AR666005
 
      C                   Else
 

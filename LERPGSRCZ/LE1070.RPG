@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD055657           Date 14May20               *
+      *  Last Amend No. 263475             Date 30Jan23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD055657           Date 14May20               *
       *                 MD054782           Date 04Dec19               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
@@ -63,6 +64,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263475 - Job LEC0213 on MSGW due to divide by zero program   *
+      *           error. Ensure WKCCY will not be left blank.         *
+      *         - Applied for AR916148 (Child: AR916149)              *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD055657 - Manual transaction from FFC TI Interface went to  *
       *             repair queue because the facility exchange rate is*
@@ -306,6 +310,7 @@
       ** Set Key List to Read Facility Details on FACHSAL1
       *
      C                     MOVE RVCR      @RV     1
+     C                     MOVE RVCR      FCRCIN                                              263475
       ** Save Revolving Credit Indicator
      C                     MOVE BRCA      FCBRCA
       ** Branch Code
@@ -1093,6 +1098,10 @@
      C           FCCY      IFNE WKCCY
       ** If Facility currency is not the same as the work currency
       *
+     C           WKCCY     IFEQ '   '                                                         263475
+     C                     MOVE FCCY      WKCCY                                               263475
+     C                     ENDIF                                                              263475
+      *                                                                                       263475
      C                     Z-ADD1         X
      C           WKCCY     LOKUPCOD,X                    20
      C                     MOVE CYD,X     CYDDS
@@ -1216,6 +1225,11 @@
      C                     Z-ADDFAMT      WKAMT
       ** Set Work amount to Facility Amount
      C*
+      ** Set Work currency to Facility Currency                                               263475
+      *                                                                                       263475
+     C                     MOVE FCCY      WKCCY                                               263475
+     C                     MOVE 'D'       FCRECI                                              263475
+      *                                                                                       263475
      C           CLE014    IFEQ 'Y'                                       CLE014
      C           TRCA      ANDNE'CA'                                      CLE014
      C           CLE014    OREQ 'N'                                       CLE014

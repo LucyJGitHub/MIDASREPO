@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *  Last Amend No. AR666005           Date 14Feb23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD034521A          Date 14Sep15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 06May13               *
       *                 AR1083047          Date 30Jan13               *
@@ -60,6 +61,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents SWIFT IDs         *
+      *             referring to closed customers from being inserted *
+      *             in the receiver's correspondent field. Applied    *
+      *             fix 229380.                                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD034521A - Error handling of Blocked account is not the     *
@@ -1138,6 +1143,13 @@
      C                   MOVEL     'FTM3119'     MsgIdXAr(Idx)                  CFT014
      C                   GOTO      EXVALRCORR2                                  CFT014
      C                   ENDIF                                                  CFT014
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+     C                   MOVE      'N'           OKRCO1                                     AR666005
+     C                   ADD       1             Idx                                        AR666005
+     C                   MOVEL     'DDRCO1'      FldNamXAr(Idx)                             AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   GOTO      EXVALRCORR2                                              AR666005
+     C                   ENDIF                                                              AR666005
       *                                                                         CFT014
      C                   MOVEL     'S'           WRCRT                          CFT014
      C                   GOTO      EXVALRCORR2                                  CFT014

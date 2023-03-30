@@ -25,18 +25,21 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD032114           Date 01Mar23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 216117             Date 06Jun06               *
+      *                 216117             Date 06Jun06               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CAP002  *CREATE    Date 11Nov97               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032114 - Allow negative value on Discount/Yield Rate       *
+      *           - Applied for MD033116                              *
       *  MD046248 - Finastra Rebranding                               *
       *  216117 - Yield/discount rate is an optional field for NAP    *
       *           deals with type equal to 'C2', 'BP' or 'BD'.        *
@@ -190,7 +193,8 @@
      C                   MOVE      DDDCRT        @@ALPH
      C                   MOVE      'N'           @@MTID
  
-     C                   CALLB     'ZA0840'                                     ***3
+     C**********         CALLB     'ZA0840'                                     ***3        MD032114
+     C                   CALLB     'ZA0841'                                                 MD032114
      C                   PARM                    RetCodeOut
      C                   PARM                    @@ALPH
      C                   PARM                    @@IDP

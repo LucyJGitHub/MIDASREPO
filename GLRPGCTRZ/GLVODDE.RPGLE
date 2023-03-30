@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052424           Date 22Feb23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR579557           Date 14Sep15               *
       *                 CGL165             Date 23Feb15               *
       *                 MD029023           Date 21Nov14               *
@@ -35,6 +36,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052424 - Blank Additional OD Change Value Date was not     *
+      *             validated when Additional OD Rate was changed.    *
+      *             Validate Additional OD Change Value even if the   *
+      *             value is blank.                                   *
       *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR579557 - Account Maintenance - date must be deleted in     *
@@ -563,10 +568,13 @@
      C     DDORTC        ORNE      *BLANKS
      C     DDAODR        ANDEQ     *BLANKS
       *                                                                                     AR579557
-     C     DDACTN        IFEQ      'A'                                                      AR579557
-     C     DDAODR        ANDEQ     *BLANKS                                                  AR579557
-     C     BXAODR        ANDEQ     0                                                        AR579557
-     C                   ELSE                                                               AR579557
+     C*****DDACTN        IFEQ      'A'                                             AR579557 MD052424
+     C*****DDAODR        ANDEQ     *BLANKS                                         AR579557 MD052424
+     C*****BXAODR        ANDEQ     0                                               AR579557 MD052424
+     C**********         ELSE                                                      AR579557 MD052424
+     C     DDACTN        IFEQ      'I'                                                      MD052424
+     C     DDACTN        OREQ      'A'                                                      MD052424
+     C     DDORTC        ANDEQ     *BLANKS                                                  MD052424
      C                   Move      'N'           DDAODROk
      C                   Move      'N'           DDORTCOk
      C                   Add       1             Idx
@@ -579,7 +587,7 @@
       ** Addiitonal Overdraft Rate changed                                                  MD029023
      C     WNAODR        IFNE      BXAODR                                                   MD029023
       ** IF Additional Overdraft Rate Change Value Date NOT = *blanks
-     C     DDORTC        IFNE      *BLANKS
+     C*****DDORTC        IFNE      *BLANKS                                                  MD052424
       *
       ** Validate and convert to Midas Day No.
      C                   CallB     'ZDATE1'
@@ -713,7 +721,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-     C                   ENDIF
+     C**********         ENDIF                                                              MD052424  
      C                   ENDIF
      C                   ENDIF
       **********                                                                             BUG4161

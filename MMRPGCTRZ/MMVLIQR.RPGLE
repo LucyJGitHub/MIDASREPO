@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 245692             Date 12Dec13               *
+      *  Last Amend No. MD020393           Date 01Mar23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 245692             Date 12Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD020393 - Allow negative rates                              *
+      *           - Applied for MD033116                              *
       *  MD046248 - Finastra Rebranding                               *
       *  245692 - Incorrect validation of rates when the decimal se-  *
       *           parator in the Dealing ICD was defined as "," ins-  *
@@ -220,7 +223,8 @@
      C**********         PARM                    ZFIELD                                       245692
      C**********         PARM                    ZADEC                                        245692
      C**********         PARM                    ZADIG                                        245692
-     C                   CALLB     'ZA0840'                                                   245692
+     C**********         CALLB     'ZA0840'                                          245692 MD020393
+     C                   CALLB     'ZA0841'                                                 MD020393
      C                   PARM                    @Rtcde                                       245692
      C                   PARM                    @@ALPH                                       245692
      C                   PARM                    @@IDP                                        245692

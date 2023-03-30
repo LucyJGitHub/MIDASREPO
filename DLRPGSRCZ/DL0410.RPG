@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD049609           Date 21Feb18               *
+      *  Last Amend No. MD021359B          Date 20Jan23               *
+      *  Prev Amend No. MD021359           Date 20Jan23               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD049609           Date 21Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 135952             Date 11May16               *
@@ -174,6 +176,11 @@
       *             switched on.  Any changes made to this program    *
       *             should be duplicated in DL0411.                   *
       *                                                               *
+      *  MD021359B - Previous fix caused FOOB in GLC30.  Enhance fix  *
+      *              by moving the ENDIF.                             *
+      *  MD021359 - When PCA is switched on, FWD revaluation reversal *
+      *             is done via GE-PC, suppress reversal from GE-FR to*
+      *             avoid duplicate reversal.                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD049609 - Adjustment of forward day and rate array          *
       *             (entries per table)                               *
@@ -4279,7 +4286,14 @@
      C                     MOVE *IN37     WIN37   1                                           CAS005
      C                     MOVE *OFF      *IN37                                               CAS005
       *                                                                                       CAS005
+      ** Supress generation of GEFRPD when PCA is switched on                               MD021359
+      ** reversal of revaluation will be done in MCC0370                                    MD021359
+      *                                                                                     MD021359
+     C           BGNVST    IFEQ 'Y'                                                         MD021359
+     C           BGN0ST    ANDEQ'Y'                                                         MD021359
+     C                     ELSE                                                             MD021359
      C                     EXCPT                                                              CAS005
+     C**********           ENDIF                                                  MD021359 MD021359B
       *                                                                                       CAS005
      C                     MOVE WIN37     *IN37                                               CAS005
       *                                                                                       CAS005
@@ -4292,6 +4306,7 @@
      C                     Z-ADD2         S                                                   CAS005
      C           PSTA      DIV  1000      ZZAMT                                               CAS005
      C                     EXSR HASH                                                          CAS005
+     C                     ENDIF                                                           MD021359B
       *                                                                                       CAS005
       ** Delete records                                                                       CAS005
       *                                                                                       CAS005

@@ -34,19 +34,21 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD033116           Date 01Mar23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01.02 ----------------------------------------*
-      *  Prev Amend No. 208051             Date 22Aug02               *
+      *                 208051             Date 22Aug02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CAP002  *CREATE    Date 01Aug97               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033116 - Introduced a PGM object for this module.          *
       *  MD046248 - Finastra Rebranding                               *
       *  208051 - Format -ve amount with a leading '-' sign.          *
       *  CAP002 - Conversion of Midas inputs to modular API structure *

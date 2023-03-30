@@ -12,8 +12,11 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *  Last Amend No. AR924081           Date 23Mar23               *
+      *  Prev Amend No. AR981899           Date 27Feb23               *
+      *                 AR1096206          Date 02Feb23               *
+      *                 249385             Date 01Aug22               *
+      *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
       *                 257879             Date 12May22               *
       *                 MD059275           Date 23May22               *
@@ -436,6 +439,17 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR924081 - Incorrect COF accrual for loans with ADDI = 'B'.  *
+      *             Extend fix 245082 to COF. Add one day to ZIEND    *
+      *             if loan is setup with first & last day accrual.   *
+      *             (Child: AR924083)                                 *
+      *  AR981899 - Incorrect details on LE1040P1. Prevent field ABLN *
+      *             to be zeroised for call loans, instead calculate  *
+      *             its aggregate balance. (Child: AR981900)          *
+      *  AR1096206 - YTD average on LE1040P1 is wrong for loans with  *
+      *              principal transfers. Consider PT/PF events as    *
+      *              principal aggregates needed for the computation  *
+      *              of average balance ABLN. (Child: AR1096207)      *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
@@ -16565,7 +16579,7 @@ C    C                   ENDIF                                                  
      C                   Z-ADD     ZIEND1        ZIEND                                         CAC00
       *                                                                   CAC001
      C     ADDI          IFEQ      'B'                                                         CAC00
-     C     ZIBEG         ANDEQ     VDATL                                                       CAC00
+     C*****ZIBEG         ANDEQ     VDATL                                             CAC001 AR924081
      C     ZIEND         ADD       1             ZIEND                                         CAC00
      C                   END                                                                   CAC00
       *                                                                   CAC001
@@ -17854,6 +17868,7 @@ C    C                   ENDIF                                                  
       *                                                                   131520
      C     MDAT          IFLT      FIRY                                          B1            13152
      C     CPAM          ANDEQ     0                                                           13152
+     C     MDAT          ANDNE     0                                                        AR981899
      C                   Z-ADD     0             ABLN                                          13152
      C                   ELSE                                                    X1            13152
       *                                                                   131520
@@ -17938,10 +17953,12 @@ C    C                   ENDIF                                                  
      C     AMTPH         IFEQ      'PI'                                           B2           13152
      C     AMTPH         OREQ      'IN'                                                        13152
      C     INTC          ANDEQ     'Y'                                                         13152
+     C     AMTPH         OREQ      'PT'                                                    AR1096206
      C     PRNCPL        ADD       PRAMH         PRNCPL                                        13152
      C                   END                                                      E2           13152
      C     AMTPH         IFEQ      'MR'                                           B2           13152
      C     AMTPH         OREQ      'RE'                                                        13152
+     C     AMTPH         OREQ      'PF'                                                    AR1096206
      C     PRNCPL        SUB       PRAMH         PRNCPL                                        13152
      C                   END                                                      E2           13152
      C     AMTPH         IFEQ      'RO'                                           B2           13152
@@ -17957,6 +17974,8 @@ C    C                   ENDIF                                                  
      C     INTC          ANDEQ     'Y'                                                         13152
      C     AMTPH         OREQ      'RO'                                                        13152
      C     HPTYP         ANDEQ     63                                                          13152
+     C     AMTPH         OREQ      'PT'                                                    AR1096206
+     C     AMTPH         OREQ      'PF'                                                    AR1096206
      C     LOAN          ORNE      LOANH                                                       13152
      C     *IN38         OREQ      '1'                                                         13152
      C                   READ      HISTR                                  38                   13152

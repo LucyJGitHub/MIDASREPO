@@ -33,8 +33,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD056973           Date 08Mar21               *     
-      *  Prev Amend No. MD056835           Date 23Mar21               *
+      *  Last Amend No. MD056988           Date 30Mar22               *
+      *  Prev Amend No. MD056973           Date 08Mar21               *
+      *                 MD056835           Date 23Mar21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL186             Date 06Oct17               *
@@ -147,6 +148,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD056988 - Display the minimum balance for account's with    *
+      *             interest type 03/04.                              *
+      *             Applied for MD-61155.                             *
       *  MD056973 - OSIC Enquiry - Number of Days for Total Interest  *
       *             is Incorrect. Do not adjust last cap. date if     *
       *             record read is from REHISPM.                      *     
@@ -614,7 +618,8 @@
      E********************NAR     1  42 79                         113955 103860
      E********************NAR     1  48 79                                             103860 CRE090
      E********************NAR     1  49 79                                          CRE090 MD027025A
-     E                    NAR     1  50 79                                                 MD027025A
+     E**********          NAR     1  50 79                                        MD027025A MD056988
+     E                    NAR     1  51 79                                                  MD056988
      E*
      E                    AR         79  1               line display     086093
       *                                                                   086254
@@ -1688,6 +1693,7 @@
      C                     Z-ADD0         ZDATE   60
      C                     MOVE *BLANKS   NARR   30
      C                     MOVE *BLANKS   NARR2  30
+     C                     MOVE *BLANKS   NARR3  15                                         MD056988
      C***********          MOVE *BLANKS   AMON   13                       118816
      C***********          MOVE *BLANKS   AMON2  13                       118816
      C                     MOVE *BLANKS   AMON   14                       118816
@@ -1706,6 +1712,7 @@
      C                     MOVE *BLANK    REB     1
      C                     MOVE *BLANKS   ADJT   11
      C                     MOVE *BLANKS   ADJS    1
+     C                     MOVE *BLANKS   VALDM   6                                         MD056988
      C*
      C** READ RECAPM
      C*
@@ -2131,6 +2138,9 @@
      C           DRECI     DOWEQ'M'                                                         MD056973
      C           *IN51     ANDEQ'0'                                                         MD056973
      C           KLIST1    READEREHISL                   51                                 MD056973
+      *                                                                                     MD056988
+     C                     Z-ADDMHISD     WHISDD                                            MD056988
+      *                                                                                     MD056988
      C                     ENDDO                                                            MD056973
       *                                                                   092181
       * If a/c header or cap. rec. not found, read the previous record    092181
@@ -2960,6 +2970,108 @@
      C                     END                                            CRE001
      C*
      C                     END                             - E4
+      *                                                                                     MD056988
+     C                     ELSE                                                             MD056988
+      *                                                                                     MD056988
+     C           CDICT     IFGT 2                                                           MD056988
+      *                                                                                     MD056988
+     C           DRECI     IFEQ 'M'                                                         MD056988
+     C           MHISD     ANDLTCHISD                                                       MD056988
+     C                     Z-ADDMHISD     WHISDD                                            MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C           DRECI     IFEQ 'M'                                                         MD056988
+     C           MHISD     ANDEQCHISD                                                       MD056988
+     C           DSDAT     IFNE *ZEROS                                                      MD056988
+     C                     Z-ADDWCRCB     ZICALC                                            MD056988
+     C                     Z-ADDWHISDD    ZIBEG                                             MD056988
+     C                     Z-ADDCHISD     ZIEND                                             MD056988
+     C                     EXSR ZICD                                                        MD056988
+      *                                                                                     MD056988
+     C           ZICALC    IFEQ 6                                                           MD056988
+     C                     Z-ADDINT6DY    DAYS                                              MD056988
+     C                     Z-ADDINT6DY    DAYC                                              MD056988
+     C                     ELSE                                                             MD056988
+     C                     Z-ADDZDAYN2    DAYS                                              MD056988
+     C                     Z-ADDZDAYN2    DAYC                                              MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     MOVE *BLANKS   ZFIELD                                            MD056988
+     C                     MOVE DAYS      ZFIELD                                            MD056988
+     C                     Z-ADD0         ZADEC                                             MD056988
+     C                     EXSR ZEDIT                                                       MD056988
+     C                     MOVE ZFIELD    ND                                                MD056988
+     C*                                                                                     MD056988
+     C                     Z-ADDSAVEZ     ZADEC                                             MD056988
+     C*                                                                                     MD056988
+     C                     Z-ADDMNBL      HISB0                                             MD056988
+     C           HISB0     MULT DAYS      NUMB0                                             MD056988
+      *                                                                                     MD056988
+     C           HISB0     IFLT 0                                                           MD056988
+     C                     MOVE 'CR'      CR                                                MD056988
+     C           HISB0     MULT SUBT      HISB0                                             MD056988
+     C                     ELSE                                                             MD056988
+     C                     MOVE *BLANKS   CR                                                MD056988
+     C                     ENDIF                                                            MD056988
+     C                     MOVELNAR,51    NARR3                                             MD056988
+      *                                                                                     MD056988
+     C           NUMB0     IFGT *ZEROS                                                      MD056988
+     C                     ADD  NUMB0     TOTND                                             MD056988
+     C                     ELSE                                                             MD056988
+     C           NUMB0     MULT SUBT      NUMB0                                             MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDDINT      INTD0                                             MD056988
+      *                                                                                     MD056988
+     C                     MOVE *BLANKS   ZFIELD                                            MD056988
+     C                     MOVE HISB0     ZFIELD                                            MD056988
+     C                     Z-ADDDECI1     ZADIG                                             MD056988
+     C                     EXSR ZEDIT                                                       MD056988
+     C                     MOVE ZFIELD    AMON                                              MD056988
+      *                                                                                     MD056988
+     C                     MOVE *BLANKS   ZFIELD                                            MD056988
+     C                     MOVE NUMB0     ZFIELD                                            MD056988
+     C                     Z-ADDDECI1     ZADIG                                             MD056988
+     C                     EXSR ZEDIT                                                       MD056988
+     C                     MOVE ZFIELD    NUMB                                              MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDINTD0     WKINT                                             MD056988
+     C                     EXSR EDTINT                                                      MD056988
+      *                                                                                     MD056988
+      ** Convert Midas Date to DDMMYY                                                       MD056988
+      *                                                                                     MD056988
+     C           PVALD     IFNE CHISD                                                       MD056988
+     C                     Z-ADDCHISD     ZDAYNO                                            MD056988
+     C                     MOVE '0'       *IN99                                             MD056988
+     C                     EXSR ZDATE2                                                      MD056988
+      *                                                                                     MD056988
+      ** Verify if error                                                                    MD056988
+      *                                                                                     MD056988
+     C           *IN99     IFEQ '1'                                                         MD056988
+     C           *LOCK     IN   LDA                                                         MD056988
+     C                     Z-ADD048       DBASE            ***************                  MD056988
+     C                     MOVE 'ZDATE2'  DBFILE           * DB ERROR 048*                  MD056988
+     C                     MOVE CHISD     DBKEY            ***************                  MD056988
+     C                     OUT  LDA                                                         MD056988
+     C                     MOVEA'1'       *IN,89                                            MD056988
+     C                     EXSR DBSR                                                        MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDCHISD     PVALD                                             MD056988
+     C                     MOVELZDATE     PVALDO                                            MD056988
+      *                                                                                     MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     MOVELPVALDO    VALDM                                             MD056988
+      *                                                                                     MD056988
+      ** OUTPUT SUBTOTAL                                                                    MD056988
+      *                                                                                     MD056988
+     C                     EXSR OUTMSR                                                      MD056988
+     C                     MOVELAREA      SDAT1                                             MD056988
+     C                     EXSR SUBW1                                                       MD056988
+     C                     ENDIF                                                            MD056988
+     C                     ENDIF                                                            MD056988
+     C                     ENDIF                                                            MD056988
      C                     END                             - E3
      C                     END                             - E2
       *                                                                   113955
@@ -3969,6 +4081,9 @@
      C           DRECI     DOWEQ'M'                                                         MD056973
      C           *IN52     ANDEQ'0'                                                         MD056973
      C           KLIST1    READEREHISL                   52                                 MD056973
+      *                                                                                     MD056988
+     C                     Z-ADDMHISD     WHISDC                                            MD056988
+      *                                                                                     MD056988
      C                     ENDDO                                                            MD056973
       *                                                                   092181
       * If a/c header or cap. rec. not found, read the previous record    092181
@@ -4786,6 +4901,108 @@
      C                     EXSR SUBW2
      C*
      C                     END                             - E4
+      *                                                                                     MD056988
+     C                     ELSE                                                             MD056988
+      *                                                                                     MD056988
+     C           CCICT     IFGT 2                                                           MD056988
+      *                                                                                     MD056988
+     C           DRECI     IFEQ 'M'                                                         MD056988
+     C           MHISD     ANDLTCHISD                                                       MD056988
+     C                     Z-ADDMHISD     WHISDC                                            MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C           DRECI     IFEQ 'M'                                                         MD056988
+     C           MHISD     ANDEQCHISD                                                       MD056988
+     C           CSDAT     IFNE *ZEROS                                                      MD056988
+     C                     Z-ADDWCRCB     ZICALC                                            MD056988
+     C                     Z-ADDWHISDC    ZIBEG                                             MD056988
+     C                     Z-ADDCHISD     ZIEND                                             MD056988
+     C                     EXSR ZICD                                                        MD056988
+      *                                                                                     MD056988
+     C           ZICALC    IFEQ 6                                                           MD056988
+     C                     Z-ADDINT6DY    DAYS                                              MD056988
+     C                     Z-ADDINT6DY    DAYC                                              MD056988
+     C                     ELSE                                                             MD056988
+     C                     Z-ADDZDAYN2    DAYS                                              MD056988
+     C                     Z-ADDZDAYN2    DAYC                                              MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     MOVE *BLANKS   ZFIELD                                            MD056988
+     C                     MOVE DAYS      ZFIELD                                            MD056988
+     C                     Z-ADD0         ZADEC                                             MD056988
+     C                     EXSR ZEDIT                                                       MD056988
+     C                     MOVE ZFIELD    ND                                                MD056988
+     C*                                                                                     MD056988
+     C                     Z-ADDSAVEZ     ZADEC                                             MD056988
+     C*                                                                                     MD056988
+     C                     Z-ADDMNBL      HISB0                                             MD056988
+     C           HISB0     MULT DAYS      NUMB0                                             MD056988
+      *                                                                                     MD056988
+     C           HISB0     IFLT 0                                                           MD056988
+     C                     MOVE 'CR'      CR                                                MD056988
+     C           HISB0     MULT SUBT      HISB0                                             MD056988
+     C                     ELSE                                                             MD056988
+     C                     MOVE *BLANKS   CR                                                MD056988
+     C                     ENDIF                                                            MD056988
+     C                     MOVELNAR,51    NARR3                                             MD056988
+      *                                                                                     MD056988
+     C           NUMB0     IFGT *ZEROS                                                      MD056988
+     C                     ADD  NUMB0     TOTND                                             MD056988
+     C                     ELSE                                                             MD056988
+     C           NUMB0     MULT SUBT      NUMB0                                             MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDCINT      INTD0                                             MD056988
+      *                                                                                     MD056988
+     C                     MOVE *BLANKS   ZFIELD                                            MD056988
+     C                     MOVE HISB0     ZFIELD                                            MD056988
+     C                     Z-ADDDECI1     ZADIG                                             MD056988
+     C                     EXSR ZEDIT                                                       MD056988
+     C                     MOVE ZFIELD    AMON                                              MD056988
+      *                                                                                     MD056988
+     C                     MOVE *BLANKS   ZFIELD                                            MD056988
+     C                     MOVE NUMB0     ZFIELD                                            MD056988
+     C                     Z-ADDDECI1     ZADIG                                             MD056988
+     C                     EXSR ZEDIT                                                       MD056988
+     C                     MOVE ZFIELD    NUMB                                              MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDINTD0     WKINT                                             MD056988
+     C                     EXSR EDTINT                                                      MD056988
+      *                                                                                     MD056988
+      ** Convert Midas Date to DDMMYY                                                       MD056988
+      *                                                                                     MD056988
+     C           PVALD     IFNE CHISD                                                       MD056988
+     C                     Z-ADDCHISD     ZDAYNO                                            MD056988
+     C                     MOVE '0'       *IN99                                             MD056988
+     C                     EXSR ZDATE2                                                      MD056988
+      *                                                                                     MD056988
+      ** Verify if error                                                                    MD056988
+      *                                                                                     MD056988
+     C           *IN99     IFEQ '1'                                                         MD056988
+     C           *LOCK     IN   LDA                                                         MD056988
+     C                     Z-ADD048       DBASE            ***************                  MD056988
+     C                     MOVE 'ZDATE2'  DBFILE           * DB ERROR 048*                  MD056988
+     C                     MOVE CHISD     DBKEY            ***************                  MD056988
+     C                     OUT  LDA                                                         MD056988
+     C                     MOVEA'1'       *IN,89                                            MD056988
+     C                     EXSR DBSR                                                        MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDCHISD     PVALD                                             MD056988
+     C                     MOVELZDATE     PVALDO                                            MD056988
+      *                                                                                     MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     MOVELPVALDO    VALDM                                             MD056988
+      *                                                                                     MD056988
+      ** OUTPUT SUBTOTAL                                                                    MD056988
+      *                                                                                     MD056988
+     C                     EXSR OUTMSR                                                      MD056988
+     C                     MOVELAREA      SDAT2                                             MD056988
+     C                     EXSR SUBW2                                                       MD056988
+     C                     ENDIF                                                            MD056988
+     C                     ENDIF                                                            MD056988
+     C                     ENDIF                                                            MD056988
      C                     END                             - E3
      C                     END                             - E2
       *                                                                   113955
@@ -8230,6 +8447,7 @@
      C                     ELSE                            - E1           100992
      C                     MOVE *BLANKS   CR                              100992
      C                     END                             - E1
+     C                     MOVELNAR,51    NARR3                                             MD056988
      C*
      C           NUMB0     IFGT *ZEROS
      C                     ADD  NUMB0     TOTND
@@ -8237,11 +8455,11 @@
      C***********          SUB  NUMB0     TOTNC                           091612
      C           NUMB0     MULT SUBT      NUMB0
      C                     END
-     C           MNBL      IFGT *ZEROS                     - B7           094431
+     C********** MNBL      IFGT *ZEROS                     - B7                      094431 MD056988
      C                     Z-ADDDINT      INTD0
-     C                     ELSE                            - X7           094431
-     C                     Z-SUBDINT      INTD0                           094431
-     C                     END                             - E7           094431
+     C**********           ELSE                            - X7                      094431 MD056988
+     C**********           Z-SUBDINT      INTD0                                      094431 MD056988
+     C**********           END                             - E7                      094431 MD056988
      C*
      C                     MOVE *BLANKS   ZFIELD
      C                     MOVE HISB0     ZFIELD
@@ -8269,10 +8487,37 @@
      C***********          MOVE ZFIELD    INTR                            086254
      C                     Z-ADDINTD0     WKINT            set SR parm    086254
      C                     EXSR EDTINT                     editIntrstWith-086254
+      *                                                                                     MD056988
+      ** Convert Midas Date to DDMMYY                                                       MD056988
+      *                                                                                     MD056988
+     C           PVALD     IFNE CHISD                                                       MD056988
+     C                     Z-ADDCHISD     ZDAYNO                                            MD056988
+     C                     MOVE '0'       *IN99                                             MD056988
+     C                     EXSR ZDATE2                                                      MD056988
+      *                                                                                     MD056988
+      ** Verify if error                                                                    MD056988
+      *                                                                                     MD056988
+     C           *IN99     IFEQ '1'                                                         MD056988
+     C           *LOCK     IN   LDA                                                         MD056988
+     C                     Z-ADD048       DBASE            ***************                  MD056988
+     C                     MOVE 'ZDATE2'  DBFILE           * DB ERROR 048*                  MD056988
+     C                     MOVE CHISD     DBKEY            ***************                  MD056988
+     C                     OUT  LDA                                                         MD056988
+     C                     MOVEA'1'       *IN,89                                            MD056988
+     C                     EXSR DBSR                                                        MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDCHISD     PVALD                                             MD056988
+     C                     MOVELZDATE     PVALDO                                            MD056988
+      *                                                                                     MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     MOVELPVALDO    VALDM                                             MD056988
      C*
      C***********          EXCPTOUT5                                      086093
      C***********          READ GHOST                    99               086093
-     C                     EXSR OUT5SR                     formatAREAType1086093
+     C**********           EXSR OUT5SR                     formatAREAType1           086093 MD056988
+     C                     EXSR OUTMSR                                                      MD056988
      C           MHISD     IFGT CLDID                                     065773
      C                     MOVELAREA      SDAT1
      C                     EXSR SUBW1
@@ -8317,6 +8562,7 @@
      C                     ELSE                            - E1           100992
      C                     MOVE *BLANKS   CR                              100992
      C                     END                             - E1
+     C                     MOVELNAR,51    NARR3                                             MD056988
      C*
      C***********NUMB0     IFGT *ZEROS                                    091612
      C***********          ADD  NUMB0     TOTND                           091612
@@ -8325,11 +8571,11 @@
      C                     SUB  NUMB0     TOTNC
      C           NUMB0     MULT SUBT      NUMB0
      C                     END
-     C           MNBL      IFGT *ZEROS                     - B7           094431
+     C********** MNBL      IFGT *ZEROS                     - B7                      094431 MD056988
      C                     Z-ADDCINT      INTC0
-     C                     ELSE                            - X7           094431
-     C                     Z-SUBCINT      INTC0                           094431
-     C                     END                             - E7           094431
+     C**********           ELSE                            - X7                      094431 MD056988
+     C**********           Z-SUBCINT      INTC0                                      094431 MD056988
+     C**********           END                             - E7                      094431 MD056988
      C*
      C                     MOVE *BLANKS   ZFIELD
      C                     MOVE HISB0     ZFIELD
@@ -8358,10 +8604,37 @@
      C***********          MOVE ZFIELD    INTR                            086254
      C                     Z-ADDINTC0     WKINT            set SR parm    086254
      C                     EXSR EDTINT                     editIntrstWith-086254
+      *                                                                                     MD056988
+      ** Convert Midas Date to DDMMYY                                                       MD056988
+      *                                                                                     MD056988
+     C           PVALD     IFNE CHISD                                                       MD056988
+     C                     Z-ADDCHISD     ZDAYNO                                            MD056988
+     C                     MOVE '0'       *IN99                                             MD056988
+     C                     EXSR ZDATE2                                                      MD056988
+      *                                                                                     MD056988
+      ** Verify if error                                                                    MD056988
+      *                                                                                     MD056988
+     C           *IN99     IFEQ '1'                                                         MD056988
+     C           *LOCK     IN   LDA                                                         MD056988
+     C                     Z-ADD048       DBASE            ***************                  MD056988
+     C                     MOVE 'ZDATE2'  DBFILE           * DB ERROR 048*                  MD056988
+     C                     MOVE CHISD     DBKEY            ***************                  MD056988
+     C                     OUT  LDA                                                         MD056988
+     C                     MOVEA'1'       *IN,89                                            MD056988
+     C                     EXSR DBSR                                                        MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDCHISD     PVALD                                             MD056988
+     C                     MOVELZDATE     PVALDO                                            MD056988
+      *                                                                                     MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     MOVELPVALDO    VALDM                                             MD056988
      C*
      C***********          EXCPTOUT5                                      086093
      C***********          READ GHOST                    99               086093
-     C                     EXSR OUT5SR                     formatAREAType1086093
+     C**********           EXSR OUT5SR                     formatAREAType1           086093 MD056988
+     C                     EXSR OUTMSR                                                      MD056988
      C           MHISD     IFGT CLCID                                     065773
      C                     MOVELAREA      SDAT2
      C                     EXSR SUBW2
@@ -8414,6 +8687,7 @@
      C                     ELSE                            - E1           100992
      C                     MOVE *BLANKS   CR                              100992
      C                     END                             - E1
+     C                     MOVELNAR,51    NARR3                                             MD056988
      C*
      C           NUMB0     IFGT *ZEROS
      C                     ADD  NUMB0     TOTND
@@ -8421,11 +8695,11 @@
      C***********          SUB  NUMB0     TOTNC                           091612
      C           NUMB0     MULT SUBT      NUMB0
      C                     END
-     C           MNBL      IFGT *ZEROS                     - B10          094431
+     C********** MNBL      IFGT *ZEROS                     - B10                     094431 MD056988
      C                     Z-ADDDINT      INTD0
-     C                     ELSE                            - X10          094431
-     C                     Z-SUBDINT      INTD0                           094431
-     C                     END                             - E10          094431
+     C**********           ELSE                            - X10                     094431 MD056988
+     C**********           Z-SUBDINT      INTD0                                      094431 MD056988
+     C**********           END                             - E10                     094431 MD056988
      C                     MOVE *BLANKS   ZFIELD
      C                     MOVE HISB0     ZFIELD
      C                     Z-ADDDECI1     ZADIG
@@ -8452,10 +8726,37 @@
      C***********          MOVE ZFIELD    INTR                            086254
      C                     Z-ADDINTD0     WKINT            set SR parm    086254
      C                     EXSR EDTINT                     editIntrstWith-086254
+      *                                                                                     MD056988
+      ** Convert Midas Date to DDMMYY                                                       MD056988
+      *                                                                                     MD056988
+     C           PVALD     IFNE CHISD                                                       MD056988
+     C                     Z-ADDCHISD     ZDAYNO                                            MD056988
+     C                     MOVE '0'       *IN99                                             MD056988
+     C                     EXSR ZDATE2                                                      MD056988
+      *                                                                                     MD056988
+      ** Verify if error                                                                    MD056988
+      *                                                                                     MD056988
+     C           *IN99     IFEQ '1'                                                         MD056988
+     C           *LOCK     IN   LDA                                                         MD056988
+     C                     Z-ADD048       DBASE            ***************                  MD056988
+     C                     MOVE 'ZDATE2'  DBFILE           * DB ERROR 048*                  MD056988
+     C                     MOVE CHISD     DBKEY            ***************                  MD056988
+     C                     OUT  LDA                                                         MD056988
+     C                     MOVEA'1'       *IN,89                                            MD056988
+     C                     EXSR DBSR                                                        MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDCHISD     PVALD                                             MD056988
+     C                     MOVELZDATE     PVALDO                                            MD056988
+      *                                                                                     MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     MOVELPVALDO    VALDM                                             MD056988
      C*
      C***********          EXCPTOUT5                                      086093
      C***********          READ GHOST                    99               086093
-     C                     EXSR OUT5SR                     formatAREAType1086093
+     C**********           EXSR OUT5SR                     formatAREAType1           086093 MD056988
+     C                     EXSR OUTMSR                                                      MD056988
      C           MHISD     IFGT CLDID                                     065773
      C                     MOVELAREA      SDAT1
      C                     EXSR SUBW1
@@ -8498,6 +8799,7 @@
      C                     ELSE                            - E1           100992
      C                     MOVE *BLANKS   CR                              100992
      C                     END                             - E1
+     C                     MOVELNAR,51    NARR3                                             MD056988
      C*
      C***********NUMB0     IFGT *ZEROS                                    091612
      C***********          ADD  NUMB0     TOTND                           091612
@@ -8506,11 +8808,11 @@
      C                     SUB  NUMB0     TOTNC
      C           NUMB0     MULT SUBT      NUMB0
      C                     END
-     C           MNBL      IFGT *ZEROS                     - B10          094431
+     C********** MNBL      IFGT *ZEROS                     - B10                     094431 MD056988
      C                     Z-ADDCINT      INTC0
-     C                     ELSE                            - X10          094431
-     C                     Z-SUBCINT      INTC0                           094431
-     C                     END                             - E10          094431
+     C**********           ELSE                            - X10                     094431 MD056988
+     C**********           Z-SUBCINT      INTC0                                      094431 MD056988
+     C**********           END                             - E10                     094431 MD056988
      C*
      C                     MOVE *BLANKS   ZFIELD
      C                     MOVE HISB0     ZFIELD
@@ -8539,10 +8841,37 @@
      C***********          MOVE ZFIELD    INTR                            086254
      C                     Z-ADDINTC0     WKINT            set SR parm    086254
      C                     EXSR EDTINT                     editIntrstWith-086254
+      *                                                                                     MD056988
+      ** Convert Midas Date to DDMMYY                                                       MD056988
+      *                                                                                     MD056988
+     C           PVALD     IFNE CHISD                                                       MD056988
+     C                     Z-ADDCHISD     ZDAYNO                                            MD056988
+     C                     MOVE '0'       *IN99                                             MD056988
+     C                     EXSR ZDATE2                                                      MD056988
+      *                                                                                     MD056988
+      ** Verify if error                                                                    MD056988
+      *                                                                                     MD056988
+     C           *IN99     IFEQ '1'                                                         MD056988
+     C           *LOCK     IN   LDA                                                         MD056988
+     C                     Z-ADD048       DBASE            ***************                  MD056988
+     C                     MOVE 'ZDATE2'  DBFILE           * DB ERROR 048*                  MD056988
+     C                     MOVE CHISD     DBKEY            ***************                  MD056988
+     C                     OUT  LDA                                                         MD056988
+     C                     MOVEA'1'       *IN,89                                            MD056988
+     C                     EXSR DBSR                                                        MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     Z-ADDCHISD     PVALD                                             MD056988
+     C                     MOVELZDATE     PVALDO                                            MD056988
+      *                                                                                     MD056988
+     C                     ENDIF                                                            MD056988
+      *                                                                                     MD056988
+     C                     MOVELPVALDO    VALDM                                             MD056988
      C*
      C***********          EXCPTOUT5                                      086093
      C***********          READ GHOST                    99               086093
-     C                     EXSR OUT5SR                     formatAREAType1086093
+     C**********           EXSR OUT5SR                     formatAREAType1           086093 MD056988
+     C                     EXSR OUTMSR                                                      MD056988
      C           MHISD     IFGT CLCID                                     065773
      C                     MOVELAREA      SDAT2
      C                     EXSR SUBW2
@@ -8560,6 +8889,7 @@
      C*
      C***********SDICI     IFEQ 'Y'                        - B10          098818
      C           SDICI     IFNE *BLANK                     - B10          098818
+     C           DHISD     ANDNEMHISD                                                       MD056988
      C*
      C**  PROCESS IF DEBIT CAPITALISATION
      C*
@@ -8651,6 +8981,7 @@
      C*
      C***********SCICI     IFEQ 'Y'                        - B10          098818
      C           SCICI     IFNE *BLANK                     - B10          098818
+     C           DHISD     ANDNEMHISD                                                       MD056988
      C*
      C**  PROCESS IF CREDIT CAPITALISATION
      C*
@@ -14100,6 +14431,33 @@
      C                     RESETTPST                                      086093
       *                                                                   086093
      C                     ENDSR                                          086093
+      *****************************************************************                     MD056988
+      *                                                               *                     MD056988
+      *  OUTMSR   Format AREA                                         *                     MD056988
+      *                                                               *                     MD056988
+      *  Called by: CRSR, DRSR, BOTHSR                                *                     MD056988
+      *                                                               *                     MD056988
+      *****************************************************************                     MD056988
+     C           OUTMSR    BEGSR                                                            MD056988
+      *                                                                                     MD056988
+     C                     MOVE *BLANKS   AREA                                              MD056988
+      *                                                                                     MD056988
+     C                     MOVEAVALDM     AR,8                                              MD056988
+     C                     MOVEAND        AR,14                                             MD056988
+     C                     MOVEANUMB      AR,18                                             MD056988
+     C                     MOVEANARR3     AR,34                                             MD056988
+     C                     MOVEAAMON      AR,49                                             MD056988
+     C                     MOVEACR        AR,63                                             MD056988
+     C                     MOVEAINTRM     AR,67                                             MD056988
+      *                                                                                     MD056988
+     C                     RESETVALD2                                                       MD056988
+     C                     RESETND                                                          MD056988
+     C                     RESETNARR2                                                       MD056988
+     C                     RESETAMON                                                        MD056988
+     C                     RESETCR                                                          MD056988
+     C                     RESETINTRM                                                       MD056988
+      *                                                                                     MD056988
+     C                     ENDSR                                                            MD056988
       *****************************************************************                       CER050
       *  SRDRAP  APR Debit Processing                                 *                       CER050
       *****************************************************************                       CER050
@@ -14310,6 +14668,7 @@ P.Date E.Date Nd          Narrative              Amount          Charges     R
  ** DR Adj.to be posted*SUSP**
 F3=Exit  F12=Previous screen  F18=Debit  F20=Credit                                           CRE090
  ** Delay Adjustment        **                                                             MD027025A
+/Min. Balance                                                                               MD056988
 ** CAC - Calculation method
                    ** Actual/365 **                    ** Actual/365 **   084790
                    ** Actual/360 **                    ** Actual/360 **   084790

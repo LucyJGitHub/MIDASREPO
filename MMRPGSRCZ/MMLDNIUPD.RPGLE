@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 262807             Date 02Aug22               *
-      *  Prev Amend No. 250747             Date 22Jul22               *
+      *  Last Amend No. MD061157           Date 30Mar23               *
+      *  Prev Amend No. 262807             Date 02Aug22               *
+      *                 250747             Date 22Jul22               *
       *                 255899A            Date 21Jun22               *
       *                 263173             Date 20Jun22               *
       *                 AR637449           Date 16Jun22               *
@@ -111,6 +112,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061157 - MM/CI trades are setting the value PF/DEALDC/CNUM *
+      *             to branch BICN ignoring MM/CIDealsDefaulting sys  *
+      *             value. Amend to reverse fix 250747.               *
       *  262807 - When base rates are amended prior to maturity, base *
       *           rate field takes on the new value instead of the old*
       *           resulting to a discrepancy with the front office    *
@@ -665,6 +669,7 @@
      C**********         ELSE                                                                 185914
      C     IKMTYP        IFEQ      'CI'                                                       202780
      C*****CIdeals       ANDEQ     'Y'                                               AR784570 250747
+     C     CIdeals       ANDEQ     'Y'                                                      MD061157
      C     IKMTYP        OREQ      'CF'                                                       CDL033
      C     CDL033        ANDEQ     'Y'                                                        CDL033
      C/COPY WNCPYSRC,MMLDNIDC10
@@ -1551,6 +1556,7 @@
      C**********         ELSE                                                                 185914
      C     IKMTYP        IFEQ      'CI'                                                       202780
      C*****CIdeals       ANDEQ     'Y'                                               AR784570 250747
+     C     CIdeals       ANDEQ     'Y'                                                      MD061157
      C     IKMTYP        OREQ      'CF'                                                       CDL033
      C     CDL033        ANDEQ     'Y'                                                        CDL033
      C/COPY WNCPYSRC,MMLDNIDC14

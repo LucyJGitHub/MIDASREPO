@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD060441           Date 01Feb23               *
-      *  Prev Amend No. MD060823           Date 12Dec22               *
+      *  Last Amend No. MD061205           Date 31Mar23               *
+      *  Prev Amend No. MD060441           Date 01Feb23               *
+      *                 MD060823           Date 12Dec22               *
       *                 MD058517           Date 17Oct22               *
       *                 MD059624           Date 20Jul22               *
       *                 249385             Date 01Aug22               *
@@ -29,6 +30,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061205 - Current period rates are not written to extract   *
+      *             file LELIBEPD causing several issues in COB       *
+      *             Remove switching off of Result.list(i).insertflag *
+      *             in SR updateHistoryFile                           *
       *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
       *             backward looking rate                             *
       *  MD060823 -  Rolled over loan using SARR calculation method   *
@@ -2007,7 +2012,7 @@
                       exsr errorHandler;
                    endif;
 
-                   result.list(i).insertFlag = *off;                                      //MD060441
+       //**********result.list(i).insertFlag = *off;                             //MD060441 MD061205
 
        endsr;
        //Start of change MD060441

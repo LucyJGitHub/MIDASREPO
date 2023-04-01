@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060008           Date 11May21               *
-      *  Prev Amend No. MD060474           Date 22Sep22               *
+      *  Last Amend No. MD061212           Date 01Apr23               *
+      *  Prev Amend No. MD060008           Date 11May21               *
+      *                 MD060474           Date 22Sep22               *
       *                 MD060473           Date 15Sep22               *
       *                 MD059624           Date 20Jul22               *
       *                 MD059867           Date 03May22               *
@@ -48,6 +49,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061212 - Rate rounding decimal is still defaulted for      *
+      *             foward looking rates                              *
+      *             Defaulting should only be done for backward       *
+      *             looking rates                                     *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD060474 - Late defaulting and validation of rate rounding   *
       *             decimal places.                                   *
@@ -1572,9 +1577,11 @@
       *                                                                                     MD060473
      C                   MOVE      DDRRDP        NURRDP            2 0                      MD060473
       *                                                                                     MD060473
-     C                   IF        DDRRDP = *BLANKS OR                                      MD059624
+     C**********         IF        DDRRDP = *BLANKS OR                             MD059624 MD061212
      C**********                   DDRRDP = '00'                                   MD059624 MD060473
-     C                             NURRDP = *ZEROS                                          MD060473
+     C**********                   NURRDP = *ZEROS                                 MD060473 MD061212
+     C                   IF        (DDRRDP = *BLANKS OR NURRDP = *ZEROS)                    MD061212
+     C                             AND (DDBLRT = 'Y')                                       MD061212
                                                                                             MD059624
      C                   SELECT                                                             MD059624
                                                                                             MD059624
@@ -1689,9 +1696,11 @@
 
       ** Default value depending on where this program is called
      C**********         IF        DDRRDP = *BLANKS                                         MD059065
-     C                   IF        DDRRDP = *BLANKS OR                                      MD059065
+     C**********         IF        DDRRDP = *BLANKS OR                             MD059065 TEMPFIX
      C**********                   DDRRDP = '00'                                   MD059065 MD060473
-     C                             NURRDP = *ZEROS                                          MD060473
+     C**********                   NURRDP = *ZEROS                                 MD060473 TEMPFIX
+     C                   IF        (DDRRDP = *BLANKS OR NURRDP = *ZEROS)                    TEMPFIX
+     C                             AND (DDBLRT = 'Y')                                       TEMPFIX
 
      C                   SELECT
 

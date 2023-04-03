@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060441           Date 01Feb23               *
-      *  Prev Amend No. MD060620           Date 14Nov22               *
+      *  Last Amend No. MD061221           Date 29Mar23               *
+      *  Prev Amend No. MD061196           Date 17Mar23               *
+      *                 MD061195           Date 16Mar23               *
+      *                 MD060441           Date 01Feb23               *
+      *                 MD060620           Date 14Nov22               *
       *                 MD059368           Date 17Dec21               *
       *                 MD057871           Date 30Apr21               *
       *                 CLE172             Date 01Oct20               *
@@ -128,6 +131,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061221 - No validation on rollover value date when         *
+      *             interest date falls on holiday                    *
+      *  MD061196 - Warning message is thrown on forward valued       *
+      *             rollover of backward looking loan                 *
+      *  MD061195 - Unable to perform rollover with value date        *
+      *             equal to interest payment date                    *
       *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
       *             backward looking rate                             *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
@@ -789,6 +798,7 @@
                                                                                             MD000091
      D isARRParamChg   S              1N                                                    MD060441
      D isBRTTChg       S              1N                                                    MD060441
+     D isBypassBC      S              1N                                                    MD061195
      D EventCtrlDate   S              5P 0                                                  MD060441
       ** Rollover type of change                                                            MD060441
      D ROLL_B2B        C                   CONST(1)                                         MD060441
@@ -9605,6 +9615,7 @@
      C                   CLEAR                   wNxtIntPayDat     5 0                      MD060441
      C                   CLEAR                   wLstIntPayDat     5 0                      MD060441
      C                   CLEAR                   wLstRollOvrDat    5 0                      MD060441
+     C                   CLEAR                   isBypassBC                                 MD061195
                                                                                             MD060441
      C                   EXSR      srDetRollover                                            MD060441
                                                                                             MD060441
@@ -9622,16 +9633,33 @@
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   EXSR      srRetrieveHst                                            MD060441
+     C                                                                                      MD061195
+     C                   IF        ( NIDT <> 0 )                                            MD061195
+     C                   EVAL      wNxtIntPayDat =  NIDT                                    MD061195
+     C                   ELSEIF    ( NRPD <> 0 )                                            MD061195
+     C                   EVAL      wNxtIntPayDat =  NRPD                                    MD061195
+     C                   ELSE                                                               MD061195
+     C                   EVAL      wNxtIntPayDat = MDAT                                     MD061195
+     C                   ENDIF                                                              MD061195
+     C                                                                                      MD061195
+     C                   IF        (wNxtIntPaydat <>  0) AND                                MD061195
+     C                             (wNxtIntPaydat <= EventCtrlDate) AND                     MD061195
+     C                             wRLDT = wNxtIntPaydat                                    MD061195
+     C                   EVAL      isBypassBC = *On                                         MD061195
+     C                   ENDIF                                                              MD061195
+                                                                                            MD061195
                                                                                             MD060441
      C                   SELECT                                                             MD060441
                                                                                             MD060441
      C                   WHEN      ( typeOfChange = ROLL_B2B )                              MD060441
                                                                                             MD060441
-     C                   IF        ( NIDT <> 0 )                                            MD060441
-     C                   EVAL      wNxtIntPayDat =  NIDT                                    MD060441
-     C                   ELSEIF    ( NRPD <> 0 )                                            MD060441
-     C                   EVAL      wNxtIntPayDat =  NRPD                                    MD060441
-     C                   ENDIF                                                              MD060441
+     C**********         IF        ( NIDT <> 0 )                                   MD060441 MD061195
+     C**********         EVAL      wNxtIntPayDat =  NIDT                           MD060441 MD061195
+     C**********         ELSEIF    ( NRPD <> 0 )                                   MD060441 MD061195
+     C**********         EVAL      wNxtIntPayDat =  NRPD                           MD060441 MD061195
+     C**********         ELSE                                                      MD061221 MD061195
+     C**********         EVAL      wNxtIntPayDat = MDAT                            MD061221 MD061195
+     C**********         ENDIF                                                     MD060441 MD061195
                                                                                             MD060441
       ** MD-60963 Fix. If next interest date or next repayment date is not zero and         MD060441
       ** within accrual profit date, then rollover value date should be equal to            MD060441
@@ -9664,17 +9692,22 @@
      C                   ELSEIF    ( wRLDT <> VDAT ) AND                                    MD060441
      C                             ( wLstIntPayDat = 0 ) AND                                MD060441
      C                             ( isARRParamChg = *ON) AND (isBRTTChg = *Off)            MD060441
+     C                             AND (wNxtIntPayDat <> wRLDT                              MD061196
+     C                                  AND wNxtIntPayDat <> 0)                             MD061196
                                                                                             MD060441
      C                   EVAL      ErrorType = 1                                            MD060441
      C                   EVAL      MessageID = '5049564'                                    MD060441
      C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
      C                             ( wRLDT <> wLstIntPayDat ) AND                           MD060441
      C                             ( isARRParamChg = *ON) and (isBRTTChg = *Off)            MD060441
+     C                             AND (wNxtIntPayDat <> wRLDT                              MD061196
+     C                                  AND wNxtIntPayDat <> 0)                             MD061196
      C                   EVAL      ErrorType = 1                                            MD060441
      C                   EVAL      MessageID = '5049564'                                    MD060441
      C                   ELSEIF    isBRTTChg = *ON                                          MD060441
-     C                   EVAL      ErrorType = 2                                            MD060441
-     C                   EVAL      MessageID = '5049566'                                    MD060441
+     C                   EXSR      srValBRChange                                            MD061195
+     C**********         EVAL      ErrorType = 2                                            MD060441
+     C**********         EVAL      MessageID = '5049566'                                    MD060441
      C                   ENDIF                                                              MD060441
                                                                                             MD060441
      C                   WHEN      ( typeOfChange = ROLL_F2B )                              MD060441
@@ -9685,15 +9718,24 @@
       ** first interest period)                                                             MD060441
       ** (Blocking Error Message 3)                                                         MD060441
                                                                                             MD060441
-     C                   IF        ( wRLDT <> VDAT ) AND                                    MD060441
-     C                             ( wLstIntPayDat = 0 )                                    MD060441
-     C                   EVAL      ErrorType = 2                                            MD060441
-     C                   EVAL      MessageID = '5049566'                                    MD060441
-     C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD060441
-     C                             ( wRLDT <> wLstIntPayDat )                               MD060441
-     C                   EVAL      ErrorType = 2                                            MD060441
-     C                   EVAL      MessageID = '5049566'                                    MD060441
-     C                   ENDIF                                                              MD060441
+     C**********         IF        ( wRLDT <> VDAT ) AND                           MD060441 MD061195
+     C**********                   ( wLstIntPayDat = 0 )                           MD060441 MD061195
+     C**********         EVAL      ErrorType = 2                                   MD060441 MD061195
+     C**********         EVAL      MessageID = '5049566'                           MD060441 MD061195
+     C**********         ELSEIF    ( wLstIntPayDat <> 0 ) AND                      MD060441 MD061195
+     C**********                   ( wRLDT <> wLstIntPayDat )                      MD060441 MD061195
+     C**********         EVAL      ErrorType = 2                                   MD060441 MD061195
+     C**********         EVAL      MessageID = '5049566'                           MD060441 MD061195
+     C**********         ENDIF                                                     MD060441 MD061195
+                                                                                            MD061195
+     C                   IF        ( wNxtIntPayDat <> 0 ) AND                               MD061195
+     C                             ( wNxtIntPayDat <= EventCtrlDate ) AND                   MD061195
+     C                             ( wRLDT <> wNxtIntPayDat )                               MD061195
+     C                   EVAL      ErrorType = 2                                            MD061195
+     C                   EVAL      MessageID = '5049566'                                    MD061195
+     C                   ELSE                                                               MD061195
+     C                   EXSR      srValBRChange                                            MD061195
+     C                   ENDIF                                                              MD061195
                                                                                             MD060441
      C                   ENDSL                                                              MD060441
                                                                                             MD060441
@@ -9710,7 +9752,47 @@
      C                   MOVE      'N'           DDRldtOK                                   MD060441
      C                   ENDSL                                                              MD060441
                                                                                             MD060441
-     C                   ENDSR                                                              MD060441
+     C                   ENDSR                                                              MD061195
+      *****************************************************************                     MD061195
+      /EJECT                                                                                MD061195
+      *****************************************************************                     MD061195
+      *                                                               *                     MD061195
+      * srValBRChange                                                 *                     MD061195
+      *                                                               *                     MD061195
+      *****************************************************************                     MD061195
+                                                                                            MD061195
+     C     srValBRChange BEGSR                                                              MD061195
+                                                                                            MD061195
+     C                   IF        isBypassBC                                               MD061195
+     C                   LEAVESR                                                            MD061195
+     C                   ENDIF                                                              MD061195
+                                                                                            MD061195
+     C                   SELECT                                                             MD061195
+                                                                                            MD061195
+      ** Back-valued and rundate                                                            MD061195
+     C                   WHEN      wRLDT <= BJRDNB                                          MD061195
+     C                   IF        ( wRLDT <> VDAT ) AND                                    MD061195
+     C                             ( wLstIntPayDat = 0 )                                    MD061195
+     C                   EVAL      ErrorType = 2                                            MD061195
+     C                   EVAL      MessageID = '5049566'                                    MD061195
+     C                   ELSEIF    ( wLstIntPayDat <> 0 ) AND                               MD061195
+     C                             ( wRLDT <> wLstIntPayDat )                               MD061195
+     C                   EVAL      ErrorType = 2                                            MD061195
+     C                   EVAL      MessageID = '5049566'                                    MD061195
+     C                   ENDIF                                                              MD061195
+                                                                                            MD061195
+      ** Future valued                                                                      MD061195
+     C                   WHEN      wRLDT >  BJRDNB                                          MD061195
+     C                   IF        ( wNxtIntPayDat <> 0 ) AND                               MD061195
+     C                             ( wRLDT <> wNxtIntPayDat )                               MD061195
+     C                   EVAL      ErrorType = 2                                            MD061195
+     C                   EVAL      MessageID = '5049567'                                    MD061195
+     C                   ENDIF                                                              MD061195
+                                                                                            MD061195
+     C                   ENDSL                                                              MD061195
+                                                                                            MD061195
+     C                   ENDSR                                                              MD061195
+                                                                                            MD061195
       *****************************************************************                     MD060441
       /EJECT                                                                                MD060441
       *****************************************************************                     MD060441

@@ -14,10 +14,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP045   *CREATE   Date 01Jun22              */
+/*       Last Amend No. MD061067           Date 20Feb23              */
+/*       Prev Amend No. CUP045   *CREATE   Date 01Jun22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061067 - Missing process for UDF tables                   */
 /*       CUP045 - One Touch Bridge - refresh                         */
 /*                                                                   */
 /*********************************************************************/
@@ -61,6 +63,8 @@
              DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
              DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
              DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&ZPRX) TYPE(*CHAR) LEN(2)                                   /*MD061067*/
+             DCL        VAR(&SBSD) TYPE(*CHAR) LEN(10)                                  /*MD061067*/
              DCLF       FILE(CLRDBLIBML)
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
@@ -93,6 +97,16 @@
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
              DLTOVR     FILE(UPDLVCPD)
 
+/* Clear MSGQ */                                                                        /*MD061067*/
+             CLRMSGQ    MSGQ(MSPECIAL)                                                  /*MD061067*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061067*/
+             CLRMSGQ    MSGQ(MRUNQ)                                                     /*MD061067*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061067*/
+             CLRMSGQ    MSGQ(MSTATUS)                                                   /*MD061067*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061067*/
+             CLRMSGQ    MSGQ(MOPERQ)                                                    /*MD061067*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061067*/
+                                                                                        /*MD061067*/
 /* End subsystem. */
 ENDSBS:
                 CALL       PGM(UPC000147) PARM(&LAYER &PFX &RTNFLAG)
@@ -101,6 +115,15 @@ ENDSBS:
                    GOTO       CMDLBL(ERROR)
                 ENDDO
 
+/* For GLOBAL, need to stop ZONE as well */                                             /*MD061067*/
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                             /*MD061067*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ZPRX)                              /*MD061067*/
+             CHGVAR     VAR(&SBSD) VALUE('M' *TCAT &ZPRX *TCAT 'SBS')                   /*MD061067*/
+             ENDSBS     SBS(&SBSD) OPTION(*IMMED)                                       /*MD061067*/
+             MONMSG     MSGID(CPF1054)                                                  /*MD061067*/
+             DLYJOB     DLY(60)                                                         /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+                                                                                        /*MD061067*/
 /* End triggering. */
 ENDTRG:
                 CALL       PGM(UPC000148) PARM(&LAYER &PFX &RTNFLAG)

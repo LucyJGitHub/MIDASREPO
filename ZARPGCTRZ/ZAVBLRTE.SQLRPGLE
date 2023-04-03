@@ -50,7 +50,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD061212 - Rate rounding decimal is still defaulted for      *
-      *             foward looking rates                              *
+      *             forward looking rates                              *
       *             Defaulting should only be done for backward       *
       *             looking rates                                     *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *

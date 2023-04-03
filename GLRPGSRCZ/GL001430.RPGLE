@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057965           Date 28May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD025421           Date 10Mar23               *
+      *  Prev Amend No. MD057965           Date 28May21               *
+      *                 CSD103             Date 10Aug20               *
       *                 223783             Date 28May12               *
       *                 222088             Date 28May12               *
       *                 216936             Date 28May12               *
@@ -64,6 +65,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD025421 - Incorrect Info To A/C Owner output to MT940       *
+      *             for an account belonging to a Cash Mgmt group.    *
+      *             Use the default at MT940 level if defined.        *
+      *             Only use the default Info To A/C Owner at CM      *
+      *             ICD if not defined at MT940 level.                *
       *  MD057965 - Next Statement Date is set to 11months later when *
       *             MT940 statement frequency is 'E'                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -709,12 +715,28 @@
      C                             OR  *IN29 = *OFF                                           222088
      C                             AND CLCCAT = 'T'                                           222088
      C                             AND GDTOPB = 'N'                                           222088
+      *                                                                                     MD025421
+      ** Use the Default 'Info To A/c Owner' at MT940 message level, if defined.            MD025421
+      ** If not defined, use the group account narrative from the Cash Mgmt ICD.            MD025421
+      *                                                                                     MD025421
+     C                   IF        N40MI1 <> *BLANKS                                        MD025421
+     C                   EVAL      MGMIO1 = N40MI1                                          MD025421
+     C                   EVAL      MGMIO2 = N40MI2                                          MD025421
+     C                   EVAL      MGMIO3 = N40MI3                                          MD025421
+     C                   EVAL      MGMIO4 = N40MI4                                          MD025421
+     C                   EVAL      MGMIO5 = N40MI5                                          MD025421
+     C                   EVAL      MGMIO6 = N40MI6                                          MD025421
+      *                                                                                     MD025421
+     C                   ELSE                                                               MD025421
+      *                                                                                     MD025421
      C                   EVAL      MGMIO1 = CMTXTG                                            CRE008
      C                   EVAL      MGMIO2 = %subst(CMTXTG:66:65)                              CRE008
      C                   EVAL      MGMIO3 = %subst(CMTXTG:131:65)                             CRE008
      C                   EVAL      MGMIO4 = %subst(CMTXTG:196:5)                              CRE008
      C                   EVAL      MGMIO5 = *blanks                                           CRE008
      C                   EVAL      MGMIO6 = *blanks                                           CRE008
+      *                                                                                     MD025421
+     C                   ENDIF                                                              MD025421
      C                   Else                                                                 CRE008
      C     KeyAcntBg     CHAIN     REZSHLL1                           30                      212319
      C                   IF        *IN30 = *OFF                                               212319

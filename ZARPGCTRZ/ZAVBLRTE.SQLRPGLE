@@ -1577,11 +1577,9 @@
       *                                                                                     MD060473
      C                   MOVE      DDRRDP        NURRDP            2 0                      MD060473
       *                                                                                     MD060473
-     C**********         IF        DDRRDP = *BLANKS OR                             MD059624 MD061212
+     C                   IF        DDRRDP = *BLANKS OR                                      MD059624
      C**********                   DDRRDP = '00'                                   MD059624 MD060473
-     C**********                   NURRDP = *ZEROS                                 MD060473 MD061212
-     C                   IF        (DDRRDP = *BLANKS OR NURRDP = *ZEROS)                    MD061212
-     C                             AND (DDBLRT = 'Y')                                       MD061212
+     C                             NURRDP = *ZEROS                                          MD060473
                                                                                             MD059624
      C                   SELECT                                                             MD059624
                                                                                             MD059624
@@ -1696,11 +1694,9 @@
 
       ** Default value depending on where this program is called
      C**********         IF        DDRRDP = *BLANKS                                         MD059065
-     C**********         IF        DDRRDP = *BLANKS OR                             MD059065 TEMPFIX
+     C                   IF        DDRRDP = *BLANKS OR                                      MD059065
      C**********                   DDRRDP = '00'                                   MD059065 MD060473
-     C**********                   NURRDP = *ZEROS                                 MD060473 TEMPFIX
-     C                   IF        (DDRRDP = *BLANKS OR NURRDP = *ZEROS)                    TEMPFIX
-     C                             AND (DDBLRT = 'Y')                                       TEMPFIX
+     C                             NURRDP = *ZEROS                                          MD060473
 
      C                   SELECT
 
@@ -2183,6 +2179,14 @@
       *****************************************************************                     MD060474
      C     SRDFLT        BEGSR                                                              MD060474
       /free
+
+       //start of change MD061112
+                  if ddblrt <>  'Y';
+                     wday = 0;
+                     leavesr;
+                  endif;
+       //end of change
+
                   if (ddrfrr <> barfrr) and
                      (apiname <> 'BSRT') and
                      (ddcalm = 'NCCR') and

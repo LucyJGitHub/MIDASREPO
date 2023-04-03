@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD057247           Date 01Feb21               *
+      *  Last Amend No. MD051578           Date 22Mar23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD057247           Date 01Feb21               *
       *                 MD054605           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 226449             Date 24Jun15               *
@@ -87,6 +88,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD051578 - GL0580P1 shows Securities Coupon on wrong date    *
+      *             Fix is to pass next working day as event control  *
+      *             date to ZNCD if Months between Rundate and Next   *
+      *             Working day are different. This is applicable for *
+      *             security with BCNV='M'                            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD057247 - Multiple calls of UTCHOBJEX for several COB com-  *
       *             ponents - Securities module.                      *
@@ -297,6 +303,7 @@
      F***ZICD2**-*Access*ICD*record*2**(TABTB11)                      *
      F*  ZNCD   - Calculate Next Coupon Date                          *
      F***ZSYSTM*-*Access*ICD*record*1**(TABTB10)*************         *   S01117
+      *  ZFWDT  - Calculate Next Working Day From ZDAYNO              *                     MD051578
      F*                                                               *
       *                                                                   S01408
      F/COPY WNCPYSRC,SE1420FFP2                                           S01408
@@ -308,6 +315,7 @@
      E/COPY ZSRSRC,ZDATE2Z1
      E/COPY ZSRSRC,ZFREQBZ1                                                                   CSE075
      E/COPY ZSRSRC,ZDATE9Z1                                                                   CSE075
+     E/COPY ZSRSRC,ZHOLE1                                                                   MD051578
       /EJECT
      ISECTYDF
      I              RECI                            SRECI
@@ -318,6 +326,7 @@
      I/COPY ZSRSRC,ZCPDZ1                                                                     CSE075
      I/COPY ZSRSRC,ZDATE9Z2                                                                   CSE075
      I/COPY ZSRSRC,ZDAT10Z1                                                                   CSE075
+     I/COPY ZSRSRC,ZHOLI1                                                                   MD051578
      I*
      I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
      ICPYR@#      DS
@@ -782,6 +791,43 @@
      C***********1         ADD  RUND      ECD                      E20085 048970
      C***********1         ADD  ECD       ECD                      048970 121782
      C           1         ADD  RUND      ECD                             121782
+      *
+      ** Override ECD if BCNV='M' and months are different                                  MD051578
+     C           BCNV      IFEQ 'M'                                                         MD051578
+      *                                                                                     MD051578
+     C                     MOVE RUND      ZDAYNO  50P                                       MD051578
+     C                     EXSR ZDATE2                                                      MD051578
+      *                                                                                     MD051578
+      ** Get rundate month                                                                  MD051578
+     C           *IN98     IFEQ '0'                                                         MD051578
+     C                     MOVELZDATE     DDMM    40P                                       MD051578
+     C                     MOVE DDMM      MMRUND  20P                                       MD051578
+     C                     ELSE                                                             MD051578
+     C                     MOVELZDATE     MMRUND                                            MD051578
+     C                     ENDIF                                                            MD051578
+      *                                                                                     MD051578
+      ** Determine the next working day for Next                                            MD051578
+      ** coupon date in nominal currency by calling                                         MD051578
+      ** SR ZFWDT with ZNRDYS = 1                                                           MD051578
+     C                     Z-ADD1         ZNRDYS  20                                        MD051578
+     C                     MOVE NMCY      ZCCY                                              MD051578
+     C                     MOVE '   '     ZLOC                                              MD051578
+     C                     EXSR ZFWDT                                                       MD051578
+     C                     MOVE ZDYNBR    ZDAYNO                                            MD051578
+     C                     EXSR ZDATE2                                                      MD051578
+      *                                                                                     MD051578
+      ** Get next working day month                                                         MD051578
+     C           *IN98     IFEQ '0'                                                         MD051578
+     C                     MOVELZDATE     DDMM                                              MD051578
+     C                     MOVE DDMM      MMDNWD  20P                                       MD051578
+     C                     ELSE                                                             MD051578
+     C                     MOVELZDATE     MMDNWD                                            MD051578
+     C                     ENDIF                                                            MD051578
+      *                                                                                     MD051578
+     C           MMRUND    IFNE MMDNWD                                                      MD051578
+     C                     Z-ADDBJDNWD    ECD                                               MD051578
+     C                     ENDIF                                                            MD051578
+     C                     ENDIF                                                            MD051578
      C*                                                                   E20085
      C                     EXSR ZNCD
      C*                                                                   E20085
@@ -1568,6 +1614,10 @@
       /EJECT                                                                                  CSE075
      C/COPY ZSRSRC,ZDAT10Z2                                                                   CSE075
       /EJECT                                                                                  CSE075
+     C/COPY ZSRSRC,ZFWDT                                                                    MD051578
+      /EJECT                                                                                MD051578
+     C/COPY ZSRSRC,ZACCH1                                                                   MD051578
+      /EJECT                                                                                MD051578
       ***
 **  CPY@
 (c) Finastra International Limited 2001

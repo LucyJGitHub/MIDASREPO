@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR641079           Date 04Apr23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR996842           Date 11Feb13               *
       *                 CRE073             Date 06Dec10               *
@@ -52,6 +53,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR641079 - Incorrect error message. Validate only the PB     *
+      *             Instrument type field if PB is ON.                *
+      *             Applied for AR872050.                             *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -472,23 +476,24 @@
 
      C                   EXSR      SRNatuAc
                                                                                               CGL014
-     C                   ENDIF                                                                CGL014
+     C**********         ENDIF                                                       CGL014 AR641079
 
       /COPY WNCPYSRC,SESEC3V030
                                                                                               CGL014
-     C                   IF        BGN4ST = 'Y'  OR  CGL014 = 'Y'                             CGL014
+     C**********         IF        BGN4ST = 'Y'  OR  CGL014 = 'Y'                    CGL014 AR641079
       *
       ** PB Instrument Type.
       *
       /COPY WNCPYSRC,SESEC3V031
 
      C                   EXSR      SRPBInTp
+     C                   ENDIF                                                              AR641079
                                                                                               CGL014
       ** Weighting code validation.                                                           CGL014
                                                                                               CGL014
      C                   EXSR      SRWeiCode                                                  CGL014
                                                                                               CGL014
-     C                   ENDIF                                                                CGL014
+     C**********         ENDIF                                                       CGL014 AR641079
 
       /COPY WNCPYSRC,SESEC3V032
 

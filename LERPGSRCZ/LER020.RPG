@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060134           Date 22Jun22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD050153           Date 17Mar23               *
+      *  Prev Amend No. AR1078902          Date 17Mar23               *
+      *                 MD060134           Date 22Jun22               *
+      *                 CLE138             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056601           Date 02Oct20               *
@@ -113,6 +115,13 @@
       *                                                                *
       *----------------------------------------------------------------*
       *                                                                *
+      *  MD050153 - Incorrect current amount for principal transfer   *
+      *             to the same non-revolving facility. Enhance fix   *
+      *             AR1078902. Remove checking for GPRT and TOLN.     *
+      *  AR1078902 - Principal Transfer enhancement. Transfer to a    *
+      *              new loan under a different facility.             *
+      *              (Child: AR1084471)                               *
+      *            - Applied for MD050153                             *
       *  MD060134 - Indicator 30 is used in the program change        *
       *             FCLS indicator from 30 to 35                      *
       *  CLE138 - Class Codes for Facilities                          *
@@ -353,6 +362,9 @@
      FLEFCLTLGIF  E           K        DISK         KINFSR *PSSR      UC                      CLE138
       ** LE Facility Extension Detail File                                                    CLE138
       *                                                                                       CLE138
+     FCLOANFL2IF  E           K        DISK         KINFSR *PSSR                           AR1078902
+     F            CLOANCLF                          KRENAMECLOANF2                         AR1078902
+     F            LOAMSDKF                          KIGNORE                                AR1078902
      FLER020P1O   E             50     PRINTER      KINFDS SPOOL      UC
       * Main report of Facility Reductions due to Repayments
       *
@@ -659,6 +671,28 @@
      I              HARIND                          H2RIND                                  MD056601
      I              HASQNO                          H2SQNO                                  MD056601
      I              HATSEQ                          H2TSEQ                                  MD056601
+      *                                                                                    AR1078902
+     ICLOANF2                                                                              AR1078902
+     I              RECI                            RECIL2                                 AR1078902
+     I              LNRF                            LNRFL2                                 AR1078902
+     I              BRCA                            BRCAL2                                 AR1078902
+     I              FCUS                            FCUSL2                                 AR1078902
+     I              FTYP                            FTYPL2                                 AR1078902
+     I              FSEQ                            FSEQL2                                 AR1078902
+     I              PSTM                            PSTML2                                 AR1078902
+     I              RSTM                            RSTML2                                 AR1078902
+     I              OSDB                            OSDBL2                                 AR1078902
+     I              OMDB                            OMDBL2                                 AR1078902
+     I              OSDA                            OSDAL2                                 AR1078902
+     I              PONS                            PONSL2                                 AR1078902
+     I              OMDA                            OMDAL2                                 AR1078902
+     I              RONS                            RONSL2                                 AR1078902
+     I              GPRT                            GPRTL2                                 AR1078902
+     I              TOLN                            TOLNL2                                 AR1078902
+     I              LPFI                            LPFIL2                                 AR1078902
+     I              PTFC                            PTFCL2                                 AR1078902
+     I              PTFT                            PTFTL2                                 AR1078902
+     I              PTFN                            PTFNL2                                 AR1078902
       *
      I            DS
       *  Old Facility Amount
@@ -887,6 +921,22 @@
      C                     ENDIF                                          CLE004
      C                     ENDIF                                          CLE004
       *                                                                   E29401
+      ** For PF events, retrieve transfer TO facility details                              AR1078902
+      ** to determine if facility amount should be reduced.                                AR1078902
+      *                                                                                    AR1078902
+     C                     MOVE 'Y'       WPFREC  1                                        AR1078902
+     C           AMTP      IFEQ 'PF'                                                       AR1078902
+     C           ROLN      CHAINCLOANF2              70                                    AR1078902
+     C           *IN70     IFEQ '0'                                                        AR1078902
+     C           FCUSL2    ANDEQFCUS                                                       AR1078902
+     C           FTYPL2    ANDEQFTYP                                                       AR1078902
+     C           FSEQL2    ANDEQFSEQ                                                       AR1078902
+     C********** GPRTL2    ANDEQ'Y'                                               AR1078902 MD050153
+     C********** TOLNL2    ANDEQLNRF                                              AR1078902 MD050153
+     C                     MOVE 'N'       WPFREC                                           AR1078902
+     C                     ENDIF                                                           AR1078902
+     C                     ENDIF                                                           AR1078902
+      *                                                                                    AR1078902
      C           AMTP      IFEQ 'MR'
      C           AMTP      OREQ 'RE'
      C           AMTP      OREQ 'MA'
@@ -894,6 +944,8 @@
      C/COPY WNCPYSRC,LER020C001
      C***********AMTP      OREQ 'PF'                               CLE004 125188
      C***********CLE004    ANDEQ'Y'                                CLE004 125188
+     C           AMTP      OREQ 'PF'                                                       AR1078902
+     C           WPFREC    ANDEQ'Y'                                                        AR1078902
       *
       ** IF PDCL and FAMU (Facility Amount Utilisation) is not Y, then                        CLE134
       ** skip process                                                                         CLE134
@@ -1332,6 +1384,8 @@
      C           FARCIN    ANDEQ'N'                                       179594
      C           FAACTN    IFEQ 'MR'                                      097133
      C           FAACTN    OREQ 'RE'                                      097133
+     C           FAACTN    OREQ 'PF'                                                       AR1078902
+     C           FALCRF    ANDEQ'     Y'                                                   AR1078902
       ***********                                                  161452 179594
      C***********FARCIN    IFEQ 'N'                                161452 179594
      C                     ADD  FAAAMT    @AMNT                           097133

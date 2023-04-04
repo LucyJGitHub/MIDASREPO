@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD026384           Date 28Apr22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD050153           Date 17Mar23               *
+      *  Prev Amend No. MD026384           Date 28Apr22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD054317           Date 09Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -106,6 +107,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050153 - Principal transfer enhancement. Transfer to a loan*
+      *             with different facility.                          *
       *  MD026384 - Added generation by assignment processing.        *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -663,6 +666,7 @@
                                                                                               CLE025
      D CLE025          S              1                                                       CLE025
      D CLE031          S              1                                                       CLE031
+     D CLE024          S              1                                                     MD050153
                                                                                               CRE020
       ** CRE020 Variables                                                                     CRE020
      D PRtCd           S              7A                                                      CRE020
@@ -1740,6 +1744,7 @@
      C     LAAMTP        IFNE      'PT'
      C     LAAMTP        ANDNE     'PF'
      C                   EXSR      SRCLON
+     C                   ENDIF                                                              MD050153
       *                                                                                    AR1021983
      C                   IF        CLE134 = 'Y' AND                                        AR1021983
      C                             W#FRNT = 'LE000473' AND                                 AR1021983
@@ -1751,6 +1756,9 @@
      C                   ENDIF                                                             AR1021983
       *
       ** If CLE009 is installed, update fees file
+      *                                                                                     MD050153
+     C     LAAMTP        IFNE      'PT'                                                     MD050153
+     C     LAAMTP        ANDNE     'PF'                                                     MD050153
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRFEES
      C                   ENDIF
@@ -1955,6 +1963,15 @@
      C                   EXSR      GLZADD
      C                   Z-ADD     ZZTOTI        VRRF
      C                   Z-ADD     ZZTOTD        VRRL
+      *                                                                                     MD050153
+     C     PTDIFF        IFLT      0                                                        MD050153
+     C                   MOVE      'Y'           PTNEG                                      MD050153
+     C     PTDIFF        MULT      -1            WPTDIFF                                    MD050153
+     C                   ELSE                                                               MD050153
+     C                   MOVE      'N'           PTNEG                                      MD050153
+     C                   Z-ADD     PTDIFF        WPTDIFF                                    MD050153
+     C                   ENDIF                                                              MD050153
+      *                                                                                     MD050153
      C                   ENDIF
       *
      C                   ENDIF
@@ -2352,6 +2369,21 @@
      C     LACHTP        OREQ      'R'
      C     LAAMTP        ANDEQ     'PI'
       *
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDNE     ' '                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDNE     ' '                                                      MD050153
+      *                                                                                     MD050153
      C                   MOVEL     FCUSC         WFCNM
      C                   MOVEL     FTYPC         WFACT
      C                   MOVEL     FSEQC         WFNUM
@@ -2435,7 +2467,8 @@
                                                                                             AR656363
      C                   EXSR      FCLTSR
       *
-     C                   IF        CLE025 = 'N'                                               CLE025
+     C**********         IF        CLE025 = 'N'                                      CLE025 MD050153
+     C                   IF        CLE024 = 'N'                                             MD050153
      C                   Eval      FA_OAM1 =  FB_OAM1
      C                   Eval      FA_OAM2 =  FB_OAM2
      C                   Eval      FA_OAM3 =  FB_OAM3
@@ -2516,7 +2549,8 @@
                                                                                             AR656363
      C                   EXSR      FCLTSR
       *
-     C                   IF        CLE025 = 'N'                                               CLE025
+     C**********         IF        CLE025 = 'N'                                      CLE025 MD050153
+     C                   IF        CLE024 = 'N'                                             MD050153
      C                   Eval      FA_OAM1 =  FB_OAM1
      C                   Eval      FA_OAM2 =  FB_OAM2
      C                   Eval      FA_OAM3 =  FB_OAM3
@@ -2669,6 +2703,39 @@
      C                   ENDIF
 
      C                   ENDIF
+      *                                                                                     MD050153
+     C     DDACTN        IFEQ      'A'                                                      MD050153
+     C     WPTDIFF       MULT(H)   OFCXRT        ILAAMF                                     MD050153
+      *                                                                                     MD050153
+     C     CLE023        IFEQ      'Y'                                                      MD050153
+     C                   Z-ADD     WPTDIFF       ZAMTCI                                     MD050153
+     C                   CALLB     'ZCONVZ1'                                                MD050153
+     C                   PARM                    ZAMTCI                                     MD050153
+     C                   PARM                    ZEXCH                                      MD050153
+     C                   PARM                    ZMD                                        MD050153
+     C                   PARM                    ZCCYI                                      MD050153
+     C                   PARM                    ZCCYO                                      MD050153
+     C                   PARM                    ZCDPI                                      MD050153
+     C                   PARM                    ZCDPO                                      MD050153
+     C                   PARM                    ZAMTCO                                     MD050153
+     C                   Z-ADD     ZAMTCO        WXAAMF                                     MD050153
+      *                                                                                     MD050153
+     C     LO_RLDT       IFLT      WRNDAY                                                   MD050153
+     C     LO_RLDT       ANDNE     0                                                        MD050153
+     C     LO_NFCE       ANDNE     0                                                        MD050153
+     C     LO_NCCY       ANDEQ     *BLANKS                                                  MD050153
+     C     LO_NFMD       IFEQ      'D'                                                      MD050153
+     C     LO_NFCE       DIV(H)    POWR(CX)      WNFCE                                      MD050153
+     C     1             DIV       WNFCE         WNFCE                                      MD050153
+     C                   ELSE                                                               MD050153
+     C     LO_NFCE       MULT(H)   POWR(CX)      WNFCE                                      MD050153
+     C                   ENDIF                                                              MD050153
+     C     WPTDIFF       MULT(H)   WNFCE         ILAAMF                                     MD050153
+     C                   ENDIF                                                              MD050153
+     C                   ENDIF                                                              MD050153
+      *                                                                                     MD050153
+     C                   ENDIF                                                              MD050153
+      *                                                                                     MD050153
      C                   ENDIF
       *
       ** Set up fields for value date updating
@@ -2676,6 +2743,17 @@
      C                   Z-ADD     LAVDAT        DAYNO             5 0
       *
      C     LACHTP        IFEQ      'I'
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
       *
      C     WSOLD         IFEQ      *BLANK
      C     WLPFI         ANDEQ     *BLANK
@@ -2689,6 +2767,17 @@
      C                   ENDIF
       *
      C     LACHTP        IFEQ      'R'
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
       *
      C     WSOLD         IFEQ      *BLANK
      C     WLPFI         ANDEQ     *BLANK
@@ -2723,7 +2812,8 @@
      C                   Eval      FB_RUN8 =  FA_RUN8
      C                   Eval      FB_RUN9 =  FA_RUN9
 
-     C                   IF        CLE025 = 'N'                                               CLE025
+     C**********         IF        CLE025 = 'N'                                      CLE025 MD050153
+     C                   IF        CLE024 = 'N'                                             MD050153
      C                   Eval      FB_OAM1 =  FA_OAM1
      C                   Eval      FB_OAM2 =  FA_OAM2
      C                   Eval      FB_OAM3 =  FA_OAM3
@@ -2912,25 +3002,73 @@
       *                                                                                       243275
      C     DDACTN        IFNE      'X'                                                        243275
       *
+     C     CLE023        IFEQ      'N'                                                      MD050153
+     C     CLE024        ANDEQ     'N'                                                      MD050153
      C     LACHTP        IFEQ      'I'
-     C     CLE023        ANDEQ     'N'
-     C     CLE025        ANDEQ     'N'                                                        CLE025
+     C*****CLE023        ANDEQ     'N'                                                      MD050153
+     C*****CLE025        ANDEQ     'N'                                               CLE025 MD050153
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
      C     FA_CAMD       SUB       ILAAMF        FA_CAMD
      C                   ENDIF
       *
      C     LACHTP        IFEQ      'R'
-     C     CLE023        ANDEQ     'N'
-     C     CLE025        ANDEQ     'N'                                                        CLE025
+     C*****CLE023        ANDEQ     'N'                                                      MD050153
+     C*****CLE025        ANDEQ     'N'                                               CLE025 MD050153
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
      C     FA_CAMD       ADD       ILAAMF        FA_CAMD
      C                   ENDIF
+     C                   ENDIF                                                              MD050153
       *
       ** If CLE023 is on, update Current Exposure based on spot rate.
      C     CLE023        IFEQ      'Y'
-     C     CLE025        ANDEQ     'N'                                                        CLE025
+     C*****CLE025        ANDEQ     'N'                                               CLE025 MD050153
+     C     CLE024        ANDEQ     'N'                                                      MD050153
      C     LACHTP        IFEQ      'I'
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
      C     FA_CEXP       SUB       WXAAMF        FA_CEXP
      C                   ENDIF
      C     LACHTP        IFEQ      'R'
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
      C     FA_CEXP       ADD       WXAAMF        FA_CEXP
      C                   ENDIF
      C                   ENDIF
@@ -3001,23 +3139,70 @@
       *                                                                                       243275
      C     DDACTN        IFNE      'X'                                                        243275
       *
+     C     CLE024        IFEQ      'N'                                                      MD050153
      C     LACHTP        IFEQ      'I'
-     C     CLE025        ANDEQ     'N'                                                        CLE025
+     C*****CLE025        ANDEQ     'N'                                               CLE025 MD050153
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
      C     FA_CAMD       ADD       ILAAMF        FA_CAMD
      C                   ENDIF
       *
      C     LACHTP        IFEQ      'R'
-     C     CLE025        ANDEQ     'N'                                                        CLE025
+     C*****CLE025        ANDEQ     'N'                                               CLE025 MD050153
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
      C     FA_CAMD       SUB       ILAAMF        FA_CAMD
      C                   ENDIF
+     C                   ENDIF                                                              MD050153
       *
       ** If CLE023 is on, update current exposure based on spot rate.
      C     CLE023        IFEQ      'Y'
-     C     CLE025        ANDEQ     'N'                                                        CLE025
+     C*****CLE025        ANDEQ     'N'                                               CLE025 MD050153
+     C     CLE024        ANDEQ     'N'                                                      MD050153
      C     LACHTP        IFEQ      'I'
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
      C     FA_CEXP       ADD       WXAAMF        FA_CEXP
      C                   ENDIF
      C     LACHTP        IFEQ      'R'
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
      C     FA_CEXP       SUB       WXAAMF        FA_CEXP
      C                   ENDIF
      C                   ENDIF
@@ -3041,6 +3226,17 @@
      C                   Z-ADD     LO_MDAT       DAYNO
       *
      C     LACHTP        IFEQ      'I'
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
       *
      C     WSOLD         IFEQ      *BLANK
      C     WLPFI         ANDEQ     *BLANK
@@ -3054,6 +3250,17 @@
      C                   ENDIF
       *
      C     LACHTP        IFEQ      'R'
+     C     LAAMTP        ANDEQ     'PI'                                                     MD050153
+     C     LACHTP        OREQ      'R'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     LACHTP        OREQ      'I'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PT'                                                     MD050153
+     C     PTNEG         ANDEQ     'Y'                                                      MD050153
+     C     LACHTP        OREQ      'A'                                                      MD050153
+     C     LAAMTP        ANDEQ     'PF'                                                     MD050153
+     C     PTNEG         ANDEQ     'N'                                                      MD050153
       *
      C     WSOLD         IFEQ      *BLANK
      C     WLPFI         ANDEQ     *BLANK
@@ -3214,7 +3421,8 @@
                                                                                             AR656363
      C                   EXSR      FCLTSR
       *
-     C                   IF        CLE025 = 'N'                                               CLE025
+     C**********         IF        CLE025 = 'N'                                      CLE025 MD050153
+     C                   IF        CLE024 = 'N'                                             MD050153
      C                   Eval      FA_OAM1 =  FB_OAM1
      C                   Eval      FA_OAM2 =  FB_OAM2
      C                   Eval      FA_OAM3 =  FB_OAM3
@@ -3258,7 +3466,8 @@
       *
      C  N92              GOTO      ENDFCT
       *
-     C                   IF        CLE025 = 'N'                                               CLE025
+     C**********         IF        CLE025 = 'N'                                      CLE025 MD050153
+     C                   IF        CLE024 = 'N'                                             MD050153
      C   93FB_OAM(Z)     SUB       FCBAL         FB_OAM(Z)
      C  N93FB_OAM(Z)     ADD       FCBAL         FB_OAM(Z)
      C                   ENDIF                                                                CLE025
@@ -4000,6 +4209,9 @@
      C                   CLEAR                   Z#ASTS
      C                   CLEAR                   Z#WSTS
      C                   MOVEL     LAFRNT        W#FRNT                                    AR1021983
+      *                                                                                     MD050153
+     C                   MOVE      *BLANK        PTNEG             1                        MD050153
+     C                   Z-ADD     *ZERO         WPTDIFF          13 0                      MD050153
       *
      C     EXINIT        ENDSR
       ****************************************************************
@@ -5386,6 +5598,26 @@
      C                   IF        PRTCD = *BLANKS                                            CLE025
      C                   MOVE      'Y'           CLE025                                       CLE025
      C                   ENDIF                                                                CLE025
+      *                                                                                     MD050153
+      ** Determine if CLE024 is switched on                                                 MD050153
+      *                                                                                     MD050153
+     C                   MOVE      'N'           CLE024                                     MD050153
+     C                   CALLB     'AOSARDR0'                                               MD050153
+     C                   PARM      *BLANKS       PRTCD                                      MD050153
+     C                   PARM      '*VERIFY'     POPTN                                      MD050153
+     C                   PARM      'CLE024'      PSARD                                      MD050153
+                                                                                            MD050153
+     C                   IF        PRTCD <> *BLANKS and                                     MD050153
+     C                             PRTCD <> '*NRF   '                                       MD050153
+     C                   MOVEL     PSARD         DBKEY                                      MD050153
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD050153
+     C                   Z-ADD     34            DBASE                                      MD050153
+     C                   EXSR      *PSSR                                                    MD050153
+     C                   ENDIF                                                              MD050153
+                                                                                            MD050153
+     C                   IF        PRTCD = *BLANKS                                          MD050153
+     C                   MOVE      'Y'           CLE024                                     MD050153
+     C                   ENDIF                                                              MD050153
       *
      C                   Z-ADD     A6TXND        TNOTL             1 0
       *

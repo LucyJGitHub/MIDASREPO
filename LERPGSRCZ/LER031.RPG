@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD059275           Date 23May22               *
+      *  Last Amend No. MD050153           Date 17Mar23               *
+      *  Prev Amend No. AR1078902          Date 17Mar23               *
+      *                 CLE138             Date 02Nov21               *
+      *                 MD059275           Date 23May22               *
       *                 MD036618           Date 23May22               *
       *                 AR674226           Date 04Dec19               *
       *                 MD055115           Date 23Jan20               *
@@ -109,6 +111,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050153 - Incorrect current amount for principal transfer   *
+      *             to the same non-revolving facility. Enhance fix   *
+      *             AR1078902. Remove checking for GPRT and TOLN.     *
+      *  AR1078902 - Principal Transfer enhancement. Transfer to a    *
+      *              new loan under a different facility.             *
+      *              (Child: AR1084471)                               *
+      *            - Applied for MD050153                             *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD059275 - Incorrect action type on LE0497P1. Reverse fix    *
       *             AR1076850 and instead introduce a new condition   *
@@ -323,6 +332,9 @@
      F            CLOANZ1F                          KIGNORE                                   233551
       ** Matured loans detail file                                                            233551
       *                                                                                       233551
+     FCLOANFL2IF  E           K        DISK         KINFSR *PSSR                           AR1078902
+     F            CLOANCLF                          KRENAMECLOANF2                         AR1078902
+     F            LOAMSDKF                          KIGNORE                                AR1078902
      FLER031AUO   E                    PRINTER                        UC
       * Database error reporting for extract - audit
       *
@@ -373,6 +385,7 @@
       *                                                                   127747
      ILKEY1DPF                                                            156585
      I              GASS                            KGASS                 156585
+     I              ROLN                            KROLN                                  AR1078902
      ILKEYFEDF    10
      I              LKRECI                          RECI                                      CLE139
      I              LKLNNO                          LNNO                                      CLE139
@@ -406,6 +419,28 @@
      ICLOANCL                                                                                 CLE023
      I              RCSI                            LRCSI                                     CLE023
       *                                                                   CLE014
+     ICLOANF2                                                                              AR1078902
+     I              RECI                            RECIL2                                 AR1078902
+     I              LNRF                            LNRFL2                                 AR1078902
+     I              BRCA                            BRCAL2                                 AR1078902
+     I              FCUS                            FCUSL2                                 AR1078902
+     I              FTYP                            FTYPL2                                 AR1078902
+     I              FSEQ                            FSEQL2                                 AR1078902
+     I              PSTM                            PSTML2                                 AR1078902
+     I              RSTM                            RSTML2                                 AR1078902
+     I              OSDB                            OSDBL2                                 AR1078902
+     I              OMDB                            OMDBL2                                 AR1078902
+     I              OSDA                            OSDAL2                                 AR1078902
+     I              PONS                            PONSL2                                 AR1078902
+     I              OMDA                            OMDAL2                                 AR1078902
+     I              RONS                            RONSL2                                 AR1078902
+     I              GPRT                            GPRTL2                                 AR1078902
+     I              TOLN                            TOLNL2                                 AR1078902
+     I              LPFI                            LPFIL2                                 AR1078902
+     I              PTFC                            PTFCL2                                 AR1078902
+     I              PTFT                            PTFTL2                                 AR1078902
+     I              PTFN                            PTFNL2                                 AR1078902
+      *                                                                                    AR1078902
      I            DS
       * Breakdown of account key
      I****************************************1  10 AKEY                                      CLE042
@@ -1364,6 +1399,24 @@
      C********************************************************************125188
      C           H0000     BEGSR                                          125188
      C           REVI      IFEQ 0                                         125188
+      *                                                                                    AR1078902
+      ** For PF events, retrieve transfer TO facility details                              AR1078902
+      ** to determine if facility amount should be reduced.                                AR1078902
+      *                                                                                    AR1078902
+     C                     MOVE '      '  HALCRF                                           AR1078902
+     C           AK910     IFEQ 'FA'                                                       AR1078902
+     C           KROLN     CHAINCLOANF2              70                                    AR1078902
+     C           *IN70     IFEQ '0'                                                        AR1078902
+     C********** GPRTL2    ANDEQ'Y'                                               AR1078902 MD050153
+     C********** TOLNL2    ANDEQLNNO                                              AR1078902 MD050153
+      *                                                                                    AR1078902
+     C           FCUSL2    IFNE FCUS                                                       AR1078902
+     C           FTYPL2    ORNE FTYP                                                       AR1078902
+     C           FSEQL2    ORNE FSEQ                                                       AR1078902
+     C                     MOVE '     Y'  HALCRF                                           AR1078902
+     C                     ENDIF                                                           AR1078902
+     C                     ENDIF                                                           AR1078902
+     C                     ENDIF                                                           AR1078902
       *                                                                   125188
      C           AK3       IFEQ 'R'                                       125188
      C                     MOVE 'PF'      HAACTN                          125188
@@ -1375,6 +1428,7 @@
      C                     Z-ADD98        HASEQ                           156993
      C                     Z-ADD98        HATSEQ                                              200289
      C                     EXSR Z1000                                     125188
+     C                     MOVE '      '  HALCRF                                           AR1078902
      C                     ENDIF                                          125188
       *                                                                   125188
      C                     ENDSR                                          125188

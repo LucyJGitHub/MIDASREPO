@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR854496           Date 10Mar23               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. 230636             Date 17Mar23               *
+      *  Prev Amend No. AR1078902          Date 17Mar23               *
+      *  Prev Amend No. AR854496           Date 10Mar23               *
+      *                 CLE138             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055601           Date 08Apr20               *
@@ -161,6 +163,15 @@
      A*                                                               *
      A*---------------------------------------------------------------*
       *                                                               *
+      *  230636 - Duplicate sequence number when loan entered on same *
+      *           day and with same value date as facility. Set       *
+      *           sequence number to 1 to avoid next record of same   *
+      *           value date written with same sequence number.       *
+      *            - Applied for MD050153                             *
+      *  AR1078902 - Principal Transfer enhancement. Transfer to a    *
+      *              new loan under a different facility.             *
+      *              (Child: AR1084471)                               *
+      *            - Applied for MD050153                             *
       *  AR854496 - LE0710P1 shows incorrect current outstanding. Do  *
       *             not update PEXP with FADRAM as it is now being    *
       *             used as previous CEXP. (Child: AR854497)          *
@@ -1221,6 +1232,17 @@
      C                     Z-ADD0         @CSEQ   20                      BH3502
      C**********           Z-ADD0         WTSEQ   30                                 200289 AR674226
      C                     Z-ADD0         WTSEQ   40                                        AR674226
+      *                                                                                       230636
+      ** If this is a new facility (*IN83 = '1'), FS record has been written by               230636
+      ** SR HISTRC just before. As file HISUPD is created with MAINT(*DLY), this              230636
+      ** new record will not be read by further processing. Therefore set seq.                230636
+      ** to 1 to avoid next record (with same value date) written with same seq.              230636
+      *                                                                                       230636
+     C           *IN83     IFEQ '1'                                                           230636
+     C                     Z-ADD1         @CSEQ                                               230636
+     C                     Z-ADD1         WTSEQ                                               230636
+     C                     ENDIF                                                              230636
+      *                                                                                       230636
      C           *IN83     IFEQ *OFF                                                        AR652989
      C           WBKVLD    ANDEQ'Y'                                                         AR652989
      C                     Z-ADDFAFSEQ    @CSEQ                                             AR652989
@@ -2856,6 +2878,7 @@
       *
      C           @RCI      IFEQ 'Y'
      C           HAACTN    OREQ 'PF'                                                        AR325915
+     C           HALCRF    ANDEQ'      '                                                   AR1078902
      C********** HAACTN    OREQ 'RE'                                                 225591 AR325915
      C********** HARIND    ANDEQ'R'                                                  225591 AR325915
      C********** @RCI      ANDNE'Y'                                                  225591 AR325915
@@ -2968,6 +2991,7 @@
      C           HAACTN    OREQ 'RE'                                      161412
      C           HAACTN    OREQ 'MT'                                      161412
      C           HAACTN    OREQ 'PF'                                                        AR325915
+     C           HALCRF    ANDEQ'      '                                                   AR1078902
      C                     ADD  @AMT      @DADJ                           161412
      C                     SUB  @AMT      @UADJ                           161412
      C                     GOTO D1EXIT                                    161412
@@ -3915,6 +3939,7 @@
      C********** FARCIN    IFEQ 'Y'                                                    154584 246029
      C           @RCI      IFEQ 'Y'                                                           246029
      C           FAACTN    OREQ 'PF'                                                        AR325915
+     C           FALCRF    ANDEQ'      '                                                   AR1078902
      C*********  FAACTN    OREQ 'RE'                                                 225591 AR325915
      C*********  FARIND    ANDEQ'R'                                                  225591 AR325915
      C*********  FARCIN    ANDNE'Y'                                                  225591 AR325915

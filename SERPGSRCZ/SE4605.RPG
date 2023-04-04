@@ -10,8 +10,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD022837B          Date 31Mar23               *
+      *  Prev Amend No. MD022837A          Date 31Mar23               *
+      *                 MD022837           Date 31Mar23               *
+      *                 256914             Date 31Mar23               *
+      *                 249385             Date 01Aug22               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD046998A          Date 15Apr21               *
       *                 248698             Date 01Jun20               *
       *                 MD057247           Date 01Feb21               *
@@ -42,6 +46,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022837B - The UL/UP key is still coming out with blank     *
+      *              profit center.  Where the security profit center *
+      *              is blank.  The trade/book posn reconcilable ind. *
+      *              is almost always 'N'.                            *
+      *  MD022837A - Blank Profit Centre. Remove ICD checking before  *
+      *              moving value to Profit Centre.                   *
+      *  MD022837 - Trade Date Based and Value Date Based UL/UP key   *
+      *             errors. Use Factorised Nominal when computing for *
+      *             UP/UL. Use SE Profit Centre if PCBK is blank.     *
+      *  256914 - Incorrect Premium/Discount amount shown in SE4605P1.*
+      *           Applied for MD022837.                               *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
@@ -646,7 +661,8 @@
      C                     CALL 'AOSTRDR0'
      C                     PARM '*DBERR ' PRTCD   7
      C                     PARM '*FIRST ' POPTN   7
-     C           SDSTRD    PARM SDSTRD    DSFDY
+     C********** SDSTRD    PARM SDSTRD    DSFDY                                             MD022837
+     C           SDSTRD    PARM SDSTRD    DSSDY                                             MD022837
       *
       **  If no records are found, DATABASE ERROR.
       *
@@ -1863,7 +1879,8 @@
       *
       **  Add nominal amount to nominal total.
       *
-     C                     ADD  AFNOML    #ATOTN
+     C**********           ADD  AFNOML    #ATOTN                                            MD022837
+     C                     ADD  ANOML     #ATOTN                                            MD022837
       *
       **  If the nominal amount is less than zero, set on *IN45 to
       **  indicate a negative amount.
@@ -1877,7 +1894,8 @@
       *
      C                     MOVE NMDP      ZDECS
      C                     MOVE 'J'       ZECODE
-     C                     Z-ADDAFNOML    ZFLD15
+     C**********           Z-ADDAFNOML    ZFLD15                                            MD022837
+     C                     Z-ADDANOML     ZFLD15                                            MD022837
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    #ANOML
       *
@@ -1889,6 +1907,7 @@
       *
      C           PROT      IFEQ '1'                                                           CEU018
      C           PROT      OREQ '3'                                                           CEU018
+     C           PROT      OREQ '8'                                                         MD022837
      C           PROT      OREQ '9'                                                           CEU018
      C           5         SUB  NMDP      #DP     10                                          CEU018
      C           #AFNOM    MULT POWER8,#DP#AFNOM                                              CEU018
@@ -1933,12 +1952,14 @@
       *
       **   ACCUMULATE YIELD * FACE VALUE for WEIGHTED AVERAGE YIELD calculation
       *
-     C           ZPRCOT    MULT AFNOML    #WK228 228
+     C********** ZPRCOT    MULT AFNOML    #WK228 228                                        MD022837
+     C           ZPRCOT    MULT ANOML     #WK228 228                                        MD022837
      C                     ADD  #WK228    #WWAY
       *
       **   ACCUMULATE YIELD * FACE VALUE for WAY MARKET
       *
-     C           MKPR      MULT AFNOML    WWK228 228
+     C********** MKPR      MULT AFNOML    WWK228 228                                        MD022837
+     C           MKPR      MULT ANOML     WWK228 228                                        MD022837
       *
       **  Format MARKET YIELD for output.
       *
@@ -1967,16 +1988,25 @@
       *
       **  Settlement Value = Price x Factorised Nominal
       *
-     C   35      #WPRIC    MULT #ANOM     #ASEV0    H
-     C   36      #WPRIC    MULT #ANOM     #ASEV1    H
-     C   37      #WPRIC    MULT #ANOM     #ASEV2    H
-     C   38      #WPRIC    MULT #ANOM     #ASEV3    H
+     C***35***** #WPRIC    MULT #ANOM     #ASEV0    H                                       MD022837
+     C***36***** #WPRIC    MULT #ANOM     #ASEV1    H                                       MD022837
+     C***37***** #WPRIC    MULT #ANOM     #ASEV2    H                                       MD022837
+     C***38***** #WPRIC    MULT #ANOM     #ASEV3    H                                       MD022837
+     C   35      #WPRIC    MULT #AFNOM    #ASEV0    H                                       MD022837
+     C   36      #WPRIC    MULT #AFNOM    #ASEV1    H                                       MD022837
+     C   37      #WPRIC    MULT #AFNOM    #ASEV2    H                                       MD022837
+     C   38      #WPRIC    MULT #AFNOM    #ASEV3    H                                       MD022837
       *
      C   35                MOVE #ASEV0    #ASETV
      C   36                MOVE #ASEV1    #ASETV
      C   37                MOVE #ASEV2    #ASETV
      C   38                MOVE #ASEV3    #ASETV
       *
+     C   35                Z-ADD#ASEV0    #ASET# 183                                          256914
+     C   36                Z-ADD#ASEV1    #ASET#                                              256914
+     C   37                Z-ADD#ASEV2    #ASET#                                              256914
+     C   38                Z-ADD#ASEV3    #ASET#                                              256914
+      *                                                                                       256914
      C                     Z-ADD#ASETV    #ASET  150
       *
       **  Format SETTLEMENT VALUE for output.
@@ -2016,12 +2046,14 @@
       *
       **  Determine if premium or discount
       *
-     C           #ASET     IFGT AFNOML
+     C********** #ASET     IFGT AFNOML                                                        256914
+     C           #ASET#    IFGT #AFNOM                                                        256914
      C           #ADSC     ANDLT0
      C                     Z-SUB#ADSC     #ADSC            premium(+)
      C                     ENDIF
       *
-     C           #ASET     IFLE AFNOML
+     C********** #ASET     IFLE AFNOML                                                        256914
+     C           #ASET#    IFLE #AFNOM                                                        256914
      C           #ADSC     ANDGT0
      C                     Z-SUB#ADSC     #ADSC            discount(-)
      C                     ENDIF
@@ -2130,10 +2162,14 @@
       **  Market Value = Market %Price x Factorised Nominal
       *
      C           ZPRCOT    DIV  100       #WPRIC    H
-     C   35      #WPRIC    MULT #ANOM     #AMAV0    H
-     C   36      #WPRIC    MULT #ANOM     #AMAV1    H
-     C   37      #WPRIC    MULT #ANOM     #AMAV2    H
-     C   38      #WPRIC    MULT #ANOM     #AMAV3    H
+     C***35***** #WPRIC    MULT #ANOM     #AMAV0    H                                       MD022837
+     C***36***** #WPRIC    MULT #ANOM     #AMAV1    H                                       MD022837
+     C***37***** #WPRIC    MULT #ANOM     #AMAV2    H                                       MD022837
+     C***38***** #WPRIC    MULT #ANOM     #AMAV3    H                                       MD022837
+     C   35      #WPRIC    MULT #AFNOM    #AMAV0    H                                       MD022837
+     C   36      #WPRIC    MULT #AFNOM    #AMAV1    H                                       MD022837
+     C   37      #WPRIC    MULT #AFNOM    #AMAV2    H                                       MD022837
+     C   38      #WPRIC    MULT #AFNOM    #AMAV3    H                                       MD022837
       *
      C   35                MOVE #AMAV0    #AMARV
      C   36                MOVE #AMAV1    #AMARV
@@ -2218,7 +2254,8 @@
       *
      C                     Z-ADD1         X       20
      C                     DO   7         X
-     C                     ADD  AFNOML    NOM,X
+     C**********           ADD  AFNOML    NOM,X                                             MD022837
+     C                     ADD  ANOML     NOM,X                                             MD022837
      C           *IN49     IFEQ '1'
      C                     SUB  #ADSC     DSC,X
      C                     ELSE
@@ -2758,7 +2795,11 @@
       *
       ** Output profit centre from Book Position Profit Centre
       *
+     C           PCBK      IFEQ *BLANKS                                                     MD022837
+     C                     MOVE BVSEPC    PRFC                                              MD022837
+     C                     ELSE                                                             MD022837
      C                     MOVE PCBK      PRFC
+     C                     ENDIF                                                            MD022837
       *
       ** Set settlement branch to blank
       *
@@ -2840,7 +2881,7 @@
       **  are to be reconciled.
       *
      C           BKPRCU    IFEQ 'Y'
-     C           BVTBRC    ANDEQ'Y'
+     C********** BVTBRC    ANDEQ'Y'                                                        MD022837A
       *
       ** Set up key fields for chain to PF/SEPCBD
       *
@@ -2850,8 +2891,11 @@
      C                     MOVE BHMK      KBHMK
       *
      C           KSEPCB    CHAINSEPCBDF              80
+      *  DB Error only if BVTBRC = 'Y'                                                     MD022837B
      C           *IN80     IFEQ '1'
+     C           BVTBRC    ANDEQ'Y'                                                        MD022837B
      C           RECI      OREQ '*'
+     C           BVTBRC    ANDEQ'Y'                                                        MD022837B
      C           *LOCK     IN   LDA
      C                     MOVE 'SEPBCD  'DBFILE
      C                     MOVE KSEPCR    DBKEY            ***************

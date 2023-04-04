@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056606           Date 07Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061096           Date 08Mar23               *
+      *  Prev Amend No. MD056606           Date 07Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061096 - DBU_YRAT job fails on start up. Add a colon before*
+      *             FunctnCode so can be used as a global variable.   *
       *  MD056606 - Deliverable Data Split for APDBINFPD              *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP002 - Conversion of Midas inputs to modular API structure *
@@ -124,7 +127,8 @@
      C+ SELECT *                                                                            MD056606
      C+ into :APDBINF                                                                       MD056606
      C+ from APDBIJW0                                                                       MD056606
-     C+ where AQFNCODE = FunctnCode                                                         MD056606
+     C+ where AQFNCODE = :FunctnCode                                                        MD061096
+     C*+*where*AQFNCODE*=*FunctnCode***********************************            MD056606 MD061096
      C/END-EXEC                                                                             MD056606
 
      C                   EVAL      UpdateFile   = AQUpdFil

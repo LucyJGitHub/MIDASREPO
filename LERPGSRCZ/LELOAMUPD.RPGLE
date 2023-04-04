@@ -5611,7 +5611,7 @@
      C                             PRTCD <> '*NRF   '                                       MD050153
      C                   MOVEL     PSARD         DBKEY                                      MD050153
      C                   MOVEL     'SCSARDPD'    DBFILE                                     MD050153
-     C                   Z-ADD     33            DBASE                                      MD050153
+     C                   Z-ADD     34            DBASE                                      MD050153
      C                   EXSR      *PSSR                                                    MD050153
      C                   ENDIF                                                              MD050153
                                                                                             MD050153

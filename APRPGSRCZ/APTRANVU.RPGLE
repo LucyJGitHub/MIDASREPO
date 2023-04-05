@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060683           Date 15Feb23               *
-      *  Prev Amend No. MD057739           Date 28Apr22               *
+      *  Last Amend No. MD055649           Date 21Mar23               *
+      *  Prev Amend No. MD060683           Date 15Feb23               *
+      *                 MD057739           Date 28Apr22               *
       *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
       *                 MD058991           Date 06Oct21               *
@@ -240,6 +241,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055649 - Authorised corrective batch was not copied to     *
+      *             PEA system. Introduced New Field BPAUTH           *
       *  MD060683 - Unable to Authorize newly inserted Single         *
       *             Currency IRS deal                                 *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
@@ -605,8 +608,8 @@
       *****************************************************************
      FAPQMBXPD  IF   E           K DISK                                                       BG0505
       ** +--------------------------------------+
-      ** ï¿½ Automatically included D-specs       ï¿½
-      ** ï¿½ ==============================       ï¿½
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
       ** +--------------------------------------+
       **
       **---------------------------------------------------------------
@@ -2008,6 +2011,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     1             SUBST     BUFFER:Bfp    VDFLTF            1                        MD052075
      C                   ADD       1             Bfp                                        MD052075
      C
+     C     1             SUBST     BUFFER:Bfp    BPAUTH            1                        MD055649
+     C                   ADD       1             Bfp                                        MD055649
      C     BPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       BPRXLn        Bfp                                          CER001
      C     BPEXLn        SUBST     BUFFER:Bfp    ExtData
@@ -2024,6 +2029,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C/COPY OFCPYSRCZ,CGL135_044                                                             CGL135A
       ** CGL150 Default Value Date 'Y'                                                      MD052075
      C                   PARM                    VDFLTF                                     MD052075
+     C                   PARM                    BPAUTH                                     MD055649
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
      C                   PARM                    FldNameArr

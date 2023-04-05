@@ -437,7 +437,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD061219 - Spread rate indicator wrongly updated during cob  *
+      *  MD061219 - Spread rate indicator wrongly updated during cob. *
+      *             Do not include SC event in retrieving spread      *
+      *             indicator                                         *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *

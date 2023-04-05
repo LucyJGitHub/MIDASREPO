@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058188           Date 11May21               *
-      *  Prev Amend No. MD058081           Date 11May21               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD058188           Date 11May21               *
+      *                 MD058081           Date 11May21               *
       *                 MD046248           Date 27Oct17               *
       *                 CFT051             Date 20Aug15               *
       *                 CGL132             Date 01May13               *
@@ -46,6 +47,7 @@
       *                                                               *
       ********************************************************************
       *                                                                  *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058188 - Deliverable Data Split for Global files           *
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD046248 - Finastra Rebranding                               *
@@ -100,10 +102,10 @@
      F                                              KINFSR *PSSR                              CSD031
       * UPD : Midas SD Country codes acceptance update                                        CSD031
       *                                                                                       CSD031
-     FSDFCTLL0UF  E           K        DISK                           UC                      CSD031
-     F                                              KCOMIT                                    CSD031
-     F                                              KINFDS ID0004                             CSD031
-     F                                              KINFSR *PSSR                              CSD031
+     F*SDFCTLL0UF  E           K        DISK                           UC            CSD001 MD061007
+     F**********                                    KCOMIT                           CSD031 MD061007
+     F**********                                    KINFDS ID0004                    CSD031 MD061007
+     F**********                                    KINFSR *PSSR                     CSD031 MD061007
       * UPD : Midas SD Standing data controls update                                          CSD031
       *                                                                                       CSD031
      F*GPCTRYL1IF  E           K        DISK                           UC            CSD031 MD058188
@@ -217,6 +219,13 @@
      I              SPARE                           SPAREX                                    CSD031
      IPDATA       DS                           1024                                         BUG11806
      IMEISOC    E DSMEISOJW0                                                                MD058081
+     IQSDFC1      DS                                                                        MD061007
+     I                                        1  10 AHFLNM                                  MD061007
+     I                                    P  11  130AHNORC                                  MD061007
+     I                                    P  14  160AHNOIN                                  MD061007
+     I                                    P  17  190AHNOAM                                  MD061007
+     I                                    P  20  220AHNODL                                  MD061007
+      *                                                                                     MD061007
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -1347,7 +1356,24 @@
      C                     MOVE *BLANK    AHFLNM                                              CSD031
      C                     MOVEL'SDCTRYPD'AHFLNM                                              CSD031
       *                                                                                       CSD031
-     C           AHFLNM    CHAIN@AHREAU              9091                                     CSD031
+     C********** AHFLNM    CHAIN@AHREAU              9091                            CSD031 MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*RTV'    ZMODE   4                                         MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM 0         AHNORC                                            MD061007
+     C                     PARM 0         AHNOIN                                            MD061007
+     C                     PARM 0         AHNOAM                                            MD061007
+     C                     PARM 0         AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN 10                                         MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     9091                                   MD061007
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061007
+     C                     SETON                     90                                     MD061007
+     C                     ENDIF                                                            MD061007
+     C           ZRETRN    IFEQ '*ERROR'                                                    MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
       *                                                                                       CSD031
       ** Send message '*Record no longer on file'                                             CSD031
       *                                                                                       CSD031
@@ -1377,7 +1403,21 @@
      C                     ADD  1         AHNODL                                              CSD031
      C                     ENDSL                                                              CSD031
       *                                                                                       CSD031
-     C                     UPDAT@AHREAU                91                                     CSD031
+     C**********           UPDAT@AHREAU                91                            CSD031 MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*UPD'    ZMODE                                             MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM           AHNORC                                            MD061007
+     C                     PARM           AHNOIN                                            MD061007
+     C                     PARM           AHNOAM                                            MD061007
+     C                     PARM           AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN                                            MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     91                                     MD061007
+     C           ZRETRN    IFNE *BLANKS                                                     MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
       *                                                                                       CSD031
       ** Change error detected                                                                CSD031
       *                                                                                       CSD031
@@ -1695,7 +1735,7 @@
      C                     OPEN SDCTRYL1
      C                     OPEN SDCTRYL0                                                      CSD031
      C                     OPEN SDACTYL0                                                      CSD031
-     C                     OPEN SDFCTLL0                                                      CSD031
+     C**********           OPEN SDFCTLL0                                             CSD031 MD061007
      C                     ENDIF                                                              CSD031
      C                     OPEN SDMMODL1
      C                     MOVEL'N'       W0PMT   1

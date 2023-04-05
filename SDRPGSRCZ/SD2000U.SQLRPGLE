@@ -13,8 +13,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CMG008             Date 20Feb20               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
@@ -31,6 +32,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CSD101 - Password Encryption (Recompile)                     *
@@ -45,8 +47,8 @@
       *****************************************************************
      FSDMMODPD  IF   E             DISK
      F*SDNWRKL0* UF A E           K DISK                                                    MD058830
-     FSDFCTLL0  UF   E           K DISK
-     F                                     COMMIT                               E31858
+     F*SDFCTLL0* UF   E           K DISK                                                    MD061007
+     F**********                           COMMIT                               E31858      MD061007
       *
       * ID C  F  H  L    Function of indicators
       *    99            EOF SDMMODPD
@@ -88,6 +90,13 @@
       *
       **  Used to convert YMD into MMDDYY or DDMMYY depending on the
       **  date format ie. D or M
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       *
       *****************************************************************
       /EJECT
@@ -215,7 +224,21 @@
       *
       **  Access SDFCTLPA using the key 'SDNWRKPD'
       *
-     C     SDNWRK        CHAIN     SDFCTLL0                           97
+     C*****SDNWRK        CHAIN     SDFCTLL0                           97                    MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      SDNWRK        AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       97                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        97                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
      C     *IN97         IFEQ      '1'                                                     1
      C     *LOCK         IN        LDA
      C                   Z-ADD     2             DBASE                          ***************
@@ -245,7 +268,16 @@
       *
       **  Update file control file SDFCTLPA
       *
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
       *
      C                   ENDSR
      C/EJECT

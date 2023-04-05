@@ -31,8 +31,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CGL157             Date 17Aug15               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CGL157 - CRS Reporting (Recompile)                           *
       *  MD046248 - Finastra Rebranding                               *
@@ -203,8 +205,8 @@
      F                                              KCOMIT                S01486
       *
       * Standing data file controls.
-     FSDFCTLL0UF  E           K        DISK
-     F                                              KCOMIT
+     F*SDFCTLL0UF  E           K        DISK                                                MD061007
+     F**********                                    KCOMIT                                  MD061007
       *                                                                   CPM005
       * Power of Attorney Details File                                    CPM005
      FSDPATTL0UF  E           K        DISK                               CPM005
@@ -292,6 +294,13 @@
      IDSSDY     E DSDSSDY                                                                     CSD028
       *                                                                                       CSD028
       ** Second DS for access programs, Long Date Structure                                   CSD028
+     IQSDFC1      DS                                                                        MD061007
+     I                                        1  10 AHFLNM                                  MD061007
+     I                                    P  11  130AHNORC                                  MD061007
+     I                                    P  14  160AHNOIN                                  MD061007
+     I                                    P  17  190AHNOAM                                  MD061007
+     I                                    P  20  220AHNODL                                  MD061007
+      *                                                                                     MD061007
       *
       ** Input parameters.
       *
@@ -1103,7 +1112,21 @@
       *
       ** Chain to SDFCTLL0.
       *
-     C           FILNAM    CHAIN@AHREAU              97
+     C********** FILNAM    CHAIN@AHREAU              97                                     MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*RTV'    ZMODE   4                                         MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM 0         AHNORC                                            MD061007
+     C                     PARM 0         AHNOIN                                            MD061007
+     C                     PARM 0         AHNOAM                                            MD061007
+     C                     PARM 0         AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN 10                                         MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     97                                     MD061007
+     C           ZRETRN    IFNE *BLANKS                                                     MD061007
+     C                     SETON                     97                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
       *
       ** Record not found in standing data file controls.
       *
@@ -1130,7 +1153,15 @@
       *
       ** Update the file control record.
       *
-     C                     UPDAT@AHREAU
+     C**********           UPDAT@AHREAU                                                     MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*UPD'    ZMODE                                             MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM           AHNORC                                            MD061007
+     C                     PARM           AHNOIN                                            MD061007
+     C                     PARM           AHNOAM                                            MD061007
+     C                     PARM           AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN                                            MD061007
       *
      C                     ENDSR
       *****************************************************************

@@ -16,12 +16,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSW209  *CREATE    Date 01Apr09               *
+      *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
@@ -46,9 +48,9 @@
       ** Midas SD Identification Types
      FSDIDTPPD  UF   E             DISK    INFSR(*PSSR)
       ** Midas SD Standing Data Controls
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
- 
- 
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061007
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -57,13 +59,13 @@
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Local data area for database error details
      D LDA           E DS                  EXTNAME(LDA) DTAARA(LDA)
- 
+
       ** Program Status Data Structure
      D PSDS           SDS
      D  PSProcName       *PROC
@@ -72,13 +74,19 @@
      D  PSUser               254    263
      D  PSProcPgm            334    343
      D  PSProcMod            344    353
- 
+
       ** Short Access Object Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Bank Details Data Structure
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
       ** +--------------------------------------+
       ** ¦ D-specs: Named constants             ¦
       ** ¦ =======  ===============             ¦
@@ -89,7 +97,7 @@
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       *
       ** Access Object Parameters
      D PRtCd           S              7A
@@ -161,7 +169,21 @@
       *****************************************************************
      C     UPDCNT        BEGSR
      C                   MOVEL     'SDIDTPPD'    KHFLNM
-     C     KHFLNM        CHAIN     @AHREAU                            10
+     C*****KHFLNM        CHAIN     @AHREAU                            10                    MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      KHFLNM        AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       10                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        10                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
      C                   IF        *IN10 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDFCTLL0'
@@ -170,13 +192,22 @@
      C                   EXSR      *PSSR
      C                   ELSE
      C                   EVAL      AHNOAM = AHNOAM + Ctr1
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
       *  P R O G R A M   E N D                                        *
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -222,7 +253,7 @@
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDBANKPD'

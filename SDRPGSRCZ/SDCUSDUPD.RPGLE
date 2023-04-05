@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059520           Date 21Feb22               *
-      *  Prev Amend No. 252069             Date 22May20               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *                 252069             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056982           Date 12Oct20               *
       *                 MD056719           Date 16Sep20               *
@@ -159,6 +160,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records. (Recompile)      *
       *  252069 - Database error message occurs when there is a       *
@@ -393,7 +395,7 @@
      F                                     RENAME(SDCUSTX0:SDCUSTX1)                          CGL132
                                                                                               CGL132
       * UPD : Midas SD Standing Data Controls index
-     FSDFCTLL0  UF A E           K DISK    COMMIT
+     F*SDFCTLL0* UF A E           K DISK    COMMIT                                          MD061007
                                                                                               CGL132
       ** FATCA Customer details file                                                          CGL132
      FSDFTCSL0  UF A E           K DISK    COMMIT                                             CGL132
@@ -1359,6 +1361,13 @@
      D X               S              2S 0                                                    CGL157
      D A               S              4S 0                                                    CGL177
 
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -5813,7 +5822,21 @@
       *
      C     KLCHSN        KLIST
      C                   KFLD                    AHFLNM
-     C     KLCHSN        CHAIN     @AHREAU                            90
+     C*****KLCHSN        CHAIN     @AHREAU                            90                    MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       90                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        90                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
 
       ** DATABASE ERROR
 
@@ -5836,7 +5859,16 @@
      C                   Z-ADD     WUNODL        AHNODL
       *
       * Update record
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
       *
      C                   ENDSR
      C*****************************************************************

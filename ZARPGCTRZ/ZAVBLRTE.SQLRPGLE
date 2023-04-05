@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060008           Date 11May21               *
-      *  Prev Amend No. MD060474           Date 22Sep22               *
+      *  Last Amend No. MD061212           Date 01Apr23               *
+      *  Prev Amend No. MD060008           Date 11May21               *
+      *                 MD060474           Date 22Sep22               *
       *                 MD060473           Date 15Sep22               *
       *                 MD059624           Date 20Jul22               *
       *                 MD059867           Date 03May22               *
@@ -48,6 +49,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061212 - Rate rounding decimal is still defaulted for      *
+      *             forward looking rates                              *
+      *             Defaulting should only be done for backward       *
+      *             looking rates                                     *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD060474 - Late defaulting and validation of rate rounding   *
       *             decimal places.                                   *
@@ -2174,6 +2179,14 @@
       *****************************************************************                     MD060474
      C     SRDFLT        BEGSR                                                              MD060474
       /free
+
+       //start of change MD061112
+                  if ddblrt <>  'Y';
+                     wday = 0;
+                     leavesr;
+                  endif;
+       //end of change
+
                   if (ddrfrr <> barfrr) and
                      (apiname <> 'BSRT') and
                      (ddcalm = 'NCCR') and

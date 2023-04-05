@@ -9800,7 +9800,7 @@
      C                   IF        ( wNxtIntPayDat <> 0 ) AND                               MD061195
      C                             ( wRLDT <> wNxtIntPayDat )                               MD061195
      C                   EVAL      ErrorType = 2                                            MD061195
-     C                   EVAL      MessageID = '5049567'                                    MD061195
+     C                   EVAL      MessageID = '5049578'                                    MD061195
      C                   ENDIF                                                              MD061195
                                                                                             MD061195
      C                   ENDSL                                                              MD061195

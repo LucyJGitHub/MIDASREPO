@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060920           Date 09Feb23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD037890           Date 25May16               *
       *                 CGL165             Date 17Feb15               *
@@ -27,6 +28,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060920 - FRA/IRS: incorrect reflection of interest in      *
+      *             assets and liabilities for CAPS/Coll/Floor.       *
+      *           - Condition the floor/ceiling rate when calculating *
+      *             the accrued interest. Also, system should display *
+      *             the correct side (OUR/THEIR) of deal's interest   *
+      *             details.                                          *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -126,6 +133,8 @@
      D PDspAmt         S             21A
      D WDivide         S              5  0
      D WANP            S             21  0
+     D WTEINR          S             11P 7                                                  MD060920
+     D WUEINR          S             11P 7                                                  MD060920
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -194,8 +203,49 @@
      C                   WHEN      UICBS = 6
      C                   EVAL      WDivide = 36600
      C                   ENDSL
+      *                                                                                     MD060920
+      ** Initialize work field for OUR Effective Int. Rate                                  MD060920
+      *                                                                                     MD060920
+     C                   EVAL      WUEINR = 0                                               MD060920
+      *                                                                                     MD060920
+      ** Process Floors, Caps and Collars deal types (Our side)                             MD060920
+      *                                                                                     MD060920
+     C                   IF        DTYP = 'RF' OR DTYP = 'RP' or DTYP = 'RR'                MD060920
+      *                                                                                     MD060920
+     C                   SELECT                                                             MD060920
+      ** Floor deal (S) where OUR Effective Int. Rate < Floor Rate                          MD060920
+     C                   WHEN      DTYP = 'RF' and BYSL = 'S' and                           MD060920
+     C                             UEINR < FLRAT                                            MD060920
+     C                   EVAL      WUEINR = FLRAT - UEINR                                   MD060920
+     C     UPAMT         MULT      WUEINR        WANP                                       MD060920
+     C                   DIV       WDivide       WANP                                       MD060920
+      ** Cap deal (S) where OUR Effective Int. Rate > Ceiling Rate                          MD060920
+     C                   WHEN      DTYP = 'RP' and BYSL = 'S' and                           MD060920
+     C                             UEINR > CLRAT                                            MD060920
+     C                   EVAL      WUEINR = UEINR - CLRAT                                   MD060920
+     C     UPAMT         MULT      WUEINR        WANP                                       MD060920
+     C                   DIV       WDivide       WANP                                       MD060920
+      ** Collar deal (S) where OUR Effective Int. Rate < Floor Rate                         MD060920
+     C                   WHEN      DTYP = 'RR' and BYSL = 'S' and                           MD060920
+     C                             UEINR < FLRAT                                            MD060920
+     C                   EVAL      WUEINR = FLRAT - UEINR                                   MD060920
+     C     UPAMT         MULT      WUEINR        WANP                                       MD060920
+     C                   DIV       WDivide       WANP                                       MD060920
+      ** Collar deal (S) where OUR Effective Int, Rate > Ceiling Rate                       MD060920
+     C                   WHEN      DTYP = 'RR' and BYSL = 'S' and                           MD060920
+     C                             UEINR > CLRAT                                            MD060920
+     C                   EVAL      WUEINR = UEINR - CLRAT                                   MD060920
+     C     UPAMT         MULT      WUEINR        WANP                                       MD060920
+     C                   DIV       WDivide       WANP                                       MD060920
+      ** Otherwise, set WANP to zero.                                                       MD060920
+     C                   OTHER                                                              MD060920
+     C                   EVAL      WANP = 0                                                 MD060920
+     C                   ENDSL                                                              MD060920
+      *                                                                                     MD060920
+     C                   ELSE                                                               MD060920
      C     UPAMT         MULT      UEINR         WANP
      C                   DIV       WDivide       WANP
+     C                   ENDIF                                                              MD060920
                                                                                            AR859056A
       * Set WANP to zero for Reversed and Matured deals                                    AR859056A
      C                   IF        RECI <> 'D'                                             AR859056A
@@ -230,8 +280,49 @@
      C                   WHEN      TICBS = 6
      C                   EVAL      WDivide = 36600
      C                   ENDSL
+      *                                                                                     MD060920
+      ** Initialize work field for THEIR Effective Int. Rate                                MD060920
+      *                                                                                     MD060920
+     C                   EVAL      WTEINR = 0                                               MD060920
+      *                                                                                     MD060920
+      ** Process Floors, Caps and Collars deal types (Their side)                           MD060920
+      *                                                                                     MD060920
+     C                   IF        DTYP = 'RF' OR DTYP = 'RP' or DTYP = 'RR'                MD060920
+      *                                                                                     MD060920
+     C                   SELECT                                                             MD060920
+      ** Floor deal (B) where THEIR Effective Int. Rate < Floor Rate                        MD060920
+     C                   WHEN      DTYP = 'RF' and BYSL = 'B' and                           MD060920
+     C                             TEINR < FLRAT                                            MD060920
+     C                   EVAL      WTEINR = FLRAT - TEINR                                   MD060920
+     C     TPAMT         MULT      WTEINR        WANP                                       MD060920
+     C                   DIV       WDivide       WANP                                       MD060920
+      ** Cap deal (B) where THEIR Effective Int. Rate > Ceiling Rate                        MD060920
+     C                   WHEN      DTYP = 'RP' and BYSL = 'B' and                           MD060920
+     C                             TEINR > CLRAT                                            MD060920
+     C                   EVAL      WTEINR = TEINR - CLRAT                                   MD060920
+     C     TPAMT         MULT      WTEINR        WANP                                       MD060920
+     C                   DIV       WDivide       WANP                                       MD060920
+      ** Collar deal (B) where THEIR Effective Int. Rate < Floor Rate                       MD060920
+     C                   WHEN      DTYP = 'RR' and BYSL = 'B' and                           MD060920
+     C                             TEINR < FLRAT                                            MD060920
+     C                   EVAL      WTEINR = FLRAT - TEINR                                   MD060920
+     C     TPAMT         MULT      WTEINR        WANP                                       MD060920
+     C                   DIV       WDivide       WANP                                       MD060920
+      ** Collar deal (B) where THEIR Effective Int, Rate > Ceiling Rate                     MD060920
+     C                   WHEN      DTYP = 'RR' and BYSL = 'B' and                           MD060920
+     C                             TEINR > CLRAT                                            MD060920
+     C                   EVAL      WTEINR = TEINR - CLRAT                                   MD060920
+     C     TPAMT         MULT      WTEINR        WANP                                       MD060920
+     C                   DIV       WDivide       WANP                                       MD060920
+      ** Otherwise, set WANP to zero.                                                       MD060920
+     C                   OTHER                                                              MD060920
+     C                   EVAL      WANP = 0                                                 MD060920
+     C                   ENDSL                                                              MD060920
+      *                                                                                     MD060920
+     C                   ELSE                                                               MD060920
      C     TPAMT         MULT      TEINR         WANP
      C                   DIV       WDivide       WANP
+     C                   ENDIF                                                              MD060920
                                                                                            AR859056A
       * Set WANP to zero for Reversed and Matured deals                                    AR859056A
      C                   IF        RECI <> 'D'                                             AR859056A

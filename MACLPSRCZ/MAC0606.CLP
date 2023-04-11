@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. BA6032             Date 09Jan23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -35,6 +36,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       BA6032 - Invoke In-house Command to Update SAVF Authority   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       122371 - Ensure CB0300 reports are included in archive.     */
@@ -68,7 +70,7 @@
 /*                                                                   */
 /*********************************************************************/
  PGM    parm(&eflg)
- 
+
  DCL        &eflg    *char   1        /* Error Flag                 */
  DCL        &machk   *char   1        /* Archiving Status           */
  DCL        &sdstat  *char 256        /* MIDAS Sys. Status - SD     */
@@ -94,30 +96,35 @@
              DCL        VAR(&MFHOLD) TYPE(*CHAR) LEN(5)               /*S01382*/
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)                /*089639*/
              DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)                /*089639*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*BA6032*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*BA6032*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*BA6032*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*BA6032*/
+             DCL        VAR(&BA6032) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6032*/
  /**/                                                                 /*LN0736*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
  DCLF       file(MAARCHL3)
- 
+
  monmsg     (RPG0000 CPF0000 MCH0000) exec(goto abnor)
- 
+
  chgjob     sws(xxxxxx00)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
  chgvar     &eflg    (' ')
- 
- 
+
+
 /* Retrieve Archiving Status                                       */
- 
+
    rtvdtaara  machk   rtnvar(&machk)
- 
+
 /* Set Archiving Sequance data area to zero                        */
- 
+
    chgdtaara  maseq   value('00000')
- 
+
 /* Retrieve Midas Sustem Id                                        */
- 
+
    rtvdtaara  sdstat  rtnvar(&sdstat)
 /**chgvar     (%sst(&dlib 1 2))  (%sst(&sdstat 6 2))                   *S01337*/
    chgvar     (%sst(&dplib 1 2))  (%sst(&sdstat 6 2))                 /*S01337*/
@@ -132,12 +139,21 @@
 /*/COPY WNCPYSRC,MAC0606MP2          */                               /*S01408*/
 /* */                                                                 /*S01408*/
 /**CHGVAR*****VAR(%SST(&DMLIB 1 2)) VALUE(%SST(&SDSTAT 6 2))*S01382*/ /*065368*/
- 
- 
+
+/*                                                                                        /*BA6032*/
+/** Check for Switchable feature BA6032.                                                  /*BA6032*/
+/*                                                                                        /*BA6032*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*BA6032*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA6032*/
+             CHGVAR     VAR(&SAR) VALUE('BA6032')                                         /*BA6032*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                              /*BA6032*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                             VAR(&BA6032) VALUE('Y'))                                     /*BA6032*/
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /*  If Archiving Status (&machk) is set to to 'N',                 +
    save Collation Work File & set status to 'Y' & chg MACHK dtaara */
- 
+
  IF    (&machk *eq 'N') then+
        (DO)
        dltf    maCHDRpdz
@@ -150,6 +166,13 @@
 /******cpyf    maCDTLpd  &Dlib/maCDTLpdz  crtfile(*yes)                *S01337*/
        cpyf    maCDTLpd  &Dplib/maCDTLpdz  crtfile(*yes)              /*S01337*/
                                           monmsg  (CPF0000)
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&DPLIB) OBJECT(MACHDRPDZ) TYPE(*FILE)                         /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             SETOBJAUT  LIB(&DPLIB) OBJECT(MACDTLPDZ) TYPE(*FILE)                         /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
                                                                       /*S01382*/
 /*  Copy header record file data to yesterdays data file */           /*S01382*/
                                                                       /*S01382*/
@@ -163,10 +186,10 @@
        chgvar  &machk    ('Y')
        chgdtaara MACHK   &machk
        ENDDO
- 
+
 /* ELSE, If Archiving Status (&machk) is set to 'Y',               +
    clear all Bureau Files & restore Collation Work Files           */
- 
+
  ELSE  cmd(IF    (&machk *eq 'Y') +
        then(DO))
        clrpfm  maFICDpd
@@ -182,7 +205,7 @@
        cpyf    maCDTLpdz  maCDTLpd   mbropt(*replace)
                          monmsg  (CPF2817)
        ENDDO
- 
+
 /*  Remove all members from PF/MAOPTDPD                            */ /*S01382*/
                                                                       /*S01382*/
 /******RMVM       FILE(&DMLIB/MAOPTDPD) MBR(*ALL)       */ /*S01382*/ /*065368*/
@@ -210,21 +233,21 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /* If Archiving Status (&machk) is set to to 'Y',                  +
    Archive Todays Reports and Collations due for archiving         */
- 
+
  IF    (&machk *eq 'Y') then+
        (DO)
- 
+
 /* select Collation records to Collation Work File                 */
- 
+
        call    MA0600
                IF    (%switch(XXXXXX11)) then(goto ABNOR)
- 
+
 /* dump Archive Output Queues for all OUTQs specified on MAARCHL3  +
    to Bureau Files                                                 */
- 
+
 READ:  rcvf    rcdfmt(MAARCHD0)
        monmsg  (CPF0864) exec(goto NEXT)
- 
+
        clrpfm  maoutqpd
           monmsg  (CPF0000)
        ovrprtf QPRTSPLQ  hold(*YES)
@@ -233,28 +256,28 @@ READ:  rcvf    rcdfmt(MAARCHD0)
 /*********monmsg  (CPF0000)  exec(goto read)                         * *LN0736*/
              RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)                  /*089639*/
              RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&SDATE)                  /*089639*/
- 
+
        call    MA0610 parm(&EAARID)
                IF    (%switch(XXXXXX11)) then(goto ABNOR)
- 
+
        goto READ
- 
+
 NEXT:
- 
+
 /* write Today's Collation Records to Bureau Files                 */
- 
+
        call    MA0620
                IF    (%switch(XXXXXX11)) then(goto ABNOR)
- 
+
 /**copy*Bureau*Files*to*TAPE****************************************/ /*S01382*/
- 
+
 /******call    MAC0606B                                            */ /*S01382*/
 /**************IF    (%switch(XXXXXXX1)) then(goto CANCEL) /*LN1070*/ /*E27260*/
 /**************IF    (%switch(XXXXXX01)) then(goto END)    /*E27260*/ /*S01382*/
 /**************IF    (%switch(XXXXXX11)) then(goto ABNOR)          */ /*S01382*/
- 
+
 /**change*Archiving*Status*data*area*MACHK*to*'C'*******************/ /*S01382*/
- 
+
 /******chgdtaara  MACHK  ('C')                                     */ /*S01382*/
                                                                       /*S01382*/
 /*  Check whether Optical Disk and/or Microfiche modules are       +
@@ -381,17 +404,17 @@ NEXT:
                           RTGDTA(*JOBD) INLLIBL(*JOBD) +
                           HOLD(&MFHOLD) OUTQ(*JOBD)                                       /*CSC023*/
        ENDDO                                                          /*S01382*/
- 
+
 /* End of Today's Archiving                                        */
- 
+
        ENDDO
- 
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
- 
+
  goto END
- 
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
- 
+
 /**IF*JOB*CANCELLED*FROM*TAPE*SAVE*IN*MAC0606B**/          /*LN1070*/ /*E27260*/
 /**BY*USER*SEND*MESSAGE*AND*END*PROGRAM**/                 /*LN1070*/ /*E27260*/
 /**/                                                                  /*LN1070*/
@@ -426,5 +449,5 @@ NEXT:
                           further information.') TOPGMQ(*EXT) +
                           TOMSGQ(MOPERQ)                              /*E27260*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                /*LN0736*/
- 
+
 END:    ENDPGM

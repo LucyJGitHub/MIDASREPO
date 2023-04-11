@@ -9,9 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. BA6032             Date 09Jan23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 260790             Date 19Jun09              */
+/*                      260790             Date 19Jun09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       BA6032 - Invoke In-house Command to Update SAVF Authority   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       260790 - COB performance improvements                       */
 /*                Save journal receivers as they are detached        */
@@ -42,11 +44,25 @@
              DCL        VAR(&DATAQN) TYPE(*CHAR) LEN(10)                                  /*260790*/
              DCL        VAR(&DATAQE) TYPE(*CHAR) LEN(10)                                  /*260790*/
              DCL        VAR(&DLEN) TYPE(*DEC) LEN(5 0) VALUE(10)                          /*260790*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*BA6032*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*BA6032*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*BA6032*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*BA6032*/
+             DCL        VAR(&BA6032) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6032*/
                                                                                           /*260790*/
 /*/COPY WNCPYSRC,SCC0401004                                          */
 /**/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
 /*/COPY WNCPYSRC,SCC0401003                                          */
+/*                                                                                        /*BA6032*/
+/** Check for Switchable feature BA6032.                                                  /*BA6032*/
+/*                                                                                        /*BA6032*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*BA6032*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA6032*/
+             CHGVAR     VAR(&SAR) VALUE('BA6032')                                         /*BA6032*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                              /*BA6032*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                             VAR(&BA6032) VALUE('Y'))                                     /*BA6032*/
 /**/
 /* If save of receivers is to disk call SCC2449 */
 /**/
@@ -87,6 +103,13 @@
              DLTDTAQ    DTAQ(&XLIB/&DATAQE)                                               /*260790*/
              MONMSG     MSGID(CPF0000 RPG0000)                                            /*260790*/
              CRTDTAQ    DTAQ(&XLIB/&DATAQE) MAXLEN(10)                                    /*260790*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&XLIB) OBJECT(&DATAQN) TYPE(*DTAQ)                            /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             SETOBJAUT  LIB(&XLIB) OBJECT(&DATAQE) TYPE(*DTAQ)                            /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
 /**/                                                                                      /*260790*/
 /* Put a STOPPED message on SCC2470END. The first thing SCC2470MON */                     /*260790*/
 /* will do is to remove the message. SCC2470MON will place a STOPPED */                   /*260790*/

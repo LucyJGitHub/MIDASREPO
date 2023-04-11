@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 259085             Date 12Jul12              */
+/*       Last Amend No. BA6032             Date 09Jan23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      259085             Date 12Jul12              */
 /*                      CBF002             Date 04Jul11              */
 /*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -39,6 +40,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       BA6032 - Invoke In-house Command to Update SAVF Authority   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       259085 - COB Performance Improvement in M+.                 */
 /*       CBF002 - BF Infrastructure: Backup and Recovery             */
@@ -139,6 +141,7 @@
 /** Variable for SAR CSC011 */                                                            /*CSC011*/
                                                                                           /*CSC011*/
              DCL        VAR(&CSC011) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC011*/
+             DCL        VAR(&BA6032) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6032*/
                                                                                           /*CSC011*/
 /** Parameters for AOSARDR0 */                                                            /*CSC011*/
                                                                                           /*CSC011*/
@@ -205,6 +208,15 @@
              IF         COND(&RTNC *EQ '       ') THEN(CHGVAR +
                           VAR(&CSC011) VALUE('Y'))                                        /*CSC011*/
                                                                                           /*CSC011*/
+/*                                                                                        /*BA6032*/
+/** Check for Switchable feature BA6032.                                                  /*BA6032*/
+/*                                                                                        /*BA6032*/
+             CHGVAR     VAR(&RTNC) VALUE('       ')                                       /*BA6032*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA6032*/
+             CHGVAR     VAR(&SARD) VALUE('BA6032')                                        /*BA6032*/
+             CALL       PGM(AOSARDR0) PARM(&RTNC &OPTN &SARD)                             /*BA6032*/
+             IF         COND(&RTNC *EQ '       ') THEN(CHGVAR +
+                             VAR(&BA6032) VALUE('Y'))                                     /*BA6032*/
 /*/COPY WNCPYSRC,SCC2454003                                          */
 /**/
 /* Copyright statement defination at runtime */
@@ -296,6 +308,11 @@
              CRTSAVF    FILE(&LIB/&BOB_SAVF) TEXT(&SAVFTEXT) +
                           ASP(&ASP) AUT(*LIBCRTAUT)                                       /*193382*/
              ENDDO                                                                        /*CSC043*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&LIB) OBJECT(&BOB_SAVF) TYPE(*FILE)                           /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
 /**/                                                                                      /*CSC033*/
              IF         COND(&CSC001 *EQ 'Y') THEN(DO)                                    /*CSC033*/
              CHGVAR     VAR(&SAVFTEXT) VALUE(&PARUND *CAT +
@@ -316,6 +333,11 @@
              CRTSAVF    FILE(&LIB/&BOB_SAVF2) TEXT(&SAVFTEXT) +
                           ASP(&ASP) AUT(*LIBCRTAUT)                                       /*CSC012*/
              ENDDO                                                                        /*CSC043*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&LIB) OBJECT(&BOB_SAVF2) TYPE(*FILE)                          /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
 /**/
 /* Save the database library                     */
 /**/
@@ -393,6 +415,11 @@
              CRTSAVF    FILE(&LIB/&BOB_SAVF3) TEXT(&SAVFTEXT) +
                           ASP(&ASP) AUT(*LIBCRTAUT)                                       /*CSC033*/
              ENDDO                                                                        /*CSC043*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&LIB) OBJECT(&BOB_SAVF3) TYPE(*FILE)                          /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
 /**/                                                                                      /*CSC033*/
              IF         COND(&CSC001 *EQ 'Y') THEN(DO)                                    /*CSC033*/
              CHGVAR     VAR(&SAVFTEXT) VALUE(&PARUND *CAT +
@@ -413,6 +440,11 @@
              CRTSAVF    FILE(&LIB/&BOB_SAVF4) TEXT(&SAVFTEXT) +
                           ASP(&ASP) AUT(*LIBCRTAUT)                                       /*CSC033*/
              ENDDO                                                                        /*CSC043*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&LIB) OBJECT(&BOB_SAVF4) TYPE(*FILE)                          /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
 /**/                                                                                      /*CSC033*/
 /*  Calculate names of save files for global libraries.                                   /*CSC033*/
 /**/                                                                                      /*CSC033*/
@@ -562,7 +594,7 @@
              ENDDO                                                                        /*CBF002*/
 /**/                                                                                      /*CSC033*/
              ENDDO                                                                        /*CSC033*/
- 
+
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,SCC2454MP9                                    */     /*S01408*/
 /**/                                                                  /*S01408*/
@@ -605,6 +637,11 @@
                           for recovery purposes') ASP(&ASP) +
                           AUT(*LIBCRTAUT)                             /*092823*/
              ENDDO                                                                        /*CSC043*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&LIB) OBJECT(JNSAV) TYPE(*FILE)                               /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
 /**/
 /* Save the database library                     */
 /**/
@@ -695,7 +732,7 @@ COMMON:
                           JOBD(SAVEJOBD) USER(*JOBD) RTGDTA(*JOBD) +
                           INLLIBL(*JOBD) OUTQ(*JOBD)                                      /*CSC023*/
              ENDDO
- 
+
 /*/COPY WNCPYSRC,SCC2454006                                          */
              GOTO       CMDLBL(ENDCLPGM)
 /**/

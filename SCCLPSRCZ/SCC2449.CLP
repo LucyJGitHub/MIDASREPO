@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD024838A          Date 20Nov18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. BA6032             Date 09Jan23              */
+/*       Prev Amend No. MD024838A          Date 20Nov18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27440           Date 21Apr10              */
@@ -35,6 +36,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       BA6032 - Invoke In-house Command to Update SAVF Authority   */
 /*       MD024838A - Saving of SAVFs done in an in-house program.    */
 /*                   Delete the savefiles instead of renaming them.  */
 /*                   Applied for MD052357                            */
@@ -124,6 +126,7 @@
              DCL        VAR(&ASP) TYPE(*CHAR) LEN(2)
              DCL        VAR(&CB_RTN_CDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CB_AUTO) TYPE(*CHAR) LEN(111)
+             DCL        VAR(&BA6032) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6032*/
 /*                                                                      CCB009*/
 /* Declare variable CCB009 - flag for switchable feature                CCB009*/
 /*                                                                      CCB009*/
@@ -158,6 +161,15 @@
 /*/COPY WNCPYSRC,SCC2449001                                          */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
+/*                                                                                        /*BA6032*/
+/** Check for Switchable feature BA6032.                                                  /*BA6032*/
+/*                                                                                        /*BA6032*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*BA6032*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*BA6032*/
+             CHGVAR     VAR(&SARD) VALUE('BA6032')                                        /*BA6032*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &OPN &SARD)                             /*BA6032*/
+             IF         COND(&PRTCD *EQ '       ') THEN(CHGVAR +
+                             VAR(&BA6032) VALUE('Y'))                                     /*BA6032*/
 /*                                                                                        /*CSC043*/
 /** Get the global IASP system values */                                                  /*CSC043*/
 /*                                                                                        /*CSC043*/
@@ -460,6 +472,11 @@ END_LOOP1:                                                                      
              CRTSAVF    FILE(&DILIB/&SAVF_NAME) TEXT('save file for +
                           Auto COB') ASP(&ASP)
              ENDDO                                                                        /*CSC043*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&DILIB) OBJECT(&SAVF_NAME) TYPE(*FILE)                        /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
 /**/
 /**********  SAVOBJ     OBJ(&SAVF_NAME) LIB(&JLIB) DEV(*SAVF) +
 /**********               OBJTYPE(*JRNRCV) SAVF(&DILIB/&SAVF_NAME)                        /*192731*/
@@ -544,6 +561,11 @@ SAVE1:                                                                          
              CRTSAVF    FILE(&DILIB/&SAVF_NAME) TEXT('save file for +
                                       Auto COB') ASP(&ASP)                                /*CRE026*/
              ENDDO                                                                        /*CSC043*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&DILIB) OBJECT(&SAVF_NAME) TYPE(*FILE)                        /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
                                                                                           /*CRE026*/
              SAVOBJ     OBJ(&EQ_RCV_NAM) LIB(&EQLIB) DEV(*SAVF) +
                             OBJTYPE(*JRNRCV) SAVF(&DILIB/&SAVF_NAME) +

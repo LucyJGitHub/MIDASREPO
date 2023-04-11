@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD059438           Date 14Mar22               *      
-      *  Prev Amend No. MD052779           Date 21Feb19               *
+      *  Last Amend No. BA6032             Date 09Jan23               *
+      *  Prev Amend No. MD059438           Date 14Mar22               *
+      *                 MD052779           Date 21Feb19               *
       *                 MD046248           Date 27Oct17               *
       *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6032 - Invoke In-house Command to Update SAVF Authority    *
       *  MD059438 - File name of @24 KWG file should be system value  *
       *             'BankName' - not 1st 4 chars of SystemProvider    *
       *  MD052779 - Recompiled to fix buffer issue on ERCRCTPD file   *
@@ -153,7 +155,7 @@
      D WVal06          C                   'InterfaceVersion'
      D***WVal07*         C                   'Serviceprovider'                              BUG22632
      D*WVal07***       C                   'ServiceProvider'                       BUG22632 MD059438
-     D WVal07          C                   'BankName'                                       MD059438 
+     D WVal07          C                   'BankName'                                       MD059438
      D WVal08          C                   'DataFormat'
      D WVal09          C                   'TransFileFolder'
       *
@@ -346,6 +348,9 @@
      D  WBin4                  1      4B 0
      D  WBin2                  1      2B 0
       *
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     BA6032
+      ** Switchable Feature Data Structure                                                    BA6032
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  BA6032
       ** Call to C procedure
       *
      D ER000103        PR            10I 0
@@ -445,6 +450,9 @@
      D PVl09           S            200A
      D PVl10           S            200A
       *
+     D POptn           S              7A                                                      BA6032
+     D PSARD           S              6A                                                      BA6032
+     D BA6032          S              1A                                                      BA6032
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1057,6 +1065,14 @@
      C                   PARM      '   '         PEnt
      C                   PARM                    PParm
       *
+      * Set authority                                                                        BA60322
+     C                   IF        BA6032 = 'Y'                                              BA60322
+     C                   EVAL      #_STMF = %TRIM(WkVl09) +                                  BA60322
+     C                                    %TRIM(WAbFnm)                                      BA60322
+     C                   CALL      'IFSAUTLC'                                                BA60322
+     C                   PARM                    #_STMF          256                         BA60322
+     C                   ENDIF                                                               BA60322
+      *                                                                                      BA60322
      C                   ENDSR
       *
       *****************************************************************
@@ -1220,6 +1236,19 @@
      C                   KFLD                    F12REF
      C                   KFLD                    F12VDT
      C                   KFLD                    F12VTM
+      *
+      *   ** Check if BA6032 is switched on                                                   BA6032
+     C                   CALL      'AOSARDR0'                                                 BA6032
+     C                   PARM      *BLANKS       PRTCD                                        BA6032
+     C                   PARM      '*VERIFY'     POPTN                                        BA6032
+     C                   PARM      'BA6032'      PSARD                                        BA6032
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6032
+      *                                                                                       BA6032
+     C                   IF        PRTCD <> *BLANKS                                           BA6032
+     C                   EVAL      BA6032 = 'N'                                               BA6032
+     C                   ELSE                                                                 BA6032
+     C                   EVAL      BA6032 = 'Y'                                               BA6032
+     C                   ENDIF                                                                BA6032
       *
      C                   ENDSR
       *

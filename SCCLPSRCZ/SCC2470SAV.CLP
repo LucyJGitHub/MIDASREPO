@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. MD055681           Date 31Jul20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. BA6032             Date 09Jan23              */
+/*       Prev Amend No. MD055681           Date 31Jul20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD036915           Date 06Jan16              */
 /*                      AR855839           Date 25Nov12              */
 /*                      CCB020             Date 06Aug12              */
@@ -19,6 +20,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       BA6032 - Invoke In-house Command to Update SAVF Authority   */
 /*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD036915 - COB: COBJRNMON is not ready for IASP.            */
@@ -85,11 +87,26 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2009')
+
+             DCL        VAR(&BA6032) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*BA6032*/
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                    /*BA6032*/
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)                                      /*BA6032*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*BA6032*/
 /**/
 /* Global MONMSG */
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
+/*                                                                                        /*BA6032*/
+/** Check for Switchable feature BA6032.                                                  /*BA6032*/
+/*                                                                                        /*BA6032*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*BA6032*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*BA6032*/
+             CHGVAR     VAR(&SARD) VALUE('BA6032')                                        /*BA6032*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &OPN &SARD)                             /*BA6032*/
+                                                                                          /*BA6032*/
+             IF         COND(&PRTCD *EQ '       ') THEN(CHGVAR +
+                             VAR(&BA6032) VALUE('Y'))                                     /*BA6032*/
 /**/
 /* Copyright statement definition at runtime */
 /**/
@@ -204,6 +221,12 @@
                           Auto COB') ASP(*LIBASP)                                       /*MD036915*/
                  MONMSG MSGID(CPF0000 MCH0000)                                          /*MD036915*/
              ENDDO                                                                      /*MD036915*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&DILIB) OBJECT(&SAVF_NAME) TYPE(*FILE)                        /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
+                                                                                          /*BA6032*/
 /**/
 /* Now save the receiver */
 /**/

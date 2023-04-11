@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 258877             Date 03Apr23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  258877 - Cannot delete average life date.                    *
+      *         - Applied for MD-36595.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -2293,6 +2296,8 @@
                                                                                               CSE065
      C                   ELSE                                                                 CSE065
                                                                                               CSE065
+     C                   IF        DDACTN = 'I' OR                                            258877
+     C                             S2SDAL <> SDAL                                             258877
      C                   EVAL      KSDAL = S2SDAL                                             CSE065
      C     KSEDEV        CHAIN     SEDEVAL                                                    CSE065
      C                   IF        %FOUND(SEDEVAL)                                            CSE065
@@ -2301,6 +2306,7 @@
      C                   EVAL      FldNameArr(IDx)= 'DDSDAL'                                  CSE065
      C                   EVAL      MsgIdArr(IDx) = 'SEA0566'                                  CSE065
      C                   ENDIF                                                                CSE065
+     C                   ENDIF                                                                258877
      C                   ENDIF                                                                CSE065
      C                   ENDIF                                                                CSE065
      C                   ENDIF                                                                CSE065

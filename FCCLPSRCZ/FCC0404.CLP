@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD058421           Date 23May22              */
-/*       Prev Amend No. CFC007             Date 29Aug18              */
+/*       Last Amend No. AR986242           Date 11Apr23              */
+/*       Prev Amend No. MD058421           Date 23May22              */
+/*                      CFC007             Date 29Aug18              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -29,6 +30,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR986242 - RCF Reports does not distributed to proper OUTQs.*/
+/*                  Add condition. (Child: AR986243)                 */
 /*       MD058421 - RCFMONITOR job flooding MSGQs with multiple      */
 /*                  error (CPF3322).                                 */
 /*       CFC007 - Release spool file via system value                */
@@ -411,8 +414,11 @@ RETRY:                                                                          
 /**/                                                                                      /*CFC002*/
 /** If SAR CFC002 is on */                                                                /*CFC002*/
 /**/                                                                                      /*CFC002*/
+/**********  IF         COND((&CFC002 *EQ 'Y') *AND (&XOUTQ *NE ' +  */                 /*AR986242*/
+/**********               ')) THEN(DO) */                                        /*CFC002 AR986242*/
              IF         COND((&CFC002 *EQ 'Y') *AND (&XOUTQ *NE ' +
-                          ')) THEN(DO)                                                    /*CFC002*/
+                          ') *OR (&CFC002 *EQ 'Y') *AND (&OUTQ *NE ' +
+                          ')) THEN(DO)                                                  /*AR986242*/
 /**/                                                                                      /*CFC002*/
 /** Call program */                                                                       /*CFC002*/
 /**/                                                                                      /*CFC002*/

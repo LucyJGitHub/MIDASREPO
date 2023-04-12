@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA) *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
@@ -98,8 +100,8 @@
      F                                              KINFDS FIL1DS
      F                                              KCOMIT
       *
-     FSDFCTLL0UF  E           K        DISK         KINFSR *PSSR
-     F                                              KCOMIT
+     F*SDFCTLL0UF  E           K        DISK         KINFSR *PSSR                           MD061007
+     F**********                                    KCOMIT                                  MD061007
       ** Standing data controls by filename - update
       *
      FSD1902DFCF  E                    WORKSTN      KINFSR *PSSR
@@ -298,6 +300,13 @@
       *
      IDSSDY     E DSDSSDY
       ** Second DS for Access Programs, Long Data Structure
+     IQSDFC1      DS                                                                        MD061007
+     I                                        1  10 AHFLNM                                  MD061007
+     I                                    P  11  130AHNORC                                  MD061007
+     I                                    P  14  160AHNOIN                                  MD061007
+     I                                    P  17  190AHNOAM                                  MD061007
+     I                                    P  20  220AHNODL                                  MD061007
+      *                                                                                     MD061007
       *
       ****************************************************************
       *                M A I N   P R O C E S S I N G                 *
@@ -1024,7 +1033,21 @@
       *
      C                     MOVEL'SDCGFRPD'KFLNM  10
       *
-     C           KFLNM     CHAIN@AHREAU              17
+     C********** KFLNM     CHAIN@AHREAU              17                                     MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*RTV'    ZMODE   4                                         MD061007
+     C                     PARM KFLNM     AHFLNM                                            MD061007
+     C                     PARM 0         AHNORC                                            MD061007
+     C                     PARM 0         AHNOIN                                            MD061007
+     C                     PARM 0         AHNOAM                                            MD061007
+     C                     PARM 0         AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN 10                                         MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     17                                     MD061007
+     C           ZRETRN    IFNE *BLANKS                                                     MD061007
+     C                     SETON                     17                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
       *
      C           *IN17     IFEQ *OFF
       *
@@ -1047,7 +1070,15 @@
       *
      C                     ENDSL
       *
-     C                     UPDAT@AHREAU
+     C**********           UPDAT@AHREAU                                                     MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*UPD'    ZMODE                                             MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM           AHNORC                                            MD061007
+     C                     PARM           AHNOIN                                            MD061007
+     C                     PARM           AHNOAM                                            MD061007
+     C                     PARM           AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN                                            MD061007
      C                     ENDIF
       *
      C                     COMIT

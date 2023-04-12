@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL146             Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL146 - MT940/MT950 Production in Input Cycle               *
@@ -59,7 +61,7 @@
      F*SDNWRKL1* IF   E           K DISK    INFSR(*PSSR)                                    MD058830
       ** Message Network Details Retrieval Index
 
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061007
       ** Standing Data Control Update Index
 
      F/COPY OFCPYSRCZ,CGL146_033                                                              CGL146
@@ -138,6 +140,13 @@
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
 
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -358,9 +367,19 @@
       ** Move key fields to @AHREAU
 
      C                   EVAL      AHFLNM = 'SDNWRKPD'
-     C     AHFLNM        CHAIN     @AHREAU
+     C*****AHFLNM        CHAIN     @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
 
-     C                   IF        NOT %FOUND(SDFCTLL0)
+     C**********         IF        NOT %FOUND(SDFCTLL0)                                     MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = 'SDNWRKPD'
      C                   EVAL      DBFILE = 'SDFCTLL0'
@@ -392,9 +411,18 @@
      C                   Z-ADD     *ZERO         AHNOAM
      C                   Z-ADD     *ZERO         AHNODL
      C                   Z-ADD     RCOUNT        AHNORC
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
      C                   ELSE
-     C                   UNLOCK    SDFCTLL0
+     C**********         UNLOCK    SDFCTLL0                                                 MD061007
      C                   ENDIF
 
      C                   ENDSR

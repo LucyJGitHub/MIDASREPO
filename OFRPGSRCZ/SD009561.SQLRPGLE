@@ -13,14 +13,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026922           Date 14May14               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026922           Date 14May14               *
       *                 MD026855           Date 12May14               *
       *                 CGL145A            Date 08Oct13               *
       *                 CGL145  *CREATE    Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026922 - Issue with replication                            *
       *  MD026855 - Nostro Daily Limit amount truncated               *
@@ -106,8 +108,8 @@
      F                                     RENAME(ACCNTABF:ACNUMTBF)
 
       ** Control File Update Index
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT                                       MD026922
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                MD061007
+     F**********                           COMMIT                              MD026922 MD061007
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -171,6 +173,12 @@
      D  WSUC                  11     11
      D  WMBIN                 13     13
 
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
@@ -1698,7 +1706,21 @@ E2   C                   ENDIF
      C     SRTrailer     BEGSR
 
      C                   MOVEL     'SDFCSDTD'    WFNAM
-     C     WFNAM         CHAIN     SDFCTLL0                           60
+     C*****WFNAM         CHAIN     SDFCTLL0                           60                    MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      WFNAM         AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       60                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        60                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
 
      C                   IF        *IN60 = *ON
      C     *LOCK         IN        LDA
@@ -1724,7 +1746,16 @@ E2   C                   ENDIF
 
      C                   ENDIF
 
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
 
      C                   ENDSR
       *****************************************************************

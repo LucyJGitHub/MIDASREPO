@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060441           Date 01Feb23               *
-      *  Prev Amend No. MD060560           Date 10Dec22               *
+      *  Last Amend No. MD061258           Date 11Apr23               *
+      *  Prev Amend No. MD060441           Date 01Feb23               *
+      *                 MD060560           Date 10Dec22               *
       *                 249385             Date 01Aug22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -67,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061258 - Previous generated BR events were deleted in      *
+      *             LOAC enquiry. Skip history deletion if roll over  *
+      *             date is greater than accrual profit date          *
       *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
       *             Backward-Looking Rate                             *
       *  MD060560 - After a spread change and a base rate code change *
@@ -303,6 +307,8 @@
       *
      ISDBANK    E DSSDBANKPD
       *
+     ISDGELR    E DSSDGELRPD                                                                MD061258
+      **  EXTERNAL DS FOR GENERAL LEDGER DETAILS                                            MD061258
      ISDBSRT    E DSSDBSRTPD                300                                             CLE075BI
      ISCSARD    E DSSCSARDPD                                              CLE004
       ** SAR File Details Accessed via Access Program AOSARDR0            CLE004
@@ -366,6 +372,16 @@
      C           CLE172    IFEQ 'Y'                                                         MD060441
      C           RECI      ANDEQ'D'                                                         MD060441
      C           RLDT      ANDGT*ZERO                                                       MD060441
+      *                                                                                     MD061258
+     C           RLDT      IFLE BKAPDT                                                      MD061258
+     C           NIDT      ANDEQRLDT                                                        MD061258
+     C           REPT      ANDEQ2                                                           MD061258
+     C           RLDT      ORLE BKAPDT                                                      MD061258
+     C           NRPD      ANDEQRLDT                                                        MD061258
+     C           REPT      ANDEQ1                                                           MD061258
+     C           RLDT      ORLE BKAPDT                                                      MD061258
+     C           NRPD      ANDEQRLDT                                                        MD061258
+     C           REPT      ANDEQ3                                                           MD061258
       *                                                                                     MD060441
      C           BLRT      IFEQ 'Y'                                                         MD060441
      C           NBLRT     ANDEQ'Y'                                                         MD060441
@@ -426,6 +442,7 @@
      C                     ENDIF                                                            MD060441
      C                     ENDIF                                                            MD060441
      C                     ENDIF                                                            MD060441
+     C                     ENDIF                                                            MD061258
      C                     ENDIF                                                            MD060441
       *
       * Need live rec with rollover date < start last interest date.
@@ -914,7 +931,19 @@
       *
       *    CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
      C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
-      *
+      *                                                                                     MD061258
+     C                     CALL 'AOGELRR1'                                                  MD061258
+     C                     PARM '*MSG   ' @RTCD                                             MD061258
+     C                     PARM '*FIRST ' @OPTN                                             MD061258
+     C           SDGELR    PARM SDGELR    DSSDY                                             MD061258
+      *                                                                                     MD061258
+     C           @RTCD     IFNE *BLANKS                                                     MD061258
+     C                     Z-ADD8         DBASE                                             MD061258
+     C                     MOVEL'SDGELRPD'DBFILE                                            MD061258
+     C                     MOVEL@RTCD     DBKEY                                             MD061258
+     C                     EXSR AUDPRT                                                      MD061258
+     C                     EXSR *PSSR                                                       MD061258
+     C                     ENDIF                                                            MD061258
       *                                                                   CLE004
       ** Determine if Customer Lending Enhancements - Syndications        CLE004
       ** (CLE004) is installed                                            CLE004

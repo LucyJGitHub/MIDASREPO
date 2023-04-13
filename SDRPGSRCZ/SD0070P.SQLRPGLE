@@ -13,8 +13,9 @@
       *                                                               *
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  195963 - Deleted broker codes not shown in SD0070P audit     *
@@ -46,13 +48,13 @@
      F*SDBROKL1* IF   E           K DISK                                                    MD058085
       * RTV: Broker Codes              Retrieval index
       *
-     FSDFCTLL1  IF   E           K DISK
+     F*SDFCTLL1* IF   E           K DISK                                                    MD061007
       * RTV: Standing Data Controls    Retrieval index
       *
      FSDBANKL1  IF   E           K DISK
       * RTV: Bank Details              Retrieval index
       *
-     FSDFCTLL0  UF   E           K DISK
+     F*SDFCTLL0* UF   E           K DISK                                                    MD061007
       * UPD: Standing Data Controls    Update index
       *
      FSDBRKDL0  IF   E           K DISK
@@ -145,6 +147,13 @@
      D DELREC        E DS                  EXTNAME(SDBRKJW0)                                MD058085
      D                                     PREFIX(X)                                        MD058085
      D SDBROK        E DS                  EXTNAME(SDBRKJW0)                                MD058085
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       /EJECT
       *****************************************************************
      C     *ENTRY        PLIST                                                  Entry parameter
@@ -524,7 +533,21 @@
      C                   KFLD                    AHFLNM                         Filename
       * Move fields to key list.
      C                   MOVEL     @CN(05)       AHFLNM                         Filename
-     C     KRSSA         CHAIN     @AHREAV                            90        *
+     C*****KRSSA         CHAIN     @AHREAV                            90        *           MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       90                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        90                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
      C     *IN90         IFEQ      '1'
       * DBF Record not found.
      C                   MOVEL     'USR0020'     W0RTN             7
@@ -554,7 +577,24 @@
       *
      C     KLCHSB        KLIST
      C                   KFLD                    AHFLNM                         Filename
-     C     KLCHSB        CHAIN     @AHREAU                            9091      *
+     C*****KLCHSB        CHAIN     @AHREAU                            9091      *           MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       9091                  MD061007
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061007
+     C                   SETON                                        90                    MD061007
+     C                   ENDIF                                                              MD061007
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061007
+     C                   SETON                                        91                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
       *
      C     *IN90         IFEQ      '1'
       * Record not found.
@@ -583,7 +623,21 @@
      C                   Z-ADD     *ZERO         AHNOAM                         No. of Amends
      C                   Z-ADD     *ZERO         AHNODL                         No. of Deletes
       *
-     C                   UPDATE    @AHREAU                              91      *
+     C**********         UPDATE    @AHREAU                              91      *           MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
+     C                   SETOFF                                       91                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        91                    MD061007
+     C                   ENDIF                                                              MD061007
+                                                                                            MD061007
      C     *IN91         IFEQ      '1'
       * Change error detected.
      C                   MOVEL     'Y2U0004'     W0RTN             7

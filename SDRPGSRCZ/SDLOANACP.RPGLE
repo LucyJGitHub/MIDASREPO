@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -68,22 +70,22 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas SD Standing Data Control File
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
- 
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061007
+     F**********                           COMMIT                                           MD061007
+
       ** Midas SD Loan Type/Sub-Type file
      FSDLOANL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas SD Loan Type/Sub-Type Acceptance file
      FSDALTSL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas SD Loan type/sub-typ - LU Ext. File                                          BUG11799
      FSDLNX1L0  UF A E           K DISK    INFSR(*PSSR)                                     BUG11799
      F                                     COMMIT                                           BUG11799
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -102,16 +104,16 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -120,12 +122,12 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -133,23 +135,30 @@
       *
       ** Midas SD Loan Types/Sub-Types Acceptance File
      D Ds_AcceptFile E DS                  ExtName(SDALTSPD)
- 
+
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       ** Entry Parameters
- 
+
      D PData           S           4000A
      D PRetCode        S              7A
      D PProgram        S             10A
- 
+
      D p_Cmd           S             13A
      D p_CmdLen        S             15  5 Inz(%Len(p_Cmd))
- 
+
      D PReturn         S              7A
      D PLoanType       S              2A
      D PLoanSubType    S              2A
@@ -157,31 +166,31 @@
      D PLoanProc       S              2P 0
      D PTLChange       S              1A
      D PMidasNo        S              5P 0
- 
+
      D k_LoanTyp       S                   Like(AYLNTY)
      D k_LoanSTp       S                   Like(AYLNST)
      D k_LoanCls       S                   Like(AYLNCL)                                     BUG11799
- 
+
      D w_Action        S              1A
      D w_AYRANG        S                   Like(AYRANG)
      D w_AYILTY        S                   Like(AYILTY)
      D w_AYILST        S                   Like(AYILST)
      D w_AYAACC        S                   Like(AYAACC)
- 
+
      D v_Count         S              3  0
      D v_AYLNPT        S                   Like(AYLNPT)
      D v_AYLNTD        S                   Like(AYLNTD)
- 
+
      D i_Success       S               N
- 
+
      D c_Yes           C                   Const('Y')
      D c_Insert        C                   Const('I')
      D c_Amend         C                   Const('A')
      D c_AcceptEffDte  C                   Const('SDC000061')
      D c_File          C                   Const('SDLOANPD  ')
      D c_DelayJob      C                   Const('DLYJOB DLY(1)')
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -192,19 +201,19 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C                   EVAL      Ds_AcceptFile = PData
- 
+
       ** Save key fields as well as the amendable fields
- 
+
      C                   EVAL      k_LoanTyp = AYLNTY
      C                   EVAL      k_LoanSTp = AYLNST
      C                   EVAL      k_LoanCls = AYLNCL                                       BUG11799
@@ -214,23 +223,23 @@
      C                   EVAL      v_AYLNPT = AYLNPT
      C                   EVAL      v_AYLNTD = AYLNTD
      C                   EVAL      w_AYAACC = AYAACC
- 
+
      C                   IF        AYAACC = c_Yes or
      C                             PProgram = c_AcceptEffDte
      C                   EXSR      SrZone
      C                   ELSE
      C                   EXSR      SrAccp
      C                   ENDIF
- 
+
       ** Commit changes if there are no errors, otherwise rollback
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   COMMIT
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -242,19 +251,19 @@
       *  Calls: Sr_UpdLoanF / Sr_UpdTrailr                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SrZone        BEGSR
- 
+
       ** Update Loan Type/SubType Codes File
- 
+
      C                   EXSR      Sr_UpdLoanF
- 
+
       ** Update Trailer File
- 
+
      C                   EXSR      Sr_UpdTrailr
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -266,33 +275,33 @@
       *  Calls: SrQcmd                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     Sr_UpdLoanF   BEGSR
- 
+
       ** Update Loan Type/Sub-type with data from Acceptance File
       ** ...retry file processing until successful or until loop
       **    count is 100
- 
+
      C                   DO        100           v_Count
- 
+
       ** ...only process delay when error is encountered, that is
       **    when loop is iterated
- 
+
      C                   IF        v_Count > 1
      C                   EXSR      SrQcmd
      C                   ENDIF
- 
+
       ** ...if there are errors, iterate and start anew with processing
       **    until updates are successful
- 
+
      C     key_LoanF     CHAIN(e)  @AYRECK
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
      C                   IF        %Found(SDLOANL0)
- 
+
       ** ...only override fields that are globally maintained
- 
+
      C                   EVAL      AYRANG = w_AYRANG
      C                   EVAL      AYILTY = w_AYILTY
      C                   EVAL      AYILST = w_AYILST
@@ -306,11 +315,11 @@
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
- 
+
      C                   EXSR      SRTablet6
      C                   EVAL      w_Action = c_Amend
      C                   ELSE
- 
+
      C                   EVAL      Ds_AcceptFile = PData
      C                   EVAL      AYTYLC = c_Insert
      C                   EVAL      AYLCD  = BJRDNB
@@ -327,19 +336,19 @@
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
- 
+
      C                   EXSR      SRTablet6
      C                   EVAL      w_Action = c_Insert
      C                   ENDIF
- 
+
       ** ...if the program reaches this point, no errors
       **    were encountered
- 
+
      C                   EVAL      i_Success = *On
      C                   LEAVE
- 
+
      C                   ENDDO
- 
+
      C                   IF        i_Success = *Off
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDLOANL0'
@@ -353,9 +362,9 @@
      C                   EVAL      PRetCode = '*ERROR'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -363,9 +372,9 @@
       *  SRTablet6  - Call Tablet6                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTablet6     BEGSR
- 
+
      C                   CALL(e)   'TABLET6'
      C                   PARM      *BLANKS       PReturn
      C                   PARM      AYLNTY        PLoanType
@@ -374,7 +383,7 @@
      C                   PARM      AYLNPT        PLoanProc
      C                   PARM      AYTYLC        PTLChange
      C                   PARM      BJRDNB        PMidasNo
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -387,26 +396,36 @@
       *  Calls: SrQcmd                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     Sr_UpdTrailr  BEGSR
- 
+
       ** Update Trailer File
       ** ...retry file processing until successful or until loop
       **    count is 100
- 
+
      C                   DO        100           v_Count
- 
+
       ** ...only process delay when error is encountered, that is
       **    when loop is iterated
- 
+
      C                   IF        v_Count > 1
      C                   EXSR      SrQcmd
      C                   ENDIF
- 
+
       ** ...check if file is existing in trailer file
- 
-     C     c_File        CHAIN(e)  @AHREAU
-     C                   IF        Not %Found(SDFCTLL0)
+
+     C*****c_File        CHAIN(e)  @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      c_File        AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C**********         IF        Not %Found(SDFCTLL0)                                     MD061007
+     C                   IF        ZRETRN = '*NRF'                                          MD061007
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDFCTLL0'
      C                   EVAL      DBKEY  =  c_File
@@ -416,33 +435,43 @@
      C                   EVAL      DBPROC =  'SR/Sr_UpdTrailr'
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSEIF    %Error
      C                   ITER
      C                   ENDIF
- 
+
       ** ...update necessary fields based on action performed in
       **    facility update routine
- 
+
      C                   IF        w_Action = c_Insert
      C                   EVAL      AHNORC = AHNORC + 1
      C                   EVAL      AHNOIN = AHNOIN + 1
      C                   ELSE
      C                   EVAL      AHNOAM = AHNOAM + 1
      C                   ENDIF
-     C                   UPDATE(e) @AHREAU
-     C                   IF        %Error
+     C**********         UPDATE(e) @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
+     C**********         IF        %Error                                                   MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
      C                   ITER
      C                   ENDIF
- 
+
       ** ...if the program reaches this point, no errors were
       **    encountered
- 
+
      C                   EVAL      i_Success = *On
      C                   LEAVE
- 
+
      C                   ENDDO
- 
+
      C                   IF        i_Success = *Off
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDFCTLL0'
@@ -455,9 +484,9 @@
      C                   EVAL      PRetCode = '*ERROR'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -469,54 +498,54 @@
       *  Calls: SrQcmd                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAccp        BEGSR
- 
+
       ** Update Acceptance File
       ** ...retry file processing until successful or until loop
       **    count is 100
- 
+
      C                   DO        100           v_Count
- 
+
       ** ...only process delay when error is encountered, that is
       **    when loop is iterated
- 
+
      C                   IF        v_Count > 1
      C                   EXSR      SrQcmd
      C                   ENDIF
- 
+
       ** ...if there are errors, iterate and start anew with processing
       **    until updates are successful
- 
+
      C     key_LoanF     CHAIN(e)  SDLOAND0
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
- 
+
      C                   EVAL      Ds_AcceptFile = PData
- 
+
      C                   IF        %Found(SDALTSL0)
      C                   UPDATE(e) SDLOAND0
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   WRITE(e)  SDLOAND0
      C                   IF        %Error
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
       ** ...if the program reaches this point, no errors
       **    were encountered
- 
+
      C                   EVAL      i_Success = *On
      C                   LEAVE
- 
+
      C                   ENDDO
- 
+
      C                   IF        i_Success = *Off
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDALTSPD'
@@ -530,9 +559,9 @@
      C                   EVAL      PRetCode = '*ERROR'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -544,15 +573,15 @@
       *  Calls: QCMDEXC                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SrQcmd        BEGSR
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM      c_DelayJob    p_Cmd
      C                   PARM                    p_CmdLen
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -564,30 +593,30 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    PData
      C                   PARM                    PRetCode
      C                   PARM                    PProgram
- 
+
      C     key_LoanF     KLIST
      C                   KFLD                    k_LoanTyp
      C                   KFLD                    k_LoanSTp
      C                   KFLD                    k_LoanCls                                  BUG11799
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Datebase error
- 
+
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBANKPD'
      C                   EVAL      DBKEY  =  @OPTN
@@ -597,11 +626,11 @@
      C                   EVAL      DBPROC =  'SR/*INZSR '
      C                   EXSR      *PSSR
      C                   OUT       LDA
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -618,22 +647,22 @@
       *  Calls: DBERRCTL                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   ROLBK
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+

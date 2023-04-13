@@ -12,15 +12,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BG12468 *CREATE    Date 07Nov06               *
+      *                 BG12468 *CREATE    Date 07Nov06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  BG12468 - Update invalid data in Customer and Branch file    *
       *                                                               *
@@ -36,7 +38,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDCUSTL0  UF   E           K DISK
      FSDCUSTL1  IF   E           K DISK
      FSDACSTL0  UF   E           K DISK    RENAME(SDCUSTD0:SDACSTD0)
@@ -47,9 +49,9 @@
      F                                     PREFIX(C_)
      FSDABRCL1  IF   E           K DISK    RENAME(SDBRCHD0:SDABRCD1)
      F                                     PREFIX(D_)
- 
-     FSDFCTLL0  UF   E           K DISK
- 
+
+     F*SDFCTLL0* UF   E           K DISK                                                    MD061007
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -71,10 +73,10 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -83,12 +85,12 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -98,12 +100,12 @@
      D BRCA            S              1    DIM(3)
      D WKCNUM          S              1    DIM(6)
      D WKCSSN          S              1    DIM(10)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D WFnd            S              1
      D KFile           S             10
@@ -111,7 +113,7 @@
      D KCNUM           S              6
      D WDEL            S              3  0
      D X               S              2  0 INZ(1)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -122,39 +124,77 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   EXSR      SRAcpBrch
      C                   EXSR      SRBranch
- 
+
      C                   IF        WDel > *ZERO
      C                   EVAL      KFile = 'SDBRCHPD'
-     C     KFile         CHAIN     SDFCTLL0
-     C                   IF        %FOUND(SDFCTLL0)
+     C*****KFile         CHAIN     SDFCTLL0                                                 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      KFile         AHFLNM           10                        MD061007
+     C                   PARM      0             AHNORC            5 0                      MD061007
+     C                   PARM      0             AHNOIN            5 0                      MD061007
+     C                   PARM      0             AHNOAM            5 0                      MD061007
+     C                   PARM      0             AHNODL            5 0                      MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+                                                                                            MD061007
+     C**********         IF        %FOUND(SDFCTLL0)                                         MD061007
+     C     ZRETRN        IFEQ      *BLANKS                                                  MD061007
      C                   EVAL      AHNORC = AHNORC - WDEL
      C                   EVAL      AHNODL = AHNODL + WDEL
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EXSR      SRAcpCust
      C                   EXSR      SRCust
- 
+
      C                   IF        WDel > *ZERO
      C                   EVAL      KFile = 'SDCUSTPD'
-     C     KFile         CHAIN     SDFCTLL0
-     C                   IF        %FOUND(SDFCTLL0)
+     C*****KFile         CHAIN     SDFCTLL0                                                 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      KFile         AHFLNM           10                        MD061007
+     C                   PARM      0             AHNORC            5 0                      MD061007
+     C                   PARM      0             AHNOIN            5 0                      MD061007
+     C                   PARM      0             AHNOAM            5 0                      MD061007
+     C                   PARM      0             AHNODL            5 0                      MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+                                                                                            MD061007
+     C**********         IF        %FOUND(SDFCTLL0)                                         MD061007
+     C     ZRETRN        IFEQ      *BLANKS                                                  MD061007
      C                   EVAL      AHNORC = AHNORC - WDEL
      C                   EVAL      AHNODL = AHNODL + WDEL
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -163,17 +203,17 @@
       *                                                               *
       *****************************************************************
      C     SRAcpBrch     BEGSR
- 
+
      C     *LOVAL        SETLL     SDABRCL0
      C                   READ      SDABRCL0
- 
+
      C                   EVAL      WDEL = 0
- 
+
      C                   DOW       NOT %EOF(SDABRCL0)
- 
+
      C                   MOVEA     C_A8BRCD      BRCA
      C                   MOVE      'N'           WFnd
- 
+
      C     BRCA(1)       LOOKUP    SMCASE(X)                              70
      C                   IF        *IN70 = *ON
      C                   MOVE      UPCASE(X)     BRCA(1)
@@ -188,37 +228,37 @@
      C                   IF        *IN72 = *ON
      C                   MOVE      UPCASE(X)     BRCA(3)
      C                   ENDIF
- 
+
      C                   IF        *IN70 = *ON
      C                             OR *IN71 = *ON
      C                             OR *IN72 = *ON
      C                   MOVEA     BRCA          KBRCA
      C                   EXSR      SRChkABrch
      C                   ENDIF
- 
+
      C                   READ      SDABRCL0
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
      C     SrChkABrch    BEGSR
- 
+
      C     KBRCA         CHAIN     SDABRCL1
      C                   IF        %FOUND(SDABRCL1)
      C                   EVAL      WFnd = 'Y'
      C                   ENDIF
- 
+
      C                   IF        WFnd = 'N'
      C                   MOVEA     BRCA          C_A8BRCD
      C                   UPDATE    SDABRCD0
      C                   ENDIF
- 
+
      C                   IF        WFnd = 'Y'
      C                   DELETE    SDABRCD0
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -228,17 +268,17 @@
       *                                                               *
       *****************************************************************
      C     SRBranch      BEGSR
- 
+
      C     *LOVAL        SETLL     SDBRCHL0
      C                   READ      SDBRCHL0
- 
+
      C                   EVAL      WDEL = 0
- 
+
      C                   DOW       NOT %EOF(SDBRCHL0)
- 
+
      C                   MOVEA     A_A8BRCD      BRCA
      C                   MOVE      'N'           WFnd              1
- 
+
      C     BRCA(1)       LOOKUP    SMCASE(X)                              70
      C                   IF        *IN70 = *ON
      C                   MOVE      UPCASE(X)     BRCA(1)
@@ -253,38 +293,38 @@
      C                   IF        *IN72 = *ON
      C                   MOVE      UPCASE(X)     BRCA(3)
      C                   ENDIF
- 
+
      C                   IF        *IN70 = *ON
      C                             OR *IN71 = *ON
      C                             OR *IN72 = *ON
      C                   MOVEA     BRCA          KBRCA
      C                   EXSR      SRChkBrch
      C                   ENDIF
- 
+
      C                   READ      SDBRCHL0
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
      C     SrChkBrch     BEGSR
- 
+
      C     KBRCA         CHAIN     SDBRCHL1
      C                   IF        %FOUND(SDBRCHL1)
      C                   EVAL      WFnd = 'Y'
      C                   ENDIF
- 
+
      C                   IF        WFnd = 'N'
      C                   MOVEA     BRCA          A_A8BRCD
      C                   UPDATE    @A8REB1
      C                   ENDIF
- 
+
      C                   IF        WFnd = 'Y'
      C                   DELETE    @A8REB1
      C                   EVAL      WDel = WDEL + 1
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -294,18 +334,18 @@
       *                                                               *
       *****************************************************************
      C     SRAcpCust     BEGSR
- 
+
      C     *LOVAL        SETLL     SDACSTL0
      C                   READ      SDACSTL0
- 
+
      C                   EVAL      WDEL = 0
- 
+
      C                   DOW       NOT %EOF(SDACSTL0)
- 
+
      C                   MOVEA     BBCUST        WkCNUM
      C                   MOVEA     BBCSSN        WkCSSN
      C                   MOVE      'N'           WFnd
- 
+
      C     WKCNUM(1)     LOOKUP    SMCASE(X)                              60
      C                   IF        *IN60 = *ON
      C                   MOVE      UPCASE(X)     WKCNUM(1)
@@ -334,7 +374,7 @@
      C                   IF        *IN65 = *ON
      C                   MOVE      UPCASE(X)     WKCNUM(6)
      C                   ENDIF
- 
+
      C     WKCSSN(1)     LOOKUP    SMCASE(X)                              70
      C                   IF        *IN70 = *ON
      C                   MOVE      UPCASE(X)     WKCSSN(1)
@@ -381,7 +421,7 @@
      C                   IF        *IN79 = *ON
      C                   MOVE      UPCASE(X)     WKCSSN(10)
      C                   ENDIF
- 
+
      C                   IF        *IN60 = *ON
      C                             OR *IN61 = *ON
      C                             OR *IN62 = *ON
@@ -401,16 +441,16 @@
      C                   MOVEA     WkCNUM        KCNUM
      C                   EXSR      SRChkACust
      C                   ENDIF
- 
+
      C                   READ      SDACSTL0
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
      C     SrChkACust    BEGSR
- 
+
      C     KCNUM         CHAIN     SDACSTL1
      C                   IF        %FOUND(SDACSTL1)
      C                   IF        *IN60 = *ON OR *IN61 = *ON OR
@@ -419,17 +459,17 @@
      C                   EVAL      WFnd = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WFnd = 'N'
      C                   MOVEA     WKCNUM        BBCUST
      C                   MOVEA     WKCSSN        BBCSSN
      C                   UPDATE    SDACSTD0
      C                   ENDIF
- 
+
      C                   IF        WFnd = 'Y'
      C                   DELETE    SDACSTD0
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -439,18 +479,18 @@
       *                                                               *
       *****************************************************************
      C     SRCust        BEGSR
- 
+
      C     *LOVAL        SETLL     SDCUSTL0
      C                   READ      SDCUSTL0
- 
+
      C                   EVAL      WDEL = 0
- 
+
      C                   DOW       NOT %EOF(SDCUSTL0)
- 
+
      C                   MOVEA     BBCUST        WKCNUM
      C                   MOVEA     BBCSSN        WkCSSN
      C                   MOVE      'N'           WFnd
- 
+
      C     WKCNUM(1)     LOOKUP    SMCASE(X)                              60
      C                   IF        *IN60 = *ON
      C                   MOVE      UPCASE(X)     WKCNUM(1)
@@ -479,7 +519,7 @@
      C                   IF        *IN65 = *ON
      C                   MOVE      UPCASE(X)     WKCNUM(6)
      C                   ENDIF
- 
+
      C     WKCSSN(1)     LOOKUP    SMCASE(X)                              70
      C                   IF        *IN70 = *ON
      C                   MOVE      UPCASE(X)     WKCSSN(1)
@@ -526,7 +566,7 @@
      C                   IF        *IN79 = *ON
      C                   MOVE      UPCASE(X)     WKCSSN(10)
      C                   ENDIF
- 
+
      C                   IF        *IN60 = *ON
      C                             OR *IN61 = *ON
      C                             OR *IN62 = *ON
@@ -546,16 +586,16 @@
      C                   MOVEA     WkCNUM        KCNUM
      C                   EXSR      SRChkCust
      C                   ENDIF
- 
+
      C                   READ      SDCUSTL0
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
      C     SrChkCust     BEGSR
- 
+
      C     KCNUM         CHAIN     SDCUSTL1
      C                   IF        %FOUND(SDCUSTL1)
      C                   IF        *IN60 = *ON OR *IN61 = *ON OR
@@ -564,18 +604,18 @@
      C                   EVAL      WFnd = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WFnd = 'N'
      C                   MOVEA     WKCNUM        BBCUST
      C                   MOVEA     WKCSSN        BBCSSN
      C                   UPDATE    @BBREBG
      C                   ENDIF
- 
+
      C                   IF        WFnd = 'Y'
      C                   DELETE    @BBREBG
      C                   EVAL      WDEL = WDEL + 1
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

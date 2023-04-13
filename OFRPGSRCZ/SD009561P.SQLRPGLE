@@ -14,11 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL145  *CREATE    Date 10Jul13               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL145  *CREATE    Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL145 - Subsidiaries Daily Sweeping Forecast                *
       *                                                               *
@@ -87,9 +89,15 @@
      D FOREC         E DS                  EXTNAME(SDFCSDTD)
      **   Midas SD Forecast Static Data
 
-     D TRAIL         E DS                  EXTNAME(SDFCTLPA)
+     D*TRAIL****     E DS                  EXTNAME(SDFCTLPA)                                MD061007
      **   Midas SD Standing Data controls File
 
+     D TRAIL           DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
       ** Parameter list fields for AOCUSTR0
      D @KEY1           S             10
      D @KYST           S              7
@@ -339,19 +347,30 @@
       ** Set SQL return code
      C                   Eval      SQLCOD = 0
       *
-     C/exec sql
-     C+    Declare TRAILER cursor for
-     C+    Select * from SDFCTLPA
-     c+    where AHFLNM = 'SDFCSDTD'
-     c+    order by AHFLNM
-     C/End-Exec
-
-     C/exec SQL
-     C+  Open TRAILER
-     C/End-exec
-
-      ** Handle SQL Error (if not %EOF)
-     C                   If        SQLCOD < 0
+     C*exec*sql*                                                                            MD061007
+     C*****Declare TRAILER cursor for                                                       MD061007
+     C*****Select * from SDFCTLPA                                                           MD061007
+     c*****where AHFLNM = 'SDFCSDTD'                                                        MD061007
+     c*****order by AHFLNM                                                                  MD061007
+     C*End-Exec*                                                                            MD061007
+      **********                                                                            MD061007
+     C*exec*SQL*                                                                            MD061007
+     C***Open*TRAILER                                                                       MD061007
+     C*End-exec*                                                                            MD061007
+      **********                                                                            MD061007
+      ** Handle SQL Error (if not %EOF)                                                     MD061007
+     C**********         If        SQLCOD < 0                                               MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      'SDFCSDTD'    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+      *                                                                                     MD061007
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 3
      C                   EVAL      DBFILE = 'SQL STM'
@@ -360,48 +379,48 @@
      C                   OUT       LDA
      C                   ExSR      *PSSR
      C                   EndIf
-
-     C/exec SQL
-     C+ fetch next
-     C+ from TRAILER
-     C+ into: TRAIL
-     C/end-exec
-
-     C                   DOW       SQLcode <> 100
-
-      ** process all records until SDFCSDTD is found ..
-
+      **********                                                                            MD061007
+     C*exec*SQL*                                                                            MD061007
+     C**fetch*next                                                                          MD061007
+     C**from*TRAILER                                                                        MD061007
+     C**into:*TRAIL                                                                         MD061007
+     C*end-exec*                                                                            MD061007
+      **********                                                                            MD061007
+     C**********         DOW       SQLcode <> 100                                           MD061007
+      **********                                                                            MD061007
+      ***process all records until SDFCSDTD is found ..                                     MD061007
+      **********                                                                            MD061007
      C                   EVAL      RINSER = AHNOIN
      C                   EVAL      RAMEND = AHNOAM
      C                   EVAL      RDELET = AHNODL
      C                   EVAL      RAUDIT = AHNORC
      C                   EVAL      RCOUNT = WNoRec
 
-     C/Exec SQL
-     C+ fetch next
-     C+ from TRAILER
-     C+ into :TRAIL
-     C/end-exec
-
-     C                   ENDDO
-
-      ** Handle SQL Error (if not %EOF)
-
-     C                   If        SQLCode < 100
-
-     C     *LOCK         IN        LDA
-     C                   EVAL      DBASE = 5
-     C                   EVAL      DBFILE = 'SQL STM'
-     C                   EVAL      DBKEY = 'SQLSTT : ' + SQLSTT
-     C                                   + ';  SQLCOD : ' + %char(SQLCOD)
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-
-     C                   EndIf
-
-     C/EXEC SQL
-     C+  CLOSE TRAILER
-     C/END-EXEC
+     C*Exec*SQL*                                                                            MD061007
+     C**fetch*next                                                                          MD061007
+     C**from*TRAILER                                                                        MD061007
+     C**into*:TRAIL                                                                         MD061007
+     C*end-exec*                                                                            MD061007
+      **********                                                                            MD061007
+     C**********         ENDDO                                                              MD061007
+      **********                                                                            MD061007
+      ***Handle*SQL Error (if not %EOF)                                                     MD061007
+      **********                                                                            MD061007
+     C**********         If        SQLCode < 100                                            MD061007
+      **********                                                                            MD061007
+     C******LOCK         IN        LDA                                                      MD061007
+     C**********         EVAL      DBASE = 5                                                MD061007
+     C**********         EVAL      DBFILE = 'SQL STM'                                       MD061007
+     C**********         EVAL      DBKEY = 'SQLSTT : ' + SQLSTT                             MD061007
+     C**********                         + ';  SQLCOD : ' + %char(SQLCOD)                   MD061007
+     C**********         OUT       LDA                                                      MD061007
+     C**********         EXSR      *PSSR                                                    MD061007
+      **********                                                                            MD061007
+     C**********         EndIf                                                              MD061007
+      **********                                                                            MD061007
+     C*EXEC*SQL*                                                                            MD061007
+     C***CLOSE*TRAILER                                                                      MD061007
+     C*END-EXEC*                                                                            MD061007
 
      C                   IF        RCOUNT <> RAUDIT
      C                   EVAL      *IN25 = *On

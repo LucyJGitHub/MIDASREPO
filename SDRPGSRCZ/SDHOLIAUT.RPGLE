@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027191           Date 26May14               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027191           Date 26May14               *
       *                 AR696350           Date 16May14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027191 - Database error occurrs when authorising a new     *
       *             holiday calendar.                                 *
@@ -43,36 +45,36 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDHOLL0   UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas SD Holiday Details Update index
- 
+
      FSDHOLL1   IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Holiday Details Retrieval index
- 
+
      FSDHOSHL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas SD Holiday Details Shadow file Update
- 
+
      FSDHOSHL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDHOSHD0:SDHOSHAU)
       ** Midas SD Holiday Details Shadow file Retrieve
- 
-     FSDFCTLL0  UF A E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+
+     F*SDFCTLL0* UF A E           K DISK    INFSR(*PSSR)                                    MD061007
+     F**********                           COMMIT                                           MD061007
       ** Midas SD Standing Data Controls
- 
+
      FSDAULGL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Authorisation Log - by Key (Rtv)
- 
+
      FSDAULGL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDAULGD0:SDAULGD1)
      F                                     COMMIT
       ** Midas SD Authorisation Log - by Key (Upd)
- 
+
      F/COPY WNCPYSRC,SDHOLIF001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -91,66 +93,66 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Fisrt DS for Access Programs, Short Data Structure
- 
+
      D @1DBRC        E DS                  EXTNAME(SDHOLPD)
       * UPD : Extended Settlements update
- 
+
      D #1DBRC        E DS                  EXTNAME(SDHOLPD) PREFIX(#)
       * Stored shadow file format fields
- 
+
      D UBA             DS          5000
       **  1st Record format
      D  MAIN1                              LIKE(@1DBRC)
      D/COPY WNCPYSRC,SDHOLID001
- 
+
      D UPA             DS          5000
       **  2nd Record format
      D  MAIN2                              LIKE(@1DBRC)
      D/COPY WNCPYSRC,SDHOLID002
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WUDELR          DS
      D  WUDR01                 1    250
      D  WUDR02               251    500
@@ -164,7 +166,7 @@
      D  WUDR00              2251   2500
      D  WUDR11              2501   2750
      D  WUDR12              2751   3000
- 
+
      D PBRC            DS          3064
       * RCD : Midas SD Deleted records file retrieval
       * I :  File name
@@ -199,7 +201,7 @@
      D  PBLCD               3061   3063P 0
       * I :  Type of Last Change
      D  PBTYLC              3064   3064
- 
+
      D PKEY            DS
      D  PCYCD                  1      3
      D  PLCCD                  4      6
@@ -207,15 +209,22 @@
       *
      D @RUN            S              1
      D CPY2@           S             80
- 
+
      D RUNDAT          DS            13
      D  RDNB                   8     10P 0
- 
+
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
      C
@@ -225,11 +234,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Access record from authorisation log
      C     PKEY          CHAIN     SDAULGL0                           80
       *
@@ -241,11 +250,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     PCYCD         KCYCD
      C                   MOVEL     PLCCD         KLCCD
      C                   MOVEL     PYRNB         KYRNB
- 
+
       ** Access original record details from from master file
      C                   MOVE      *BLANKS       UBA
       *
@@ -262,7 +271,7 @@
      C                   ELSE
      C                   MOVE      @1DBRC        MAIN1
      C                   ENDIF
- 
+
       ** Access record to be authorised from shadow file
      C                   MOVE      *BLANKS       UPA
       *
@@ -275,11 +284,11 @@
      C                   MOVE      *BLANKS       UBA
      C                   MOVE      @1DBRC        MAIN1
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SDHOLIC002
- 
+
       ** Call program SDAUTHCMP to display differences
- 
+
      C                   CALLB     'SDAUTHCMP'
      C                   PARM      *BLANKS       RETCODE
      C                   PARM      'SDHOLPD'     FILE             10
@@ -293,27 +302,27 @@
      C                   PARM                    @INKI             1
      C                   PARM                    @INKJ             1
      C                   PARM                    @INKL             1
- 
+
       * Exit program if Enquire or F3 or F12
      C                   IF        PACTN = 'E' OR @INKC = '1' OR @INKL = '1'
      C                   MOVEL     RETCODE       ERRMSG
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       * Authorise Requested
      C                   IF        @INKI = '1'
      C                   EXSR      SRUpdate
      C                   EXSR      SRDelete
      C                   ENDIF
- 
+
       * Delete Requested
      C                   IF        @INKJ = '1'
      C                   EXSR      SRDelete
      C                   ENDIF
- 
+
       ** If There were any Errors in the Update functions, Rollback any
       ** updates and end this program, otherwise, Commit the updates
- 
+
      C                   IF        ERRMSG = *BLANKS
      C                   COMMIT
       *
@@ -332,7 +341,7 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRDelete      BEGSR
- 
+
       ** Delete record from Audit Log
      C     PKEY          CHAIN     SDAULGL1                           80
       *
@@ -343,20 +352,20 @@
      C                   MOVEL     PKEY          DBKEY
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   DELETE    SDAULGD1
      C                   ENDIF
- 
+
       ** Delete record from Shadow file
      C     KKEY1         CHAIN     SDHOSHL0                           80
       *
      C                   IF        *IN80 = '0'
      C                   DELETE    SDHOSHD0
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SDHOLIC003
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -366,13 +375,13 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRUpdate      BEGSR
- 
+
       ** If action is 'D', Delete record.
       ** --------------------------------
- 
+
      C                   IF        ALACTN = 'D'
      C     KKEY1         CHAIN     SDHOLL0                            80
- 
+
      C                   IF        *IN80 = '1'
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDHOLPD'     DBFILE
@@ -380,7 +389,7 @@
      C                   MOVEL     PKEY          DBKEY
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   DELETE    @HOLPHG
       *
@@ -388,14 +397,14 @@
      C                   EXSR      SRStdCtl
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If action is 'I', Insert record.
       ** --------------------------------
- 
+
      C                   IF        ALACTN = 'I'
      C                   Z-ADD     0             DGEACC                                     MD027191
      C     KKEY1         CHAIN     SDHOSHL0                           80
- 
+
      C                   IF        *IN80 = '1'
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDHOSHPD'    DBFILE
@@ -403,7 +412,7 @@
      C                   MOVEL     PKEY          DBKEY
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   EVAL      DGEACC = *ZERO                                           AR696350
      C                   WRITE     @HOLPHG
@@ -411,21 +420,21 @@
      C                   EXSR      SRStdCtl
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If action is 'A', Update record.
       ** --------------------------------
- 
+
  B1  C                   IF        ALACTN = 'A'
      C     KKEY1         CHAIN     SDHOSHL0                           80
- 
+
  B2  C                   IF        *IN80 = '0'
- 
+
       ** Hold shadow record image
      C                   MOVEL     *BLANKS       #1DBRC
      C                   MOVEL     @1DBRC        #1DBRC
      C                   MOVEL     *BLANKS       @1DBRC
      C     KKEY1         CHAIN     SDHOLL0                            80
- 
+
  B3  C                   IF        *IN80 = '1'
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDHOLL0'     DBFILE
@@ -433,7 +442,7 @@
      C                   MOVEL     PKEY          DBKEY
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
  X3  C                   ELSE
       ** Replace values with shadow record image
      C                   MOVEL     *BLANKS       @1DBRC
@@ -443,11 +452,11 @@
      C                   EXSR      SRStdCtl
  E3  C                   ENDIF
  E2  C                   ENDIF
- 
+
  E1  C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SDHOLIC004
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -499,7 +508,24 @@
       *
      C                   MOVE      *BLANKS       WKFLNM           10
      C                   MOVEL     'SDHOLPD'     WKFLNM
-     C     WKFLNM        CHAIN     @AHREAU                            9899
+     C*****WKFLNM        CHAIN     @AHREAU                            9899                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      WKFLNM        AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       9899                  MD061007
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061007
+     C                   SETON                                        98                    MD061007
+     C                   ENDIF                                                              MD061007
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061007
+     C                   SETON                                        99                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
       *
       * Record not found
      C     *IN98         IFEQ      '1'
@@ -537,7 +563,16 @@
      C                   EVAL      AHNODL = (AHNODL + 1)
      C                   ENDSL
       *
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
       *
      C                   ENDSR
       /EJECT
@@ -548,15 +583,15 @@
       * Calls    : None                                               *
       *****************************************************************
      C     SREnd         BEGSR
- 
+
       ** Terminate program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       ** Exit program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -566,13 +601,13 @@
       *  Calls    :                                                   *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Set up copyright parameter
- 
+
      C                   MOVEA     CPY@          CPY2@
- 
+
       ** Receive entry parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RETCODE           7
      C**********         PARM                    PKEY             20                          CGL029
@@ -581,30 +616,30 @@
      C                   PARM                    ERRMSG            7
       ** Command Keys
      C                   PARM                    @INKC
- 
+
       ** Define LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'SDHOLIAUT'
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY =  *BLANKS
      C                   OUT       LDA
- 
+
       ** Get Rundate - Rundate
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
      C                   Z-ADD     RDNB          WURDNB            5 0
- 
+
       ** Define Key list
- 
+
      C     KKEY1         KLIST
      C                   KFLD                    KCYCD             3
      C                   KFLD                    KLCCD             3
      C                   KFLD                    KYRNB             4
       *
      C/COPY WNCPYSRC,SDHOLIC001
- 
+
      C                   ENDSR
       /EJECT
       ********************************************************************

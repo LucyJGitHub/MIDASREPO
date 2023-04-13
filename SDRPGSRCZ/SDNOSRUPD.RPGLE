@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD048898           Date 11Dec17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 30May14               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD048898 - Files not updating. Correct Parameters            *
       *  MD038440 - Nostro deletion issue. Revised validation process *
@@ -45,8 +47,8 @@
      F                                     INFSR(*PSSR)
       * Midas SD Nostro Code Details Master File
 
-     FSDFCTLL0  UF A E           K DISK    COMMIT
-     F                                     INFSR(*PSSR)
+     F*SDFCTLL0* UF A E           K DISK    COMMIT                                          MD061007
+     F**********                           INFSR(*PSSR)                                     MD061007
       * Midas SD Standing Data Controls index
 
      FRSACMTL8  IF   E           K DISK                                                     AR920354
@@ -216,6 +218,13 @@
      D Key10           S             10    Inz                                                CDL094
      D x               S              3U 0                                                    CDL094
 
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       /EJECT
       *****************************************************************
       *                                                               *
@@ -801,7 +810,24 @@
       *
      C                   MOVE      *BLANKS       WKFLNM           10
      C                   MOVEL     'SDNOSTPD'    WKFLNM
-     C     WKFLNM        CHAIN     @AHREAU                            9899
+     C*****WKFLNM        CHAIN     @AHREAU                            9899                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      WKFLNM        AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       9899                  MD061007
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061007
+     C                   SETON                                        98                    MD061007
+     C                   ENDIF                                                              MD061007
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061007
+     C                   SETON                                        99                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
       *
       * Record not found
      C     *IN98         IFEQ      '1'
@@ -834,7 +860,16 @@
      C                   EVAL      AHNORC = (AHNORC - 1)
      C                   EVAL      AHNODL = (AHNODL + 1)
      C                   ENDSL
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
       *
      C                   ENDSR
      C****************************************************************

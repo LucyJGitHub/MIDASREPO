@@ -69,7 +69,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD061258 - Previous generated BR events were deleted in      *
-      *             LOAC enquiry. Skip history deletion if ANWD run   *
+      *             LOAC enquiry. Process history deletion if COB     *
+      *             program runs on a non-ANWD and non-PDP component. *
+      *             Skip deletion if rollover date = interest date.   *
       *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
       *             Backward-Looking Rate                             *
       *  MD060560 - After a spread change and a base rate code change *
@@ -307,7 +309,7 @@
      ISDBANK    E DSSDBANKPD
       *
      ISDGELR    E DSSDGELRPD                                                                MD061258
-      **  EXTERNAL DS FOR GENERAL LEDGER DETAILS                                            MD061258
+      **  External DS for General Ledger Details                                            MD061258
      ISDBSRT    E DSSDBSRTPD                300                                             CLE075BI
      ISCSARD    E DSSCSARDPD                                              CLE004
       ** SAR File Details Accessed via Access Program AOSARDR0            CLE004
@@ -367,7 +369,8 @@
       *                                                                                     MD060441
       ** Check if there is a change in ARR parm                                             MD060441
      C                     MOVE *BLANKS   WARRP   1                                         MD060441
-     C                     MOVE ' '       WNEWBC  1                                         MD061258
+     C                     MOVE *BLANKS   WNEWBC  1                                         MD061258
+     C                     Z-ADD0         C3                                                MD061258
       *                                                                                     MD060441
      C           CLE172    IFEQ 'Y'                                                         MD060441
      C           RECI      ANDEQ'D'                                                         MD060441
@@ -389,26 +392,25 @@
      C           DBAV      ORNE NDBAV                                                       MD060441
      C                     MOVE 'Y'       WARRP                                             MD060441
      C                     ENDIF                                                            MD060441
-      *                                                                                     MD061258
+      ** Skip deletion if rollover date (with ARR parameter changes)                        MD061258
+      ** falls on an interest date                                                          MD061258
      C           WARRP     IFEQ 'Y'                                                         MD061258
      C           RLDT      ANDEQNIDT                                                        MD061258
      C           REPT      ANDEQ2                                                           MD061258
      C           WARRP     OREQ 'Y'                                                         MD061258
      C           RLDT      ANDEQNRPD                                                        MD061258
      C           REPT      ANDNE2                                                           MD061258
-     C                     MOVE ' '       WARRP                                             MD061258
-      *                                                                                     MD061258
-     C           BJDNWD    SUB  1         WACDT   50                                        MD061258
-     C           BKAPDT    IFLT WACDT                                                       MD061258
-     C                     MOVE BKAPDT    WACDT                                             MD061258
+     C                     MOVE *BLANKS   WARRP                                             MD061258
      C                     ENDIF                                                            MD061258
-     C           RLDT      IFLE WACDT                                                       MD061258
+      ** Deletion required if rollover changes the base rate code                           MD061258
+      ** (backward-looking to another backward-looking)                                     MD061258
+     C           RLDT      IFLE WEVCD                                                       MD061258
      C           BRTT      ANDNENBRA                                                        MD061258
      C                     MOVE 'Y'       WNEWBC                                            MD061258
      C                     ENDIF                                                            MD061258
-     C                     ENDIF                                                            MD061258
      C                     ENDIF                                                            MD060441
       ** If forward to backward or there is a change in ARR parm                            MD060441
+      ** Or a new base rate code is defined at rollover                                     MD061258
      C           BLRT      IFNE 'Y'                                                         MD060441
      C           NBLRT     ANDEQ'Y'                                                         MD060441
      C           WARRP     OREQ 'Y'                                                         MD060441
@@ -953,6 +955,11 @@
      C                     MOVEL@RTCD     DBKEY                                             MD061258
      C                     EXSR AUDPRT                                                      MD061258
      C                     EXSR *PSSR                                                       MD061258
+     C                     ENDIF                                                            MD061258
+      *                                                                                     MD061258
+     C           BJDNWD    SUB  1         WEVCD   50                                        MD061258
+     C           BKAPDT    IFLE WEVCD                                                       MD061258
+     C                     MOVE BKAPDT    WEVCD                                             MD061258
      C                     ENDIF                                                            MD061258
       *                                                                   CLE004
       ** Determine if Customer Lending Enhancements - Syndications        CLE004

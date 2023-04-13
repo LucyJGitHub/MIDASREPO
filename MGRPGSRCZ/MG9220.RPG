@@ -16,8 +16,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD029017           Date 25Nov14               *
+      *  Last Amend No. MD024895B          Date 13Apr23               *
+      *  Prev Amend No. MD022051           Date 13Apr23               *
+      *                 MD024895A          Date 13Apr23               *
+      *                 MD024895           Date 13Apr23               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD029017           Date 25Nov14               *
       *                 MD022051           Date 04Sep13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +36,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024895B - Do not skip when message is found.               *
+      *  MD022051 - Action canceL_MT360 for counterparty_field tag 21 *
+      *             is incorrect                                      *
+      *  MD024895A - Reverse all messages regardless of status.       *
+      *  MD024895 - Reverse all messages when deal is reversed.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029017 - Tag 22A value is AMND instead of NEWT             *
       *  MD022051 - Action canceL_MT360 for counterparty_field tag 21 *
@@ -133,11 +142,13 @@
       ** message found indicator is off
       *
      C           *IN75     DOWEQ'0'
-     C           *IN76     ANDEQ'0'
+     C********** *IN76     ANDEQ'0'                                                        MD024895B
      C           P#TRNO    ANDEQTRNO#N
      C           MTRN      ANDEQWMTRN                                                       MD029017
       *
-     C           MTPY      IFEQ P#MTYP
+     C********** MTPY      IFEQ P#MTYP                                                      MD024895
+     C                     MOVE MTPY      CANC    2                                         MD024895
+     C           CANC      IFNE '92'                                                        MD024895
       *
      C                     EXSR SRCALL
      C           P#RTCD    IFEQ 'C'
@@ -192,18 +203,18 @@
      C                     EXSR *PSSR
      C                     END
       *
-     C           BGCFMT    IFEQ 'Y'
-     C           MTPY      ANDEQ'340'
-     C           BGCFMT    OREQ 'Y'
-     C           MTPY      ANDEQ'341'
-      *                                                                   CCF003
-      ** Also, generate cancellation message for message types            CCF003
-      ** '360' and '361 if CCF003 switchable feature is on                CCF003
-      *                                                                   CCF003
-     C           CCF003    OREQ 'Y'                                       CCF003
-     C           MTPY      ANDEQ'360'                                     CCF003
-     C           CCF003    OREQ 'Y'                                       CCF003
-     C           MTPY      ANDEQ'361'                                     CCF003
+     C********** BGCFMT    IFEQ 'Y'                                                        MD024895A
+     C********** MTPY      ANDEQ'340'                                                      MD024895A
+     C********** BGCFMT    OREQ 'Y'                                                        MD024895A
+     C********** MTPY      ANDEQ'341'                                                      MD024895A
+      *****************************************************************             CCF003 MD024895A
+      ***Also,*generate*cancellation*message*for*message*types*********             CCF003 MD024895A
+      ***'360'*and*'361*if*CCF003*switchable*feature*is*on*************             CCF003 MD024895A
+      *****************************************************************             CCF003 MD024895A
+     C********** CCF003    OREQ 'Y'                                                 CCF003 MD024895A
+     C********** MTPY      ANDEQ'360'                                               CCF003 MD024895A
+     C********** CCF003    OREQ 'Y'                                                 CCF003 MD024895A
+     C********** MTPY      ANDEQ'361'                                               CCF003 MD024895A
       *
      C                     CALL 'MG9210'               78
      C                     PARM           TRNO
@@ -229,14 +240,14 @@
      C                     EXSR *PSSR
      C                     END
       *
-     C                     ENDIF
+     C**********           ENDIF                                                           MD024895A
       *
      C                     ENDIF
       *
      C           MGSG      IFEQ '2'
      C           MGSG      OREQ '3'
      C                     MOVE 'C'       P#RTCD
-     C                     MOVE '1'       *IN76
+     C**********           MOVE '1'       *IN76                                            MD024895B
      C                     ENDIF
       *
      C                     ENDSR

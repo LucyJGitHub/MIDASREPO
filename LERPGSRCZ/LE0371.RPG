@@ -69,8 +69,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD061258 - Previous generated BR events were deleted in      *
-      *             LOAC enquiry. Skip history deletion if roll over  *
-      *             date is greater than accrual profit date          *
+      *             LOAC enquiry. Skip history deletion if ANWD run   *
       *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
       *             Backward-Looking Rate                             *
       *  MD060560 - After a spread change and a base rate code change *
@@ -368,20 +367,13 @@
       *                                                                                     MD060441
       ** Check if there is a change in ARR parm                                             MD060441
      C                     MOVE *BLANKS   WARRP   1                                         MD060441
+     C                     MOVE ' '       WNEWBC  1                                         MD061258
       *                                                                                     MD060441
      C           CLE172    IFEQ 'Y'                                                         MD060441
      C           RECI      ANDEQ'D'                                                         MD060441
      C           RLDT      ANDGT*ZERO                                                       MD060441
-      *                                                                                     MD061258
-     C           RLDT      IFLE BKAPDT                                                      MD061258
-     C           NIDT      ANDEQRLDT                                                        MD061258
-     C           REPT      ANDEQ2                                                           MD061258
-     C           RLDT      ORLE BKAPDT                                                      MD061258
-     C           NRPD      ANDEQRLDT                                                        MD061258
-     C           REPT      ANDEQ1                                                           MD061258
-     C           RLDT      ORLE BKAPDT                                                      MD061258
-     C           NRPD      ANDEQRLDT                                                        MD061258
-     C           REPT      ANDEQ3                                                           MD061258
+     C           *INU3     ANDEQ*OFF                                                        MD061258
+     C           WPNAM     ANDEQ*BLANKS                                                     MD061258
       *                                                                                     MD060441
      C           BLRT      IFEQ 'Y'                                                         MD060441
      C           NBLRT     ANDEQ'Y'                                                         MD060441
@@ -397,11 +389,30 @@
      C           DBAV      ORNE NDBAV                                                       MD060441
      C                     MOVE 'Y'       WARRP                                             MD060441
      C                     ENDIF                                                            MD060441
+      *                                                                                     MD061258
+     C           WARRP     IFEQ 'Y'                                                         MD061258
+     C           RLDT      ANDEQNIDT                                                        MD061258
+     C           REPT      ANDEQ2                                                           MD061258
+     C           WARRP     OREQ 'Y'                                                         MD061258
+     C           RLDT      ANDEQNRPD                                                        MD061258
+     C           REPT      ANDNE2                                                           MD061258
+     C                     MOVE ' '       WARRP                                             MD061258
+      *                                                                                     MD061258
+     C           BJDNWD    SUB  1         WACDT   50                                        MD061258
+     C           BKAPDT    IFLT WACDT                                                       MD061258
+     C                     MOVE BKAPDT    WACDT                                             MD061258
+     C                     ENDIF                                                            MD061258
+     C           RLDT      IFLE WACDT                                                       MD061258
+     C           BRTT      ANDNENBRA                                                        MD061258
+     C                     MOVE 'Y'       WNEWBC                                            MD061258
+     C                     ENDIF                                                            MD061258
+     C                     ENDIF                                                            MD061258
      C                     ENDIF                                                            MD060441
       ** If forward to backward or there is a change in ARR parm                            MD060441
      C           BLRT      IFNE 'Y'                                                         MD060441
      C           NBLRT     ANDEQ'Y'                                                         MD060441
      C           WARRP     OREQ 'Y'                                                         MD060441
+     C           WNEWBC    OREQ 'Y'                                                         MD061258
       ** Retrieve check date                                                                MD060441
      C                     Z-ADDRLDT      WRLDT   50                                        MD060441
      C           LNRF      SETLLLELIBEL0                                                    MD060441
@@ -442,7 +453,6 @@
      C                     ENDIF                                                            MD060441
      C                     ENDIF                                                            MD060441
      C                     ENDIF                                                            MD060441
-     C                     ENDIF                                                            MD061258
      C                     ENDIF                                                            MD060441
       *
       * Need live rec with rollover date < start last interest date.

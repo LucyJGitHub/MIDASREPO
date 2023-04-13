@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059243A          Date 09Dec21               *
-      *  Prev Amend No. MD059234           Date 08Nov21               *
+      *  Last Amend No. MD060920           Date 09Feb23               *
+      *  Prev Amend No. MD059243A          Date 09Dec21               *
+      *                 MD059234           Date 08Nov21               *
       *                 MD059146           Date 29Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058285           Date 22Jun21               *
@@ -44,6 +45,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060920 - FRA/IRS: incorrect reflection of interest in      *
+      *             assets and liabilities for CAPS/Coll/Floor.       *
+      *           - Condition the floor/ceiling rate when calculating *
+      *             the accrued interest. Also, system should display *
+      *             the correct side (OUR/THEIR) of deal's interest   *
+      *             details.                                          *
       *  MD059243A - Allow the amendment of Spread Rate and Spread    *
       *              Indicator is feature CIR020 is swicthed on       *
       *  MD059234 - Unable to amend base rate code due to Rates Known *
@@ -503,7 +510,8 @@
 
      C                   IF        CrDTYP = 'RP' AND CrBYSL = 'B' OR
      C                             CrDTYP = 'RR' AND CrBYSL = 'B' OR
-     C                             CrDTYP = 'RF' AND CrBYSL = 'S'
+     C**********                   CrDTYP = 'RF' AND CrBYSL = 'S'                           MD060920
+     C                             CrDTYP = 'RF' AND CrBYSL = 'B'                           MD060920
      C                   EVAL      WSide = 'T'
      C                   ELSE
      C                   EVAL      WSide = 'U'

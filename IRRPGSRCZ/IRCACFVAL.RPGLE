@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059246           Date 20Dec21               *
-      *  Prev Amend No. MD059133           Date 10Nov21               *
+      *  Last Amend No. MD060920           Date 09Feb23               *
+      *  Prev Amend No. MD059246           Date 20Dec21               *
+      *                 MD059133           Date 10Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD051346           Date 17Jul18               *
@@ -58,6 +59,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060920 - FRA/IRS: incorrect reflection of interest in      *
+      *             assets and liabilities for CAPS/Coll/Floor.       *
+      *           - Condition the floor/ceiling rate when calculating *
+      *             the accrued interest. Also, system should display *
+      *             the correct side (OUR/THEIR) of deal's interest   *
+      *             details.                                          *
       *  MD059246 - Short term rate become 0 after cob                *
       *  MD059133 - Prohibit the use of backward looking rate if      *
       *             CIR020 is switched off                            *
@@ -1730,7 +1737,8 @@
      C                   IF        MsgID1 = *BLANKS
      C                   IF        #0DTYP = 'RP' AND #0BYSL = 'B' OR
      C                             #0DTYP = 'RR' AND #0BYSL = 'B' OR
-     C                             #0DTYP = 'RF' AND #0BYSL = 'S'
+     C**********                   #0DTYP = 'RF' AND #0BYSL = 'S'                           MD060920
+     C                             #0DTYP = 'RF' AND #0BYSL = 'B'                           MD060920
      C                   EVAL      WOurTheir = 'T'
      C                   ELSE
      C                   EVAL      WOurTheir = 'O'

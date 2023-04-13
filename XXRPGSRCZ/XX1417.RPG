@@ -1,0 +1,127 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas xx I/O Account Code List')                       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - I/O RECONCILE                                        *
+     F*                                                               *
+     F*  XX1417 - I/O ACCOUNT CODES LIST                              *
+     F*                                                               *
+     F*  (C) Finastra International Limited 2021                      *
+     F*                                                               *
+     F*  Last Amend No. EML114   *CREATE   Date 23Sep21               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  EML114 - Upgrade TFJ004 to FM2.1                             *
+     F*  TFJ004 - Inter-office Reconcile                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FXXACODL1IP  E           K        DISK
+     FSDACODL0IF  E           K        DISK
+      *
+     FXX1417P1O   F     132     OF     PRINTER
+     F*
+      *****************************************************************
+     I*
+     I@BANK     E DSSDBANKPD
+     I** DUMMY RECORD FORMAT FOR BANK DETAILS
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     C*****************************************************************
+     C*
+     C   11                SETOF                     11
+     C  N10                EXSR #INIT
+     C  N10                SETON                     1011
+     C*
+     C                     SETOF                     30
+     C*
+     C           RECI      CABNE'D'       #END
+     C*
+     C                     MOVE IOACOD    WKACOD 10
+     C           WKACOD    CHAINSDACODL0             89
+     C  N89      A5TYLC    COMP 'D'                      89
+     C*
+     C           *IN89     IFEQ '1'
+     C                     MOVE *BLANK    WKACSC  2
+     C                     MOVE *BLANK    WKACCN 25
+     C                     ELSE
+     C                     MOVE A5ACSC    WKACSC
+     C                     MOVELA5ACCN    WKACCN
+     C                     END
+     C*
+     C                     SETON                     30
+     C*
+     C           #END      TAG
+     C*
+     C********************************************************************
+     C           #INIT     BEGSR
+     C*
+     C** CALL ACCESS PROGRAM FOR BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE 10         *************
+     C                     MOVEL'01'      DBASE   3         *DBERROR 001*
+     C                     MOVEL@OPTN     DBOPTN  7         *************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     OXX1417P1H   02   11
+     O       OR        OF
+     O                                   15 'REFERENCE'
+     O                                   24 'XX1417P1'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   113
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        H 1      11
+     O       OR        OF
+     O                                   60 'I/O ACCOUNT CODES LIST'
+     O        H 1      11
+     O       OR        OF
+     O                                   60 '----------------------'
+     O        H 2      11
+     O       OR        OF
+     O                                   10 'A/C CODE'
+     O                                   20 'SECTION'
+     O                                   36 'A/C CODE NAME'
+     O                                   60 'RECORD TYPE'
+     O                                   71 'ALT. A/C'
+     O                                   83 'H/O CUST.'
+     O                                   95 'I/O CUST.'
+     O        H 1      11
+     O       OR        OF
+     O                                   20 '--------------------'
+     O                                   40 '--------------------'
+     O                                   60 '--------------------'
+     O                                   80 '--------------------'
+     O                                  100 '--------------------'
+     O                                  120 '--------------------'
+     O                                  132 '------------'
+     O        D 1      30
+     O                         IOACOD    10
+     O                         WKACSC    17
+     O                         WKACCN    48
+     O                         RECTYP    54
+     O                         ALTAC     69
+     O                         HCNUM1    80
+     O                         IOCUSF    90
+     O                 89               116 '*** A/C CODE NOT ON'
+     O                 89               132 'MIDAS TABLE ***'
+     O        T 3      LR
+     O                                   70 '*** END OF REPORT ***'

@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. EML104             Date 04Feb20               *
+      *  Prev Amend No. EML102             Date 28Nov19               *
+      *                 CSD103             Date 10Aug20               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 CMG009             Date 24Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -48,6 +50,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade of EML010 to FBM2.1 SP23                    *
+      *           EML010 - Structured field :86:                      *
+      *           Add Hooks: EML104_035 EML104_036                    *
+      *  EML102 - Upgrade of UNL007, EML004 to FB2.1 SP21             *
+      *           EML004 - Extended Narrative                         *
+      *           Add Hooks: EML102_015 EML102_016 EML102_017         *
+      *                      EML102_018                               *
+      *           BUG25009 - No MT942 produced on manual request      *
+      *           UNL007 - Extended Narratives                        *
+      *           Add Hooks: GL00141601 GL00141602 GL00141603         *
+      *                      GL00141604                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
@@ -110,6 +123,7 @@
      FOTPAY     IF   E           K DISK                      INFSR(*PSSR)                   BUG22558
       ** Midas FT Outgoing Payments Transactions.                                           BUG22558
 
+      /COPY WNCPYSRC,GL00141601                                                               EML102
      FGLPOSTPD  O  A E             DISK    COMMIT            INFSR(*PSSR)
       ** Midas GL Postings for MT94x Messages.
      F                                     PREFIX(GL)
@@ -211,6 +225,7 @@
                                                                                               CRE008
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SS)                       CRE008
       **  Data Structure for Switchable features descriptions.                                CRE008
+     D/COPY WNCPYSRC,EML104_035                                                               EML104
 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  First DS for access programs, long data structure.
@@ -237,6 +252,7 @@
      D    TrSPOS                      7    OVERLAY(TransType:*NEXT)             Source of Posting
      D      TrFiller4                 1    OVERLAY(TransType:*NEXT)
      D    TrDescrip                  34    OVERLAY(TransType:*NEXT)             Description
+     D/COPY WNCPYSRC,EML102_016                                                               EML102
 
      D                 DS
       ** Data Structure to retrieve the Batch Number and the Item Number
@@ -282,6 +298,7 @@
      D PRCGLPN         S              1                                         UpdGLPOSTPD MD032299
      D PRCRSMN         S              1                                         UpdGLRSACPD MD032299
      D CMG009          S              1                                         CMG009 flag   CMG009
+      /COPY WNCPYSRC,GL00141602                                                               EML102
       ** Input Specs
       ** -----------
 
@@ -348,6 +365,7 @@
       ** Load Posting fields
 
      C                   EXSR      $LoadFld
+     C/COPY WNCPYSRC,EML102_017                                                               EML102
 
      C                   ENDIF
 
@@ -680,6 +698,7 @@ e1   C                   Endsl                                                  
      C                   EVAL      GLMGADI6 = BAADI6                            Additional Inf. 6
      C                   EVAL      GLMGAERI = BAAERI                            ERI Indicator
      C                   ENDIF
+      /COPY WNCPYSRC,GL00141603                                                               EML102
      C                   ENDIF
      C/COPY WNCPYSRC,GLH00624
      C                   EVAL      GLMGNWRK = MRNWRK                            Network
@@ -720,6 +739,7 @@ e1   C                   Endsl                                                  
       *    ----------    -----
      C     @RtvPosNar    ENDSR
 
+     C/COPY WNCPYSRC,EML102_018                                                               EML102
       *========================================================================*
       * SRZSLOAD - Load Zero Blancing/Sweeping fld 61 details                  *              CRE008
       *------------------------------------------------------------------------*              CRE008
@@ -886,6 +906,8 @@ e1   C                   Endsl                                                  
      C                   IF        P@RTCD = *BLANKS                                           CMG009
      C                   EVAL      CMG009 = 'Y'                                               CMG009
      C                   ENDIF                                                                CMG009
+     C/COPY WNCPYSRC,EML104_036                                                               EML104
+                                                                                              EML104
       ** Key List to access Movements LF/RSACMTL2
 
      C     KeyMvnt       KLIST
@@ -918,11 +940,13 @@ e1   C                   Endsl                                                  
      C     KeyAddInf1    KLIST                                                              BUG23284
      C                   KFLD                    WBatchNb                                   BUG23284
      C                   KFLD                    WItemNb                                    BUG23284
+     C/COPY WNCPYSRC,EML102_015                                                               EML102
       ** Key List to access the Posting in Transit Extension file                             CRE008
                                                                                               CRE008
      C     KeyGLPZS      KLIST                                                                CRE008
      C                   KFLD                    XRFI                                         CRE008
      C                   KFLD                    XRFN                                         CRE008
+     C/COPY WNCPYSRC,GL00141604                                                               EML102
 
      C/COPY WNCPYSRC,GLH00402
       *    ------        -----

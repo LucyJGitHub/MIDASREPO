@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD029952           Date 30Apr15               *
+      *  Prev Amend No. AR763240           Date 05Jul11               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
       *                 AR1031825A         Date 09Jan13               *
       *                 MD048750           Date 27Mar18               *
@@ -53,6 +55,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD029952   - This is a Mizuho Touchpaper Reference. Use      *
+      *               Cleared balance rather than Ledger Balance on   *
+      *               Audit Letter                                    *
+      *  AR763240 - Use the Ledger balance on RE audit letters        *
+      *             regardless of statement frequency.                *
+      *             (Child: AR763241)                                 *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -703,14 +711,15 @@
      C                   MOVEL     'END_CLR '    #@RDE
      C     ##RDE         CAT       #@RDE:1       ##RDE
       *
-     C     STFQ          IFEQ      'E'
-     C                   MOVEL     LDBL          ##DATA
-      *
-      ** Forword statement balance
-      *
-     C                   ELSE
-     C                   MOVEL     CFSB          ##DATA
-     C                   END
+     C********** STFQ      IFEQ 'E'                                                         AR763240
+     C**********           MOVELLDBL      ##DATA                                            MD029952
+     C                   MOVEL     CLBL          ##DATA                                     MD029952
+      *****************************************************************                     AR763240
+      ***Forword*statement*balance*************************************                     AR763240
+      *****************************************************************                     AR763240
+     C**********           ELSE                                                             AR763240
+     C**********           MOVELCFSB      ##DATA                                            AR763240
+     C**********           END                                                              AR763240
       *
      C                   MOVEL     'Amount'      ##RDEC
      C                   MOVEL     'L'           ##RDET

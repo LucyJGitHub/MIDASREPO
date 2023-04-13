@@ -13,8 +13,10 @@
 /*                                                                   */                 /*CGL127AY*/
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD059147           Date 10Dec21              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. EML102B            Date 03Sep20              */
+/*       Prev Amend No. EML102             Date 28Nov19              */
+/*                      MD059147           Date 10Dec21              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD002850           Date 08Apr13              */
 /*                      CGL127AY           Date 06Aug12              */
 /*                      CCB020             Date 06Aug12              */
@@ -43,6 +45,17 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*  EML102B - Changes required due to TS processing                  */
+/*            (EML102 changes not required in CLP)                   */
+/*            Amendment of core hook GLC4450INT                      */
+/*            Amendment of core hook GLC4450MPS                      */
+/*            Amendment of core hook GLC4450MP1                      */
+/*            Amendment of core hook GLC4450MP2                      */
+/*            Amendment of core hook GLC4450MP3                      */
+/*  EML102 - Upgrade of UNL007 to FB2.1 SP23                         */
+/*  UNL007 - Extended Narratives                                     */
+/*           Use /COPY GLC4450INT, GLC4450MPS, GLC4450MP1,           */
+/*           GLC4450MP2, GLC4450MP3)                                 */
 /*       MD059147 - GLC4450 task split jobs timeout                  */
 /*                - Increase time wait from 900 to 1200.             */
 /*       MD046248 - Finastra Rebranding                              */

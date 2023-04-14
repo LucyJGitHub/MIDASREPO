@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD037251           Date 13Mar23               *
-      *  Prev Amend No. MD049864           Date 11Mar23               *
+      *  Last Amend No. MD046446           Date 14Apr23               *
+      *  Prev Amend No. MD037251           Date 13Mar23               *
+      *                 MD049864           Date 11Mar23               *
       *                 MD054313           Date 10Mar23               *
       *                 MD045018           Date 06Mar23               *
       *                 MD036339           Date 06Mar23               *
@@ -66,6 +67,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046446 - FLR0022 Encountered even with correct rate fix    *
+      *             day and value date input                          *
       *  MD037251 - Amendment of LDNI cause rate change to be skipped.*
       *  MD049864 - Amendment causes LDNI Rate to not reset           *
       *  MD054313 - FRN testing - it is possible to insert MM deal    *
@@ -662,6 +665,7 @@
      C                   EXSR      ValidRcfR                                                  CDL033
      C                   EXSR      ValidRcDt                                                  CDL033
      C                   EXSR      ValidRcDm                                                  CDL033
+     C                   EXSR      ValidFxDm                                                MD046446
      C**********         EXSR      ValidStRt                                         CDL033 BUG24317
      C                   EXSR      ValidStRt                                                AR851172
                                                                                             BUG10810
@@ -942,7 +946,7 @@
      C                   ENDIF                                                              BUG10810
                                                                                             BUG10810
      C                   IF        CDL033 = 'Y'                                             AR851172
-     C                   EXSR      ValidFxDm                                                  CDL033
+     C**********         EXSR      ValidFxDm                                         CDL033 MD046446
      C                   EXSR      ValidFYld                                                  CDL033
      C                   MOVE      'Y'           WValidOk                                     CDL033
      C                   ENDIF                                                              AR851172

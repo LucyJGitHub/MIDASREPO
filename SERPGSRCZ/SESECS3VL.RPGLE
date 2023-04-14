@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR641079           Date 04Apr23               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD027228           Date 13Apr23               *
+      *  Prev Amend No. AR641079           Date 04Apr23               *
+      *                 MD058285           Date 22Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR996842           Date 11Feb13               *
@@ -53,6 +54,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027228 - Incorrect Average life date validation due to     *
+      *             incorrect conversion of Maturity date within      *
+      *             this program. Get the correct Maturity date.      *
       *  AR641079 - Incorrect error message. Validate only the PB     *
       *             Instrument type field if PB is ON.                *
       *             Applied for AR872050.                             *
@@ -263,6 +267,9 @@
      D WkMATY          S              5  0                                                    CSE065
      D W#ITLD          S              6  0                                                    CSE065
      D W#MATY          S              6  0                                                    CSE065
+     D W#Yr            S              2  0                                                  MD027228
+     D W#WDate         S              8A                                                    MD027228
+     D W#WDateNum      S              8  0                                                  MD027228
                                                                                               CGL014
      D CGL014          S              1                                                       CGL014
                                                                                               232543
@@ -1015,6 +1022,19 @@
      c                   Else                                                                 CSE065
      c     *usa          Move      WDateIso      WDateIso#                                    CSE065
      c                   EndIf                                                                CSE065
+      *                                                                                     MD027228
+     C                   EVAL      W#WDate = *BLANKS                                        MD027228
+     C                   MOVE      WDateIso#     W#WDate                                    MD027228
+      *                                                                                     MD027228
+      ** Format of W#WDate is either mmddyyyy or ddmmyyyy                                   MD027228
+      ** If year date is 19nn, change it to 20nn.                                           MD027228
+      *                                                                                     MD027228
+     C                   EVAL      W#Yr = %DEC(%SUBST(W#WDate:5:2):2:0)                     MD027228
+     C                   IF        W#Yr = 19                                                MD027228
+     C                   EVAL      %SUBST(W#WDate:5:2)= '20'                                MD027228
+     C                   MOVE      W#WDate       W#WDateNum                                 MD027228
+     C                   MOVE      W#WDateNum    WDateISo#                                  MD027228
+     C                   ENDIF                                                              MD027228
                                                                                               CSE065
      C                   MOVE      WDateIso#     P@DAT1                                       CSE065
                                                                                               CSE065

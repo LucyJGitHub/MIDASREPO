@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD060883           Date 22Jan23               *
-      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *  Last Amend No. MD060441            Date 01Feb23              *
+      *  Prev Amend No. MD060883           Date 22Jan23               *
+      *                 MD058517           Date 17Oct22               *
       *                 MD060590           Date 04Oct22               *
       *                 MD059624           Date 20Jul22               *
       *                 MD059564           Date 14Feb22               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD060883 - Invalid rate displayed against the rate used      *
       *             in computing the the final interest.              *
       *             Compute for the interest rate using rate spread,  *
@@ -1398,7 +1401,8 @@
      C+ and CINFLG = 'Y'                                                                    MD058517
      C**********+ order by                                                                  MD058517
      C**********+     CINPDT asc                                                            MD058517
-     C+ union all                                                                           MD058517
+     C**********+ union all                                                        MD058517 MD060441
+     C+ union                                                                               MD058517
      C+ select                                                                              MD058517
      C+   FINPSD                                                                            MD058517
      C+ , FINPED                                                                            MD058517
@@ -1414,10 +1418,11 @@
      C+ , FSMPAV                                                                            MD058517
      C+ from SDFWDRTD T2                                                                    MD058517
      C+ where                                                                               MD058517
-     C+ not exists (                                                                        MD058517
-     C+ select * from SDHSDRTD T1                                                           MD058517
-     C+ where T1.CINPDT = T2.FINPDT )                                                       MD058517
-     C+ and FMODID = 'LE'                                                                   MD058517
+     C**********+ not exists (                                                     MD058517 MD060441
+     C**********+ select * from SDHSDRTD T1                                        MD058517 MD060441
+     C**********+ where T1.CINPDT = T2.FINPDT )                                    MD058517 MD060441
+     C**********+ and FMODID = 'LE'                                                MD058517 MD060441
+     C+     FMODID = 'LE'                                                                   MD060441
      C+ and FTRNID = :XXLNRF                                                                MD058517
      C+ order by                                                                            MD058517
      C+ CINPDT asc                                                                          MD058517

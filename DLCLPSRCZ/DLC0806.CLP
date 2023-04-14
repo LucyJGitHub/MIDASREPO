@@ -9,7 +9,8 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. EMP104             Date 22Apr20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,7 +18,7 @@
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CDL002             Date 22Sep97              */
+/*                      CDL002             Date 22Sep97              */
 /*                      S01433             Date 30Sep93              */
 /*                      E40459             DATE 04JUN92             */
 /*                      S01360             DATE 03MAR92             */
@@ -34,6 +35,11 @@
 /*                      S01105             DATE 22/09/86            */
 /*                                                                  */
 /*------------------------------------------------------------------*/
+/*       EMP104 - Remove FX/IRS exposures and limits                 */
+/*                (Upgrade NADC02 to FM2.1 SP23)                     */
+/*                Amendment of core hook DLC0806001                  */
+/*                Amendment of core hook DLC0806003                  */
+/*                Amendment of core hook DLC0806004                  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CDL002 - FX Netting. Set Switches for FX Net Event file     */
 /*                processing                                         */
@@ -311,7 +317,7 @@
 /***************                     TOMSGQ(MRUNQ)                    /*BHF934*/
 /***************         OVRDBF    FILE(TABLE) TOFILE(TABDLEE)        /*S01194*/
 /***************         CALL      PGM(DL0680)                        /*S01117*/
- 
+
 /*****       IF         COND(&RLEV *EQ 'S') THEN(CALL PGM(DL0681))    /*E108*/
 /*****             ELSE CMD(CALL PGM(DL0683) PARM(&RSEQ &RENT))/*S01117 E108*/
 /*****                   RTVJOBA   SWS(&SWS)                          /*E108*/

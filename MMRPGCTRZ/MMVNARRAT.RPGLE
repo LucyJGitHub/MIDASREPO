@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD057558           Date 18Feb21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. EML112             Date 23Feb21               *
+      *  Prev Amend No. MD057558           Date 18Feb21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML112   -Reference Rate field subject to tolerance          *
+      *            validation based on system value                   *
+      *            ReferenceRateTolChk                                *
+      *            Add /COPY EML112_009 EML112_010 EML112_011         *
+      *            EML112_012                                         *
       *  MD057558 - Set tolerance to 0 if no reference rate defined   *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL049 - Addition of a Reference Rate field                  *
@@ -121,6 +127,9 @@
      D RateIn          S             11  7
 
      D DSSDY         E DS                  EXTNAME(DSSDY)
+      *                                                                                       EML112
+     D/COPY WNCPYSRC,EML112_009                                                               EML112
+      *                                                                                       EML112
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -189,6 +198,9 @@
      C                   Z-ADD     *ZERO         UERRAT           13 8
       *
       **  Set Interest Tolerance
+      ** Only check FX Tolerance if ReferenceRateTolChk = 'Y'                                 EML112
+     C/COPY WNCPYSRC,EML112_011                                                               EML112
+      *                                                                                       EML112
       *
      C                   Eval      UERRAT = (IINRRT/100)
       *
@@ -205,6 +217,8 @@
      C                   EndIf
      C                   EndIf
       *
+     C/COPY WNCPYSRC,EML112_012                                                               EML112
+      *                                                                                       EML112
      C                   EndIf                                                  End Valid
      C                   EndIf                                                  End Blank
 
@@ -250,6 +264,9 @@
      C**********         EXSR      *PSSR                                                    MD057558
      C                   ENDIF
 
+      ** Retrieve system value ReferenceRateTolChk                                            EML112
+     C/COPY WNCPYSRC,EML112_010                                                               EML112
+      *                                                                                       EML112
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

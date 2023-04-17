@@ -14,11 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. EML104A            Date 27Oct20               *
-      *  Prev Amend No. EML104             Date 04Feb20               *
-      *                 EML102             Date 22Nov19               *
-      *                 223783 (Reopen)    Date 28May12               *
-      *                 223783             Date 28May12               *
+      *  Last Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Prev Amend No. 223783             Date 28May12               *
       *                 MD028250           Date 28Jul14               *
       *                 MD046248           Date 27Oct17               *
       *                 MD026965           Date 16May14               *
@@ -38,20 +35,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  EML104A- Recompiled due to changed EML102_021                *
-      *  EML104 - Upgrade of EML010 to FBM2.1 SP23                    *
-      *       EML010 - Structured field :86:                          *
-      *             Use hook: GLH00520                                *
-      *             Amend hooks: EML102_019 EML102_011 EML102_021     *
-      *                          EML102_013                           *
-      *             Add hooks: EML104_002 EML104_003                  *
-      *  EML102 - Upgrade of UNL007, EML004 to FB2.1 SP23             *
-      *       EML004 - Extended Narrative                             *
-      *             Add Hooks: EML102_019 EML102_020 EML102_021       *
-      *                        EML102_022                             *
-      *       UNL007 - Extended Narratives                            *
-      *             Add Hooks: EML102_010 EML102_011 EML102_012       *
-      *                        EML102_013                             *
       *  223783 - (Reopen)Applied for AR973615 (Child: AR973617)      *
       *           (Recompile)                                         *
       *  223783 - Use IBAN when formatting field 86.                  *
@@ -95,8 +78,6 @@
      FGLPOSTPD  O  A E             DISK    COMMIT         INFSR(*PSSR)
       ** Midas GL Postings for MT94x Messages.
  
-      /COPY WNCPYSRC,EML102_010                                                               EML102
-      *                                                                                       EML102
      FGLUCTLPD  UF A E             DISK    COMMIT         INFSR(*PSSR)
       ** Midas GL Update Control file.
      F/COPY WNCPYSRC,GLH00518
@@ -221,7 +202,6 @@
      D WORAMT                  1      7A
      D/COPY WNCPYSRC,GLH00403
  
-     D/COPY WNCPYSRC,EML102_019                                                               EML102
       ** Declared variables
       ** ------------------
  
@@ -247,7 +227,6 @@
       *                                                                                      CGL135A
       /COPY OFCPYSRCZ,CGL135_020                                                             CGL135A
       *                                                                                       CER030
-      /COPY WNCPYSRC,EML102_011                                                               EML102
  
       ** Input Specs
       ** -----------
@@ -436,14 +415,12 @@
       ** Manage the Additional Fields
  
      C                   EXSR      $AddInf
-     C/COPY WNCPYSRC,EML102_020                                                               EML102
  
       *  Load subfield 61 details if posting is zero balancing/sweeping                       CRE008
      C                   If        CRE008 = 'Y'                                               CRE008
      C                   Exsr      SRZSLOAD                                                   CRE008
      C                   Exsr      SRGALOAD                                                   216937
      C                   Endif                                                                CRE008
-     C/COPY WNCPYSRC,EML104_002                                                               EML104
  
       ** For each Network, Message Type, Destination of the Midas Account,
       ** duplicate the posting in PF/GLPOSTPD.
@@ -455,7 +432,6 @@
      C                   EVAL      MGDSTN = NwAcDSTN                            Destination
      C                   EVAL      MGMTPY = NwAcMTPY                            Message Type
      C                   EVAL      MGPROC = *BLANKS                             Not Processed
-     C/COPY WNCPYSRC,EML104_003                                                               EML104
      C                   WRITE     GLPOSTD0
      C                   ENDDO
  
@@ -583,13 +559,10 @@
      C**********         ENDIF                                                      CER030 BUG22979A
      C/COPY WNCPYSRC,GLH00629
  
-      /COPY WNCPYSRC,EML102_012                                                               EML102
-      *                                                                                       EML102
       *    -------       -----
      C     @AddInf       ENDSR
  
      C/COPY WNCPYSRC,GLH00407
-     C/COPY WNCPYSRC,EML102_021                                                               EML102
       *========================================================================*
       * $LoadCtl  : Load Control file.                                         *
       *------------------------------------------------------------------------*
@@ -793,10 +766,8 @@
      C                   KFLD                    PSTD
      C                   KFLD                    WBatchNb
      C                   KFLD                    WItemNb
-     C/COPY WNCPYSRC,EML102_022                                                               EML102
+ 
      C/COPY WNCPYSRC,GLH00411
-     C/COPY WNCPYSRC,EML102_013                                                               EML102
-      *                                                                                       EML102
       *    ------        -----
      C     @INZSR        ENDSR
  

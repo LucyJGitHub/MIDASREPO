@@ -11,10 +11,15 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD050666 *CREATE     Date 17Mar20             *
+      *  Last Amend No. MD060709             Date 08Nov22             *
+      *  Prev Amend No. MD050666 *CREATE     Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060709 - Change in LF dynamic selection is omitted         *
+      *             File is not deleted when both DTAARA and file     *
+      *             have the same name.                               *
+      *             Change in PF key is omitted                       *
       *  MD050666 - Adaptive Database Upgrade                         *
       *                                                               *
       *****************************************************************
@@ -136,6 +141,18 @@
      C                   eval      STOP = 'Y'
      C                   endif
 
+      ** If RcdCount is greater than Job_Count, then check than none are submitted          MD060709
+      ** (case where DTAARA and file are to be deleted - IRCIRSUPD)                         MD060709
+     C                   if        RcdCount >  Job_Count                                    MD060709
+     C/exec SQL                                                                             MD060709
+     C+ select count(*) into :RcdCount from UPZDRVTD                                        MD060709
+     C+ where DRLIB = :Library and DRUPDD = 'S'                                             MD060709
+     C/end-exec                                                                             MD060709
+     C                   if        RcdCount =  0                                            MD060709
+     C                   eval      STOP = 'Y'                                               MD060709
+     C                   endif                                                              MD060709
+     C                   endif                                                              MD060709
+                                                                                            MD060709
      C                   ENDDO
      C
       * if all went well, send DONE message to server (UPC4015)

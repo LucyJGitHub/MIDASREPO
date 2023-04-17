@@ -12,14 +12,19 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD060961             Date 23Jan23             *
-      *  Prev Amend No. MD059751             Date 25Mar22             *
+      *  Last Amend No. MD060709             Date 08Nov22             *
+      *  Prev Amend No. MD060961             Date 23Jan23             *
+      *                 MD059751             Date 25Mar22             *
       *                 MD059742             Date 23Mar22             *
       *                 MD058585             Date 17Aug21             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060709 - Change in LF dynamic selection is omitted         *
+      *             File is not deleted when both DTAARA and file     *
+      *             have the same name.                               *
+      *             Change in PF key is omitted                       *
       *  MD060961 - File is not created when both DTAARA and file     *
       *             have the same name.                               *
       *             Discard LF if dependency is not found in the      *
@@ -390,6 +395,8 @@
       *  if this is a LF/view, file need to be duplicate instead of SQL Update
      C                             or WDSP  = 'DSPFD_K'                                     MD058585
       *  or if there is a change in the key                                                 MD058585
+     C                             or WFLDA = 'Select'                                      MD060709
+      *  or if dynamic selection is different for LF                                        MD060709
      C                   If        %SUBST(RdLib:4:1) = 'V'
      C                   eval      @FlDup = 'E'
      C                   else
@@ -410,6 +417,8 @@
      C                             or WFLDA = 'ATSELO'
      C                             or WFLDA = 'ATNOFM'
      C*                            or WFLDA = 'ATTXT'
+     C                             or WFLDA = 'APNKYF'                                      MD060709
+      *  or if dynamic selection is different for PF                                        MD060709
      C                   eval      @FlDup = 'E'
       * Get next
      C/exec SQL
@@ -705,7 +714,38 @@
      C                   ENDIF
 
      C                   if        @DTAARA = 'M'
-     C                   eval      DRACTN = 'IGNORE'
+      ** Check first @MisFl. If set to 'Y' then 2 records must be written in the driver     MD060709
+     C                   if        @MisFl = 'Y'                                             MD060709
+     C/EXEC SQL                                                                             MD060709
+     C+ insert into UPZDRVTD                                                                MD060709
+     C+ (                                                                                   MD060709
+     C+   DRPRFX                                                                            MD060709
+     C+  ,DRFILE                                                                            MD060709
+     C+  ,DRLIB                                                                             MD060709
+     C+  ,DRACTN                                                                            MD060709
+     C+  ,DRALLC                                                                            MD060709
+     C+  ,DRFLCH                                                                            MD060709
+     C+  ,DREXCP                                                                            MD060709
+     C+  ,DRSCRP                                                                            MD060709
+     C+  ,DRUPDD                                                                            MD060709
+     C+ )                                                                                   MD060709
+     C+ Values                                                                              MD060709
+     C+ (                                                                                   MD060709
+     C+   :Lib1                                                                             MD060709
+     C+  ,:WFILE                                                                            MD060709
+     C+  ,:WJOB                                                                             MD060709
+     C+  ,:DRACTN                                                                           MD060709
+     C+  ,:DRALLC                                                                           MD060709
+     C+  ,:DRFLCH                                                                           MD060709
+     C+  ,:DREXCP                                                                           MD060709
+     C+  ,' '                                                                               MD060709
+     C+  ,' '                                                                               MD060709
+     C+ )                                                                                   MD060709
+     C/END-EXEC                                                                             MD060709
+     C                                                                                      MD060709
+     C                   ENDIF                                                              MD060709
+      * keep IGNORE to be consistent with missing file
+     C                   eval      DRACTN = 'IGNORE'                                        MD060709
      C                   eval      DRALLC = 'Y'
      C                   ENDIF
 

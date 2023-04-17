@@ -13,10 +13,15 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD060709             Date 08Nov22             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060709 - Change in LF dynamic selection is omitted         *
+      *             File is not deleted when both DTAARA and file     *
+      *             have the same name.                               *
+      *             Change in PF key is omitted                       *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -1103,6 +1108,50 @@
      C                   exsr      SR_RestoreDTAA
      C                   endif
 
+      ******************* D T A A R A  W I L L  B E  D E L E T E D                          MD060709
+     C                   WHEN      DRACTN = 'DTAARA will be deleted'                        MD060709
+                                                                                            MD060709
+     C                   exsr      SR_SaveDTAA                                              MD060709
+                                                                                            MD060709
+     C                   eval      #SEQ = #SEQ + 1                                          MD060709
+     C                   eval      SCCMD = 'DLTDTAARA DTAARA(' +                            MD060709
+     C                             %trimr(DRLIB) +                                          MD060709
+     C                             '/' + %trimr(DRFILE) + ')'                               MD060709
+                                                                                            MD060709
+     C/EXEC SQL                                                                             MD060709
+     C+ insert into UPZSCRTD                                                                MD060709
+     C+ (                                                                                   MD060709
+     C+   SCPRFX                                                                            MD060709
+     C+  ,SCFILE                                                                            MD060709
+     C+  ,SCLIB                                                                             MD060709
+     C+  ,SCSEQ                                                                             MD060709
+     C+  ,SCTYPE                                                                            MD060709
+     C+  ,SCCMTY                                                                            MD060709
+     C+  ,SCCDSH                                                                            MD060709
+     C+  ,SCDEPF                                                                            MD060709
+     C+  ,SCCDRN                                                                            MD060709
+     C+  ,SCCMD                                                                             MD060709
+     C+  ,SCOPGM                                                                            MD060709
+     C+ )                                                                                   MD060709
+     C+ Values                                                                              MD060709
+     C+ (                                                                                   MD060709
+     C+   :Prefix                                                                           MD060709
+     C+  ,:DRFILE                                                                           MD060709
+     C+  ,:DRLIB                                                                            MD060709
+     C+  ,:#SEQ                                                                             MD060709
+     C+  ,'  '                                                                              MD060709
+     C+  ,'CLP'                                                                             MD060709
+     C+  ,'DLTF'                                                                            MD060709
+     C+  ,' '                                                                               MD060709
+     C+  ,' '                                                                               MD060709
+     C+  ,:SCCMD                                                                            MD060709
+     C+  ,'UP000051'                                                                        MD060709
+     C+ )                                                                                   MD060709
+     C/END-EXEC                                                                             MD060709
+                                                                                            MD060709
+     C                   exsr      SR_RestoreDTAA                                           MD060709
+                                                                                            MD060709
+                                                                                            MD060709
       ******************* N E W  D T A Q  W I L L  B E  D U P L I C A T E D
      C                   WHEN      DRACTN = 'New DTAQ will be duplicated'
      C                             or DRACTN = 'Existing DTAQ will be' +

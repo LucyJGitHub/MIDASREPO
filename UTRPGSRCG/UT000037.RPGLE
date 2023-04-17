@@ -11,10 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE     Date 17Mar20               *
+      *  Last Amend No. MD060709             Date 08Nov22             *
+      *  Prev Amend No. CUT017 *CREATE     Date 17Mar20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060709 - Change in LF dynamic selection is omitted         *
+      *             File is not deleted when both DTAARA and file     *
+      *             have the same name.                               *
+      *             Change in PF key is omitted                       *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -169,6 +174,9 @@
       * as this was already reported for DSPFFD
      C                             or (DSP1 = 'DSPFDBA1' and
      C                              %subst(LIB1:4:1) <> 'V')
+      * or if 'file not found' when compare is for *ACCPTH for PF, do not report            MD060709
+      * as this was already reported for DSPFFD                                             MD060709
+     C                             or DSP1 = 'DSPFDAC1'                                     MD060709
      C                   Else
      C                   CALL      'UT000039'
      C                   PARM      LIB1          #LIB1            10
@@ -224,6 +232,9 @@
       * as this was already reported for DSPFFD
      C                             or (DSP1 = 'DSPFDBA1' and
      C                              %subst(LIB2:4:1) <> 'V')
+      * or if 'file not found' when compare is for *ACCPTH for PF, do not report            MD060709
+      * as this was already reported for DSPFFD                                             MD060709
+     C                             or DSP1 = 'DSPFDAC1'                                     MD060709
      C                   Else
      C                   CALL      'UT000039'
      C                   PARM      *BLANKS       #LIB1

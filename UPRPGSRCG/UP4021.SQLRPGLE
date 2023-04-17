@@ -11,10 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE     Date 17Mar20               *
+      *  Last Amend No. MD060709           Date 08Nov22               *
+      *  Prev Amend No. CUT017 *CREATE     Date 17Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060709 - Change in LF dynamic selection is omitted         *
+      *             File is not deleted when both DTAARA and file     *
+      *             have the same name.                               *
+      *             Change in PF key is omitted                       *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -410,6 +415,7 @@
      C+   DRACTN = :DRACTN
      C+ where
      C+     DRFILE  = :DFFILE
+     C+ and DRLIB   = :DFLIBR                                                               MD060709
      C/end-exec
      C                   IF        SQLCODE <> 0
      C                   EVAL      ZAMSGF = 'SDUSRMSG'
@@ -1044,6 +1050,7 @@
      C                             and DFACTN <> 'SQL Update KEEP'
      C                             and DFACTN <> 'SQL Update'
      C                             and DFACTN <> 'File will be deleted'
+     C                             and DFACTN <> 'DTAARA will be deleted'                   MD060709
      C                   EVAL      ErrFlg = 'Y'
      C                   EVAL      ZAMSGF = 'SDUSRMSG'
      C                   EVAL      ZAMSID = 'ADB0002'

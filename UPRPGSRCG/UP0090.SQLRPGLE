@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD060964             Date 24Jan23             *
-      *  Prev Amend No. MD060352             Date 22Aug22             *
+      *  Last Amend No. MD060877             Date 01Jan23             *
+      *  Prev Amend No. MD060964             Date 24Jan23             *
+      *                 MD060352             Date 22Aug22             *
       *                 MD058188             Date 11May21             *
       *                 MD060008             Date 11May21             *
       *                 MD058830             Date 01Oct21             *
@@ -102,6 +103,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060877 - Deliverable Data Split for SMRLSLPD and SMBFPRTD  *
       *  MD060964 - Program does not compile                          *
       *  MD060352 - Deliverable Data Split for GP/SCRELCTD            *
       *  MD058188 - Deliverable Data Split for Global files           *
@@ -1343,6 +1345,8 @@
      C                             or ChkFile = 'GPNJRXTD'                                  MD058188
      C                             or ChkFile = 'SCRELXTD'                                  MD060352
      C                             or ChkFile = 'GPRELXTD'                                  MD060352
+     C                             or ChkFile = 'SMBFPXTD'                                  MD060877
+     C                             or ChkFile = 'SMRLSXTD'                                  MD060877
 
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
@@ -1522,6 +1526,8 @@
      C                             or Member = 'GPINSCTD'                                   MD058188
      C                             or Member = 'GPNJRCTD'                                   MD058188
      C                             or Member = 'GPRELCTD'                                   MD060352
+     C                             or Member = 'SMBFPCTD'                                   MD060877
+     C                             or Member = 'SMRLSCTD'                                   MD060877
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264

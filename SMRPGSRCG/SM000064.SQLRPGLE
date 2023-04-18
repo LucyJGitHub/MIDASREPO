@@ -15,12 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD032025           Date 21Jan15               *
-      *  Prev Amend No. MD020456           Date 23May13               *
+      *  Last Amend No. MD060877           Date 01Jan23               *
+      *  Prev Amend No. MD032025           Date 21Jan15               *
+      *                 MD020456           Date 23May13               *
       *                 MD018386C          Date 23Apr13               *
       *                 MD018386B *CREATE  Date 22Apr13               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060877 - Deliverable Data Split for SMRLSLPD and SMBFPRTD  *
       *  MD032025  - Duplicate key when creating new zone since pgm   *
       *              tries to reload all zones.                       *
       *  MD020456 - BF Upload menu option UPLD doesn't upload         *
@@ -44,7 +46,8 @@
                     concat(concat(trim(b.BPPERID),'-'),trim(a.ZOMSYS)),                   //MD020456
                     0,'system', Now(), Now()
             from GPZONEPD a
-               , SMBFPRTD b
+       //******,*SMBFPRTD b                                                               //MD060877
+               , SMBFPJW0 b                                                               //MD060877
                  Where concat(concat(trim(b.BPPERID),'-'),trim(a.ZOMSYS))                 //MD032025
                  not in (select BFZONEPERMISSIONIDPK from BFTB_ZONEPERMISSION)            //MD032025
             );

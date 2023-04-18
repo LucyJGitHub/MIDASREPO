@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 260331             Date 31Mar16               *
+      *  Last Amend No. MD058397           Date 31Mar23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 260331             Date 31Mar16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -83,6 +84,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058397 - Failed component SEC0602A 00001 in Production COB *
+      *           - Applied for MD-61149.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  260331 - Incorrect posting created due to a deleted diary    *
       *           event. Applied fix 255857.                          *
@@ -2599,6 +2602,7 @@
      C                     SETOF                     09
      C                     MOVEA'0000'    *IN,40
      C                     MOVE '0'       *IN49                           S01510
+     C                     MOVE *BLANKS   XRECI   1                                         MD058397
      C/COPY WNCPYSRC,SE0130C020
       *                                                                   CSE010
       ** Check Security Shortname and call Securities Selection           CSE010
@@ -2736,6 +2740,10 @@
      C*
      C                     ELSE
      C           SSDSN     CHAINSECTYDF              33
+      *                                                                                     MD058397
+     C           *IN33     IFEQ '0'                                                         MD058397
+     C                     MOVE RECI      XRECI                                             MD058397
+     C                     ENDIF                                                            MD058397
      C*                                                                   S01408
      C/COPY WNCPYSRC,SE0130CP10                                           S01408
      C*                                                                   S01408
@@ -2792,6 +2800,14 @@
      C                     MOVEA' 101'    ERR,EC                          E22960
      C                     SETON                     41
      C                     ELSE
+      *                                                                                     MD058397
+      ** must be an active security record                                                  MD058397
+      *                                                                                     MD058397
+     C           XRECI     IFNE 'D'                                                         MD058397
+     C                     ADD  1         EC                                                MD058397
+     C                     MOVEA' 102'    ERR,EC                                            MD058397
+     C                     SETON                     41                                     MD058397
+     C                     ENDIF                                                            MD058397
      C*
      C* Record must exist
      C*

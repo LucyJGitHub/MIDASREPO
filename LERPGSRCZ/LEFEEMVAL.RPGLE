@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058763           Date 08Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. AR930168           Date 19Apr23               *
+      *  Prev Amend No. MD058763           Date 08Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR375891B          Date 26Aug20               *
       *                 AR375892           Date 26Aug20               *
@@ -121,6 +122,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR930168 - Profit Center not mandatory on Facilities and Fees*
+      *             Added validation to check if PRFC is blank when   *
+      *             analytical accounting is on. (Child: AR930170)    *
       *  MD058763 - Error message LER5607 is displayed despite valid  *
       *             input. Amend conditions to conform with           *
       *             alphanumeric base rates.                          *
@@ -4044,6 +4048,13 @@
      C                   Movel     'DDPRFC'      FldNamXAr(Idx)
      C                   Movel     'LER0146'     MsgIDXAr(Idx)
      C                   ENDIF
+     C     DDPRFC        IFEQ      *BLANKS                                                  AR930168
+     C     BGN0ST        ANDEQ     'Y'                                                      AR930168
+     C                   MOVE      'W'           DDPRFCOK                                   AR930168
+     C                   ADD       1             WId                                        AR930168
+     C                   MOVEL     'DDPRFC'      WFldNmXAr(WId)                             AR930168
+     C                   MOVEL     'LEL0880'     WMsgIDXAr(WId)                             AR930168
+     C                   ENDIF                                                              AR930168
      C                   ENDIF
       *
      C                   ENDIF

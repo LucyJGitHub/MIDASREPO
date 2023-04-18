@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060560           Date 10Dec22               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD061258           Date 11Apr23               *
+      *  Prev Amend No. MD060441           Date 01Feb23               *
+      *                 MD060560           Date 10Dec22               *
+      *                 249385             Date 01Aug22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
@@ -66,6 +68,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061258 - Previous generated BR events were deleted in      *
+      *             LOAC enquiry. Process history deletion if COB     *
+      *             program runs on a non-ANWD and non-PDP component. *
+      *             Skip deletion if rollover date = interest date    *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             Backward-Looking Rate                             *
       *  MD060560 - After a spread change and a base rate code change *
       *             on loans, the system stopped accruing. Amend Omit *
       *             selection to correctly filter records (Recompile) *
@@ -158,6 +166,10 @@
      FLEHISTLJIF  E           K        DISK                                                 MD031736
      F            HISTSHQF                          KRENAMEHISTHQ5F                         MD031736
      F            ACTN3DKF                          KRENAMEACTNDK5F                         MD031736
+     FLELIBEL0IF  E           K        DISK                                                 MD060441
+     FLECLIPL2IF  E           K        DISK                           UC                    MD061258
+     F            CLOANCLF                          KRENAMECLOANC1F                         MD061258
+     F            CLOANCKF                          KIGNORE                                 MD061258
      FACTN3ZX UF  E                    DISK
      FHISTSZX UF  E                    DISK
      FLE0371AUO   E             61     PRINTER
@@ -299,6 +311,8 @@
       *
      ISDBANK    E DSSDBANKPD
       *
+     ISDGELR    E DSSDGELRPD                                                                MD061258
+      **  External DS for General Ledger Details                                            MD061258
      ISDBSRT    E DSSDBSRTPD                300                                             CLE075BI
      ISCSARD    E DSSCSARDPD                                              CLE004
       ** SAR File Details Accessed via Access Program AOSARDR0            CLE004
@@ -355,6 +369,106 @@
      C                     READ CLOAN                    81
       *
      C           *IN81     DOWEQ*OFF
+      *                                                                                     MD060441
+      ** Check if there is a change in ARR parm                                             MD060441
+     C                     MOVE *BLANKS   WARRP   1                                         MD060441
+     C                     MOVE *BLANKS   WNEWBC  1                                         MD061258
+     C                     Z-ADD0         C3                                                MD061258
+      *                                                                                     MD060441
+     C           CLE172    IFEQ 'Y'                                                         MD060441
+     C           RECI      ANDEQ'D'                                                         MD060441
+     C           RLDT      ANDGT*ZERO                                                       MD060441
+     C           *INU3     ANDEQ*OFF                                                        MD061258
+     C           WPNAM     ANDEQ*BLANKS                                                     MD061258
+      *                                                                                     MD060441
+     C           BLRT      IFEQ 'Y'                                                         MD060441
+     C           NBLRT     ANDEQ'Y'                                                         MD060441
+      *                                                                                     MD060441
+     C           RFRR      IFNE NRFRR                                                       MD060441
+     C           CALM      ORNE NCALM                                                       MD060441
+     C           BADJ      ORNE NBADJ                                                       MD060441
+     C           FLOR      ORNE NFLOR                                                       MD060441
+     C           LBDY      ORNE NLBDY                                                       MD060441
+     C           LODY      ORNE NLODY                                                       MD060441
+     C           OPSH      ORNE NOPSH                                                       MD060441
+     C           RRDP      ORNE NRRDP                                                       MD060441
+     C           DBAV      ORNE NDBAV                                                       MD060441
+     C                     MOVE 'Y'       WARRP                                             MD060441
+     C                     ENDIF                                                            MD060441
+      ** Skip deletion if rollover date (with ARR parameter changes)                        MD061258
+      ** falls on an interest date                                                          MD061258
+     C           WARRP     IFEQ 'Y'                                                         MD061258
+     C           RLDT      ANDEQNIDT                                                        MD061258
+     C           REPT      ANDEQ2                                                           MD061258
+     C           WARRP     OREQ 'Y'                                                         MD061258
+     C           RLDT      ANDEQNRPD                                                        MD061258
+     C           REPT      ANDNE2                                                           MD061258
+     C                     MOVE *BLANKS   WARRP                                             MD061258
+     C                     ENDIF                                                            MD061258
+      ** Deletion required if rollover changes the base rate code                           MD061258
+      ** (backward-looking to another backward-looking)                                     MD061258
+     C           RLDT      IFLE WEVCD                                                       MD061258
+     C           BRTT      ANDNENBRA                                                        MD061258
+     C                     MOVE 'Y'       WNEWBC                                            MD061258
+     C                     ENDIF                                                            MD061258
+     C                     ENDIF                                                            MD060441
+      ** If forward to backward or there is a change in ARR parm                            MD060441
+      ** Or a new base rate code is defined at rollover                                     MD061258
+     C           BLRT      IFNE 'Y'                                                         MD060441
+     C           NBLRT     ANDEQ'Y'                                                         MD060441
+     C           WARRP     OREQ 'Y'                                                         MD060441
+     C           WNEWBC    OREQ 'Y'                                                         MD061258
+      ** Retrieve check date                                                                MD060441
+     C                     Z-ADDRLDT      WRLDT   50                                        MD060441
+     C           LNRF      SETLLLELIBEL0                                                    MD060441
+     C           LNRF      READELELIBEL0                 89                                 MD060441
+      *                                                                                     MD060441
+     C           *IN89     IFEQ '0'                                                         MD060441
+     C                     Z-ADDLDVDAT    WRLDT                                             MD060441
+     C                     ENDIF                                                            MD060441
+      *                                                                                     MD060441
+     C           LNRF      SETLLLEHISTL0                                                    MD060441
+     C           LNRF      READELEHISTL0                 89                                 MD060441
+     C           *IN89     DOWEQ*OFF                                                        MD060441
+      *                                                                                     MD060441
+     C           WRLDT     IFLE VDAT                                                        MD060441
+     C           AMTP      IFNE 'MC'                                                        MD060441
+     C           AMTP      IFEQ 'RO'                                                        MD061258
+     C           VDAT      ANDEQWRLDT                                                       MD061258
+     C           BRTT      ANDEQNBRA                                                        MD061258
+     C           RLDT      ANDGTWRLDT                                                       MD061258
+      ** Do not delete RO that valued on start of interest period                           MD061258
+      ** which has the same base rate code and an overridden RO exists                      MD061258
+     C                     ELSE                                                             MD061258
+     C                     DELETHISTSHQF                                                    MD060441
+      ** Update counter for trailer deletion HISTSZX                                        MD060441
+     C                     ADD  1         C3                                                MD060441
+     C                     ENDIF                                                            MD061258
+     C                     ENDIF                                                            MD060441
+     C                     ENDIF                                                            MD060441
+     C           LNRF      READELEHISTL0                 89                                 MD060441
+     C                     ENDDO                                                            MD060441
+      ** Update Trailer - Sub 1 from No. of records                                         MD060441
+     C           C3        IFNE 0                                                           MD060441
+     C           1         SETLLHISTSZX                                                     MD060441
+     C                     READ HISTSZX                  89                                 MD060441
+      **   Database error                                                                   MD060441
+     C           *IN89     IFEQ *ON                                                         MD060441
+     C                     Z-ADD7         DBASE                                             MD060441
+     C                     MOVEL'HISTSZX 'DBFILE                                            MD060441
+     C                     MOVE *BLANKS   DBKEY                                             MD060441
+     C                     EXSR AUDPRT                                                      MD060441
+     C                     EXSR *PSSR                                                       MD060441
+     C                     ELSE                                                             MD060441
+     C                     SUB  C3        NOREHS                                            MD060441
+     C                     UPDATHISTSZXF                                                    MD060441
+     C                     Z-ADD0         C3                                                MD060441
+     C                     ENDIF                                                            MD060441
+     C                     ENDIF                                                            MD060441
+      ** Chain to retrieve current loan details                                             MD061258
+     C           LNRF      CHAINLECLIPL2             89                                     MD061258
+     C                     ENDIF                                                            MD060441
+     C                     ENDIF                                                            MD060441
       *
       * Need live rec with rollover date < start last interest date.
      C           RECI      IFEQ 'D'
@@ -842,7 +956,24 @@
       *
       *    CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
      C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
-      *
+      *                                                                                     MD061258
+     C                     CALL 'AOGELRR1'                                                  MD061258
+     C                     PARM '*MSG   ' @RTCD                                             MD061258
+     C                     PARM '*FIRST ' @OPTN                                             MD061258
+     C           SDGELR    PARM SDGELR    DSSDY                                             MD061258
+      *                                                                                     MD061258
+     C           @RTCD     IFNE *BLANKS                                                     MD061258
+     C                     Z-ADD8         DBASE                                             MD061258
+     C                     MOVEL'SDGELRPD'DBFILE                                            MD061258
+     C                     MOVEL@RTCD     DBKEY                                             MD061258
+     C                     EXSR AUDPRT                                                      MD061258
+     C                     EXSR *PSSR                                                       MD061258
+     C                     ENDIF                                                            MD061258
+      *                                                                                     MD061258
+     C           BJDNWD    SUB  1         WEVCD   50                                        MD061258
+     C           BKAPDT    IFLE WEVCD                                                       MD061258
+     C                     MOVE BKAPDT    WEVCD                                             MD061258
+     C                     ENDIF                                                            MD061258
       *                                                                   CLE004
       ** Determine if Customer Lending Enhancements - Syndications        CLE004
       ** (CLE004) is installed                                            CLE004
@@ -894,6 +1025,7 @@
      C           SCSARD    PARM SCSARD    DSFDY                                               CLE172
      C           @RTCD     IFEQ *BLANKS                                                       CLE172
      C                     MOVEL'Y'       CLE172                                              CLE172
+     C                     OPEN LECLIPL2                                                    MD061258
      C                     ENDIF                                                              CLE172
       *
      C           CLNKEY    KLIST
@@ -928,6 +1060,7 @@
      C                     MOVE *OFF      *IN63
      C                     Z-ADD0         C1      40
      C                     Z-ADD0         C2      40
+     C                     Z-ADD0         C3      40                                        MD060441
       *
      C           *LIKE     DEFN AMTP      W#AMTP
      C           *LIKE     DEFN VDAT      W#VDAT

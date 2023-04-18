@@ -17,13 +17,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061006            Date 02Feb23              *
-      *  Prev Amend No. MD060824            Date 10Jan23              *
+      *  Last Amend No. MD060441            Date 01Feb23              *
+      *  Prev Amend No. MD061006            Date 02Feb23              *
+      *                 MD060824            Date 10Jan23              *
       *                 MD060897            Date 10Jan23              *
       *                 MD058517 *CREATE    Date 17Oct22              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
+      *             backward looking rate                             *
       *  MD061006 - Compilation failed on LE000372 due to SDLIBRTD    *
       *             made redundant                                    *
       *             Amended all calls to SDLIBRTD to access           *
@@ -61,7 +64,8 @@
       *****************************************************************
       *
       ** Midas LE Rate Known Loans File
-     FSDRTKNTD  UF   E             DISK    INFSR(*PSSR)
+     F***SDRTKNTD  UF   E             DISK    INFSR(*PSSR)                                  MD060441
+     FSDRTKNL0  UF   E             DISK    INFSR(*PSSR)                                     MD060441
      F                                     COMMIT
       *
       ** Midas SD Array of Text Table
@@ -238,6 +242,10 @@
      D wFinalRate      S             15P 9 INZ(0)                                           MD060824
      D wCurrRate       S             11P 7 INZ(0)                                           MD060824
      D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD061006
+     D isFirstRun      S              1N   INZ(*ON)                                         MD060441
+     D wrkDec          S              1S 0 INZ(0)                                           MD060441
+     D wrkVDAT         S              5P 0 INZ(0)                                           MD060441
+     D isManualComp    S              1N   INZ(*OFF)                                        MD060441
 
       *****************************************************************
       /EJECT
@@ -247,7 +255,9 @@
 
       ** Read records from LE Rate Known Loans Files File
 
-     C                   READ      SDRTKNTD                               40
+     C**********         READ      SDRTKNTD                               40                MD060441
+     C                   READ      SDRTKNL0                               40                MD060441
+
      C     *IN40         DOWEQ     *OFF
      C                   IF        KMODID = 'LE' AND KRTKNI = 'Y' AND
      C                             (KCINTA <> KPINTA OR KSPLFP <> 'Y'
@@ -283,6 +293,7 @@
      C+ from CLOANCL
      C+ where
      C+     LNRF = :KTRNID
+     C+     AND BLRT = 'Y'                                                                  MD060441
      C/end-exec
 
      C**********/exec SQL                                                                   MD060897
@@ -475,6 +486,7 @@
 
      C                   EVAL      ZFLD15 = DSCPAM
      C                   EVAL      ZDECS = A6NBDP
+     C                   EVAL      wrkDec = A6NBDP                                          MD060441
 
      C                   CALL      'ZSEDIT'
      C                   PARM                    ZFLD15
@@ -505,6 +517,11 @@
      C                   EXSR      SRReportP1
      C                   EXSR      SRReportP2
 
+     C                   CLEAR                   curIntrstAmt     13 0                      MD060441
+     C                   CLEAR                   nxtIntrstAmt     13 0                      MD060441
+     C                   CLEAR                   wrkIntrstAmt     13 0                      MD060441
+     C                   CLEAR                   prvIntrstAmt     13 0                      MD060441
+                                                                                            MD060441
      C     PrintP3       IFEQ      '1'
      C                   EXSR      SRReportP3
 I    C                   ENDIF
@@ -529,7 +546,8 @@ I    C                   ENDIF
 
      C                   ENDIF
 
-     C                   READ      SDRTKNTD                               40
+     C**********         READ      SDRTKNTD                               40                MD060441
+     C                   READ      SDRTKNL0                               40                MD060441
      C                   ENDDO
 
       ** End Program
@@ -696,6 +714,7 @@ I    C                   ENDIF
      C     SRReportP3    BEGSR
 
      C                   Z-ADD     0             XCINPSD
+     C                   EVAL      isFirstRun  = *on                                        MD060441
      C/exec SQL
      C+ declare SDHS cursor for
      C+ select
@@ -718,7 +737,8 @@ I    C                   ENDIF
      C+ and CINFLG = 'Y'
      C**********+ order by                                                                  MD060897
      C**********+     CINPDT asc                                                            MD060897
-     C+ union all                                                                           MD060897
+     C+ union                                                                               MD060441
+     C**********+ union all                                                        MD060897 MD060441
      C+ select                                                                              MD060897
      C+   FINPSD                                                                            MD060897
      C+ , FINPED                                                                            MD060897
@@ -734,10 +754,11 @@ I    C                   ENDIF
      C+ , FSMPAV                                                                            MD060897
      C+ from SDFWDRTD T2                                                                    MD060897
      C+ where                                                                               MD060897
-     C+ not exists (                                                                        MD060897
-     C+ select * from SDHSDRTD T1                                                           MD060897
-     C+ where T1.CINPDT = T2.FINPDT )                                                       MD060897
-     C+ and FMODID = 'LE'                                                                   MD060897
+     C**********+ not exists (                                                     MD060897 MD060441
+     C**********+ select * from SDHSDRTD T1                                        MD060897 MD060441
+     C**********+ where T1.CINPDT = T2.FINPDT )                                    MD060897 MD060441
+     C**********+ and FMODID = 'LE'                                                MD060897 MD060441
+     C+     FMODID = 'LE'                                                                   MD060441
      C+ and FTRNID = :KTRNID                                                                MD060897
      C+ order by                                                                            MD060897
      C+ CINPDT asc                                                                          MD060897
@@ -777,7 +798,9 @@ I    C                   ENDIF
 
       ** Interest Period Days
      C                   MOVE      Dindy         WWIndyChar
-     C                   EVAL      P2INDY =  %triml(WWIndyChar:'0')
+     C**********         EVAL      P2INDY =  %triml(WWIndyChar:'0')                         MD060441
+     C                   EVALR     P2INDY =  %triml(WWIndyChar:'0')                         MD060441
+
 
       ** Published Risk Free Rate
      C                   Z-ADD     Dbrfr         WrkRate          11 7
@@ -789,19 +812,20 @@ I    C                   ENDIF
      C                   PARM                    ZDECS
      C                   PARM      'J'           ZECODE
      C                   PARM                    ZOUT21
-     C                   EVAL      P2BRFR  = (%trim(ZOUT21))
+     C**********         EVAL      P2BRFR  = (%trim(ZOUT21))                                MD060441
+     C                   EVALR     P2BRFR  = (%trim(ZOUT21))                                MD060441
 
-      ** Rate Applied
-     C                   Z-ADD     Drtap         WrkRate
-     C                   Z-ADD     0             ZFLD15
-     C                   MOVE      WrkRate       ZFLD15
-     C                   EVAL      ZDECS = 7
-     C                   CALL      'ZSEDIT'
-     C                   PARM                    ZFLD15
-     C                   PARM                    ZDECS
-     C                   PARM      'J'           ZECODE
-     C                   PARM                    ZOUT21
-     C                   EVAL      P2RTAP  = (%trim(ZOUT21))
+      ***Rate*Applied*************************************************                      MD060441
+     C**********         Z-ADD     Drtap         WrkRate                                    MD060441
+     C**********         Z-ADD     0             ZFLD15                                     MD060441
+     C**********         MOVE      WrkRate       ZFLD15                                     MD060441
+     C**********         EVAL      ZDECS = 7                                                MD060441
+     C**********         CALL      'ZSEDIT'                                                 MD060441
+     C**********         PARM                    ZFLD15                                     MD060441
+     C**********         PARM                    ZDECS                                      MD060441
+     C**********         PARM      'J'           ZECODE                                     MD060441
+     C**********         PARM                    ZOUT21                                     MD060441
+     C**********         EVAL      P2RTAP  = (%trim(ZOUT21))                                MD060441
 
       ** Average/Compound Rate
      C                   SELECT
@@ -823,7 +847,36 @@ I    C                   ENDIF
      C                   PARM                    ZDECS
      C                   PARM      'J'           ZECODE
      C                   PARM                    ZOUT21
-     C                   EVAL      P2AVCR  = (%trim(ZOUT21))
+     C**********         EVAL      P2AVCR  = (%trim(ZOUT21))                                MD060441
+     C                   EVALR     P2AVCR  = (%trim(ZOUT21))                                MD060441
+      *                                                                                     MD060441
+      ** Compute all-in interest rate                                                       MD060441
+      *                                                                                     MD060441
+     C                   CLEAR                   wrkAllInRate     11 7                      MD060441
+     C                   EVAL      wrkAllInRate = WrkRate + DSBADJ                          MD060441
+     C                   SELECT                                                             MD060441
+     C     DSSPIN        WHENEQ    'A'                                                      MD060441
+     C                   ADD       DSRTSP        wrkAllInRate                               MD060441
+     C     DSSPIN        WHENEQ    'S'                                                      MD060441
+     C                   SUB       DSRTSP        wrkAllInRate                               MD060441
+     C     DSSPIN        WHENEQ    'P'                                                      MD060441
+     C     DSRTSP        DIV       100           WRK_139          13 9                      MD060441
+     C                   MULT(H)   WRK_139       wrkAllInRate                               MD060441
+     C     DSSPIN        WHENEQ    *BLANK                                                   MD060441
+     C                   ADD       DSRTSP        wrkAllInRate                               MD060441
+     C                   ENDSL                                                              MD060441
+     C                   Z-ADD     0             ZFLD15                                     MD060441
+     C                   MOVE      wrkAllInRate  ZFLD15                                     MD060441
+     C                   EVAL      ZDECS = 7                                                MD060441
+     C                   CALL      'ZSEDIT'                                                 MD060441
+     C                   PARM                    ZFLD15                                     MD060441
+     C                   PARM                    ZDECS                                      MD060441
+     C                   PARM      'J'           ZECODE                                     MD060441
+     C                   PARM                    ZOUT21                                     MD060441
+                                                                                            MD060441
+     C                   EVALR     P2ALIN  = (%trim(ZOUT21))                                MD060441
+                                                                                            MD060441
+     C                   EXSR      srGetTotalInt                                            MD060441
 
       ** Write out Detail Record
      C                   Z-ADD     1             RQDLN1            3 0
@@ -973,6 +1026,136 @@ I    C                   ENDIF
      C**********/end-exec                                                                   MD060897
 
      C                   ENDSR
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srGetTotalInt - Compute Total Interest Amount                 *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+     C     srGetTotalInt BEGSR                                                              MD060441
+                                                                                            MD060441
+     C                   IF        Dcalm = 'NCCR' or Dcalm = 'SARR'                         MD060441
+     C                   EXSR      srCalculate1                                             MD060441
+     C                   ELSEIF    Dcalm = 'CCR' or Dcalm = 'SAVG'                          MD060441
+     C                   EXSR      srCalculate2                                             MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   ENDSR                                                              MD060441
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srCalculate1                                                  *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+                                                                                            MD060441
+     C     srCalculate1  BEGSR                                                              MD060441
+                                                                                            MD060441
+     C                   EVAL      isManualComp = *OFF                                      MD060441
+                                                                                            MD060441
+      ** Get current interest amount from history file                                      MD060441
+                                                                                            MD060441
+     C/exec SQL                                                                             MD060441
+     C+ select AITC                                                                         MD060441
+     C+ into :curIntrstAmt                                                                  MD060441
+     C+ from HISTSHQ                                                                        MD060441
+     C+ where LNRF = :KTRNID and                                                            MD060441
+     C+       VDAT = :XCINPDT and                                                           MD060441
+     C+       AMTP = 'BR'                                                                   MD060441
+     C/end-exec                                                                             MD060441
+                                                                                            MD060441
+     C                   IF        ( SQLCOD <> NO_RECORD )                                  MD060441
+                                                                                            MD060441
+      ** Get next interest amount from history file                                         MD060441
+     C/exec SQL                                                                             MD060441
+     C+ select AITC                                                                         MD060441
+     C+ into :nxtIntrstAmt                                                                  MD060441
+     C+ from HISTSHQ                                                                        MD060441
+     C+ where LNRF = :KTRNID and                                                            MD060441
+     C+       AMTP = 'BR' and                                                               MD060441
+     C+       VDAT > :XCINPDT                                                               MD060441
+     C+ order by VDAT                                                                       MD060441
+     C+ fetch first 1 row only                                                              MD060441
+     C/end-exec                                                                             MD060441
+                                                                                            MD060441
+     C                   IF        ( SQLCOD <> NO_RECORD )                                  MD060441
+     C                   EVAL      wrkIntrstAmt = nxtIntrstAmt - curIntrstAmt               MD060441
+     C                   ELSE                                                               MD060441
+     C                   EVAL      isManualComp = *ON                                       MD060441
+     C                   ENDIF                                                              MD060441
+     C                   ELSE                                                               MD060441
+     C                   EVAL      isManualComp = *ON                                       MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   IF        (isManualComp)                                           MD060441
+                                                                                            MD060441
+      ** If there are no record retrieve from history file, manually compute the            MD060441
+      ** interest amount                                                                    MD060441
+                                                                                            MD060441
+                                                                                            MD060441
+     C                   EVAL      ZIBEG = Dintd                                            MD060441
+     C                   EVAL      ZIEND = Dintd + Dindy                                    MD060441
+     C                   EVAL      ZIAMT = DSCPAM                                           MD060441
+     C                   EVAL      ZICALC = DSICBS                                          MD060441
+     C                   EVAL      ZIRATE = wrkAllInRate                                    MD060441
+                                                                                            MD060441
+     C                   EXSR      GLINTC                                                   MD060441
+                                                                                            MD060441
+     C                   EVAL (H)  wrkIntrstAmt = ZINTR                                     MD060441
+     C                   ENDIF                                                              MD060441
+                                                                                            MD060441
+     C                   EVAL      ZFLD15 = wrkIntrstAmt                                    MD060441
+     C                   EVAL      ZDECS = wrkDec                                           MD060441
+     C                   CALL      'ZSEDIT'                                                 MD060441
+     C                   PARM                    ZFLD15                                     MD060441
+     C                   PARM                    ZDECS                                      MD060441
+     C                   PARM      'J'           ZECODE                                     MD060441
+     C                   PARM                    ZOUT21                                     MD060441
+                                                                                            MD060441
+     C                   EVALR     P2INTA  = %trim(ZOUT21)                                  MD060441
+                                                                                            MD060441
+     C                   ENDSR                                                              MD060441
+      *****************************************************************                     MD060441
+      /EJECT                                                                                MD060441
+      *****************************************************************                     MD060441
+      *                                                               *                     MD060441
+      * srCalculate2                                                  *                     MD060441
+      *                                                               *                     MD060441
+      *****************************************************************                     MD060441
+     C     srCalculate2  BEGSR                                                              MD060441
+                                                                                            MD060441
+     C                   EVAL      ZIBEG = Dintd                                            MD060441
+     C                   EVAL      ZIEND = Dintd + Dindy                                    MD060441
+     C                   EVAL      ZIAMT = DSCPAM                                           MD060441
+     C                   EVAL      ZICALC = DSICBS                                          MD060441
+     C                   EVAL      ZIRATE = wrkAllInRate                                    MD060441
+                                                                                            MD060441
+     C                   EXSR      GLINTC                                                   MD060441
+                                                                                            MD060441
+     C                   IF        isFirstRun                                               MD060441
+     C                   EVAL (H)  wrkIntrstAmt = ZINTR                                     MD060441
+     C                   EVAL      isFirstRun = *OFF                                        MD060441
+     C                   EVAL (H)  prvIntrstAmt = ZINTR                                     MD060441
+     C                   ELSE                                                               MD060441
+     C                   EVAL (H)  wrkIntrstAmt = ZINTR                                     MD060441
+     C                   EVAL      wrkIntrstAmt = wrkIntrstAmt - prvIntrstAmt               MD060441
+     C                   EVAL (H)  prvIntrstAmt = ZINTR                                     MD060441
+     C                   ENDIF                                                              MD060441
+     C                                                                                      MD060441
+                                                                                            MD060441
+     C                   EVAL      ZFLD15 = wrkIntrstAmt                                    MD060441
+     C                   EVAL      ZDECS = wrkDec                                           MD060441
+     C                   CALL      'ZSEDIT'                                                 MD060441
+     C                   PARM                    ZFLD15                                     MD060441
+     C                   PARM                    ZDECS                                      MD060441
+     C                   PARM      'J'           ZECODE                                     MD060441
+     C                   PARM                    ZOUT21                                     MD060441
+                                                                                            MD060441
+     C                   EVALR     P2INTA  = %trim(ZOUT21)                                  MD060441
+     C                                                                                      MD060441
+     C                   ENDSR                                                              MD060441
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1117,3 +1300,4 @@ I    C                   ENDIF
      C/COPY ZSRSRC,ZINTDYZ2LE
      C/COPY ZSRSRC,ZDATE9Z3LE
      C/COPY ZSRSRC,ZDAT10Z2LE
+     C/COPY ZSRSRC,GLINTCZ1LE                                                               MD060441

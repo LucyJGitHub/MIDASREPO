@@ -8,8 +8,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSW220             Date 09Mar20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CSW122A            Date 14Apr23              */
+/*       Prev Amend No. CSW220             Date 09Mar20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD037198           Date 26Apr16              */
 /*                      AR316373           Date 03Jun15              */
 /*                      MD023239           Date 27Mar14              */
@@ -49,6 +50,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSW122A - SWIFT ISO 20022 CCR1 Generation of MTn99          */
 /*       CSW220 - SWIFT Changes 2020                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD037198 - Add OVRDBF for TABFP since FT0640 fails with     */
@@ -191,6 +193,7 @@
              DCL        VAR(&CMTJOB10) TYPE(*CHAR) LEN(10)                                /*CSC022*/
              DCL        VAR(&CRSKIP) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
              DCL        VAR(&PSWIFT) TYPE(*CHAR) LEN(6)                                   /*CSW220*/
+             DCL        VAR(&CSW122) TYPE(*CHAR) LEN(1)                                  /*CSW122A*/
              DCL        VAR(&PCOB) TYPE(*CHAR) LEN(1) VALUE('N')                          /*CSW220*/
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(4)                                    /*CSW220*/
              DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CSW220*/
@@ -552,14 +555,29 @@
 /**  Check for Database Errors Trapped by Program  **/
 /**/
         IF COND(%SWITCH(XXXXXX11)) THEN(GOTO DBERR)
+/**/                                                                                     /*CSW122A*/
+/**  Check if CSW122 is installed **/                                                    /*CSW122A*/
+/**/                                                                                     /*CSW122A*/
+        CHGVAR     VAR(&CSW122) VALUE('N')                                               /*CSW122A*/
+        CHGVAR     VAR(&RTCD) VALUE('       ')                                           /*CSW122A*/
+        CHGVAR     VAR(&SARD) VALUE('CSW122')                                            /*CSW122A*/
+        CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                           /*CSW122A*/
+                                                                                         /*CSW122A*/
+        CALL   PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD)                                     /*CSW122A*/
+        IF     COND(&RTCD *EQ '       ') THEN(DO)                                        /*CSW122A*/
+        CHGVAR     VAR(&CSW122) VALUE('Y')                                               /*CSW122A*/
+        ENDDO                                                                            /*CSW122A*/
 /**/                                                                                      /*CSW220*/
-/**  Call FT000199  **/                                                                   /*CSW220*/
+/****Call*FT000199****/                                                           /*CSW220 CSW122A*/
+/** Call FT000199 MT199 Extract and Format Program if CSW220 or CSW122 is installed **/  /*CSW122A*/
 /**/                                                                                      /*CSW220*/
         CHGJOB     SWS(XXXXXX00)                                                          /*CSW220*/
         CHGVAR     VAR(&RTCD) VALUE('       ')                                            /*CSW220*/
         CHGVAR     VAR(&PSWIFT) VALUE('CSW220')                                           /*CSW220*/
         CALL   PGM(SWIFTACTV) PARM(&PSWIFT &RTCD)                                         /*CSW220*/
-        IF     COND(&RTCD *EQ 'CSWACTV') THEN(DO)                                         /*CSW220*/
+/********** IF     COND(&RTCD *EQ 'CSWACTV') THEN(DO)*/                           /*CSW220 CSW122A*/
+        IF     COND((&RTCD *EQ 'CSWACTV') *OR +
+                   (&CSW122 *EQ 'Y')) THEN(DO)                                           /*CSW122A*/
 /*  Check that ZMUSER dataarea has been set up in QTEMP, if not   */                      /*CSW220*/
 /*  create it here.                                               */                      /*CSW220*/
                                                                                           /*CSW220*/
@@ -576,7 +594,8 @@
         IF         COND(&MPHAS *EQ '*YES') THEN(DO)                                       /*CSW220*/
         CHGVAR     VAR(&PCOB) VALUE('Y')                                                  /*CSW220*/
         ENDDO                                                                             /*CSW220*/
-        CALL       PGM(FT000199) PARM(&PCOB &RTCD)                                        /*CSW220*/
+/********** CALL       PGM(FT000199) PARM(&PCOB &RTCD)*/                          /*CSW220 CSW122A*/
+        CALL       PGM(FT000199) PARM(&PCOB &RTCD &CSW122)                               /*CSW122A*/
         MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)                                /*CSW220*/
  /**/                                                                                     /*CSW220*/
  /** Execute rollback if SAR CSC022 is not enrolled or */                                 /*CSW220*/

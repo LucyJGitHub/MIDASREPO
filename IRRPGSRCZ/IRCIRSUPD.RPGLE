@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059410           Date 21Dec21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD023568           Date 19Apr23               *
+      *  Prev Amend No. MD059410           Date 21Dec21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056655A          Date 09Oct20               *
@@ -127,6 +128,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023568 - Incorrect reversal projected shadow/nostro        *
+      *             balances when IRS deal is deleted.                *
+      *             1. Apply fix similar to BUG7587 to prevent        *
+      *                deletion of unprocessed records from cash      *
+      *                flow file DLCFSCPD.                            *
+      *             2. Do not call DL2900 from SIRDEL (reversal       *
+      *                subroutine)                                    *
       *  MD059410 - Wrong rate is applied for the computation of int  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
@@ -2299,17 +2307,17 @@
      C                   MOVEL     DEALS         Z#ASTS
      C                   MOVE      RXDLNO        PDLNO
       *
-     C                   CALLB     'DL2900'
-     C                   PARM      *BLANK        PRTCD
-     C                   PARM                    PDLNO
-     C                   PARM      'A'           PBEAF
-      *
-     C     PRTCD         IFEQ      '*ERROR'
-     C                   MOVEL     'DL2900'      DBFILE
-     C                   MOVEL     '996'         DBASE
-     C                   MOVEL     *BLANK        DBKEY
-     C                   EXSR      *PSSR
-     C                   END
+     C***********        CALLB     'DL2900'                                                 MD023568
+     C***********        PARM      *BLANK        PRTCD                                      MD023568
+     C***********        PARM                    PDLNO                                      MD023568
+     C***********        PARM      'A'           PBEAF                                      MD023568
+      ***********                                                                           MD023568
+     C*****PRTCD         IFEQ      '*ERROR'                                                 MD023568
+     C***********        MOVEL     'DL2900'      DBFILE                                     MD023568
+     C***********        MOVEL     '996'         DBASE                                      MD023568
+     C***********        MOVEL     *BLANK        DBKEY                                      MD023568
+     C***********        EXSR      *PSSR                                                    MD023568
+     C***********        END                                                                MD023568
      C**********         ENDIF                                                        CIR008 BUG5519
       *
      C                   ENDSR
@@ -4156,6 +4164,11 @@
       ** processed (Cash Flow)                                                                CAP043
                                                                                               CAP043
      C                   IF        CAP043 = 'Y'                                               CAP043
+      *                                                                                     MD023568
+      ** Retain cash flow records if deal reversal (needed for                              MD023568
+      ** generating reversal entries in case of projected movements)                        MD023568
+      *                                                                                     MD023568
+     C                   IF        RXCHTP <> 'R'                                            MD023568
      C     KDTSC         SETLL     DLCFSCD0                                                   CAP043
      C     KDTSC         READE     DLCFSCD0                               98                  CAP043
                                                                                               CAP043
@@ -4168,6 +4181,7 @@
                                                                                               CAP043
      C     KDTSC         READE     DLCFSCD0                               98                  CAP043
      C                   ENDDO                                                                CAP043
+     C                   ENDIF                                                              MD023568
                                                                                               CAP043
       ** Clear all dates for this transaction except those already                            CAP043
       ** processed (Principal Change)                                                         CAP043

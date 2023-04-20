@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSW052             Date 02Nov21              */
-/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*       Last Amend No. BA8020             Date 20Mar23              */
+/*       Prev Amend No. CSW052             Date 02Nov21              */
+/*                      CSD101             Date 07Dec18              */
 /*                      CSC053             Date 20Aug18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CSC043             Date 18Jun10              */
@@ -35,6 +36,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       BA8020 - Enable Inter.Pel Transmission of SWIFT Outgoing    */
+/*                Messages from Midas                                */
 /*       CSW052 - Send SWIFT messages to AFT via MQ queues           */
 /*       CSD101 - Password Encryption (Recompile)                    */
 /*       CSC053 - FTP Secure Connections to SWIFT and Correspondence */
@@ -58,7 +61,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCLF       FILE(SDMGMEPD)
              DCL        VAR(&DELAY) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&RETVAL) TYPE(*CHAR) LEN(1)
@@ -80,6 +83,8 @@
              DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
              DCL        VAR(&IASP) TYPE(*CHAR) LEN(18)                                    /*CSC043*/
 /*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+             DCL        VAR(&BA8020) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA8020*/
+             DCL        VAR(&DIR) TYPE(*CHAR) LEN(50) VALUE('/usr/bin/')                  /*BA8020*/
 /*/COPY WNCPYSRC,MSC3200002                                          */
 /*/COPY WNCPYSRC,MSH00010                                            */
                                                                                           /*CSC053*/
@@ -123,11 +128,11 @@
              DCL        VAR(&MQ) TYPE(*CHAR) LEN(1) VALUE(' ')                            /*CSW052*/
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2001')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*                                                                                        /*CSC043*/
 /** Get the global IASP system values */                                                  /*CSC043*/
 /*                                                                                        /*CSC043*/
@@ -154,16 +159,16 @@
                                                                                           /*CSC043*/
 /* Set off all switches */
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Start commitment control */
 /**********     STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))         /*CPK009*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                              /*CPK009*/
- 
+
              CALL (AOSARDR0) PARM(&PRTCD '*VERIFY' 'CSW027')                              /*CSW027*/
                                                                                           /*CSW027*/
              IF (&PRTCD *EQ ' ') (CHGVAR (&CSW027) VALUE('Y'))                            /*CSW027*/
- 
+
  /** Access CSC053 Feature                                          */                    /*CSC053*/
              CHGVAR     VAR(&SAR) VALUE('CSC053')                                         /*CSC053*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CSC053*/
@@ -216,13 +221,21 @@
 
 /* Lock data area to show job is active */
              ALCOBJ     OBJ((MS_M2A_AFT *DTAARA *EXCL)) WAIT(120)
- 
+
 /* Access MG/ME installation Control Data and calculate dataq delay */
              RCVF       RCDFMT(SDMGMED0)
 /*/COPY WNCPYSRC,MSC3200003                                          */
              CHGVAR     VAR(&DELAY) VALUE(&ENSPLO * 60)
 /*/COPY WNCPYSRC,MSC3200004                                          */
- 
+
+             CHGVAR     VAR(&SAR) VALUE('BA8020')                                         /*BA8020*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA8020*/
+             CHGVAR     VAR(&BA8020) VALUE('N')                                           /*BA8020*/
+                                                                                          /*BA8020*/
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE &OPTN &SAR &SCSARD)                    /*BA8020*/
+             IF         COND(&RTNCDE *EQ '       ') THEN(CHGVAR +
+                          VAR(&BA8020) VALUE('Y'))                                        /*BA8020*/
+
              CHGVAR     VAR(&PRTCD) VALUE(*BLANKS)                                        /*CSW052*/
              CALL       PGM(AOSARDR0) PARM(&PRTCD '*VERIFY' 'CSW052')                     /*CSW052*/
              IF (&PRTCD *EQ ' ') (CHGVAR (&CSW052) VALUE('Y'))                            /*CSW052*/
@@ -293,19 +306,33 @@
              SNDPGMMSG  MSGID(MEM7000) MSGF(MIDAS) MSGDTA(&ENSAIP) +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              GOTO       CMDLBL(DTQ_PROC)
- 
+
 /* If link is active compress new batch of outgoing messages and */
 /* prepare FTP script file for transmission */
  LINK_UP:    CLRPFM     FILE(MSFTTIPD)
              CLRPFM     FILE(MSFTTOPD)
              CLRPFM     FILE(MSPCCOPD)
 /*/COPY WNCPYSRC,MSC3200006                                          */
- 
+
              IF COND(&CSW027 *EQ 'Y') THEN(DO)                                            /*CSW027*/
                 CLRPFM     FILE(MSLISTPD)                                                 /*CSW027*/
                 RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                                 /*CSW027*/
                 CHGVAR     VAR(&PFX) VALUE(%SUBSTRING(&SDSTAT 6 2))                       /*CSW027*/
                                                                                           /*CSW027*/
+             IF         COND(&BA8020 *EQ 'Y') THEN(DO)                                    /*BA8020*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*BA8020*/
+                CHGVAR     VAR(&AFTCMD) VALUE(&DIR *TCAT 'ls ' *CAT +
+                            &ENLPHO *CAT ' >/' *CAT &IASP *TCAT +
+                            '/qsys.lib/' *CAT &PFX +
+                            *CAT 'dplib.lib/mslistpd.file/mslistpd.mbr')                  /*BA8020*/
+             ENDDO                                                                        /*BA8020*/
+             ELSE       CMD(DO)                                                           /*BA8020*/
+                CHGVAR     VAR(&AFTCMD) VALUE(&DIR *TCAT 'ls ' *CAT +
+                            &ENLPHO *CAT ' >/qsys.lib/' *CAT &PFX +
+                            *CAT 'dplib.lib/mslistpd.file/mslistpd.mbr')                  /*BA8020*/
+             ENDDO                                                                        /*BA8020*/
+             ENDDO                                                                        /*BA8020*/
+             ELSE       CMD(DO)                                                           /*BA8020*/
 /*                                                                                        /*CSC043*/
 /** If IASP environment */                                                                /*CSC043*/
 /*                                                                                        /*CSC043*/
@@ -320,7 +347,33 @@
                            ' >/qsys.lib/' *CAT &PFX *CAT +
                              'dplib.lib/mslistpd.file/mslistpd.mbr')                      /*CSW027*/
              ENDDO                                                                        /*CSC043*/
+             ENDDO                                                                        /*BA8020*/
+
                 QSH        CMD(&AFTCMD)                                                   /*CSW027*/
+
+             IF         COND(&BA8020 *EQ 'Y') THEN(DO)                                    /*BA8020*/
+                RMVM       FILE(A8LPCCPP) MBR(MX*)                                        /*BA8020*/
+                MONMSG     MSGID(CPF7301)                                                 /*BA8020*/
+                CLRPFM     FILE(A8LPCCPP)                                                 /*BA8020*/
+                                                                                          /*BA8020*/
+                CALL       PGM(A8C020001) PARM(&ENLPHO &PFX)                              /*BA8020*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*BA8020*/
+                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)                           /*BA8020*/
+                   ROLLBACK                                                               /*BA8020*/
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                                TOPGMQ(*EXT) TOMSGQ(MOPERQ)                               /*BA8020*/
+                   GOTO       CMDLBL(END)                                                 /*BA8020*/
+                ENDDO                                                                     /*BA8020*/
+                                                                                          /*BA8020*/
+                CALL       PGM(A8020001) PARM(&MSGS)                                      /*BA8020*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*BA8020*/
+                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)                           /*BA8020*/
+                   ROLLBACK                                                               /*BA8020*/
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                                TOPGMQ(*EXT) TOMSGQ(MOPERQ)                               /*BA8020*/
+                   GOTO       CMDLBL(END)                                                 /*BA8020*/
+                ENDDO                                                                     /*BA8020*/
+             ENDDO                                                                        /*BA8020*/
                                                                                           /*CSW027*/
                 CALL       PGM(MS3205) PARM(&MSGS)                                        /*CSW027*/
                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CSW027*/
@@ -342,7 +395,11 @@
              GOTO       CMDLBL(END)
              ENDDO
              ENDDO                                                                        /*CSW027*/
- 
+                                                                                          /*BA8020*/
+            IF         COND(&BA8020 *EQ 'Y') THEN(DO)                                     /*BA8020*/
+            CALL       PGM(SWF001C)                                                       /*BA8020*/
+            ENDDO                                                                         /*BA8020*/
+
 /*/COPY WNCPYSRC,MSC3200007                                          */
 /* If any messages extracted attempt to send to SWIFT device using */
 /* TCP/IP File Transfer Protocol (FTP) */
@@ -365,7 +422,7 @@
              ENDDO                                                                        /*CSC053*/
                                                                                           /*CSC053*/
 /*/COPY WNCPYSRC,MSH00012                                            */
- 
+
 /* Analyse result of file transfer */
              CALL       PGM(MS3210) PARM(&OPR &ERR)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -383,7 +440,7 @@
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* If error reported on transfer send user message and reset batch */
 /* status to Ready-to-Send... */
              IF         COND(&OPR *NE ' ') THEN(DO)
@@ -411,7 +468,7 @@
              ENDDO                                                                        /*238732*/
 /************CALL       PGM(MS0203) PARM('R')                  147256*/
              ENDDO
- 
+
 /* else, if no error on transfer, set status to Transmitted-to-SWIFT */
 /************ELSE       CMD(CALL PGM(MS0203) PARM('T'))                                   /*CSW027*/
              ELSE       CMD(DO)                                                           /*CSW027*/
@@ -431,7 +488,7 @@
              ENDDO                                                                        /*236012*/
                                                                                           /*236012*/
              ENDDO                                                                        /*CSW027*/
- 
+
 /* If trace facility is enabled or transfer failed print FTP script */
 /* and output files */
              IF         COND((&TRACE *EQ 'T') *OR (&OPR *NE ' ')) +
@@ -439,14 +496,14 @@
              CPYF       FROMFILE(MSFTTIPD) TOFILE(*PRINT) FROMRCD(2)
              CPYF       FROMFILE(MSFTTOPD) TOFILE(*PRINT)
              ENDDO
- 
- 
+
+
              ENDDO
 /*/COPY WNCPYSRC,MSC3200005                                          */
- 
+
 /* If termination requested on previous iteration, terminate now */
  DTQ_PROC:   IF         COND(&RETVAL *EQ 'T') THEN(GOTO CMDLBL(END))
- 
+
 /* Wait on DEQW for time specified on ICD (or until entry received) */
              CALL       PGM(QRCVDTAQ) PARM(MS_M2A_AFT *LIBL +
                           X'00001F' &RETVAL &DELAY)
@@ -455,14 +512,14 @@
              IF         COND((&CSW027 *EQ 'Y') *AND (&CSW052 *EQ +
                           'Y')) THEN(GOTO CMDLBL(LOOPIFS))                                /*CSW052*/
              GOTO       CMDLBL(LOOP)
- 
+
 /* Abnormal termination */
  ABNOR:      CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           MSC3200 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
                MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  END:
- 
+
              ENDPGM

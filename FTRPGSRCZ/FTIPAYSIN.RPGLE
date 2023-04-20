@@ -3197,7 +3197,7 @@
      C                   ENDIF                                                                209067
       *                                                                                       209067
      C                   ENDIF
-     C                   ENDIF
+     C                   ENDIF                                                                CSW122
       *
       ** F15 - build Browse.
       *

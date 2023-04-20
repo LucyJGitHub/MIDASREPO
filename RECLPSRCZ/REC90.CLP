@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD030959           Date 17Jun15              */
+/*       Last Amend No. BA6032             Date 09Jan23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD030959           Date 17Jun15              */
 /*                      AR1097467          Date 01Apr13              */
 /*                      BUG27667           Date 14May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -37,6 +38,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       BA6032 - Invoke In-house Command to Update SAVF Authority   */
 /*       MD046248 - Finastra Rebranding                              */
 /*     MD030959 - Recompiled due to changed PF/HELDIHC.              */
 /*     AR1097467 - Expected 15% COB run optimization not met        */
@@ -103,6 +105,7 @@
              DCL        VAR(&TIME) TYPE(*CHAR) LEN(6)                                   /*BUG27667*/
              DCL        VAR(&BLNK327) TYPE(*CHAR) LEN(327) +
                         VALUE(' ')                                                      /*BUG27667*/
+             DCL        VAR(&BA6032) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6032*/
 /*/COPY WNCPYSRC,REC90010                                            */
 /**/
 /*           DCLDTAARA DTAARA(RESTAT)                   */            /*S01179*/
@@ -131,6 +134,15 @@
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                         VAR(&ULX043) VALUE('Y'))                                          /*CER001*/
                                                                                           /*CER001*/
+/** Check for Switchable feature BA6032.                                                  /*BA6032*/
+/*                                                                                        /*BA6032*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*BA6032*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA6032*/
+             CHGVAR     VAR(&SAR) VALUE('BA6032')                                         /*BA6032*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                              /*BA6032*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                             VAR(&BA6032) VALUE('Y'))                                     /*BA6032*/
+/*                                                                                        /*BA6032*/
              RTVJOBA    JOB(&JOB) USER(&USRID)                                          /*BUG27667*/
              RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&TIME)                                     /*BUG27667*/
              CHGVAR     VAR(&WSID) VALUE(&JOB)                                          /*BUG27667*/
@@ -475,6 +487,11 @@
                               FMTOPT(*NONE)                           /*S01147*/
                    MONMSG (CPF2817) CMPDTA(CPF2869)                   /*S01147*/
 /**/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&TOLIB) OBJECT(XREDEFD) TYPE(*FILE)                           /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
+                                                                                          /*BA6032*/
                    ALCOBJ     ((RESTAT *DTAARA *EXCLRD))
 /*           RCVDTAARA DTAARA(RESTAT)                   */            /*S01179*/
              RTVDTAARA  DTAARA(RESTAT) RTNVAR(&RESTAT)                /*S01179*/
@@ -541,6 +558,11 @@
                               FMTOPT(*NONE)                           /*S01147*/
                    MONMSG (CPF2817) CMPDTA(CPF2869)                   /*S01147*/
 /**/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&TOLIB) OBJECT(XRECCYD) TYPE(*FILE)                           /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
+                                                                                          /*BA6032*/
                    ALCOBJ     ((RESTAT *DTAARA *EXCLRD))
 /*           RCVDTAARA DTAARA(RESTAT)                   */            /*S01179*/
              RTVDTAARA  DTAARA(RESTAT) RTNVAR(&RESTAT)                /*S01179*/
@@ -607,6 +629,11 @@
                               FMTOPT(*NONE)                           /*S01147*/
                    MONMSG (CPF2817) CMPDTA(CPF2869)                   /*S01147*/
 /**/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&TOLIB) OBJECT(XREINTD) TYPE(*FILE)                           /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
+                                                                                          /*BA6032*/
                    ALCOBJ     ((RESTAT *DTAARA *EXCLRD))
 /*           RCVDTAARA DTAARA(RESTAT)                   */            /*S01179*/
              RTVDTAARA  DTAARA(RESTAT) RTNVAR(&RESTAT)                /*S01179*/
@@ -671,6 +698,11 @@
                               FMTOPT(*NONE)                           /*S01147*/
                    MONMSG (CPF2817) CMPDTA(CPF2869)                   /*S01147*/
 /**/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&TOLIB) OBJECT(XRECRGD) TYPE(*FILE)                           /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
+                                                                                          /*BA6032*/
                    ALCOBJ     ((RESTAT *DTAARA *EXCLRD))
 /*           RCVDTAARA DTAARA(RESTAT)                   */            /*S01179*/
              RTVDTAARA  DTAARA(RESTAT) RTNVAR(&RESTAT)                /*S01179*/
@@ -737,6 +769,11 @@
                    MONMSG (CPF2817) CMPDTA(CPF2869)                   /*S01147*/
 /*/COPY WNCPYSRC,REC90007                                            */
 /**/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&TOLIB) OBJECT(XRETRGD) TYPE(*FILE)                           /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
+                                                                                          /*BA6032*/
                    ALCOBJ     ((RESTAT *DTAARA *EXCLRD))
 /*           RCVDTAARA DTAARA(RESTAT)                   */            /*S01179*/
              RTVDTAARA  DTAARA(RESTAT) RTNVAR(&RESTAT)                /*S01179*/

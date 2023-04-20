@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055891           Date 01Sep20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. BA6032             Date 09Jan23              */
+/*       Prev Amend No. MD055891           Date 01Sep20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       BA6032 - Invoke In-house Command to Update SAVF Authority   */
 /*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       207764 - Change all SAV* and RST* commands to print a       */
@@ -74,6 +76,11 @@
              DCL        VAR(&TIMEO) TYPE(*DEC) LEN(5)                 /*S01417*/
              DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1) VALUE(0)       /*S01417*/
              DCL        VAR(&MULT) TYPE(*CHAR) LEN(2)                 /*S01417*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*BA6032*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*BA6032*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*BA6032*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*BA6032*/
+             DCL        VAR(&BA6032) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6032*/
                                                                       /*S01417*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
@@ -141,6 +148,15 @@
 /*/COPY WNCPYSRC,CBMENUCMP1                                          */
                                                                       /*S01408*/
              CHGVAR     VAR(&DTALIB) VALUE(&LIBGRP *TCAT 'DTALIB')    /*S01417*/
+/*                                                                                        /*BA6032*/
+/** Check for Switchable feature BA6032.                                                  /*BA6032*/
+/*                                                                                        /*BA6032*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*BA6032*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA6032*/
+             CHGVAR     VAR(&SAR) VALUE('BA6032')                                         /*BA6032*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                              /*BA6032*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                             VAR(&BA6032) VALUE('Y'))                                     /*BA6032*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,CBMENUCMP2                                          */
                                                                       /*S01408*/
@@ -154,6 +170,13 @@
              CRTSAVF    FILE(&DILIB/COBFILES_M)                                         /*MD055891*/
              MONMSG     MSGID(CPF7302)                                                  /*MD055891*/
                                                                                         /*MD055891*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&DILIB) OBJECT(COBFILES) TYPE(*FILE)                          /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             SETOBJAUT  LIB(&DILIB) OBJECT(COBFILES_M) TYPE(*FILE)                        /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
+                                                                                          /*BA6032*/
 /* Clear old Save Files                                               /*S01417*/
 /* If an old save file exists and not authorised to it, end program   /*S01417*/
                                                                       /*S01417*/

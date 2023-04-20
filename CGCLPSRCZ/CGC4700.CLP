@@ -14,28 +14,30 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. BA6032             Date 09Jan23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 087247             Date 03May95              */
+/*                      087247             Date 03May95              */
 /*                      S01522             Date 09Jan95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       BA6032 - Invoke In-house Command to Update SAVF Authority   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       087247 - Correct processing                                 */
 /*       S01522 - User Defined Correspondence                        */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM        PARM(&COMP_NAME &COMP_SEQ)
- 
+
 /* General                                                           */
- 
+
              DCL        VAR(&DATA)        TYPE(*CHAR) LEN(50)
              DCL        VAR(&DBPREFIX)    TYPE(*CHAR) LEN(2)
              DCL        VAR(&DPLIB)       TYPE(*CHAR) LEN(10)
@@ -45,39 +47,53 @@
              DCL        VAR(&COMP_NAME)   TYPE(*CHAR) LEN(10)
              DCL        VAR(&COMP_SEQ)    TYPE(*DEC) LEN(5)
              DCL        VAR(&STATUS)      TYPE(*CHAR) LEN(1)
- 
- 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*BA6032*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*BA6032*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*BA6032*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*BA6032*/
+             DCL        VAR(&BA6032) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6032*/
+
+
 /* Copyright Statement                                               */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
- 
+
+
 /* Global monitor message */
- 
+
              MONMSG  MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNORMAL)
- 
- 
+
+
 /* Send message to MRUNQ */
- 
+
              SNDPGMMSG  MSG('CGC4700 - Statement Driver Control') +
                           TOMSGQ(MRUNQ)
- 
- 
+
+
 /* Set-off Data Base Error Switches. */
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create data LDA in QTEMP  */
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
- 
+
 /* Construct DPLIB */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&DBPREFIX)
              CHGVAR     VAR(&DPLIB) VALUE(&DBPREFIX *CAT 'DPLIB')
+/*                                                                                        /*BA6032*/
+/** Check for Switchable feature BA6032.                                                  /*BA6032*/
+/*                                                                                        /*BA6032*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*BA6032*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA6032*/
+             CHGVAR     VAR(&SAR) VALUE('BA6032')                                         /*BA6032*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                              /*BA6032*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                             VAR(&BA6032) VALUE('Y'))                                     /*BA6032*/
 /* */
 /* Get run status */
 /* */
@@ -92,60 +108,64 @@
 /* If status is active skip */                                        /*087247*/
 /* */                                                                 /*087247*/
              IF         COND(&STATUS *NE 'Y') THEN(DO)                /*087247*/
- 
+
 /* Clear the UDC Statement Driver file.                              */
- 
+
              CLRPFM     FILE(CGSTMTPD)
- 
+
 /* Delete the Temporary Statement Driver file if it exists.          */
- 
+
              DLTF       FILE(&DPLIB/XXSTMTAH)
              MONMSG     MSGID(CPF2105)
- 
- 
+
+
 /* Create the Temporary Statement Driver file exists by duplicating  */
 /* the existing Statement Driver file and data.                      */
- 
+
              RTVOBJD    OBJ(STMTAH) OBJTYPE(*FILE) RTNLIB(&RTNLIB)
              CRTDUPOBJ  OBJ(STMTAH) FROMLIB(&RTNLIB) OBJTYPE(*FILE) +
                           TOLIB(&DPLIB) NEWOBJ(XXSTMTAH) DATA(*YES)
- 
- 
+
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&DPLIB) OBJECT(XXSTMTAH) TYPE(*FILE)                          /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
+
 /* Change the Temporary Statement Driver file to allow 2 members and */
 /* add one to receive the updated version of the Driver file.        */
- 
+
              CHGPF      FILE(XXSTMTAH) MAXMBRS(2)
              ADDPFM     FILE(XXSTMTAH) MBR(EXTRACT) TEXT('Extracted +
                           Statements to Process')
- 
- 
+
+
 /* Override the Temporary Statement Driver to the Extract member     */
 /* (The main member will remain as a security copy of the STMAH file)*/
- 
+
              OVRDBF     FILE(XXSTMTAH) MBR(EXTRACT) SEQONLY(*YES 500)
- 
- 
+
+
 /* Override the Reference File for Non-Comit Control                 */
              OVRDBF     FILE(EXUDCRPD) TOFILE(CGUDCRPD) SECURE(*YES) +
                           SHARE(*NO)
- 
- 
+
+
 /* Call the Statement Driver Program                                 */
- 
+
              CALL    PGM(CG4700) PARM(&RTN_CODE)
- 
- 
+
+
 /* */
 /* Check for Database errors trapped by program */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              GOTO       CMDLBL(ABNORMAL)
              ENDDO
- 
- 
+
+
              ENDDO                                                    /*087247*/
 /* */                                                                 /*087247*/
 /* Update status to Active */                                         /*087247*/
@@ -154,7 +174,7 @@
              CALL      PGM(CB0150) PARM(&COMP_NAME &COMP_SEQ &STATUS) /*087247*/
 /* If no error thus far, overwrite Statement Driver file with new    */
 /* Version.                                                          */
- 
+
              RTVMBRD    FILE(XXSTMTAH) MBR(EXTRACT) NBRCURRCD(&NO_RECS)
              IF         COND((&NO_RECS *NE 0)) THEN(DO)
              CPYF       FROMFILE(XXSTMTAH) TOFILE(STMTAH) +
@@ -169,12 +189,12 @@
 /* */
              CHGVAR     VAR(&STATUS) VALUE('N')
              CALL       PGM(CB0150) PARM(&COMP_NAME &COMP_SEQ &STATUS)
- 
+
 /* Terminate Program normally                                        */
- 
+
              GOTO       CMDLBL(ENDCLPGM)
- 
- 
+
+
 /**/
 /* Abnormal termination processing                       */
 /**/
@@ -193,7 +213,7 @@ ABNORMAL:
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           CGC4700 ended abnormally') MSGTYPE(*ESCAPE)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /**/
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)

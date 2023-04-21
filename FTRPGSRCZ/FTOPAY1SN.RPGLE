@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR928996A          Date 03May12               *
+      *  Last Amend No. CSW122             Date 14Apr23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD054131           Date 13Sep19               *
       *                 MD054130           Date 28Aug19               *
@@ -174,6 +175,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122 - SWIFT ISO 20022                                     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
@@ -1248,6 +1250,7 @@
      D CSW203          S              1A                                                      CSW203
       ** CSC022 switchable field                                                              CSC022
      D CSC022          S              1A                                                      CSC022
+     D CSW122          S              1A                                                      CSW122
       **                                                                                      CSC022
       ** CSC022 work fields                                                                   CSC022
      D WArrPtr         S              3S 0                                                    CSC022
@@ -1941,6 +1944,22 @@
      C                   EVAL      @EINKD = 'Y'                                 CFT007
      C                   ENDIF                                                  CFT007
      C                   ENDIF                                                  CFT007
+      *                                                                                       CSW122
+      ** Display F22=MX Element when CSW122 is ON and                                         CSW122
+      ** Action is Amend, Enquire and routed via FTMG                                         CSW122
+      *                                                                                       CSW122
+     C                   IF        CSW122 = 'Y' AND                                           CSW122
+     C                             (SACTION ='E' OR SACTION = 'A' OR                          CSW122
+     C                              LinkedEnq <> *BLANKS)                                     CSW122
+     C                   MOVE      'Y'           @EINKW                                       CSW122
+      *                                                                                       CSW122
+     C                   IF        LinkedEnq <> *BLANKS                                       CSW122
+     C                   Z-ADD     OTOPMSGR      OPMSGR                                       CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
+     C                   ELSE                                                                 CSW122
+     C                   MOVE      'N'           @EINKW                                       CSW122
+     C                   ENDIF                                                                CSW122
       *                                                                         CFT018
       **  Reset function keys prior to display                                  CFT018
      C                   Move      '0'           @INKC                          CFT018
@@ -1953,6 +1972,7 @@
      C                   Move      '0'           @INKQ                          CFT018
      C                   Move      '0'           @INKS                          CFT018
      C                   Move      '0'           @INKV                          CFT018
+     C                   MOVE      '0'           @INKW                                        CSW122
       *                                                                         CFT018
       **  Do not display screen if payment to be inserted from SSI              CFT018
       **  and no errors have occurred in validation                             CFT018
@@ -2007,6 +2027,7 @@
      C                   PARM                    @EINKQ            1            CFT007
      C                   PARM                    @EINKS            1
      C                   PARM                    @EINKV            1
+     C                   PARM                    @EINKW            1                          CSW122
       * Successful insert Payment
      C                   PARM                    @SITR            15
       *
@@ -2032,6 +2053,7 @@
      C                   PARM      '0'           @INKQ             1            CFT007
      C                   PARM      '0'           @INKS             1
      C                   PARM      '0'           @INKV             1
+     C                   PARM      '0'           @INKW             1                          CSW122
       * Write screen with no read indicator
      C                   PARM      'N'           WriteOnly         1
       * Cursor location on screen                                               CFT007
@@ -2069,6 +2091,8 @@
       *                                                                         CFT018
      C                   Endif                                                  CFT018
       *                                                                         CFT018
+      ** F12 - from F22=MX Element                                                            CSW122
+     C     @INKW         CASEQ     '1'           CANC@S                                       CSW122
       *
       * F3 - End Program
      C     @INKC         CASEQ     '1'           ENDP
@@ -4379,6 +4403,7 @@
      C                   Move      '0'           @INKQ                          CFT018
      C                   Move      '0'           @INKS                          CFT018
      C                   Move      '0'           @INKV                          CFT018
+     C                   MOVE      '0'           @INKW                                        CSW122
       *                                                                         CFT018
       **  Do not display screen if payment to be inserted from SSI              CFT018
      C     @InsertPay    Ifne      'Y'                                          CFT018
@@ -4426,6 +4451,7 @@
      C                   PARM                    @EINKQ                         CFT007
      C                   PARM                    @EINKS
      C                   PARM                    @EINKV
+     C                   PARM                    @EINKW                                       CSW122
       *
       * SUCCESFUL INSERT TRANSACTION
      C                   PARM                    @SITR
@@ -4453,6 +4479,7 @@
      C                   PARM      '0'           @INKQ                          CFT007
      C                   PARM      '0'           @INKS             1
      C                   PARM      '0'           @INKV             1
+     C                   PARM      '0'           @INKW             1                          CSW122
      C                   PARM      'Y'           WriteOnly         1
       * Cursor location on screen                                               CFT007
      C                   PARM      0             CursorLoc                      CFT007
@@ -9215,6 +9242,7 @@
       *
      C                   MOVEL     'N'           @EINKJ
      C                   MOVEL     'N'           @EINKV
+     C                   MOVEL     'N'           @EINKW                                       CSW122
       *
       * Initialize field status on Primary Screen
       *
@@ -9222,7 +9250,11 @@
       *
       ** If called from linked enqiry return to calling program.
      C     LinkedEnq     IFNE      *BLANK
+     C     @INKW         IFEQ      '1'                                                        CSW122
+     C                   MOVEL     'P'           @SCRN                                        CSW122
+     C                   ELSE                                                                 CSW122
      C                   MOVEL     'T'           @SCRN
+     C                   ENDIF                                                                CSW122
       ** F12
      C     @INKL         IFEQ      '1'
      C                   MOVE      '5'           @ReturnCde
@@ -9401,6 +9433,23 @@
      C                   ELSE
      C                   MOVE      'N'           @EINKV
      C                   END
+      *                                                                                       CSW122
+      ** Display F22=MX Element when CSW122 is ON and                                         CSW122
+      ** Action is Amend, Enquire and routed via FTMG                                         CSW122
+      *                                                                                       CSW122
+     C                   IF        CSW122 = 'Y' AND                                           CSW122
+     C                             (@SORT = 'E' OR @SORT = 'A' OR                             CSW122
+     C                              LinkedEnq <> *BLANKS)                                     CSW122
+     C                   MOVE      'Y'           @EINKW                                       CSW122
+      *                                                                                       CSW122
+     C                   IF        LinkedEnq <> *BLANKS                                       CSW122
+     C                   Z-ADD     OTOPMSGR      OPMSGR                                       CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
+     C                   ELSE                                                                 CSW122
+     C                   MOVE      'N'           @EINKW                                       CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
      C
      C                   ENDSR
       *****************************************************************
@@ -9429,6 +9478,7 @@
      C                   Move      '0'           @INKQ                          CFT018
      C                   Move      '0'           @INKS                          CFT018
      C                   Move      '0'           @INKV                          CFT018
+     C                   MOVE      '0'           @INKW                                        CSW122
       *                                                                         CFT018
       **  Do not display screen if payment to be inserted from SSI              CFT018
      C     @InsertPay    Ifne      'Y'                                          CFT018
@@ -9477,6 +9527,7 @@
      C                   PARM      'N'           @EINKQ                         CFT007
      C                   PARM      'N'           @EINKS
      C                   PARM      'N'           @EINKV
+     C                   PARM      'N'           @EINKW                                       CSW122
       *
       * SUCCESFUL INSERT
      C                   PARM                    @SITR
@@ -9504,6 +9555,7 @@
      C                   PARM      '0'           @INKQ                          CFT007
      C                   PARM      '0'           @INKS             1
      C                   PARM      '0'           @INKV             1
+     C                   PARM      '0'           @INKW                                        CSW122
      C                   PARM      'N'           WriteOnly         1
       * Cursor location on screen                                               CFT007
      C                   PARM      0             CursorLoc                      CFT007
@@ -11563,6 +11615,31 @@
      C                   IF        PRTCD = *BLANKS                                            CFT050
      C                   EVAL      @CFT007 = 'Y'                                              CFT050
      C                   ENDIF                                                                CFT050
+      *                                                                                       CSW122
+      ** CSW122 - SWIFT ISO feature                                                           CSW122
+      *                                                                                       CSW122
+     C                   CALL      'AOSARDR0'                                                 CSW122
+     C                   PARM      *BLANKS       PRtCd                                        CSW122
+     C                   PARM      '*VERIFY'     POptn                                        CSW122
+     C                   PARM      'CSW122'      PSard                                        CSW122
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW122
+      *                                                                                       CSW122
+      ** An NRF (No Record Found) return code is valid.                                       CSW122
+      ** Issue database error only for error return codes.                                    CSW122
+      *                                                                                       CSW122
+     C                   IF        PRtCd <> *BLANKS AND                                       CSW122
+     C                             PRtCd <> '*NRF   '                                         CSW122
+     C                   EVAL      DBKEY = 'CSW122'                                           CSW122
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CSW122
+     C                   Z-ADD     908           DBASE                                        CSW122
+     C                   EXSR      *PSSR                                                      CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
+     C                   IF        PRtCd = *BLANKS                                            CSW122
+     C                   EVAL      CSW122 = 'Y'                                               CSW122
+     C                   ELSE                                                                 CSW122
+     C                   EVAL      CSW122 = 'N'                                               CSW122
+     C                   ENDIF                                                                CSW122
                                                                                 CFT012
       * Access SAR details file to see if CFT012 is installed.                  CFT012
       *                                                                         CFT012

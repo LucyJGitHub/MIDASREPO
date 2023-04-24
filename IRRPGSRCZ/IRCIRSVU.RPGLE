@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060981           Date 11Apr23               *
-      *  Prev Amend No. MD021871           Date 11Apr23               *
+      *  Last Amend No. MD023568           Date 19Apr23               *
+      *  Prev Amend No. MD060981           Date 11Apr23               *
+      *                 MD021871           Date 11Apr23               *
       *                 MD021868           Date 11Apr23               *
       *                 MD059314           Date 22Feb22               *
       *                 MD059100A          Date 23Dec21               *
@@ -117,6 +118,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023568 - Incorrect reversal projected shadow/nostro        *
+      *             balances when IRS deal is deleted.                *
+      *             Apply fix similar to BUG7587 to prevent           *
+      *             deletion of unprocessed records from cash         *
+      *             flow file DLCFSCPD.                               *
       *  MD060981 - CIRS buffer issue                                 *
       *             Applied for MD-61255                              *
       *  MD021871 - Yearly frequency are generated as monthly freq.   *
@@ -6846,6 +6852,10 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       ** Clear all dates for this transaction except those already                           BUG5449
       ** processed (Cash Flow)                                                               BUG5449
                                                                                              BUG5449
+      ** Retain cash flow records if deal reversal (needed for                              MD023568
+      ** generating reversal entries in case of projected movements)                        MD023568
+      *                                                                                     MD023568
+     C                   IF        SACCD <> 'R'                                             MD023568
      C     KDTSC         SETLL     DLCFSCD0                                                  BUG5449
      C     KDTSC         READE     DLCFSCD0                               98                 BUG5449
                                                                                              BUG5449
@@ -6857,6 +6867,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
                                                                                              BUG5449
      C     KDTSC         READE     DLCFSCD0                               98                 BUG5449
      C                   ENDDO                                                               BUG5449
+     C                   ENDIF                                                              MD023568
                                                                                              BUG5449
       ** Clear all dates for this transaction except those already                           BUG5449
       ** processed (Principal Change)                                                        BUG5449

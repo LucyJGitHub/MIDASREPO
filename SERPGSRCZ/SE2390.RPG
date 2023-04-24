@@ -33,8 +33,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD050604           Date 21Feb20               *
-      *  Prev Amend No. MD052583           Date 22Jan19               *
+      *  Last Amend No. MD059109           Date 18Apr23               *
+      *  Prev Amend No. MD050604           Date 21Feb20               *
+      *                 MD052583           Date 22Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037742           Date 04Apr16               *
       *                 260331             Date 31Mar16               *
@@ -150,12 +151,17 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD059109 - Incorrect posting amount on maturity.             *
+      *             Split a Security's maturty posting (MT event)     *
+      *             when the amount to be posted is greater than      *
+      *             9,999,999,999,999.                                *
+      *           - Applied for MD061150                              *
       *  MD050604 - Average price of position changed incorrectly.    *
       *           - Recompiled due to changes in copy source ZCNSDZ1. *
       *  MD052583 - Reinstate deleted fixes CSE110                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE110 - Condition Output of Partly Paid Account Key on      *
-      *           Position Settlement.                                *      
+      *           Position Settlement.                                *
       *  MD037742 - Security diary events - pool factor reversal.     *
       *             Additional fix to initialize tax fields to prevent*
       *             garbage which cause decimal data error in COB.    *
@@ -819,6 +825,8 @@
      C********** *LIKE     DEFN RDFD      URDFD                                 AR1001183 AR1001183A
      C********** *LIKE     DEFN CNSP      UCNSP                                 AR1001183 AR1001183A
      C********** *LIKE     DEFN CNSG      UCNSG                                 AR1001183 AR1001183A
+     C           *LIKE     DEFN PAMD      WPAMD                                             MD059109
+     C                     MOVE *HIVAL    WPAMD                                             MD059109
      C*                                                                   095066
      C*** Check if Value date position is to be used for Dividend.        095066
      C*                                                                   095066
@@ -2132,7 +2140,39 @@
      C** IF POSITION SETTLEMENT REQUIRED WRITE POSN SETLL.IN SUBR W02     E21138
      C*                                                                   E21138
      C           PSRI      IFEQ 'Y'                                       E21138
+      *                                                                                     MD059109
+      ** Process split of amount to be posted in POSETD if WNOMAT is                        MD059109
+      ** greater than 9,999,999,999,999.                                                    MD059109
+      *                                                                                     MD059109
+     C                     MOVE 'N'       WSPLIT  1                                         MD059109
+     C                     Z-ADDWNOMAT    TNOMAT 150                                        MD059109
+     C           TNOMAT    IFLT 0                                                           MD059109
+     C                     Z-SUBTNOMAT    TNOMAT                                            MD059109
+     C                     ENDIF                                                            MD059109
+      *                                                                                     MD059109
+     C           TNOMAT    DOWGTWPAMD                                                       MD059109
+     C                     Z-ADDWPAMD     PAMD                                              MD059109
+      *                                                                                     MD059109
+     C           WNOMAT    IFLE 0                                                           MD059109
+     C                     MOVE 'P'       PPRE                                              MD059109
+     C                     ELSE                                                             MD059109
+     C                     MOVE 'R'       PPRE                                              MD059109
+     C                     ENDIF                                                            MD059109
+      *                                                                                     MD059109
+     C                     EXSR W02                                                         MD059109
+     C                     MOVE 'Y'       WSPLIT                                            MD059109
+     C           TNOMAT    SUB  WPAMD     TNOMAT                                            MD059109
+      *                                                                                     MD059109
+     C                     ENDDO                                                            MD059109
+      *                                                                                     MD059109
+      ** Process remaining amount for split if WSPLIT is 'Y'                                MD059109
+      *                                                                                     MD059109
+     C           WSPLIT    IFEQ 'Y'                                                         MD059109
+     C                     Z-ADDTNOMAT    PAMD                                              MD059109
+     C                     ELSE                                                             MD059109
      C                     Z-ADDWNOMAT    PAMD                            E19430
+     C                     ENDIF                                                            MD059109
+      *                                                                                     MD059109
      C           PAMD      IFLT 0
      C                     Z-SUBPAMD      PAMD
      C                     END
@@ -2152,9 +2192,54 @@
      C* WRITE ACCOUNT KEYS RECORD SUBR W01 - IIIM_X______MVN___CV         E19770
      C*                                                                   E19770
      C           AKRI      IFEQ 'Y'                                       E21138
+      *                                                                                     MD059109
+      ** Process split of amount to be posted in SEKEYD if WNOMAT is                        MD059109
+      ** greater than 9,999,999,999,999.                                                    MD059109
+      *                                                                                     MD059109
+     C                     MOVE 'N'       WSPLIT                                            MD059109
+     C                     Z-ADDWNOMAT    TNOMAT                                            MD059109
+     C           TNOMAT    IFLT 0                                                           MD059109
+     C                     Z-SUBTNOMAT    TNOMAT                                            MD059109
+     C                     ENDIF                                                            MD059109
+      *                                                                                     MD059109
+     C           TNOMAT    DOWGTWPAMD                                                       MD059109
+     C                     MOVE 'M'       WACEVC                                            MD059109
+     C                     Z-ADDWPAMD     EVAM                                              MD059109
+     C           WNOMAT    IFLT 0                                                           MD059109
+     C                     Z-SUBEVAM      EVAM                                              MD059109
+     C                     ENDIF                                                            MD059109
+      *                                                                                     MD059109
+     C           NPAC      IFEQ 'N'                                                         MD059109
+     C           WNOMAT    ORGT 0                                                           MD059109
+     C                     MOVE ' '       WACNEG                                            MD059109
+     C                     ELSE                                                             MD059109
+     C                     MOVE 'N'       WACNEG                                            MD059109
+     C                     ENDIF                                                            MD059109
+     C                     MOVE 'CV'      WACAMC                                            MD059109
+      *                                                                                     MD059109
+     C           WNOMAT    IFLT 0                                                           MD059109
+     C           NPAC      ANDEQ'Y'                                                         MD059109
+     C                     Z-SUBEVAM      EVAM                                              MD059109
+     C                     ENDIF                                                            MD059109
+     C                     EXSR W01                                                         MD059109
+     C                     MOVE 'Y'       WSPLIT                                            MD059109
+     C           TNOMAT    SUB  WPAMD     TNOMAT                                            MD059109
+      *                                                                                     MD059109
+     C                     ENDDO                                                            MD059109
+      *                                                                                     MD059109
      C                     MOVE 'M'       WACEVC                          E19770
      C***********          Z-ADDWNOMAT    WRK130                   E19430 E23169
+      *                                                                                     MD059109
+      ** Process remaining amount for split if WSPLIT is 'Y'                                MD059109
+      *                                                                                     MD059109
+     C           WSPLIT    IFEQ 'Y'                                                         MD059109
+     C                     Z-ADDTNOMAT    WRK130                                            MD059109
+     C           WNOMAT    IFLT 0                                                           MD059109
+     C                     Z-SUBWRK130    WRK130                                            MD059109
+     C                     ENDIF                                                            MD059109
+     C                     ELSE                                                             MD059109
      C                     Z-ADDWNOMAT    WRK130 130                      E23169
+     C                     ENDIF                                                            MD059109
      C*                                                                   E19770
      C** SET NEGATIVE IND TO ' 'IF NEG POSN ON A/C IS N OR                E19770
      C** NOM.MATURING + INTEREST IS GREATER THAN ZERO                     E19770

@@ -33,8 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059314           Date 22Feb22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD061255           Date 11Apr23               *
+      *  Prev Amend No. MD021871           Date 11Apr23               *
+      *                 MD021868           Date 11Apr23               *
+      *                 MD059314           Date 22Feb22               *
+      *                 MD059304           Date 11Nov21               *
       *                 MD059183A          Date 21Dec21               *
       *                 MD059100           Date 28Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -123,6 +126,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061255 - CIRS and SIRS buffer issue                        *
+      *  MD021871 - Yearly frequency are generated as monthly freq.   *
+      *  MD021868 - Default the cashflow amount when control date is  *
+      *             being defaulted.                                  *
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -1536,9 +1543,11 @@ RGC                                                                             
      C                   EVAL      TRDATEAST=%SUBST(BufferEx2:4816)                           CIR020
      C                   EVAL      TPDATEAST=%SUBST(BufferEx2:9616)+BufferEx3       CIR020 MD059183A
      C**********         EVAL      OCFSAST=%SUBST(BufferEx3:4417)+BufferEx4         CIR020 MD059183A
-     C                   EVAL      OCFSAST=%SUBST(BufferEx3:4415)+BufferEx4                MD059183A
+     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:4415)+BufferEx4       MD059183A MD061255
+     C                   EVAL      OCFSAST=%SUBST(BufferEx3:4417)+BufferEx4                 MD061255
      C**********         EVAL      TCFSAST=%SUBST(BufferEx4:7618)+BufferEx5+        CIR020 MD059183A
-     C                   EVAL      TCFSAST=%SUBST(BufferEx4:7616)+BufferEx5+               MD059183A
+     C**********         EVAL      TCFSAST=%SUBST(BufferEx4:7616)+BufferEx5+      MD059183A MD061255
+     C                   EVAL      TCFSAST=%SUBST(BufferEx4:7618)+BufferEx5+                MD061255
      C                                                 BufferEx6                              CIR020
      C                   EVAL      PCSAST=%SUBST(BufferEx6:820)+BufferEx7                     CIR020
      C                   MOVEA     ORDATEAST     ORDATEA                        BUG4646
@@ -1978,23 +1987,28 @@ RGC                                                                             
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12456)+PCSAST          MD044553 MD056546
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9255)                   MD044553 MD056546
      C**********         EVAL      Buffer2=%SUBST(ORDATEAST:887)+OPDATEAST        MD056546 MD059183A
-     C                   EVAL      Buffer2=%SUBST(ORDATEAST:786)                            MD059183
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:786)                   MD059183 MD061255
+     C                   EVAL      Buffer2=%SUBST(ORDATEAST:787)                            MD061255
      C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:86)+TRDATEAST       MD056546 MD059183A
      C                   EVAL      BufferEx2 = %SUBST(ORDATEAST:4786) +                    MD059183A
      C                                         OPDATEAST +TRDATEAST                        MD059183A
      C                                         +TPDATEAST                                   MD056546
      C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:485)+OCFSAST        MD056546 MD059183A
-     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:386)+OCFSAST                 MD059183A
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:386)+OCFSAST        MD059183A MD061255
+     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:385)+OCFSAST                  MD061255
      C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5684)+TCFSAST         MD056546 MD059183A
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5586) +                        MD059183A
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5586) +               MD059183A MD061255
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5584) +                         MD061255
      C                             TCFSAST                                                 MD059183A
      C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2483)                 MD056546 MD059183A
-     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2385) +                        MD059183A
-     C                             TCFSAST                                                 MD059183A
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2385) +               MD059183A MD061255
+     C**********                   TCFSAST                                        MD059183A MD061255
+     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2383)                           MD061255
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12482)+PCSAST         MD056546 MD059183A
      C                   EVAL      BufferEx6=%SUBST(TCFSAST:12382)+PCSAST                  MD059183A
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9281)                            MD056546
-     C                   EVAL      BufferEx7=%SUBST(PCSAST:9183)                            MD059183
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9183)                   MD059183 MD061255
+     C                   EVAL      BufferEx7=%SUBST(PCSAST:9181)                            MD061255
      C                   ENDIF                                                               BUG6377
 
      C                   RETURN
@@ -3382,9 +3396,23 @@ RGC                                                                             
      C                   EVAL      I=1                                          BUG4646
      C                   EXSR      SRGetCtlDate                                 BUG4646
       * Default with control date                                               BUG5964
+      ** and amount                                                                         MD021868
+      *                                                                                     MD021868
      C                   IF        X=1                                          BUG5964
      C                             and SUNIPD <> *blanks                                     BUG7621
      C                   EVAL      OCFSA(X)=SUNIPD                              BUG5964
+     C                   IF        SFORMAMTOC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTOC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTOC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(OCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ELSE                                                   BUG5964
       * Check if all dates are processed                                        BUG5964
@@ -3402,6 +3430,18 @@ RGC                                                                             
      C                             and SUNIPD <> *blanks                                     BUG7621
      C                             and SUIPFR <> 'Z'                                         BUG7621
      C                   EVAL      OCFSA(X)=SUNIPD                              BUG5964
+     C                   IF        SFORMAMTOC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTOC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTOC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(OCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ENDIF                                                  BUG5964
      C                   ENDIF                                                  BUG5964
@@ -3615,9 +3655,23 @@ RGC                                                                             
      C                   EVAL      I=1                                          BUG4646
      C                   EXSR      SRGetCtlDate                                 BUG4646
       * Default with control date                                               BUG5964
+      ** amount                                                                             MD021868
+      *                                                                                     MD021868
      C                   IF        X=1                                          BUG5964
      C                             and STNIPD <> *blanks                                     BUG7621
      C                   EVAL      TCFSA(X)=STNIPD                              BUG5964
+     C                   IF        SFORMAMTTC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTTC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTTC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(TCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ELSE                                                   BUG5964
       * Check if all dates are processed                                        BUG5964
@@ -3635,6 +3689,18 @@ RGC                                                                             
      C                             and STNIPD <> *blanks                                     BUG7621
      C                             and STIPFR <> 'Z'                                         BUG7621
      C                   EVAL      TCFSA(X)=STNIPD                              BUG5964
+     C                   IF        SFORMAMTTC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTTC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTTC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(TCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ENDIF                                                  BUG5964
      C                   ENDIF                                                  BUG5964
@@ -5073,7 +5139,8 @@ RGC                                                                             
      C                   ADD       6             MTHN                           BUG4646
      C                   ENDIF                                                  BUG4646
      C                   IF        SFREQF = 'Y'                                 BUG4646
-     C                   ADD       1             MTHN                           BUG4646
+     C**********         ADD       1             MTHN                               BUG4646 MD021871
+     C                   ADD       1             YRNO                                       MD021871
      C                   ENDIF                                                  BUG4646
      C*                                                                         BUG4646
      C**  If past end of year                                                   BUG4646

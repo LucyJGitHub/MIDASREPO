@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. MD057455           Date 27Jan21               *
+      *  Last Amend No. EML104             Date 05Feb20               *      
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD057455           Date 27Jan21               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL178             Date 04Aug16               *
@@ -669,6 +670,7 @@
      C                   EVAL      *IN55 = *ON                                                CER030
       *                                                                                       CER030
      C                   ELSEIF    D1MCNW <> 'Y' AND D1MCNW <> 'N'                            CER030
+     C/COPY WNCPYSRC,EML104_027                                                               EML104
       *                                                                                       CER030
      C                   EVAL      ZAMSID = 'USR3973'                                         CER030
      C                   EVAL      *IN55 = *ON                                                CER030
@@ -989,6 +991,7 @@
      C                   MoveL     'Y'           CMG008                                       CMG008
      C                   ENDIF                                                                CMG008
      C/COPY OFCPYSRCZ,CGL146_002                                                              CGL146
+     C/COPY WNCPYSRC,EML104_028                                                               EML104
       *    ----------    ------
      C     @INZSR        ENDSR
 

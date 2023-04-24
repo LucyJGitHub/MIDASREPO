@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. MD055861           Date 18May20               *
+      *  Last Amend No. MD061276           Date 17Apr23               *      
+      *  Prev Amend No. EML104             Date 05Feb20               *      
+      *                 MD058830           Date 01Oct21               *
+      *                 MD055861           Date 18May20               *
       *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23028           Date 20Feb09               *
@@ -31,6 +33,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061276 - Conflict between EML104 and MD-58830 as SDNWRKPD  *
+      *             was made redundant by DDS. Recompile due to       *
+      *             changes in EML104_017 and EML104_018.             *
+      *             Added new hook EML104_037.                        *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Add EML104_017, EML104_018, EML104_019              *      
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD055861 - Value entered in Allow Non SWIFT Character is not *
       *             saved in the file SDNWRKPD. (Recompile)           *
@@ -46,6 +55,7 @@
      F**********                           RENAME(@EDREJZ:SDNWRKD1)                         MD058830
       ** Midas Message Network Details
       *
+     F/COPY WNCPYSRC,EML104_017                                                               EML104
 
      FGLNWACL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLNWACD0:GLNWACD1)
@@ -155,6 +165,7 @@
       *
 
      D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD058830
+     D/COPY WNCPYSRC,EML104_037                                                             MD061276     
       ** Current selection
       *
      D CurSelect       DS
@@ -518,6 +529,7 @@
      C                   EXSR      $ZaSndMsg
      C                   MOVE      'N'           ValidCodes
      C                   ENDIF
+     F/COPY WNCPYSRC,EML104_018                                                               EML104
 
      C                   ENDIF
 
@@ -1105,6 +1117,7 @@
       ** Initialise copyright array
       *
      C                   MOVEA     CPY@          CPY@@            80
+     F/COPY WNCPYSRC,EML104_019                                                               EML104
 
       ** Define fields used by the message sending function
       *

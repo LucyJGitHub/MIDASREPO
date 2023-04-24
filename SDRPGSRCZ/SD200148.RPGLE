@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. EML104             Date 05Feb20               *      
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL152             Date 02Dec13               *
       *                 CER059             Date 19Jul10               *
@@ -24,6 +25,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Add EML104_029, EML104_030, EML104_031, EML104_032  *      
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
@@ -230,13 +234,16 @@
       *
       ** Field Transaction Reference Number
       *
+     C/COPY WNCPYSRC,EML104_029                                                               EML104
      C                   IF        D8FTRN = *BLANKS
+     C/COPY WNCPYSRC,EML104_030                                                               EML104
      C                   EVAL      PZaMsId = 'USR3970'
      C                   EVAL      *IN44 = *ON
      C                   EXSR      SRZaSndMsg
      C                   EVAL      *IN40 = *ON
      C                   EVAL      PRetCodeOut = '*MSG'
      C                   ENDIF
+     C/COPY WNCPYSRC,EML104_031                                                               EML104
       *
       ** Exit from Module
       *
@@ -348,6 +355,7 @@
      C                   KFLD                    KNwrk
      C                   KFLD                    KTrCd
       *
+     C/COPY WNCPYSRC,EML104_032                                                               EML104
      C                   ENDSR
       *
       *****************************************************************

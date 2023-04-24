@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD050727           Date 21Jan17               *      
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 223783             Date 28May12               *
       *                 CMG008             Date 20Feb20               *
       *                 MD054605           Date 17Oct19               *
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050727 - Emergency fix to enable alphanumeric batches      *
+      *             to be processed. Please see SFDC 01793714         *      
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -644,7 +647,8 @@
       *
       ** Batch Transaction
       *
-     C     '0123456789'  CHECK     GLSPOS        Wx
+     C*****'0123456789'**CHECK     GLSPOS        Wx                                         MD050727
+     C     '0123456789'  CHECK     GLSPOS:4      Wx                                         MD050727
       *
       ** Source of Posting contains 6 numeric digits (batch number +
       ** batch item)

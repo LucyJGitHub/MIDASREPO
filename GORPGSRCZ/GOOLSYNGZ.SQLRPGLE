@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. EML102             Date 13Aug20               *
+      *  Prev Amend No. CER073D            Date 13Aug20               *      
+      *                 MD058085           Date 11May21               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD056557           Date 31Aug20               *
       *                 MD056556           Date 31Aug20               *
       *                 MD055681           Date 31Jul20               *
@@ -117,6 +119,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML102 - Upgrade of UNL007 to FB2.1 SP23                     *
+      *  UNL007 - Extended Narratives                                 *
+      *  CER073D - Upgrade of EML014 to FB2.1 SP23                    *
+      *  EML014 - AnaCredit Reporting Enhancement (Recompile)         *      
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD056557 - Deliverable Data Split for Pulldown               *

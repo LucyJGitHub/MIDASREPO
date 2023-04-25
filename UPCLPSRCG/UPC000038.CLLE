@@ -9,76 +9,109 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. CUP041   *CREATE   Date 24Jun14              */
-/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*       Last Amend No. MD061310           Date 24Apr23              */
+/*       Prev Amend No. CUP041   *CREATE   Date 24Jun14              */
+/*                      xxxxxxxx           Date ddMmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061310 - Process improvement.                             */
 /*       CUP041 - New Bridge methodology to combine menu options     */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&LAYER &PFX &BRGBRGLIB &RTNFLAG)
- 
+
              DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
              DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&MLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TLIB) TYPE(*CHAR) LEN(10)
- 
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')                      /*MD061310*/
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(500)                                  /*MD061310*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2014')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              DLTF       FILE(QTEMP/UPC000038F)
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(QTEMP/UPC000038O)
              MONMSG     MSGID(CPF0000)
- 
+
              CLRPFM     FILE(UPSFMTQF)
- 
+
              CRTDUPOBJ  OBJ(UPFDRFTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) NEWOBJ(UPC000038F)
- 
+
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
                 CHGVAR     VAR(&MLIB) VALUE(&PFX *CAT 'GMLIB')
                 CHGVAR     VAR(&PLIB) VALUE(&PFX *CAT 'GPLIB')
                 CHGVAR     VAR(&TLIB) VALUE(&PFX *CAT 'GTALIB')
              ENDDO
- 
+
              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
                 CHGVAR     VAR(&MLIB) VALUE(&PFX *CAT 'DMLIB')
                 CHGVAR     VAR(&PLIB) VALUE(&PFX *CAT 'DPLIB')
                 CHGVAR     VAR(&TLIB) VALUE(&PFX *CAT 'DTALIB')
              ENDDO
- 
-             DSPFD      FILE(&MLIB/*ALL) TYPE(*RCDFMT) +
+
+/**********  DSPFD      FILE(&MLIB/*ALL) TYPE(*RCDFMT) +
                           OUTPUT(*OUTFILE) +
-                          OUTFILE(QTEMP/UPC000038O) OUTMBR(*FIRST *ADD)
-             DSPFD      FILE(&PLIB/*ALL) TYPE(*RCDFMT) +
+                          OUTFILE(QTEMP/UPC000038O) OUTMBR(*FIRST *ADD) */              /*MD061310*/
+/**********  DSPFD      FILE(&PLIB/*ALL) TYPE(*RCDFMT) +
                           OUTPUT(*OUTFILE) +
-                          OUTFILE(QTEMP/UPC000038O) OUTMBR(*FIRST *ADD)
-             DSPFD      FILE(&TLIB/*ALL) TYPE(*RCDFMT) +
+                          OUTFILE(QTEMP/UPC000038O) OUTMBR(*FIRST *ADD) */              /*MD061310*/
+/**********  DSPFD      FILE(&TLIB/*ALL) TYPE(*RCDFMT) +
                           OUTPUT(*OUTFILE) +
-                          OUTFILE(QTEMP/UPC000038O) OUTMBR(*FIRST *ADD)
- 
+                          OUTFILE(QTEMP/UPC000038O) OUTMBR(*FIRST *ADD) */              /*MD061310*/
+
+             CRTDUPOBJ  OBJ(UPFDRFTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UPC000038O)                               /*MD061310*/
+                                                                                        /*MD061310*/
+             CLRPFM     FILE(QTEMP/UPC000038O)                                          /*MD061031*/
+                                                                                        /*MD061310*/
+             CHGVAR     VAR(&SQL) VALUE('INSERT INTO  +
+                           QTEMP/UPC000038O (RFFILE, RFLIB,  +
+                            RFNAME) select a.dbifil, a.dbilib,  +
+                            a.dbifmt FROM QADBIFLD a WHERE DBILIB = ' +
+                          *BCAT &QUOTE *TCAT &MLIB *TCAT &QUOTE  *BCAT +
+                          ' GROUP BY DBILIB, DBIFIL, DBIFMT')                           /*MD061310*/
+                RUNSQL     SQL(&SQL) COMMIT(*NONE)                                      /*MD061310*/
+                                                                                        /*MD061310*/
+             CHGVAR     VAR(&SQL) VALUE('INSERT INTO  +
+                           QTEMP/UPC000038O (RFFILE, RFLIB,  +
+                            RFNAME) select a.dbifil, a.dbilib,  +
+                            a.dbifmt FROM QADBIFLD a WHERE DBILIB = ' +
+                          *BCAT &QUOTE *TCAT &PLIB *TCAT &QUOTE  *BCAT +
+                          ' GROUP BY DBILIB, DBIFIL, DBIFMT')                           /*MD061310*/
+                RUNSQL     SQL(&SQL) COMMIT(*NONE)                                      /*MD061310*/
+                                                                                        /*MD061310*/
+             CHGVAR     VAR(&SQL) VALUE('INSERT INTO  +
+                           QTEMP/UPC000038O (RFFILE, RFLIB,  +
+                            RFNAME) select a.dbifil, a.dbilib,  +
+                            a.dbifmt FROM QADBIFLD a WHERE DBILIB = ' +
+                          *BCAT &QUOTE *TCAT &TLIB *TCAT &QUOTE  *BCAT +
+                          ' GROUP BY DBILIB, DBIFIL, DBIFMT')                           /*MD061310*/
+                RUNSQL     SQL(&SQL) COMMIT(*NONE)                                      /*MD061310*/
+                                                                                        /*MD061310*/
              CPYF       FROMFILE(QTEMP/UPC000038O) +
                           TOFILE(QTEMP/UPC000038F) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)
- 
+
              CALL       PGM(UP0025) PARM(&RTNFLAG)
              IF         COND(&RTNFLAG *EQ 'E') THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
 ERROR:
              CHGVAR     VAR(&RTNFLAG) VALUE('E')
- 
+
 ENDPGM:
              ENDPGM

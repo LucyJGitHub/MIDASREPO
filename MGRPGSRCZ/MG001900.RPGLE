@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD060775           Date 29Mar23               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD054605           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031691           Date 22Jan15               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060775 - Missing tag 86 on AMSTERDAM, SWIFT network        *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -596,6 +598,7 @@
      C**********         MOVE      '63'          WVal                             AR864881 AR877174A
      C**********         EXSR      SrFmtDta                                       AR864881 AR877174A
                                                                                             AR864881
+     C                   IF        Wfound = 'Y'                                             MD060775
      C                   EVAL      PFormL1 = ArrExt2(1)                                     AR864881
      C                   EVAL      PFormL2 = ArrExt2(2)                                     AR864881
      C                   EVAL      PFormL3 = ArrExt2(3)                                     AR864881
@@ -616,6 +619,7 @@
      C                   EVAL      PFormL18 = ArrExt2(18)                                   AR864881
      C                   EVAL      PFormL19 = ArrExt2(19)                                   AR864881
      C                   EVAL      PFormL20 = ArrExt2(20)                                   AR864881
+     C                   ENDIF                                                              MD060775
      C                   EVAL      PRtcd = '*FORMAT'                                        AR864881
      C                   ENDIF                                                              AR864881
       *

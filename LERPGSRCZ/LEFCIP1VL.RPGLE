@@ -2145,10 +2145,11 @@
      C                   ENDIF
      C     DDPRFC        IFEQ      *BLANKS                                                  AR930168
      C     BGN0ST        ANDEQ     'Y'                                                      AR930168
-     C                   MOVE      'W'           DDPRFCOK                                   AR930168
-     C                   ADD       1             WId                                        AR930168
-     C                   MOVEL     'DDPRFC'      WFldNmXAr(WId)                             AR930168
-     C                   MOVEL     'LEL0880'     WMsgIDXAr(WId)                             AR930168
+     C     DDPRFCOK      ANDNE     'N'                                                      AR930168
+     C                   MOVE      'N'           DDPRFCOK                                   AR930168
+     C                   ADD       1             Idx                                        AR930168
+     C                   MOVEL     'DDPRFC'      FldNamXAr(Idx)                             AR930168
+     C                   MOVEL     'LEL0880'     MsgIDXAr(Idx)                              AR930168
      C                   ENDIF                                                              AR930168
      C                   ENDIF
 

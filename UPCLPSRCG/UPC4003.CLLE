@@ -10,12 +10,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD059751           Date 25Mar22              */
-/*       Prev Amend No. MD058585           Date 17Aug21              */
+/*       Last Amend No. MD060709           Date 08Nov22              */
+/*       Prev Amend No. MD059751           Date 25Mar22              */
+/*                      MD058585           Date 17Aug21              */
 /*                      CUT017 *CREATE     Date 17Mar20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060709 - Change in LF dynamic selection is omitted        */
+/*                  File is not deleted when both DTAARA and file    */
+/*                  Change in PF key is omitted                      */
 /*       MD059751 - SQL view statement change is not detected by aDBU*/
 /*       MD058585 - aDBU does not detect if LF has different keys    */
 /*       CUT017 - Adapptive Database Upgrade                         */
@@ -54,6 +58,7 @@
              DCL        VAR(&RCVL) TYPE(*CHAR) LEN(4)
              DCL        VAR(&RCVVAR) TYPE(*CHAR) LEN(200)
              DCL        VAR(&RTVINFO) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)                                /*MD060709*/
 
              DCLF       FILE(UPMBRLT) OPNID(OPNID)
 
@@ -322,6 +327,75 @@ NEXT2:
              OVRDBF     FILE(UTFLDDL1) MBR(&NMBR)
              CALL       PGM(UT000037) PARM(&LIB1 &LIB2 ' ' &DSP1 &DSP2)
 
+/* Add *SELECT to identify change in dynamic selection of LF */                         /*MD060709*/
+/* Remove members as they will be added back by CMPF */                                 /*MD060709*/
+             DLTOVR     FILE(UTCMPFPD)                                                  /*MD060709*/
+             DLTF       FILE(QTEMP/UTCMPFPD#)                                           /*MD060709*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060709*/
+             RMVM       FILE(UTFLDDL0) MBR(&NMBR)                                       /*MD060709*/
+             MONMSG     MSGID(CPF7310)                                                  /*MD060709*/
+             RMVM       FILE(UTFLDDL1) MBR(&NMBR)                                       /*MD060709*/
+             MONMSG     MSGID(CPF7310)                                                  /*MD060709*/
+             RMVM       FILE(UTFLDDL2) MBR(&NMBR)                                       /*MD060709*/
+             MONMSG     MSGID(CPF7310)                                                  /*MD060709*/
+                                                                                        /*MD060709*/
+/* If &LIB2 contains less than 50% of objects of &LIB1 */                               /*MD060709*/
+             IF         COND(&LIBCNT2 *LT &HALF) THEN(DO)                               /*MD060709*/
+/* List &LIB2 files */                                                                  /*MD060709*/
+                DLTF       FILE(QTEMP/SMC000034F)                                       /*MD060709*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060709*/
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UPMBRLT)                                  /*MD060709*/
+                DSPFD      FILE(&LIB2/*ALL) TYPE(*MBRLIST) +
+                             OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/SMC000034F)                                  /*MD060709*/
+             CPYF       FROMFILE(QTEMP/SMC000034F) +
+                          TOFILE(QTEMP/UPMBRLT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                            /*MD060709*/
+READ3:                                                                                  /*MD060709*/
+             RCVF       OPNID(OPNID)                                                    /*MD060709*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                         /*MD060709*/
+                GOTO       CMDLBL(NEXT3)                                                /*MD060709*/
+             ENDDO                                                                      /*MD060709*/
+                                                                                        /*MD060709*/
+             DSPFD      FILE(&LIB1/&OPNID_MLFILE) TYPE(*SELECT) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/DSPFDSL1)                                    /*MD060709*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060709*/
+             GOTO       CMDLBL(READ3)                                                   /*MD060709*/
+                                                                                        /*MD060709*/
+             enddo                                                                      /*MD060709*/
+                                                                                        /*MD060709*/
+             ELSE       CMD(DO)                                                         /*MD060709*/
+/* DSPFD *RCDFMT LIB1 */                                                                /*MD060709*/
+                   DSPFD      FILE(&LIB1/*ALL) TYPE(*SELECT) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/DSPFDSL1)                                 /*MD060709*/
+                                                                                        /*MD060709*/
+             enddo                                                                      /*MD060709*/
+                                                                                        /*MD060709*/
+NEXT3:                                                                                  /*MD060709*/
+             CLOSE      OPNID(OPNID)                                                    /*MD060709*/
+/* DSPFD *RCDFMT LIB1 */                                                                /*MD060709*/
+                   DSPFD      FILE(&LIB1/*ALL) TYPE(*SELECT) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/DSPFDSL1)                                 /*MD060709*/
+/* DSPFD *RCDFMTT LIB2 */                                                               /*MD060709*/
+                   DSPFD      FILE(&LIB2/*ALL) TYPE(*SELECT) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/DSPFDSL2)                                 /*MD060709*/
+                                                                                        /*MD060709*/
+/* run CMPF to ouput difference into QTEMP/UTCMPFPD# */                                 /*MD060709*/
+             CMPF FILE1(QTEMP/DSPFDSL1) FILE2(QTEMP/DSPFDSL2) TFILE(DSPFDSL1) +
+                         MBROVR(&NMBR) KEYFLD(*FLD) OUTPUT(*OUTFILE) +
+                         FLD(SOFILE SORFMT SOFLD SORULE SOCOMP SONVAL +
+                         SOVALL SOVALU SODYNS)  OUTFILE(QTEMP/UTCMPFPD#)                /*MD060709*/
+                                                                                        /*MD060709*/
+/* remove all EX type as extraneous are already handled */                              /*MD060709*/
+
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from QTEMP/UTCMPFPD# +
+                        where CFTYPE = ''EX''')                                         /*MD060709*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060709*/
+                                                                                        /*MD060709*/
+/* call report program*/                                                                /*MD060709*/
+             CALL       PGM(UP4027) PARM(&LIB1 &LIB2 &LAYER)                            /*MD060709*/
+                                                                                        /*MD060709*/
 /* Check for difference in keys */                                                      /*MD058585*/
              CALL       PGM(UP4023) PARM(&LIB1 &LIB2 &LAYER)                            /*MD058585*/
                                                                                         /*MD058585*/

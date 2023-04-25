@@ -10,10 +10,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CUT017 *CREATE     Date 17Mar20              */
+/*       Last Amend No. MD060709           Date 08Nov22              */
+/*       Prev Amend No. CUT017 *CREATE     Date 17Mar20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060709 - Change in LF dynamic selection is omitted        */
+/*                  File is not deleted when both DTAARA and file    */
+/*                  Change in PF key is omitted                      */
 /*       CUT017 - Adapptive Database Upgrade                         */
 /*                                                                   */
 /*********************************************************************/
@@ -331,6 +335,56 @@ NEXT3:
              OVRDBF     FILE(UTFLDDL1) MBR(&NMBR)
              CALL       PGM(UT000037) PARM(&LIB1 &LIB2 ' ' &DSP1 &DSP2)
 
+/* Remove members as they will be added back by CMPF */                                 /*MD060709*/
+             DLTOVR     FILE(UTCMPFPD)                                                  /*MD060709*/
+             DLTF       FILE(QTEMP/UTCMPFPD#)                                           /*MD060709*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060709*/
+             RMVM       FILE(UTFLDDL0) MBR(&NMBR)                                       /*MD060709*/
+             MONMSG     MSGID(CPF7310)                                                  /*MD060709*/
+             RMVM       FILE(UTFLDDL1) MBR(&NMBR)                                       /*MD060709*/
+             MONMSG     MSGID(CPF7310)                                                  /*MD060709*/
+             RMVM       FILE(UTFLDDL2) MBR(&NMBR)                                       /*MD060709*/
+             MONMSG     MSGID(CPF7310)                                                  /*MD060709*/
+                                                                                        /*MD060709*/
+/* DSPFD *ACCPTH LIB1 */                                                                /*MD060709*/
+             IF         COND(&LIBCNT2 *LT &HALF) THEN(DO)                               /*MD060709*/
+READ4:                                                                                  /*MD060709*/
+             RCVF       OPNID(OPNID)                                                    /*MD060709*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                         /*MD060709*/
+                GOTO       CMDLBL(NEXT4)                                                /*MD060709*/
+             ENDDO                                                                      /*MD060709*/
+                                                                                        /*MD060709*/
+             DSPFD      FILE(&LIB1/&OPNID_MLFILE) TYPE(*ACCPTH) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDAC1) +
+                          OUTMBR(*FIRST *ADD)                                           /*MD060709*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD060709*/
+             GOTO       CMDLBL(READ4)                                                   /*MD060709*/
+                                                                                        /*MD060709*/
+             enddo                                                                      /*MD060709*/
+                                                                                        /*MD060709*/
+             ELSE       CMD(DO)                                                         /*MD060709*/
+                DSPFD      FILE(&LIB1/*ALL) TYPE(*ACCPTH) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDAC1)                   /*MD060709*/
+             enddo                                                                      /*MD060709*/
+                                                                                        /*MD060709*/
+NEXT4:                                                                                  /*MD060709*/
+             CLOSE      OPNID(OPNID)                                                    /*MD060709*/
+/* DSPFD *RCDFMTT LIB2 */                                                               /*MD060709*/
+             DSPFD      FILE(&LIB2/*ALL) TYPE(*ACCPTH) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDAC2)                      /*MD060709*/
+                                                                                        /*MD060709*/
+/* run CMPF to ouput difference into QTEMP/UTCMPFPD# */                                 /*MD060709*/
+             CMPF FILE1(QTEMP/DSPFDAC1) FILE2(QTEMP/DSPFDAC2) TFILE(DSPFDAC1) +
+                         MBROVR(&NMBR) KEYFLD(*FLD) OUTPUT(*OUTFILE) +
+                         FLD(APFILE APKEYF) OUTFILE(QTEMP/UTCMPFPD#)                    /*MD060709*/
+/* call report program*/                                                                /*MD060709*/
+             CHGVAR     VAR(&DSP1) VALUE('DSPFDAC1')                                    /*MD060709*/
+             CHGVAR     VAR(&DSP2) VALUE('DSPFDAC2')                                    /*MD060709*/
+             OVRDBF     FILE(UPCLOGPD) TOFILE(&LOGFILE)                                 /*MD060709*/
+             OVRDBF     FILE(UTCMPFPD) TOFILE(QTEMP/UTCMPFPD#)                          /*MD060709*/
+             OVRDBF     FILE(UTFLDDL1) MBR(&NMBR)                                       /*MD060709*/
+             CALL       PGM(UT000037) PARM(&LIB1 &LIB2 ' ' &DSP1 &DSP2)                 /*MD060709*/
+                                                                                        /*MD060709*/
 /* List and compare DTAARA */
              DSPOBJD    OBJ(&LIB1/*ALL) OBJTYPE(*DTAARA) +
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/DTAARA1)

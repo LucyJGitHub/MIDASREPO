@@ -1,9 +1,9 @@
      H DEBUG
+     H ALWNULL(*USRCTL)                                                                      CER073D
       *****************************************************************
 /*S*D****RPGBASE*******************************************************                      CER073D
-/*STD****RPGBASEBND****************************************************             CER073D MD060008
-/*STD    RPGSQLBND                                                    *                      CER073D
-/*EXI *  ALWNULL(*USRCTL)                                             *                      CER073D
+/*S*D****RPGBASEBND****************************************************             CER073D MD060008
+/*STD *  RPGSQLBND                                                    *                      CER073D
 /*EXI *  TEXT('Midas LE Loans and parts purch & sold maintenance')    *
 0003 F*****************************************************************
 0002 F*                                                               *
@@ -13,8 +13,8 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER073D            Date 13Aug20               *      
-      *  Prev Amend No. MD060008           Date 11May21               *     
+      *  Last Amend No. CER073D            Date 13Aug20               *
+      *  Prev Amend No. MD060008           Date 11May21               *
       *                 MD058109           Date 08Sep21               *
       *                 MD057871           Date 30Apr21               *
       *                 MD058050           Date 10May21               *
@@ -143,10 +143,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
-      *  CER073D - Upgrade of EML014 to FB2.1 SP23                    *    
+      *  CER073D - Upgrade of EML014 to FB2.1 SP23                    *
       *  EML014 - AnaCredit Reporting Enhancement                     *
-      *  MD060008 - Deliverable Data Split for Standing Data 2        *      
-      *  MD058109 - 'Accrue' field misalignment on LE0310P1 Report    *       
+      *  MD060008 - Deliverable Data Split for Standing Data 2        *
+      *  MD058109 - 'Accrue' field misalignment on LE0310P1 Report    *
       *  MD057871 - Allow a blank floor in calling ARR Calculator     *
       *  MD058050 - CLE172 fields are reflected in LE0310P1 Report    *
       *             when CLE172 off. Switch off *IN21 if CLE172 is    *
@@ -703,7 +703,7 @@
      D* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
      D*                                                                   S01194
       **                                                                  S01117
-     D SDLIBR        E DS                  EXTNAME(SDLIBJW0)              S01486            MD060008
+     D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                         S01486 MD060008
      D*SDSVAL*** E DSSDSVALPD                                                        CLE038 MD054605
       *                                                                                       CLE038
       ** External DS for System Values                                                        CLE038

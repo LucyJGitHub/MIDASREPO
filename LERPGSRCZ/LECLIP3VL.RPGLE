@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE123             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. AR854485           Date 19Apr23               *
+      *  Prev Amend No. CLE123             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD054876           Date 26Aug20               *
@@ -74,6 +75,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR854485 - Profit centre is allowed to be blank when branch  *
+      *             has no default profit centre in matrix and        *
+      *             unallocated profit centre is also blank. Added    *
+      *             validation to check if PFRC is blank when         *
+      *             analytical accounting is on. (Child: AR854486)    *
       *  CLE123 - Commitment and Outstanding Report by Account Officer*
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1596,6 +1602,14 @@ E1   C                   ENDIF                                                  
      C                   MOVEL     'DDPRFC'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0310'     MsgIDXAr(Idx)
      C                   ENDIF
+     C     DDPRFC        IFEQ      *BLANKS                                                  AR854485
+     C     BGN0ST        ANDEQ     'Y'                                                      AR854485
+     C     DDPRFCOK      ANDNE     'N'                                                      AR854485
+     C                   MOVE      'N'           DDPRFCOK                                   AR854485
+     C                   ADD       1             Idx                                        AR854485
+     C                   MOVEL     'DDPRFC'      FldNamXAr(Idx)                             AR854485
+     C                   MOVEL     'LEL0880'     MsgIDXAr(Idx)                              AR854485
+     C                   ENDIF                                                              AR854485
      C                   ENDIF
       *
      C                   ENDIF

@@ -1605,7 +1605,7 @@ E1   C                   ENDIF                                                  
      C     DDPRFC        IFEQ      *BLANKS                                                  AR854485
      C     BGN0ST        ANDEQ     'Y'                                                      AR854485
      C     DDPRFCOK      ANDNE     'N'                                                      AR854485
-     C                   MOVE      'E'           DDPRFCOK                                   AR854485
+     C                   MOVE      'N'           DDPRFCOK                                   AR854485
      C                   ADD       1             Idx                                        AR854485
      C                   MOVEL     'DDPRFC'      FldNamXAr(Idx)                             AR854485
      C                   MOVEL     'LEL0880'     MsgIDXAr(Idx)                              AR854485

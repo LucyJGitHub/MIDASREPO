@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD060987           Date 20Apr23               *
+      *  Last Amend No. MD060987 *Create   Date 20Apr23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -67,6 +67,7 @@
       *****************************************************************
       *
      C                   EXSR      MOVREC
+     C                   EXSR      OFLNSR
      C                   WRITE     ENDP1
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -234,6 +235,7 @@
      C                   ENDIF
      C     HNALN         IFEQ      0
      C                   MOVEL     NONAR1        P1NAR1
+     C                   EXSR      OFLNSR
      C                   WRITE     NARRP1
      C                   ENDIF
       *
@@ -367,6 +369,8 @@
 
      C     *PSSR         BEGSR
 
+     C                   EXSR      OFLNSR
+     C                   WRITE     ERRP1
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON

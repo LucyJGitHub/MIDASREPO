@@ -18,14 +18,14 @@
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
       *  Last Amend No. MD053940           Date 03Apr23               *
-      *  Prev Amend No. LCI020  *CREATE    Date 03Apr23               *
+      *  Prev Amend No. BA8020  *CREATE    Date 03Apr23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
       *  MD053940 - Compilation error. Adjust length of W@ALFIL field *
       *             from 14 to 30.                                    *
-      *  BA802020 - Enable Inter.Pel transmission of SWIFT outgoing   *
-      *             messages from Midas                               *
+      *  BA8020 - Enable Inter.Pel transmission of SWIFT outgoing     *
+      *           messages from Midas                                 *
       *                                                               *
       *****************************************************************
       /EJECT

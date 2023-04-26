@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060966           Date 25Jan23               *
-      *  Prev Amend No. MD060784           Date 02Dec22               *
+      *  Last Amend No. EML104             Date 04Feb20               *      
+      *  Prev Amend No. MD060966           Date 25Jan23               *
+      *                 MD060784           Date 02Dec22               *
       *                 MD060685           Date 27Oct22               *
       *                 MD058830           Date 01Oct21               *
       *                 MD057965           Date 28May21               *
@@ -70,6 +71,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade of EML010 to FBM2.1 SP21                    *
+      *           EML010 - Structured field :86:                      *
+      *           Added EML104_004 EML104_005                         *       
       *  MD060966 - Re-deliver correct source                         *
       *  MD060784 - Program fails with decimal data error             *
       *             Change in CGL146_046                              *
@@ -601,6 +605,7 @@
      C**********                   (EDEXET <> *BLANKS AND                            CER030 BUG26608
      C                   IF        (EDEXET <> *BLANKS AND                                   BUG26608
      C                             EDEXET <> '*NONE')                                         CER030
+      /COPY WNCPYSRC,EML104_004                                                               EML104
      C                   EVAL      PMsgTyp = '940'                                            CER030
       *                                                                                       CER030
      C                   CALL      EDEXET                               99                    CER030
@@ -1284,6 +1289,7 @@
      C                   IF        P@RTCD = *BLANKS
      C                   EVAL      CSW022 = 'Y'
      C                   ENDIF
+     C/COPY WNCPYSRC,EML104_005                                                               EML104
                                                                                               CRE008
       ** Check if feature CRE008 (Cash Management feature) is installed                       CRE008
                                                                                               CRE008

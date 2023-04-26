@@ -14,7 +14,9 @@
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
       *  Last Amend No. CER073D            Date 13Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *      
+      *                 MD046248           Date 27Oct17               *
       *                 CER073B            Date 25Sep17               *
       *                 CER073A            Date 05Sep17               *
       *                 CER073   *CREATE   Date 10Jul17               *
@@ -22,7 +24,10 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CER073D - Upgrade of EML014 to FB2.1 SP23                    *
-      *      EML014 - AnaCredit Reporting Enhancement                 *
+      *  EML014 - AnaCredit Reporting Enhancement                     *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *      
       *  MD046248 - Finastra Rebranding                               *
       *  CER073B - CER073 Change Control 2 (Recompile)                *
       *  CER073A - CER073 Change Control 1 (Recompile)                *

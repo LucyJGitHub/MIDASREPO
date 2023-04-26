@@ -14,8 +14,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. EML102A            Date 16Jun20               *
+      *  Prev Amend No. EML102             Date 28Nov19               *      
+      *                 249385             Date 01Aug22               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR1088283          Date 20Mar13               *
       *                 BUG25122B          Date 13Oct09               *
       *                 EFIXJM             Date 16Sep09               *
@@ -166,6 +168,13 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  EML102A- GLC43 on MWGW due to closed GL0420P6                *
+      *           Amended GL0420OP13 -> GL0420OP18                    *
+      *  EML102 - Upgrade of UNL007 to FB2.1 SP23                     *
+      *           UNL007 - Extended Narratives                        *
+      *           Used GL0420CP15, GL0420CP27, GL0420CP35, GL0420CP48,*
+      *                GL0420FFP2, GL0420IIPG, GL0420OP13, GL0420OP14,*
+      *                GL0420OP15, GL0420OP16, GL0420OP17, GL0420OP18 *      
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

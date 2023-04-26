@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *      
-      *  Prev Amend No. MD060344           Date 08Oct22               *
+      *  Last Amend No. EML104             Date 04Feb20               *      
+      *  Prev Amend No. MD058830           Date 01Oct21               *      
+      *                 MD060344           Date 08Oct22               *
       *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
@@ -51,6 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade of EML010 to FBM2.1 SP21                    *
+      *           EML010 - Structured field :86:                      *
+      *           Added EML104_009 EML104_010 EML104_011              *      
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *      
       *  MD060344 - Paris MGOMSGPD Tag 25 reconciliation Difference.  *
       *           - Pattern the fix after MG000942.                   *
@@ -91,6 +95,7 @@
      FSDCUSTL7  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Customers by unique SWIFT ID
 
+     F/COPY WNCPYSRC,EML104_009                                                               EML104
      FMGOMSGPD  O    E             DISK    COMMIT  PREFIX(Mo_)
       ** Midas MG Master Message Data file
 
@@ -1380,6 +1385,7 @@
      C                   EVAL      Mr_NWRK = MGNWRK                             Network
      C                   ENDIF
      C/COPY OFCPYSRCZ,CGL146_059                                                              CGL146
+     C/COPY WNCPYSRC,EML104_010                                                               EML104
      C                   MOVE      A8BICN        Mr_SECN                        Customer no of Send.
      C                   EVAL      Mr_NWSN = A8BTID                             Branch TID Address
 
@@ -1765,6 +1771,7 @@
      C                   EXSR      BldConvFil                                                 CMG008
      C                   ENDIF                                                                CMG008
                                                                                               CMG008
+     C/COPY WNCPYSRC,EML104_011                                                               EML104
       ** Key to access Network Account or Posting details.
 
      C     Key           KLIST

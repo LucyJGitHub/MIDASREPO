@@ -17,9 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060959           Date 26Jan23               *
-      *  Prev Amend No. MD060883           Date 22Jan23               *
-      *                 MD060823           Date 12Dec22               *      
+      *  Last Amend No. MD061316           Date 24Apr23               *
+      *  Prev Amend No. MD060758           Date 29Nov22               *
+      *                 MD060959           Date 26Jan23               *
+      *                 MD060883           Date 22Jan23               *
+      *                 MD060823           Date 12Dec22               *
       *                 MD058517           Date 17Oct22               *
       *                 MD060008           Date 11May21               *
       *                 MD060033           Date 25Sep22               *
@@ -45,6 +47,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061316 - Conflict between MD060758 and MD060959 as both    *
+      *              fixes uses previous rundate in JNSTAT            *
+      *  MD060758 - ARR calculator does not handle zero lookback days.*
+      *             Allow for lookback days equal to zero.            *
       *  MD060959 -  Loans whose repayment falls on a holiday is      *
       *              reported as Rates Known 'Y' in SDRTKNTD.         *
       *              Amend subroutine SRChk2ndCall to include         *
@@ -167,6 +173,14 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
+                                                                                            MD060758
+      ** Data structure for JNSTAT                                                          MD060758
+     D DaJnStat      E DS                  EXTNAME(JNSTAT)                                  MD060758
+      *                                                                                     MD060758
+      ** Redefine to allow check filled                                                     MD060758
+      *                                                                                     MD060758
+     D#PrvRunDate            103    105P 0                                                  MD060758
+     D#PrvRunDateCh          103    105A                                                    MD060758
 
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
@@ -240,8 +254,8 @@
      D RTKNOWDS      e ds                  extname(SDRTKNTD)                                MD058517
      D RateKnownDS     ds                  likeds(RTKNOWDS)                                 MD058517
       ** Data area to read previous run date                                                MD060959
-     D JNSTAT          DS           200                                                     MD060959
-     D  PRUN                 103    105P 0                                                  MD060959
+     D********** JNSTAT          DS           200                                  MD060959 MD061316
+     D**********  PRUN                 103    105P 0                               MD060959 MD061316
 
       ** Constants declaration
      D NO_ERROR        c                   const(0)
@@ -332,6 +346,10 @@
      D SysDate         S               D   DATFMT(*ISO)                                     MD060033
      D SysOrMidas      S              1A                                                    MD060033
      D SDLIBR        E DS                  EXTNAME(SDLIBJW0)                                MD060008
+                                                                                            MD060758
+      ** Define lookback control variable                                                   MD060758
+     D #IsdaLockout    S              1A                                                    MD060758
+     D #PrvRunDateIso  S             10A                                                    MD060758
 
       *****************************************************************
       /EJECT
@@ -411,6 +429,15 @@
      C                   IF        WZeroMDATFlag = 'N'
      C                   EXSR      SRDetRTKN
      C                   ENDIF
+                                                                                            MD060758
+      ** If look back is zero then the start date must be less than or                      MD060758
+      ** equal to the previous working day                                                  MD060758
+                                                                                            MD060758
+     C                   IF        #IsdaLockout = 'Y'                                       MD060758
+     C                             AND TrLbdy = 0                                           MD060758
+     C                             AND IntPerSDATE > #PrvRunDate                            MD060758
+     C                   EVAL      CallARR = 'N'                                            MD060758
+     C                   ENDIF                                                              MD060758
 
       ** If ARRCalcFrequency is M-Monthly and it is not End of Month,
       ** skip call to ARR Calculator unless it satisfies below conditions
@@ -442,6 +469,17 @@
      C/end-exec
      C                   IF        NoOfRecs = 0
      C                   EVAL      CallARR = 'Y'
+                                                                                            MD060758
+      ** Check history file ... if no records then call calc                                MD060758
+      ** Unless lookback days = 0 and start date after previous                             MD060758
+      ** working day i.e. no rates available                                                MD060758
+                                                                                            MD060758
+     C                   IF        #IsdaLockout = 'Y'                                       MD060758
+     C                             AND TrLbdy = 0                                           MD060758
+     C                             AND IntPerSDATE > #PrvRunDate                            MD060758
+     C                   EVAL      CallARR = 'N'                                            MD060758
+     C                   ENDIF                                                              MD060758
+                                                                                            MD060758
      C                   ENDIF
 
      C                   ENDIF
@@ -477,6 +515,27 @@
      C                   IF        RatesKnown = 'N'
      C                   EVAL      CalcTillDate = WCalcTillDate
      C                   EVAL      RatesKnownInd = 'N'
+                                                                                            MD060758
+      ** Check if lookback days = 0                                                         MD060758
+                                                                                            MD060758
+     C                   IF        #IsdaLockout = 'Y'                                       MD060758
+     C                             AND TrLbdy = 0                                           MD060758
+                                                                                            MD060758
+      ** Check if can change date to previous working day                                   MD060758
+                                                                                            MD060758
+     C                   IF        #PrvRunDate >= IntPerSDATE                               MD060758
+     C                             AND #PrvRunDate < IntPerEDATE                            MD060758
+     C                             AND #PrvRunDate < BJRDNB                                 MD060758
+     C                             AND #PrvRunDate > BJRDNB - 7                             MD060758
+                                                                                            MD060758
+      ** Call with previous run date                                                        MD060758
+                                                                                            MD060758
+     C                   EVAL      CalcTillDate = #PrvRunDateIso                            MD060758
+                                                                                            MD060758
+     C                   ENDIF                                                              MD060758
+                                                                                            MD060758
+     C                   ENDIF                                                              MD060758
+                                                                                            MD060758
      C                   EXSR      SRCallARRC
      C                   ENDIF
 
@@ -1463,15 +1522,33 @@
      C/END-EXEC                                                                             MD060008
      C                   ENDDO
       *                                                                                     MD060959
-      ** Get PRUN from data area JNSTAT                                                     MD060959
+      ***Get*PRUN*from*data*area*JNSTAT                                            MD060959 MD061316
       *                                                                                     MD060959
-     C     *DTAARA       DEFINE                  JNSTAT                                     MD060959
-     C                   IN        JNSTAT                                                   MD060959
+     C**********     *DTAARA       DEFINE                  JNSTAT                  MD060959 MD061316
+     C**********                   IN        JNSTAT                                MD060959 MD061316
 
      C/EXEC SQL                                                                             MD060008
      C+ close ACursor                                                                       MD060008
      C/END-EXEC                                                                             MD060008
-                                                                                            MD060008
+                                                                                            MD060758
+      ** Obtain previous run date                                                           MD060758
+                                                                                            MD060758
+     C     *Dtaara       DEFINE    JNSTAT        DaJnStat                                   MD060758
+     C                   IN        DaJnStat                                                 MD060758
+                                                                                            MD060758
+      ** Convert date                                                                       MD060758
+                                                                                            MD060758
+     C                   IF        #PrvRunDateCh <> *BLANKS                                 MD060758
+     C                             AND #PrvRunDate > 0                                      MD060758
+                                                                                            MD060758
+      ** Convert Interest Period Start Date into *ISO Date Format                           MD060758
+                                                                                            MD060758
+     C                   EVAL      ZDayNo = #PrvRunDate                                     MD060758
+     C                   EXSR      SrZDate                                                  MD060758
+     C                   EVAL      #PrvRunDateIso = %CHAR(ISODate)                          MD060758
+     C                   EVAL      #IsdaLockout = 'Y'                                       MD060758
+                                                                                            MD060758
+     C                   ENDIF                                                              MD060758
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1498,9 +1575,12 @@
      C+ select count(*) into :NoOfRecs                                                      MD060959
      C+ from CLOANCL                                                                        MD060959
      C+ where LNRF = :TrTRAN                                                                MD060959
-     C+   and ((NIDT > :PRUN and NIDT < :BJRDNB)                                            MD060959
-     C+   or  (NRPD > :PRUN and NRPD <:BJRDNB and REPT <> 2))                               MD060959
-     C+   and (RLDT > :PRUN and RLDT < :BJRDNB or RLDT = 0)                                 MD060959
+     C**********+   and ((NIDT > :PRUN and NIDT < :BJRDNB)                         MD060959 MD061316
+     C**********+   or  (NRPD > :PRUN and NRPD <:BJRDNB and REPT <> 2))            MD060959 MD061316
+     C**********+   and (RLDT > :PRUN and RLDT < :BJRDNB or RLDT = 0)              MD060959 MD061316
+     C+   and ((NIDT > :#PrvRunDate and NIDT < :BJRDNB)                                     MD061316
+     C+   or  (NRPD > :#PrvRunDate and NRPD <:BJRDNB and REPT <> 2))                        MD061316
+     C+   and (RLDT > :#PrvRunDate and RLDT < :BJRDNB or RLDT = 0)                          MD061316
      C+   and BLRT = 'Y'                                                                    MD060959
      C+   and NBLRT <> 'N'                                                                  MD060959
      C/end-exec                                                                             MD060959
@@ -1520,6 +1600,16 @@
      C+   and :TrTRAN not in (select * from LEWIPROLL)                                      MD059190
      C/end-exec                                                                             MD059190
      C                   EVAL      Wrk2ndCall = 'Y'                                         MD059190
+                                                                                            MD060758
+      ** If lookback days is zero then no rates will be available                           MD060758
+      ** Note: in a test system where the rundate is behind the actual                      MD060758
+      ** date, then rates could be found BUT this is a live system fix                      MD060758
+                                                                                            MD060758
+     C                   IF        #IsdaLockout = 'Y' AND                                   MD060758
+     C                             TrLbDy = 0                                               MD060758
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD060758
+     C                   ENDIF                                                              MD060758
+                                                                                            MD060758
      C                   ENDIF                                                              MD059190
      C                   EVAL      NoOfRecs = 0                                             MD059190
      C                   EVAL      SQLCOD = 0                                               MD059190

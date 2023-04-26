@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD048483           Date 08Dec17               *
+      *  Last Amend No. MD061301           Date 19Apr23               *
+      *  Prev Amend No. EML110             Date 20Jan20               *
+      *                 MD058085           Date 11May21               *
+      *                 MD048483           Date 08Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 MD030956           Date 09Oct14               *
@@ -120,6 +122,12 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061301 - Recompile due to change of type on EML110 copy    *
+      *             sources from RPG to RPGLE.                        *
+      *  EML110 - ACCOUNT BALANCE POOLING. UPGRADE TO FBM 2.1         *
+      *           Amend hooks WN0481CCP1, SD0021RC01, SD0021RC02      *
+      *           Add new hook EML110_004, EML110_005, EML110_006,    *
+      *           EML110_007 and EML110_008.                          *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD048483 - Fix duplicate write error on RECCYDXC file.       *
       *  MD046248 - Finastra Rebranding                               *
@@ -6296,6 +6304,7 @@
      C                   PARM                    DATA                           Trans Data     S0121
      C                   PARM      *BLANK        W0RTN                          Return Code    S0121
      C                   PARM                    SPARE           256            Spare Field    LN035
+     C/COPY WNCPYSRC,EML110_004                                                               EML110
       * WM Check Return
       * CASE: PAR.*Return code is *User QUIT requested
      C     W0RTN         IFEQ      'Y2U9999'                                    *IF
@@ -6724,6 +6733,7 @@
      C                   PARM                    DATA                           Trans Data     S0121
      C                   PARM      *BLANK        W0RTN                          Return Code    S0121
      C                   PARM                    SPARE           256            Spare Field    LN035
+     C/COPY WNCPYSRC,EML110_005                                                               EML110
       * WM Check Return
       * CASE: PAR.*Return code is *User QUIT requested
      C     W0RTN         IFEQ      'Y2U9999'                                    *IF
@@ -7243,6 +7253,7 @@
      C                   PARM                    DATA                           Trans Data     S0121
      C                   PARM      *BLANK        W0RTN                          Return Code    S0121
      C                   PARM                    SPARE           256            Spare Field    LN035
+     C/COPY WNCPYSRC,EML110_006                                                               EML110
       * End of SAR S01117
       * WM Check Return
       * CASE: PAR.*Return code is *User QUIT requested
@@ -7982,6 +7993,7 @@
      C                   PARM                    DATA                           Trans Data     S0121
      C                   PARM      *BLANK        W0RTN                          Return Code    S0121
      C                   PARM                    SPARE           256            Spare Field    LN035
+     C/COPY WNCPYSRC,EML110_007                                                               EML110
       * End of SAR S01117
       * WM Check Return
       * CASE: PAR.*Return code is *User QUIT requested
@@ -12797,6 +12809,7 @@
      C     CSW212        ANDEQ     'Y'
      C                   MOVE      'Y'           CMG003
      C                   ENDIF
+     C/COPY WNCPYSRC,EML110_008                                                               EML110
       *                                                                                     MD025467
       ** This is a dummy condition for compilation purpose                                  MD025467
       *                                                                                     MD025467

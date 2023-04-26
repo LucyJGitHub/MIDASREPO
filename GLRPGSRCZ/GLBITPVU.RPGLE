@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060726           Date 23Nov22               *
-      *  Prev Amend No. CGL082             Date 02Nov21               *
+      *  Last Amend No. MD058941           Date 15Apr22               *      
+      *  Prev Amend No. MD060726           Date 23Nov22               *
+      *                 CGL082             Date 02Nov21               *
       *                 MD058466           Date 09Aug21               *
       *                 AR574704           Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
@@ -101,6 +102,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058941 - The UPDATE:BITH part fails because the last       *
+      *             WRITE:BITP SOAP call triggers the batch to be     *
+      *             accepted automatically due to fix AR1029481.      *      
       *  MD060726 - Add missing parameter introduced by CGL082 when   *
       *             calling GLBITHUPD.                                *
       *  CGL082 - Journal Entry User Audit                            *
@@ -1058,7 +1062,7 @@
      C     Idx           IFEQ      0
      C                   EXSR      SRSetOFld
      C                   EXSR      UpdateDB
-     C                   EXSR      SrAutoAuth                                              AR1029481
+     C**********         EXSR      SrAutoAuth                                     AR1029481 MD058941
      C                   ENDIF
 
      C                   ENDSR

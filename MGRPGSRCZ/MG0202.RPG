@@ -11,8 +11,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. BA3100             Date 01Sep22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD050227A          Date 25Apr23               *
+      *  Prev Amend No. MD050227           Date 25Apr23               *
+      *                 BA3100             Date 01Sep22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056607           Date 06Oct20               *
       *                 MD051760           Date 22Aug18               *
       *                 MD050973           Date 18May18               *
@@ -116,6 +118,11 @@
      F*                                                               *
       *****************************************************************
       *                                                               *
+      *  MD050227A - System generated MT202 instead of MT202COV for   *
+      *              MT103. Move the initialization of COV103 flag    *
+      *              to SR/MS202.                                     *
+      *  MD050227 - Suppress MT202COV generation if main message is   *
+      *             not found in MGCOVRPD.                            *
       *  BA3100 - MT103 and MT202 message details changes for         *
       *           Target 2 RTGS System                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -2290,7 +2297,47 @@
      C           MS202     BEGSR
      C/COPY WNCPYSRC,MG0202C049
       *
+     C           CSW209    IFEQ 'Y'                                                        MD050227A
+     C                     MOVEL'N'       COV103  1                                        MD050227A
+     C                     ENDIF                                                           MD050227A
       *
+      ** If message is a MT202COV, look for transaction of main message                     MD050227
+      ** in MGCOVRPD                                                                        MD050227
+      *                                                                                     MD050227
+     C                     MOVEL*BLANKS   SUPCVR  1                                         MD050227
+     C                     MOVE '0'       *IN41                                            MD050227A
+     C           MGCVMI    IFEQ 'S'                                                         MD050227
+     C                     MOVEL*BLANKS   IXDLNO  6                                         MD050227
+     C                     MOVELMGTNUM    IXDLNO                                            MD050227
+     C           IXDLNO    SETLLMGCOVRPD                 40                                 MD050227
+      *                                                                                     MD050227
+      ** If main message not found, suppress MT202COV generation                            MD050227
+      *                                                                                     MD050227
+     C           *IN40     IFEQ '0'                                                         MD050227
+     C                     MOVE '1'       *IN41                                            MD050227A
+     C           CSW209    IFEQ 'Y'                                                         MD050227
+     C                     MOVEL'N'       PRVCOV  1                                         MD050227
+     C                     ENDIF                                                            MD050227
+     C                     MOVEL'Y'       SUPCVR                                            MD050227
+      *                                                                                     MD050227
+      ** If main message is found                                                           MD050227
+      *                                                                                     MD050227
+     C                     ELSE                                                             MD050227
+     C           IXDLNO    SETGTMGCOVRPD                                                    MD050227
+     C                     READPMGCOVRPD                 42                                 MD050227
+     C                     MOVELCVTRN     ZCREF                                             MD050227
+     C           CSW209    IFEQ 'Y'                                                         MD050227
+     C                     MOVEL'Y'       COV103                                            MD050227
+     C                     ENDIF                                                            MD050227
+     C                     ENDIF                                                            MD050227
+     C                     ELSE                                                            MD050227A
+     C                     MOVE '1'       *IN41                                            MD050227A
+     C                     ENDIF                                                            MD050227
+      *                                                                                     MD050227
+     C           MGCVMI    IFNE 'S'                                                         MD050227
+     C           MGCVMI    OREQ 'S'                                                         MD050227
+     C           SUPCVR    ANDNE'Y'                                                         MD050227
+      *                                                                                     MD050227
      C                     MOVE '202'     MTPY
       *
       **  Format Fields 20, 21 and 32A or 32B
@@ -2347,6 +2394,7 @@
      C                     EXSR OMSG
      C                     END
       *
+     C                     ENDIF                                                            MD050227
      C                     ENDSR
      C/EJECT
       *****************************************************************
@@ -2617,9 +2665,9 @@
       *
      C           COMM      BEGSR
       *                                                                                       CSW209
-     C           CSW209    IFEQ 'Y'                                                           CSW209
-     C                     MOVEL'N'       COV103  1                                           CSW209
-     C                     ENDIF                                                              CSW209
+     C********** CSW209    IFEQ 'Y'                                                 CSW209 MD050227A
+     C**********           MOVEL'N'       COV103  1                                 CSW209 MD050227A
+     C**********           ENDIF                                                    CSW209 MD050227A
       *
       **  Access the approriate transaction file for the SWIFT sequence
       *
@@ -2769,38 +2817,41 @@
      C           X         OCUR MULT
      C/COPY WNCPYSRC,MG0202C057
       *                                                                   105577
-      ** If a Cover MT202 then look for Related Ref of MT100              105577
-      *                                                                   105577
-     C                     MOVE '0'       *IN41                           105577
-     C           MGCVMI    IFEQ 'S'                                       105577
-     C                     MOVE *BLANKS   IXDLNO  6                       105577
-     C                     MOVELMGTNUM    IXDLNO                          105577
-     C           IXDLNO    SETLLMGCOVRPD                 40               105577
-      *                                                                   105577
-      *                                                                   105577
-     C           *IN40     IFEQ '0'                                       105577
-     C                     MOVE '1'       *IN41            21:  NOT SET   105577
-     C           CSW209    IFEQ 'Y'                                                           CSW209
-     C                     MOVEL'N'       PRVCOV  1                                           CSW209
-     C                     ENDIF                                                              CSW209
-     C                     ELSE                                           105577
-     C           IXDLNO    SETGTMGCOVRPD                                  105577
-     C                     READPMGCOVRPD                 42               105577
-      *                                                                   105577
-      ** TRN found in Rel. Msg file.                                      105577
-      *                                                                   105577
-     C                     MOVELCVTRN     ZCREF                           105577
-     C           CSW209    IFEQ 'Y'                                                           CSW209
-     C                     MOVEL'Y'       COV103                                              CSW209
-     C                     ENDIF                                                              CSW209
-     C                     END                                            105577
-     C                     ELSE                                           105577
-     C                     MOVE '1'       *IN41                           105577
-     C                     END                                            105577
-      *                                                                   105577
-      ** If Rel. record not found,                                        105577
-      ** Or Message not cover      then process as normal                 105577
-     C           *IN41     IFEQ '1'                                       105577
+      **********                                                                     105577 MD050227
+      ***If*a*Cover*MT202*then*look*for*Related*Ref*of*MT100                         105577 MD050227
+      **********                                                                     105577 MD050227
+     C**********           MOVE '0'       *IN41                                      105577 MD050227
+     C********** MGCVMI    IFEQ 'S'                                                  105577 MD050227
+     C**********           MOVE *BLANKS   IXDLNO  6                                  105577 MD050227
+     C**********           MOVELMGTNUM    IXDLNO                                     105577 MD050227
+     C********** IXDLNO    SETLLMGCOVRPD                 40                          105577 MD050227
+      **********                                                                     105577 MD050227
+      **********                                                                     105577 MD050227
+     C********** *IN40     IFEQ '0'                                                  105577 MD050227
+     C**********           MOVE '1'       *IN41            21:  NOT SET              105577 MD050227
+     C********** CSW209    IFEQ 'Y'                                                  CSW209 MD050227
+     C**********           MOVEL'N'       PRVCOV  1                                  CSW209 MD050227
+     C**********           ENDIF                                                     CSW209 MD050227
+     C**********           ELSE                                                      105577 MD050227
+     C********** IXDLNO    SETGTMGCOVRPD                                             105577 MD050227
+     C**********           READPMGCOVRPD                 42                          105577 MD050227
+      **********                                                                     105577 MD050227
+      ***TRN*found*in*Rel.*Msg*file.*********************                            105577 MD050227
+      **********                                                                     105577 MD050227
+     C**********           MOVELCVTRN     ZCREF                                      105577 MD050227
+     C********** CSW209    IFEQ 'Y'                                                  CSW209 MD050227
+     C**********           MOVEL'Y'       COV103                                     CSW209 MD050227
+     C**********           ENDIF                                                     CSW209 MD050227
+     C**********           END                                                       105577 MD050227
+     C**********           ELSE                                                      105577 MD050227
+     C**********           MOVE '1'       *IN41                                      105577 MD050227
+     C**********           END                                                       105577 MD050227
+      **********                                                                     105577 MD050227
+      ***If*Rel.*record*not*found,***********************                            105577 MD050227
+      ***Or*Message*not cover******then*process*as*normal                            105577 MD050227
+     C********** *IN41     IFEQ '1'                                                  105577 MD050227
+      **********                                                                     105577 MD050227
+     C           *IN41     IFEQ '1'                                                        MD050227A
       *                                                                   105577
       *                                                                   CDL002
       **  Only proceed if FX Netting switchable feature is off,           CDL002
@@ -2882,8 +2933,9 @@
      C                     MOVEL@TRNO     ZCREF
      C                     END
      C                     END
-      *                                                                   105577
-     C                     END                                            105577
+      *                                                                                       105577
+     C**********           END                                                       105577 MD050227
+     C                     END                                                             MD050227A
       *
      C                     ENDIF                                          129211
       *                                                                   129211

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD056612           Date 12Sep20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD061325           Date 26Apr23              */
+/*       Prev Amend No. MD056612           Date 12Sep20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061325 - CPF5149 was detected in MXEXFFZZ                 */
 /*       MD056612 - Deliverable Data Split for MX group              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CMX001 - Meridian Export                                    */
@@ -54,8 +56,10 @@
 
 /**********  CPYF       FROMFILE(MXEXFFPD) TOFILE(QTEMP/MXEXFFZZ) +
                           CRTFILE(*YES) FROMRCD(1) TORCD(1) */                          /*MD056612*/
-             CPYF       FROMFILE(MXEXFJW0) TOFILE(QTEMP/MXEXFFZZ) +
-                          CRTFILE(*YES) FROMRCD(1) TORCD(1)                             /*MD056612*/
+/**********  CPYF       FROMFILE(MXEXFJW0) TOFILE(QTEMP/MXEXFFZZ) +
+                          CRTFILE(*YES) FROMRCD(1) TORCD(1) */                /*MD056612**MD061325*/
+             CPYF       FROMFILE(MXEXFFPD) TOFILE(QTEMP/MXEXFFZZ) +
+                          CRTFILE(*YES) FROMRCD(1) TORCD(1)                             /*MD061325*/
              MONMSG CPF0000
 
              ENDDO

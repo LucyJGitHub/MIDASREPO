@@ -23,7 +23,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD061325 - CPF5149 was detected in MXEXFFZZ                 */
+/*       MD061325 - CPF5149 was detected in MXEXFFZZ.                */
+/*                - Applied for MD-61326.                            */
 /*       MD056612 - Deliverable Data Split for MX group              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CMX001 - Meridian Export                                    */

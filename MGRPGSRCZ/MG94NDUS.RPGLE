@@ -245,7 +245,8 @@
      D**********SDNWRK        E DS                  EXTNAME(SDNWRKPD)                       MD061276
      D SDNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD061276
       *                                                                                    BUG23280A
-     D DSNwrk        E DS                  EXTNAME(SDNWRKPD)                               BUG23280A
+     D**********DSNwrk        E DS                  EXTNAME(SDNWRKPD)             BUG23280A MD061276
+     D DSNwrk        E DS                  EXTNAME(SDNWKJW0)                      BUG23280A MD061276
      D                                     PREFIX(N_)                                      BUG23280A
       *                                                                                    BUG23280A
       ** External DS for account details                                                   BUG23280A

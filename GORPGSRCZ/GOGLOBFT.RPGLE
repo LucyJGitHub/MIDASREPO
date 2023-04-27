@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060936           Date 21Feb23               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CAP212             Date 15Sep14               *
       *                 CGP017             Date 06Aug12               *
       *                 CER049             Date 06Dec10               *
@@ -27,6 +28,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060936 - BFMM - issue re incoming payment missing          *
+      *             from the incoming payment queue.                  *
+      *           - add SETON LR before returning to calling program. *
+      *           - Applied for MD061117.                             *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API                              *
@@ -38,10 +43,10 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -58,11 +63,11 @@
       * Length of the after image of the record
      D  ALEN                  69     72B 0
      D  EntryData            117  10117A
- 
- 
+
+
      D PARM2           DS
      D  LENG                   1      4B 0
- 
+
       ** Switchable Feature Details Data Structure                                            CSF003
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSF003
                                                                                               CSF003
@@ -81,22 +86,22 @@
                                                                                               CSF003
       ** Switchable Features                                                                  CSF003
      D CSF003          S              1A                                                      CSF003
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
- 
+
       * Recover before and after image
- 
+
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4000
- 
+
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4000
- 
- 
+
+
       * Global Updates - BEFORE/AFTER image
       * TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
      C     TRGEVENT      IFEQ      '1'
@@ -105,17 +110,17 @@
      C     TRGEVENT      IFEQ      '2'
      C                   MOVEL     *BLANK        I#AIMG
      C                   ENDIF
- 
+
      C                   MOVEL     O#ZONE        I#ZONE                         * ERROR MESSAGE
      C                   MOVEL     'Y'           I#TRAP
- 
+
       * Determine updates
- 
+
      C                   EXSR      DET_UPDATES
- 
+
      C                   MOVEL     'B'           I#BFAF
      C                   DO        2
- 
+
      C     P_Before      IFEQ      'Y'
      C     I#BFAF        ANDEQ     'B'
      C     P_After       OREQ      'Y'
@@ -147,12 +152,13 @@
      C                   ENDIF                                                                CSF003
                                                                                               CSF003
      C                   ENDIF
- 
+
      C                   MOVEL     'A'           I#BFAF
      C                   ENDDO
- 
+
+     C                   SETON                                        LR                    MD060936
      C                   RETURN
- 
+
       /SPACE 5
       *****************************************************************
       * Global Updates - Request For Transfer Detail
@@ -262,7 +268,7 @@
       * Determine Updates
       *****************************************************************
      C     DET_UPDATES   BEGSR
- 
+
      C                   CALL      'GPDETGUPD'
      C                   PARM                    I#ZONE           10
      C                   PARM      PFLNAME       I#FILE           10
@@ -270,7 +276,7 @@
      C                   PARM                    I#AIMG
      C                   PARM      'N'           P_Before          1
      C                   PARM      'N'           P_After           1
- 
+
      C                   ENDSR
       *****************************************************************                       CSF003
       /EJECT                                                                                  CSF003
@@ -303,12 +309,12 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEL     *BLANK        I#RTCD            7
      C                   MOVEL     *BLANK        I#ERMS           50
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
                                                                                               CSF003
       ** Check if CSF003 is enabled.                                                          CSF003
@@ -335,7 +341,7 @@
      C                   ENDIF                                                                CSF003
                                                                                               CSF003
      C                   ENDIF                                                                CSF003
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD022770           Date 25Apr23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022770 - Job MXOLEXT crashes when the Midas Export         *
+      *             Drip-Feed Processing is started. Ensured spaces   *
+      *             are generated between the values of the FIELD     *
+      *             parameter of the QCMD to be executed.             *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
@@ -73,7 +78,8 @@
       * Maximum number of formats
      D MaxNoFmts       C                   CONST(200)
       * FILE ARRAY
-     D #_FILE          S             10    DIM(MaxNoFmts)
+     D*#_FILE***       S             10    DIM(MaxNoFmts)                                   MD022770
+     D #_FILE          S             11    DIM(MaxNoFmts)                                   MD022770
 
 
      D #_RCV1          S              1    DIM(30) CTDATA PERRCD(30)
@@ -188,7 +194,9 @@
      C     EXDRIP        ANDEQ     'Y'
      C     EXFDCR        ANDEQ     'Y'
      C                   Z-ADD     1             @T                5 0
-     C     EXFILE        LOOKUP    #_FILE(@T)                             99    *
+     C*****EXFILE        LOOKUP    #_FILE(@T)                             99    *           MD022770
+     C                   MOVEL(P)  EXFILE        W#FILE           11                        MD022770
+     C     W#FILE        LOOKUP    #_FILE(@T)                             99    *           MD022770
 
      C     *in99         ifeq      '0'
      C                   Z-ADD     1             @T
@@ -244,7 +252,9 @@
      C     EXMSGQ        ANDNE     *BLANK
      C     EXENAB        ANDNE     'N'                                                        CTI006
      C                   Z-ADD     1             @T
-     C     EXFILE        LOOKUP    #_FILE(@T)                             99    *
+     C*****EXFILE        LOOKUP    #_FILE(@T)                             99    *           MD022770
+     C                   MOVEL(P)  EXFILE        W#FILE                                     MD022770
+     C     W#FILE        LOOKUP    #_FILE(@T)                             99    *           MD022770
 
      C     *in99         ifeq      '0'
      C                   Z-ADD     1             @T

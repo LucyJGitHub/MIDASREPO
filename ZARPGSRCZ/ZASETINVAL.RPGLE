@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057916           Date 18May21               *
-      *  Prev Amend No. CSW221             Date 05Apr21               *
+      *  Last Amend No. MD050227           Date 25Apr23               *
+      *  Prev Amend No. MD057916           Date 18May21               *
+      *                 CSW221             Date 05Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD051567           Date 26Sep20               *
       *                 MD056313           Date 21Sep20               *
@@ -147,6 +148,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050227 - Recipient of Payment Instructions must be blank   *
+      *             when Beneficiary is non-bank.                     *
       *  MD057916 - No defaulting process should be performed during  *
       *             settlement details amendment.                     *
       *  CSW221   - SWIFT Changes 2021                                *
@@ -6134,6 +6137,16 @@
      C                   MOVE      'N'           DDBennOK
      C                   END
      C                   END
+      *                                                                                     MD050227
+      ** If Beneficiary is bank, Recipient of Payment must be blank.                        MD050227
+      *                                                                                     MD050227
+     C     @BBNBI        IFEQ      'Y'                                                      MD050227
+     C     DDRVNO        ANDNE     *BLANKS                                                  MD050227
+     C                   ADD       1             Idx                                        MD050227
+     C                   EVAL      FldNameArr(Idx) = 'DDRVNO'                               MD050227
+     C                   EVAL      MsgIDArr(Idx) = 'ESM1958'                                MD050227
+     C                   MOVE      'N'           DDRvnoOK                                   MD050227
+     C                   ENDIF                                                              MD050227
       *
      C                   ENDSR
      C********************************************************************

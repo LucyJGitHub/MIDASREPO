@@ -121,6 +121,7 @@
       *             from the incoming payment queue.                  *
       *           - Recompile due to changes in GPINPAYDD and         *
       *             and GPINPAYXPD called from GPZOLSYNSR.            *
+      *           - Applied for MD061117.                             *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD056557 - Deliverable Data Split for Pulldown               *
       *  MD056556 - Deliverable Data Split for GPGLOBFPD              *

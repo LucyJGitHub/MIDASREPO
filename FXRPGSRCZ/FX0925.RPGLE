@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD049836           Date 08Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD023183A          Date 27Apr23               *
+      *  Prev Amend No. MD049836           Date 08Mar18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023183A - Net reference should be net number.              *
       *  MD049836 - In multiple settlements screen, F6 will now cause *
       *             validate to occur; not just ENTER key.            *
       *  MD046248 - Finastra Rebranding                               *
@@ -197,6 +199,7 @@
      D  PMBIN                         1A
      D  PNBDP                         1S 0
      D  PDBUY                        15S 0
+     D  PSeqq                         3S 0                                                 MD023183A
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -1120,8 +1123,10 @@
      C                   Eval      PMPRCV = 'Y'
      C                   EndIf
       *
-     C                   Eval      WCCY = %Subst(PNetR:8:3)
-     C                   Eval      WSeq = %Subst(PNetR:17:3)
+     C**********         Eval      WCCY = %Subst(PNetR:8:3)                                MD023183A
+     C                   Eval      WCCY = PNCCY                                            MD023183A
+     C**********         Eval      WSeq = %Subst(PNetR:17:3)                               MD023183A
+     C                   Eval      WSeq = %Char(PSeqq)                                     MD023183A
      C                   Eval      PDlNo = WCCY + WSeq
      C                   Eval      PMCVMR = #CVMR
      C                   Eval      PMCPGM = 'FXFX'

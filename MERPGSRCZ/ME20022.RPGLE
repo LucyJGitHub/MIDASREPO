@@ -13,12 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD060246A          Date 04Aug22               *
-      *  Prev Amend No. MD060246           Date 21Jul22               *
+      *  Last Amend No. MD061339           Date 26Apr23               *
+      *  Prev Amend No. MD060246A          Date 04Aug22               *
+      *                 MD060246           Date 21Jul22               *
       *                 CSW122 *CREATE     Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061339 - Dump generated due to duplicate records in pacs   *
+      *             messages having same UETR values.                 *
       *  MD060246A- Increase field length value for MX Element Value  *
       *             changed from 120A to 500A.                        *
       *  MD060246 - Increase field length value for MX Element Value  *
@@ -300,6 +303,8 @@
      C                   EVAL      OMCDTE = BJRDNB
      C                   WRITE     MEISOMD0                             05
 
+
+
       **  Error on write to PF/MEISOMPD (Header deails of elements)
 
      C                   IF        *IN05 = *ON
@@ -308,7 +313,8 @@
      C                   MOVEL     'ERROR   '    DBKEY
      C                   MOVEL     'MEISOMPD'    DBFILE
      C                   OUT       LDA
-     C                   EXSR      *PSSR
+     C****               EXSR      *PSSR                                                    MD061339
+     C                   RETURN                                                             MD061339
      C                   ENDIF
 
       ** Update status flag to 'Y in MSMXISOPD

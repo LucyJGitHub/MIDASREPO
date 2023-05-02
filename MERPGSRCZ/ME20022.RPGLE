@@ -13,12 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD060246A          Date 04Aug22               *
-      *  Prev Amend No. MD060246           Date 21Jul22               *
+      *  Last Amend No. MD061298           Date 26Apr23               *
+      *  Prev Amend No. MD060246A          Date 04Aug22               *
+      *                 MD060246           Date 21Jul22               *
       *                 CSW122 *CREATE     Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061298 - Camt.108.001.01 displays truncated MX Element     *
+      *             Value in ISO MX Enquiry                           *
       *  MD060246A- Increase field length value for MX Element Value  *
       *             changed from 120A to 500A.                        *
       *  MD060246 - Increase field length value for MX Element Value  *
@@ -90,12 +93,14 @@
 
       ** Work Variables
      D WrkMSID         S             36A
-     D WLastElem       S            100A
+     D***WLastElem       S              100A                                                MD061298
+     D WLastElem       S            256A                                                    MD061298
      D WStrPos         S              3S 0
      D WCRLFPos        S              3S 0
      D WCRpos          S              3S 0
      D WrkLF           S              1A
-     D WElement        S            220A
+     D***WElement        S              220A                                                MD061298
+     D WElement        S            600A                                                    MD061298
      D WEqPos          S              3S 0
      D WEName          S            100A
      D*WEValue**       S            120A                                                   MD060246A

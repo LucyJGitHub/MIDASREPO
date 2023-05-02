@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CGL094             Date 02Nov21               *
+      *  Last Amend No. CSW101             Date 03Feb23               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CGL094             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 AR898442           Date 24Feb12               *
       *                 MD055842           Date 02Jun20               *
@@ -85,6 +86,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW101 - PayPlus Interface.                                  *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CGL094 - Allow External Destination for MT940 Message.       *
       *           Remove Spaces when formatting field 61.             *
@@ -737,6 +739,10 @@
      C                   EVAL      NewPage1A = *BLANK                                       MD042371
      C                   EVAL      NewPage2A = *BLANK                                       MD042371
      C/COPY WNCPYSRC,MGH00015
+      *                                                                                       CSW101
+     C                   IF        CSW101 = 'Y'                                               CSW101
+     C                   EVAL      WLength = *ZERO                                            CSW101
+     C                   ENDIF                                                                CSW101
 
       *  Reset Message length count to reflect allocated length for
       *  header and trailer.
@@ -768,6 +774,10 @@
      C                   EVAL      NewPage1A = *BLANK                                       MD042371
      C                   EVAL      NewPage2A = *BLANK                                       MD042371
      C/COPY WNCPYSRC,MGH00016
+      *                                                                                       CSW101
+     C                   IF        CSW101 = 'Y'                                               CSW101
+     C                   EVAL      WLength = *ZERO                                            CSW101
+     C                   ENDIF                                                                CSW101
 
       *  Reset Message length count to reflect allocated length for
       *  header and trailer.
@@ -1645,8 +1655,13 @@
       *                                                                                       CER030
      C**********         ELSEIF    CER030 = 'Y' AND EDMCNW = 'Y'                     CER030 BUG22853
      C                   ELSEIF    CER030 = 'Y'                                             BUG22853
+     C                   IF        CSW101 = 'N'                                               CSW101
      C                   EVAL      ChkLen86A = 'N'                                          MD042371
      C                   EXSR      SRMTCash                                                   CER030
+     C                   ELSE                                                                 CSW101
+     C                   EXSR      SRPAYplus                                                  CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
      C                   ENDIF                                                                CER030
       *
       *  Update Message Length
@@ -3214,6 +3229,10 @@
      C                   EVAL      MFLD = WFld86                                              CER030
      C                   EVAL      CTRC = WCrLf                                               CER030
      C                   EVAL      WLength = WLength + %LEN(%TRIM(WFld86))                    CER030
+      *                                                                                       CSW101
+     C                   IF        CSW101 = 'Y'                                               CSW101
+     C                   EVAL      WFld86Len = Wfld86Len + %LEN(%TRIM(WFld86))                CSW101
+     C                   ENDIF                                                                CSW101
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
@@ -3286,6 +3305,455 @@
       *========================================================================*            MD055842
       /EJECT                                                                                MD055842
      C/COPY WNCPYSRC,MGH00030
+      *                                                               *                       CSW101
+      *****************************************************************                       CSW101
+      *                                                               *                       CSW101
+      *  SRPAYplus - Process Extended Narratives for PAYplus          *                       CSW101
+      *                                                               *                       CSW101
+      *  Called by: Format_6186                                       *                       CSW101
+      *                                                               *                       CSW101
+      *  Calls: SRLdFld                                               *                       CSW101
+      *                                                               *                       CSW101
+      *****************************************************************                       CSW101
+      *                                                                                       CSW101
+     C     SRPAYplus     BEGSR                                                                CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WFrstFlg = 'Y'                                             CSW101
+     C                   EVAL      WFld86Len = 0                                              CSW101
+      *                                                                                       CSW101
+      ** Unstructured Format                                                                  CSW101
+      *                                                                                       CSW101
+     C                   IF        EDF86F <> 'STRCT'                                          CSW101
+     C                             OR ((WDCInd = '0' OR WDCInd = '1' OR                       CSW101
+     C                             WDCInd = '2' OR WDCInd = '3')                              CSW101
+     C                             AND  EDF86F = 'STRCT')                                     CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WPos = %SCAN('/IACC/D':WExtNarr)                           CSW101
+      *                                                                                       CSW101
+     C                   IF        WPos > 0                                                   CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WIndLn = WPos + 7                                          CSW101
+     C                   EVAL      WDCInd = %SUBST(WExtNarr:WIndLn:1)                         CSW101
+      *                                                                                       CSW101
+      *                                                                                       CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+     C                   EVAL      PDCInd = *BLANKS                                           CSW101
+     C                   EVAL      PDCInd = WDCInd                                            CSW101
+      *                                                                                       CSW101
+      ** Initialize Output Parms to Blanks                                                    CSW101
+      *                                                                                       CSW101
+     C                   EVAL      PFormL1 = *BLANKS                                          CSW101
+     C                   EVAL      PFormL2 = *BLANKS                                          CSW101
+     C                   EVAL      PFormL3 = *BLANKS                                          CSW101
+     C                   EVAL      PFormL4 = *BLANKS                                          CSW101
+     C                   EVAL      PFormL5 = *BLANKS                                          CSW101
+     C                   EVAL      PFormL6 = *BLANKS                                          CSW101
+     C                   EVAL      PFormL7 = *BLANKS                                          CSW101
+     C                   EVAL      PFormL8 = *BLANKS                                          CSW101
+     C                   EVAL      PFormL9 = *BLANKS                                          CSW101
+     C                   EVAL      PFormL10 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL11 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL12 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL13 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL14 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL15 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL16 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL17 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL18 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL19 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL20 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL21 = *BLANKS                                         CSW101
+     C                   EVAL      PFormL22 = *BLANKS                                         CSW101
+      *                                                                                       CSW101
+     C                   EVAL      PArrExt = *BLANKS                                          CSW101
+     C                   EVAL      ArrExtNar = *BLANKS                                        CSW101
+      *                                                                                       CSW101
+     C                   IF        X_MG8633 <> *BLANKS                                        CSW101
+     C                   EVAL      PFormL1 = %TRIM(X_MG8633)                                  CSW101
+     C                   ELSE                                                                 CSW101
+     C                   EVAL      PFormL1 = *BLANKS                                          CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+      ** If 22 * 35 structure is input call MG001901                                          CSW101
+      *                                                                                       CSW101
+     C                   IF        X_MG8635 ='Y'                                              CSW101
+      *                                                                                       CSW101
+     C                   EVAL      PArrExt(1) = X_MGADI1                                      CSW101
+     C                   EVAL      PArrExt(2) = X_MGADI2                                      CSW101
+     C                   EVAL      PArrExt(3) = X_MGADI3                                      CSW101
+     C                   EVAL      PArrExt(4) = X_MGADI4                                      CSW101
+     C                   EVAL      PArrExt(5) = X_MGADI5                                      CSW101
+     C                   EVAL      PArrExt(6) = X_MGADI6                                      CSW101
+     C                   EVAL      PArrExt(7) = X_MG8621                                      CSW101
+     C                   EVAL      PArrExt(8) = X_MG8622                                      CSW101
+     C                   EVAL      PArrExt(9) = X_MG8623                                      CSW101
+     C                   EVAL      PArrExt(10) = X_MG8624                                     CSW101
+     C                   EVAL      PArrExt(11) = X_MG8625                                     CSW101
+     C                   EVAL      PArrExt(12) = X_MG8626                                     CSW101
+     C                   EVAL      PArrExt(13) = X_MG8627                                     CSW101
+     C                   EVAL      PArrExt(14) = X_MG8628                                     CSW101
+     C                   EVAL      PArrExt(15) = X_MG8629                                     CSW101
+     C                   EVAL      PArrExt(16) = X_MG8660                                     CSW101
+     C                   EVAL      PArrExt(17) = X_MG8661                                     CSW101
+     C                   EVAL      PArrExt(18) = X_MG8662                                     CSW101
+     C                   EVAL      PArrExt(19) = X_MG8663                                     CSW101
+     C                   EVAL      PArrExt(20) = X_MG8664                                     CSW101
+     C                   EVAL      PArrExt(21) = X_MG8665                                     CSW101
+     C                   EVAL      PArrExt(22) = X_MG8632                                     CSW101
+      *                                                                                       CSW101
+     C                   CALL      'MG001901'                                                 CSW101
+     C                   PARM                    PRtcd                                        CSW101
+     C                   PARM      '*FORMAT'     POptn                                        CSW101
+     C                   PARM      MGNWRK        PNwrk                                        CSW101
+     C                   PARM                    PMsgTyp                                      CSW101
+     C                   PARM      MGBRCA        PBrca                                        CSW101
+     C                   PARM      MGCNUM        PCNum                                        CSW101
+     C                   PARM      MGCCY         PCcy                                         CSW101
+     C                   PARM      MGACCD        PAcno                                        CSW101
+     C                   PARM      MGACSQ        PAcsq                                        CSW101
+     C                   PARM                    PDCInd                                       CSW101
+     C                   PARM                    PRtty                                        CSW101
+     C                   PARM                    PArrExt                                      CSW101
+     C                   PARM                    PFormL1                                      CSW101
+     C                   PARM                    PFormL2                                      CSW101
+     C                   PARM                    PFormL3                                      CSW101
+     C                   PARM                    PFormL4                                      CSW101
+     C                   PARM                    PFormL5                                      CSW101
+     C                   PARM                    PFormL6                                      CSW101
+     C                   PARM                    PFormL7                                      CSW101
+     C                   PARM                    PFormL8                                      CSW101
+     C                   PARM                    PFormL9                                      CSW101
+     C                   PARM                    PFormL10                                     CSW101
+     C                   PARM                    PFormL11                                     CSW101
+     C                   PARM                    PFormL12                                     CSW101
+     C                   PARM                    PFormL13                                     CSW101
+     C                   PARM                    PFormL14                                     CSW101
+     C                   PARM                    PFormL15                                     CSW101
+     C                   PARM                    PFormL16                                     CSW101
+     C                   PARM                    PFormL17                                     CSW101
+     C                   PARM                    PFormL18                                     CSW101
+     C                   PARM                    PFormL19                                     CSW101
+     C                   PARM                    PFormL20                                     CSW101
+     C                   PARM                    PFormL21                                     CSW101
+     C                   PARM                    PFormL22                                     CSW101
+     C                   PARM                    Idx                                          CSW101
+     C                   PARM                    FldNamXAr                                    CSW101
+     C                   PARM                    MsgIDXAr                                     CSW101
+     C                   PARM                    MsgDtaXAr                                    CSW101
+     C                   PARM                    WFldNmXAr                                    CSW101
+     C                   PARM                    WMsgIDXAr                                    CSW101
+     C                   PARM                    WMsgDtXAr                                    CSW101
+     C                   ELSE                                                                 CSW101
+      *                                                                                       CSW101
+     C                   CALL      'MG001900'                                                 CSW101
+     C                   PARM                    PRtcd                                        CSW101
+     C                   PARM      '*FORMAT'     POptn                                        CSW101
+     C                   PARM      MGNWRK        PNwrk                                        CSW101
+     C                   PARM                    PMsgTyp                                      CSW101
+     C                   PARM      MGBRCA        PBrca                                        CSW101
+     C                   PARM      MGCNUM        PCNum                                        CSW101
+     C                   PARM      MGCCY         PCcy                                         CSW101
+     C                   PARM      MGACCD        PAcno                                        CSW101
+     C                   PARM      MGACSQ        PAcsq                                        CSW101
+     C                   PARM                    PDCInd                                       CSW101
+     C                   PARM                    PRtty                                        CSW101
+     C                   PARM      X_MGADI1      PNarr1                                       CSW101
+     C                   PARM      X_MGADI2      PNarr2                                       CSW101
+     C                   PARM      X_MGADI3      PNarr3                                       CSW101
+     C                   PARM      X_MGADI4      PNarr4                                       CSW101
+     C                   PARM      X_MGADI5      PNarr5                                       CSW101
+     C                   PARM      X_MGADI6      PNarr6                                       CSW101
+     C                   PARM                    PFormL1                                      CSW101
+     C                   PARM                    PFormL2                                      CSW101
+     C                   PARM                    PFormL3                                      CSW101
+     C                   PARM                    PFormL4                                      CSW101
+     C                   PARM                    PFormL5                                      CSW101
+     C                   PARM                    PFormL6                                      CSW101
+     C                   PARM                    PFormL7                                      CSW101
+     C                   PARM                    PFormL8                                      CSW101
+     C                   PARM                    PFormL9                                      CSW101
+     C                   PARM                    PFormL10                                     CSW101
+     C                   PARM                    PFormL11                                     CSW101
+     C                   PARM                    PFormL12                                     CSW101
+     C                   PARM                    PFormL13                                     CSW101
+     C                   PARM                    PFormL14                                     CSW101
+     C                   PARM                    PFormL15                                     CSW101
+     C                   PARM                    PFormL16                                     CSW101
+     C                   PARM                    PFormL17                                     CSW101
+     C                   PARM                    PFormL18                                     CSW101
+     C                   PARM                    PFormL19                                     CSW101
+     C                   PARM                    PFormL20                                     CSW101
+     C                   PARM                    Idx                                          CSW101
+     C                   PARM                    FldNamXAr                                    CSW101
+     C                   PARM                    MsgIDXAr                                     CSW101
+     C                   PARM                    MsgDtaXAr                                    CSW101
+     C                   PARM                    WFldNmXAr                                    CSW101
+     C                   PARM                    WMsgIDXAr                                    CSW101
+     C                   PARM                    WMsgDtXAr                                    CSW101
+      *                                                                                       CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+     C                   EVAL      ArrExtNar(1) = PFormL1                                     CSW101
+     C                   EVAL      ArrExtNar(2) = PFormL2                                     CSW101
+     C                   EVAL      ArrExtNar(3) = PFormL3                                     CSW101
+     C                   EVAL      ArrExtNar(4) = PFormL4                                     CSW101
+     C                   EVAL      ArrExtNar(5) = PFormL5                                     CSW101
+     C                   EVAL      ArrExtNar(6) = PFormL6                                     CSW101
+     C                   EVAL      ArrExtNar(7) = PFormL7                                     CSW101
+     C                   EVAL      ArrExtNar(8) = PFormL8                                     CSW101
+     C                   EVAL      ArrExtNar(9) = PFormL9                                     CSW101
+     C                   EVAL      ArrExtNar(10) = PFormL10                                   CSW101
+     C                   EVAL      ArrExtNar(11) = PFormL11                                   CSW101
+     C                   EVAL      ArrExtNar(12) = PFormL12                                   CSW101
+     C                   EVAL      ArrExtNar(13) = PFormL13                                   CSW101
+     C                   EVAL      ArrExtNar(14) = PFormL14                                   CSW101
+     C                   EVAL      ArrExtNar(15) = PFormL15                                   CSW101
+     C                   EVAL      ArrExtNar(16) = PFormL16                                   CSW101
+     C                   EVAL      ArrExtNar(17) = PFormL17                                   CSW101
+     C                   EVAL      ArrExtNar(18) = PFormL18                                   CSW101
+     C                   EVAL      ArrExtNar(19) = PFormL19                                   CSW101
+     C                   EVAL      ArrExtNar(20) = PFormL20                                   CSW101
+     C                   EVAL      ArrExtNar(21) = PFormL21                                   CSW101
+     C                   EVAL      ArrExtNar(22) = PFormL22                                   CSW101
+     C                   EVAL      WIdx = 1                                                   CSW101
+      *                                                                                       CSW101
+      ** Populate the Extended Narratives                                                     CSW101
+      *                                                                                       CSW101
+     C     1             DO        22                                                         CSW101
+     C                   IF        ArrExtNar(WIdx) <> *BLANKS                                 CSW101
+      *                                                                                       CSW101
+      ** Change 1st character of extended narrative if ':' or '-'                             CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WResult = ArrExtNar(WIdx)                                  CSW101
+     C                   EVAL      WFst = %SUBST(WResult:1:1)                                 CSW101
+     C                   IF        WFst = ':' OR WFst = '-'                                   CSW101
+     C                   MOVEL     '.'           WResult                                      CSW101
+     C                   EVAL      ArrExtNar(WIdx) = WResult                                  CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+     C                   EVAL      Q = Q +1                                                   CSW101
+     C     Q             OCCUR     MULT                                                       CSW101
+      *                                                                                       CSW101
+     C                   IF        WFrstFlg = 'Y'                                             CSW101
+     C                   EVAL      MTAG = ':86:'                                              CSW101
+     C                   EVAL      WFrstFlg = 'N'                                             CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+     C                   EVAL      MFLD = ArrExtNar(WIdx)                                     CSW101
+      *                                                                                       CSW101
+      *                                                                                       CSW101
+     C                   EVAL      CTRC = WCrLf                                               CSW101
+      *                                                                                       CSW101
+     C                   IF        %SUBST(ArrExtNar(WIdx):51:20) <> *BLANKS                   CSW101
+     C                   EVAL      CTRC = *BLANKS                                             CSW101
+     C                   EVAL      WLength  = WLength +                                       CSW101
+     C                                        %LEN(%TRIM(MTAG)) +                             CSW101
+     C                                        %LEN(%TRIM(MFLD)) +                             CSW101
+     C                                        %LEN(%TRIM(CTRC))                               CSW101
+     C                   EVAL      WFld86Len = Wfld86Len +                                    CSW101
+     C                                        %LEN(%TRIM(MTAG)) +                             CSW101
+     C                                        %LEN(%TRIM(MFLD)) +                             CSW101
+     C                                        %LEN(%TRIM(CTRC))                               CSW101
+     C                   EVAL      Q = Q + 1                                                  CSW101
+     C     Q             OCCUR     MULT                                                       CSW101
+      *                                                                                       CSW101
+     C                   EVAL      MFLD = %SUBST(ArrExtNar(WIdx):51:20)                       CSW101
+      *                                                                                       CSW101
+     C                   EVAL      CTRC = WCrLf                                               CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WLength  = WLength +                                       CSW101
+     C                                        %LEN(%TRIM(MTAG)) +                             CSW101
+     C                                        %LEN(%TRIM(MFLD)) +                             CSW101
+     C                                        %LEN(%TRIM(CTRC))                               CSW101
+     C                   EVAL      WFld86Len = Wfld86Len +                                    CSW101
+     C                                        %LEN(%TRIM(MTAG)) +                             CSW101
+     C                                        %LEN(%TRIM(MFLD)) +                             CSW101
+     C                                        %LEN(%TRIM(CTRC))                               CSW101
+      *                                                                                       CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WIdx = WIdx + 1                                            CSW101
+     C                   ENDDO                                                                CSW101
+      *                                                                                       CSW101
+      ** Structured Format                                                                    CSW101
+      *                                                                                       CSW101
+     C                   ELSE                                                                 CSW101
+     C                   EVAL      WFld86= *BLANKS                                            CSW101
+     C                   EVAL      WKTag= *BLANKS                                             CSW101
+     C                   EVAL      WFldSep = EDFSEP                                           CSW101
+     C                   EVAL      WFld86Len = 0                                              CSW101
+      *                                                                                       CSW101
+      ** Subfield GVC                                                                         CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = 'GVC'                                              CSW101
+     C                   EVAL      WKValue = X_MG86GV                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Booking Text                                                                         CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '00'                                               CSW101
+     C                   EVAL      WKValue = X_MG8600                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Batch No                                                                             CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '10'                                               CSW101
+     C                   EVAL      WKValue = X_MG8610                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '20'                                               CSW101
+     C                   EVAL      WKValue = X_MG8620                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '21'                                               CSW101
+     C                   EVAL      WKValue = X_MG8621                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '22'                                               CSW101
+     C                   EVAL      WKValue = X_MG8622                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '23'                                               CSW101
+     C                   EVAL      WKValue = X_MG8623                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '24'                                               CSW101
+     C                   EVAL      WKValue = X_MG8624                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '25'                                               CSW101
+     C                   EVAL      WKValue = X_MG8625                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '26'                                               CSW101
+     C                   EVAL      WKValue = X_MG8626                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '27'                                               CSW101
+     C                   EVAL      WKValue = X_MG8627                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '28'                                               CSW101
+     C                   EVAL      WKValue = X_MG8628                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '29'                                               CSW101
+     C                   EVAL      WKValue = X_MG8629                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Bank Sort Code                                                                       CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '30'                                               CSW101
+     C                   EVAL      WKValue = X_MG8630                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Account Number                                                                       CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '31'                                               CSW101
+     C                   EVAL      WKValue = X_MG8631                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Account Name                                                                         CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '32'                                               CSW101
+     C                   EVAL      WKValue = X_MG8632                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Account Name                                                                         CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '33'                                               CSW101
+     C                   EVAL      WKValue = X_MG8633                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Text Code Supplement                                                                 CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '34'                                               CSW101
+     C                   EVAL      WKValue = X_MG8634                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Beneficiary Data                                                                     CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '35'                                               CSW101
+     C                   EVAL      WKValue = X_MG8635                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Beneficiary Data                                                                     CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '36'                                               CSW101
+     C                   EVAL      WKValue = X_MG8636                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** IBAN                                                                                 CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '38'                                               CSW101
+     C                   EVAL      WKValue = X_MG8638                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '60'                                               CSW101
+     C                   EVAL      WKValue = X_MG8660                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '61'                                               CSW101
+     C                   EVAL      WKValue = X_MG8661                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '62'                                               CSW101
+     C                   EVAL      WKValue = X_MG8662                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '63'                                               CSW101
+     C                   EVAL      WKValue = X_MG8663                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '64'                                               CSW101
+     C                   EVAL      WKValue = X_MG8664                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+      ** Details of Payments                                                                  CSW101
+      *                                                                                       CSW101
+     C                   EVAL      WKTag = '65'                                               CSW101
+     C                   EVAL      WKValue = X_MG8665                                         CSW101
+     C                   EXSR      SRLdFld                                                    CSW101
+      *                                                                                       CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+     C                   ENDSR                                                                CSW101
+      *                                                                                       CSW101
+      *****************************************************************                       CSW101
+      /EJECT                                                                                  CSW101
+      *                                                                                       CSW101
      C/COPY OFCPYSRCZ,CGL146_093                                                             CGL146A
       *****************************************************************
       *                                                               *
@@ -3557,6 +4025,19 @@
 
      C/COPY OFCPYSRCZ,CGL146_094                                                             CGL146A
      C/COPY WNCPYSRC,MGH00031
+      *                                                                                       CSW101
+     C                   CALL      'AOSARDR0'                                                 CSW101
+     C                   PARM      *BLANK        PRtcd                                        CSW101
+     C                   PARM      '*FIRST  '    POptn                                        CSW101
+     C                   PARM      'CSW101'      PSard                                        CSW101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW101
+      *                                                                                       CSW101
+     C                   IF        PRtcd = *BLANKS                                            CSW101
+     C                   MOVE      'Y'           CSW101            1                          CSW101
+     C                   ELSE                                                                 CSW101
+     C                   MOVE      'N'           CSW101                                       CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
      C                   ENDSR
       *****************************************************************
       /EJECT

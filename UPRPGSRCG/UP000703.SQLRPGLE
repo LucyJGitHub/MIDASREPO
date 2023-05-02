@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD060848             Date 28Dec22             *        
-      *  Prev Amend No. MD058830             Date 01Oct21             *
+      *  Last Amend No. CSW101               Date 03Feb23             *
+      *  Prev Amend No. MD060848             Date 28Dec22             *
+      *                 MD058830             Date 01Oct21             *
       *                 MD060547             Date 12Dec22             *
       *                 MD056602             Date 04Sep20             *
       *                 MD060626             Date 13Oct22             *
@@ -41,7 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060848 - Consider field SDLIBRTD.ROUPAL                    *      
+      *  CSW101 - PAYplus Interface.                                  *
+      *  MD060848 - Consider field SDLIBRTD.ROUPAL                    *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD060547 - Issue with column A1FTPT in SDRETRPD              *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
@@ -453,9 +455,9 @@
                                                                                             MD060547
       ** if processing A1FTPT, check same field exists in SDRETRPD                          MD060547
      C                   If        WHFLDI = 'A1FTPT'                                        MD060547
-     C                             or WHFLDI = 'ROUAPL'                                     MD060848     
+     C                             or WHFLDI = 'ROUAPL'                                     MD060848
      C                   eval      OLDSCHEMA = '#.' + KMSCHEMA                              MD060547
-     C                   If        WHFLDI = 'A1FTPT'                                        MD060848     
+     C                   If        WHFLDI = 'A1FTPT'                                        MD060848
      C/EXEC SQL                                                                             MD060547
      C+ select count(*) into :RcdCount                                                      MD060547
      C+ from QADBILLB WHERE DBILIB = :OLDSCHEMA and DBIFIL                                  MD060547
@@ -467,7 +469,7 @@
      C+ from QADBILLB WHERE DBILIB = :OLDSCHEMA and DBIFIL                                  MD060848
      C+ = :OLDFILE and DBIFLD = 'ROUAPL'                                                    MD060848
      C/END-EXEC                                                                             MD060848
-     C                   Endif                                                              MD060848     
+     C                   Endif                                                              MD060848
      C                   If        RcdCount = 0                                             MD060547
      C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI               MD060547
      C                   eval      PSELECT = %trimr(PSELECT) + ', '  + ''' '''              MD060547
@@ -477,8 +479,25 @@
      C                   Endif                                                              MD060547
      C                   Else                                                               MD060547
                                                                                             MD060547
+     C                   If        WHFLDI = 'A1IDCD'                                          CSW101
+     C                   eval      OLDSCHEMA = '#.' + KMSCHEMA                                CSW101
+     C/EXEC SQL                                                                               CSW101
+     C+ select count(*) into :RcdCount                                                        CSW101
+     C+ from QADBILLB WHERE DBILIB = :OLDSCHEMA and DBIFIL                                    CSW101
+     C+ = :OLDFILE and DBIFLD = 'A1IDCD'                                                      CSW101
+     C/END-EXEC                                                                               CSW101
+     C                   If        RcdCount = 0                                               CSW101
+     C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI                 CSW101
+     C                   eval      PSELECT = %trimr(PSELECT) + ', '  + ''' '''                CSW101
+     C                   Else                                                                 CSW101
+     C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI                 CSW101
+     C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI                 CSW101
+     C                   Endif                                                                CSW101
+     C                   Else                                                                 CSW101
+                                                                                              CSW101
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI
      C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI
+     C                   Endif                                                                CSW101
      C                   Endif                                                              MD060547
      C                   ENDIF                                                              MD058986
      C                   ENDIF                                                              MD055681

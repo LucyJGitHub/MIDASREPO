@@ -1,0 +1,86 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Delete temporary library')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC100004 - Midas GL Delete temporary library for           */
+/*                   Journal Entry interface                         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. CSW101 *CREATE     Date 03Feb23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSW101 - PAYplus Interface.                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+/** Declare PGM Variables                                            */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2013')
+
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&TENTH) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&REMAIN) TYPE(*DEC) LEN(5 0) VALUE(0)
+
+/** Global monitor message                                           */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+/** Determine name of temporary library from name of job user profile*/
+
+             RTVJOBA    USER(&USER)
+
+/** Delete temporary library with same name as the user profile.     */
+
+McLOOP:
+             DLTLIB     LIB(&USER)
+
+/** If unable to allocate the library,                               */
+
+             MONMSG     MSGID(CPF2113) EXEC(DO)
+
+/** Produce a report of object locks for the library,                */
+
+             WRKOBJLCK  OBJ(QSYS/&USER) OBJTYPE(*LIB) OUTPUT(*PRINT)
+
+/** Increment the count of number of attempts.                       */
+
+             CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+             CHGVAR     VAR(&TENTH) VALUE(&COUNT / 10)
+             CHGVAR     VAR(&TENTH) VALUE(&TENTH * 10)
+             CHGVAR     VAR(&REMAIN) VALUE(&COUNT - &TENTH)
+
+/** If unable to allocate the library after 10 attempts or a multiple*/
+
+             IF         COND(&REMAIN *EQ 0) THEN(DO)
+
+/** send a message to MOPERQ, SHBMSGQ and QSYSOPR.                   */
+
+             SNDMSG     MSG('Error in PAYplus interface  +
+                          processing.  Unable to delete temporary +
+                          library ' *BCAT &USER *TCAT '.') +
+                          TOMSGQ(MOPERQ SHBMSGQ QSYSOPR)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+
+/** Delay 5 seconds before attempting again.                         */
+
+             DLYJOB     DLY(5)
+             GOTO       CMDLBL(McLOOP)
+             ENDDO
+
+/** Terminate the program                                            */
+
+ END:
+             CHGVAR   VAR(&CPYFLD) VALUE('(c) +
+                       Finastra International Limited')
+             RETURN
+
+             ENDPGM

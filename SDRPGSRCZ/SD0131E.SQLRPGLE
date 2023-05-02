@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058755           Date 01Sep21               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. CSW101             Date 03Feb23               *
+      *  Prev Amend No. MD058755           Date 01Sep21               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
       *                 CER059             Date 19Jul10               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW101 - PAYplus Interface.                                  *
       *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
@@ -681,6 +683,7 @@
      C                   MOVEL     *BLANK        #1CIND                         Cash Indicator
      C                   MOVEL     *BLANK        #1CLIN                         Clearing Indica
      C                   MOVE      *BLANKS       #1FTPT
+     C                   MOVE      *BLANKS       #1IDCD                                       CSW101
       *================================================================
      CSR   MAEXIT        ENDSR
       /EJECT
@@ -705,6 +708,7 @@
      C                   MOVEL     A1CIND        #1CIND                         Cash Indicator
      C                   MOVEL     A1CLIN        #1CLIN                         Clearing Indica
      C                   MOVEL     A1FTPT        #1FTPT
+     C                   MOVEL     A1IDCD        #1IDCD                                       CSW101
       *================================================================
      CSR   MBEXIT        ENDSR
       /EJECT
@@ -1722,6 +1726,35 @@
      C                   ELSE
      C                   MOVE      '0'           *IN80
      C                   ENDIF
+      *                                                                                       CSW101
+      ** Check if CSW101 - PAYPlus is ON                                                      CSW101
+      *                                                                                       CSw101
+     C                   MOVEL     'N'           CSW101                                       CSW101
+     C                   MOVE      '0'           *IN81                                        CSW101
+      *                                                                                       CSW101
+     C                   CALL      'AOSARDR0'                                                 CSW101
+     C                   PARM      *BLANKS       PRTCD                                        CSw101
+     C                   PARM      '*VERIFY'     @OPTN                                        CSW101
+     C                   PARM      'CSW101'      @SARD                                        CSw101
+     C                   PARM      WUFDY         SCSARD                                       CSW101
+      *                                                                                       CSW101
+     C     PRTCD         IFNE      *BLANKS                                                    CSw101
+     C     PRTCD         IFNE      '*NRF'                                                     CSW101
+     C                   MOVEL     'Y2U0032'     W0RTN                                        CSW101
+     C                   MOVEL     *BLANKS       W0CLPG                                       CSw101
+     C                   MOVEL     'AOSARDR0'    W0CLPG                                       CSW101
+     C                   MOVEL     'Y2U0032'     ZAMSID                                       CSW101
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                       CSw101
+     C                   MOVEL     W0CLPG        ZAMSDA                                       CSW101
+     C                   EXSR      ZASNMS                                                     CSW101
+     C                   ENDIF                                                                CSw101
+      *                                                                                       CSW101
+     C                   ELSE                                                                 CSW101
+      *                                                                                       CSW101
+     C                   MOVEL     'Y'           CSW101            1                          CSW101
+     C                   MOVE      '1'           *IN81                                        CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSw101
       *================================================================
      CSR   ZZEXIT        ENDSR
       /EJECT

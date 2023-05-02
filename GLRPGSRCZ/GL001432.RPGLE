@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060966           Date 25Jan23               *
-      *  Prev Amend No. MD060784           Date 02Dec22               *
+      *  Last Amend No. CSW101             Date 03Feb23               *
+      *  Prev Amend No. MD060966           Date 25Jan23               *
+      *                 MD060784           Date 02Dec22               *
       *                 MD058830           Date 01Oct21               *
       *                 MD058285           Date 22Jun21               *
       *                 223783 (Reopen)    Date 28May12               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW101 - PAYplus Interface.                                  *
       *  MD060966 - Re-deliver correct source                         *
       *  MD060784 - Program fails with decimal data error             *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
@@ -210,7 +212,7 @@
                                                                                             BUG26832
      D DSLDY         E DS                  EXTNAME(DSLDY)                                   BUG26832
 
-
+     D SDRETR        E DS                  EXTNAME(SDRTRJW0)                                  CSW101
      D W1DATA          DS           256
       **  Define FT0325 parameter data structure
      D  W1PREF                 1     15                                         Payment Reference
@@ -623,7 +625,26 @@
       ** Override MGSFD6 if found to exist in SDNTTIPD                                        CGL152
      C                   EXSR      $CGL152SFld6                                               CGL152
      C/COPY WNCPYSRC,GLH00203
-
+                                                                                              CSW101
+      ** Check if switchable feature CSW101 is on, before considering                         CSW101
+      ** transactions coming from PRANG.                                                      CSW101
+                                                                                              CSW101
+     C                   IF        CSW101 = 'Y'                                               CSW101
+                                                                                              CSW101
+     C                   MOVE      GLTRAT        PRTTY                                        CSW101
+     C                   CALL      'AORETRR0'                                                 CSW101
+     C                   PARM      *BLANKS       P@RTCD                                       CSW101
+     C                   PARM      '*KEY'        P@OPTN                                       CSW101
+     C                   PARM                    PRTTY             5                          CSW101
+     C     SDRETR        PARM      SDRETR        DSFDY                                        CSW101
+                                                                                              CSW101
+     C     P@RTCD        IFEQ      *BLANK                                                     CSW101
+     C     A1IDCD        ANDNE     *BLANK                                                     CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = A1IDCD                                CSW101
+     C                   ENDIF                                                                CSW101
+                                                                                              CSW101
+     C                   ENDIF                                                                CSW101
+                                                                                              CSW101
       *    --------      -----
      C     @SubFld6      ENDSR
 
@@ -960,6 +981,18 @@
       **  Cash Management Group Accounting replicated posting                                 216937
      C                   WHEN      GLXRFI = 'GA '                                             216937
      C/COPY WNCPYSRC,GLH00205
+      *                                                                                       CSW101
+     C                             AND CSW101 = 'N'                                           CSW101
+      *                                                                                       CSW101
+     C                             OR  GLXRFI = 'GA '                                         CSW101
+     C                             AND CSW101 = 'Y'                                           CSW101
+     C                             AND GLMGADI1 = *Blanks                                     CSW101
+     C                             AND GLMGADI2 = *Blanks                                     CSW101
+     C                             AND GLMGADI3 = *Blanks                                     CSW101
+     C                             AND GLMGADI4 = *Blanks                                     CSW101
+     C                             AND GLMGADI5 = *Blanks                                     CSW101
+     C                             AND GLMGADI6 = *Blanks                                     CSW101
+      *                                                                                       CSW101
      C                   EVAL      MGADI1 = *blank                                            216937
      C                   EVAL      MGADI2 = *blank                                            216937
      C                   EVAL      MGADI3 = *blank                                            216937
@@ -968,6 +1001,15 @@
      C                   EVAL      MGADI6 = *blank                                            216937
      C                   EVAL      MGADI1 = GLMGSRCA                                          216937
      C/COPY WNCPYSRC,GLH00206
+      *                                                                                       CSW101
+     C                   WHEN      GLXRFI = 'GA '                                             CSW101
+     C                             AND CSW101 = 'Y'                                           CSW101
+     C                   EVAL      MGADI1 = GLMGSRCA                                          CSW101
+     C                   EVAL      MGADI2 = GLMGADI1                                          CSW101
+     C                   EVAL      MGADI3 = GLMGADI2                                          CSW101
+     C                   EVAL      MGADI4 = GLMGADI3                                          CSW101
+     C                   EVAL      MGADI5 = GLMGADI4                                          CSW101
+     C                   EVAL      MGADI6 = GLMGADI5                                          CSW101
 
       ** If ERI Indicator = ' ' and ERI Information exists, it should be in first line.
 
@@ -1035,6 +1077,61 @@
       *                                                                                     BUG25147
      C                   ENDIF                                                              BUG25147
      C/COPY WNCPYSRC,GLH00207
+      *                                                                                       CSW101
+     C                   IF        CSW101 = 'Y'                                               CSW101
+      *                                                                                       CSW101
+      ** Leading '-' or ':' not accepted by Swift: replace by '.'                             CSW101
+      *                                                                                       CSW101
+     C     MGADI1        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI1        CHAR1             1                          CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI1                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI2        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI2        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI2                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI3        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI3        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI3                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI4        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI4        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI4                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI5        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI5        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI5                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI6        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI6        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI6                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+      *                                                                                       CSW101
+     C                   ENDIF                                                                CSW101
       *                                                                                       223783
       ** Check if we have ti use IBAN.                                                        223783
       *                                                                                       223783
@@ -1373,6 +1470,21 @@
      C/COPY WNCPYSRC,GLH00430
 
      C/COPY WNCPYSRC,GLH00208
+      *                                                                                       CSW101
+      ** Check if feature CSW101 (PAYplus Interface) is installed                             CSW101
+                                                                                              CSW101
+     C                   MOVEL     'N'           CSW101            1                          CSW101
+                                                                                              CSW101
+     C                   CALLB     'AOSARDR0'                                                 CSW101
+     C                   PARM      *BLANKS       P@RTCD                         Return Code   CSW101
+     C                   PARM      '*VERIFY'     P@OPTN                         Option        CSW101
+     C                   PARM      'CSW101 '     P@SARD                         Feature Ref.  CSW101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW101
+                                                                                              CSW101
+     C                   IF        P@RTCD = *BLANKS                                           CSW101
+     C                   EVAL      CSW101 = 'Y'                                               CSW101
+     C                   ENDIF                                                                CSW101
+                                                                                              CSW101
       *    ------        -----
      C     @INZSR        ENDSR
 

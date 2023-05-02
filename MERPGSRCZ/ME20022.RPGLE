@@ -314,6 +314,7 @@
      C                   MOVEL     'MEISOMPD'    DBFILE
      C                   OUT       LDA
      C****               EXSR      *PSSR                                                    MD061339
+     C                   SETON                                        U7U8LR                MD061339
      C                   RETURN                                                             MD061339
      C                   ENDIF
 

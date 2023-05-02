@@ -13,15 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD061298           Date 26Apr23               *
+      *  Last Amend No. MD061339           Date 26Apr23               *
       *  Prev Amend No. MD060246A          Date 04Aug22               *
       *                 MD060246           Date 21Jul22               *
       *                 CSW122 *CREATE     Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD061298 - Camt.108.001.01 displays truncated MX Element     *
-      *             Value in ISO MX Enquiry                           *
+      *  MD061339 - Dump generated due to duplicate records in pacs   *
+      *             messages having same UETR values.                 *
       *  MD060246A- Increase field length value for MX Element Value  *
       *             changed from 120A to 500A.                        *
       *  MD060246 - Increase field length value for MX Element Value  *
@@ -93,14 +93,12 @@
 
       ** Work Variables
      D WrkMSID         S             36A
-     D***WLastElem       S              100A                                                MD061298
-     D WLastElem       S            256A                                                    MD061298
+     D WLastElem       S            100A
      D WStrPos         S              3S 0
      D WCRLFPos        S              3S 0
      D WCRpos          S              3S 0
      D WrkLF           S              1A
-     D***WElement        S              220A                                                MD061298
-     D WElement        S            600A                                                    MD061298
+     D WElement        S            220A
      D WEqPos          S              3S 0
      D WEName          S            100A
      D*WEValue**       S            120A                                                   MD060246A
@@ -305,6 +303,8 @@
      C                   EVAL      OMCDTE = BJRDNB
      C                   WRITE     MEISOMD0                             05
 
+
+
       **  Error on write to PF/MEISOMPD (Header deails of elements)
 
      C                   IF        *IN05 = *ON
@@ -313,7 +313,9 @@
      C                   MOVEL     'ERROR   '    DBKEY
      C                   MOVEL     'MEISOMPD'    DBFILE
      C                   OUT       LDA
-     C                   EXSR      *PSSR
+     C****               EXSR      *PSSR                                                    MD061339
+     C                   SETON                                        U7U8LR                MD061339
+     C                   RETURN                                                             MD061339
      C                   ENDIF
 
       ** Update status flag to 'Y in MSMXISOPD

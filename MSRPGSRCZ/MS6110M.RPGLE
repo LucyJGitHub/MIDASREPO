@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058137           Date 18May21               *
-      *  Prev Amend No. MD051624           Date 23Sep20               *
+      *  Last Amend No. MD060326           Date 20Mar23               *
+      *  Prev Amend No. MD058137           Date 18May21               *
+      *                 MD051624           Date 23Sep20               *
       *                 AR989496           Date 13Jun12               *
       *                 CSD102             Date 08Jan19               *
       *                 MD048231           Date 17Jan18               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060326 - MIR and MOR Sequence Generator                    *
       *  MD058137 - Midas is not generating unique MQ MessageID if    *
       *             via MGOREF message generation                     *
       *  MD051624 - MT940's msgs found in the Outstanding Message     *
@@ -251,6 +253,7 @@
      D  w@96n                  1      2
      D  tme                    4      7
      D  MIR                    8     35
+     D  MirSeq                26     35                                                     MD060326
      D  w@sndad               14     21
      D  w@sndbr               23     25
      D  MODE                  36     41  0
@@ -263,6 +266,7 @@
      D  w@mord                 1      6
      D  w@dstad                7     14
      D  w@dstbr               16     18
+     D  MorSeq                19     28                                                     MD060326
      D  w@morr                 7     28
       ** Message Ouput Reference (MOR)
       *
@@ -464,6 +468,19 @@
      D PMDNO           S              5P 0                                                  MD051624
      D PDATE6          S              6  0                                                  MD051624
      D PDATE7          S              7                                                     MD051624
+      *                                                                                     MD060326
+      ** Entry Parameters for MS100003                                                      MD060326
+      *                                                                                     MD060326
+     DIN_MSGTYPE       S              3A                                                    MD060326
+     DIN_UETR          S             36A                                                    MD060326
+     DIN_MIR           S             28A                                                    MD060326
+     DIN_MOR           S             28A                                                    MD060326
+     DOUT_MIR          S             28A                                                    MD060326
+     DOUT_MOR          S             28A                                                    MD060326
+     DOUT_MORERR       S             10A                                                    MD060326
+     DOUT_MIRERR       S             10A                                                    MD060326
+      *                                                                                     MD060326
+
       /EJECT
       *****************************************************************
       *  Index to Subroutines                                         *
@@ -1457,15 +1474,67 @@
      C                   else                                                               AR976772
      C                   move      '19'          MODEC                                      AR976772
      C                   endif                                                              AR976772
+      *                                                                                     MD060326
+      ** If MirSeq is *blank                                                                MD060326
+      **  or MirSeq are '0000000000'                                                        MD060326
+      **                                                                                    MD060326
+      *                                                                                     MD060326
+     C                   eval      OUT_MIRERR = *blanks                                     MD060326
+     C                   eval      OUT_MORERR = *blanks                                     MD060326
+      *                                                                                     MD060326
+     C                   if        MirSeq = *blanks                                         MD060326
+     C                             or MirSeq = '0000000000'                                 MD060326
+      *                                                                                     MD060326
+      ** Set up MOR                                                                         MD060326
+      ** Locate Block {1: of the message for the remaining                                  MD060326
+      ** components of the MOR                                                              MD060326
+      *                                                                                     MD060326
+     C                   move      MODE          w@mord                                     MD060326
+     C     '{1:'         scan      p@msgbuf      w@1                                        MD060326
+     C                   add       6             w@1                                        MD060326
+     C     22            subst     p@msgbuf:w@1  w@morr                                     MD060326
+      *                                                                                     MD060326
+      ** Populate IN_UETR                                                                   MD060326
+      *                                                                                     MD060326
+     C     '121:'        scan      p@msgbuf      w@9               7 0                      MD060326
+     C                   if        w@9 = 0                                                  MD060326
+     C                   eval      w_uetr = *BLANKS                                         MD060326
+     C                   else                                                               MD060326
+     C                   eval      w@9 = w@9 +4                                             MD060326
+     C     36            subst     p@msgbuf:w@9  w_uetr           36                        MD060326
+     C                   endif                                                              MD060326
+      *                                                                                     MD060326
+      ** Call the generator                                                                 MD060326
+      *                                                                                     MD060326
+     C                   call      'MS100003'                                               MD060326
+     C                   parm      w@mtpy        IN_MSGTYPE                                 MD060326
+     C                   parm      w_uetr        IN_UETR                                    MD060326
+     C                   parm      MIR           IN_MIR                                     MD060326
+     C                   parm      MOR           IN_MOR                                     MD060326
+     C                   parm      *blanks       OUT_MIR                                    MD060326
+     C                   parm      *blanks       OUT_MOR                                    MD060326
+     C                   parm      *blanks       OUT_MIRERR                                 MD060326
+     C                   parm      *blanks       OUT_MORERR                                 MD060326
+     C                   move      OUT_MIR       MIR                                        MD060326
+     C                   move      OUT_MOR       MOR                                        MD060326
+     C                   endif                                                              MD060326
       *
      C     MIR           setll     msmsi2d9                               60
       *
       ** If message is not a duplicate and is of a recognised type update
       ** database
+      ** and no error in the MIR/MOR Seq Generator                                          MD060326
+      *                                                                                     MD060326
      C     *in60         ifeq      *off
      C     w@mtpy        andge     '100'
      C     w@mtpy        andle     '999'
      C     w@96n         andne     '96'
+     C     OUT_MIRERR    andeq     *blanks                                                  MD060326
+     C     OUT_MORERR    andeq     *blanks                                                  MD060326
+      *                                                                                     MD060326
+      ** If MOR was already setup above, do not repeat MOR setup                            MD060326
+      *                                                                                     MD060326
+     C                   if        MOR = *blanks                                            MD060326
       *
       ** Set up the MOR date from the incoming date
      C                   move      MODE          w@mord
@@ -1475,6 +1544,7 @@
      C     '{1:'         scan      p@msgbuf      w@1
      C                   add       6             w@1
      C     22            subst     p@msgbuf:w@1  w@morr
+     C                   endif                                                              MD060326
       *
       ** Create message index
      C                   exsr      sr_ix

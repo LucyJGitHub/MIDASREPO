@@ -48,6 +48,8 @@
      FMEDESCL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MEDESCD0:MEDESCD1)
      FMSMXISOL1 IF   E           K DISK    INFSR(*PSSR)
+     FMEISOML2  IF   E           K DISK    INFSR(*PSSR)                                     MD061339
+     F                                     RENAME(MEISOMD0:MEISOMD1)                        MD061339
 
      FME20022AU O    E             PRINTER USROPN INFSR(*PSSR)
 
@@ -109,6 +111,7 @@
      D*WEValue**       S            120A                                                   MD060246A
      D WEValue         S            500A                                                   MD060246A
      D WrkLen          S              3S 0
+     D WrkDup          S              1A                                                    MD061339
       /EJECT
       *****************************************************************
       *                 M A I N L I N E
@@ -120,12 +123,18 @@
      C                   READ      MSIXISOL1                              99
 
      C                   DOW       *IN99 = '0'
+                                                                                            MD061339
+     C                   EXSR      SrScanDupl                                               MD061339
+                                                                                            MD061339
+     C     WrkDup        IFEQ      'N'                                                      MD061339
 
      C                   EXSR      SrNewRef
 
      C                   EXSR      SrDetail
 
      C                   EXSR      SrHeader
+                                                                                            MD061339
+     C                   ENDIF                                                              MD061339
 
      C                   READ      MSIXISOL1                              99
      C                   ENDDO
@@ -317,14 +326,12 @@
      C                   MOVEL     'MEISOMPD'    DBFILE
      C                   OUT       LDA
      C****               EXSR      *PSSR                                                    MD061339
-     C                   SETON                                        U7U8LR                MD061339
-     C                   RETURN                                                             MD061339
      C                   ENDIF
 
       ** Update status flag to 'Y in MSMXISOPD
 
      C     KeyMX         CHAIN     MSIXISOL1
-     C                   IF        %FOUND
+     C                   IF        %FOUND AND WrkDup <> 'Y'
      C                   EVAL      IMPF = 'Y'
      C                   UPDATE    MSIXISD0                             98
       *
@@ -365,6 +372,28 @@
      C                   WRITE     MEDESCD0
      C                   ENDIF
      C                   ENDSR
+      *****************************************************************
+      /EJECT
+      **********************************************************************                MD061339
+      *                                                                    *                MD061339
+      * SrScanDupl     : Scan for Duplicate Key Values                     *                MD061339
+      *                                                                    *                MD061339
+      **********************************************************************                MD061339
+      *                                                                                     MD061339
+     C     SrScanDupl    BEGSR                                                              MD061339
+                                                                                            MD061339
+     C     IUETR         CHAIN     MEISOML2                                                 MD061339
+     C                   IF        %FOUND                                                   MD061339
+     C                   EVAL      WrkDup = 'Y'                                             MD061339
+                                                                                            MD061339
+      ** If UETR already exists in MEISOMPD, read the next                                  MD061339
+      ** record from MSIXISOPD for processing.                                              MD061339
+                                                                                            MD061339
+     C                   READ      MSIXISOL1                              99                MD061339
+     C                   ELSE                                                               MD061339
+     C                   EVAL      WrkDup = 'N'                                             MD061339
+     C                   ENDIF                                                              MD061339
+     C                   ENDSR                                                              MD061339
       *****************************************************************
       /EJECT
       *****************************************************************

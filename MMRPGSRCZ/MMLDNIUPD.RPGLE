@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 255899A            Date 21Jun22               *
-      *  Prev Amend No. 263173             Date 20Jun22               *
+      *  Last Amend No. MD036339           Date 27Jan23               *
+      *  Prev Amend No. 255899A            Date 21Jun22               *
+      *                 263173             Date 20Jun22               *
       *                 AR637449           Date 16Jun22               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
@@ -109,6 +110,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036339 - DL Error amending Maturity date.                  *
+      *           - Ensure Interest rate field is updated when Short  *
+      *             Term rate is amended.                             *
       *  255899A - Remove the CSW050 condition when checking for      *
       *            confo request                                      *
       *  263173 - No Cancellation Confirmation: apply 226737          *
@@ -1439,6 +1443,16 @@
       *                                                                                       CDL033
      C     CDL033        IFEQ      'Y'                                                        CDL033
      C     IKMTYP        ANDEQ     'CF'                                                       CDL033
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'CI'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'IP'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'IT'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'TI'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'TD'                                                     MD036339
       *                                                                                       CDL033
       ** Update effective rate.                                                               CDL033
       *                                                                                       CDL033

@@ -21,6 +21,7 @@
       *                                                               *
       *  Last Amend No. MD060753           Date 10Nov22               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044305           Date 04May17               *
       *                 CDL094             Date 11Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -52,6 +53,11 @@
       *                                                               *
       *  MD060753 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
+      *  MD044305 - Allow amendment of interest payment frequency and *
+      *             interest payment day in no for all deal status    *
+      *             when HHINTA is Y. When HHINTA is N, only allow    *
+      *             amendment of said fields for incomplete and       *
+      *             complete deal status.                             *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *
@@ -636,13 +642,18 @@
       *-----------------------------------------*
       * Interest Payment Frequency              *
       *-----------------------------------------*
-      **  The payment frequency is not amendable.
+      ****The*payment*frequency*is*not*amendable.*******************************            MD044305
+     C**  This field is not amendable for R and A status deals,                             MD044305
+     C**  if interest details amendable indicator is N.                                     MD044305
+     C**  It is amendable for all deal types and status when indicator is Y.                MD044305
       *
      C     DDIPFQ        IFNE      @DDIPFQ
      C     HHINTA        ANDEQ     'N'
+     C     HLDSTS        ANDNE     'C'                                                      MD044305
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDIPFQ'
-     C                   EVAL      MsgIDArr(Idx)   = 'MMM0483'
+     C**********         EVAL      MsgIDArr(Idx)   = 'MMM0483'                              MD044305
+     C                   EVAL      MsgIDArr(Idx)   = '5049556'                              MD044305
      C                   EVAL      DDIPFQok        = 'N'
      C                   ENDIF
       *
@@ -726,8 +737,12 @@
       * Interest Frequency day in Month         *
       *-----------------------------------------*
       *
-      **  This field is only amendable if the deal is
-      **  complete, and the field is designated as amendable on the
+     C****This*field*is*only*amendable*if*the*deal*is***************************            MD044305
+     C****complete,*and*the*field*is*designated*as*amendable*on*the*************            MD044305
+     C**  This field is not amendable for R and A status deals,                             MD044305
+     C**  if interest details amendable indicator is N, and                                 MD044305
+     C**  if deals are not call, demand loan, or fiduciary.                                 MD044305
+     C**  It is amendable for all deal types and status when indicator is Y on              MD044305
       **  file MMCDAFLL.
       *
      C     HLDSTS        IFNE      'C'
@@ -735,7 +750,8 @@
      C     HHINTA        ANDEQ     'N'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDIPDM'
-     C                   EVAL      MsgIDArr(Idx)   = 'MMM0487'
+     C**********         EVAL      MsgIDArr(Idx)   = 'MMM0487'                              MD044305
+     C                   EVAL      MsgIDArr(Idx)   = '5049556'                              MD044305
      C                   EVAL      DDIPDMok        = 'N'
      C                   ENDIF
       *

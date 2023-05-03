@@ -16,7 +16,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD060876           Date 08Feb23               *
-      *  Prev Amend No. MD060620           Date 14Nov22               *
+      *  Prev Amend No. AR959687           Date 24Jan23               *
+      *                 MD060620           Date 14Nov22               *
       *                 MD059368           Date 17Dec21               *
       *                 MD058734           Date 03Sep21               *
       *                 MD058547           Date 10Aug21               *
@@ -61,6 +62,8 @@
       *                                                               *
       *  MD060876 - Internal Funding deal with a Backward-looking     *
       *             Rate - error message "Fixed Base Rate must be N". *
+      *  AR959687 - Parameter added to MMVACTINTR for warning message *
+      *             (Child: AR959689)                                 *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *  MD059368 - Inhibit the LIBOR Deregulation fields if CDL102   *
       *             is switched off                                   *
@@ -3146,10 +3149,15 @@
      C                   PARM                    CDL102                                       CDL102
      C                   PARM                    DDACTN                                     MD058547
      C*******************PARM                    PPINTR           11 7                 CDL020 CDL038
+     C                   PARM                    PWMsgID                                    AR959687
                                                                                               CDL020
      C                   IF        RetCodeOut <> *Blanks                                      CDL020
      C                   EVAL      WSFldNam = '#1AIR'                                         CDL020
      C                   MOVE      'N'           OKAIR                                        CDL020
+     C                   IF        PWMsgID <> *Blanks                                       AR959687
+     C                   EVAL      WFldNmXAr(1) = '#1AIR'                                   AR959687
+     C                   EVAL      WMsgIDXAr(1) = PWMsgID                                   AR959687
+     C                   ENDIF                                                              AR959687
      C                   EXSR      SRSetErrFld                                                CDL020
      C                   EXSR      SRUpdatErrs                                                CDL020
      C                   ELSE                                                                 CDL020

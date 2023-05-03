@@ -331,7 +331,7 @@
       ** Update status flag to 'Y in MSMXISOPD
 
      C     KeyMX         CHAIN     MSIXISOL1
-     C                   IF        %FOUND AND WrkDup <> 'Y'
+     C                   IF        %FOUND
      C                   EVAL      IMPF = 'Y'
      C                   UPDATE    MSIXISD0                             98
       *

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058195           Date 09Jun21               *
-      *  Prev Amend No. CSE040             Date 10Mar21               *
+      *  Last Amend No. MD041126           Date 21Jan19               *
+      *  Prev Amend No. MD058195           Date 09Jun21               *
+      *                 CSE040             Date 10Mar21               *
       *                 MD056262           Date 10Mar21               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *  MD058195 - SEC4664 00001 fails during COB due to MQOPEN call.*
       *             Changed the call of IBM MQ functions from CALLP   *
       *             to CALL operation.                                *
@@ -336,11 +338,17 @@
       *                                                                                     MD056262
      C**********         CALLP     MQCONN( ODMN : HCONN :                          MD056262 MD058195
      C**********                           OCODE  : REASON )                       MD056262 MD058195
-     C                   CALL      'MQCONN'                                                 MD058195
-     C                   PARM                    ODMN                                       MD058195
-     C                   PARM                    HCONN                                      MD058195
-     C                   PARM                    OCODE                                      MD058195
-     C                   PARM                    REASON                                     MD058195
+     C**********         CALL      'MQCONN'                                        MD058195 MD041126
+     C**********         PARM                    ODMN                              MD058195 MD041126
+     C**********         PARM                    HCONN                             MD058195 MD041126
+     C**********         PARM                    OCODE                             MD058195 MD041126
+     C**********         PARM                    REASON                            MD058195 MD041126
+     C                   EVAL      QMNAME = QMGR                                            MD041126
+     C                   Z-ADD     *ZERO         HANDLE                                     MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQCONN( QMNAME : HANDLE :                                MD041126
+     C                                     OCODE  : REASON )                                MD041126
       *                                                                                     MD056262
       ** If connect failed, indicate abnormal end                                           MD056262
       *                                                                                     MD056262
@@ -391,12 +399,15 @@
       *                                                                                     MD056262
      C**********         CALLP     MQCLOSE( HCONN : HIN : OPTS :                   MD056262 MD058195
      C**********                            CCODE : REASON )                       MD056262 MD058195
-     C                   CALL      'MQCLOSE'                                                MD058195
-     C                   PARM                    HCONN                                      MD058195
-     C                   PARM                    HIN                                        MD058195
-     C                   PARM                    OPTS                                       MD058195
-     C                   PARM                    CCODE                                      MD058195
-     C                   PARM                    REASON                                     MD058195
+     C**********         CALL      'MQCLOSE'                                       MD058195 MD041126
+     C**********         PARM                    HCONN                             MD058195 MD041126
+     C**********         PARM                    HIN                               MD058195 MD041126
+     C**********         PARM                    OPTS                              MD058195 MD041126
+     C**********         PARM                    CCODE                             MD058195 MD041126
+     C**********         PARM                    REASON                            MD058195 MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
+     C                                      CCODE : REASON )                                MD041126
       *                                                                                     MD056262
       ** If close queue failed, indicate abnormal end                                       MD056262
       *                                                                                     MD056262
@@ -461,15 +472,19 @@
      C**********                          CCODE : REASON )                         MD056262 MD058195
      C                   IF        P@MsgBuf <> *BLANKS                                      MD058195
       *                                                                                     MD058195
-     C                   CALL      'MQPUT'                                                  MD058195
-     C                   PARM                    HCONN                                      MD058195
-     C                   PARM                    HIN                                        MD058195
-     C                   PARM                    MQMD                                       MD058195
-     C                   PARM                    MQPMO                                      MD058195
-     C                   PARM                    P@MsgLen                                   MD058195
-     C                   PARM                    P@MsgBuf                                   MD058195
-     C                   PARM                    CCODE                                      MD058195
-     C                   PARM                    REASON                                     MD058195
+     C**********         CALL      'MQPUT'                                         MD058195 MD041126
+     C**********         PARM                    HCONN                             MD058195 MD041126
+     C**********         PARM                    HIN                               MD058195 MD041126
+     C**********         PARM                    MQMD                              MD058195 MD041126
+     C**********         PARM                    MQPMO                             MD058195 MD041126
+     C**********         PARM                    P@MsgLen                          MD058195 MD041126
+     C**********         PARM                    P@MsgBuf                          MD058195 MD041126
+     C**********         PARM                    CCODE                             MD058195 MD041126
+     C**********         PARM                    REASON                            MD058195 MD041126
+                                                                                            MD041126
+     C                   CALLP     MQPUT( HCONN : HOBJ : MQMD : MQPMO :                     MD041126
+     C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
+     C                                    CCODE :  REASON )                                 MD041126
       *                                                                                     MD056262
      C     REASON        IFNE      RCNONE                                                   MD056262
      C     REASON        ANDNE     RC2033                                                   MD056262

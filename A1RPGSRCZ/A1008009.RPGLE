@@ -18,10 +18,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. BA1008   *CREATE   Date 03Jun21               *
+      *  Last Amend No. MD041126           Date 21Jan19               *
+      *  Past Amend No. BA1008   *CREATE   Date 03Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *  BA1008 - Replication of Trades to consolidated branches      *
       *                                                               *
       *****************************************************************
@@ -31,22 +33,26 @@
       *
       ** MQI named constants
       *
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
       *
       ** Object Descriptor
       *
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
       *
       ** Message Descriptor
       *
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
       *
       ** Put message options
       *
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
       *
       ** Other includes
       ** --------------
@@ -70,7 +76,7 @@
       ** Parameters for the QMQM calls.
       *
      D CID             S              9P 0
-     D HCONN           S              9P 0
+     D*** HCONN           S              9P 0                                               MD041126
      D HOBJ            S              9P 0
      D BUFLEN          S              9P 0
      D CCODE           S              9P 0
@@ -103,6 +109,18 @@
       ** Length of input Transaction Data field
       *
      D TransDtaLn      S              5P 0 INZ(8000)
+                                                                                            MD041126
+      ** MQ Parameters                                                                      MD041126
+     D QMNAME          S             48A                                                    MD041126
+     D HANDLE          S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
+     D BUFLEN          S             10I 0                                                  MD041126
+     D MESLEN          S             10I 0                                                  MD041126
 
       /EJECT
      C     Start         TAG
@@ -151,16 +169,20 @@
      C                   Z-ADD     PMSYP         PMOPT
      C                   ENDIF
 
-     C                   CALL      'QMQM'
-     C                   PARM                    CID
-     C                   PARM                    HCONN
-     C                   PARM                    HOBJ
-     C                   PARM                    MQMD
-     C                   PARM                    MQPMO
-     C                   PARM                    BUFLEN
-     C                   PARM                    DataOut
-     C                   PARM                    CCODE
-     C                   PARM                    REASON
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID                                        MD041126
+     C**********         PARM                    HCONN                                      MD041126
+     C**********         PARM                    HOBJ                                       MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQPMO                                      MD041126
+     C**********         PARM                    BUFLEN                                     MD041126
+     C**********         PARM                    DataOut                                    MD041126
+     C**********         PARM                    CCODE                                      MD041126
+     C**********         PARM                    REASON                                     MD041126
+                                                                                            MD041126
+     C                   CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :                      MD041126
+     C                                    BUFLEN: %ADDR(DataOut) :                          MD041126
+     C                                    CCODE : REASON )                                  MD041126
       *
       ** If an error occured, put the MQSeries return code into this
       ** module's return code.
@@ -209,14 +231,17 @@
       ** or not the call was successful, and REASON, which gives details
       ** if there was a failure.
       *
-     C                   CALL      'QMQM'
-     C                   PARM                    CID
-     C                   PARM                    HCONN
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS
-     C                   PARM                    HOBJ
-     C                   PARM                    OCODE
-     C                   PARM                    REASON
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID                                        MD041126
+     C**********         PARM                    HCONN                                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS                                       MD041126
+     C**********         PARM                    HOBJ                                       MD041126
+     C**********         PARM                    OCODE                                      MD041126
+     C**********         PARM                    REASON                                     MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HIN : OCODE : REASON )                           MD041126
       *
       ** Report reason, if any; stop if failed
       ** RCNONE is a named constant indicating no failure (it is zero).
@@ -251,14 +276,17 @@
       *
       ** Close queue
       *
-     C                   Z-ADD     MQCLOS        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HOBJ              9 0
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQCLOS        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HOBJ              9 0                      MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
+     C                                      CCODE : REASON )                                MD041126
       *
       ** Error processing
       *

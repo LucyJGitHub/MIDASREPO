@@ -1481,6 +1481,7 @@
       *                                                                                     MD060326
      C                   eval      OUT_MIRERR = *blanks                                     MD060326
      C                   eval      OUT_MORERR = *blanks                                     MD060326
+     C                   eval      IN_UETR = *blanks                                        MD060326
       *                                                                                     MD060326
      C                   if        MirSeq = *blanks                                         MD060326
      C                             or MirSeq = '0000000000'                                 MD060326

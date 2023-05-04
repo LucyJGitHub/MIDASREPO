@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*     Last Amend No. MD046248           Date 27Oct17               */
-/*     Prev Amend No. CER049             Date 06Dec10                */
+/*     Last Amend No. CGL200             Date 17Feb23               */
+/*     Prev Amend No. MD046248           Date 27Oct17               */
+/*                    CER049             Date 06Dec10                */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     CGL200 - Timestamp on batch items and related postings       */
 /*     MD046248 - Finastra Rebranding                               */
 /*     CER049  -  Stamp Tax                                         */
 /*     089310  -  Do not do RMVM/ADDLFM on SACPO as it may take     */
@@ -49,6 +51,8 @@
                           Finastra International Limited +
                           2001')
              DCL VAR(&ACCR) TYPE(*CHAR) LEN(5)                         /*E2473*/
+             DCL        VAR(&CGL200) TYPE(*CHAR) LEN(7)               /*CGL200*/
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CGL200*/
 /*/COPY WNCPYSRC,REC99001                                            */
 /**/                                                                  /*S01189*/
 /*   OBTAIN ACCRUAL TYPE FROM CLOSE OF BUSINESS DATA AREA          */ /*S01189*/
@@ -58,6 +62,8 @@
 /*   REMOVE LOGICAL FILES OVER PHYSICALS BEFORE COPYING     */        /*S01098*/
 /*                  AND REPLACE AFTER                       */        /*S01098*/
 /**/                                                                  /*S01098*/
+             CALL       PGM(AOSARDR0) PARM(&CGL200 '*VERIFY' +
+                          'CGL200' &AOFMT)                            /*CGL200*/
 /*/COPY WNCPYSRC,REC99002                                            */
              RMVM       FILE(CLEAR) MBR(CLEAR)                        /*S01098*/
              MONMSG     MSGID(CPF0000)                                /*S01098*/
@@ -86,6 +92,12 @@
                         MBROPT(*REPLACE) FMTOPT(*NONE)                /*S01098*/
              MONMSG     (CPF2817) CMPDTA(CPF2869) +
                         EXEC(CLRPFM CLEARZZ)                          /*S01098*/
+             IF COND(&CGL200 *EQ '       ') THEN(DO)                  /*CGL200*/
+             CPYF       FROMFILE(GLCLEAXO) TOFILE(GLCLEAX0) +
+                        MBROPT(*REPLACE) FMTOPT(*NONE)                /*CGL200*/
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM GLCLEAX0)                         /*CGL200*/
+             ENDDO                                                    /*CGL200*/
 /*/COPY WNCPYSRC,REC99003                                            */
                                                                                           /*CER049*/
              CPYF       FROMFILE(GLCLERPD) TOFILE(CLEARPD) +

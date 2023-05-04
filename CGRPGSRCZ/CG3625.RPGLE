@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSD053A            Date 14Dec12               *
+      *  Last Amend No. BA6020             Date 19Jan23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSD053A            Date 14Dec12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6020 - Add specific header field to CM XML Output          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD053A - Correspondence Manager DBCS Support                *
       *            Applied for AR924785 (Child: AR924788)             *
@@ -52,24 +54,26 @@
       * +------------------+
       * ¦ File declaration ¦
       * +------------------+
- 
+
       *  UDC Data Reference Log file
      FCGUDCRL0  UF   E           K DISK    USROPN COMMIT
- 
+
       *  UDC Archive Data Reference Log file
      FCGXDCRL0  UF   E           K DISK    USROPN COMMIT
- 
+
+     FA6RDEXL1  IF   E           K DISK                                                       BA6020
+      *                                                                                       BA6020
       /EJECT
       * +--------------------------------------+
       * ¦ Prototypes required for the IFS APIs ¦
       * +--------------------------------------+
       /COPY CGCPYSRC,IFSPROTO
- 
+
       * +------------------------------------------------------+
       * ¦ READ API() definitions for oflag and mode parameters ¦
       * +------------------------------------------------------+
       /COPY CGCPYSRC,OPENDFN
- 
+
       * +-------------------------------------------------+
       * ¦ Variable declaration for the IFS APIs used here ¦
       * +-------------------------------------------------+
@@ -80,18 +84,21 @@
      D RC              S             10I 0
      D*Codepage*       S              3  0                                                    CSD053
      D Ccsid           S              5  0                                                    CSD053
- 
+
       * +-------------------------+
       * ¦ Other standalone fields ¦
       * +-------------------------+
-     D PathName        S            100A   INZ(*BLANKS)
+     D*PathName****    S            100A   INZ(*BLANKS)                                       BA6020
+     D PathName        S            150A   INZ(*BLANKS)                                       BA6020
+     D StmfName        S             80A   INZ(*BLANKS)                                       BA6020
+     D SavedStmfName   S                   LIKE(StmfName)                                     BA6020
      D AttNbr          S             35A
      D RtnCode         S              7A
      D ActCode         S              6A
-     D StmfName        S             30A   INZ(*BLANKS)
+     D*StmfName****    S             30A   INZ(*BLANKS)                                       BA6020
      D WFirst          S              1A
      D WClose          S              1A
- 
+
       * +-------------------------------------+
       * ¦ Variables for writing into Log file ¦
       * +-------------------------------------+
@@ -101,7 +108,7 @@
      D L#Titl          S              7    INZ(*BLANKS)
      D L#Ulin          S              7    INZ(*BLANKS)
      D L#Cmt           S              3    INZ(*BLANKS)
- 
+
       * +-----------------+
       * ¦ Named Constants ¦
       * +-----------------+
@@ -109,18 +116,18 @@
      D ExtCTL          C                   CONST('.CTL')
      D CRLF            C                   X'0D25'
      D Null            C                   X'00'
- 
+
       * +----------------------------------+
       * ¦ For *PSSR Error Handling routine ¦
       * +----------------------------------+
      D @RUN            S              1
- 
+
       * +-------------------------+
       * ¦ Parameters for AOCORMR0 ¦
       * +-------------------------+
      D Rtcd            S              7    INZ(*BLANK)
      D Optn            S              7    INZ(*BLANK)
- 
+
       * +------------------------+
       * ¦ Parameters for CGC3608 ¦
       * +------------------------+
@@ -153,39 +160,39 @@
       *                                                                                      CSD053A
      D CodePage        S              3P 0                                                   CSD053A
      D AllowDBCS       S              1                                                      CSD053A
- 
+
       * +---------------------------------------------------------+
       * ¦ Function to retrieve next Streamfile Attribution Number ¦
       * +---------------------------------------------------------+
      DGetAttNbr        PR            35
- 
+
       * +--------------------------------------------------------+
       * ¦ Data structure to set up Message Data for the log file ¦
       * +--------------------------------------------------------+
      D L#MSDT          DS
      D L#ITEM                  1      5P 0
      D L#DCOR                  6     15
- 
+
       * +----------------------------------------------+
       * ¦ Data structure for Print Process driver file ¦
       * +----------------------------------------------+
      D PrtGen        E DS                  EXTNAME(CGPGENPD)
- 
+
       * +-----------------------------------------------+
       * ¦ Data structure for Correspondence Manager ICD ¦
       * +-----------------------------------------------+
      D Sdcorm        E DS                  EXTNAME(SDCORMPD)
- 
+
       * +-----------------------------------------------+
       * ¦ Data Structure (long) used by Access Programs ¦
       * +-----------------------------------------------+
      D Dsldy         E DS                  EXTNAME(DSLDY)
- 
+
       * +----------------------------------------------------+
       * ¦ System Local Data Area to hold <OutputInformation> ¦
       * +----------------------------------------------------+
      D Cglda         E DS                  EXTNAME(CGLDA)
- 
+
       * +------------------------------------------------------+
       * ¦ Local Data Area Structure for error handling routine ¦
       * +------------------------------------------------------+
@@ -196,13 +203,34 @@
       *                                     181 1830DBASE
       *                                     184 193 DBMOD
       *                                     194 203 DBPROC
- 
+
       * +-----------------------------------------------------------------+
       * ¦ The following /COPY line includes all the defined fields in the ¦
       * ¦ PSDS.  They have meaningful names, prefixed by 'PS'.            ¦
       * +-----------------------------------------------------------------+
      D/COPY ZACPYSRC,PSDS
- 
+      *                                                                                       BA6020
+      ** Fields for enhancement BA6020                                                        BA6020
+     D BA6020          S              1A   INZ('N')                                           BA6020
+     D PRTCD           S              7A                                                      BA6020
+     D POPTN           S              7A                                                      BA6020
+     D PSARD           S                   LIKE(SARN)                                         BA6020
+     D W#TYPE          S                   LIKE(CGTYPE)                                       BA6020
+     D                                     INZ('REFR')                                        BA6020
+     D W#ARGT          S                   LIKE(CGARGT)                                       BA6020
+     D COLON           S              1A   INZ(':')                                           BA6020
+     D DOT             S              1A   INZ('.')                                           BA6020
+                                                                                              BA6020
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  BA6020
+      ** Externally described DS for SAR Details                                              BA6020
+                                                                                              BA6020
+     D CGRDEC        E DS                  EXTNAME(A6RDEXPD)                                  BA6020
+      ** Externally described DS for SAR Details                                              BA6020
+                                                                                              BA6020
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     BA6020
+      ** DS for Access Programs - short data structure                                        BA6020
+                                                                                              BA6020
+
       /EJECT
       * +------------------------------------------------------------------+
       * ¦ Main Routine                                                     ¦
@@ -249,91 +277,91 @@
       *  Mode = *WRITE
       *  -------------
      C                   WHEN      ActCode = '*WRITE'
- 
+
       *  Only create stream file and write <Correspondent> line if
       *  program is called for the first time to write or if previous
       *  stream was successfully closed (this is for multi-message
       *  processing where 1st streamfile already holds the maximum
       *  number of export file size defined).
      C                   IF        (WFirst = 'Y') OR (WClose = 'Y')
- 
+
       *  Retrieve the next available Streamfile Attribution No.
      C                   EVAL      AttNbr = GetAttNbr
- 
+
       *  Create the Streamfile
      C                   EXSR      CREATESTMF
- 
+
       *  Open stream file and write first line (i.e. '<Correspondence>')
      C                   EXSR      WRITEFIRST
- 
+
      C                   ENDIF
- 
+
       *  Write data into Streamfile
      C                   EXSR      WRITESTMF
- 
+
       *  Output Log record for this item
      C                   EXSR      WRITELOG
- 
+
       *  Update WClose flag to 'N'
      C                   EVAL      WClose = 'N'
- 
+
       *  Mode = *CLOSE
       *  -------------
      C                   WHEN      ActCode = '*CLOSE'
- 
+
       *  Close the Streamfile .DAT
      C                   EXSR      CLOSESTMF
- 
+
       *  Submit the FTP job (if not already running)
      C                   EXSR      RUNFTP
- 
+
       *  Update WClose flag to 'N'
      C                   EVAL      WClose = 'Y'
- 
+
      C                   ENDSL
- 
+
       *  Update WFirst flag to 'N'
      C                   EVAL      WFirst = 'N'
- 
+
       *  Terminate the program
      C                   RETURN
- 
+
       /EJECT
       * +------------------------------------------------------------------+
       * ¦ Subr/*INZSR - Initialisation subroutine                          ¦
       * +------------------------------------------------------------------+
      C     *INZSR        BEGSR
- 
+
       * List of program parameters :
       * --------------------------
       * a) RtnCode - normally *BLANK at entry
       * b) ActCode - should be either *GEN, *WRITE or *CLOSE
       * c) PrtGen - a data structure containing entire data record
       *             from PF/CGPGENPD
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RtnCode
      C                   PARM                    ActCode
      C                   PARM                    PrtGen
- 
+
       *  Initialise control flags
      C                   EVAL      WFirst = 'Y'
      C                   EVAL      WClose = 'N'
- 
+
       *  Define work dataarea
      C     *DTAARA       DEFINE    *LDA          Cglda
- 
+
       *  Define Key for creating Item Log record
      C     UDCRKY        KLIST
      C                   KFLD                    B2ITEM
      C                   KFLD                    B2DCOR
- 
+
       *  Retrieve Correspondence Manager ICD
      C                   CALLB(E)  'AOCORMR0'
      C                   PARM      *BLANKS       Rtcd
      C                   PARM      '*FIRST '     Optn
      C     Sdcorm        PARM      *BLANKS       Dsldy
- 
+
       * Error calling AOCORMR0
      C                   IF        %ERROR OR Rtcd <> *BLANK
      C                   EVAL      DBFILE =  'SDCORMPD'
@@ -342,7 +370,7 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Initialise the code page for stream file representation
      C**********         MOVE      CMCPAG        CodePage                                     CSD053
      C                   IF        AllowDBCS = 'Y'                                           CSD053A
@@ -350,23 +378,73 @@
      C                   ELSE                                                                CSD053A
      C                   MOVE      CMCPAG        CodePage                                    CSD053A
      C                   ENDIF                                                               CSD053A
- 
+      *
+     C     K#RDEC        KLIST                                                                BA6020
+     C                   KFLD                    W#TYPE                                       BA6020
+     C                   KFLD                    W#ARGT                                       BA6020
+      *                                                                                       BA6020
+     C                   CALL      'AOSARDR0'                                                 BA6020
+     C                   PARM      *BLANKS       PRTCD                                        BA6020
+     C                   PARM      '*VERIFY'     POPTN                                        BA6020
+     C                   PARM      'BA6020'      PSARD                                        BA6020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6020
+      *                                                                                       BA6020
+     C                   IF        PRTCD = *Blanks                                            BA6020
+     C                   EVAL      BA6020 = 'Y'                                               BA6020
+     C                   ENDIF                                                                BA6020
+
      C                   ENDSR
- 
+
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/CREATESTMF - Create streamfile (type *STMF) in         ¦
       * ¦                   exclusive mode.                           ¦
       * +-------------------------------------------------------------+
      C     CREATESTMF    BEGSR
- 
+
       *  Define the streamfile name (AttnNbr + '.DAT').
      C                   EVAL      StmfName = %TRIM(AttNbr) + ExtDAT
- 
+      *                                                                                       BA6020
+     C                   IF        (BA6020 = 'Y')                                             BA6020
+      *  Get required schema name from CGRDECL0, and prepend to                               BA6020
+      *  the "standard" stream file name.                                                     BA6020
+     C                   EVAL      W#ARGT = %TRIM(B2PTYP) + COLON +                           BA6020
+     C                              %TRIM(B2PSTP)                                             BA6020
+      *                                                                                       BA6020
+      *  Chain to Handelsbanken extension file to obtain short name of correspondence         BA6020
+      *                                                                                       BA6020
+     C     K#RDEC        CHAIN     A6RDEXL1                                                   BA6020
+      *                                                                                       BA6020
+     C                   IF        %FOUND(A6RDEXL1)                                           BA6020
+      *                                                                                       BA6020
+      *  If the short name is present,                                                        BA6020
+      *                                                                                       BA6020
+     C     CGSNWD        IFNE      '          '                                               BA6020
+      *                                                                                       BA6020
+      *  use the short name to calculate the name of the stream file.                         BA6020
+      *                                                                                       BA6020
+     C                   EVAL      StmfName = %TRIM(CGSNWD) + DOT + StmfName                  BA6020
+      *                                                                                       BA6020
+      *  If the short name field is blank,                                                    BA6020
+      *                                                                                       BA6020
+     C                   ELSE                                                                 BA6020
+      *                                                                                       BA6020
+      *  use the full schema name.                                                            BA6020
+      *                                                                                       BA6020
+     C                   EVAL      StmfName = %TRIM(CGNWFD) + DOT + StmfName                  BA6020
+      *                                                                                       BA6020
+     C                   ENDIF                                                                BA6020
+      *  Define the path using the Local Directory entry in ICD                               BA6020
+     C                   EVAL      PathName =                                                 BA6020
+     C                               %TRIM(CMLODI) + '/' + %TRIM(StmfName)                    BA6020
+     C                   ENDIF                                                                BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+
       *  Define the path using the Local Directory entry in ICD
      C                   EVAL      PathName =
      C                               %TRIM(CMLODI) + '/' + %TRIM(StmfName)
- 
+
       *  CREATE THE STREAM FILE
       *  ----------------------
       *  Set file status flag for creation of stream file where the file
@@ -384,12 +462,18 @@
       * Set file mode parameter
      C                   EVAL      mode = S_IRWXU + S_IRWXG +
      C                                    S_IROTH + S_IXOTH
- 
+
       * Create stream file
      C                   IF        AllowDBCS = 'Y'                                           CSD053A
      C                   EVAL      FDescDat = OPEN(%TRIMR(PathName) :
      C**********                            Oflag : mode : Codepage)                          CSD053
      C                                      Oflag : mode : Ccsid)                             CSD053
+      *                                                                                       BA6020
+     C                   IF        BA6020 = 'Y'                                               BA6020
+     C                   CALL      'A6C000003'                                                BA6020
+     C                   PARM                    PathName                                     BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
      C                   ELSE                                                                CSD053A
      C                   EVAL      FDescDat = OPEN(%TRIMR(PathName) :                        CSD053A
      C                                      Oflag : mode : Codepage)                         CSD053A
@@ -411,6 +495,12 @@
      C                   EVAL      FDescDat = OPEN(%TRIMR(PathName) :                        BUG7529
      C**********                            Oflag : mode : Codepage)                  BUG7529 CSD053
      C                                      Oflag : mode : Ccsid)                     BUG7529 CSD053
+      *                                                                                       BA6020
+     C                   IF        BA6020 = 'Y'                                               BA6020
+     C                   CALL      'A6C000003'                                                BA6020
+     C                   PARM                    PathName                                     BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
      C                   ELSE                                                                CSD053A
      C                   EVAL      FDescDat = OPEN(%TRIMR(PathName) :                        CSD053A
      C                                      Oflag : mode : Codepage)                         CSD053A
@@ -418,7 +508,7 @@
      C                   ADD       1             W#CNT                                        235560
      C                   ENDDO                                                                235560
      C**********         ENDIF                                                        BUG7529 235560
- 
+
       * If error creating the Streamfile
       * after the re-try, then this is not an issue of trying too soon, database error.      BUG7529
      C                   IF        FDescDat = -1
@@ -428,23 +518,23 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/WRITEFIRST - Write data from Merged XML Data (CGUXMLPD)¦
       * ¦                   file into the stream file.                ¦
       * +-------------------------------------------------------------+
      C     WRITEFIRST    BEGSR
- 
+
      C                   CALLB     'CG3626'
      C                   PARM      '*GEN  '      ActCode
      C                   PARM                    PrtGen
      C                   PARM                    FDescDat
      C                   PARM      *BLANKS       RtnCode
      C                   PARM                    AllowDBCS                                   CSD053A
- 
+
       *  If return code is not blank or *ERROR, process dbase error.
      C                   IF        RtnCode <> *BLANKS
      C                             AND RtnCode = '*ERROR '
@@ -454,25 +544,25 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/WRITESTMF - Write data from Merged XML Data (CGUXMLPD) ¦
       * ¦                  file into the stream file.                 ¦
       * +-------------------------------------------------------------+
      C     WRITESTMF     BEGSR
- 
+
       *  Write Merged XML data into Stream file.
- 
+
      C                   CALLB     'CG3626'
      C                   PARM      '*WRITE'      ActCode
      C                   PARM                    PrtGen
      C                   PARM                    FDescDat
      C                   PARM      *BLANKS       RtnCode
      C                   PARM                    AllowDBCS                                   CSD053A
- 
+
       *  If return code is not blank or *ERROR, process dbase error.
      C                   IF        RtnCode <> *BLANKS
      C                             AND RtnCode = '*ERROR '
@@ -482,9 +572,9 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/CLOSESTMF - Wrap the stream file by writing line       ¦
@@ -492,16 +582,16 @@
       * ¦                  IFS API CLOSE()function.                   ¦
       * +-------------------------------------------------------------+
      C     CLOSESTMF     BEGSR
- 
+
       *  Wrap correspondent data in the stream file and close it.
- 
+
      C                   CALLB     'CG3626'
      C                   PARM      '*CLOSE'      ActCode
      C                   PARM                    PrtGen
      C                   PARM                    FDescDat
      C                   PARM      *BLANKS       RtnCode
      C                   PARM                    AllowDBCS                                   CSD053A
- 
+
       *  If return code is not blank or *ERROR, process dbase error.
      C                   IF        RtnCode <> *BLANKS
      C                             AND RtnCode = '*ERROR '
@@ -511,13 +601,18 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+      ** Save streamfile name.                                                                BA6020
+      *                                                                                       BA6020
+     C                   If        (BA6020 = 'Y')                                             BA6020
+     C                   Eval      SavedStmfName = StmfName                                   BA6020
+     C                   Endif                                                                BA6020
+
       *  Create control file .CTL before closing .DAT file
      C                   EXSR      CREATECTL
- 
+
       *  Now close the .DAT file
      C                   EVAL      RC = CLOSE(FDescDat)
- 
+
       *  If error closing the streamfile, process dbase error.
      C                   IF        RC = -1
      C                   EVAL      DBFILE =  *BLANK
@@ -526,9 +621,20 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+      *                                                                                       BA6020
+     C                   IF        (BA6020 = 'Y')                                             BA6020
+      *                                                                                       BA6020
+      ** Pass path and streamfile name to encoding conversion program.                        BA6020
+      ** This is to workaround a downstream application that isn't handling UTF-16 properly.  BA6020
+      *                                                                                       BA6020
+     C                   CALL      'A6C000002'                                                GSH002
+     C                   PARM                    CMLODI                                       BA6020
+     C                   PARM                    SavedStmfName                                BA6020
+      *                                                                                       BA6020
+     C                   ENDIF                                                                BA6020
+
      C                   ENDSR
- 
+
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/CREATECTL - Create .CTL control file to indicate       ¦
@@ -536,12 +642,12 @@
       * ¦                  complete.                                  ¦
       * +-------------------------------------------------------------+
      C     CREATECTL     BEGSR
- 
+
       *  Define the control streamfile name (AttnNbr + '.CTL').
      C                   EVAL      StmfName = %TRIM(AttNbr) + ExtCTL
      C                   EVAL      PathName =
      C                               %TRIM(CMLODI) + '/' + %TRIM(StmfName)
- 
+
       *  Create the control file .CTL
       *  ----------------------------
       *  Set file status flag for stream file creation where the file is
@@ -553,17 +659,23 @@
       * Set file mode parameter
      C                   EVAL      Mode = S_IRWXU + S_IRWXG +
      C                                    S_IROTH + S_IXOTH
- 
+
       * Create stream file
      C                   IF        AllowDBCS = 'Y'                                           CSD053A
      C                   EVAL      FDescCtl = OPEN(%TRIMR(PathName) :
      C**********                            Oflag : Mode : Codepage)                          CSD053
      C                                      Oflag : Mode : Ccsid)                             CSD053
+      *                                                                                       BA6020
+     C                   IF        BA6020 = 'Y'                                               BA6020
+     C                   CALL      'A6C000003'                                                BA6020
+     C                   PARM                    PathName                                     BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
      C                   ELSE                                                                CSD053A
      C                   EVAL      FDescCtl = OPEN(%TRIMR(PathName) :                        CSD053A
      C                                      Oflag : Mode : Codepage)                         CSD053A
      C                   ENDIF                                                               CSD053A
- 
+
       *  If error creating the streamfile, process dbase error.
      C                   IF        FDescCtl = -1
      C                   EVAL      DBFILE =  *BLANK
@@ -572,11 +684,11 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
       *  Close .CTL file without writing anything to it.
- 
+
      C                   EVAL      RC = CLOSE(FDescCtl)
- 
+
       *  If error closing the streamfile, process dbase error.
      C                   IF        RC = -1
      C                   EVAL      DBFILE =  *BLANK
@@ -585,23 +697,23 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/RUNFTP - Submit FTP Job CGC3608.                       ¦
       * +-------------------------------------------------------------+
      C     RUNFTP        BEGSR
- 
+
       *  Call CGC3608 to submit the FTP job.
- 
+
      C                   CALL      'CGC3608'
      C                   PARM      *BLANKS       F#Rtn
      C                   PARM      '*START    '  F#Act
- 
+
       *  Action *START will try to allocate SDCORMPD file to ensure
       *  that FTP job will not run while this ICD file is being amended.
       *  If the file can not be allocated, process dbase error and dump
@@ -613,9 +725,9 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/WRITELOG - Output Log record either in PF/CGUDCLPD     ¦
@@ -623,10 +735,10 @@
       * ¦                 Archive Flag.                               ¦
       * +-------------------------------------------------------------+
      C     WRITELOG      BEGSR
- 
+
       *  Read-in *LDA
      C                   IN        Cglda
- 
+
       *  Open any of the two Log files depending on Archive flag
       *  from dataarea Cglda
      C                   IF        #@ARCH = 'A'
@@ -634,29 +746,29 @@
      C                   ELSE
      C                   OPEN      CGUDCRL0
      C                   ENDIF
- 
+
       *  Access the UDC Reference file for the Correspondence Item
      C                   IF        #@ARCH = 'A'
      C     UDCRKY        CHAIN     CGXDCRL0                           50
      C                   ELSE
      C     UDCRKY        CHAIN     CGUDCRL0                           50
      C                   ENDIF
- 
+
       *  If record is not found, process database error.
      C                   IF        *IN50 = '1'
- 
+
      C                   IF        #@ARCH = 'A'
      C                   EVAL      DBFILE = 'CGXDCRL0'
      C                   ELSE
      C                   EVAL      DBFILE = 'CGUDCRL0'
      C                   ENDIF
- 
+
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   EVAL      DBASE  =  012
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *  Set Item Status as 'PRTQ' (FormsMaster Print Queue).
       *
      C                   IF        B2ISTS <> 'PPFN'                                           226341
@@ -669,7 +781,7 @@
      C                   ELSE
      C                   UPDATE    @UDCRL0
      C                   ENDIF
- 
+
       *  Set up the relevant Log file fields for this level.
      C                   CLEAR                   L#UDCL
      C                   EVAL      DLITEM = B2ITEM
@@ -681,8 +793,8 @@
      C                   EVAL      DLCPGM = 'CG3625'
      C                   EVAL      DLRPGM = 'CG3626'
      C                   EVAL      DLSTFN = AttNbr
- 
- 
+
+
       *  Call program to output log record
      C                   IF        #@ARCH = 'A'
      C                   CALL      'CG9050'
@@ -692,7 +804,7 @@
      C                   PARM      *BLANKS       L#Titl
      C                   PARM      *BLANKS       L#Ulin
      C                   PARM      'YES'         L#Cmt
- 
+
      C                   ELSE
      C                   CALL      'CG9030'
      C                   PARM      *BLANKS       L#Rtcd
@@ -702,7 +814,7 @@
      C                   PARM      *BLANKS       L#Ulin
      C                   PARM      'YES'         L#Cmt
      C                   IF        L#Rtcd = *BLANKS
- 
+
       *  Set charge log record systematically
      C                   CLEAR                   L#UDCL
      C                   EVAL      DLITEM = B2ITEM
@@ -721,10 +833,10 @@
      C                   PARM      *BLANKS       L#Titl
      C                   PARM      *BLANKS       L#Ulin
      C                   PARM      'YES'         L#Cmt
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       *  If error encountered, process database error
      C                   IF        L#Rtcd <> *BLANKS
      C                   IF        #@ARCH = 'A'
@@ -732,20 +844,20 @@
      C                   ELSE
      C                   EVAL      DBFILE = 'CGUDCRL0'
      C                   ENDIF
- 
+
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   EVAL      DBASE  =  013
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *  Close file after successful update.
      C                   IF        #@ARCH = 'A'
      C                   CLOSE     CGXDCRL0
      C                   ELSE
      C                   CLOSE     CGUDCRL0
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       * +-------------------------------------------------------------+
@@ -755,31 +867,31 @@
       * ¦              This subroutine DUMPs the program just once.   ¦
       * +-------------------------------------------------------------+
      C     *PSSR         BEGSR
- 
+
       *  Dump the program
      C                   DUMP
- 
+
       *  Display Dbase Error screen
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
       * Set job switches
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
       * Pass a value of '*ERROR*' to calling program (i.e. CG5200)
      C                   EVAL      RtnCode = '*ERROR*'
- 
+
       * End program
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Func/GetAttNbr - Retrieve next available Streamfile         ¦
@@ -789,15 +901,15 @@
       * +-------------------------------------------------------------+
      PGetAttNbr        B
      DGetAttNbr        PI            35
- 
+
      DRtnCode          S             10
      DAttNbr           S             35
- 
+
       ** Get the initial group set name.
- 
+
      C                   CALLB     'CG3605'
      C                   PARM      *Blanks       RtnCode
      C                   PARM      *Blanks       AttNbr
- 
+
      C                   RETURN    AttNbr
      P                 E

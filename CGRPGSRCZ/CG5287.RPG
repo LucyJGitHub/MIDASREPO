@@ -15,12 +15,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA6020             Date 09Feb23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSC022             Date 24Feb04               *
+      *                 CSC022             Date 24Feb04               *
       * Midas Release 4.01 -------------------------------------------*
       *                 190022             Date 25Jan99               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -31,6 +32,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  BA6020 =  Add specific header field to CM XML Output         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
       *  190022 - Recompiled due to increased size of OVRPRTF string  *
@@ -60,6 +62,9 @@
      F                                              KINFSR SRFILE
      F                                              KCOMIT
       * RTV : Print Generator           By Correspondent
+     FA6PGENL3UF  E           K        DISK                           UC                      BA6020
+     F                                              KINFSR SRFILE                             BA6020
+     F                                              KCOMIT                                    BA6020
       *
      FCGPGENPDO   E                    DISK
      F                                              KINFSR SRFILE
@@ -151,7 +156,11 @@
      C                     READ CGPGENL2                 90
      C                     ELSE
      C/COPY WNCPYSRC,CG5287C001
+     C           BA6020    IFEQ 'Y'                                                           BA6020
+     C                     READ A6PGENL3                 90                                   BA6020
+     C                     ELSE                                                               BA6020
      C                     READ CGPGENL3                 90
+     C                     ENDIF                                                              BA6020
      C/COPY WNCPYSRC,CG5287C002
      C                     ENDIF
       *                                                                   CCG002
@@ -207,7 +216,11 @@
      C                     OTHER                                          CCG002
      C                     WRITE@PGENPD
      C/COPY WNCPYSRC,CG5287C003
+     C           BA6020    IFEQ 'Y'                                                           BA6020
+     C                     DELET@6PGENL3                                                      BA6020
+     C                     ELSE                                                               BA6020
      C                     DELET@PGENL3
+     C                     ENDIF                                                              BA6020
      C/COPY WNCPYSRC,CG5287C004
      C                     ENDSL                                          CCG002
      C                     ENDIF
@@ -218,7 +231,11 @@
      C                     READ CGPGENL2                 90
      C                     ELSE
      C/COPY WNCPYSRC,CG5287C005
+     C           BA6020    IFEQ 'Y'                                                           BA6020
+     C                     READ A6PGENL3                 90                                   BA6020
+     C                     ELSE                                                               BA6020
      C                     READ CGPGENL3                 90
+     C                     ENDIF                                                              BA6020
      C/COPY WNCPYSRC,CG5287C006
      C                     ENDIF
      C                     ENDDO
@@ -267,6 +284,33 @@
       *
      C                     SETON                     50
      C                     Z-ADD0         ##CNT   50
+      *                                                                                       BA6020
+      **  Check if BA6020 feature is switched ON.                                             BA6020
+      *                                                                                       BA6020
+     C                     MOVE 'N'       BA6020  1                                           BA6020
+     C                     CALL 'AOSARDR0'             91                                     BA6020
+     C                     PARM '       ' ##RTCD                                              BA6020
+     C                     PARM '*VERIFY' ##OPTN                                              BA6020
+     C                     PARM 'BA6020'  ##SARD                                              BA6020
+     C           SCSARD    PARM *BLANKS   DSSDY                                               BA6020
+      *                                                                                       BA6020
+      **  If the Access Object returns an error code, process a                               BA6020
+      **  database error.                                                                     BA6020
+      *                                                                                       BA6020
+     C           ##RTCD    IFNE *BLANK                                                        BA6020
+     C           ##RTCD    ANDNE'*NRF   '                                                     BA6020
+     C           *IN91     OREQ *ON                                                           BA6020
+     C                     MOVEL'AOSARDR0'W0FILE           ***************                    BA6020
+     C                     MOVEL'BA6020'  W0KEY            * DB ERROR 16 *                    BA6020
+     C                     Z-ADD16        W0ERNB           ***************                    BA6020
+     C                     MOVEL'MEM5003' W0MSGD                                              BA6020
+     C                     MOVEL'MIDAS  ' W0MSGF                                              BA6020
+     C                     EXSR SRERR                                                         BA6020
+     C                     ENDIF                                                              BA6020
+      *                                                                                       BA6020
+     C           ##RTCD    IFEQ *BLANK                                                        BA6020
+     C                     MOVE 'Y'       BA6020                                              BA6020
+     C                     ENDIF                                                              BA6020
       *
       *  Open files
       *
@@ -274,7 +318,11 @@
      C                     OPEN CGPGENL2
      C                     ELSE
      C/COPY WNCPYSRC,CG5287C007
+     C           BA6020    IFEQ 'Y'                                                           BA6020
+     C                     OPEN A6PGENL3                                                      BA6020
+     C                     ELSE                                                               BA6020
      C                     OPEN CGPGENL3
+     C                     ENDIF                                                              BA6020
      C/COPY WNCPYSRC,CG5287C008
      C                     ENDIF
       *

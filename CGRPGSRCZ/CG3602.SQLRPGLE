@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA6020             Date 19Jan23               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR754177A          Date 14Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27073           Date 18Feb10               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6020 - Add specific header field to CM XML Output          *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR754177A - Notice days was not displayed on confirmation    *
@@ -136,7 +138,8 @@
       *                                                                                    AR754177A
       ** Set Global Array size                                                             AR754177A
       *                                                                                    AR754177A
-     D ArraySize       C                   CONST(800)                                      AR754177A
+     D*ArraySize***    C                   CONST(800)                               AR754177A BA6020
+     D ArraySize       C                   CONST(999)                                         BA6020
       *
      D CGRDEC        E DS                  EXTNAME(CGRDEJW0)                                MD054955
       /EJECT

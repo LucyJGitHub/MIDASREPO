@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. CSD101             Date 07Dec18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. BA6020             Date 13Feb13              */
+/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       BA6020 - Add specific header field Output to CM XML         */
 /*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG7700- Send message with msgid to MOPERQ so that          */
@@ -44,8 +46,10 @@
              DCL        VAR(&WAIT) TYPE(*DEC) LEN(5 0) VALUE(0)
 /* */
 /* Parameters for CG3612 */
-             DCL        VAR(&SRCDIR) TYPE(*CHAR) LEN(100)
-             DCL        VAR(&DSTDIR) TYPE(*CHAR) LEN(100)
+/*********   DCL        VAR(&SRCDIR) TYPE(*CHAR) LEN(100)            */                   /*BA6020*/
+/*********   DCL        VAR(&DSTDIR) TYPE(*CHAR) LEN(100)            */                   /*BA6020*/
+             DCL        VAR(&SRCDIR) TYPE(*CHAR) LEN(150)                                 /*BA6020*/
+             DCL        VAR(&DSTDIR) TYPE(*CHAR) LEN(150)                                 /*BA6020*/
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OPTION) TYPE(*CHAR) LEN(750)
              DCL        VAR(&USER) TYPE(*CHAR) LEN(20)
@@ -56,7 +60,8 @@
 /* Parameters for CG3630 */
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10) +
                           VALUE('          ')
-             DCL        VAR(&STREAM) TYPE(*CHAR) LEN(20)
+/**********  DCL        VAR(&STREAM) TYPE(*CHAR) LEN(20)             */                   /*BA6020*/
+             DCL        VAR(&STREAM) TYPE(*CHAR) LEN(70)                                  /*BA6020*/
 /* */
 /* Parameters for CGC3701 (FEEDBACK process) */
              DCL        VAR(&RTNPARM) TYPE(*CHAR) LEN(10)
@@ -68,6 +73,16 @@
              DCL        VAR(&PARM3) TYPE(*CHAR) LEN(200)
              DCL        VAR(&PARM4) TYPE(*CHAR) LEN(200)
              DCL        VAR(&PARM5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&BA6020) TYPE(*CHAR) LEN(1)                                   /*BA6020*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                   /*BA6020*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*BA6020*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*BA6020*/
+                                                                                          /*BA6020*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*BA6020*/
+             CHGVAR     VAR(&BA6020) VALUE('N')                                           /*BA6020*/
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')                                     /*BA6020*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA6020*/
+             CHGVAR     VAR(&SAR) VALUE('BA6020')                                         /*BA6020*/
 /*/COPY WNCPYSRC,CGH00003                                            */
 /* */
 /* Global Monitor Message */
@@ -77,6 +92,14 @@
              CHGJOB     SWS(XXXXX000)
                    STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)
+ /**/                                                                                     /*BA6020*/
+ /** Call AO Switchable features  */                                                      /*BA6020*/
+ /**/                                                                                     /*BA6020*/
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE &OPTN &SAR &SCSARD)                    /*BA6020*/
+                                                                                          /*BA6020*/
+             IF         COND(&RTNCDE *EQ '       ') THEN(DO)                              /*BA6020*/
+             CHGVAR     VAR(&BA6020) VALUE('Y')                                           /*BA6020*/
+             ENDDO                                                                        /*BA6020*/
 /*/COPY WNCPYSRC,CGH00005                                            */
 /**/
 /* Clear dataqueue before commencing FTP job */
@@ -132,6 +155,11 @@
              CALL       PGM(CG3612) PARM(&RETURN &STREAM &SRCDIR +
                           &DSTDIR &ACTION &OPTION &USER &PSWRD &HOST)
 
+             IF         COND(&BA6020 = 'Y') THEN(DO)                                      /*BA6020*/
+             IFSAUT     PATH(&SRCDIR)                                                     /*BA6020*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6020*/
+             ENDDO                                                                        /*BA6020*/
+                                                                                          /*BA6020*/
              IF         COND(&RETURN = '*ERROR') THEN(GOTO +
                           CMDLBL(ABNORMAL))
 /*/COPY WNCPYSRC,CGH00004                                            */
@@ -150,6 +178,10 @@
              CALL       PGM(CGC3705) PARM(&HOST &RETURN)
              IF         COND(&RETURN = '*ERROR') THEN(GOTO +
                           CMDLBL(ABNORMAL))
+             IF         COND(&BA6020 = 'Y') THEN(DO)                                      /*BA6020*/
+             IFSAUT     PATH(&DSTDIR)                                                     /*BA6020*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6020*/
+             ENDDO                                                                        /*BA6020*/
 
 /**/
 /* FTP Log Read: CG3629 calls CG3613 (Status of FTP Trans) which     */

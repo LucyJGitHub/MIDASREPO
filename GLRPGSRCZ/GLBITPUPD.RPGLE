@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL082             Date 02Nov21               *
-      *  Prev Amend No. CGL118             Date 02Nov21               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. CGL082             Date 02Nov21               *
+      *                 CGL118             Date 02Nov21               *
       *                 MD058173           Date 28Jun21               *
       *                 AR573975           Date 01Jun20               *
       *                 254657             Date 01Jun20               *
@@ -99,6 +100,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
+      *           Include: MD-54571, MD-54555                         *
       *  CGL082 - Journal Entry User Audit                            *
       *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD058173 - Hash Item input count on JRNE is updated when user*
@@ -311,6 +314,21 @@
       *                                                                                       CRE023
       ** Outward Clearing Balance File                                                        CRE023
       *                                                                                       CRE023
+      *                                                                                       CGL200
+     FGLJENPX0  O    E             DISK    INFSR(*PSSR)                                       CGL200
+     F                                     RENAME(GLJEIPD0:GLJENPD2)                          CGL200
+     F                                     USROPN                                             CGL200
+     F                                     COMMIT                                             CGL200
+      *                                                                                       CGL200
+      ** Timestamp Extension file                                                             CGL200
+      *                                                                                       CGL200
+     FGLJENP01  UF   E           K DISK    INFSR(*PSSR)                                       CGL200
+     F                                     RENAME(GLJEIPD0:GLJENPD3)                          CGL200
+     F                                     USROPN                                             CGL200
+     F                                     COMMIT                                             CGL200
+      *                                                                                       CGL200
+      ** Timestamp Extension file - Index                                                     CGL200
+      *                                                                                       CGL200
      FGLMNARL2  UF A E           K DISK    INFSR(*PSSR)                                     BUG23742
       *                                                                                     BUG23742
       ** Midas GL Journal Entry - Additional Information 1                                  BUG23742
@@ -584,6 +602,9 @@
       *                                                                                    AR792734A
      D WPdId           S             15S 0 INZ(0)                                          AR1093096
      D/COPY WNCPYSRC,GLBITPDD01
+      *                                                                                       CGL200
+     D PTimeStamp      S               Z                                                      CGL200
+      *                                                                                       CGL200
       ** Duplicate cheque                                                                     257489
      D WCDup           S              1A   Inz('N')                                           257489
      D CGL182          S              1A   INZ('N')                                           CGL182
@@ -841,6 +862,15 @@
      C                   EXSR      SrUpdateChq                                                239466
      C                   ENDIF                                                                239466
       *                                                                                       239466
+     C                   IF        CGL200 = 'Y'                                               CGL200
+      *                                                                                       CGL200
+     C     GLJENP        CHAIN     GLJENP01                           90                      CGL200
+     C                   IF        *IN90 = *OFF                                               CGL200
+     C                   DELETE    GLJENPD3                                                   CGL200
+     C                   ENDIF                                                                CGL200
+      *                                                                                       CGL200
+     C                   ENDIF                                                                CGL200
+      *                                                                                       CGL200
      C                   DELETE    @BTREAK                                                    CAP084
      C                   ELSE                                                                 CAP084
      C                   UPDATE    @BTREAK                                                    CAP084
@@ -858,7 +888,7 @@
      C                   PARM                    BRBCDA                                       CGL082
      C                   PARM                    LastActn                                     CGL082
      C                   END                                                       E* Audit   CGL082
-      *                                                                                       CGL082     
+      *                                                                                       CGL082
      C/COPY OFCPYSRCZ,CGL135_062                                                             CGL135A
       *                                                                                       246418
       ** CGL013 processing                                                                    246418
@@ -1003,9 +1033,18 @@
      C                   PARM                    BRBCDA                                       CGL082
      C                   PARM      'I'           LastActn                                     CGL082
      C                   END                                                       E* Audit   CGL082
-      *                                                                                       CGL082     
+      *                                                                                       CGL082
      C/COPY OFCPYSRCZ,CGL135_063                                                             CGL135A
       *                                                                                       239466
+     C                   IF        CGL200 = 'Y'                                               CGL200
+      *                                                                                       CGL200
+     C                   CALLB     'ZAGENTMSTM'                                               CGL200
+     C                   PARM                    PTimeStamp                                   CGL200
+     C                   MOVE      PTimeStamp    BTTMST                                       CGL200
+     C                   WRITE     GLJENPD2                                                   CGL200
+      *                                                                                       CGL200
+     C                   ENDIF                                                                CGL200
+      *                                                                                       CGL200
       ** Update presented cheques for debit postings where cheque is used                     239466
       ** except when cheque used has been previously presented                                239466
       *                                                                                       239466
@@ -1312,7 +1351,7 @@ E1   C     *IN99         IFEQ      *OFF                                         
      C                   PARM                    BRBTNB                                       CGL082
      C                   PARM                    BRBCDA                                       CGL082
      C                   PARM      'A'           LastActn                                     CGL082
-     C                   END                                                       E* Audit   CGL082     
+     C                   END                                                       E* Audit   CGL082
       *                                                                                       CRE019
       ** Update presented cheques for debit postings where cheque is used                     CRE019
       ** except when cheque used has been previously presented                                CRE019
@@ -1494,7 +1533,7 @@ E1   C                   ENDIF                                                  
      C                   PARM                    BRBTNB                                       CGL082
      C                   PARM                    BRBCDA                                       CGL082
      C                   PARM      'I'           LastActn                                     CGL082
-     C                   END                                                       E* Audit   CGL082     
+     C                   END                                                       E* Audit   CGL082
       *
      C                   ENDSR
       *
@@ -2392,7 +2431,7 @@ z    C     KCHQB2        READPE    CHQBKPDF                               43    
      C                   PARM                    CRE019            1                          CRE019
       *                                                                                       CGL082
       ** Journal Entry User Audit                                                             CGL082
-     C                   PARM                    CGL082            1                          CGL082     
+     C                   PARM                    CGL082            1                          CGL082
       *                                                                                       246418
       ** MT94x Messages Generation                                                            246418
      C                   PARM                    CGL013            1                          246418
@@ -2774,6 +2813,27 @@ z    C     KCHQB2        READPE    CHQBKPDF                               43    
       *                                                                                       CGL182
      C/COPY WNCPYSRC,GLH00460
      C/COPY OFCPYSRCZ,CGL135_066                                                             CGL135A
+      *                                                                                       CGL200
+      * Access SAR details for CGL200                                                         CGL200
+      *                                                                                       CGL200
+     C                   MOVEL     'N'           CGL200            1                          CGL200
+     C                   CALLB     'AOSARDR0'                                                 CGL200
+     C                   PARM      *BLANKS       @RTCD                                        CGL200
+     C                   PARM      '*VERIFY'     POPTN                                        CGL200
+     C                   PARM      'CGL200'      PSARD                                        CGL200
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL200
+      *                                                                                       CGL200
+     C     @RTCD         IFEQ      *BLANK                                                     CGL200
+     C                   MOVEL     'Y'           CGL200                                       CGL200
+     C                   Open      GLJENPX0                                                   CGL200
+     C                   Open      GLJENP01                                                   CGL200
+     C                   ENDIF                                                                CGL200
+      *                                                                                       CGL200
+     C     GLJENP        KLIST                                                                CGL200
+     C                   KFLD                    BTPTDT                                       CGL200
+     C                   KFLD                    B2BTNB                                       CGL200
+     C                   KFLD                    B2BINB                                       CGL200
+      *                                                                                       CGL200
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

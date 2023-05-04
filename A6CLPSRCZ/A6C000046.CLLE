@@ -1,0 +1,77 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI    TEXT('Utility to Update Ext. Files A6RETRPD and A6NWRKPD')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas SD - Standing Data Module                             */
+/*                                                                   */
+/*       A6C000046 - Utility Program to Update Extension Files       */
+/*                   A6RETRPD and A6NW94PD                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. BA6026   *CREATE   Date 18Jan23              */
+/*       Prev Amend No. Xxnnnnnn           Date DDMMMYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BA6026 - Structuring Current MT940 and SEPA Compliance.     */
+/*                Include MD058337                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&OPTN)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SAR)    TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTCD)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&GII018) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
+
+             CHGJOB     SWS(00000000)
+
+/** Monitor for error messages not trapped in the rest of the */
+/** program. If they occur issue error msg and exit.          */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Check if enhancement BA6026 is installed */
+
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SAR)  VALUE('BA6026')
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR +
+                          &SCSARD)
+
+/** If feature is available */
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+
+/** Process initialize of extension files */
+             CLRPFM     FILE(A6RETRPD)
+             CLRPFM     FILE(A6NW94PD)
+
+/** Process update of extension files */
+                        CALL       PGM(A6000046)
+                        RTVJOBA    SWS(&SWS)
+                                   IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(DO)
+                                   GOTO       CMDLBL(ABNOR)
+                                   ENDDO
+
+             SNDPGMMSG  MSG('Extension files A6RETRPD and A6NW94PD +
+                          are successfully updated.') TOPGMQ(*EXT)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/** Otherwise end the pgm */
+             IF         COND(&RTCD *NE '       ') THEN(GOTO +
+                          CMDLBL(END))
+
+ABNOR:
+
+            SNDPGMMSG  MSG('Program A6C000046 ended abnormally')   +
+                         TOPGMQ(*EXT)
+            MONMSG     MSGID(CPF0000 MCH0000)
+
+END:
+             ENDPGM

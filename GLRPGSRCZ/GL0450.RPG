@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD059828           Date 20May22               *
       *                 CSD103             Date 10Aug20               *
       *                 223783             Date 28May12               *
@@ -96,6 +97,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
@@ -269,6 +271,11 @@
       ***********                                                                     181008 BUG5389
       ***GL Account Balances Today                                                    181008 BUG5389
       ***********                                                                     181008 BUG5389
+      *                                                                   CGL200
+     FGLJENP00IF  E           K        DISK                           UC  CGL200
+     F            GLJEIPD0                          KRENAMEGLJENPD1       CGL200
+     FGLAPOSX0O   E                    DISK         KCOMIT            UC  CGL200
+      *                                                                   CGL200
      F/COPY WNCPYSRC,GL0450FFPG                                           S01408
      F*                                                                   S01408
      F/COPY OFCPYSRCZ,CGL146_113                                                             CGL146A
@@ -529,6 +536,9 @@
      IDSSDY     E DSDSSDY                                                                     CGL029
       **  Long data Structure                                                                 CGL029
       **********                                                                     CAP203 BUG27914
+      *                                                                                       CGL200
+     I              'GL009700'            C         CG200P                                    CGL200
+      *                                                                                       CGL200
      I*                                                                   S01408
      I/COPY WNCPYSRC,GL0450IIPG                                           S01408
      I*                                                                   S01408
@@ -916,6 +926,39 @@
      C**********           MOVEL'N'       CAP203                                     CAP203 BUG27914
      C**********           END                                                       CAP203 BUG27914
       **********                                                                     CAP203 BUG27914
+      *                                                                   CGL200
+     ** Access SAR details for CGL200                                     CGL200
+      *                                                                   CGL200
+     C                     MOVEL'N'       CGL200  1                       CGL200
+     C                     CALL 'AOSARDR0'                                CGL200
+     C                     PARM *BLANKS   @RTCD                           CGL200
+     C                     PARM '*VERIFY' @OPTN                           CGL200
+     C                     PARM 'CGL200'  @SARD                           CGL200
+     C           SCSARD    PARM SCSARD    DSFDY                           CGL200
+      *                                                                   CGL200
+     C           @RTCD     IFEQ *BLANK                                    CGL200
+     C                     MOVEL'Y'       CGL200                          CGL200
+     C                     OPEN GLJENP00                                  CGL200
+     C                     OPEN GLAPOSX0                                  CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
+     C           *LIKE     DEFN BTTMST    W0TMST                          CGL200
+      *                                                                   CGL200
+     C           KEY001    KLIST                                          CGL200
+     C                     KFLD           BTPTDT                          CGL200
+     C                     KFLD           BTBTNB                          CGL200
+     C                     KFLD           BTBINB                          CGL200
+      *                                                                   CGL200
+     C           KEY002    KLIST                                          CGL200
+     C                     KFLD           XXBRCA                          CGL200
+     C                     KFLD           XXCNUM                          CGL200
+     C                     KFLD           XXCCY                           CGL200
+     C                     KFLD           XXACOD                          CGL200
+     C                     KFLD           XXACSQ                          CGL200
+     C                     KFLD           XXPSTD                          CGL200
+     C                     KFLD           XXVALD                          CGL200
+     C                     KFLD           XXUNQK                          CGL200
+      *                                                                   CGL200
      C/COPY WNCPYSRC,GL0450C015
      C*                                                                   CEU013
      C/COPY OFCPYSRCZ,CGL146_115                                                             CGL146A
@@ -1212,6 +1255,39 @@
      C                     MOVE 'N'       WINTB   1                       CAC001
      C                     EXSR CHGTYP
      C*                                                                   S01408
+     C           CGL200    IFEQ 'Y'                                       CGL200
+      *                                                                   CGL200
+     C                     MOVEL*BLANKS   ZZ009                           CGL200
+     C                     MOVE BTTMST    W0TMST                          CGL200
+      *                                                                   CGL200
+     C           KEY001    CHAINGLJENP00             63                   CGL200
+      *                                                                   CGL200
+     C           *IN63     IFEQ *OFF                                      CGL200
+     C           ATYP      ANDEQ'R'                                       CGL200
+      *                                                                   CGL200
+     C                     MOVE BTIBCA    XXBRCA                          CGL200
+     C                     MOVE CNUMA     XXCNUM                          CGL200
+     C                     MOVE CCY       XXCCY                           CGL200
+     C                     MOVE ACODA     XXACOD                          CGL200
+     C                     MOVE ACSQA     XXACSQ                          CGL200
+     C                     MOVE BTPTDT    XXPSTD                          CGL200
+     C                     MOVE VALD      XXVALD                          CGL200
+      *                                                                   CGL200
+     C                     CALL CG200P                                    CGL200
+     C                     PARM           UNQK#   9                       CGL200
+     C                     MOVELUNQK#     XXUNQK    P                     CGL200
+     C                     MOVELUNQK#     ZZ009                           CGL200
+      *                                                                   CGL200
+     C                     MOVE BTTMST    XXTMST                          CGL200
+      *                                                                   CGL200
+     C                     WRITEGLAPOSD0                                  CGL200
+      *                                                                   CGL200
+     C                     MOVE W0TMST    BTTMST                          CGL200
+      *                                                                   CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
      C/COPY WNCPYSRC,GL0450CCBU                                           S01408
      C*                                                                   S01408
      C/COPY OFCPYSRCZ,CGL135_014                                                             CGL135A

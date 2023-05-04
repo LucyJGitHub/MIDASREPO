@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD042378           Date 20Feb23               *
-      *  Prev Amend No. MD042258           Date 20Feb23               *
+      *  Last Amend No. BA6026             Date 08Mar23               *
+      *  Prev Amend No. BA6020             Date 07Feb23               *
+      *                 MD042378           Date 20Feb23               *
+      *                 MD042258           Date 20Feb23               *
       *                 MD031405           Date 20Feb23               *
       *                 MD059859A          Date 28Jun22               *
       *                 MD059859           Date 11May22               *
@@ -109,6 +111,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
+      *           Include GSH026, GSH046CC1 and MD060859.             *
+      *  BA6020 - Add specific header field to CM XML Output          *
       *  MD042378 - Account Statement for Closed account has wrong    *
       *             period                                            *
       *  MD042258 - available/cleared balance is incorrect on the     *
@@ -512,6 +517,14 @@
      D C#STMT          C                   CONST('STATEMENT ')
      D C#NORM          C                   CONST('NORMAL    ')
      D C#TURN          C                   CONST('TURNOVER  ')
+     D REV1            C                   CONST('STMT_BFBAL')                                BA6020
+     D REV2            C                   CONST('STMT_BFCBL')                                BA6020
+     D REV3            C                   CONST('STMT_ACBL ')                                BA6020
+     D REV4            C                   CONST('POST_AMT  ')                                BA6020
+     D REV5            C                   CONST('STMT_CFBAL')                                BA6020
+     D REV6            C                   CONST('STMT_CFCBL')                                BA6020
+     D REV7            C                   CONST('TOT_CRVAL ')                                BA6020
+     D REV8            C                   CONST('TOT_DRVAL ')                                BA6020
      D/COPY WNCPYSRC,CG4510I004
       *
       * System Value                                                                        MD059859
@@ -1260,6 +1273,7 @@
      C                   MOVEL     ##ACOD        PACCD                                        CER038
      C                   MOVEL     ##ACSQ        PACSQ                                        CER038
      C                   MOVEL     '*FORMAT'     POPTN                                        CER038
+     C                   MOVEL     TRAT          PTRTP                                        BA6026
       *                                                                                     BUG23445
       ** Format according to network Paper if Account is linked                             BUG23445
       *                                                                                     BUG23445
@@ -1282,6 +1296,13 @@
       *                                                                                     BUG24460
      C     WMT22         IFEQ      'Y'                                                      BUG24460
      C                   MOVEL     'Y'           WACUM                                      BUG24460
+      *                                                                                       BA6020
+      ** Set Network to 'EPOX' to ensure narratives formatted for EPOX                        BA6020
+      *                                                                                       BA6020
+     C     BA6020        IFEQ      'Y'                                                        BA6020
+     C     PNTWK         ANDEQ     ' '                                                        BA6020
+     C                   MOVEL     'EPOX  '      PNTWK                                        BA6020
+     C                   ENDIF                                                                BA6020
       *                                                                                     BUG24460
       ** Call the MG001901 access object to format the extended                             BUG24460
       ** narratives                                                                         BUG24460
@@ -1298,6 +1319,9 @@
      C                   PARM                    PACSQ                                      BUG24460
      C                   PARM                    PDCIN                                      BUG24460
      C                   PARM                    PTRTP                                      BUG24460
+     C                   PARM      *BLANKS       PPNARR           30                          BA6026
+     C                   PARM      *BLANKS       PNATY             1                          BA6026
+     C                   PARM      *BLANKS       PDSTN            11                          BA6026
       *                                                                                     BUG24460
       ** Extended Narratives of length 22 * 35                                              BUG24460
       *                                                                                     BUG24460
@@ -1332,6 +1356,7 @@
      C                   PARM                    WFLDNM                                     BUG24460
      C                   PARM                    WMGID                                      BUG24460
      C                   PARM                    WMGDTA                                     BUG24460
+     C                   PARM                    PPNAR2           30                          BA6026
       *                                                                                     BUG24460
      C     PRTCD2        IFEQ      *BLANKS                                                  BUG24460
      C     PRTCD2        OREQ      '*FORMAT'                                                BUG24460
@@ -4256,6 +4281,7 @@
      C                   ENDIF                                                                216937
      C*                                                                                       216937
      C     CGL193        IFEQ      'Y'                                                        CGL193
+     C     BA6020        OREQ      'Y'                                                        BA6020
      C     TRAT          IFNE      0                                                          CGL193
      C                   MOVE      TRAT          TRATA             5                          CGL193
      C                   MOVEL     TRATA         ##D(18)                                      CGL193
@@ -4625,9 +4651,42 @@
       *
       * Sign the amount
      C     ##SIGN        IFEQ      '-'
+      *                                                                                       BA6020
+     C     BA6020        Ifeq      'Y'                                                        BA6020
+     C     ##RDE#        Ifeq      REV1                                                       BA6020
+     C     ##RDE#        OREQ      REV2                                                       BA6020
+     C     ##RDE#        OREQ      REV3                                                       BA6020
+     C     ##RDE#        OREQ      REV4                                                       BA6020
+     C     ##RDE#        OREQ      REV5                                                       BA6020
+     C     ##RDE#        OREQ      REV6                                                       BA6020
+     C     ##RDE#        OREQ      REV7                                                       BA6020
+     C     ##RDE#        OREQ      REV8                                                       BA6020
+     C                   Z-ADD     ##WNUM        ##NUMB                                       BA6020
+     C                   Else                                                                 BA6020
      C                   Z-SUB     ##WNUM        ##NUMB
+     C                   EndIf                                                                BA6020
+     C                   ELSE                                                                 BA6020
+     C                   Z-SUB     ##WNUM        ##NUMB
+     C                   Endif                                                                BA6020
+      *                                                                                       BA6020
      C                   ELSE
+      *                                                                                       BA6020
+     C     BA6020        IFEQ      'Y'                                                        BA6020
+     C     ##RDE#        IFEQ      REV1                                                       BA6020
+     C     ##RDE#        OREQ      REV2                                                       BA6020
+     C     ##RDE#        OREQ      REV3                                                       BA6020
+     C     ##RDE#        OREQ      REV4                                                       BA6020
+     C     ##RDE#        OREQ      REV5                                                       BA6020
+     C     ##RDE#        OREQ      REV6                                                       BA6020
+     C     ##RDE#        OREQ      REV7                                                       BA6020
+     C     ##RDE#        OREQ      REV8                                                       BA6020
+     C                   Z-SUB     ##WNUM        ##NUMB
+     C                   ELSE                                                                 BA6020
+     C                   Z-ADD     ##WNUM        ##NUMB                                       BA6020
+     C                   Endif                                                                BA6020
+     C                   Else                                                                 BA6020
      C                   Z-ADD     ##WNUM        ##NUMB
+     C                   Endif                                                                BA6020
      C                   END
       *
       * Default Edit Type
@@ -5265,6 +5324,17 @@
      C                   KFLD                    ##BANO                                     BUG26680
      C                   KFLD                    W#BITM                                     BUG26680
       *                                                                                     BUG26680
+     C                   MOVEL     'N'           BA6020            1                          BA6020
+     C                   CALL      'AOSARDR0'                                                 BA6020
+     C                   PARM      *BLANKS       PRTCD                                        BA6020
+     C                   PARM      '*VERIFY'     POPTN                                        BA6020
+     C                   PARM      'BA6020'      PSARD                                        BA6020
+     C     SCSARD        PARM      SCSARD        DSSDY                                        BA6020
+      *                                                                                       BA6020
+     C     PRTCD         IFEQ      *BLANK                                                     BA6020
+     C                   MOVEL     'Y'           BA6020                                       BA6020
+     C                   EndIF                                                                BA6020
+                                                                                              BA6020
      C                   CALL      'AOSARDR0'                                                 CGL193
      C                   PARM      *BLANKS       PRTCD                                        CGL193
      C                   PARM      '*VERIFY'     POPTN                                        CGL193

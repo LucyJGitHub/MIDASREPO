@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 255619             Date 11Aug22               *
-      *  Prev Amend No. MD055442           Date 01Jun20               *
+      *  Last Amend No. BA6020             Date 03Sep13               *
+      *  Prev Amend No. 255619             Date 11Aug22               *
+      *                 MD055442           Date 01Jun20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027486           Date 23Jun15               *
       *                 CSD053A            Date 14Dec12               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+/*    *  BA6020 - Add specific header field to CM XML output          *
       *  255619 - Applied fix 252870.                                 *
       *  252870 - Zero-byte file transferred by CM.                   *
       *  MD055442 - Correspondence manager - pick up Czech CCSID 870. *
@@ -62,6 +64,11 @@
       *  XML Merged Data by Item Reference (Archive)
      FCGXXMLL0  IF   E           K DISK
 
+      *                                                                                       BA6020
+     FCGUXMHPD  IF   E             DISK                                                       BA6020
+      *                                                                                       BA6020
+     FA6RDEXL0  IF   E           K DISK                                                       BA6020
+      *                                                                                       BA6020
       /EJECT
       * +--------------------------------------+
       * ¦ Prototypes required for the IFS APIs ¦
@@ -130,10 +137,49 @@
      D CorrLine        S            184
      D SysLine         S            135
      D WFlag           S              1
+     D RootFnd         S              1                                                       BA6020
+     D DocSFnd         S              1                                                       BA6020
+     D BYPS            S              1                                                       BA6020
+     D BA6020          S              1                                                       BA6020
+     D POption         S              7A                                                      BA6020
+     D PRtnCode        S              7A                                                      BA6020
+     D PSARD           S              6A                                                      BA6020
+     D InHousePgm      S             10A   INZ(*BLANK)                                        BA6020
+     D W#SCHEMA        S             50A                                                      BA6020
+     D P@SCHEMA        S                   LIKE(W#SCHEMA)                                     BA6020
+     D COLON           S              1A   INZ(':')                                           BA6020
+     D W#ARGT          S            111A                                                      BA6020
+     D W#TYPE          S              4A   INZ('REFR')                                        BA6020
+     D WSysCus         S              1                                                       BA6020
                                                                                              CSD053A
      D Buffer          S            250A   INZ(*BLANK)                                       CSD053A
      D pBuffer         S               *   INZ(%ADDR(Buffer))                                CSD053A
      D AllowDBCS       S              1                                                      CSD053A
+      *                                                                                       BA6020
+      ** Parameters for AOSVALR0                                                              BA6020
+      *                                                                                       BA6020
+     D P@OP01          S             20    INZ                                                BA6020
+     D P@VL01          S            200    INZ                                                BA6020
+     D P@OP02          S                   LIKE(P@OP01) INZ                                   BA6020
+     D P@VL02          S                   LIKE(P@VL01) INZ                                   BA6020
+     D P@OP03          S                   LIKE(P@OP01) INZ                                   BA6020
+     D P@VL03          S                   LIKE(P@VL01) INZ                                   BA6020
+     D P@OP04          S                   LIKE(P@OP01) INZ                                   BA6020
+     D P@VL04          S                   LIKE(P@VL01) INZ                                   BA6020
+     D P@OP05          S                   LIKE(P@OP01) INZ                                   BA6020
+     D P@VL05          S                   LIKE(P@VL01) INZ                                   BA6020
+     D P@OP06          S                   LIKE(P@OP01) INZ                                   BA6020
+     D P@VL06          S                   LIKE(P@VL01) INZ                                   BA6020
+     D P@OP07          S                   LIKE(P@OP01) INZ                                   BA6020
+     D P@VL07          S                   LIKE(P@VL01) INZ                                   BA6020
+     D P@OP08          S                   LIKE(P@OP01) INZ                                   BA6020
+     D P@VL08          S                   LIKE(P@VL01) INZ                                   BA6020
+     D P@OP09          S                   LIKE(P@OP01) INZ                                   BA6020
+     D P@VL09          S                   LIKE(P@VL01) INZ                                   BA6020
+     D P@OP10          S                   LIKE(P@OP01) INZ                                   BA6020
+     D P@VL10          S                   LIKE(P@VL01) INZ                                   BA6020
+     D I#Rtcd          S              7    INZ(*BLANK)                                        BA6020
+      *                                                                                       BA6020
 
       * +-----------------+
       * ¦ Named Constants ¦
@@ -144,6 +190,12 @@
      D                                          "ISO-8859-1"?'                               CSD053A
      D CRLF            C                   X'0D25'
      D Null            C                   X'00'
+     D ROOTS           C                   '<ROOT>'                                           BA6020
+     D DOCS            C                   '<DOCUMENT>'                                       BA6020
+     D DOCE            C                   '</DOCUMENT>'                                      BA6020
+     D ROOTE           C                   '</ROOT>'                                          BA6020
+     D SYSCUSS         C                   '<SYSTEMCUSTOM>'                                   BA6020
+     D SYSCUSE         C                   '</SYSTEMCUSTOM>'                                  BA6020
 
       * +-----------------------------------------------+
       * ¦ Data structure for Correspondence Manager ICD ¦
@@ -175,6 +227,8 @@
       *                                     181 1830DBASE
       *                                     184 193 DBMOD
       *                                     194 203 DBPROC
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  BA6020
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     BA6020
       * +-----------------------------------------------------------------+
       * ¦ The following /COPY line includes all the defined fields in the ¦
       * ¦ PSDS.  They have meaningful names, prefixed by 'PS'.            ¦
@@ -205,6 +259,21 @@
       * ¦ Mode = *GEN                                                 ¦
       * +-------------------------------------------------------------+
      C                   WHEN      ActCode = '*GEN  '
+      *                                                                                       BA6020
+      * EPOX assumes that all extracts will be valid XML.  Therefore                          BA6020
+      * only one XML declaration is required per DAT file.                                    BA6020
+      * Only one ROOT element is required per DAT file.  Misys code                           BA6020
+      * will generate the root element because the original design -                          BA6020
+      * that the root element be injected via the custom data extract -                       BA6020
+      * does not work for DAT files containing multiple extracts.                             BA6020
+      *                                                                                       BA6020
+     C     BA6020        IFEQ      'Y'                                                        BA6020
+      *                                                                                       BA6020
+      ** Write XML Heading line                                                               BA6020
+     C                   EXSR      WRTHEAD                                                    BA6020
+      *                                                                                       BA6020
+     C                   ENDIF                                                                BA6020
+                                                                                              BA6020
 
       * +-------------------------------------------------------------+
       * ¦ Mode = *WRITE                                               ¦
@@ -214,8 +283,12 @@
       *  Setup system data area
      C                   EXSR      SETLDA
 
+     C     BA6020        IFEQ      'N'                                                        BA6020
+                                                                                              BA6020
       *  Write XML Heading line
      C                   EXSR      WRTHEAD
+                                                                                              BA6020
+     C                   ENDIF                                                                BA6020
 
       *  Write XML data from PF/CGUXMLPD
      C                   EXSR      WRTDET
@@ -224,6 +297,11 @@
       * ¦ Mode = *CLOSE                                               ¦
       * +-------------------------------------------------------------+
      C                   WHEN      ActCode = '*CLOSE'
+      *                                                                                       BA6020
+     C                   IF        BA6020 = 'Y'                                               BA6020
+     C                   EXSR      WRTCLS                                                     BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
 
      C                   ENDSL
       *
@@ -263,6 +341,68 @@
      C                   EXSR      *PSSR
 
      C                   ENDIF
+      *                                                                                       BA6020
+      ** Check if BA6020 feature is on.                                                       BA6020
+      *                                                                                       BA6020
+     C                   EVAL      BA6020 = 'N'                                               BA6020
+     C                   CALL      'AOSARDR0'                                                 BA6020
+     C                   PARM      *BLANKS       PRtnCode                                     BA6020
+     C                   PARM      '*VERIFY'     POption                                      BA6020
+     C                   PARM      'BA6020'      PSARD                                        BA6020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6020
+      *                                                                                       BA6020
+     C                   IF        PRtnCode <> *Blanks  and                                   BA6020
+     C                             PRtnCode <> '*NRF'                                         BA6020
+     C                   EVAL      DBFILE = 'AOSARDR0'                                        BA6020
+     C                   EVAL      DBKEY = POption                                            BA6020
+     C                   EVAL      DBASE  = 11                                                BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+     C                   IF        PRtnCode = *BLANKS                                         BA6020
+     C                   EVAL      BA6020 = 'Y'                                               BA6020
+      *                                                                                       BA6020
+      ** Access the system value                                                              BA6020
+      *                                                                                       BA6020
+     C                   EVAL      P@OP01 = 'BA6020_InHousePgm'                               BA6020
+      *                                                                                       BA6020
+     C                   CALL      'AOSVALR0'                                                 BA6020
+     C                   PARM      *BLANKS       I#Rtcd                                       BA6020
+     C                   PARM                    P@OP01                                       BA6020
+     C                   PARM      *BLANKS       P@VL01                                       BA6020
+     C                   PARM      *BLANKS       P@OP02                                       BA6020
+     C                   PARM      *BLANKS       P@VL02                                       BA6020
+     C                   PARM      *BLANKS       P@OP03                                       BA6020
+     C                   PARM      *BLANKS       P@VL03                                       BA6020
+     C                   PARM      *BLANKS       P@OP04                                       BA6020
+     C                   PARM      *BLANKS       P@VL04                                       BA6020
+     C                   PARM      *BLANKS       P@OP05                                       BA6020
+     C                   PARM      *BLANKS       P@VL05                                       BA6020
+     C                   PARM      *BLANKS       P@OP06                                       BA6020
+     C                   PARM      *BLANKS       P@VL06                                       BA6020
+     C                   PARM      *BLANKS       P@OP07                                       BA6020
+     C                   PARM      *BLANKS       P@VL07                                       BA6020
+     C                   PARM      *BLANKS       P@OP08                                       BA6020
+     C                   PARM      *BLANKS       P@VL08                                       BA6020
+     C                   PARM      *BLANKS       P@OP09                                       BA6020
+     C                   PARM      *BLANKS       P@VL09                                       BA6020
+     C                   PARM      *BLANKS       P@OP10                                       BA6020
+     C                   PARM      *BLANKS       P@VL10                                       BA6020
+      *                                                                                       BA6020
+     C                   IF        I#Rtcd <> *BLANKS                                          BA6020
+     C                   EVAL      DBFILE =  'SDSVLXTD'                                       BA6020
+     C                   EVAL      DBPGM  =  P@OP01                                           BA6020
+     C                   EVAL      DBASE  =  014                                              BA6020
+     C                   EVAL      DBMOD  =  PSProcMod                                        BA6020
+     C                   EXSR      *PSSR                                                      BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+     C                   MOVEL     P@VL01        InHousePgm                                   BA6020
+                                                                                              BA6020
+     C                   ENDIF                                                                BA6020
+                                                                                              BA6020
+     C     K#RDEC        KLIST                                                                BA6020
+     C                   KFLD                    W#TYPE                                       BA6020
+     C                   KFLD                    W#ARGT                                       BA6020
 
      C                   ENDSR
 
@@ -340,6 +480,89 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
+      *                                                                                       BA6020
+      * Only one ROOT element is required per DAT file.  Misys code                           BA6020
+      * will generate the root element because the original design -                          BA6020
+      * that the root element be injected via the custom data extract -                       BA6020
+      * does not work for DAT files containing multiple extracts.                             BA6020
+      *                                                                                       BA6020
+     C                   IF        BA6020 = 'Y'                                               BA6020
+      *                                                                                       BA6020
+     C                   EVAL      BigString = %TRIM(ROOTS) + CRLF                            BA6020
+     C                   EVAL      Output = %TRIMR(%UCS2(BigString))                          BA6020
+     C                   EVAL      RC = WRITE(FileDesc : %ADDR(Output):                       BA6020
+     C                                         %LEN(%TRIMR(Output))*2)                        BA6020
+      *                                                                                       BA6020
+      ** If error writing to stream file                                                      BA6020
+      *                                                                                       BA6020
+     C                   IF        RC = -1                                                    BA6020
+     C                   EVAL      DBFILE =  *BLANK                                           BA6020
+     C                   EVAL      DBPGM  =  PSProcPgm                                        BA6020
+     C                   EVAL      DBASE  =  906                                              BA6020
+     C                   EVAL      DBMOD  =  PSProcMod                                        BA6020
+                                                                                              BA6020
+     C                   EXSR      *PSSR                                                      BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+      ** Get schema name.                                                                     BA6020
+      *                                                                                       BA6020
+     C                   EVAL      W#ARGT = %TRIM(B2PTYP) + COLON +                           BA6020
+     C                               %TRIM(B2PSTP)                                            BA6020
+     C     K#RDEC        CHAIN     A6RDEXL0                                                   BA6020
+     C                   IF        %FOUND(A6RDEXL0)                                           BA6020
+     C                   EVAL      W#SCHEMA = %TRIM(CGNWFD)                                   BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+      ** Build the START element and its sub-elements.                                        BA6020
+      *                                                                                       BA6020
+     C                   CALL      InHousePgm                                                 BA6020
+     C                   PARM      W#SCHEMA      P@SCHEMA                                     BA6020
+      *                                                                                       BA6020
+      ** Write the START element and its sub-elements.                                        BA6020
+      ** Reset file pointer because in house program clears file when called.                 BA6020
+      *                                                                                       BA6020
+     C     1             SETLL     CGUXMHPD                                                   BA6020
+     C                   READ      CGUXMHPD                                                   BA6020
+     C                   DOW       NOT %EOF                                                   BA6020
+     C                   MOVE(P)   XHTAGN        TagName                                      BA6020
+     C                   MOVE(P)   XHTAGV        TagValue                                     BA6020
+     C                   MOVE(P)   XHENDT        TagEnd                                       BA6020
+      *                                                                                       BA6020
+      ** Scan tag value for special characters (i.e. '&','<', '>'),                           BA6020
+      ** if so, format field as '<![CDATA[Tag Value]]>'.                                      BA6020
+      *                                                                                       BA6020
+     C                   EVAL      ConvValue = ScanFld(TagValue)                              BA6020
+      *                                                                                       BA6020
+      ** Combine data into a single compressed field.                                         BA6020
+      *                                                                                       BA6020
+     C                   EVAL      RecordData = %TRIM(TagName)+                               BA6020
+     C                              %TRIM(ConvValue) + %TRIM(TagEnd)                          BA6020
+      *                                                                                       BA6020
+      ** Attach CRLF at the end of each record line                                           BA6020
+      *                                                                                       BA6020
+     C                   EVAL      BigString = %TRIM(RecordData) + CRLF                       BA6020
+     C                   Eval      Output = %TRIMR(%UCS2(BigString))                          BA6020
+      *                                                                                       BA6020
+      ** Write record to stream file                                                          BA6020
+      *                                                                                       BA6020
+     C                   EVAL      RC = WRITE(FileDesc : %ADDR(Output):                       BA6020
+     C                                         %LEN(%TRIMR(Output))*2)                        BA6020
+      *                                                                                       BA6020
+      ** If error writing to stream file                                                      BA6020
+      *                                                                                       BA6020
+     C                   IF        RC = -1                                                    BA6020
+     C                   EVAL      DBFILE =  *BLANK                                           BA6020
+     C                   EVAL      DBPGM  =  PSProcPgm                                        BA6020
+     C                   EVAL      DBASE  =  907                                              BA6020
+     C                   EVAL      DBMOD  =  PSProcMod                                        BA6020
+      *                                                                                       BA6020
+     C                   EXSR      *PSSR                                                      BA6020
+     C                   ENDIF                                                                BA6020
+     C                   READ      CGUXMHPD                                                   BA6020
+     C                   ENDDO                                                                BA6020
+      *                                                                                       BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
      C                   ENDSR
 
       /EJECT
@@ -450,6 +673,91 @@
       * +-------------------------------------------------------------+
      C     WRTDET        BEGSR
 
+      *  Output first the whole block starting by element '<ROOT>' and ending                 BA6020
+      *  with the element preceeding '</DOCUMENT>.                                            BA6020
+      *                                                                                       BA6020
+     C                   EVAL      BYPS   = 'N'                                               BA6020
+     C                   EVAL      RootFnd = 'N'                                              BA6020
+     C                   EVAL      DocSFnd = 'N'                                              BA6020
+     C                   EVAL      WSysCus = 'N'                                              BA6020
+      *                                                                                       BA6020
+     C                   IF        BA6020 = 'Y'                                               BA6020
+      *                                                                                       BA6020
+     C                   IF        #@ARCH = 'A'                                               BA6020
+     C     B2ITEM        SETLL     CGXXMLL0                                                   BA6020
+     C     B2ITEM        READE     CGXXMLL0                                                   BA6020
+     C                   ELSE                                                                 BA6020
+     C                   OPEN      CGUXMLL0                                                   BA6020
+     C     B2ITEM        SETLL     CGUXMLL0                                                   BA6020
+     C     B2ITEM        READE     CGUXMLL0                                                   BA6020
+     C                   ENDIF                                                                BA6020
+     C                   IF        DOCS = %TRIM(XMTAGN)                                       BA6020
+     C                   EVAL      DocSFnd = 'Y'                                              BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+     C                   IF        DocSFnd = 'N'                                              BA6020
+     C                   DOU       %EOF                                                       BA6020
+     C                             OR DOCS = %TRIM(XMTAGN)                                    BA6020
+     C                   IF        #@ARCH = 'A'                                               BA6020
+     C     B2ITEM        READE     CGXXMLL0                                                   BA6020
+     C                   ELSE                                                                 BA6020
+     C     B2ITEM        READE     CGUXMLL0                                                   BA6020
+     C                   ENDIF                                                                BA6020
+     C                   ENDDO                                                                BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+     C                   IF        #@ARCH <> 'A'                                              BA6020
+     C                   CLOSE     CGUXMLL0                                                   BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+     C                   IF        DOCS = %TRIM(XMTAGN)                                       BA6020
+     C                   EVAL      DocSFnd = 'Y'                                              BA6020
+      *                                                                                       BA6020
+      ** Output until '</DOCUMENT> is reached.                                                BA6020
+     C                   DOU       %EOF                                                       BA6020
+     C                             OR XMTAGN = DOCE                                           BA6020
+      *                                                                                       BA6020
+      ** Load records into work fields.                                                       BA6020
+     C                   MOVE(P)   XMTAGN        TagName                                      BA6020
+     C                   MOVE(P)   XMTAGV        TagValue                                     BA6020
+     C                   MOVE(P)   XMENDT        TagEnd                                       BA6020
+      *                                                                                       BA6020
+      ** Scan tag value for special characters (i.e. '&','<', '>'),                           BA6020
+      ** if so, format field as '<!£CDATA£Tag Value]]>'.                                      BA6020
+     C                   EVAL      ConvValue = ScanFld(TagValue)                              BA6020
+      *                                                                                       BA6020
+      ** Combine data into a single compressed field.                                         BA6020
+     C                   EVAL      RecordData = %TRIM(TagName)+                               BA6020
+     C                              %TRIM(ConvValue) + %TRIM(TagEnd)                          BA6020
+      *                                                                                       BA6020
+      ** Attach CRLF at the end of each record line                                           BA6020
+     C                   EVAL      BigString = %TRIM(RecordData) + CRLF                       BA6020
+     C                   Eval      Output = %TRIMR(%UCS2(BigString))                          BA6020
+      *                                                                                       BA6020
+      * Write record to stream file                                                           BA6020
+     C                   EVAL      RC = WRITE(FileDesc : %ADDR(Output):                       BA6020
+     C                                         %LEN(%TRIMR(Output))*2)                        BA6020
+      *                                                                                       BA6020
+      ** If error writing to stream file                                                      BA6020
+     C                   IF        RC = -1                                                    BA6020
+     C                   EVAL      DBFILE =  *BLANK                                           BA6020
+     C                   EVAL      DBPGM  =  PSProcPgm                                        BA6020
+     C                   EVAL      DBASE  =  006                                              BA6020
+     C                   EVAL      DBMOD  =  PSProcMod                                        BA6020
+     C                   EXSR      *PSSR                                                      BA6020
+     C                   ENDIF                                                                BA6020
+     C                                                                                        BA6020
+     C                   IF        #@ARCH = 'A'                                               BA6020
+     C     B2ITEM        READE     CGXXMLL0                                                   BA6020
+     C                   ELSE                                                                 BA6020
+     C     B2ITEM        READE     CGUXMLL0                                                   BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+     C                   ENDDO                                                                BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
       *  Initialise WFlag to write the System Field info ONLY ONCE
       *  and ONLY AFTER writing the first record from XML file for
       *  the current item.
@@ -470,12 +778,47 @@
      C                   ENDIF
 
      C                   DOW       NOT %EOF
+      *                                                                                       BA6020
+      ** Bypass the <ROOT> group.                                                             BA6020
+     C                   IF        XMTAGN = DOCS  AND                                         BA6020
+     C                             BA6020 = 'Y'                                               BA6020
+     C                   EVAL      BYPS   = 'Y'                                               BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+     C                   If        BYPS = 'N' and WSysCus = 'N'                               BA6020
+     C                               and BA6020 = 'Y'                                         BA6020
+      *  Output <SYSTEMCUSTOM> before 1st detail line of correspondence.                      BA6020
+     C                   MOVE(P)   SYSCUSS       TagName                                      BA6020
+     C                   MOVE(P)   *BLANKS       TagValue                                     BA6020
+     C                   MOVE(P)   *BLANKS       TagEnd                                       BA6020
+     C                   EVAL      RecordData = %TRIM(TagName)                                BA6020
+     C                   EVAL      BigString = %TRIM(RecordData) + CRLF                       BA6020
+     C                   Eval      Output = %TRIMR(%UCS2(BigString))                          BA6020
+     C                   EVAL      RC = WRITE(FileDesc : %ADDR(Output):                       BA6020
+     C                                         %LEN(%TRIMR(Output))*2)                        BA6020
+      *                                                                                       BA6020
+      *  If error writing to stream file                                                      BA6020
+     C                   IF        RC = -1                                                    BA6020
+     C                   EVAL      DBFILE =  *BLANK                                           BA6020
+     C                   EVAL      DBPGM  =  PSProcPgm                                        BA6020
+     C                   EVAL      DBASE  =  990                                              BA6020
+     C                   EVAL      DBMOD  =  PSProcMod                                        BA6020
+     C                   EXSR      *PSSR                                                      BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+      *  Set flag indicating <SYSTEMCUSTOM> has been output.                                  BA6020
+     C                   Eval      WSysCus = 'Y'                                              BA6020
+      *                                                                                       BA6020
+     C                   Endif                                                                BA6020
+      *                                                                                       BA6020
 
       *  Load records into work fields.
      C                   MOVE(P)   XMTAGN        TagName
      C                   MOVE(P)   XMTAGV        TagValue
      C                   MOVE(P)   XMENDT        TagEnd
 
+     C                   IF        BYPS = 'N' AND BA6020 = 'Y'                                BA6020
+     C                             OR BA6020 = 'N'                                            BA6020
       * Format the header if it's the first record read for a given
       * item number
      C                   IF        WFlag = 'N'
@@ -532,7 +875,13 @@
 
      C                   EXSR      *PSSR
      C                   ENDIF
+     C                   ENDIF                                                                BA6020
 
+     C                   IF        XMTAGN = DOCE                                              BA6020
+     C                             AND BYPS = 'Y'                                             BA6020
+     C                   EVAL      BYPS   = 'N'                                               BA6020
+     C                   ENDIF                                                                BA6020
+                                                                                              BA6020
       *  Write '<OutputInformation>' + System Fields information ONLY
       *  ONCE and AFTER writing the first line for Item Reference.
 
@@ -554,8 +903,67 @@
      C                   CLOSE     CGUXMLL0                                                   252870
      C                   ENDIF                                                                252870
 
+      *  If <ROOT> element was found, output </DOCUMENT> and </ROOT> at the very end          BA6020
+      *  of the extract                                                                       BA6020
+      *                                                                                       BA6020
+     C                   IF        BA6020 = 'Y'                                               BA6020
+      *                                                                                       BA6020
+      *  Output </SYSTEMCUSTOM> before </DOCUMENT>.                                           BA6020
+     C                   MOVE(P)   SYSCUSE       TagName                                      BA6020
+     C                   MOVE(P)   *BLANKS       TagValue                                     BA6020
+     C                   MOVE(P)   *BLANKS       TagEnd                                       BA6020
+     C                   EVAL      RecordData = %TRIM(TagName)                                BA6020
+     C                   EVAL      BigString = %TRIM(RecordData) + CRLF                       BA6020
+     C                   Eval      Output = %TRIMR(%UCS2(BigString))                          BA6020
+     C                   EVAL      RC = WRITE(FileDesc : %ADDR(Output):                       BA6020
+     C                                         %LEN(%TRIMR(Output))*2)                        BA6020
+      *                                                                                       BA6020
+      *  If error writing to stream file                                                      BA6020
+     C                   IF        RC = -1                                                    BA6020
+     C                   EVAL      DBFILE =  *BLANK                                           BA6020
+     C                   EVAL      DBPGM  =  PSProcPgm                                        BA6020
+     C                   EVAL      DBASE  =  991                                              BA6020
+     C                   EVAL      DBMOD  =  PSProcMod                                        BA6020
+     C                   EXSR      *PSSR                                                      BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+      *  Then output </DOCUMENT>.                                                             BA6020
+     C                   MOVE(P)   DOCE          TagName                                      BA6020
+     C                   MOVE(P)   *BLANKS       TagValue                                     BA6020
+     C                   MOVE(P)   *BLANKS       TagEnd                                       BA6020
+     C                   EVAL      RecordData = %TRIM(TagName)                                BA6020
+     C                   EVAL      BigString = %TRIM(RecordData) + CRLF                       BA6020
+     C                   Eval      Output = %TRIMR(%UCS2(BigString))                          BA6020
+     C                   EVAL      RC = WRITE(FileDesc : %ADDR(Output):                       BA6020
+     C                                         %LEN(%TRIMR(Output))*2)                        BA6020
+      *                                                                                       BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
      C                   ENDSR
 
+      /EJECT                                                                                  BA6020
+      * +-------------------------------------------------------------+                       BA6020
+      * ¦ Subr/WRTCLS  - Close ROOT element before file is closed.    ¦                       BA6020
+      * +-------------------------------------------------------------+                       BA6020
+     C     WRTCLS        BEGSR                                                                BA6020
+      *                                                                                       BA6020
+     C                   EVAL      BigString = %TRIM(ROOTE) + CRLF                            BA6020
+     C                   EVAL      Output = %TRIMR(%UCS2(BigString))                          BA6020
+     C                   EVAL      RC = WRITE(FileDesc : %ADDR(Output):                       BA6020
+     C                                         %LEN(%TRIMR(Output))*2)                        BA6020
+      *                                                                                       BA6020
+      ** If error writing to stream file                                                      BA6020
+      *                                                                                       BA6020
+     C                   IF        RC = -1                                                    BA6020
+     C                   EVAL      DBFILE =  *BLANK                                           BA6020
+     C                   EVAL      DBPGM  =  PSProcPgm                                        BA6020
+     C                   EVAL      DBASE  =  908                                              BA6020
+     C                   EVAL      DBMOD  =  PSProcMod                                        BA6020
+      *                                                                                       BA6020
+     C                   EXSR      *PSSR                                                      BA6020
+     C                   ENDIF                                                                BA6020
+     C                   ENDSR                                                                BA6020
+      *                                                                                       BA6020
       /EJECT
       * +-------------------------------------------------------------+
       * ¦ Subr/*PSSR - Program Exception Error Handling Routine       ¦

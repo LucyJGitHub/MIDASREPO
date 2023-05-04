@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD058181           Date 28May21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057593           Date 19Feb21               *
@@ -178,6 +179,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
@@ -589,6 +591,12 @@
      FGLJEPQL0UF  E           K        DISK         KINFSR *PSSR                            MD058181
       ** UPD: MMidas GL Journal Entry Detail Extension File - QD                            MD058181
       *                                                                                     MD058181
+     FGLJENP00UF  E           K        DISK         KINFSR *PSSR A    UC  CGL200
+     F            GLJEIPD0                          KRENAMEGLJENPD0       CGL200
+     F                                              KCOMIT                CGL200
+      *                                                                   CGL200
+      ** Timestamp Extension file - Index                                 CGL200
+      *                                                                   CGL200
      F/COPY WNCPYSRC,GL0121MFP1                                           S01408
       *                                                                   S01408
       *                                                                   S01408
@@ -1405,6 +1413,31 @@
       *                                                                                       CRE019
      I                                        1   8 ZA0156                                    CRE019
       *                                                                                       CRE019
+     IOUTDAT      DS                                                      CGL200
+     I                                        1   4 APIYR                 CGL200
+     I                                        5   6 APIMTH                CGL200
+     I                                        7   8 APIDAY                CGL200
+     I                                        9  10 APIHR                 CGL200
+     I                                       11  12 APIMN                 CGL200
+     I                                       13  14 APISEC                CGL200
+     I                                       15  17 APIMIL                CGL200
+      *                                                                   CGL200
+     ITMSTDS      DS                                                      CGL200
+     I                                        1   4 RETYR                 CGL200
+     I                                        5   5 TMST1                 CGL200
+     I                                        6   7 RETMTH                CGL200
+     I                                        8   8 TMST2                 CGL200
+     I                                        9  10 RETDAY                CGL200
+     I                                       11  11 TMST3                 CGL200
+     I                                       12  13 RETHR                 CGL200
+     I                                       14  14 TMST4                 CGL200
+     I                                       15  16 RETMN                 CGL200
+     I                                       17  17 TMST5                 CGL200
+     I                                       18  19 RETSEC                CGL200
+     I                                       20  20 TMST6                 CGL200
+     I                                       21  23 RETMIL                CGL200
+     I                                       24  26 RETMIC                CGL200
+      *                                                                   CGL200
      I/COPY WNCPYSRC,GL0121MI03
       *                                                                                       CGL013
      I            DS                                                                          CGL013
@@ -4387,6 +4420,14 @@
      C                     ENDIF                                                             LLN022A
       *                                                                                      LLN022A
      C                     WRITE@BTREAK                91  *
+      *                                                                   CGL200
+     C           CGL200    IFEQ 'Y'                                       CGL200
+      *                                                                   CGL200
+     C                     EXSR TMSTST                                    CGL200
+     C                     WRITEGLJENPD0                                  CGL200
+      *                                                                   CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
      C/COPY WNCPYSRC,GL0121MM06
       *
      C           *IN91     IFEQ '1'
@@ -4793,6 +4834,15 @@ E1   C                     ENDIF                                          CGL016
      C                     DELETGLJEPQD0                                                    MD058181
      C                     ENDIF                                                            MD058181
       *                                                                                     MD058181
+     C           CGL200    IFEQ 'Y'                                     CGL200
+      *                                                                 CGL200
+     C           GLJENP    CHAINGLJENP00             90                 CGL200
+     C           *IN90     IFEQ *OFF                                    CGL200
+     C                     DELETGLJENPD0                                CGL200
+     C                     ENDIF                                        CGL200
+      *                                                                 CGL200
+     C                     ENDIF                                        CGL200
+      *                                                                 CGL200
      C/COPY WNCPYSRC,GL0121MK85
       *                                                                                       CGL013
       ** If Additional Information Exist in PF/GLJENXPD, delete.                              CGL013
@@ -11697,6 +11747,25 @@ E1   C                     ENDIF                                          CGL016
      C                     MOVE 'N'       CGL148                                              CGL148
      C                     ENDIF                                                              CGL148
       *                                                                                       CGL148
+      * Access SAR details for CGL200                                     CGL200
+      *                                                                   CGL200
+     C                     MOVEL'N'       CGL200  1                       CGL200
+     C                     CALL 'AOSARDR0'                                CGL200
+     C                     PARM *BLANKS   WRTCD                           CGL200
+     C                     PARM '*VERIFY' WOPTN                           CGL200
+     C                     PARM 'CGL200'  WSARD                           CGL200
+     C           D@SARD    PARM D@SARD    UUFDY                           CGL200
+      *                                                                   CGL200
+     C           WRTCD     IFEQ *BLANKS                                   CGL200
+     C                     MOVE 'Y'       CGL200                          CGL200
+     C                     OPEN GLJENP00                                  CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
+     C           GLJENP    KLIST                                          CGL200
+     C                     KFLD           BTPTDT                          CGL200
+     C                     KFLD           BTBTNB                          CGL200
+     C                     KFLD           BTBINB                          CGL200
+      *                                                                   CGL200
      C/COPY WNCPYSRC,GL0121MC08
       *                                                                                       CGL149
       ** Check if enhancement CGL149 is on                                                    CGL149
@@ -12729,6 +12798,65 @@ E1   C                     ENDIF                                          CGL016
       *****************************************************************                       CGL013
       /EJECT                                                                                  CGL013
       *****************************************************************                       CGL013
+      *                                                               *   CGL200
+      *  TMSTST - Time stamp setup                                    *   CGL200
+      *                                                               *   CGL200
+      *****************************************************************   CGL200
+      *                                                                   CGL200
+     C           TMSTST    BEGSR                           *** TMSTST *** CGL200
+      *                                                                   CGL200
+     C                     MOVE *BLANKS   INFMT  10                       CGL200
+     C                     MOVEL'*CURRENT'INFMT                           CGL200
+     C                     MOVE *BLANKS   INVAR   1                       CGL200
+     C                     MOVE *BLANKS   OUTFMT 10                       CGL200
+     C                     MOVEL'*YYMD'   OUTFMT                          CGL200
+      *                                                                   CGL200
+     C                     CALL 'QWCCVTDT'                                CGL200
+      *                                                                   CGL200
+      ** Input format                                                     CGL200
+      *                                                                   CGL200
+     C                     PARM           INFMT                           CGL200
+      *                                                                   CGL200
+      ** Input variable                                                   CGL200
+      *                                                                   CGL200
+     C                     PARM           INVAR                           CGL200
+      *                                                                   CGL200
+      ** Output format                                                    CGL200
+      *                                                                   CGL200
+     C                     PARM           OUTFMT                          CGL200
+      *                                                                   CGL200
+      ** Date/time returned                                               CGL200
+      *                                                                   CGL200
+     C                     PARM           OUTDAT                          CGL200
+      *                                                                   CGL200
+      ** Error structure                                                  CGL200
+      *                                                                   CGL200
+     C                     PARM           QUSEC  32                       CGL200
+      *                                                                   CGL200
+     C                     MOVE '-'       TMST1                           CGL200
+     C                     MOVE '-'       TMST2                           CGL200
+     C                     MOVE '-'       TMST3                           CGL200
+     C                     MOVE '.'       TMST4                           CGL200
+     C                     MOVE '.'       TMST5                           CGL200
+     C                     MOVE '.'       TMST6                           CGL200
+      *                                                                   CGL200
+      ** The OutDate field returned from the API and TimeStamp fiel       CGL200
+      ** returned from this procedure have been broken down by data       CGL200
+      ** structures.  Copy the data from one to the other and exit.       CGL200
+      *                                                                   CGL200
+     C                     MOVE APIYR     RETYR                           CGL200
+     C                     MOVE APIMTH    RETMTH                          CGL200
+     C                     MOVE APIDAY    RETDAY                          CGL200
+     C                     MOVE APIHR     RETHR                           CGL200
+     C                     MOVE APIMN     RETMN                           CGL200
+     C                     MOVE APISEC    RETSEC                          CGL200
+     C                     MOVE APIMIL    RETMIL                          CGL200
+      *                                                                   CGL200
+     C                     MOVELTMSTDS    BTTMST                          CGL200
+      *                                                                   CGL200
+     C                     ENDSR                                          CGL200
+      *****************************************************************   CGL200
+     C/EJECT                                                              CGL200
      O/COPY WNCPYSRC,GL0121MOPG
      O@BTREAK E                VALID                                                         241505A
      O                         BTVALI                                                        241505A

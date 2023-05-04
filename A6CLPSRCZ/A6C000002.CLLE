@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas A6 Correspondence Manager - EPOX Interface')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Correspondence Manager                              */
+/*                                                                   */
+/*       A6C000002 - Correspondence Manager - EPOX Interface         */
+/*                                                                   */
+/*       (c) Finastra Systems Technology, Inc. 2023                  */
+/*                                                                   */
+/*       Last Amend No. BA6020  *CREATE    Date 16Jan23              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BA6020 - Add specific header field to CM XML Output         */
+/*                Downstream apps have problems handling UTF-16,     */
+/*                so convert streamfiles to ISO-8859-1               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PATH &FNAME)
+
+/*/COPY WNCPYSRC,mmCnnnnINT                                          */
+
+             DCL        VAR(&PATH) TYPE(*CHAR) LEN(75)
+             DCL        VAR(&FNAME) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&SVAR1) TYPE(*CHAR) LEN(155)
+             DCL        VAR(&SVAR2) TYPE(*CHAR) LEN(155)
+             DCL        VAR(&PATH1) TYPE(*CHAR) LEN(155)
+             DCL        VAR(&PATH2) TYPE(*CHAR) LEN(155)
+             DCL        VAR(&CMD1) TYPE(*CHAR) LEN(255)
+             DCL        VAR(&CMD2) TYPE(*CHAR) LEN(255)
+             DCL        VAR(&CMD3) TYPE(*CHAR) LEN(255)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra Systems Technology, Inc. 2023 ')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Set up paths: target file and temporary file. */
+             CHGVAR     VAR(&PATH1) VALUE(&PATH *TCAT '/' *CAT &FNAME)
+             CHGVAR     VAR(&PATH2) VALUE(&PATH *TCAT '/tmp.xml')
+
+/* Set up QSHELL commands:                                                            */
+/*                  - convert bytestream (& write to temporary file);                 */
+/*                  - write bytestream back to target file;                           */
+/*                  - delete temporary file;                                          */
+
+             CHGVAR     VAR(&CMD1) VALUE('iconv -f 01200 -t 819 '  +
+                          *CAT &PATH1)
+             CHGVAR     VAR(&CMD2) VALUE('cat ' *cat &path2)
+             CHGVAR     VAR(&CMD3) VALUE('rm ' *cat &path2)
+
+/* Set up environment variables                                                       */
+/*     This is because QSHELL redirection uses environmental variables to control     */
+/*     I/O redirection, whereas most POSIX shells use > and <.                        */
+
+             ADDENVVAR  ENVVAR(QIBM_QSH_CMD_OUTPUT) VALUE(NONE) +
+                          REPLACE(*YES)
+             CHGVAR     VAR(&SVAR1) VALUE('FILE=' *CAT &PATH2)
+             CHGVAR     VAR(&SVAR2) VALUE('FILE=' *CAT &PATH1)
+
+ /* Run the commands                                                           */
+
+             CHGENVVAR  ENVVAR(QIBM_QSH_CMD_OUTPUT) VALUE(&SVAR1)
+             STRQSH     CMD(&CMD1)
+             CHGENVVAR  ENVVAR(QIBM_QSH_CMD_OUTPUT) VALUE(&SVAR2)
+             STRQSH     CMD(&CMD2)
+             CHGENVVAR  ENVVAR(QIBM_QSH_CMD_OUTPUT) VALUE(NONE)
+             STRQSH     CMD(&CMD3)
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+/*/COPY WNCPYSRC,mmCnnnnERR                                          */
+
+             CHGJOB     SWS(XXXXXX11)
+
+
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+
+/*/COPY WNCPYSRC,mmCnnnnEND                                          */
+
+/* (Add any specific end processing here) */
+
+             ENDPGM

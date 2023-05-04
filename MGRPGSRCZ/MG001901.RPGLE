@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA6020             Date 12Feb23               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 CMG008             Date 20Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044271           Date 21Mar17               *
       *                 MD000091           Date 14May13               *
       *                 CER059             Date 19Jul10               *
@@ -32,6 +34,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6020 - Add Specific header field to CM XML Output          *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
+      *           Add structured formatting for Field 86.             *
+      *           Include GSH026, GSH041, GSH046 and Change Requests  *
+      *  GSH046CC2 - Structured MT940 Automated Process CC2           *
+      *  GSH046CC1 - Structured MT940 Automated Process CC1           *
+      *  GSH046 - Structured MT940 Automated process                  *
+      *  GSH041A -  Added Field 86 Address Change to WKSF86 <> 'Y'    *
+      *             i.e. not using keywords                           *
+      *  GSH041 - GSH026 Field 86 Address Change                      *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044271 - (1) if MT940 is not to be generated, default      *
@@ -90,6 +102,12 @@
       *
      FGLNW94L8  IF   E           K DISK    RENAME(GLNW94D0:GLNW94D1)
       *
+     FA6RETRL1  IF   E           K DISK                                                       BA6026
+     FA6NW94L0  IF   E           K DISK    RENAME(A6NW94D0:A6NW94D1)                          BA6026
+     F                                     PREFIX(Z_)                                         BA6026
+      *                                                                                       BA6026
+     FA6H940L0  IF   E           K DISK                                                       BA6026
+     FA6M940L0  IF   E           K DISK                                                       BA6026
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -150,7 +168,17 @@
       *
       ** Array for storing extended narratives in format 22 * 70
       *
+     D PArrCc1         S             35A   DIM(50)                                            BA6026
+      *                                                                                       BA6026
+      ** Array for storing Narratives                                                         BA6026
+      *
      D Arr22           S             70A   DIM(22)
+      *                                                                                       BA6026
+      ** Array for TRF Unstructured REMI (Incoming)                                           BA6026
+     D TRFUnstInc      S              5A   DIM(40)                                            BA6026
+      *                                                                                       BA6026
+      ** Array for TRF Structured REMI (Incoming)                                             BA6026
+     D TRFStrucInc     S              5A   DIM(40)                                            BA6026
       *
       ** Network details record format data structure
       *
@@ -162,6 +190,12 @@
       ** Long Access Object Data Structure
       *
      D DSLDY         E DS                  EXTNAME(DSLDY)
+                                                                                              BA6020
+      ** Externally described DS for SAR Details                                              BA6020
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  BA6020
+                                                                                              BA6020
+      ** DS for Access Programs - short data structure                                        BA6020
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     BA6020
       *
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
@@ -182,6 +216,9 @@
      D PAcsq           S              2S 0
      D PDCInd          S              1A
      D PTranTp         S              5A
+     D PPNarr          S             30A                                                      BA6026
+     D PNaty           S              1A                                                      BA6026
+     D PDstn           S             11A                                                      BA6026
      D PFormL1         S             70A
      D PFormL2         S             70A
      D PFormL3         S             70A
@@ -238,6 +275,13 @@
      D WIndx           S              2  0
      D WIndx1          S              2  0
      D WRemain         S              3S 0
+     D WExt046         S            770A                                                      BA6026
+     D WWrk046         S            770A                                                      BA6026
+     D Pos             S              5S 0                                                    BA6026
+     D DivRslt         S              3S 0                                                    BA6026
+     D DivRmdr         S              3S 0                                                    BA6026
+     D RmdgBlk         S              3S 0                                                    BA6026
+     D FillBlanks      S            999A                                                      BA6026
       *
      D POptnIn         S              7A
      D PRtcdIn         S              7A
@@ -249,6 +293,57 @@
      D WPosCl          S              3S 0
      D WLnCnt          S              2S 0                                                  BUG24303
      D WCtr            S              2S 0                                                  BUG24303
+      ** Work fields for AOSARDR0                                                             BA6026
+     D POptnAO         S              7A                                                      BA6026
+     D PSardAO         S              6A                                                      BA6026
+     D PRtcdAO         S              7A                                                      BA6026
+     D BA6026          S              1A                                                      BA6026
+      ** Work fields for AOSVALR0                                                             BA6026
+     D SVALK1          C                   'TTyp_TRF_UnstREMIInc'                             BA6026
+     D SVALK2          C                   'TTyp_TRF_StrREMIInc'                              BA6026
+     D SVALK3          C                   'A6Fld86AddChg'                                    BA6026
+     D SVOP01          S             20A                                                      BA6026
+     D SVVL01          S            200A                                                      BA6026
+     D SVOP02          S             20A                                                      BA6026
+     D SVVL02          S            200A                                                      BA6026
+     D SVOP03          S             20A                                                      BA6026
+     D SVVL03          S            200A                                                      BA6026
+     D SVOP04          S             20A                                                      BA6026
+     D SVVL04          S            200A                                                      BA6026
+     D SVOP05          S             20A                                                      BA6026
+     D SVVL05          S            200A                                                      BA6026
+     D SVOP06          S             20A                                                      BA6026
+     D SVVL06          S            200A                                                      BA6026
+     D SVOP07          S             20A                                                      BA6026
+     D SVVL07          S            200A                                                      BA6026
+     D SVOP08          S             20A                                                      BA6026
+     D SVVL08          S            200A                                                      BA6026
+     D SVOP09          S             20A                                                      BA6026
+     D SVVL09          S            200A                                                      BA6026
+     D SVOP10          S             20A                                                      BA6026
+     D SVVL10          S            200A                                                      BA6026
+      *                                                                                       BA6026
+      ** Work fields for Fld 86 formatting                                                    BA6026
+     D Len             S              1S 0                                                    BA6026
+     D Str             S              3S 0                                                    BA6026
+     D Z               S              2S 0                                                    BA6026
+     D FMTMode         S              5A                                                      BA6026
+     D WKSF86          S              1A                                                      BA6026
+     D ChkFound        S              1A                                                      BA6026
+     D MapDet          S              1A                                                      BA6026
+      *                                                                                       BA6026
+      ** Key fields for KAcct2 (for CHAIN to A6NW94L0)                                        BA6026
+     D KNetw2          S                   LIKE(N4NWRK)                                       BA6026
+     D KBrca2          S                   LIKE(N4BRCA)                                       BA6026
+     D KCnum2          S                   LIKE(N4CNUM)                                       BA6026
+     D KCcy2           S                   LIKE(N4CCY)                                        BA6026
+     D KAccd2          S                   LIKE(N4ACCD)                                       BA6026
+     D KAcsq2          S                   LIKE(N4ACSQ)                                       BA6026
+     D KNaty2          S                   LIKE(N4NATY)                                       BA6026
+     D KDstn2          S                   LIKE(N4DSTN)                                       BA6026
+      *                                                                                       BA6026
+      ** Work fields for System Values                                                        BA6026
+     D A6Fld86AddChg   S              1A                                                      BA6026
       *
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -363,9 +458,42 @@
      C                   ELSE
       *
      C                   EXSR      SrFnNet
+      *
+     C                   If        BA6026 = 'Y'                                               BA6026
+     C                             and PMsgTyp = '940' and PNwrk = 'SWIFT'                    BA6026
+      *                                                                                       BA6026
+     C                   Eval      MapDet = *Blanks                                           BA6026
+      *                                                                                       BA6026
+     C     PTranTp       Chain     A6RETRL1                           70                      BA6026
+      *                                                                                       BA6026
+     C                   Eval      K1Trat = PTranTp                                           BA6026
+     C                   Eval      K1Swid = G1Sidc                                            BA6026
+      *                                                                                       BA6026
+     C     K1M940        Chain     A6H940L0                           80                      BA6026
+     C     *In80         Ifeq      *Off                                                       BA6026
+     C                   Eval      MapDet = 'Y'                                               BA6026
+     C                   else                                                                 BA6026
+     C                   Eval      K1Trat = *Blanks                                           BA6026
+     C     K1M940        Chain     A6H940L0                           80                      BA6026
+     C     *In80         Ifeq      *Off                                                       BA6026
+     C                   Eval      MapDet = 'Y'                                               BA6026
+     C                   Endif                                                                BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+      ** If BA6026 is ON and Structured Fld 86 to be formatted for SWIFT MT940s               BA6026
+     C                   If        BA6026 = 'Y' and PMsgTyp = '940'                           BA6026
+     C                             and PNwrk = 'SWIFT' and WKSF86 = 'Y'                       BA6026
+     C                             and G1SIDC <> *Blanks and G1SIDC <> 'NMSC'                 BA6026
+     C                             and MapDet = 'Y'                                           BA6026
+     C                   Exsr      SrFmt046                                                   BA6026
+     C                   Else                                                                 BA6026
      C                   EXSR      SrNarr
       *
      C                   EXSR      SRFormat
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
      C                   EVAL      PRtcd = '*FORMAT'
      C                   ENDIF
       *
@@ -778,6 +906,9 @@
      C                   DO        22                                                       BUG24303
      C                   IF        %trim(PArrExt22(WLnCnt)) <> *blanks                      BUG24303
      C                   EVAL      WCtr = WCtr + 1                                          BUG24303
+      *                                                                                       BA6020
+     C     BA6020        IFEQ      'N'                                                        BA6020
+      *                                                                                       BA6020
      C                   IF        WCtr > EDNOLN                                            BUG24303
      C                   EVAL      Idx = Idx + 1                                            BUG24303
      C                   EVAL      FldNamXAr(Idx) = ArrExtName(WLnCnt)                      BUG24303
@@ -788,6 +919,8 @@
      C                   EVAL      MsgDtaXAr(Idx) =LenStr +%TRIM(MsgDtaTmp)                 MD000091
      C                   EVAL      WError = 'Y'                                             BUG24303
      C                   ENDIF                                                              BUG24303
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
      C                   ENDIF                                                              BUG24303
      C                   EVAL      WLnCnt = WLnCnt + 1                                      BUG24303
      C                   ENDDO                                                              BUG24303
@@ -975,6 +1108,9 @@
      C     KAcct         CHAIN     GLNW94L8
      C                   IF        NOT %FOUND (GLNW94L8)
      C                   EVAL      KNwrk1= 'SWIFT'
+      *                                                                                       BA6026
+      ** Set Structured Fld 86 flag to off.                                                   BA6026
+     C                   EVAL      WKSF86 = 'N'                                               BA6026
      C                   ELSE
       *
       ** Loop to get First network with Extended naarative flag as 'Y'
@@ -1037,6 +1173,29 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                       BA6026
+      ** Retrieve the value of Structured Field 86 flag for this account.                     BA6026
+     C                   If        BA6026 = 'Y'                                               BA6026
+      *                                                                                       BA6026
+      ** Load key values for retrieval of extension record.                                   BA6026
+     C                   Eval      KNetw2 = PNwrk                                             BA6026
+     C                   Eval      KBrca2 = PBrca                                             BA6026
+     C                   Eval      KCnum2 = PCNum                                             BA6026
+     C                   Eval      KCcy2 = PCcy                                               BA6026
+     C                   Eval      KAccd2 = PAccd                                             BA6026
+     C                   Eval      KAcsq2 = PAcsq                                             BA6026
+     C                   Eval      KNaty2 = PNaty                                             BA6026
+     C                   Eval      KDstn2 = PDstn                                             BA6026
+      *                                                                                       BA6026
+      ** Retrieve network account details extension.                                          BA6026
+     C     KAcct2        Chain     A6NW94L0                                                   BA6026
+     C                   If        NOT %FOUND (A6NW94L0)                                      BA6026
+     C                   Eval      WKSF86 = 'N'                                               BA6026
+     C                   Else                                                                 BA6026
+     C                   Eval      WKSF86 = Z_G4SF86                                          BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   Endif                                                                BA6026
       *
      C                   ENDSR
       *****************************************************************
@@ -1110,6 +1269,27 @@
       *
      C                   EVAL      WIndx = WIndx + 1
      C                   ENDDO
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y'                                               BA6026
+     C                             And A6Fld86AddChg = 'Y'                                    BA6026
+      *                                                                                       BA6026
+      ** Look up in arrays of Transaction Types to determine                                  BA6026
+      ** formatting type                                                                      BA6026
+      *                                                                                       BA6026
+     C                   Eval      FMTMode = *blanks                                          BA6026
+     C     PTranTp       Lookup    TRFUnstInc                             99                  BA6026
+      *                                                                                       BA6026
+     C                   If        *IN99 = *ON                                                BA6026
+     C                   Eval      FMTMode = 'TRFUI'                                          BA6026
+     C                   Else                                                                 BA6026
+     C     PTranTp       Lookup    TRFStrucInc                            99                  BA6026
+      *                                                                                       BA6026
+     C                   If        *IN99 = *ON                                                BA6026
+     C                   Eval      FMTMode = 'TRFSI'                                          BA6026
+     C                   Endif                                                                BA6026
+     C                   Endif                                                                BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
       *
       ** Check if formatting required
       *
@@ -1120,8 +1300,23 @@
      C                   EVAL      WFmtFlg = 'N'
       *
      C                   EVAL      WIdx = 1
+      *                                                                                       BA6026
      C                   DO        22
+     C                   IF        BA6026 = 'Y'                                               BA6026
+     C                             And A6Fld86AddChg = 'Y'                                    BA6026
+     C                             And (FMTMode = 'TRFUI'                                     BA6026
+     C                             Or FMTMode = 'TRFSI')                                      BA6026
+      *                                                                                       BA6026
+     C                   IF        (WIdx = 1 OR WIdx > 4)                                     BA6026
+     C                   EVAL      Arr22(WIdx) = ParrExt22(WIdx)                              BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+      ** BA6026 Off or ON but not Incoming Payments                                           BA6026
+      *                                                                                       BA6026
+     C                   Else                                                                 BA6026
+                                                                                              BA6026
      C                   EVAL      Arr22(WIdx) = ParrExt22(WIdx)
+     C                   Endif                                                                BA6026
      C                   EVAL      WIdx = WIdx + 1
      C                   ENDDO
       *
@@ -1135,6 +1330,36 @@
       *
      C                   EVAL      WNarr = *BLANKS
       *
+     C                   If        BA6026 = 'Y'                                               BA6026
+     C                             And A6Fld86AddChg = 'Y'                                    BA6026
+     C                             And (FMTMode = 'TRFUI'                                     BA6026
+     C                             Or FMTMode = 'TRFSI')                                      BA6026
+      *                                                                                       BA6026
+      ** limit format to Incoming payments                                                    BA6026
+      *                                                                                       BA6026
+     C                   EVAL      WNarr = %TRIM(PArrExt22(1))+ '  '+                         BA6026
+     C                                     %TRIM(PArrExt22(5))+ '  '+                         BA6026
+     C                                     %TRIM(PArrExt22(6))+ '  '+                         BA6026
+     C                                     %TRIM(PArrExt22(7))+ '  '+                         BA6026
+     C                                     %TRIM(PArrExt22(8))+ '  '+                         BA6026
+     C                                     %TRIM(PArrExt22(9))+ '  '+                         BA6026
+     C                                     %TRIM(PArrExt22(10))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(11))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(12))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(13))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(14))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(15))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(16))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(17))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(18))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(19))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(20))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(21))+ '  '+                        BA6026
+     C                                     %TRIM(PArrExt22(22)) + '  '                        BA6026
+     C                   Else                                                                 BA6026
+                                                                                              BA6026
+      * use previous formatting                                                               BA6026
+                                                                                              BA6026
      C                   EVAL      WNarr = %TRIM(PArrExt22(1))+ '  '+
      C                                     %TRIM(PArrExt22(2))+ '  '+
      C                                     %TRIM(PArrExt22(3))+ '  '+
@@ -1157,6 +1382,7 @@
      C                                     %TRIM(PArrExt22(20))+ '  '+
      C                                     %TRIM(PArrExt22(21))+ '  '+
      C                                     %TRIM(PArrExt22(22)) + '  '
+     C                   Endif                                                                BA6026
      C
       *
       ** Move the string back to original variables
@@ -1168,6 +1394,699 @@
       *
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                                  BA6026
+      *****************************************************************                       BA6026
+      *                                                               *                       BA6026
+      *  SrFmt046 - Format Field 86 via Automated Structured Process  *                       BA6026
+      *                                                               *                       BA6026
+      *  Called by : Main                                             *                       BA6026
+      *                                                               *                       BA6026
+      *  Calls : None                                                 *                       BA6026
+      *                                                               *                       BA6026
+      *****************************************************************                       BA6026
+     C     SrFmt046      BEGSR                                                                BA6026
+      *                                                                                       BA6026
+     C                   Eval      WExt046 = *Blanks                                          BA6026
+     C                   Eval      FillBlanks = *Blanks                                       BA6026
+      *                                                                                       BA6026
+     C     K1M940        Setll     A6M940L0                                                   BA6026
+     C                   Read      A6M940L0                               80                  BA6026
+      *                                                                                       BA6026
+     C     *In80         Doweq     *Off                                                       BA6026
+     C     MPSwid        andeq     K1Swid                                                     BA6026
+     C     MPTrat        andeq     K1Trat                                                     BA6026
+      *                                                                                       BA6026
+     C                   Eval      PArrCc1 = *Blanks                                          BA6026
+     C                   Move      *Blanks       Skip1             1                          BA6026
+     C                   Move      *Blanks       Skip2             1                          BA6026
+     C                   Move      *Blanks       Skip3             1                          BA6026
+     C                   Move      *Blanks       Skip4             1                          BA6026
+      *                                                                                       BA6026
+     C                   If        MPNex1 <> 0                                                BA6026
+     C                   If        MPNex1 = 50                                                BA6026
+     C                   Eval      PArrCc1(MPNex1) = PPNar2                                   BA6026
+     C                   else                                                                 BA6026
+     C                   Eval      PArrCc1(MPNex1) = PArrExt22(MPNex1)                        BA6026
+     C                   Endif                                                                BA6026
+     C                   If        PArrCc1(MPNex1) = *Blanks                                  BA6026
+     C                   Move      'Y'           Skip1                                        BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   Move      'Y'           Skip1                                        BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        MPNex2 <> 0                                                BA6026
+     C                   If        MPNex2 = 50                                                BA6026
+     C                   Eval      PArrCc1(MPNex2) = PPNar2                                   BA6026
+     C                   else                                                                 BA6026
+     C                   Eval      PArrCc1(MPNex2) = PArrExt22(MPNex2)                        BA6026
+     C                   Endif                                                                BA6026
+     C                   If        PArrCc1(MPNex2) = *Blanks                                  BA6026
+     C                   Move      'Y'           Skip2                                        BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   Move      'Y'           Skip2                                        BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        MPNex3 <> 0                                                BA6026
+     C                   If        MPNex3 = 50                                                BA6026
+     C                   Eval      PArrCc1(MPNex3) = PPNar2                                   BA6026
+     C                   else                                                                 BA6026
+     C                   Eval      PArrCc1(MPNex3) = PArrExt22(MPNex3)                        BA6026
+     C                   Endif                                                                BA6026
+     C                   If        PArrCc1(MPNex3) = *Blanks                                  BA6026
+     C                   Move      'Y'           Skip3                                        BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   Move      'Y'           Skip3                                        BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        MPNex4 <> 0                                                BA6026
+     C                   If        MPNex4 = 50                                                BA6026
+     C                   Eval      PArrCc1(MPNex4) = PPNar2                                   BA6026
+     C                   else                                                                 BA6026
+     C                   Eval      PArrCc1(MPNex4) = PArrExt22(MPNex4)                        BA6026
+     C                   Endif                                                                BA6026
+     C                   If        PArrCc1(MPNex4) = *Blanks                                  BA6026
+     C                   Move      'Y'           Skip4                                        BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   Move      'Y'           Skip4                                        BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        MPOmit = 'Y'                                               BA6026
+     C                             and Skip1 = 'Y'                                            BA6026
+     C                             and Skip2 = 'Y'                                            BA6026
+     C                             and Skip3 = 'Y'                                            BA6026
+     C                             and Skip4 = 'Y'                                            BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+     C                   If        MPSlsh = 'Y'                                               BA6026
+     C                             and PArrCC1(MPNex1) <> *Blanks                             BA6026
+      *                                                                                       BA6026
+     C                   If        MPNex4 <> 0                                                BA6026
+     C                   If        MPNEWL <> 'Y'                                              BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) + %TRIM(MPSwcd) +                 BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               '/' +                                                    BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex3):1:MPLen3))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex4):1:MPLen4))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+      ** Obtain number of chars in string                                                     BA6026
+     C                   eval      pos = (%SCAN ('NEWLINEID' : WExt046)) - 1                  BA6026
+      *                                                                                       BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Z-Add     0             DivRmdr                                      BA6026
+     C                   Z-Add     0             RmdgBlk                                      BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+      ** Calculate number of spaces to insert for codeword to start in a New Line             BA6026
+     C                   If        Pos > EDNCLN                                               BA6026
+     C     Pos           Div       EDNCLN        DivRslt                                      BA6026
+     C                   MVR                     DivRmdr                                      BA6026
+     C     DivRmdr       IfGt      0                                                          BA6026
+     C     EDNCLN        Sub       DivRmdr       RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C     EDNCLN        Sub       Pos           RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) +                                 BA6026
+     C                               %Subst(FillBlanks:1:RmdgBlk) +                           BA6026
+     C                               %TRIM(MPSwcd) +                                          BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               '/' +                                                    BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex3):1:MPLen3))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex4):1:MPLen4))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   If        MPNex3 <> 0                                                BA6026
+     C                   If        MPNEWL <> 'Y'                                              BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) + %TRIM(MPSwcd) +                 BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               '/' +                                                    BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex3):1:MPLen3))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+      ** Obtain number of chars in string                                                     BA6026
+     C                   eval      pos = (%SCAN ('NEWLINEID' : WExt046)) - 1                  BA6026
+      *                                                                                       BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Z-Add     0             DivRmdr                                      BA6026
+     C                   Z-Add     0             RmdgBlk                                      BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+      ** Calculate number of spaces to insert for codeword to start in a New Line             BA6026
+     C                   If        Pos > EDNCLN                                               BA6026
+     C     Pos           Div       EDNCLN        DivRslt                                      BA6026
+     C                   MVR                     DivRmdr                                      BA6026
+     C     DivRmdr       IfGt      0                                                          BA6026
+     C     EDNCLN        Sub       DivRmdr       RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C     EDNCLN        Sub       Pos           RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) +                                 BA6026
+     C                               %Subst(FillBlanks:1:RmdgBlk) +                           BA6026
+     C                               %TRIM(MPSwcd) +                                          BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               '/' +                                                    BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex3):1:MPLen3))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   If        MPNex2 <> 0                                                BA6026
+     C                   If        MPNEWL <> 'Y'                                              BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) + %TRIM(MPSwcd) +                 BA6026
+     C                               %TRIM(%Subst(PArrCC1(MpNex1):1:MPLen1))+                 BA6026
+     C                               '/' +                                                    BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+      ** Obtain number of chars in string                                                     BA6026
+     C                   eval      pos = (%SCAN ('NEWLINEID' : WExt046)) - 1                  BA6026
+      *                                                                                       BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Z-Add     0             DivRmdr                                      BA6026
+     C                   Z-Add     0             RmdgBlk                                      BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+      ** Calculate number of spaces to insert for codeword to start in a New Line             BA6026
+     C                   If        Pos > EDNCLN                                               BA6026
+     C     Pos           Div       EDNCLN        DivRslt                                      BA6026
+     C                   MVR                     DivRmdr                                      BA6026
+     C     DivRmdr       IfGt      0                                                          BA6026
+     C     EDNCLN        Sub       DivRmdr       RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C     EDNCLN        Sub       Pos           RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) +                                 BA6026
+     C                               %Subst(FillBlanks:1:RmdgBlk) +                           BA6026
+     C                               %TRIM(MPSwcd) +                                          BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               '/' +                                                    BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   If        MPNEWL <> 'Y'                                              BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) + %TRIM(MPSwcd) +                 BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               '/'                                                      BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+      ** Obtain number of chars in string                                                     BA6026
+     C                   eval      pos = (%SCAN ('NEWLINEID' : WExt046)) - 1                  BA6026
+      *                                                                                       BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Z-Add     0             DivRmdr                                      BA6026
+     C                   Z-Add     0             RmdgBlk                                      BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+      ** Calculate number of spaces to insert for codeword to start in a New Line             BA6026
+     C                   If        Pos > EDNCLN                                               BA6026
+     C     Pos           Div       EDNCLN        DivRslt                                      BA6026
+     C                   MVR                     DivRmdr                                      BA6026
+     C     DivRmdr       IfGt      0                                                          BA6026
+     C     EDNCLN        Sub       DivRmdr       RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C     EDNCLN        Sub       Pos           RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) +                                 BA6026
+     C                               %Subst(FillBlanks:1:RmdgBlk) +                           BA6026
+     C                               %TRIM(MPSwcd) +                                          BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               '/'                                                      BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   Endif                                                                BA6026
+     C                   Endif                                                                BA6026
+     C                   Endif                                                                BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+     C                   If        MPNex4 <> 0                                                BA6026
+     C                   If        MPNEWL <> 'Y'                                              BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) + %TRIM(MPSwcd) +                 BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex3):1:MPLen3))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex4):1:MPLen4))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+      ** Obtain number of chars in string                                                     BA6026
+     C                   eval      pos = (%SCAN ('NEWLINEID' : WExt046)) - 1                  BA6026
+      *                                                                                       BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Z-Add     0             DivRmdr                                      BA6026
+     C                   Z-Add     0             RmdgBlk                                      BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+      ** Calculate number of spaces to insert for codeword to start in a New Line             BA6026
+     C                   If        Pos > EDNCLN                                               BA6026
+     C     Pos           Div       EDNCLN        DivRslt                                      BA6026
+     C                   MVR                     DivRmdr                                      BA6026
+     C     DivRmdr       IfGt      0                                                          BA6026
+     C     EDNCLN        Sub       DivRmdr       RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C     EDNCLN        Sub       Pos           RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) +                                 BA6026
+     C                               %Subst(FillBlanks:1:RmdgBlk) +                           BA6026
+     C                               %TRIM(MPSwcd) +                                          BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex3):1:MPLen3))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex4):1:MPLen4))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   If        MPNex3 <> 0                                                BA6026
+     C                   If        MPNEWL <> 'Y'                                              BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) + %TRIM(MPSwcd) +                 BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex3):1:MPLen3))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+      ** Obtain number of chars in string                                                     BA6026
+     C                   eval      pos = (%SCAN ('NEWLINEID' : WExt046)) - 1                  BA6026
+      *                                                                                       BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Z-Add     0             DivRmdr                                      BA6026
+     C                   Z-Add     0             RmdgBlk                                      BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+      ** Calculate number of spaces to insert for codeword to start in a New Line             BA6026
+     C                   If        Pos > EDNCLN                                               BA6026
+     C     Pos           Div       EDNCLN        DivRslt                                      BA6026
+     C                   MVR                     DivRmdr                                      BA6026
+     C     DivRmdr       IfGt      0                                                          BA6026
+     C     EDNCLN        Sub       DivRmdr       RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C     EDNCLN        Sub       Pos           RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) +                                 BA6026
+     C                               %Subst(FillBlanks:1:RmdgBlk) +                           BA6026
+     C                               %TRIM(MPSwcd) +                                          BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex3):1:MPLen3))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   If        MPNex2 <> 0                                                BA6026
+     C                   If        MPNEWL <> 'Y'                                              BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) + %TRIM(MPSwcd) +                 BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+      ** Obtain number of chars in string                                                     BA6026
+     C                   eval      pos = (%SCAN ('NEWLINEID' : WExt046)) - 1                  BA6026
+      *                                                                                       BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Z-Add     0             DivRmdr                                      BA6026
+     C                   Z-Add     0             RmdgBlk                                      BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+      ** Calculate number of spaces to insert for codeword to start in a New Line             BA6026
+     C                   If        Pos > EDNCLN                                               BA6026
+     C     Pos           Div       EDNCLN        DivRslt                                      BA6026
+     C                   MVR                     DivRmdr                                      BA6026
+     C     DivRmdr       IfGt      0                                                          BA6026
+     C     EDNCLN        Sub       DivRmdr       RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C     EDNCLN        Sub       Pos           RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) +                                 BA6026
+     C                               %Subst(FillBlanks:1:RmdgBlk) +                           BA6026
+     C                               %TRIM(MPSwcd) +                                          BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))+                 BA6026
+     C                               ' ' +                                                    BA6026
+     C                               %TRIM(%Subst(PArrCc1(MPNex2):1:MPLen2))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C                   If        MPNEWL <> 'Y'                                              BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) + %TRIM(MPSwcd) +                 BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   else                                                                 BA6026
+      *                                                                                       BA6026
+      ** Obtain number of chars in string                                                     BA6026
+     C                   eval      pos = (%SCAN ('NEWLINEID' : WExt046)) - 1                  BA6026
+      *                                                                                       BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Z-Add     0             DivRmdr                                      BA6026
+     C                   Z-Add     0             RmdgBlk                                      BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+      ** Calculate number of spaces to insert for codeword to start in a New Line             BA6026
+     C                   If        Pos > EDNCLN                                               BA6026
+     C     Pos           Div       EDNCLN        DivRslt                                      BA6026
+     C                   MVR                     DivRmdr                                      BA6026
+     C     DivRmdr       IfGt      0                                                          BA6026
+     C     EDNCLN        Sub       DivRmdr       RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+     C                   else                                                                 BA6026
+     C     EDNCLN        Sub       Pos           RmdgBlk                                      BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
+     C                   Eval      WExt046 = %TRIM(WExt046) +                                 BA6026
+     C                               %Subst(FillBlanks:1:RmdgBlk) +                           BA6026
+     C                               %TRIM(MPSwcd) +                                          BA6026
+     C                               %TRIM(%Subst(PArrCc1(MpNex1):1:MPLen1))                  BA6026
+     C                               + 'NEWLINEID'                                            BA6026
+     C                   Endif                                                                BA6026
+     C                   Endif                                                                BA6026
+     C                   Endif                                                                BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C     K1M940        ReadE     A6M940L0                               80                  BA6026
+     C                   Enddo                                                                BA6026
+      *                                                                                       BA6026
+      ** Remove tag 'NEWLINEID' from string                                                   BA6026
+     C                   Move      *Blanks       WWrk046                                      BA6026
+     C                   Eval      WWrk046 = %ScanRpl('NEWLINEID':'':WExt046)                 BA6026
+     C                   Eval      WExt046 = WWrk046                                          BA6026
+      *                                                                                       BA6026
+      ** Search and replace invalid SWIFT characters at start of each line                    BA6026
+      *                                                                                       BA6026
+     C                   Z-Add     1             Cnt               2 0                        BA6026
+     C                   If        %subst(WExt046:1:1) = ':'                                  BA6026
+     C                             or %subst(WExt046:1:1) = '-'                               BA6026
+     C                   Eval      %subst(WExt046:1:1) = '.'                                  BA6026
+     C                   Endif                                                                BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C     1             Add       @Lc           @S                3 0                        BA6026
+      *                                                                                       BA6026
+     C     Cnt           Dowle     @Ln                                                        BA6026
+      *                                                                                       BA6026
+     C                   If        %subst(WExt046:@S:1) = ':'                                 BA6026
+     C                             or %subst(WExt046:@S:1) = '-'                              BA6026
+     C                   Eval      %subst(WExt046:@S:1) = '.'                                 BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Enddo                                                                BA6026
+      *                                                                                       BA6026
+      ** Populate PFormL* output parameters                                                   BA6026
+      *                                                                                       BA6026
+     C                   Z-Add     1             Cnt                                          BA6026
+     C                   Z-Add     1             @S                                           BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   Eval      PFormL1 = %subst(WExt046:@S:@Lc)                           BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL2 = %subst(WExt046:@S:@Lc)                           BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL3 = %subst(WExt046:@S:@Lc)                           BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL4 = %subst(WExt046:@S:@Lc)                           BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL5 = %subst(WExt046:@S:@Lc)                           BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL6 = %subst(WExt046:@S:@Lc)                           BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL7 = %subst(WExt046:@S:@Lc)                           BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL8 = %subst(WExt046:@S:@Lc)                           BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL9 = %subst(WExt046:@S:@Lc)                           BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL10 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL11 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL12 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL13 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL14 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL15 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL16 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL17 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL18 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL19 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL20 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL21 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+     C     Cnt           Ifle      @Ln                                                        BA6026
+     C     Cnt           andle     22                                                         BA6026
+     C                   EVAL      PFormL22 = %subst(WExt046:@S:@Lc)                          BA6026
+     C                   Add       1             Cnt                                          BA6026
+     C                   Add       @Lc           @S                                           BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   ENDSR                                                                BA6026
+      *****************************************************************                       BA6026
+      /EJECT                                                                                  BA6026
+      *****************************************************************                       BA6026
+      *                                                               *                       BA6026
+      *  SrLoadTType - Load retrieved Tx Types system values into     *                       BA6026
+      *                arrays.                                        *                       BA6026
+      *  Called by : *INZSR                                           *                       BA6026
+      *                                                               *                       BA6026
+      *****************************************************************                       BA6026
+     C     SrLoadTType   BEGSR                                                                BA6026
+      *                                                                                       BA6026
+     C                   Eval      Len = 5                                                    BA6026
+      *                                                                                       BA6026
+      ** Process 'TTyp_TRF_UnstREMIInc'                                                       BA6026
+     C                   Eval      TRFUnstInc = *blanks                                       BA6026
+     C                   Eval      Str = 1                                                    BA6026
+     C                   Eval      Z = 1                                                      BA6026
+     C     Z             DowLE     40                                                         BA6026
+     C                   If        %Subst(SVVL01:Str:Len) = *blanks                           BA6026
+     C                   Leave                                                                BA6026
+     C                   Else                                                                 BA6026
+     C                   Eval      TRFUnstInc(Z) = %Subst(SVVL01:Str:Len)                     BA6026
+     C                   Eval      Str = Str + 5                                              BA6026
+     C                   Eval      Z = Z + 1                                                  BA6026
+     C                   Endif                                                                BA6026
+     C                   Enddo                                                                BA6026
+      *                                                                                       BA6026
+      ** Process 'TTyp_TRF_StrREMIInc'                                                        BA6026
+     C                   Eval      TRFStrucInc = *blanks                                      BA6026
+     C                   Eval      Str = 1                                                    BA6026
+     C                   Eval      Z = 1                                                      BA6026
+     C     Z             DowLE     40                                                         BA6026
+     C                   If        %Subst(SVVL02:Str:Len) = *blanks                           BA6026
+     C                   Leave                                                                BA6026
+     C                   Else                                                                 BA6026
+     C                   Eval      TRFStrucInc(Z) = %Subst(SVVL02:Str:Len)                    BA6026
+     C                   Eval      Str = Str + 5                                              BA6026
+     C                   Eval      Z = Z + 1                                                  BA6026
+     C                   Endif                                                                BA6026
+     C                   Enddo                                                                BA6026
+      *                                                                                       BA6026
+      ** Process 'A6Fld86AddChg'                                                              BA6026
+     C                   Eval      A6Fld86AddChg = SVVL03                                     BA6026
+     C                   If        A6Fld86AddChg <> 'Y'                                       BA6026
+     C                             And A6Fld86AddChg <> 'N'                                   BA6026
+     C                   Eval      A6Fld86AddChg = 'N'                                        BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   ENDSR                                                                BA6026
+      *****************************************************************                       BA6026
       /EJECT
       *****************************************************************
       *                                                               *
@@ -1223,6 +2142,18 @@
       ** Transaction Type
       *
      C                   PARM                    PTranTp
+      *                                                                                       BA6026
+      ** Posting Narrative                                                                    BA6026
+      *                                                                                       BA6026
+     C                   PARM                    PPNarr                                       BA6026
+      *                                                                                       BA6026
+      ** Network Account Type                                                                 BA6026
+      *                                                                                       BA6026
+     C                   PARM                    PNaty                                        BA6026
+      *                                                                                       BA6026
+      ** Destination                                                                          BA6026
+      *                                                                                       BA6026
+     C                   PARM                    PDstn                                        BA6026
       *
       ** Extended Narratives of length 22 * 35
       *
@@ -1260,6 +2191,7 @@
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
+     C                   PARM                    PPNar2           30                         BA6026
       *
       ** End Parameter List
       *
@@ -1272,10 +2204,107 @@
      C                   KFLD                    KAccd
      C                   KFLD                    KAcsq
       *
+      ** KList for file GLNW94L8                                                              BA6026
+      *                                                                                       BA6026
+     C     KAcct2        KLIST                                                                BA6026
+     C                   KFLD                    KNetw2                                       BA6026
+     C                   KFLD                    KBrca2                                       BA6026
+     C                   KFLD                    KCnum2                                       BA6026
+     C                   KFLD                    KCcy2                                        BA6026
+     C                   KFLD                    KAccd2                                       BA6026
+     C                   KFLD                    KAcsq2                                       BA6026
+     C                   KFLD                    KNaty2                                       BA6026
+     C                   KFLD                    KDstn2                                       BA6026
+      *                                                                                       BA6026
       ** Initialize arrays
       *
      C                   EVAL      Arr22 = *BLANKS
      C                   EVAL      PRtcd = *BLANKS
+      *                                                                                       BA6020
+     C                   MOVE      'N'           BA6020                                       BA6020
+     C                   CALL      'AOSARDR0'                                                 BA6020
+     C                   PARM      *BLANK        ##RTCD            7                          BA6020
+     C                   PARM      '*FIRST  '    ##OPTN            7                          BA6020
+     C                   PARM      'BA6020'      ##SARD            6                          BA6020
+     C     SCSARD        PARM      *BLANKS       DSFDY                                        BA6020
+      *                                                                                       BA6020
+     C     ##RTCD        IFEQ      *BLANK                                                     BA6020
+     C                   MOVE      'Y'           BA6020            1                          BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6026
+      ** Check if feature BA6026 is installed.                                                BA6026
+      *                                                                                       BA6026
+     C                   CALL      'AOSARDR0'                                                 BA6026
+     C                   PARM      *BLANKS       PRtcdAO                                      BA6026
+     C                   PARM      '*VERIFY'     POptnAO                                      BA6026
+     C                   PARM      'BA6026 '     PSardAO                                      BA6026
+      *                                                                                       BA6026
+     C                   IF        PRtcdAO = *BLANKS                                          BA6026
+     C                   EVAL      BA6026 = 'Y'                                               BA6026
+      *                                                                                       BA6026
+      ** Retrieve Transaction Type system values                                              BA6026
+     C                   CALL      'AOSVALR0'                                                 BA6026
+     C                   PARM      *BLANKS       PRtCdIn                                      BA6026
+     C                   PARM      SVALK1        SVOP01                                       BA6026
+     C                   PARM      *BLANKS       SVVL01                                       BA6026
+     C                   PARM      SVALK2        SVOP02                                       BA6026
+     C                   PARM      *BLANKS       SVVL02                                       BA6026
+     C                   PARM      SVALK3        SVOP03                                       BA6026
+     C                   PARM      *BLANKS       SVVL03                                       BA6026
+     C                   PARM      *BLANKS       SVOP04                                       BA6026
+     C                   PARM      *BLANKS       SVVL04                                       BA6026
+     C                   PARM      *BLANKS       SVOP05                                       BA6026
+     C                   PARM      *BLANKS       SVVL05                                       BA6026
+     C                   PARM      *BLANKS       SVOP06                                       BA6026
+     C                   PARM      *BLANKS       SVVL06                                       BA6026
+     C                   PARM      *BLANKS       SVOP07                                       BA6026
+     C                   PARM      *BLANKS       SVVL07                                       BA6026
+     C                   PARM      *BLANKS       SVOP08                                       BA6026
+     C                   PARM      *BLANKS       SVVL08                                       BA6026
+     C                   PARM      *BLANKS       SVOP09                                       BA6026
+     C                   PARM      *BLANKS       SVVL09                                       BA6026
+     C                   PARM      *BLANKS       SVOP10                                       BA6026
+     C                   PARM      *BLANKS       SVVL10                                       BA6026
+                                                                                              BA6026
+     C                   IF        PRtCdIn <> *Blanks  AND                                    BA6026
+     C                             PRtCdIn <> '*NRF   '                                       BA6026
+     C     *LOCK         IN        LDA                                                        BA6026
+     C                   EVAL      DBFILE = 'SDSVALPD'                                        BA6026
+     C                   EVAL      DBKEY = 'SVOP01'                                           BA6026
+     C                   EVAL      DBASE = 903                                                BA6026
+     C                   OUT       LDA                                                        BA6026
+     C                   EXSR      *PSSR                                                      BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
+      ** Load system values into arrays                                                       BA6026
+     C                   EXSR      SrLoadTType                                                BA6026
+      *                                                                                       BA6026
+     C                   Call      'AONWRKR1'                                                 BA6026
+     C                   Parm      *BLANKS       PRtCdIn                                      BA6026
+     C                   Parm      '*KEY'        POptnIn                                      BA6026
+     C                   Parm      'SWIFT'       PNwrkIn                                      BA6026
+     C     DSNwrk        Parm                    DSLDY                                        BA6026
+      *                                                                                       BA6026
+     C                   If        PRtCdIn <> *Blanks                                         BA6026
+     C     *Lock         In        LDA                                                        BA6026
+     C                   Eval      DBASE = 946                                                BA6026
+     C                   Eval      DBFILE = 'SDNWRKPD'                                        BA6026
+     C                   Eval      DBKEY  = 'SWIFT'                                           BA6026
+     C                   Eval      DBPGM = 'MG001901'                                         BA6026
+     C                   Out       LDA                                                        BA6026
+     C                   Exsr      *PSSR                                                      BA6026
+     C                   Else                                                                 BA6026
+     C                   Z-Add     EDNOLN        @Ln               2 0                        BA6026
+     C                   Z-Add     EDNCLN        @Lc               3 0                        BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
+     C                   ELSE                                                                 BA6026
+     C                   EVAL      BA6026 = 'N'                                               BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
+     C     K1M940        KList                                                                BA6026
+     C                   KFld                    K1Swid            4                          BA6026
+     C                   KFld                    K1Trat            5                          BA6026
       *
      C                   ENDSR
       *****************************************************************

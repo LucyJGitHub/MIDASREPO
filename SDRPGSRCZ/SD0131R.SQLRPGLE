@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058755           Date 01Sep21               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. CSW101             Date 03Feb23               *
+      *  Prev Amend No. MD058755           Date 01Sep21               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
       *                 CER059             Date 19Jul10               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW101 - PAYplus Interface.                                  *
       *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
@@ -164,6 +166,7 @@
      D @1DBRC        E DS                  EXTNAME(SDRTRJW0)                                MD058755
      D                                     PREFIX(X)                                        MD058755
      D SDRETR        E DS                  EXTNAME(SDRTRJW0)                                MD058755
+     D SDIDCD        E DS                  EXTNAME(SDIDCJW0)                                  CSW101
       * UPD : Midas SD Retail transaction types update
       * Current/previous master file format fields for change control
       *
@@ -1471,6 +1474,55 @@
      C                   ENDIF
       *                                                                                       CGL154
      C                   ENDIF
+                                                                                              CSW101
+      ** If CSW101 is ON validate Identification Code                                         CSW101
+                                                                                              CSW101
+     C     CSW101        IFEQ      'Y'                                                        CSW101
+                                                                                              CSW101
+     C     #1IDCD        IFNE      *BLANK                                                     CSW101
+     C                   MOVEL     #1IDCD        WUTQKF            1            Test ? in Key CSW101
+      * CASE: WRK.Test ? in Key Field is Question Mark                                        CSW101
+     C     WUTQKF        IFEQ      '?'                                          *IF           CSW101
+     C                   MOVEL     *BLANK        WUIDCD            3                          CSW101
+      * Select RTS Retail Trans. - Retail Transaction Types  *                                CSW101
+     C                   CALL      'SD000131S'                          90                    CSW101
+     C                   PARM      *BLANK        W0RTN             7                          CSW101
+     C     WUIDCD        PARM      WUIDCD        WQA003            3                          CSW101
+      *                                                                                       CSW101
+     C     *IN90         IFEQ      '1'                                                        CSW101
+      * Call to program ended in error                                                        CSW101
+     C                   MOVEL     'Y2U0032'     W0RTN                                        CSW101
+     C                   MOVEL     *BLANKS       W0CLPG           10                          CSW101
+     C                   MOVEL     'SD000131S'   W0CLPG                                       CSW101
+      * Send message '*Error occured on CALL...'                                              CSW101
+     C                   MOVEL     'Y2U0032'     ZAMSID                                       CSW101
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                       CSW101
+     C                   MOVEL     W0CLPG        ZAMSDA                         Message data  CSW101
+     C                   EXSR      ZASNMS                                                     CSW101
+     C                   END                                                                  CSW101
+      *                                                                                       CSW101
+      * Error detected?                                                                       CSW101
+     C     W0RTN         IFNE      *BLANK                                                     CSW101
+     C                   SETON                                        99        *             CSW101
+     C                   END                                                                  CSW101
+     C                   MOVEL     WUIDCD        #1IDCD                                       CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+     C/EXEC SQL                                                                               CSW101
+     C+ SELECT *                                                                              CSW101
+     C+ into :SDIDCD                                                                          CSW101
+     C+ from SDIDCJW0                                                                         CSW101
+     C+ where AAIDCD = :#1IDCD                                                                CSW101
+     C/END-EXEC                                                                               CSW101
+                                                                                              CSW101
+     C     SQLCODE       IFEQ      100                                                        CSW101
+     C                   SETON                                        9945                    CSW101
+     C                   MOVEL     'USR4390'     ZAMSID                                       CSW101
+     C                   MOVEL     'SDUSRMSG'    ZAMSGF                                       CSW101
+     C                   EXSR      ZASNMS                                                     CSW101
+     C                   END                                                                  CSW101
+     C                   ENDIF                                                                CSW101
+     C                   ENDIF                                                                CSW101
       *================================================================
      CSR   DCEXIT        ENDSR
       /EJECT
@@ -1677,6 +1729,7 @@
      C                   MOVEL     *BLANK        #1CIND                         Cash Indicator
      C                   MOVEL     *BLANK        #1CLIN                         Clearing Indica
      C                   MOVEL     *BLANK        #1FTPT
+     C                   MOVEL     *BLANK        #1IDCD                                       CSW101
       *================================================================
      CSR   MAEXIT        ENDSR
       /EJECT
@@ -1704,6 +1757,7 @@
      C                   eval      @1DBRC = SDRETR                                          MD058755
      C                   MOVEL     @1DBRC        #1DBRC
      C                   MOVEL     A1FTPT        #1FTPT
+     C                   MOVEL     A1IDCD        #1IDCD                                       CSW101
       *================================================================
      CSR   MBEXIT        ENDSR
       /EJECT
@@ -1889,6 +1943,7 @@
      C                   MOVEL     #1PASB        A1PASB                         Passbook Transa
      C                   MOVEL     #1CIND        A1CIND                         Cash Indicator
      C                   MOVEL     #1CLIN        A1CLIN                         Clearing Indica
+     C                   MOVEL     #1IDCD        A1IDCD                                       CSW101
       *                                                                                       CGL154
      C                   MOVEL     #1FTPT        A1FTPT
      C     #1FTPT        IFEQ      *BLANK
@@ -2014,6 +2069,7 @@
      C+  ,A1ASGL                                                                            MD058755
      C+  ,A1FTPT                                                                            MD058755
      C+  ,A1MODE                                                                            MD058755
+     C+  ,A1IDCD                                                                              CSW101
      C+ )                                                                                   MD058755
      C+ Values                                                                              MD058755
      C+ (                                                                                   MD058755
@@ -2036,6 +2092,7 @@
      C+  ,:A1ASGL                                                                           MD058755
      C+  ,:A1FTPT                                                                           MD058755
      C+  ,'B'                                                                               MD058755
+     C+  ,:A1IDCD                                                                             CSW101
      C+ )                                                                                   MD058755
      C/END-EXEC                                                                             MD058755
      C/EXEC SQL                                                                             MD058755
@@ -2060,6 +2117,7 @@
      C+  ,A1ASGL                                                                            MD058755
      C+  ,A1FTPT                                                                            MD058755
      C+  ,A1MODE                                                                            MD058755
+     C+  ,A1IDCD                                                                              CSW101
      C+ )                                                                                   MD058755
      C+ Values                                                                              MD058755
      C+ (                                                                                   MD058755
@@ -2082,6 +2140,7 @@
      C+  ,:A1ASGL                                                                           MD058755
      C+  ,:A1FTPT                                                                           MD058755
      C+  ,'B'                                                                               MD058755
+     C+  ,:A1IDCD                                                                             CSW101
      C+ )                                                                                   MD058755
      C/END-EXEC                                                                             MD058755
       *
@@ -2626,6 +2685,7 @@
      C                   MOVEL     #1PASB        A1PASB                         Passbook Transa
      C                   MOVEL     #1CIND        A1CIND                         Cash Indicator
      C                   MOVEL     #1CLIN        A1CLIN                         Clearing Indica
+     C                   MOVEL     #1IDCD        A1IDCD                                       CSW101
       *                                                                                       CGL154
      C                   MOVEL     #1FTPT        A1FTPT
      C     #1FTPT        IFEQ      *BLANK
@@ -2739,6 +2799,8 @@
      C+  ,A1PASB = :A1PASB                                                                  MD058755
      C+  ,A1CIND = :A1CIND                                                                  MD058755
      C+  ,A1CLIN = :A1CLIN                                                                  MD058755
+     C+  ,A1FTPT = :A1FTPT                                                                    CSW101
+     C+  ,A1IDCD = :A1IDCD                                                                    CSW101
      C+ where A1RTTY = :A1RTTY                                                              MD058755
      C/END-EXEC                                                                             MD058755
      C                   ELSE
@@ -4032,6 +4094,35 @@
      C                   ELSE
      C                   MOVE      '1'           *IN80
      C                   ENDIF
+      *                                                                                       CSW101
+      ** Check if CSW101 - PAYPlus is ON                                                      CSW101
+      *                                                                                       CSw101
+     C                   MOVEL     'N'           CSW101                                       CSW101
+     C                   MOVE      '1'           *IN81                                        CSW101
+      *                                                                                       CSW101
+     C                   CALL      'AOSARDR0'                                                 CSW101
+     C                   PARM      *BLANKS       PRTCD                                        CSw101
+     C                   PARM      '*VERIFY'     OPTION                                       CSW101
+     C                   PARM      'CSW101'      @SARD                                        CSw101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW101
+      *                                                                                       CSW101
+     C     PRTCD         IFNE      *BLANKS                                                    CSw101
+     C     PRTCD         IFNE      '*NRF'                                                     CSW101
+     C                   MOVEL     'Y2U0032'     W0RTN                                        CSW101
+     C                   MOVEL     *BLANKS       W0CLPG                                       CSw101
+     C                   MOVEL     'AOSARDR0'    W0CLPG                                       CSW101
+     C                   MOVEL     'Y2U0032'     ZAMSID                                       CSW101
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                       CSw101
+     C                   MOVEL     W0CLPG        ZAMSDA                                       CSW101
+     C                   EXSR      ZASNMS                                                     CSW101
+     C                   ENDIF                                                                CSw101
+      *                                                                                       CSW101
+     C                   ELSE                                                                 CSW101
+      *                                                                                       CSW101
+     C                   MOVEL     'Y'           CSW101            1                          CSW101
+     C                   MOVE      '0'           *IN81                                        CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSw101
       *================================================================
      CSR   ZZEXIT        ENDSR
       /EJECT

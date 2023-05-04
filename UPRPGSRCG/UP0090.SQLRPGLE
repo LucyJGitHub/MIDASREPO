@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD060964             Date 24Jan23             *
-      *  Prev Amend No. MD060352             Date 22Aug22             *
+      *  Last Amend No. CSW101               Date 03Feb23             *
+      *  Prev Amend No. MD060964             Date 24Jan23             *
+      *                 MD060352             Date 22Aug22             *
       *                 MD058188             Date 11May21             *
       *                 MD060008             Date 11May21             *
       *                 MD058830             Date 01Oct21             *
@@ -102,6 +103,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW101 - PAYplus Interface.                                  *
       *  MD060964 - Program does not compile                          *
       *  MD060352 - Deliverable Data Split for GP/SCRELCTD            *
       *  MD058188 - Deliverable Data Split for Global files           *
@@ -1343,6 +1345,7 @@
      C                             or ChkFile = 'GPNJRXTD'                                  MD058188
      C                             or ChkFile = 'SCRELXTD'                                  MD060352
      C                             or ChkFile = 'GPRELXTD'                                  MD060352
+     C                             or ChkFile = 'SDIDCXTD'                                    CSW101
 
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
@@ -1709,6 +1712,7 @@
      C                             or Member = 'SDNW1CTD'                                   MD058830
      C                             or Member = 'SDLIBCTD'                                   MD060008
      C                             or Member = 'SCRELCTD'                                   MD060352
+     C                             or Member = 'SDIDCCTD'                                     CSW101
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C/exec SQL                                                                             MD057943

@@ -384,12 +384,11 @@
                                                                                             MD061339
      C     IUETR         CHAIN     MEISOML2                                                 MD061339
      C                   IF        %FOUND                                                   MD061339
-     C                   EVAL      WrkDup = 'Y'                                             MD061339
                                                                                             MD061339
       ** If UETR already exists in MEISOMPD, read the next                                  MD061339
       ** record from MSIXISOPD for processing.                                              MD061339
                                                                                             MD061339
-     C                   READ      MSIXISOL1                              99                MD061339
+     C                   EVAL      WrkDup = 'Y'                                             MD061339
      C                   ELSE                                                               MD061339
      C                   EVAL      WrkDup = 'N'                                             MD061339
      C                   ENDIF                                                              MD061339

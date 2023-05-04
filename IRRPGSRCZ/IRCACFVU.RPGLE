@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059314           Date 22Feb22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD024407           Date 03May23               *
+      *  Prev Amend No. MD059314           Date 22Feb22               *
+      *                 MD059304           Date 11Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
@@ -89,6 +90,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024407 - Do not allow duplicate front office ids.          *
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -1326,6 +1328,13 @@
       *****************************************************************
      C     SrValActCde   BEGSR
 
+     C     APFOTranID    IFNE      *BLANKS                                                  MD024407
+     C     #0DLNO        ANDEQ     *BLANKS                                                  MD024407
+     C                   MOVEL     '*FRONT'      ModeofOp                                   MD024407
+     C                   ELSE                                                               MD024407
+     C                   MOVEL     '      '      ModeofOp                                   MD024407
+     C                   ENDIF                                                              MD024407
+      *                                                                                     MD024407
       ** Validate Action code versus Deal number supplied
 
      C                   CALLB     'IRCACFRTV'

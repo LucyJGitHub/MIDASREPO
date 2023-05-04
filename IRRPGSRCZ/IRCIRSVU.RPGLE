@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD023568           Date 19Apr23               *
-      *  Prev Amend No. MD060981           Date 11Apr23               *
+      *  Last Amend No. MD024407           Date 03May23               *
+      *  Prev Amend No. MD023568           Date 19Apr23               *
+      *                 MD060981           Date 11Apr23               *
       *                 MD021871           Date 11Apr23               *
       *                 MD021868           Date 11Apr23               *
       *                 MD059314           Date 22Feb22               *
@@ -118,6 +119,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024407 - Do not allow duplicate front office ids.          *
       *  MD023568 - Incorrect reversal projected shadow/nostro        *
       *             balances when IRS deal is deleted.                *
       *             Apply fix similar to BUG7587 to prevent           *
@@ -2654,6 +2656,13 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
 
      C     ValidateAc    BEGSR
 
+     C     APFOTranID    IFNE      *BLANKS                                                  MD024407
+     C     SDLNO         ANDEQ     *BLANKS                                                  MD024407
+     C                   MOVEL     '*FRONT'      ModeofOp                                   MD024407
+     C                   ELSE                                                               MD024407
+     C                   MOVEL     '      '      ModeofOp                                   MD024407
+     C                   ENDIF                                                              MD024407
+      *                                                                                     MD024407
       ** Validate action code versus transaction IDs supplied
       ** This function will set the Midas deal number
       ** The deal in file format from the database is retrieved as well.

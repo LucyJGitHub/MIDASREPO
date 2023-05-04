@@ -58,7 +58,6 @@
      C                   EXSR      CloCur
 
       ** End Program
-     C                   COMMIT
      C
      C                   EVAL      *INLR = *ON
      C                   RETURN

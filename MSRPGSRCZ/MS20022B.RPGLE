@@ -17,12 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059755           Date 28Mar22               *
-      *  Prev Amend No. MD059677           Date 10Mar22               *
+      *  Last Amend No. MD061269           Date 25Apr23               *
+      *  Prev Amend No. MD059755           Date 28Mar22               *
+      *                 MD059677           Date 10Mar22               *
       *                 CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061269 - Pacs.010.001.03 is encountering buffer issue in   *
+      *             QMQM.                                             *
       *  MD059755 - Various records in MSIXISOPD and MSMXISOPD  have  *
       *             no value date                                     *
       *  MD059677 - Cleared correlation ID                            *
@@ -72,17 +75,21 @@
 
       ** Output string
 
-     D outBytes        S          12000A   varying
+     D outBytes        S          24000A   varying
 
       ** Field for record writing
 
-     D buffer          S          12000A
+     D***buffer         S          12000A                                                   MD061269
+     D buffer          S          24000A                                                    MD061269
 
       ** Fields for tag manipulation and position marking
 
-     D  tagName        S          12000A   varying
-     D  tagVal         S          12000A   varying
-     D  tag            S          12000A   varying
+     D***tagName        S          12000A   varying                                         MD061269
+     D  tagName        S          24000A   varying                                          MD061269
+     D***tagVal         S          12000A   varying                                         MD061269
+     D  tagVal         S          24000A   varying                                          MD061269
+     D***tag            S          12000A   varying                                         MD061269
+     D  tag            S          24000A   varying                                          MD061269
      D  msgEnd         S              2A
      D  tagLen         S              5S 0
      D  tagF           S              5S 0
@@ -132,9 +139,11 @@
       ** Data structure for receiving message from queue
 
      D                 DS
-     D  q@dqm                  1  12050
+     D***q@dqm                  1  12050                                                    MD061269
+     D  q@dqm                  1  24050                                                     MD061269
      D  q@sndref               1     50
-     D  q@msgbuf              51  12050
+     D***q@msgbuf              51  12050                                                    MD061269
+     D  q@msgbuf              51  24050                                                     MD061269
 
       ** Data queue entry (control)
 
@@ -144,7 +153,8 @@
 
       ** Working field to receive data from queue
 
-     Dp@msgbuf         S          12000A   varying
+     D***p@msgbuf         S          12000A   varying                                       MD061269
+     Dp@msgbuf         S          24000A   varying                                          MD061269
 
       **  Declare MQI structures needed
       ** MQI Constants
@@ -393,7 +403,8 @@
      C                   PARM                    HIN               9 0
      C                   PARM                    MQMD
      C                   PARM                    MQGMO
-     C                   PARM      12000         p@msglen          9 0
+     C**********         PARM      12000         p@msglen          9 0                      MD061269
+     C                   PARM      24000         p@msglen          9 0                      MD061269
      C                   PARM                    q@msgbuf
      C                   PARM                    MESLEN            9 0
      C                   PARM                    CCODE             9 0
@@ -801,7 +812,8 @@
      C     q@rcvdtaq     plist
      C                   parm      p@dtqm        q@dtaq           10
      C                   parm      '*LIBL'       q@libl           10
-     C                   parm      12050         q@length          5 0
+     C**********         parm      12050         q@length          5 0                      MD061269
+     C                   parm      24050         q@length          5 0                      MD061269
      C                   parm                    q@dqm
      C                   parm      -1            q@wait            5 0
       *

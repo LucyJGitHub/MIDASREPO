@@ -16,13 +16,15 @@
       *                                                               *
       *  (c)Finastra International Limited 2020                       *
       *                                                               *
-      *  Last Amend No. MD059958           Date 17May22               *
-      *  Prev Amend No. MD059573           Date 15Feb22               *
+      *  Last Amend No. MD061368           Date 05May23               *
+      *  Prev Amend No. MD059958           Date 17May22               *
+      *                 MD059573           Date 15Feb22               *
       *                 MD059184           Date 05Nov21               *
       *                 CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061368 - Monitor error when file has no member             *
       *  MD059958 - GPST and ZPST successfully run but produced dump. *
       *             Error in SQL insert in GZDEALSDG and DEALSDG      *
       *             due to added fields by CIR020.                    *
@@ -596,6 +598,7 @@
      C/END-EXEC                                                                             MD059184
       *                                                                                     MD059184
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                             and SQLCODE <> -204                                      MD061368
      C                   EXSR      *PSSR                                                    MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184

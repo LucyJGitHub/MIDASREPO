@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD023568           Date 19Apr23               *
-      *  Prev Amend No. MD059410           Date 21Dec21               *
+      *  Last Amend No. MD026941           Date 02May23               *
+      *  Prev Amend No. MD023568           Date 19Apr23               *
+      *                 MD059410           Date 21Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
@@ -125,6 +126,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026941 - No projection generated for reversal of completed *
+      *           - deals.                                            *
+      *           - Reinstate call to DL2900 in SIRDEL but condition  *
+      *             it for completed deals only                       *
+      *           - Set CHTP value for reversal of postings.          *
       *  MD023568 - Incorrect reversal projected shadow/nostro        *
       *             balances when IRS deal is deleted.                *
       *             1. Apply fix similar to BUG7587 to prevent        *
@@ -1757,6 +1763,22 @@
      C                   EXSR      *PSSR
      C                   END
      C**********         ENDIF                                                        CIR008 BUG6373
+     C                   IF        FIDSTS =  'C'                                            MD026941
+      *                                                                                     MD026941
+      ** Before Status is necessary for delete of Completed deals                           MD026941
+      *                                                                                     MD026941
+     C                   CALLB     'DL2900'                                                 MD026941
+     C                   PARM      *BLANK        PRTCD                                      MD026941
+     C                   PARM                    PDLNO                                      MD026941
+     C                   PARM      'B'           PBEAF                                      MD026941
+                                                                                            MD026941
+     C     PRTCD         IFEQ      '*ERROR'                                                 MD026941
+     C                   MOVEL     'DL2900'      DBFILE                                     MD026941
+     C                   MOVEL     '995'         DBASE                                      MD026941
+     C                   MOVEL     *BLANK        DBKEY                                      MD026941
+     C                   EXSR      *PSSR                                                    MD026941
+     C                   ENDIF                                                              MD026941
+     C                   ENDIF                                                              MD026941
       *
       * SET CONFIRMATION BIT ON DEAL
       * AND CONFIRMATION REQUIRED INDICATOR
@@ -1783,6 +1805,11 @@
       *
      C                   UPDATE    DEALSDGF
      C/COPY WNCPYSRC,IRSIRSDC07
+      *                                                                                     MD026941
+      ** Restore CHTP for deletion of completed deals in AOOUSWU1                           MD026941
+      *                                                                                     MD026941
+     C                   EVAL      CHTP = WSCHTP                                            MD026941
+      *                                                                                     MD026941
 
       ** If Interest Rate Calendars feature present and data has been           CAP004
       ** input via server clear dates from file.                                CAP004

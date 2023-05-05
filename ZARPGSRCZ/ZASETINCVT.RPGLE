@@ -13,8 +13,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD061359           Date 03May23               *
-      *  Prev Amend No. MD044595           Date 03May23               *
-      *                 CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD040199           Date 05Aug16               *
       *                 MD033870           Date 17Apr15               *
@@ -47,7 +46,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD061359 - Issue on Customer Details Retrieval               *
-      *  MD044595 - Retrieve details of closed customers.             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -533,7 +531,7 @@
      C*
      C     @RTCD         IFEQ      *BLANKS
      C     @KYST         ANDNE     '*ERROR '
-     C     BBCLST        OREQ      'Y'                                                      MD044595
+     C     BBCLST        OREQ      'Y'                                                      MD061359
      C**********         MOVEL     BBCSSN        @@WK10                                     MD026923
      C                   EVAL      @@WK10 = BBCUST                                          MD026923
      C                   MOVEL     'CUSTNUM'     @PARTY                                      CSF011A

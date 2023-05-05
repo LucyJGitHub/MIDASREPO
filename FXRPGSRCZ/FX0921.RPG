@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD023183A          Date 27Apr23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD047513           Date 18Sep17               *
       *                 MD037598           Date 18Jul17               *
       *                 MD031530           Date 18Feb15               *
@@ -43,11 +44,12 @@
       *                 CDL002             Date 06Mar97               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD023183A - Net reference should be net number.              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD047513 - Incorrect projected ledger balance after FX net   *
       *             deletion.  Recreate FX deal projection if FX net  *
-      *             was inserted on an earlier date.                  *      
+      *             was inserted on an earlier date.                  *
       *  MD037598 - Deal absent in FX nets summary.  Commit all files *
       *             for update.                                       *
       *  MD031530 - FX Netting contains deal still in WIP queue       *
@@ -171,7 +173,8 @@
      I            DS
      I                                        1  10 CUSGRP
      I                                        1   6 CUSKEY
-     I                                        7  10 GRPKEY
+     I**********                              7  10 GRPKEY                                 MD023183A
+     I                                        5   6 GRPREF                                 MD023183A
       **  Data Structure:  Redefine MIDAS Rundate
      IBJMRDS      DS
      I                                        1   20RUNADD
@@ -247,6 +250,7 @@
      C                     PARM           BJRDNO  50       RUN DATE
      C                     PARM           CHGDAT  80
      C                     PARM           PLRTRN  8
+     C                     PARM           PLCUSN  6                                        MD023183A
      C/COPY WNCPYSRC,FXH00165
       *  Define Multi-branching fields
      C                     MOVE BYOPBR    BYOPBR  3
@@ -273,8 +277,10 @@
       *
       *  Check if Customer/Group supplied
      C                     MOVELPLCUST    CUSGRP
-     C           GRPKEY    IFNE *BLANKS
+     C********** GRPKEY    IFNE *BLANKS                                                    MD023183A
+     C           GRPREF    IFEQ *BLANKS                                                    MD023183A
      C                     MOVEL'Y'       GROUP   1
+     C                     MOVELPLCUST    GRPKEY  4                                        MD023183A
      C                     ELSE
      C                     MOVEL'N'       GROUP
      C                     ENDIF
@@ -365,38 +371,41 @@
      C                     ELSE
      C                     ADD  1         WFSEQ
      C                     END
-      *
-      * DETERMINE NET REFERENCE AND CREATE RECORD
-      * Set values for key NETREF
-     C                     MOVEL'DL#'     WFBRCA
-      *  USE MMDD OF VALUE DATE AND CURRENCY
-     C                     MOVELMMDDPT    WFDLVD
-     C                     MOVELPLCCY     WFCCY
-      *  USE CUSTOMER NUMBER OR GROUP CODE + ##
-     C           GRPKEY    IFEQ *BLANKS
-     C                     MOVE BBCUST    WFCUSN
-     C                     ELSE
-     C                     MOVELGRPKEY    WFCUSN
-     C                     MOVE '##'      WFCUSN
-     C                     END
-     C                     Z-ADD999       WFSEQN
-     C           NETREF    SETGTFXNETMD0
-     C                     READPFXNETMD0            N    82
-     C           *IN82     IFEQ '0'
-     C                     MOVELAMNETR    NETLFT
-     C                     MOVE AMNETR    NETSEQ  30
-     C                     END
-     C           *IN82     IFEQ '1'
-     C           NETLFT    ORNE NETCHK
-     C                     Z-ADD1         WFSEQN
-     C                     ELSE
-     C           NETSEQ    ADD  1         WFSEQN
-     C           WFSEQN    IFEQ 0
-     C                     Z-ADD1         WFSEQN
-     C                     END
-     C                     END
-     C                     MOVE NETREF    AMNETR
-     C                     MOVE NETREF    PLNETR
+      *****************************************************************                  MD023183A
+      **DETERMINE*NET*REFERENCE*AND*CREATE*RECORD**********************                  MD023183A
+      **Set*values*for*key*NETREF**************************************                  MD023183A
+     C**********           MOVEL'DL#'     WFBRCA                                         MD023183A
+      ***USE*MMDD*OF*VALUE*DATE*AND*CURRENCY***************************                  MD023183A
+     C**********           MOVELMMDDPT    WFDLVD                                         MD023183A
+     C**********           MOVELPLCCY     WFCCY                                          MD023183A
+      ***USE*CUSTOMER*NUMBER*OR*GROUP*CODE*+*##************************                  MD023183A
+     C********** GRPKEY    IFEQ *BLANKS                                                  MD023183A
+     C**********           MOVE BBCUST    WFCUSN                                         MD023183A
+     C**********           ELSE                                                          MD023183A
+     C**********           MOVELGRPKEY    WFCUSN                                         MD023183A
+     C**********           MOVE '##'      WFCUSN                                         MD023183A
+     C**********           END                                                           MD023183A
+     C**********           Z-ADD999       WFSEQN                                         MD023183A
+     C********** NETREF    SETGTFXNETMD0                                                 MD023183A
+     C**********           READPFXNETMD0            N    82                              MD023183A
+     C********** *IN82     IFEQ '0'                                                      MD023183A
+     C**********           MOVELAMNETR    NETLFT                                         MD023183A
+     C**********           MOVE AMNETR    NETSEQ  30                                     MD023183A
+     C**********           END                                                           MD023183A
+     C********** *IN82     IFEQ '1'                                                      MD023183A
+     C********** NETLFT    ORNE NETCHK                                                   MD023183A
+     C**********           Z-ADD1         WFSEQN                                         MD023183A
+     C**********           ELSE                                                          MD023183A
+     C********** NETSEQ    ADD  1         WFSEQN                                         MD023183A
+     C********** WFSEQN    IFEQ 0                                                        MD023183A
+     C**********           Z-ADD1         WFSEQN                                         MD023183A
+     C**********           END                                                           MD023183A
+     C**********           END                                                           MD023183A
+     C**********           MOVE NETREF    AMNETR                                         MD023183A
+     C**********           MOVE NETREF    PLNETR                                         MD023183A
+     C                     MOVE *BLANKS   AMNETR                                         MD023183A
+     C                     MOVELNETNO     AMNETR                                         MD023183A
+     C                     MOVELNETNO     PLNETR                                         MD023183A
      C                     MOVE NETNO     AMNTNO
      C                     MOVE 'I'       AMRECI
      C                     Z-ADDWQVALD    AMVALD
@@ -846,7 +855,7 @@
       ********************************************************************
      C/COPY WNCPYSRC,FX0921C011
 **  CPY@
-(c) Finastra International Limited 2001           
+(c) Finastra International Limited 2001
 ** TABMTH/TABCOD - MONTHS TABLES
 JAN01
 FEB02

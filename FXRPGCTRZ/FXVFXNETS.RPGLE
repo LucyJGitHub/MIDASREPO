@@ -19,8 +19,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD052398           Date 19Dec18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD023183A          Date 27Apr23               *
+      *  Prev Amend No. MD052398           Date 19Dec18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023183A - Use net number as net transaction reference.     *
       *  MD052398 - DL: FX netting: The FX Netting contains a deal    *
       *             with status unmatch. Fix is to remove the 'IF'    *
       *             condition statement DDMTCH IFEQ *BLANK.           *
@@ -68,7 +70,8 @@
       *                                                               *
       *****************************************************************
 
-     FFXNETML1  IF   E           K DISK    INFSR(*PSSR)
+     F***FXNETML1  IF   E           K DISK    INFSR(*PSSR)                                 MD023183A
+     FFXNETML5  IF   E           K DISK    INFSR(*PSSR)                                    MD023183A
      FSDCGRPL2  IF   E           K DISK    INFSR(*PSSR)
      FSDCPTTL1  IF   E           K DISK    INFSR(*PSSR)                                      BUG6251
      F/COPY WNCPYSRC,FXH00197
@@ -162,13 +165,13 @@
       ** External data structure for access programs (long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
 
-     D DSNETR          DS            19
-      ** Dummy Net Reference
-     D  DMBRCA                 1      3
-     D  DMM#DD                 4      7
-     D  DBSCCY                 8     10
-     D  DCUSGP                11     16
-     D  DSSEQN                17     19
+     D*DSNETR*****     DS            19                                                    MD023183A
+      ***Dummy*Net*Reference*******************************************                    MD023183A
+     D**DMBRCA                 1      3                                                    MD023183A
+     D**DMM#DD                 4      7                                                    MD023183A
+     D**DBSCCY                 8     10                                                    MD023183A
+     D**DCUSGP                11     16                                                    MD023183A
+     D**DSSEQN                17     19                                                    MD023183A
 
      D DSVALD          DS             4
       ** Value Date
@@ -484,6 +487,8 @@
      C     *LIKE         DEFINE    AMCCY1        KCCY1
      C     *LIKE         DEFINE    AMCCY2        KCCY2
      C     *LIKE         DEFINE    DDNBUY        BUYSEL
+     C     *LIKE         DEFINE    AMNETR        DSNETR                                    MD023183A
+     C     *LIKE         DEFINE    AMCNUM        KCUST                                     MD023183A
       *
       ** Set up Net Reference if blank
      C     DDNBRF        IFEQ      *BLANKS
@@ -496,29 +501,29 @@
      C                   PARM      DDCUST        @KEY1            10
      C                   PARM      *BLANKS       @KYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
-      *
-      ** Module ID:-
-     C                   MOVEL     'DL#'         DMBRCA
-      ** Month and Day Number:-
-     C                   MOVEL     DDVDAT        DSVALD
-     C                   MOVEL     DMONTH        DMM#DD
-     C                   MOVE      DDAYNO        DMM#DD
-      *
-      ** Currency:-
-     C     BUYSEL        IFEQ      'B'
-     C                   MOVEL     DDBCCY        DBSCCY
-     C                   ELSE
-     C                   MOVEL     DDSCCY        DBSCCY
-     C                   END
+      *****************************************************************                    MD023183A
+      ***Module*ID:-***************************************************                    MD023183A
+     C**********         MOVEL     'DL#'         DMBRCA                                    MD023183A
+      ***Month*and*Day*Number:-****************************************                    MD023183A
+     C**********         MOVEL     DDVDAT        DSVALD                                    MD023183A
+     C**********         MOVEL     DMONTH        DMM#DD                                    MD023183A
+     C**********         MOVE      DDAYNO        DMM#DD                                    MD023183A
+      *****************************************************************                    MD023183A
+      ***Currency:-****************************************************                    MD023183A
+     C*****BUYSEL        IFEQ      'B'                                                     MD023183A
+     C**********         MOVEL     DDBCCY        DBSCCY                                    MD023183A
+     C**********         ELSE                                                              MD023183A
+     C**********         MOVEL     DDSCCY        DBSCCY                                    MD023183A
+     C**********         END                                                               MD023183A
      C/COPY WNCPYSRC,FXH00109
-      *
-      ** Netting Group or Customer:-
-     C     BBNTGP        IFNE      *BLANKS
-     C                   MOVEL     BBNTGP        DCUSGP
-     C                   MOVE      '##'          DCUSGP
-     C                   ELSE
-     C                   MOVEL     DDCUST        DCUSGP
-     C                   END
+      *****************************************************************                    MD023183A
+      ***Netting*Group*or*Customer:-***********************************                    MD023183A
+     C*****BBNTGP        IFNE      *BLANKS                                                 MD023183A
+     C**********         MOVEL     BBNTGP        DCUSGP                                    MD023183A
+     C**********         MOVE      '##'          DCUSGP                                    MD023183A
+     C**********         ELSE                                                              MD023183A
+     C**********         MOVEL     DDCUST        DCUSGP                                    MD023183A
+     C**********         END                                                               MD023183A
      C/COPY WNCPYSRC,FXH00110
       *
       ** Set up key for paired currency net.
@@ -614,21 +619,26 @@
      C                   KFLD                    @VDYNO
      C                   KFLD                    KCCY1
      C                   KFLD                    KCCY2
-     C                   KFLD                    DSNETR
+     C**********         KFLD                    DSNETR                                    MD023183A
+     C                   KFLD                    KCUST                                     MD023183A
+     C                   MOVE      DDCUST        KCUST                                     MD023183A
       *
-     C     NETKEY        SETLL     FXNETML1
-     C                   READ      FXNETML1                             8889
-      *
-      ** Check record read is equal to access key fields by using
-      ** sequence number found and comparing values.
+     C*****NETKEY        SETLL     FXNETML1                                                MD023183A
+     C*********          READ      FXNETML1                             8889               MD023183A
+     C     NETKEY        SETLL     FXNETML5                                                MD023183A
+     C                   READ      FXNETML5                             8889               MD023183A
+      *****************************************************************                    MD023183A
+      ***Check*record*read*is*equal*to*access*key*fields*by*using******                    MD023183A
+      ***sequence*number*found*and*comparing*values.*******************                    MD023183A
      C     *IN89         IFEQ      '0'
-     C                   CLEAR                   DSSEQN
-     C                   MOVE      AMSEQN        DSSEQN
+     C**********         CLEAR                   DSSEQN                                    MD023183A
+     C**********         MOVE      AMSEQN        DSSEQN                                    MD023183A
       *
      C     AMVALD        IFEQ      @VDYNO
      C     AMCCY1        ANDEQ     KCCY1
      C     AMCCY2        ANDEQ     KCCY2
-     C     AMNETR        ANDEQ     DSNETR
+     C*****AMNETR        ANDEQ     DSNETR                                                  MD023183A
+     C     AMCNUM        ANDEQ     BBCUST                                                  MD023183A
      C                   MOVE      'Y'           #FOUND            1
      C                   ELSE
      C                   MOVE      'N'           #FOUND

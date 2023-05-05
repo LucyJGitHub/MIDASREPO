@@ -10,13 +10,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD060906           Date 25Jan23              */
-/*       Prev Amend No. MD059958           Date 17May22              */
+/*       Last Amend No. MD061363           Date 05May23              */
+/*       Prev Amend No. MD060906           Date 25Jan23              */
+/*                      MD059958           Date 17May22              */
 /*                      MD059758           Date 18Apr22              */
 /*                      CSD103    *CREATE  Date 10Aug20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061363 - In case of abnormal termination, check if job    */
+/*                  is interactive                                   */
 /*       MD060906 - Base Rate with '00' was not converted to blanks  */
 /*                  in PF/STRAN. It caused REC7B to fail as RE0743   */
 /*                  process base rate with '00' which doesn't exist. */
@@ -47,11 +50,12 @@
 
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                               /*MD059758*/
              DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)                                /*MD059758*/
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)                                /*MD061363*/
                                                                                         /*MD059758*/
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
 
-
+             RTVJOBA    TYPE(&JOBTYPE)                                                  /*MD061363*/
              IF         COND(&LAYER *EQ 'Global') THEN(DO)
 /*Get Global system prefix*/
                 CALL       PGM(GPAOSVALR0) PARM(&AORTN 'BrgMidasGlobalPrefix' +
@@ -205,7 +209,10 @@
              GOTO       CMDLBL(END)
 
  ABNOR:
-                                                                                        /*MD059758*/
+             /* Abnormal termination - interactive job */                               /*MD061363*/
+                                                                                        /*MD061363*/
+             IF         COND(&JOBTYPE = '1') THEN(DO)                                   /*MD061363*/
+                                                                                        /*MD061363*/
              CHGVAR     VAR(&ERRPGM) VALUE('SMUC00105')                                 /*MD059758*/
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
                           MSGDTA(&ERRPGM) MSG(&MESSAGE)                                 /*MD059758*/
@@ -217,6 +224,7 @@
              MONMSG     MSGID(CPF0000)                                                  /*MD059758*/
              CALL       PGM(SCC0010) PARM(&ERRPGM 'JOBLOG' 'Y')                         /*MD059758*/
              MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD059758*/
+             ENDDO                                                                      /*MD061363*/
                                                                                         /*MD059758*/
              SNDPGMMSG  MSG('Error occurred in SMUC00105 program') +
                           TOMSGQ(MOPERQ MRUNQ)                                          /*MD059758*/

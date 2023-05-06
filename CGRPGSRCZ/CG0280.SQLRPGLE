@@ -21,8 +21,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059906           Date 24Jan23               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD061086           Date 06May23               *
+      *  Prev Amend No. MD059906           Date 24Jan23               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
       *                 MD055928           Date 02Jun20               *
       *                 MD054955           Date 16Dec19               *
@@ -64,6 +65,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD061086 - Some correspondent schedules cannot be amended.   *
+      *             Replace CPPCOR with CPCCOR in the SQL statement   *
+      *             when accessing CGCSHJW0 and CGCSHXTD.             *
+      *           - Applied for MD061341                              *
       *  MD059906 - Correct CGPTYJW0 access as field GARECI does      *
       *             not exist                                         *
       *           - Applied for MD060934                              *
@@ -3119,7 +3124,8 @@
      C+ SELECT *                                                                            MD054955
      C+ into :CGCSCH                                                                        MD054955
      C+ from CGCSHJW0                                                                       MD054955
-     C+ where CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD054955
+     C*+*where*CPPCOR*=*:CPCORR*and*CPPTYP*=*:CPPTYP*and*CPPSTP*=*:CPPSTP          MD054955 MD061086
+     C+ where CPCORR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD061086
      C+ and CPSEQN = :CPSEQN                                                                MD054955
      C/END-EXEC                                                                             MD054955
      C                   SETOFF                                       9091                  MD054955
@@ -3185,7 +3191,8 @@
      C+ , CPARDT = :CPARDT                                                                  MD054955
      C+ , CPAACT = :CPAACT                                                                  MD054955
      C+ , CPRDNB = :CPRDNB                                                                  MD054955
-     C+ where CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD054955
+     C*+*where*CPPCOR*=*:CPCORR*and*CPPTYP*=*:CPPTYP*and*CPPSTP*=*:CPPSTP          MD054955 MD061086
+     C+ where CPCORR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD061086
      C+ and CPSEQN = :CPSEQN                                                                MD054955
      C/END-EXEC                                                                             MD054955
      C******IN91*        IFEQ      '1'                                                      MD054955
@@ -3222,7 +3229,8 @@
      C+ SELECT *                                                                            MD054955
      C+ into :CGCSCH                                                                        MD054955
      C+ from CGCSHJW0                                                                       MD054955
-     C+ where CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD054955
+     C*+*where*CPPCOR*=*:CPCORR*and*CPPTYP*=*:CPPTYP*and*CPPSTP*=*:CPPSTP          MD054955 MD061086
+     C+ where CPCORR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD061086
      C+ and CPSEQN = :CPSEQN                                                                MD054955
      C/END-EXEC                                                                             MD054955
      C                   SETOFF                                       9091                  MD054955
@@ -3337,7 +3345,8 @@
      C+ , CPACCD = :CPACCD                                                                  MD054955
      C+ , CPMACT = :CPMACT                                                                  MD054955
      C+ , CPCACT = :CPCACT                                                                  MD054955
-     C+ where CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD054955
+     C*+*where*CPPCOR*=*:CPCORR*and*CPPTYP*=*:CPPTYP*and*CPPSTP*=*:CPPSTP          MD054955 MD061086
+     C+ where CPCORR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD061086
      C+ and CPSEQN = :CPSEQN                                                                MD054955
      C/END-EXEC                                                                             MD054955
      C******IN91*        IFEQ      '1'                                                      MD054955

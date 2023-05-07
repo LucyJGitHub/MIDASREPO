@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 252514             Date 19Aug14               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 252514             Date 19Aug14               *
       *                 CSD095             Date 08Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  252514 - Apply core fix 252050.                              *
       *  252050 - Update SDFCTLPA when BYRECI changed to or from 'D'. *
@@ -41,10 +43,10 @@
       *                                                               *
       *****************************************************************
       /EJECT
- 
+
       ** SD Extended Settlements
      FSDEXSTPD  IP   E           K Disk    InfSR(*PSSR)
- 
+
       ** SD Extended Settlements by CYCD/CUST/TRTY/EFFD
      FSDEXSTLA  UF   E           K Disk    InfSR(*PSSR)
      F                                     Rename(SDEXSTD0:SDEXSTDA)
@@ -52,7 +54,7 @@
       *                                                                                       252050
       ** SD File Controls update                                                              252050
       *                                                                                       252050
-     FSDFCTLL0  UF   E           K Disk    INFSR(*PSSR)                                       252050
+     F*SDFCTLL0* UF   E           K Disk    INFSR(*PSSR)                                    MD061007
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -61,23 +63,29 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------------------------------
- 
+
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
       /EJECT
- 
+
      D @RUN            S              1
- 
+
       ** Define Key Fields
      D K#CUST          S                   Like(BYCUST)
      D K#CYCD          S                   Like(BYCYCD)
      D K#TRTY          S                   Like(BYTRTY)
- 
+
       /EJECT
       *****************************************************************
       *
@@ -86,50 +94,84 @@
      C                   Eval      K#CUST = BYCUST
      C                   Eval      K#CYCD = BYCYCD
      C                   Eval      K#TRTY = BYTRTY
- 
+
      C     KeyLA         Setll     SDEXSTDA
      C     KeyLA         ReadE     SDEXSTDA
- 
+
       ** Process history and current records
      C                   Dow       Not %Eof
- 
+
      C                   Select
- 
+
      C                   When      LYRECI = '*'
       ** No Action,deleted later
- 
+
      C                   When      LYRECI = 'H'
      C                   Eval      LYRECI = '*'
      C                   Update    SDEXSTDA
- 
+
      C                   When      LYRECI = 'D'
      C                   Eval      LYRECI = 'H'
      C                   Update    SDEXSTDA
      C                   Eval      AHFLNM = 'SDEXSTPD'                                        252050
-     C     AHFLNM        Chain     SDFCTLL0                                                   252050
+     C*****AHFLNM        Chain     SDFCTLL0                                          252050 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
      C                   Eval      AHNORC = AHNORC - 1                                        252050
      C                   Eval      AHNODL = AHNODL + 1                                        252050
-     C                   Update    @AHREAU                                                    252050
- 
+     C**********         Update    @AHREAU                                           252050 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
+
      C                   When      LYRECI = 'F' and LYEFFD = BYEFFD
      C                   Eval      LYRECI = 'D'
      C                   Update    SDEXSTDA
      C                   Eval      AHFLNM = 'SDEXSTPD'                                        252050
-     C     AHFLNM        Chain     SDFCTLL0                                                   252050
+     C*****AHFLNM        Chain     SDFCTLL0                                          252050 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
      C                   Eval      AHNORC = AHNORC + 1                                        252050
      C                   Eval      AHNOIN = AHNOIN + 1                                        252050
-     C                   Update    @AHREAU                                                    252050
- 
+     C**********         Update    @AHREAU                                           252050 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
+
      C                   Other
- 
+
      C                   EndSl
- 
+
      C     KEYLA         ReadE     SDEXSTDA
      C                   EndDo
- 
+
      CLR                 Exsr      SRDelete
       *****************************************************************
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -141,12 +183,12 @@
       *                                                               *
       *****************************************************************
      C     SRDelete      BegSr
- 
+
       ** Clear Key Fields
      C                   Clear                   K#CUST
      C                   Clear                   K#CYCD
      C                   Clear                   K#TRTY
- 
+
      C     KEYLA         Setll     SDEXSTLA
      C                   Read      SDEXSTLA
       ** Process all records
@@ -155,10 +197,10 @@
      C                   If        LYRECI = '*'
      C                   Delete    SDEXSTLA
      C                   EndIf
- 
+
      C                   Read      SDEXSTLA
      C                   EndDo
- 
+
      C                   EndSr
       /EJECT
       *****************************************************************
@@ -172,7 +214,7 @@
       *                                                               *
       *****************************************************************
      C     *InzSr        BegSr
- 
+
       ** Define LDA
      C     *Lock         In        LDA
      C                   Eval      DBPGM = 'SD0760'
@@ -180,13 +222,13 @@
      C                   Eval      DBKEY =  *BLANKS
      C                   Eval      DBASE = 0
      C                   Out       LDA
- 
+
       ** Initialise Key Lists
      C     KeyLA         KList
      C                   KFld                    K#CUST
      C                   KFld                    K#CYCD
      C                   KFld                    K#TRTY
- 
+
      C                   EndSr
       /EJECT
       *****************************************************************
@@ -199,7 +241,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BegSr
- 
+
      C                   If        @RUN = *BLANK
      C                   Eval      @RUN = 'Y'
      C                   Seton                                        U7U8LR
@@ -210,7 +252,7 @@
       ** If *PSSR already run, then just end the program here.
      C                   Seton                                        U7U8LR
      C                   Return
- 
+
      C                   EndSr
       /EJECT
       *****************************************************************

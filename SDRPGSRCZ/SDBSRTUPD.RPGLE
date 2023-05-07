@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MG000484           Date 15Jul19               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MG000484           Date 15Jul19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MG000484 - Rate Change should not be generated if New Base   *
       *             Rate has the same value as the previous history   *
@@ -75,8 +77,8 @@
      FSDBSRTL0  UF A E           K DISK
      F                                     COMMIT
       * Midas SD Controls File
-     FSDFCTLL0  UF A E           K DISK
-     F                                     COMMIT
+     F*SDFCTLL0* UF A E           K DISK                                                    MD061007
+     F**********                           COMMIT                                           MD061007
 
       * Market Data Feed Requests Details File                                                CSD006
      FSDMDFRL0  UF A E           K DISK    COMMIT                                             CSD006
@@ -193,6 +195,13 @@
      D POptn           S              7A                                                      CSC011
      D PSard           S              6A                                                      CSC011
 
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       ** Data structure passed to SD0520X
      D WUDELR          DS
      D  WUDR01                 1    250
@@ -1006,7 +1015,24 @@
       *
      C                   MOVE      *BLANKS       WKFLNM           10
      C                   MOVEL     'SDBSRTPD'    WKFLNM
-     C     WKFLNM        CHAIN     @AHREAU                            9899
+     C*****WKFLNM        CHAIN     @AHREAU                            9899                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      WKFLNM        AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       9899                  MD061007
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061007
+     C                   SETON                                        98                    MD061007
+     C                   ENDIF                                                              MD061007
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061007
+     C                   SETON                                        99                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
       *
       * Record not found
      C     *IN98         IFEQ      '1'
@@ -1040,7 +1066,16 @@
      C                   EVAL      AHNODL = (AHNODL + 1)
      C                   ENDSL
       *
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
       *
      C                   ENDSR
      C****************************************************************

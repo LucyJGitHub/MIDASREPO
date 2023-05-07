@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058250           Date 13Jul21               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD058250           Date 13Jul21               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 258531             Date 19Aug14               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058250 - Midas_DDM_Audit_Report SD0020PM Currencies        *
       *             Maintenance.                                      *
       *           - Remove call to SD0028.                            *
@@ -90,7 +92,7 @@
      FSDCURRML  UF A E           K DISK    COMMIT                                            BUG8205
       * Midas SD Transaction Details Master File
 
-     FSDFCTLL0  UF A E           K DISK    COMMIT
+     F*SDFCTLL0* UF A E           K DISK    COMMIT                                          MD061007
       * Midas SD Standing Data Controls index
 
      F***SDFCTLPAX O    E             DISK    COMMIT                               MD025009 MD025467
@@ -331,6 +333,13 @@
       *                                                                                       CER048
      D CGL165          S              1A                                                      CGL165
       *                                                                                       CGL165
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       /EJECT
       *****************************************************************
       *                                                               *

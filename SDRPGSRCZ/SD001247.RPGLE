@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR988376           Date 11Feb13               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR988376           Date 11Feb13               *
       *                 CFT045  *CREATE    Date 04Aug11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR988376 - Component SDC0602 ended in error (Child:AR988377) *
       *  CFT045 - Outgoing Payments - Extended Settlement Instructions*
@@ -35,7 +37,7 @@
       *
       ** Midas SD Standing Data Controls File Retrieval Index
       *
-     FSDFCTLL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDFCTLL1* IF   E           K DISK    INFSR(*PSSR)                                    MD061007
       *
       ** Midas SD Out. Payment Ext. Sett. Instn. Rpt. List
       *
@@ -100,6 +102,13 @@
      D   SFileU               83     92
      D   SFNumU              123    124B 0
       *
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -371,7 +380,21 @@
       ** Check control details
       *
      C                   EVAL      WFName = 'SDOPESPD'
-     C     WFName        CHAIN     SDFCTLL1                           55
+     C*****WFName        CHAIN     SDFCTLL1                           55                    MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      WFName        AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       55                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        55                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
       *
       ** Database error
       *

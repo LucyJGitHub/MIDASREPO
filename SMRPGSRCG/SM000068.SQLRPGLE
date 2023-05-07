@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD059085           Date 08Nov21               *
-      *  Prev Amend No. CUP042   *CREATE   Date 24Nov14               *
+      *  Last Amend No. MD060877           Date 01Jan23               *
+      *  Prev Amend No. MD059085           Date 08Nov21               *
+      *                 CUP042   *CREATE   Date 24Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060877 - Deliverable Data Split for SMRLSLPD and SMBFPRTD  *
       *  MD059085 - Rename field AUPROJ to 'Old System Release'       *
       *  CUP042 - Restructure of deliverable data files.              *
       *                                                               *
@@ -986,7 +988,8 @@
      C+ select count(*)
      C+ into
      C+   :RecCount
-     C+ from SMRLSLPD
+     C**from*SMRLSLPD                                                                       MD060877
+     C+ from SMRLSJW0                                                                       MD060877
      C+ where
      C+     RLUPMB = :DFPROJ
      C/end-exec

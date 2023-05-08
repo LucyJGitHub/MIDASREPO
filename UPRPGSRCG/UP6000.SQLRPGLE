@@ -15,11 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060396           Date 20Sep22               *
-      *  Prev Amend No. CUP044 *CREATE     Date 22May22               *
+      *  Last Amend No. MD061361           Date 04May23               *
+      *  Prev Amend No. MD060396           Date 20Sep22               *
+      *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061361 - Correct package name when calling PGM             *
       *  MD060396 - Only X should be used to select layers            *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
       *           Patch Upgrade                                       *
@@ -2000,7 +2002,8 @@
      C                   endif
 
      C                   CALL      'PGMB1'                              20
-     C                   PARM                    XPACK2
+     C**********         PARM                    XPACK2                                     MD061361
+     C                   PARM                    XPACK                                      MD061361
      C                   PARM                    GPFX
      C                   PARM                    ZPFX              2
      C                   PARM                    RTN
@@ -2047,7 +2050,8 @@
      C                   endif
 
      C                   CALL      'PGMB2'                              20
-     C                   PARM                    XPACK2
+     C**********         PARM                    XPACK2                                     MD061361
+     C                   PARM                    XPACK                                      MD061361
      C                   PARM                    GPFX
      C                   PARM                    sprf
      C                   PARM                    RTN

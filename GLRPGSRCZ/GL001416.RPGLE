@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. MD026615           Date 08May23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 CMG009             Date 24Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -48,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026615 - Principal Increase Loan events are automatically  *
+      *             tagged as DL transaction. Need to distinguish if  *
+      *             PI event is a DL or LE transaction.               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
@@ -126,6 +130,9 @@
      F***NTRAN1**  IF   E           K DISK                      INFSR(*PSSR)       MD034442 MD036398
      FNTRAN     IF   E           K DISK                      INFSR(*PSSR)                   MD036398
       ** Midas FT Nostro Transfer Transactions.                                             MD034442
+     FDEALS     IF   E           K DISK                      INFSR(*PSSR)                   MD026615
+      ** Midas Dealing File                                                                 MD026615
+     F                                     PREFIX(DL_)                                      MD026615
      F/COPY WNCPYSRC,GLH00394
 
       *========================================================================*
@@ -226,7 +233,8 @@
      D*TransType******               50    DIM(60) CTDATA PERRCD(1)                           CRE008
      D*TransType*                    50    DIM(61) CTDATA PERRCD(1)                    CRE008 CAP204
      D/COPY WNCPYSRC,GLH00622
-     D TransType                     50    DIM(63) CTDATA PERRCD(1)                           CAP204
+     D*TransType******               50    DIM(63) CTDATA PERRCD(1)                  CAP204 MD026615
+     D TransType                     50    DIM(64) CTDATA PERRCD(1)                         MD026615
      D/COPY WNCPYSRC,GLH00627
      D    TrType                      2    OVERLAY(TransType)                   Transaction Type
      D      TrFiller1                 1    OVERLAY(TransType:*NEXT)
@@ -282,6 +290,7 @@
      D PRCGLPN         S              1                                         UpdGLPOSTPD MD032299
      D PRCRSMN         S              1                                         UpdGLRSACPD MD032299
      D CMG009          S              1                                         CMG009 flag   CMG009
+     D KItemNo         S                   LIKE(DL_DLNO)                                    MD026615
       ** Input Specs
       ** -----------
 
@@ -553,6 +562,14 @@ e1   C                   Endsl                                                  
      C                   WHEN      TRYP = 'OP'                                  FT Outgoing
      C                             AND FUND <> *BLANKS                          Payment
      C                   EVAL      WkTRYP = 'OF'
+     C                   WHEN      TRYP = 'PI'                                              MD026615
+     C                   MOVE      TNMR          KItemNo                                    MD026615
+     C     KItemNo       CHAIN     DEALS                                                    MD026615
+     C                   IF        %FOUND(DEALS)                                            MD026615
+     C                   EVAL      WkTRYP = 'PI'                                            MD026615
+     C                   ELSE                                                               MD026615
+     C                   EVAL      WkTRYP = 'Px'                                            MD026615
+     C                   ENDIF                                                              MD026615
      C                   OTHER
      C                   EVAL      WkTRYP = TRYP
      C                   ENDSL
@@ -1010,6 +1027,7 @@ F2 LE U   GE-LE Fee on Facility
 Hx LE U   GE-LE Lending Module
 Jx LE U   GE-LE Lending Module
 Kx LE U   GE-LE Lending Module
+Px LE U   GE-LE Lending Module                                                              MD026615
 SO SO O   GE-SO Standing Orders
 TP ST S   GE-ST Trade Purchased
 TS ST S   GE-ST Trade Saled

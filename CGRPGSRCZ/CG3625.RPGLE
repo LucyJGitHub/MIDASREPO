@@ -32,6 +32,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  BA6020 - Add specific header field to CM XML Output          *
+      *           Include MD-34476                                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD053A - Correspondence Manager DBCS Support                *
       *            Applied for AR924785 (Child: AR924788)             *
@@ -608,7 +609,7 @@
      C                   Endif                                                                BA6020
 
       *  Create control file .CTL before closing .DAT file
-     C                   EXSR      CREATECTL
+     C**********         EXSR      CREATECTL                                                  BA6020
 
       *  Now close the .DAT file
      C                   EVAL      RC = CLOSE(FDescDat)
@@ -633,6 +634,9 @@
       *                                                                                       BA6020
      C                   ENDIF                                                                BA6020
 
+      *  Create control file .CTL at the end                                                  BA6020
+     C                   EXSR      CREATECTL                                                  BA6020
+                                                                                              BA6020
      C                   ENDSR
 
       /EJECT

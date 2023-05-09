@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD024407           Date 03May23               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057061           Date 03Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024407 - Do not allow duplicate front office ids.          *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057061 - Serious Midas Error encountered in CIRS and SIRS  *
@@ -175,6 +177,13 @@
                                                                                               CAP185
       ** Midas AP API Configuration                                                           CAP185
      FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
+     FFRNTOFCL1 IF   E           K DISK    INFSR(*PSSR)                                     MD024407
+     F                                     RENAME(MMDELDP0:MMDELDX0)                        MD024407
+     F                                     RENAME(MMDENBP0:MMDENBX0)                        MD024407
+     F                                     RENAME(MMDENSP0:MMDENSX0)                        MD024407
+     F                                     RENAME(ABDEALP0:ABDEALX0)                        MD024407
+     F                                     RENAME(FXDEALP0:FXDEALX0)                        MD024407
+     F                                     RENAME(DEALSDGF:DEALSGX0)                        MD024407
 
       *****************************************************************
       ** +--------------------------------------+
@@ -512,7 +521,8 @@
      C                   END
 
       * ACCESS DEAL WITH FRONT OFFICE TRANSACTION ID
-     C     FOTRID        CHAIN     IRCIRSL0F                          99
+     C*****FOTRID        CHAIN     IRCIRSL0F                          99                    MD024407
+     C     FOTRID        CHAIN     FRNTOFCL1                          99                    MD024407
 
       * IF INSERT
      C     SACCD         IFEQ      'I'

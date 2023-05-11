@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GP Report Layout Generation')
+/*EXI *  TEXT('Midas GP Report Layout Generation')                    *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,15 +11,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1058381          Date 11May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGP004  *CREATE    Date 23May03               *
+      *                 CGP004  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1058381 - Audit file maintenance crashes on webfaced       *
+      *              screen. Convert hardcoded column header & footer *
+      *              functions in DSPF into variables. Recompiled due *
+      *              to changes in GPAU0012DF. (Child: AR1058383)     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP004 - Audit Reporting                                     *
       *                                                               *
@@ -33,6 +38,9 @@
      D WKA             S              1    DIM(30)
      D ERR             S             76    DIM(2) CTDATA PERRCD(1)
  
+     D NARR1           C                   'CK/3=Exit,'                                    AR1058381
+     D NARR2           C                   'CK/12=Abandon'                                 AR1058381
+                                                                                           AR1058381
      D PSDS           SDS
      D  ERROR            *STATUS
      D  WKSID                244    253
@@ -67,8 +75,11 @@
       * Display screen
       *****************************************************************
      C     DSPLAY        BEGSR
-     C                   WRITE     MESSAG
+     C                   MOVE      NARR1         FOOTER1                                   AR1058381
+     C                   MOVE      NARR2         FOOTER2                                   AR1058381
+     C**********         WRITE     MESSAG                                                  AR1058381
      C                   WRITE     MAIN
+     C                   WRITE     MESSAG                                                  AR1058381
      C                   READ      MAIN                                   99    *
      C                   MOVEL     *BLANK        DDERR            76
      C* CK/3

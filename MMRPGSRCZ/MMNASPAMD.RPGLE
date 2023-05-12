@@ -19,9 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060753           Date 10Nov22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD044305           Date 04May17               *
+      *  Last Amend No. MD044305           Date 08May23               *
+      *  Prev Amend No. MD060753           Date 10Nov22               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -51,13 +51,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060753 - Error in source compilation                       *
-      *  MD046248 - Finastra Rebranding                               *
       *  MD044305 - Allow amendment of interest payment frequency and *
       *             interest payment day in no for all deal status    *
       *             when HHINTA is Y. When HHINTA is N, only allow    *
       *             amendment of said fields for incomplete and       *
       *             complete deal status.                             *
+      *  MD060753 - Error in source compilation                       *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *

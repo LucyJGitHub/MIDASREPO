@@ -33,11 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060683           Date 15Feb23               *
-      *  Prev Amend No. MD021868           Date 02Feb23               *
-      *                 MD021870A          Date 30Jan23               *
-      *                 MD021871           Date 27Jan23               *
-      *                 MD060981           Date 27Jan23               *      
+      *  Last Amend No. MD021868           Date 08May23               *
+      *  Prev Amend No. MD021870A          Date 08May23               *
+      *                 MD021871           Date 08May23               *
+      *                 MD060981           Date 08May23               *
+      *                 MD060683           Date 15Feb23               *
       *                 MD059863           Date 28Sep22               *
       *                 MD059314           Date 22Feb22               *
       *                 MD059100A          Date 23Dec21               *
@@ -120,14 +120,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060683 - Unable to Authorize newly inserted Single         *
-      *             Currency IRS deal                                 *
       *  MD021868 - Default the cashflow amount when control date is  *
       *             being defaulted.                                  *
       *  MD021870A - 31 will be considered as invalid input. It should*
       *              be either 31+ or 31- just like other numbers.    *
       *  MD021871 - Yearly frequency are generated as monthly freq.   *
-      *  MD060981 - CIRS buffer issue                                 *      
+      *  MD060981 - CIRS buffer issue                                 *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  MD059863 - UDF field position in CIRS or SIRS message type.  *
       *           - Move Front Office ID to RXFRNT, if not blanks.    *
       *  MD059314 - Error encountered on Principal Change Schedule    *

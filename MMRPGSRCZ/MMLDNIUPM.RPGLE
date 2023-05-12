@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD036339           Date 27Jan23               *
+      *  Last Amend No. MD036339           Date 08May23               *
       *  Prev Amend No. AR690814           Date 31May22               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
@@ -1699,7 +1699,7 @@
      C     CDL033        OREQ      'Y'                                                      MD036339
      C     IKMTYP        ANDEQ     'TI'                                                     MD036339
      C     CDL033        OREQ      'Y'                                                      MD036339
-     C     IKMTYP        ANDEQ     'TD'                                                     MD036339     
+     C     IKMTYP        ANDEQ     'TD'                                                     MD036339
      C                   Z-ADD     IKINTR        HKINTR                                       CDL033
      C                   ENDIF                                                                CDL033
       **

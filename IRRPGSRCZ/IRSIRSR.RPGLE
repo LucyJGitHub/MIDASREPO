@@ -13,8 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060683           Date 15Feb23               *
-      *  Prev Amend No. MD021868           Date 02Feb23               *
+      *  Last Amend No. MD021868           Date 08May23               *
+      *  Prev Amend No. MD060683           Date 15Feb23               *
       *                 MD059183A          Date 21Dec21               *
       *                 MD059183           Date 11Nov21               *
       *                 CIR020             Date 02Aug21               *
@@ -72,10 +72,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060683 - Unable to Authorize newly inserted Single         *
-      *             Currency IRS deal                                 *
       *  MD021868 - Default the cashflow amount when control date is  *
       *             being defaulted.                                  *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  MD059183A- Values entered in Our/Their Int Payment           *
       *             Schedule tab were not saved after authorisation.  *
       *  MD059183 - Freq is irregular and values entered are missing  *

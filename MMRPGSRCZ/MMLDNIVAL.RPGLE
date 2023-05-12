@@ -16,8 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060840           Date 03Feb23               *
-      *  Prev Amend No. AR959687           Date 24Jan23               *
+      *  Last Amend No. MD060840           Date 08May23               *
+      *  Prev Amend No. AR959687           Date 08May23               *
       *                 MD060620           Date 14Nov22               *
       *                 MD060583           Date 13Oct22               *
       *                 MD060532           Date 27Sep22               *
@@ -177,10 +177,10 @@
       *             interest payment                                  *
       *  AR959687 - Parameter added to MMVACTINTR for warning message *
       *             (Child: AR959689)                                 *
-      *  MD060620 - Cannot edit Base Rate due to Libor fields.        *      
+      *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *  MD060583 - Calculation of total interest not working.        *
       *             Enhanced the validation of Short Term Rate field  *
-      *             for Total interest to be calculated.              *      
+      *             for Total interest to be calculated.              *
       *  MD060532 - Unable to insert MM deal. Error 45049506 occured. *
       *             Amended validation Fixed Base Rate must be 'N' if *
       *             Backward-Looking Rate is 'Y'.                     *

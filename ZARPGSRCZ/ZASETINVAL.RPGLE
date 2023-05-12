@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050227           Date 25Apr23               *
-      *  Prev Amend No. MD057916           Date 18May21               *
+      *  Last Amend No. MD061359           Date 11May23               *
+      *  Prev Amend No. MD050227           Date 25Apr23               *
+      *                 MD057916           Date 18May21               *
       *                 CSW221             Date 05Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD051567           Date 26Sep20               *
@@ -148,6 +149,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061359 - Issue on Customer Details Retrieval               *
       *  MD050227 - Recipient of Payment Instructions must be blank   *
       *             when Beneficiary is non-bank.                     *
       *  MD057916 - No defaulting process should be performed during  *
@@ -493,6 +495,8 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** EXTERNAL DS FOR LONG DUMMY DATA STRUCTURE
       *
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD061359
+                                                                                            MD061359
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** EXTERNAL DS FOR SHORT DUMMY DATA STRUCTURE
                                                                                               219241
@@ -7914,16 +7918,19 @@
       *
      C                   MOVE      *BLANKS       @KEY1            10
      C                   MOVEL     P#PART        @KEY1
-     C                   CALL      'AOCUSTR0'
+     C**********         CALL      'AOCUSTR0'                                               MD061359
+     C                   CALL      'AOCUSTR1'                                               MD061359
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @KEY1
      C                   PARM      *BLANKS       @KYST             7
-     C     SDCUST        PARM      *BLANKS       DSSDY
+     C*****SDCUST        PARM      *BLANKS       DSSDY                                      MD061359
+     C     SDCUST        PARM      SDCUST        DSLDY                                      MD061359
       *
       * CUSTOMER FOUND
       *
      C     @RTCD         IFEQ      *BLANKS
+     C     BBCLST        ANDNE     'Y'                                                      MD061359
       *
       ** CUSTOMER NUMBER OR SHORTNAME?
       *
@@ -8006,6 +8013,7 @@
      C                   MOVEL     DDBENN        @CSCN
      C                   EXSR      ACCUST
      C     @RTCD         IFEQ      *BLANKS
+     C     BBCLST        ANDNE     'Y'                                                      MD061359
      C**********         MOVEL     BBBNBI        @BBNBI                                       197865
      C                   MOVEL     BBSWFI        @BBNBI                                       197865
      C                   ELSE
@@ -8043,6 +8051,7 @@
      C                   MOVEL     ##CSNM        @CSCN
      C                   EXSR      ACCUST
      C     @RTCD         IFNE      *BLANKS
+     C     BBCLST        OREQ      'Y'                                                      MD061359
      C                   GOTO      EDEFPY
      C                   END
      C                   MOVEL     BBCRNM        W#WK30           30
@@ -8395,12 +8404,14 @@
      C     ACCUST        BEGSR
       *
      C/COPY WNCPYSRC,ZASETNVC02
-     C                   CALL      'AOCUSTR0'
+     C**********         CALL      'AOCUSTR0'                                               MD061359
+     C                   CALL      'AOCUSTR1'                                               MD061359
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    @CSCN            10
      C                   PARM                    @KYST             7
-     C     SDCUST        PARM      SDCUST        DSSDY
+     C*****SDCUST        PARM      SDCUST        DSSDY                                      MD061359
+     C     SDCUST        PARM      SDCUST        DSLDY                                      MD061359
       *
      C                   ENDSR
      C*********************************************************************
@@ -8475,7 +8486,8 @@
      C                   EVAL      @KYST = *BLANKS                                           CSF011A
      C                   EXSR      ACCUST                                                    CSF011A
                                                                                              CSF011A
-     C                   IF        @RTCD = *BLANKS                                           CSF011A
+     C**********         IF        @RTCD = *BLANKS                                  CSF011A MD061359
+     C                   IF        @RTCD = *BLANKS AND BBCLST <> 'Y'                        MD061359
                                                                                              CSF011A
      C                   IF        SETTF = 'P'                                               CSF011A
      C                   EVAL      DDPSH1 = BBCSSN                                           CSF011A
@@ -8582,6 +8594,7 @@
      C                   MOVEL     DDBENN        @CSCN                                        238721
      C                   EXSR      ACCUST                                                     238721
      C     @RTCD         IFEQ      *BLANKS                                                    238721
+     C     BBCLST        ANDNE     'Y'                                                      MD061359
      C                   MOVEL     BBSWFI        @BBNBI                                       238721
      C                   ENDIF                                                                238721
                                                                                              CSF011A
@@ -8657,6 +8670,7 @@
      C                   EXSR      ACCUST
       *
      C     @RTCD         IFNE      *BLANKS
+     C     BBCLST        OREQ      'Y'                                                      MD061359
      C                   MOVEL     ##CSNM        DBKEY
      C                   MOVEL     'SDCUSTPD'    DBFILE                         ************
      C                   MOVEL     '800'         DBASE                          * DBERR 800*

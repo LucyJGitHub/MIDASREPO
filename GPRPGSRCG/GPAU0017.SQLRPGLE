@@ -4,7 +4,7 @@
 /**** *  RPGBASEMOD                                                   *                     MD056611
 /*STD *  RPGSQLMOD                                                    *                     MD056611
 /*EXI *  CLOSQLCSR(*ENDMOD)                                           *                     MD056611
-/*EXI *  TEXT('Midas GP Audit Input Selection')
+/*EXI *  TEXT('Midas GP Audit Input Selection')                       *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056611           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1058381          Date 11May23               *
+      *  Prev Amend No. MD056611           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1058381 - Audit file maintenance crashes on webfaced       *
+      *              screen. Convert hardcoded column header & footer *
+      *              functions in DSPF into variables. Recompiled due *
+      *              to changes in GPAU0017DF. (Child: AR1058383)     *
       *  MD056611 - Deliverable Data Split for Audit Reporting        *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG2410 - Improve web-facing display                         *
@@ -37,6 +42,11 @@
 
      D ERR             S             76    DIM(2) CTDATA PERRCD(1)
 
+     D NARR1           C                   'Input'                                         AR1058381
+     D NARR2           C                   'Description'                                   AR1058381
+     D NARR3           C                   'CK/3=Exit, CK12=Previous, Rollup-              AR1058381
+     D                                     ,Rolldown'                                      AR1058381
+                                                                                           AR1058381
      D*DATA*****     E DS                  EXTNAME(GPAUIPPD)                                MD056611
      D**##INPT**     E                     EXTFLD(AIINPT)                                   MD056611
      D  ##INPT         S              4                                                     MD056611
@@ -67,6 +77,9 @@
 
      C                   EXSR      FILLSB
 
+     C                   MOVE      NARR1         HEADER1                                   AR1058381
+     C                   MOVE      NARR2         HEADER2                                   AR1058381
+     C                   MOVE      NARR3         FOOTER1                                   AR1058381
      C                   WRITE     SUBMESS                                                   BUG2410
      C                   WRITE     SUBFLCTL
      C*******************WRITE     SUBMESS                                                   BUG2410

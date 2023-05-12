@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GP Field Selection From Layout Maintenance')
+/*EXI *  TEXT('Midas GP Field Selection From Layout Maintenance')     *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,15 +11,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1058381          Date 11May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGP004  *CREATE    Date 23May03               *
+      *                 CGP004  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1058381 - Audit file maintenance crashes on webfaced       *
+      *              screen. Convert hardcoded column header & footer *
+      *              functions in DSPF into variables. Recompiled due *
+      *              to changes in GPAU0014DF. (Child: AR1058383)     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP004 - Audit Reporting                                     *
       *                                                               *
@@ -31,6 +36,13 @@
  
      D ERR             S             76    DIM(2) CTDATA PERRCD(1)
  
+     D NARR1           C                   'Field'                                         AR1058381
+     D NARR2           C                   'Description'                                   AR1058381
+     D NARR3           C                   'Format'                                        AR1058381
+     D NARR4           C                   'Edit Word'                                     AR1058381
+     D NARR5           C                   'CK/3=Exit, CK12=Previous, Rollup-              AR1058381
+     D                                     ,Rolldown'                                      AR1058381
+                                                                                           AR1058381
      D DATA          E DS                  EXTNAME(GPAUFDPD)
      D  ##FILE       E                     EXTFLD(AFFILE)
      D  ##RCID       E                     EXTFLD(AFRCID)
@@ -73,8 +85,14 @@
  
      C                   EXSR      FILLSB
  
+     C                   MOVE      NARR1         HEADER1                                   AR1058381
+     C                   MOVE      NARR2         HEADER2                                   AR1058381
+     C                   MOVE      NARR3         HEADER3                                   AR1058381
+     C                   MOVE      NARR4         HEADER4                                   AR1058381
+     C                   MOVE      NARR5         FOOTER1                                   AR1058381
+     C                   WRITE     SUBMESS                                                 AR1058381
      C                   WRITE     SUBFLCTL
-     C                   WRITE     SUBMESS
+     C**********         WRITE     SUBMESS                                                 AR1058381
      C                   READ      SUBFLCTL                               99    *
      C                   MOVEL     *BLANK        DDERR
  

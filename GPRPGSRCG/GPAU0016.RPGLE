@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GP Action Selection - 2')
+/*EXI *  TEXT('Midas GP Action Selection - 2')                        *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,15 +11,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1058381          Date 11May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGP004  *CREATE    Date 23May03               *
+      *                 CGP004  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1058381 - Audit file maintenance crashes on webfaced       *
+      *              screen. Convert hardcoded column header & footer *
+      *              functions in DSPF into variables. Recompiled due *
+      *              to changes in GPAU0016DF. (Child: AR1058383)     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP004 - Audit Reporting                                     *
       *                                                               *
@@ -35,6 +40,13 @@
  
      D ERR             S             76    DIM(9) CTDATA PERRCD(1)
  
+     D NARR1           C                   '      Field      Name             -            AR1058381
+     D                                                              Edit Size -
+     D                                              '
+                                                                                           AR1058381
+     D NARR2           C                   'CK/3=Exit, CK/6=Update,'                       AR1058381
+     D NARR3           C                   'CK/12=Abandon'                                 AR1058381
+                                                                                           AR1058381
      D                 DS
      D  F_DATA                 1     46
      D  AFSIAO                 1      3
@@ -74,6 +86,9 @@
       *****************************************************************
      C     DSPLAY        BEGSR
  
+     C                   MOVE      NARR1         HEADER1                                   AR1058381
+     C                   MOVE      NARR2         FOOTER1                                   AR1058381
+     C                   MOVE      NARR3         FOOTER2                                   AR1058381
      C                   WRITE     SUBFLCT1
      C                   WRITE     SUBFLCT2
      C                   WRITE     SUBMESS

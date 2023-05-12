@@ -628,7 +628,7 @@
       ** Pass path and streamfile name to encoding conversion program.                        BA6020
       ** This is to workaround a downstream application that isn't handling UTF-16 properly.  BA6020
       *                                                                                       BA6020
-     C                   CALL      'A6C000002'                                                GSH002
+     C                   CALL      'A6C000002'                                                BA6020
      C                   PARM                    CMLODI                                       BA6020
      C                   PARM                    SavedStmfName                                BA6020
       *                                                                                       BA6020

@@ -152,9 +152,6 @@
      D NewFilRcd2    E DS                  EXTNAME(A6NW94PD)                                  BA6026
       ** New Network Account MT94x Details Extension File                                     BA6026
       *                                                                                       BA6026
-     D*DsNWRK****    E DS                  EXTNAME(SDNWRKPD)                                  BA6026
-      ** Network details record format data structure                                         BA6026
-      *                                                                                       BA6026
 
      D ScrLayout     E DS                  EXTNAME(ME002322DF:ME002322F2)
       ** Detail 2 Screen Layout

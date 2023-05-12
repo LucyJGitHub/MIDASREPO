@@ -231,7 +231,7 @@
       *
  X2  C                   WHEN      CurFormat = 1
      C                   CALLB     'ME002320'    PME00232x
-     C
+
  B3  C                   IF        ActionCode = 'A'
      C                   EVAL      PrvFilRcd = NewFilRcd
      C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061359           Date 03May23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD040199           Date 05Aug16               *
       *                 MD033870           Date 17Apr15               *
       *                 AR1023850          Date 25Nov14               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061359 - Issue on Customer Details Retrieval               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -86,6 +88,8 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
 
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD061359
+                                                                                            MD061359
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       * FILE RECEIVE INSTRUCTIONS
 
@@ -516,15 +520,18 @@
      C     @@WK06        IFNE      *ZEROS
      C     @@WK06        ANDNE     *BLANKS
      C*
-     C                   CALLB     'AOCUSTR0'
+     C**********         CALLB     'AOCUSTR0'                                               MD061359
+     C                   CALLB     'AOCUSTR1'                                               MD061359
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      @@WK06        @KEY1            10
      C                   PARM      *BLANKS       @KYST             7
-     C     SDCUST        PARM      SDCUST        DSSDY
+     C*****SDCUST        PARM      SDCUST        DSSDY                                      MD061359
+     C     SDCUST        PARM      SDCUST        DSLDY                                      MD061359
      C*
      C     @RTCD         IFEQ      *BLANKS
      C     @KYST         ANDNE     '*ERROR '
+     C     BBCLST        OREQ      'Y'                                                      MD061359
      C**********         MOVEL     BBCSSN        @@WK10                                     MD026923
      C                   EVAL      @@WK10 = BBCUST                                          MD026923
      C                   MOVEL     'CUSTNUM'     @PARTY                                      CSF011A

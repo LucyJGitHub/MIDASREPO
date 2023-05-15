@@ -14,8 +14,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD061343           Date 03May23               *
+      *  Prev Amend No. MD061164           Date 03May23               *
+      *                 CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 252771             Date 04Sep19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -97,6 +99,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD061343 - Rollover Advice LE1170 does not fit the paper     *
+      *             Formalise codes introduced by EENHAC3.            *
+      *           - EENHAC3 - Recompile due to shifted text in PRTF   *
+      *             to be able to fit in page.                        *
+      *  MD061164 - LE ARR - Forward rates and new report changes.    *
+      *             Formalise codes introduced by EENHAC.             *
+      *           - EENHAC - Include text relating to ARR at the end  *
+      *             of the conf                                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  252771 - Align name to the left and if customer 1 and        *
@@ -221,6 +231,7 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      FLE1170AUO   E                    PRINTER      KINFDS SPOOLU
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE1170FFP1                                           S01408
+     FXXCTXTPDIF  E                    DISK                           UC                    MD061164
      F*                                                                   S01408
      F*
      F/EJECT
@@ -2481,6 +2492,26 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      C*
      C** Output the confirmation
      C/COPY WNCPYSRC,LE1170C004
+      ** Check if loan is linked to backward looking base rate and if so, output the        MD061164
+      ** text related to an ARR loan                                                        MD061164
+     C                     MOVE *IN79     WIN79   1                                         MD061164
+     C                     SETOF                     7986                                   MD061164
+     C                     MOVE CCY       KEY1                                              MD061164
+     C                     MOVE BRTT      KEY2                                              MD061164
+     C                     CALL 'AOBSRTR0'PLIST1                                            MD061164
+     C*                                                                                     MD061164
+     C           @RTCD     IFEQ *BLANKS                                                     MD061164
+     C           BABLRT    ANDEQ'Y'                                                         MD061164
+     C                     OPEN XXCTXTPD                                                    MD061164
+     C                     READ XXCTXTPD                 79                                 MD061164
+     C           *IN79     IFEQ *OFF                                                        MD061164
+     C                     SETON                     86                                     MD061164
+     C                     ENDIF                                                            MD061164
+      *                                                                                     MD061164
+     C                     CLOSEXXCTXTPD                                                    MD061164
+     C                     ENDIF                                                            MD061164
+     C                     MOVE WIN79     *IN79                                             MD061164
+      *                                                                                     MD061164
      C*
      C           CLE006    IFEQ 'Y'                                       CLE006
      C           AMTP      ANDEQ'MC'                                      CLE006
@@ -2491,7 +2522,11 @@ T    F*  109192 - Rollover confirmation is being generated for next   *
      C                     WRITELE1170D2                                  CLE006
      C                     ELSE                                           CLE006
      C***********          WRITELE1170D1                                  107431
+     C           *IN86     IFEQ *ON                                                         MD061164
+     C                     WRITELE1170DA               70                                   MD061164
+     C                     ELSE                                                             MD061164
      C                     WRITELE1170D1               70                 107431
+     C                     ENDIF                                                            MD061164
      C                     ENDIF                                          CLE006
      C/COPY WNCPYSRC,LE1170C005
      C*

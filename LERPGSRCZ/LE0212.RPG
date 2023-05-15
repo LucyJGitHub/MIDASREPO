@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058222           Date 08Jul21               *
-      *  Prev Amend No. MD058102           Date 09Jun21               *
+      *  Last Amend No. MD061164           Date 03May23               *
+      *  Prev Amend No. MD058222           Date 08Jul21               *
+      *                 MD058102           Date 09Jun21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 241243             Date 07Mar08               *
@@ -299,6 +300,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061164 - LE ARR - Forward rates and new report changes.    *
+      *             Formalise codes introduced by ARRLOA.             *
+      *           - ARRLOA - Pick up future BR changes related to ARR *
+      *             when in the rates known period and correctly      *
+      *             calculate next interest amount                    *
       *  MD058222 - Interest payment not displayed on LOAC with zero  *
       *             amount. Introduce system value ZeroFutIntPayInLOAC*
       *             which determines whether to display or to suppress*
@@ -968,9 +974,10 @@
      FLE0212DFCF  E                    WORKSTN
      F                                              KSLN   VSLN
      FHISTR   IF  E           K        DISK
-     FLOAMS   IF  E           K        DISK
-     F            LOAMSDHF                          KIGNORE
-     F            LOAMSZ1F                          KIGNORE
+     F***LOAMS   IF  E           K        DISK                                              MD061164
+     F**********   LOAMSDHF                          KIGNORE                                MD061164
+     F**********   LOAMSZ1F                          KIGNORE                                MD061164
+     FLOBR    IF  E           K        DISK                                                 MD061164
      FCLOAN   IF  E           K        DISK
      F            CLOANHHF                          KIGNORE
      F            CLOANZ1F                          KIGNORE
@@ -1171,6 +1178,35 @@
      I**********    XAVD                            XAVDL                              242852 257301
      I              GASS                            GASSL                                     247071
      I              LASN                            LASNL                                     CLE134
+     ILOBRDKF                                                                               MD061164
+      ** Rename loan amendment fields                                                       MD061164
+     I              LNRF                            LNRFL                                   MD061164
+     I              CNUM                            CNUML                                   MD061164
+     I              VDAT                            VDATL                                   MD061164
+     I              AMTP                            AMTPL                                   MD061164
+     I              BRTT                            BRTTL                                   MD061164
+     I              RTSP                            RTSPL                                   MD061164
+     I              CCY                             CCYL                                    MD061164
+     I              PRAM                            PRAML                                   MD061164
+     I              INTA                            INTAL                                   MD061164
+     I              WTXA                            WTXAL                                   MD061164
+     I              FEAM                            FEAML                                   MD061164
+     I              TAMT                            TAMTL                                   MD061164
+     I              BRCA                            BRCAL                                   MD061164
+     I              REPT                            REPTL                                   MD061164
+     I              STAI                            STAIL                                   MD061164
+     I              SETP                            SETPL                                   MD061164
+     I              BRTE                            BRTEL                                   MD061164
+     I              SPIN                            SPINL                                   MD061164
+     I              INTC                            INTCL                                   MD061164
+     I              ORED                            OREDL                                   MD061164
+     I              IRCF                            IRCFL                                   MD061164
+     I              LCD                             LCDL                                    MD061164
+     I              ROLN                            ROLNL                                   MD061164
+     I              PDDI                            PDDIL                                   MD061164
+     I              PTDI                            PTDIL                                   MD061164
+     I              AUTO                            AUTOL                                   MD061164
+     I              XAVD                            XAVDL                                   MD061164
       *
      ICLOANCLF                                                            157635
       *                                                                   157635
@@ -1639,8 +1675,10 @@
       *                                                                                       260221
      C                     MOVE '0'       *IN35                                               260221
      C                     MOVE '0'       *IN36                                               260221
-     C           LNRF      SETLLLOAMS                                                         260221
-     C           LNRF      READELOAMS                    34                                   260221
+     C********** LNRF      SETLLLOAMS                                                260221 MD061164
+     C********** LNRF      READELOAMS                    34                          260221 MD061164
+     C           LNRF      SETLLLOBR                                                        MD061164
+     C           LNRF      READELOBR                     34                                 MD061164
      C           *IN34     DOWEQ'0'                                                           260221
      C           AMTPL     IFEQ 'MR'                                                          260221
      C           INTAL     ANDNE0                                                             260221
@@ -1654,13 +1692,16 @@
      C           NIDT      ANDEQVDATL                                                         260221
      C                     MOVE '1'       *IN36                                               260221
      C                     ENDIF                                                              260221
-     C           LNRF      READELOAMS                    34                                   260221
+     C********** LNRF      READELOAMS                    34                          260221 MD061164
+     C           LNRF      READELOBR                     34                                 MD061164
      C                     ENDDO                                                              260221
       *
-     C           LNRF      SETLLLOAMS
+     C********** LNRF      SETLLLOAMS                                                       MD061164
+     C           LNRF      SETLLLOBR                                                        MD061164
      C           *IN34     DOUEQ'1'
      C           RECI      OREQ 'D'
-     C           LNRF      READELOAMS                    34
+     C********** LNRF      READELOAMS                    34                                 MD061164
+     C           LNRF      READELOBR                     34                                 MD061164
      C                     ENDDO
      C           *IN34     IFEQ '1'
      C                     Z-ADD99999     VDATL
@@ -5757,6 +5798,10 @@
      C**********           ENDIF                                                     239062 AR698122
       *                                                                                       239062
      C                     EXSR SRNEWI
+      *                                                                                     MD061164
+     C           AMTPL     WHEQ 'BR'                                                        MD061164
+     C                     Z-ADDBRTEL     WCUBR                                             MD061164
+     C                     EXSR SRNEWI                                                      MD061164
       *
      C           AMTPL     WHEQ 'SC'
       * Only process Spread Changes that amended the interest spread rate                     248506
@@ -5809,7 +5854,8 @@
      C           *IN34     IFEQ '0'
      C           *IN34     DOUEQ'1'
      C           RECI      OREQ 'D'
-     C           LNRF      READELOAMS                    34
+     C********** LNRF      READELOAMS                    34                                 MD061164
+     C           LNRF      READELOBR                     34                                 MD061164
      C                     ENDDO
      C           *IN34     IFEQ '1'
      C                     Z-ADD99999     VDATL
@@ -5828,7 +5874,8 @@
      C                     ELSE                                                               190638
      C           *IN34     DOUEQ'1'                                                           190638
      C           RECI      OREQ 'D'                                                           190638
-     C           LNRF      READELOAMS                    34                                   190638
+     C********** LNRF      READELOAMS                    34                          190638 MD061164
+     C           LNRF      READELOBR                     34                                 MD061164
      C                     ENDDO                                                              190638
      C           *IN34     IFEQ '1'                                                           190638
      C                     Z-ADD99999     VDATL                                               190638
@@ -5944,6 +5991,35 @@
      C                     ENDIF                                                            MD058102
      C                     MOVE *BLANKS   ZFIELD                                            AR742875
      C                     EXSR SRDISL
+      *                                                                                     MD061164 
+     C           AMTPL     WHEQ 'BR'                                                        MD061164
+     C                     MOVEL*BLANKS   SNARR                                             MD061164
+     C                     MOVEL'LEE0015' ZAMSID                                            MD061164
+     C                     EXSR SRTEXT                                                      MD061164
+     C                     MOVELZAMSTX    SNARR                                             MD061164
+      *                                                                                     MD061164
+     C           BRTEL     IFLT 0                                                           MD061164
+     C                     MOVE 'Y'       WSUB                                              MD061164
+     C                     Z-SUBBRTEL     BRTEL                                             MD061164
+     C                     ENDIF                                                            MD061164
+      *                                                                                     MD061164
+     C                     MOVE BRTEL     ZFIELD                                            MD061164
+     C                     Z-ADD7         ZADEC                                             MD061164
+     C                     EXSR ZEDIT                                                       MD061164
+      *                                                                                     MD061164
+     C           WSUB      IFEQ 'Y'                                                         MD061164
+     C                     MOVE *BLANKS   WSUB                                              MD061164
+     C                     MOVE ZFIELD    WFLD1                                             MD061164
+     C           WFLD1     CAT  '-'       WFLD2                                             MD061164
+     C                     MOVE WFLD2     SAMNT                                             MD061164
+     C                     Z-SUBBRTEL     BRTEL                                             MD061164
+     C                     ELSE                                                             MD061164
+     C                     MOVE ZFIELD    SAMNT                                             MD061164
+     C                     ENDIF                                                            MD061164
+      *                                                                                     MD061164
+     C                     MOVE ZFIELD    SAMNT                                             MD061164
+     C                     MOVE *BLANKS   ZFIELD                                            MD061164
+     C                     EXSR SRDISL                                                      MD061164
       *
       ** Manual Repayment - principal
       *

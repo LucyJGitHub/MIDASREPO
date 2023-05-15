@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060424           Date 22Feb23               *
-      *  Prev Amend No. MD059190           Date 08Nov21               *
+      *  Last Amend No. MD061164           Date 03May23               *
+      *  Prev Amend No. MD060424           Date 22Feb23               *
+      *                 MD059190           Date 08Nov21               *
       *                 MD059137           Date 29Oct21               *
       *                 MD059128           Date 28Oct21               *
       *                 MD058708           Date 31Aug21               *
@@ -34,6 +35,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061164 - LE ARR - Forward rates and new report changes.    *
+      *             Formalise codes introduced by ATHOTFIX, MDNNNNNN, *
+      *             and ARRLOR.                                       *
+      *           - ATHOTFIX - Hotfix for Rates Known. Reverse some   *
+      *             codes by MDNNNNNN and replace MidasDay with BJRDNB*
+      *           - MDNNNNNN - Hotfix for Rates Known.                *
+      *           - ARRLOR - Loan advice including forward valued     *
+      *             rates                                             *
       *  MD060424 - No rate extracted from ARR calculator. Use NMDT as*
       *             end date of ARR call parameter, else use MDAT.    *
       *  MD059190 - Do a second call of ARR calculator for existing   *
@@ -265,6 +274,7 @@
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
+     D SysDate         S               D   DATFMT(*ISO)                                     MDNNNNNN
 
       *****************************************************************
       /EJECT
@@ -656,6 +666,19 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
+      ** Start of MD061164
+     C                   If        RatesKnown = 'Y'
+     C/exec SQL
+     C+ insert into XXRTKNTD
+     C+    ( FMODID
+     C+     ,FTRNID )
+     C+ values
+     C+ ('LE'
+     C+     ,:TransREF )
+     C/end-exec
+     C                   ENDIF
+      ** End of MD061164
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -851,10 +874,13 @@
      C                   ENDIF
 
       ** Get the starting date of the Rates Known Window
-      ** Rates Known Date = Interest Period End Date minus
-      ** (Lookback + Lockout) plus Publication Lag Days
+      ***Rates*Known*Date*=*Interest*Period*End*Date*minus**********************************MD061164
+      ***(Lookback*+*Lockout)*plus*Publication*Lag*Days*************************************MD061164
+      ** Rates Known Date = Interest Payment Date minus                                     MD061164
+      ** (1-day + Lookback + Lockout) plus Publication Lag Days                             MD061164
      C                   EVAL      RTKNDate = 0
-     C                   EVAL      SumLBLO = TrLBDY + TrLODY
+     C**********         EVAL      SumLBLO = TrLBDY + TrLODY                                MD061164
+     C                   EVAL      SumLBLO = TrLBDY + TrLODY + 1                            MD061164
 
      C                   MOVEL     TrCCY         ZCCY              3
      C                   MOVEL     *BLANKS       ZLOC              3
@@ -873,17 +899,33 @@
 
      C                   EVAL      RTKNDate = ZDYNBR
 
+      ** Retrieve current system date and time                                              MD061164
+     C***********        EVAL      SysDate = %date()                                        MD061164
+     C***********        EVAL      CurrDate = %dec(SysDate:*MDY)                            MD061164
+     C                   EVAL      CurrTime = %char(%time():*HMS)                           MD061164
+      ***Convert*to*Midas*Day                                                               MD061164
+     C***********        CALL      'ZDATE1'                                                 MD061164
+     C***********        PARM                    ReturnCde         7                        MD061164
+     C***********        PARM                    CurrDate          6 0                      MD061164
+     C***********        PARM      'M'           DatFmt            1                        MD061164
+     C***********        PARM      *ZEROS        MidasDay          5 0                      MD061164
+                                                                                            MD061164
       ** Set the Rates Known flag if the computed Rates Known Date has
       ** passed the system date and the reference rate publication time
+     C***********        IF        RTKNDate < MidasDay or                                   MD061164
+     C***********                  (RTKNDate = MidasDay and PublTime < CurrTime)            MD061164
+     C                   IF        RTKNDate < BJRDNB or                                     MD061164
+     C                             (RTKNDate = BJRDNB and PublTime < CurrTime)              MD061164
+     C                   EVAL      RatesKnown = 'Y'                                         MD061164
      C**********         IF        RTKNDate <= BJRDNB and                                   MD058040
-     C                   IF        RTKNDate <= EventCtrlDate and                            MD058040
-     C                             RTKNDate <> 0
-     C                   EVAL      RatesKnown = 'Y'
-     C                   EVAL      CurrTime = %char(%time():*HMS)
-     C                   IF        RTKNDate = BJRDNB and
-     C                             PublTime > CurrTime
-     C                   EVAL      RatesKnown = 'N'
-     C                   ENDIF
+     C**********         IF        RTKNDate <= EventCtrlDate and                   MD058040 MD061164
+     C**********                   RTKNDate <> 0                                            MD061164
+     C**********         EVAL      RatesKnown = 'Y'                                         MD061164
+     C**********         EVAL      CurrTime = %char(%time():*HMS)                           MD061164
+     C**********         IF        RTKNDate = BJRDNB and                                    MD061164
+     C**********                   PublTime > CurrTime                                      MD061164
+     C**********         EVAL      RatesKnown = 'N'                                         MD061164
+     C**********         ENDIF                                                              MD061164
      C                   ENDIF
 
      C                   ENDSR

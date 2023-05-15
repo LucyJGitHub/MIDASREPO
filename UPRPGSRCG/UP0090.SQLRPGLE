@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSW101               Date 03Feb23             *
-      *  Prev Amend No. MD060964             Date 24Jan23             *
+      *  Last Amend No. MD061274             Date 09May23             *
+      *  Prev Amend No. CSW101               Date 03Feb23             *
+      *                 MD060964             Date 24Jan23             *
       *                 MD060352             Date 22Aug22             *
       *                 MD058188             Date 11May21             *
       *                 MD060008             Date 11May21             *
@@ -103,6 +104,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061274 - Deliverable Data Split for SDARRTTD               *
       *  CSW101 - PAYplus Interface.                                  *
       *  MD060964 - Program does not compile                          *
       *  MD060352 - Deliverable Data Split for GP/SCRELCTD            *
@@ -1334,6 +1336,7 @@
      C                             or ChkFile = 'SDNWKXTD'                                  MD058830
      C                             or ChkFile = 'SDNW1XTD'                                  MD058830
      C                             or ChkFile = 'SDLIBXTD'                                  MD060008
+     C                             or ChkFile = 'SDARRXTD'                                  MD061274
      C                             or ChkFile = 'GPACSXTD'                                  MD058188
      C                             or ChkFile = 'GPACXXTD'                                  MD058188
      C                             or ChkFile = 'GPCTRXTD'                                  MD058188
@@ -1711,6 +1714,7 @@
      C                             or Member = 'SDNWKCTD'                                   MD058830
      C                             or Member = 'SDNW1CTD'                                   MD058830
      C                             or Member = 'SDLIBCTD'                                   MD060008
+     C                             or Member = 'SDARRCTD'                                   MD061274
      C                             or Member = 'SCRELCTD'                                   MD060352
      C                             or Member = 'SDIDCCTD'                                     CSW101
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264

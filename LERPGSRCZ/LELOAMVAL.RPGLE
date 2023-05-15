@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057191           Date 02Dec20               *
-      *  Prev Amend No. MD054876           Date 26Aug20               *
+      *  Last Amend No. MD060729           Date 15May23               *
+      *  Prev Amend No. MD057537           Date 15May23               *
+      *                 MD057191           Date 02Dec20               *
+      *                 MD054876           Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
@@ -101,6 +103,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060729 - Warning message is still displayed even if        *
+      *             principal amount is less than the ten billion     *
+      *             threshold.Format the Ten Billion constant to      *
+      *             consider the loan currency no. of decimal places. *
+      *             Applied for MD051151                              *
+      *  MD057537 - Return a warning message when the total of        *
+      *             principal amount and event amount exceeds ten     *
+      *             billion.                                          *
+      *             Applied for MD051151                              *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *
       *           - DL ICD must not be used, removed unnecessary codes*
@@ -599,6 +610,7 @@
      D CLE158          S              1A                                                      CLE158
      D NDayFwd         S              2S 0 INZ(0)                                             CLE158
      D @VDAYNO         S              5S 0                                                    CLE158
+     D WrkTenB         S             15P 0                                                  MD060729
 
       /COPY WNCPYSRC,LELOAMV002
 
@@ -628,6 +640,8 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
+      *                                                                                     MD057537
+     D TenBillion      C                   CONST(10000000000)                               MD057537
       ** +--------------------------------------+
       ** | End of D-specs                       |
       ** | ==============                       |
@@ -2586,6 +2600,22 @@
      C                   MOVEL     'LEA0190'     MsgIdArr(Idx)
      C                   ENDIF
       *
+     C     DDATYP        IFEQ      'PI'                                                     MD057537
+      *                                                                                     MD057537
+     C                   Z-ADD     0             HLAMT            13 0                      MD057537
+     C     SVCPAM        ADD       WLAMT         HLAMT                                      MD057537
+     C                   EVAL      WrkTenB = TenBillion * (10**CDPL)                        MD060729
+      *                                                                                     MD057537
+     C*****HLAMT         IFGT      TenBillion                                      MD057537 MD060729
+     C     HLAMT         IFGT      WrkTenB                                                  MD060729
+     C                   MOVE      'W'           DDAMNTOK                                   MD057537
+     C                   ADD       1             WIdx                                       MD057537
+     C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'                              MD057537
+     C                   EVAL      WMsgIDArr(WIdx)  = '5049551'                             MD057537
+     C                   ENDIF                                                              MD057537
+      *                                                                                     MD057537
+     C                   ENDIF                                                              MD057537
+      *                                                                                     MD057537
       ** Check amount against the current principal amount of SVOLNO
       ** Only if amendment is against a participation sold
      C     SVPTYP        IFNE      64

@@ -139,10 +139,6 @@
      F***NTRAN1**  IF   E           K DISK                      INFSR(*PSSR)       MD034442 MD036398
      FNTRAN     IF   E           K DISK                      INFSR(*PSSR)                   MD036398
       ** Midas FT Nostro Transfer Transactions.                                             MD034442
-     F*LELOANL1* IF   E           K DISK                      INFSR(*PSSR)        MD026616 MD026616A
-      ***Midas*LE*Loans*File*******************************************           MD026616 MD026616A
-     F**********                           RENAME(CLOANCLF:CLOANCLL)              MD026616 MD026616A
-     F**********                           PREFIX(LE_)                            MD026616 MD026616A
      FDEALS     IF   E           K DISK                      INFSR(*PSSR)                   MD026616
       ** Midas Dealing File                                                                 MD026616
      F                                     PREFIX(DL_)                                      MD026616
@@ -308,7 +304,6 @@
      D CMG009          S              1                                         CMG009 flag   CMG009
      D KeyLNRF         S                   LIKE(CL_LNRF)                                   MD026616A
      D KeyRCDT         S                   LIKE(CL_RCDT) INZ('A')                          MD026616A
-     D*KItemNo**       S                   LIKE(LE_LNRF)                          MD026616 MD026616A
      D KItemNo         S                   LIKE(DL_DLNO)                                   MD026616A
       ** Input Specs
       ** -----------
@@ -658,13 +653,10 @@ e1   C                   Endsl                                                  
      C                   ENDIF                                                              MD026616
      C                   WHEN      TrModule(TrIdx) = 'LE'                       Lending Module
      C                   EVAL      GLDLREF = 'L' + TNMR                         loan reference
-     C**********         MOVE      TNMR          KItemNo                          MD026616 MD026616A
-     C*****KItemNo       CHAIN     LELOANL1                           99          MD026616 MD026616A
      C                   MOVE      TNMR          KeyLNRF                                   MD026616A
      C     KeyCLOAN      CHAIN     CLOANCLF                           99                   MD026616A
      C                   IF        NOT *IN99                                                MD026616
-     C**********         EVAL      GLDBCNUM = LE_CNUM                             MD026616 MD026616A
-     C                   EVAL      GLDBCNUM = CL_CNUM                             MD026616 MD026616A
+     C                   EVAL      GLDBCNUM = CL_CNUM                                      MD026616A
      C                   ENDIF                                                              MD026616
      C                   ENDSL
      C                   EVAL      GLPREF  = FUND                               PAYMENT REF

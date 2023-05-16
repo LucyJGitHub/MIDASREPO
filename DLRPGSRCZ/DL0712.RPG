@@ -12,8 +12,10 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0008 F*                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR948875A          Date 08May23               *
+      *  Prev Amend No. AR948875           Date 08May23               *
+      *                 MD058815           Date 28Sep21               *
+      *                 CSD103             Date 10Aug20               *
       *                 260405             Date 04Apr20               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -83,6 +85,12 @@
 0010 F*                                                                  *
 0011 F********************************************************************
 0011 F*                                                               *
+      *  AR948875A - First deal in process does not check CDL033      *
+      *              feature. (Child: AR948878)                       *
+      *           - Applied for MD023985                              *
+      *  AR948875 - Used INTR as interest rate from DEALSDC instead of*
+      *             rate in EVNTXED. (Child: AR948878)                *
+      *           - Applied for MD023985                              *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -494,6 +502,50 @@
      C                     EXSR *PSSR
      C                     GOTO END
      C                     END
+      *                                                                                    AR948875A
+      ** Check for CDL033 when it is the first cycle since tag                             AR948875A
+      ** NOTFC is not yet called.                                                          AR948875A
+      *                                                                                    AR948875A
+     C           *IN20     IFEQ *OFF                                                       AR948875A
+     C                     MOVE 'N'       CDL033  1                                        AR948875A
+      *                                                                                    AR948875A
+     C                     CALL 'AOSARDR0'                                                 AR948875A
+     C                     PARM '       ' WRTCD                                            AR948875A
+     C                     PARM '*VERIFY' WOPTN                                            AR948875A
+     C                     PARM 'CDL033'  WSARD                                            AR948875A
+     C           SCSARD    PARM SCSARD    DSFDY                                            AR948875A
+      *                                                                                    AR948875A
+     C           WRTCD     IFEQ *BLANKS                                                    AR948875A
+     C                     MOVE 'Y'       CDL033                                           AR948875A
+     C                     ENDIF                                                           AR948875A
+      *                                                                                    AR948875A
+     C           WRTCD     IFNE *BLANKS                                                    AR948875A
+     C           WRTCD     ANDNE'*NRF  '                                                   AR948875A
+     C                     MOVEL'SCSARDPD'DBFILE                                           AR948875A
+     C                     MOVEL'17'      DBASE                                            AR948875A
+     C                     MOVELWOPTN     DBKEY                                            AR948875A
+     C                     SETON                     U7U8LR                                AR948875A
+     C                     EXSR *PSSR                                                      AR948875A
+     C                     GOTO END                                                        AR948875A
+     C                     ENDIF                                                           AR948875A
+     C                     ENDIF                                                           AR948875A
+      *                                                                                     AR948875
+      ** Check for CDL033 and CF, CI, IT, IP, TI, and TD deals.                             AR948875
+      *                                                                                     AR948875
+     C           CDL033    IFEQ 'Y'                                                         AR948875
+     C           DTYP      ANDEQ'CF'                                                        AR948875
+     C           CDL033    OREQ 'Y'                                                         AR948875
+     C           DTYP      ANDEQ'CI'                                                        AR948875
+     C           CDL033    OREQ 'Y'                                                         AR948875
+     C           DTYP      ANDEQ'IT'                                                        AR948875
+     C           CDL033    OREQ 'Y'                                                         AR948875
+     C           DTYP      ANDEQ'IP'                                                        AR948875
+     C           CDL033    OREQ 'Y'                                                         AR948875
+     C           DTYP      ANDEQ'TD'                                                        AR948875
+     C           CDL033    OREQ 'Y'                                                         AR948875
+     C           DTYP      ANDEQ'TI'                                                        AR948875
+     C                     Z-ADDINTR      EXRT                                              AR948875
+     C                     ENDIF                                                            AR948875
      C*                                                                   084827
      C/COPY WNCPYSRC,DL0712C014
      C* For Accepted/Discounted bills (TA), Discounted bills (BA)         084827
@@ -695,6 +747,29 @@
      C                     Z-SUB99999     FIDMDT  50                      CDL006
      C                     MOVE *LOVAL    FICOBB  3                       CDL006
      C                     ENDIF                                          CDL006
+      ** Check if CDL033 is switched on.                                                    AR948875
+      *                                                                                     AR948875
+     C                     MOVE 'N'       CDL033  1                                         AR948875
+      *                                                                                     AR948875
+     C                     CALL 'AOSARDR0'                                                  AR948875
+     C                     PARM '       ' WRTCD                                             AR948875
+     C                     PARM '*VERIFY' WOPTN                                             AR948875
+     C                     PARM 'CDL033'  WSARD                                             AR948875
+     C           SCSARD    PARM SCSARD    DSFDY                                             AR948875
+      *                                                                                     AR948875
+     C           WRTCD     IFEQ *BLANKS                                                     AR948875
+     C                     MOVE 'Y'       CDL033                                            AR948875
+     C                     ENDIF                                                            AR948875
+      *                                                                                     AR948875
+     C           WRTCD     IFNE *BLANKS                                                     AR948875
+     C           WRTCD     ANDNE'*NRF  '                                                    AR948875
+     C                     MOVEL'SCSARDPD'DBFILE                                            AR948875
+     C                     MOVEL'17'      DBASE                                             AR948875
+     C                     MOVELWOPTN     DBKEY                                             AR948875
+     C                     SETON                     U7U8LR                                 AR948875
+     C                     EXSR *PSSR                                                       AR948875
+     C                     GOTO END                                                         AR948875
+     C                     ENDIF                                                            AR948875
       *                                                                   CDL006
      C/COPY WNCPYSRC,DLH00078
      C*                                                                   S01383

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060683           Date 15Feb23               *
-      *  Prev Amend No. MD059183A          Date 21Dec21               *
+      *  Last Amend No. MD021868           Date 08May23               *
+      *  Prev Amend No. MD060683           Date 15Feb23               *
+      *                 MD059183A          Date 21Dec21               *
       *                 MD059183           Date 11Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
@@ -71,6 +72,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021868 - Default the cashflow amount when control date is  *
+      *             being defaulted.                                  *
       *  MD060683 - Unable to Authorize newly inserted Single         *
       *             Currency IRS deal                                 *
       *  MD059183A- Values entered in Our/Their Int Payment           *
@@ -810,9 +813,11 @@
      C                                         OPDATEAST +TRDATEAST                         MD059183
      C                                         +TPDATEAST                                   MD056546
      C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:485)+OCFSAST         MD056546 MD059183
-     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:386)+OCFSAST                  MD059183
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:386)+OCFSAST         MD059183 MD021868
+     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:385)+OCFSAST                  MD021868
      C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5684)+TCFSAST          MD056546 MD059183
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5586) +                         MD059183
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5586) +                MD059183 MD021868
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5584) +                         MD021868
      C                             TCFSAST                                                  MD059183
      C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2483)                  MD056546 MD059183
      C                   EVAL      BufferEx5=%SUBST(TCFSAST:2385) +                         MD059183

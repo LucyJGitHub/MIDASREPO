@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060788           Date 08May23               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -67,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060788 - Records in the Interest Rate Payment and Interest *
+      *             Rate Change Schedule tabs are missing upon        *
+      *             Authorisation of a TD/ CF deal                    *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -562,9 +566,12 @@
      C**********                              + RatDateDS + PayDateDS               CSF011 AR1060863
      C**********         EVAL      BufferEx3 = %SUBST(PayDateDS:2885)               CSF011 AR1060863
      C**********                              + RegData + ExtData                   CSF011 AR1060863
-     C                   EVAL      BufferEx2 = %SUBST(FIDTScnRpt:2471:2281)                AR1060863
-     C                                        + RatDateDS                                  AR1060863
-     C                   EVAL      BufferEx3 = Filler3 + PayDateDS                         AR1060863
+     C**********         EVAL      BufferEx2 = %SUBST(FIDTScnRpt:2471:2281)       AR1060863 MD060788
+     C                   EVAL      BufferEx2 = %SUBST(FIDTScnRpt:2168)                      MD060788
+     C                                        + RatDateDS
+     C                                        + PayDateDS                                   MD060788
+     C**********         EVAL      BufferEx3 = Filler3 + PayDateDS                AR1060863 MD060788
+     C                   EVAL      BufferEx3 = %SUBST(PayDateDS:2615)             AR1060863 MD060788
      C                                        + RegData + ExtData                          AR1060863
 
      C                   SETON                                        LR

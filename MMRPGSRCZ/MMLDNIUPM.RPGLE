@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR690814           Date 31May22               *
-      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *  Last Amend No. MD036339           Date 08May23               *
+      *  Prev Amend No. AR690814           Date 31May22               *
+      *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057049           Date 03Nov20               *
@@ -116,6 +117,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036339 - DL Error amending Maturity date.                  *
+      *           - Ensure Interest rate field is updated when Short  *
+      *             Term rate is amended.                             *
       *  AR690814 - Unable to authorise Internal Funding Deals in WIP *
       *             Set ID,IL deals as auto authorise                 *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
@@ -1686,6 +1690,16 @@
       *                                                                                       CDL033
      C     CDL033        IFEQ      'Y'                                                        CDL033
      C     IKMTYP        ANDEQ     'CF'                                                       CDL033
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'CI'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'IP'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'IT'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'TI'                                                     MD036339
+     C     CDL033        OREQ      'Y'                                                      MD036339
+     C     IKMTYP        ANDEQ     'TD'                                                     MD036339
      C                   Z-ADD     IKINTR        HKINTR                                       CDL033
      C                   ENDIF                                                                CDL033
       **

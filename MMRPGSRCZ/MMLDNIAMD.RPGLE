@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR797731           Date 02Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD044305           Date 08May23               *
+      *  Prev Amend No. AR797731           Date 02Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Mar15               *
@@ -81,6 +82,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044305 - Allow amendment of interest payment frequency and *
+      *             interest payment day in no for all deal types and *
+      *             status when HHINTA is Y. When HHINTA is N, only   *
+      *             allow amendment of said fields for incomplete and *
+      *             complete deal status - except for call deals,     *
+      *             demand loans, and fiduciary deals wherein these   *
+      *             fields are always amendable.                      *
       *  AR797731 - Error in the MM Maintenance Screen. Reverse       *
       *             BUG5169. Part of CDL020's functionality is to     *
       *             give the user option to amend the system          *
@@ -1095,7 +1103,10 @@
      C* Interest Payment Frequency              *
      C*-----------------------------------------*
      C**  This field is not amendable for R and A status deals,
-     C**  and is only amendable for status C if this is indicated on
+     C****and*is*only*amendable*for*status*C if*this*is*indicated*on************            MD044305
+     C**  if interest details amendable indicator is N, and                                 MD044305
+     C**  if deals are not call, demand loan, or fiduciary.                                 MD044305
+     C**  It is amendable for all deal types and status when indicator is Y on              MD044305
      C**  MMCDAFLL.
      C*
      C     HKDSTS        IFNE      'C'
@@ -1115,7 +1126,8 @@
      C     CDL006        ANDEQ     'Y'                                          CDL006
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDIPFQ'
-     C                   EVAL      MsgIDArr(Idx)   = 'MMM0482'
+     C**********         EVAL      MsgIDArr(Idx)   = 'MMM0482'                              MD044305
+     C                   EVAL      MsgIDArr(Idx)   = '5049556'                              MD044305
      C                   EVAL      ddIPFQok        = 'N'
      C                   END
      C*
@@ -1191,8 +1203,12 @@
      C*-----------------------------------------*
      C* Interest Frequency day in Month         *
      C*-----------------------------------------*
-     C**  This field is only amendable if the deal is
-     C**  complete, and the field is designated as amendable on the
+     C****This*field*is*only*amendable*if*the*deal*is***************************            MD044305
+     C****complete,*and*the*field*is*designated*as*amendable*on*the*************            MD044305
+     C**  This field is not amendable for R and A status deals,                             MD044305
+     C**  if interest details amendable indicator is N, and                                 MD044305
+     C**  if deals are not call, demand loan, or fiduciary.                                 MD044305
+     C**  It is amendable for all deal types and status when indicator is Y on              MD044305
      C**  file MMCDAFLL.
      C*
      C     HKDSTS        IFNE      'C'
@@ -1212,7 +1228,8 @@
      C     CDL006        ANDEQ     'Y'                                          CDL006
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDIPDM'
-     C                   EVAL      MsgIDArr(Idx)   = 'MMM0486'
+     C**********         EVAL      MsgIDArr(Idx)   = 'MMM0486'                              MD044305
+     C                   EVAL      MsgIDArr(Idx)   = '5049557'                              MD044305
      C                   EVAL      ddIPDMok        = 'N'
      C                   END
      C                   ENDIF

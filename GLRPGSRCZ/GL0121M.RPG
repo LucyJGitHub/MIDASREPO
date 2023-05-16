@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250932             Date 01Dec22               *
-      *  Prev Amend No. UUC100             Date 01Dec22               *
+      *  Last Amend No. MD061268           Date 16May23               *
+      *  Prev Amend No. 250932             Date 01Dec22               *
+      *                 UUC100             Date 01Dec22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD058181           Date 28May21               *
       *                 CSD103             Date 10Aug20               *
@@ -179,6 +180,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061268 - JE Postings Maintenance GL0121M incorrectly re-   *
+      *             ports errors in uploaded batch from JE interface. *
       *  250932 - Value date of Batch Items uploaded from interface   *
       *           file changed to run date. Screen should show the    *
       *           value date held in the interface file GLJEIPPD.     *
@@ -4175,6 +4178,34 @@
      C                     ELSE                                                               246922
      C                     Z-ADDBTVLDT    #1PVDT           Prev VLDT      091729
      C                     ENDIF                                                              246922
+      *                                                                                     MD061268
+      ** Ensure screen work fields are set up correctly when F3 taken                       MD061268
+      ** and re-validation takes place since these are not cleared so                       MD061268
+      ** contain values from last subfile record processed                                  MD061268
+     C           *IN03     IFEQ *ON                        *IF                              MD061268
+     C                     MOVE *BLANKS   #RNRTV                                            MD061268
+     C           BTNVCD    IFNE *BLANK                     *IF                              MD061268
+     C                     MOVELBTNVCD    #RNRTV           Narrative                        MD061268
+     C                     ELSE                                                             MD061268
+     C                     MOVELBTNRDC    #RNRTV           Narrative                        MD061268
+     C                     END                             *FI                              MD061268
+      ** Midas Conv. Day to Date - Standard functions  *                                    MD061268
+     C                     CALL 'ZDATE2'               90  Midas Conv. Day                  MD061268
+     C                     PARM BTVLDT    WQ0001  50       Runday Number                    MD061268
+     C                     PARM WUDTFF    WQ0002  1        Date Format fla                  MD061268
+     C           WUDTNF    PARM *ZERO     WQ0003  60       Date (numeric f                  MD061268
+     C           WUDDCD    PARM *BLANK    WQ0004  7        Midas Run Date                   MD061268
+      *                                                                                     MD061268
+     C           *IN90     IFEQ '1'                                                         MD061268
+      ** Call to program ended in error                                                     MD061268
+     C                     MOVEL'Y2U0021' W0RTN   7                                         MD061268
+     C                     END                                                              MD061268
+      *                                                                                     MD061268
+      ** Copy Num to VDate Display - Standard functions                                     MD061268
+     C                     Z-ADDWUDTNF    UUDNMA                                            MD061268
+     C                     MOVE UUDNMA    #RVDDS                                            MD061268
+     C                     END                             *FI                              MD061268
+      *                                                                                     MD061268
      C/COPY WNCPYSRC,GL0121MK79
      C                     MOVELBTCYCD    #1PCCY           Prev A/C ccy   091729
      C                     MOVELBTACNB    #1ACNB           Assoc. Customer

@@ -171,8 +171,8 @@
       *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *
       *             customer.                                         *
-      *  MD053634 - Requested Customer Authority Holders Link Report *
-      *             for KWG$24c not generated.                       *
+      *  MD053634 - Requested Customer "Authority Holders Link Report *
+      *             for KWG$24c" not generated.                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - Customer deletion: Issue detailed error message   *

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 212319             Date 28May12               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. 212319             Date 28May12               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  212319 - Change the format of ICD text so that it matches    *
       *           what will appear onto SWIFT statement               *
       *           (3 * 65 char + 5 char).                             *
@@ -93,23 +95,23 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSD9452DF  CF   E             WORKSTN INFSR(*PSSR)
       ** Midas RE Cash Management ICD Maintenance Screen
- 
+
      FSDCMANL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas RE Cash Management ICD Update Index
- 
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061007
+     F**********                           COMMIT                                           MD061007
       ** Standing Data Controls Update index
- 
+
       *****************************************************************
       **
       ** +--------------------------------------+
@@ -121,38 +123,38 @@
       * Standard D Specifications
      D/COPY ZACPYSRC,RECMSTDD
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External data structure for General Ledger Details
@@ -168,14 +170,14 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Second DS for Access Programs, Long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       ** Cash Management ICD File
      D WDSFDBRC      E DS                  EXTNAME(SDCMANPD)
- 
+
       ** Data Structure for Screen Fields
      D WDSSDBRC        DS           600
- 
+
       ** Data Structure for Text for Group Acc Off
      D WDSTXTG         DS
      D**WTXTG1**               1     54                                                       212319
@@ -185,7 +187,7 @@
      D  WTXTG2                66    130                                                       212319
      D  WTXTG3               131    195                                                       212319
      D  WTXTG4               196    200                                                       212319
- 
+
       ** Data Structure for Text for Zero Bal Off
      D WDSTXTZ         DS
      D**WTXTZ1**               1     54                                                       212319
@@ -195,17 +197,17 @@
      D  WTXTZ2                66    130                                                       212319
      D  WTXTZ3               131    195                                                       212319
      D  WTXTZ4               196    200                                                       212319
- 
+
       ** Data Structure for No. of Forward Value Days
      D WDSFVD          DS
      D  WAFVDN                 1      2
      D  WAFVDA                 3      3
- 
+
       ** Data Structure for No. of Back Value Days
      D WDSBVD          DS
      D  WABVDN                 1      2
      D  WABVDA                 3      3
- 
+
       ** Data Structure for Input Cycle Sweeping Frequency
      D WDSICSF         DS
      D  #1ICSFA                1      4
@@ -244,29 +246,36 @@
      D  #1ICSFL               45     48
      D  WHOURL                45     46
      D  WMINL                 47     48
- 
+
       ** Data Structure of Valid Time
      D WDSVTime        DS
      D  WHOURN                 1      2  0
      D  WMINN                  3      4  0
- 
+
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       ** Array of Inputted Time
      D WTime           S              4A   DIM(12)
- 
+
       ** Array of Valid Time
      D WVTime          S              4  0 DIM(12)
- 
+
       ** Work Array 1
      D WArray1         S              1A   DIM(3)
- 
+
       ** Work Array 2
      D WArray2         S              1A   DIM(3)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WError          S              1A
      D WFVDN           S              2  0
      D WBVDN           S              2  0
@@ -284,47 +293,47 @@
      D PMsgID          S             10A
      D X               S              2  0
      D Y               S              2  0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
- 
+
      C                   EXSR      SRProcess
- 
+
      C                   DOU       *INKC = *ON OR WError = 'N'
- 
+
      C                   EXSR      SRDisplay
- 
+
      C                   IF        PMode <> 'E' AND *INKC <> *ON
      C                   EXSR      SRValid
      C                   IF        WError <> 'Y'
      C                   EXSR      SRUpdate
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Terminate program
- 
+
      C                   IF        WError = 'Y'
      C                   ROLBK
      C                   ELSE
      C                   COMMIT
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -336,20 +345,20 @@
       *  Calls    : SRMove, SRSndErr                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRProcess     BEGSR
- 
+
       ** Check for existing record
- 
+
      C     PKey          CHAIN     SDCMANL0
- 
+
       ** Record does not exist
- 
+
      C                   IF        NOT %FOUND(SDCMANL0)
      C                   EVAL      WError = 'Y'
- 
+
       ** Send message 'Cash Management ICD Not Found'
- 
+
      C                   IF        PMode = 'E'
      C                   EVAL      PMsgID = 'RE74001'
      C                   ELSE
@@ -359,9 +368,9 @@
      C                   ELSE
      C                   EXSR      SRMove
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -373,9 +382,9 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMOVE        BEGSR
- 
+
      C                   EVAL      #1ZBSH = CMZBSH
      C                   EVAL      #1GACH = CMGACH
      C                   EVAL      #1TOPB = CMTOPB
@@ -419,13 +428,13 @@
      C                   MOVE      CMCHAC        #1CHAC
      C                   ENDIF
      C                   EVAL      #1CHPC = CMCHPC
- 
+
       * Hold existing record image
- 
+
      C                   EVAL      WDSSDBRC = WDSFDBRC
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -437,14 +446,14 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDisplay     BEGSR
- 
+
      C                   WRITE     SD9452C0
      C                   EXFMT     SD9452H0
- 
+
       ** Clear messages from program message queue
- 
+
      C                   IF        PMode <> 'E'
      C                   CALL      'ZA0250'
      C                   EVAL      *IN20 = *OFF
@@ -482,9 +491,9 @@
      C                   EVAL      *IN52 = *OFF
      C                   EVAL      *IN53 = *OFF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -496,13 +505,13 @@
       *  Calls    : SRSndErr                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValid       BEGSR
- 
+
      C                   EVAL      WError = 'N'
- 
+
       ** Validate Zero Balancing/Sweeping Heirarchies
- 
+
      C                   IF        #1ZBSH <> 'N' AND
      C                             #1ZBSH <> 'Y'
      C                   EVAL      PMsgID = 'RE74003'
@@ -510,9 +519,9 @@
      C                   EVAL      *IN20 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Group Account Heirarchies
- 
+
      C                   IF        #1GACH <> 'N' AND
      C                             #1GACH <> 'Y'
      C                   EVAL      PMsgID = 'RE74004'
@@ -520,9 +529,9 @@
      C                   EVAL      *IN21 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Top On Balance Sheet
- 
+
      C                   IF        #1GACH = 'Y' AND
      C                             #1TOPB = *BLANKS OR
      C                             #1GACH = 'Y' AND
@@ -533,7 +542,7 @@
      C                   EVAL      *IN22 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #1GACH = 'N' AND
      C                             #1TOPB <> *BLANKS
      C                   EVAL      PMsgID = 'RE74006'
@@ -541,18 +550,18 @@
      C                   EVAL      *IN22 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Account Code for Shadow Contra Entries
- 
+
      C                   IF        #1ZBSH = 'Y'
- 
+
      C                   IF        #1ACSC = *BLANKS
      C                   EVAL      PMsgID = 'RE74007'
      C                   EVAL      WError = 'Y'
      C                   EVAL      *IN23 = *ON
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   CALL      'AOACODR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -560,7 +569,7 @@
      C                   PARM      #1ACSC        @ACOD            10
      C*****SDACOD        PARM      SDACOD        DSFDY                                        245963
      C     SDACOD        PARM      SDACOD        DSSDY                                        245963
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      PMsgID = 'RE74008'
      C                   EVAL      WError = 'Y'
@@ -577,9 +586,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1ACSC <> *BLANKS
      C                   EVAL      PMsgID = 'RE74010'
@@ -587,9 +596,9 @@
      C                   EVAL      *IN23 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Level for Shadow Control Entries
- 
+
      C                   IF        #1ZBSH = 'Y' AND
      C                             #1LVSC = *BLANKS OR
      C                             #1ZBSH = 'Y' AND
@@ -601,7 +610,7 @@
      C                   EVAL      *IN24 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1LVSC <> *BLANKS
      C                   EVAL      PMsgID = 'RE74012'
@@ -609,25 +618,25 @@
      C                   EVAL      *IN24 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Account Code for Contra Entries
- 
+
      C                   IF        #1GACH = 'Y'
- 
+
      C                   IF        #1ACCE = *BLANKS
      C                   EVAL      PMsgID = 'RE74013'
      C                   EVAL      WError = 'Y'
      C                   EVAL      *IN25 = *ON
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   CALL      'AOACODR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      #1ACCE        @ACOD
      C*****SDACOD        PARM      SDACOD        DSFDY                                        245963
      C     SDACOD        PARM      SDACOD        DSSDY                                        245963
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      PMsgID = 'RE74008'
      C                   EVAL      WError = 'Y'
@@ -644,9 +653,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        #1GACH = 'N' AND
      C                             #1ACCE <> *BLANKS
      C                   EVAL      PMsgID = 'RE74014'
@@ -654,9 +663,9 @@
      C                   EVAL      *IN25 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Level for Contra Entries
- 
+
      C                   IF        #1GACH = 'Y' AND
      C                             #1LVCE = *BLANKS OR
      C                             #1GACH = 'Y' AND
@@ -668,7 +677,7 @@
      C                   EVAL      *IN26 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #1GACH = 'N' AND
      C                             #1LVCE <> *BLANKS
      C                   EVAL      PMsgID = 'RE74016'
@@ -676,9 +685,9 @@
      C                   EVAL      *IN26 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Text For Group A/c Off
- 
+
      C*******************IF        #1GACH = 'Y' AND                                           221277
      C*******************          #1TXTG1 = *BLANKS AND                                      221277
      C*******************          #1TXTG2 = *BLANKS AND                                      221277
@@ -688,7 +697,7 @@
      C*******************EVAL      *IN27 = *ON                                                221277
      C*******************EXSR      SRSndErr                                                   221277
      C*******************ENDIF                                                                221277
- 
+
      C                   IF        #1GACH = 'N'
      C                   IF        #1TXTG1 <> *BLANKS OR
      C                             #1TXTG2 <> *BLANKS OR
@@ -701,9 +710,9 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Text For Zero Bal Off
- 
+
      C*******************IF        #1ZBSH = 'Y' AND                                           221277
      C*******************          #1TXTZ1 = *BLANKS AND                                      221277
      C*******************          #1TXTZ2 = *BLANKS AND                                      221277
@@ -713,7 +722,7 @@
      C*******************EVAL      *IN28 = *ON                                                221277
      C*******************EXSR      SRSndErr                                                   221277
      C*******************ENDIF                                                                221277
- 
+
      C                   IF        #1ZBSH = 'N'
      C                   IF        #1TXTZ1 <> *BLANKS OR
      C                             #1TXTZ2 <> *BLANKS OR
@@ -726,9 +735,9 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate LOCAL Forward Value Sweeping
- 
+
      C                   IF        #1ZBSH = 'Y' AND
      C                             #1LFVS = *BLANKS OR
      C                             #1ZBSH = 'Y' AND
@@ -739,7 +748,7 @@
      C                   EVAL      *IN29 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1LFVS <> *BLANKS
      C                   EVAL      PMsgID = 'RE74022'
@@ -747,22 +756,22 @@
      C                   EVAL      *IN29 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate LOCAL Forward Value Days
- 
+
      C                   IF        #1LFVS = 'Y'
- 
+
      C                   IF        #1LFVD = *BLANKS
      C                   EVAL      PMsgID = 'RE74023'
      C                   EVAL      WError = 'Y'
      C                   EVAL      *IN30 = *ON
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   MOVEA     *BLANKS       WArray1
      C                   MOVEA     *BLANKS       WArray2
      C                   MOVEA     #1LFVD        WArray1
- 
+
      C                   EVAL      X = 3
      C                   EVAL      Y = 3
      C                   DO        3
@@ -772,10 +781,10 @@
      C                   ENDIF
      C                   EVAL      X = X - 1
      C                   ENDDO
- 
+
      C                   MOVEA     WArray2       #1LFVD
      C                   MOVEA     WArray2       WDSFVD
- 
+
      C                   TESTN                   WAFVDN               6061
      C                   IF        *IN60 <> *ON AND
      C                             *IN61 <> *ON
@@ -796,7 +805,7 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WAFVDA  <> 'C' AND
      C                             WAFVDA  <> 'B'
      C                   EVAL      PMsgID = 'RE74023'
@@ -804,11 +813,11 @@
      C                   EVAL      *IN30 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        #1LFVS = 'N' AND
      C                             #1LFVD <> *BLANKS OR
      C                             #1LFVS = ' ' AND
@@ -818,22 +827,22 @@
      C                   EVAL      *IN30 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate LOCAL Back Value Days
- 
+
      C                   IF        #1ZBSH = 'Y'
- 
+
      C                   IF        #1LBVD = *BLANKS
      C                   EVAL      PMsgID = 'RE74025'
      C                   EVAL      WError = 'Y'
      C                   EVAL      *IN31 = *ON
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   MOVEA     *BLANKS       WArray1
      C                   MOVEA     *BLANKS       WArray2
      C                   MOVEA     #1LBVD        WArray1
- 
+
      C                   EVAL      X = 3
      C                   EVAL      Y = 3
      C                   DO        3
@@ -843,10 +852,10 @@
      C                   ENDIF
      C                   EVAL      X = X - 1
      C                   ENDDO
- 
+
      C                   MOVEA     WArray2       #1LBVD
      C                   MOVEA     WArray2       WDSBVD
- 
+
      C                   TESTN                   WABVDN               6061
      C                   IF        *IN60 <> *ON AND
      C                             *IN61 <> *ON
@@ -867,7 +876,7 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WABVDA  <> 'C' AND
      C                             WABVDA  <> 'M' AND
      C                             WABVDA  <> 'B'
@@ -876,11 +885,11 @@
      C                   EVAL      *IN31 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1LBVD <> *BLANKS
      C                   EVAL      PMsgID = 'RE74026'
@@ -888,9 +897,9 @@
      C                   EVAL      *IN31 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate EXTERNAL Forward Value Sweeping
- 
+
      C                   IF        #1ZBSH = 'Y' AND
      C                             #1EFVS = *BLANKS OR
      C                             #1ZBSH = 'Y' AND
@@ -901,7 +910,7 @@
      C                   EVAL      *IN32 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1EFVS <> *BLANKS
      C                   EVAL      PMsgID = 'RE74022'
@@ -909,22 +918,22 @@
      C                   EVAL      *IN32 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate EXTERNAL Forward Value Days
- 
+
      C                   IF        #1EFVS = 'Y'
- 
+
      C                   IF        #1EFVD = *BLANKS
      C                   EVAL      PMsgID = 'RE74023'
      C                   EVAL      WError = 'Y'
      C                   EVAL      *IN33 = *ON
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
      C                   MOVEA     *BLANKS       WArray1
      C                   MOVEA     *BLANKS       WArray2
      C                   MOVEA     #1EFVD        WArray1
- 
+
      C                   EVAL      X = 3
      C                   EVAL      Y = 3
      C                   DO        3
@@ -934,10 +943,10 @@
      C                   ENDIF
      C                   EVAL      X = X - 1
      C                   ENDDO
- 
+
      C                   MOVEA     WArray2       #1EFVD
      C                   MOVEA     WArray2       WDSFVD
- 
+
      C                   TESTN                   WAFVDN               6061
      C                   IF        *IN60 <> *ON AND
      C                             *IN61 <> *ON
@@ -958,7 +967,7 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WAFVDA  <> 'C' AND
      C                             WAFVDA  <> 'B'
      C                   EVAL      PMsgID = 'RE74023'
@@ -966,11 +975,11 @@
      C                   EVAL      *IN33 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        #1EFVS = 'N' AND
      C                             #1EFVD <> *BLANKS OR
      C                             #1EFVS = ' ' AND
@@ -980,17 +989,17 @@
      C                   EVAL      *IN33 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate EXTERNAL Back Value Days
- 
+
      C                   IF        #1ZBSH = 'Y'
- 
+
      C                   IF        #1EBVD <> *BLANKS
- 
+
      C                   MOVEA     *BLANKS       WArray1
      C                   MOVEA     *BLANKS       WArray2
      C                   MOVEA     #1EBVD        WArray1
- 
+
      C                   EVAL      X = 3
      C                   EVAL      Y = 3
      C                   DO        3
@@ -1000,10 +1009,10 @@
      C                   ENDIF
      C                   EVAL      X = X - 1
      C                   ENDDO
- 
+
      C                   MOVEA     WArray2       #1EBVD
      C                   MOVEA     WArray2       WDSBVD
- 
+
      C                   TESTN                   WABVDN               6061
      C                   IF        *IN60 <> *ON AND
      C                             *IN61 <> *ON
@@ -1024,7 +1033,7 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WABVDA  <> 'C' AND
      C                             WABVDA  <> 'M' AND
      C                             WABVDA  <> 'B'
@@ -1033,11 +1042,11 @@
      C                   EVAL      *IN34 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1EBVD <> *BLANKS
      C                   EVAL      PMsgID = 'RE74026'
@@ -1045,9 +1054,9 @@
      C                   EVAL      *IN34 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate External Interface for MT103/MT101
- 
+
      C                   IF        #1ZBSH = 'Y' AND
      C                             #1INTF = *BLANKS OR
      C                             #1ZBSH = 'Y' AND
@@ -1058,7 +1067,7 @@
      C                   EVAL      *IN35 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1INTF <> *BLANKS
      C                   EVAL      PMsgID = 'RE74028'
@@ -1066,9 +1075,9 @@
      C                   EVAL      *IN35 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate MT103 Default Status
- 
+
      C                   IF        #1ZBSH = 'Y' AND
      C                             #1103S = *BLANKS OR
      C                             #1ZBSH = 'Y' AND
@@ -1079,7 +1088,7 @@
      C                   EVAL      *IN36 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1103S <> *BLANKS
      C                   EVAL      PMsgID = 'RE74030'
@@ -1087,9 +1096,9 @@
      C                   EVAL      *IN36 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate MT101 Default Status
- 
+
      C                   IF        #1ZBSH = 'Y' AND
      C                             #1101S = *BLANKS OR
      C                             #1ZBSH = 'Y' AND
@@ -1100,7 +1109,7 @@
      C                   EVAL      *IN37 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1101S <> *BLANKS
      C                   EVAL      PMsgID = 'RE74032'
@@ -1108,9 +1117,9 @@
      C                   EVAL      *IN37 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Sweeping in Input Cycle
- 
+
      C                   IF        #1ZBSH = 'Y' AND
      C                             #1SWIC = *BLANKS OR
      C                             #1ZBSH = 'Y' AND
@@ -1121,7 +1130,7 @@
      C                   EVAL      *IN38 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             #1SWIC <> *BLANKS
      C                   EVAL      PMsgID = 'RE74034'
@@ -1129,13 +1138,13 @@
      C                   EVAL      *IN38 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Validate Input Cycle Sweeping Frequency
- 
+
      C                   EVAL      WEICSFA = 'N'
- 
+
      C                   IF        #1ZBSH = 'Y'
- 
+
      C                   IF        #1SWIC = 'Y' AND
      C                             WDSICSF = *BLANKS
      C                   EVAL      PMsgID = 'RE74035'
@@ -1144,14 +1153,14 @@
      C                   EVAL      *IN39 = *ON
      C                   EXSR      SRSndErr
      C                   ELSE
- 
+
       ** Check for any embedded lines
- 
+
      C                   MOVEA     WDSICSF       WTIME
      C                   Z-ADD     12            X
- 
+
      C                   DOW       X <> 0
- 
+
      C                   IF        WTIME(X) <> *BLANKS
      C                   EVAL      Y = X - 1
      C                   DOW       Y <> 0
@@ -1177,13 +1186,13 @@
      C                   EVAL      Y = Y - 1
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   EVAL      X = X - 1
- 
+
      C                   ENDDO
- 
+
       ** Check time to be in 2400 hour format
- 
+
      C                   IF        #1ICSFA <> *BLANKS
      C                   TESTN                   WHOURA               6061
      C                   TESTN                   WMINA                62
@@ -1213,7 +1222,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFB <> *BLANKS
      C                   TESTN                   WHOURB               6061
      C                   TESTN                   WMINB                62
@@ -1243,7 +1252,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFC <> *BLANKS
      C                   TESTN                   WHOURC               6061
      C                   TESTN                   WMINC                62
@@ -1273,7 +1282,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFD <> *BLANKS
      C                   TESTN                   WHOURD               6061
      C                   TESTN                   WMIND                62
@@ -1303,7 +1312,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFE <> *BLANKS
      C                   TESTN                   WHOURE               6061
      C                   TESTN                   WMINE                62
@@ -1333,7 +1342,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFF <> *BLANKS
      C                   TESTN                   WHOURF               6061
      C                   TESTN                   WMINF                62
@@ -1363,7 +1372,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFG <> *BLANKS
      C                   TESTN                   WHOURG               6061
      C                   TESTN                   WMING                62
@@ -1393,7 +1402,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFH <> *BLANKS
      C                   TESTN                   WHOURH               6061
      C                   TESTN                   WMINH                62
@@ -1423,7 +1432,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFI <> *BLANKS
      C                   TESTN                   WHOURI               6061
      C                   TESTN                   WMINI                62
@@ -1453,7 +1462,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFJ <> *BLANKS
      C                   TESTN                   WHOURJ               6061
      C                   TESTN                   WMINJ                62
@@ -1483,7 +1492,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFK <> *BLANKS
      C                   TESTN                   WHOURK               6061
      C                   TESTN                   WMINK                62
@@ -1513,7 +1522,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #1ICSFL <> *BLANKS
      C                   TESTN                   WHOURL               6061
      C                   TESTN                   WMINL                62
@@ -1543,15 +1552,15 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Time entered must be on ascending sequence
- 
+
      C                   IF        WEICSFA = 'N'
- 
+
      C                   Z-ADD     12            X
- 
+
      C                   DOW       X <> 0
      C                   IF        WTIME(X) <> *BLANKS AND
      C                             X > 1
@@ -1577,11 +1586,11 @@
      C                   ENDIF
      C                   EVAL      X = X - 1
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        #1ZBSH = 'N' AND
      C                             WDSICSF <> *BLANKS
      C                   EVAL      PMsgID = 'RE74039'
@@ -1603,16 +1612,16 @@
      C                   EVAL      *IN50 = *ON
      C                   EXSR      SRSndErr
      C                   ENDIF
- 
+
       ** Group A/c Transaction type must be a valid transaction type
- 
+
      C     #1GACH        IFEQ      'Y'
      C                   CALL      'AORETRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      #1GATT        @TRATT            5
      C     SDRETR        PARM      SDRETR        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      PMsgID = 'RE74064'
      C                   EVAL      WError = 'Y'
@@ -1629,9 +1638,9 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Charge Income Account code must be a valid account code
- 
+
      C                   CALL      'AOACODR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -1639,7 +1648,7 @@
      C                   PARM      #1CHAC        @ACOD                                        CGL029
      C*****SDACOD        PARM      SDACOD        DSFDY                                        245963
      C     SDACOD        PARM      SDACOD        DSSDY                                        245963
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      PMsgID = 'RE74065'
      C                   EVAL      WError = 'Y'
@@ -1655,16 +1664,16 @@
      C                   EXSR      SRSndErr
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Charge Income Proft Centre must be a valid profit centre
- 
+
      C     BKPRCU        IFEQ      'Y'
      C                   CALL      'AOPRFCR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      #1CHPC        @PRFC             4
      C     SDPRFC        PARM      SDPRFC        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      PMsgID = 'RE74066'
      C                   EVAL      WError = 'Y'
@@ -1676,9 +1685,9 @@
      C                   ELSE
      C                   MOVE      *BLANK        #1CHPC
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1690,15 +1699,15 @@
       *  Calls    : SRSndErr                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdate      BEGSR
- 
+
      C     PKey          CHAIN     SDCMANL0
- 
+
       ** Write new ICD record
- 
+
      C                   IF        NOT %FOUND(SDCMANL0)
- 
+
      C                   EVAL      CMDMKY = PKey
      C                   EVAL      CMZBSH = #1ZBSH
      C                   EVAL      CMGACH = #1GACH
@@ -1725,40 +1734,40 @@
      C                   EVAL      CMGATT = #1GATT
      C                   MOVE      #1CHAC        CMCHAC
      C                   EVAL      CMCHPC = #1CHPC
- 
+
      C                   WRITE     SDCMAND0
- 
+
       ** Update saved record image
- 
+
      C                   EVAL      WDSSDBRC = WDSFDBRC
- 
+
       ** Change Standing Data Controls
- 
+
      C                   Z-ADD     *ZERO         WNumRec
      C                   Z-ADD     1             WNumIns
      C                   Z-ADD     *ZERO         WNumDel
      C                   Z-ADD     *ZERO         WNumAmd
- 
+
      C                   EXSR      SRSDCntrl
- 
+
      C                   ENDIF
- 
+
       ** Update SDCMANL0
- 
+
      C                   IF        %FOUND(SDCMANL0)
- 
+
       ** Check for changed record
- 
+
      C                   IF        WDSSDBRC <> WDSFDBRC
      C                   EVAL      WError = 'Y'
      C                   EVAL      PMsgID = 'RE74040'
      C                   EXSR      SRSndErr
      C                   UNLOCK    SDCMANL0
- 
+
      C                   ELSE
- 
+
       ** Update File
- 
+
      C                   EVAL      CMZBSH = #1ZBSH
      C                   EVAL      CMGACH = #1GACH
      C                   EVAL      CMTOPB = #1TOPB
@@ -1784,22 +1793,22 @@
      C                   EVAL      CMGATT = #1GATT
      C                   MOVE      #1CHAC        CMCHAC
      C                   EVAL      CMCHPC = #1CHPC
- 
+
      C                   UPDATE    SDCMAND0
- 
+
      C                   Z-ADD     *ZERO         WNumRec
      C                   Z-ADD     *ZERO         WNumIns
      C                   Z-ADD     *ZERO         WNumDel
      C                   Z-ADD     1             WNumAmd
- 
+
      C                   EXSR      SRSDCntrl
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1811,19 +1820,29 @@
       *  Calls    : SRWRITE, SRRASC                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSDCntrl     BEGSR
- 
+
       ** Move key fields to @AHREAU
- 
+
      C                   EVAL      AHFLNM = *BLANKS
      C                   EVAL      AHFLNM = 'SDICDRPD'
- 
-     C     AHFLNM        CHAIN     SDFCTLL0
- 
+
+     C*****AHFLNM        CHAIN     SDFCTLL0                                                 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+
       ** If not found, DB Error
- 
-     C                   IF        NOT %FOUND(SDFCTLL0)
+
+     C**********         IF        NOT %FOUND(SDFCTLL0)                                     MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDFCTLPA'
      C                   EVAL      DBKEY = 'SDICDRPD'
@@ -1831,26 +1850,35 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
       ** USER: Processing after DBF read
- 
+
      C                   ADD       AHNORC        WNumRec
      C                   ADD       AHNOIN        WNumIns
      C                   ADD       AHNOAM        WNumAmd
      C                   ADD       AHNODL        WNumDel
- 
+
       ** Move non-key fields to @AHREAU
- 
+
      C                   Z-ADD     WNumRec       AHNORC
      C                   Z-ADD     WNumIns       AHNOIN
      C                   Z-ADD     WNumAmd       AHNOAM
      C                   Z-ADD     WNumDel       AHNODL
- 
-     C                   UPDATE    @AHREAU
+
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1862,15 +1890,15 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSndErr      BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM                    PMsgFile
      C                   PARM                    PMsgID
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1882,28 +1910,28 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRetCodeIn
      C                   PARM                    PKey
      C                   PARM                    PMode
- 
+
       ** The following /COPY sets the program, module and procedure
       ** names for database error processing.
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRetCodeIn
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
       ** Database error
- 
+
      C     PRetCodeIn    IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 002
@@ -1912,17 +1940,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access general ledger details
- 
+
      C**********         CALL      'AOGELRR0'                                                 CGL029
      C                   CALL      'AOGELRR1'                                                 CGL029
      C                   PARM      *BLANKS       PRetCodeIn
      C                   PARM      '*FIRST '     POption
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
       ** Database error
- 
+
      C     PRetCodeIn    IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 003
@@ -1932,28 +1960,28 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C     BKPRCU        COMP      'Y'                                6565
- 
+
       ** Move Workstation ID to screen field
- 
+
      C                   EVAL      #0RUNA = BJMRDT
      C                   EVAL      #0USER = PSUser
      C                   EVAL      #0WSID = PSJobName
      C                   EVAL      #0PGMQ = PSProcMod
- 
+
       ** Initialise Work Fields
- 
+
      C                   EVAL      WError = 'Y'
      C                   EVAL      WNumRec = *ZEROS
      C                   EVAL      WNumIns = *ZEROS
      C                   EVAL      WNumDel = *ZEROS
      C                   EVAL      WNumAMd = *ZEROS
- 
+
      C                   IF        PMode = 'E'
      C                   EVAL      *IN11 = *ON
      C                   ELSE
      C                   EVAL      *IN11 = *OFF
      C                   ENDIF
- 
+
      C                   EVAL      *IN20 = *OFF
      C                   EVAL      *IN21 = *OFF
      C                   EVAL      *IN22 = *OFF
@@ -1988,9 +2016,9 @@
      C                   EVAL      *IN51 = *OFF
      C                   EVAL      *IN52 = *OFF
      C                   EVAL      *IN53 = *OFF
- 
+
       ** Initialise detail screen
- 
+
      C                   MOVE      *BLANKS       #1ZBSH
      C                   MOVE      *BLANKS       #1GACH
      C                   MOVE      *BLANKS       #1TOPB
@@ -2031,8 +2059,8 @@
      C                   MOVE      *BLANKS       #1GATT
      C                   MOVE      *BLANKS       #1CHAC
      C                   MOVE      *BLANKS       #1CHPC
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /COPY ZACPYSRC,RECMPSSR

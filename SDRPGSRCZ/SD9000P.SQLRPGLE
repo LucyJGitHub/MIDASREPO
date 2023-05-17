@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD056358           Date 14Sep20               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD056358           Date 14Sep20               *
       *                 MD054605           Date 17Oct19               *
       *                 CSD101             Date 07Dec18               *
       *                 CLE071             Date 18Jul18               *
@@ -201,6 +202,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD056358 - SDC0602 goes MSGW because of a decimal data error *
       *             Make sure to retrive the decimal value of the base*
@@ -552,7 +554,7 @@
      FTABTBRE   IF   E             DISK                                         S01413
      FTABTREXC  IF   E             DISK                                         S01413
      FSDTCHGPD  IF   E             DISK                                         CRT001
-     FSDFCTLL0  UF   E           K DISK
+     F*SDFCTLL0* UF   E           K DISK                                                    MD061007
      FSDCSFDL1  IF   E           K DISK                                         S01423
      FSDMEXPPD  IF   E           K DISK                                         S01493
      F*****SCSARDPDIF  E                    DISK                   070946 CSC010
@@ -910,19 +912,31 @@
      D NullInds        s              5i 0 dim(21)                                          MD054605
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D                                     PREFIX(AB)                                       MD055681
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
+     D                 DS                                                                   MD061007
+     D  NREC                   1      3P 0                                                  MD061007
+     D  NINS                   4      6P 0                                                  MD061007
+     D  NAMD                   7      9P 0                                                  MD061007
+     D  NDEL                  10     12P 0                                                  MD061007
      I*                                                                   S01408
      I/COPY WNCPYSRC,SD9000PEP1                                           S01408
      I*                                                                   S01408
      I**                                                              *
-     I@AHREAU
+     I*@AHREAU**                                                                            MD061007
      I**********    AHAANB                          NREC                  S01251
      I**********    AHABNB                          NINS                  S01251
      I**********    AHACNB                          NAMD                  S01251
      I**********    AHADNB                          NDEL                  S01251
-     I              AHNORC                      NREC                            S01251
-     I              AHNOIN                      NINS                            S01251
-     I              AHNOAM                      NAMD                            S01251
-     I              AHNODL                      NDEL                            S01251
+     I**********    AHNORC                      NREC                            S01251      MD061007
+     I**********    AHNOIN                      NINS                            S01251      MD061007
+     I**********    AHNOAM                      NAMD                            S01251      MD061007
+     I**********    AHNODL                      NDEL                            S01251      MD061007
      I/COPY WNCPYSRC,SD9000PI01
      I**
      I* DATA STRUCTURE FOR SDHEDGPD                                                           CAS009
@@ -5193,7 +5207,21 @@ B2   C     P@MODE        IFNE      'A'                                          
      CSR   FCTLSR        BEGSR                                                   FILE CONTROLS
      C**
 0319 C                   MOVEL     'SDMMODPD'    FCTLKY           10
-     C     FCTLKY        CHAIN     SDFCTLL0                           20
+     C*****FCTLKY        CHAIN     SDFCTLL0                           20                    MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      FCTLKY        AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       20                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        20                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
      C     *IN20         IFEQ      '1'                                          IF  IN20 On
      C***********          MOVE 20        N                ***********    049956
      C                   MOVE      19            N                              ***********    04995
@@ -5205,10 +5233,33 @@ B2   C     P@MODE        IFNE      'A'                                          
      C                   MOVE      *ZERO         NAMD                           NO OF AMENDS
      C                   MOVE      *ZERO         NDEL                           NO OF DELETES
      C**
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
      C**
 0319 C                   MOVEL     'SDICDRPD'    FCTLKY
-     C     FCTLKY        CHAIN     SDFCTLL0                           21
+     C*****FCTLKY        CHAIN     SDFCTLL0                           21                    MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      FCTLKY        AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       21                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        21                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
      C     *IN21         IFEQ      '1'                                          IF  IN21 On
      C                   MOVE      21            N                              ***********
      C                   EXSR      DBERR                                        *    21   *
@@ -5225,7 +5276,16 @@ B2   C     P@MODE        IFNE      'A'                                          
      C                   MOVE      *ZERO         NAMD                           NO OF AMENDS
      C                   MOVE      *ZERO         NDEL                           NO OF DELETES
      C**
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
      C**
      C**
      CSR   ZFCTL         ENDSR                                                   FILE CONTROLS

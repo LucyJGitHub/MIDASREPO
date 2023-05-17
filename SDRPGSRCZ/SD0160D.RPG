@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056853           Date 29Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD056853           Date 29Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD056853 - Recompiled over changed SD0160D#.                 *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11788 - Effective date not update in zonal list view      *
@@ -111,10 +113,10 @@
      F                                              KINFSR *PSSR                              CSD031
       * RSQ : Holidays Acceptance file                                                        CSD031
       *                                                                                       CSD031
-     FSDFCTLL0UF  E           K        DISK                           UC                      CSD031
-     F                                              KCOMIT                                    CSD031
-     F                                              KINFDS ID0007                             CSD031
-     F                                              KINFSR *PSSR                              CSD031
+     F*SDFCTLL0UF  E           K        DISK                           UC                   MD061007
+     F**********                                    KCOMIT                           CSD031 MD061007
+     F**********                                    KINFDS ID0007                    CSD031 MD061007
+     F**********                                    KINFSR *PSSR                     CSD031 MD061007
      E* Description     : Copyright notice for inclusion in all programs
      E*
      E********************************************************************
@@ -654,7 +656,14 @@
      I              ' Central Data  '     C         GHDR2                                     CSD031
      I              'Action'              C         GHDR3                                     CSD031
       *                                                                                       CSD031
-     IQSDFC1    E DSSDFCTLL0                                                                  CSD031
+     I*QSDFC1***E DSSDFCTLL0                                                         CSD031 MD061007
+     IQSDFC1      DS                                                                        MD061007
+     I                                        1  10 AHFLNM                                  MD061007
+     I                                    P  11  130AHNORC                                  MD061007
+     I                                    P  14  160AHNOIN                                  MD061007
+     I                                    P  17  190AHNOAM                                  MD061007
+     I                                    P  20  220AHNODL                                  MD061007
+      *                                                                                     MD061007
       * UPD : Midas SD Standing data controls update                                          CSD031
       *                                                                                       CSD031
      IID0007      DS                            528                                           CSD031
@@ -1997,7 +2006,7 @@
      C                     OPEN SDAHDYL1                                                      CSD031
      C                     OPEN SDAHDYL3                                                      CSD031
      C                     OPEN SDAHDYL7                                                      CSD031
-     C                     OPEN SDFCTLL0                                                      CSD031
+     C**********           OPEN SDFCTLL0                                             CSD031 MD061007
      C                     MOVE 'C'       WP0001                                              CSD031
      C                     MOVE 'Z'       CSD041                                              CSD031
      C                     MOVE *ON       *IN93                                               CSD031
@@ -4044,7 +4053,24 @@
       *                                                                                       CSD031
      C           KLCHSE    KLIST                                                              CSD031
      C                     KFLD           AHFLNM           Filename                           CSD031
-     C           KLCHSE    CHAIN@AHREAU              9091  *                                  CSD031
+     C********** KLCHSE    CHAIN@AHREAU              9091  *                         CSD031 MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*RTV'    ZMODE   4                                         MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM 0         AHNORC                                            MD061007
+     C                     PARM 0         AHNOIN                                            MD061007
+     C                     PARM 0         AHNOAM                                            MD061007
+     C                     PARM 0         AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN 10                                         MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     9091                                   MD061007
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061007
+     C                     SETON                     90                                     MD061007
+     C                     ENDIF                                                            MD061007
+     C           ZRETRN    IFEQ '*ERROR'                                                    MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
       *                                                                                       CSD031
      C           *IN90     IFEQ '1'                                                           CSD031
       * Record not found                                                                      CSD031
@@ -4081,10 +4107,24 @@
      C                     END                                                                CSD031
       * If changed update record otherwise release record                                     CSD031
      C           YARDC     IFEQ 'Y'                                                           CSD031
-     C                     UPDAT@AHREAU                91  *                                  CSD031
+     C**********           UPDAT@AHREAU                91  *                         CSD031 MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*UPD'    ZMODE                                             MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM           AHNORC                                            MD061007
+     C                     PARM           AHNOIN                                            MD061007
+     C                     PARM           AHNOAM                                            MD061007
+     C                     PARM           AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN                                            MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     91                                     MD061007
+     C           ZRETRN    IFNE *BLANKS                                                     MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
      C                     ELSE                                                               CSD031
       * Release record lock                                                                   CSD031
-     C                     UNLCKSDFCTLL0               91  *                                  CSD031
+     C**********           UNLCKSDFCTLL0               91  *                         CSD031 MD061007
      C                     END                                                                CSD031
      C           *IN91     IFEQ '1'                                                           CSD031
       * Change error detected                                                                 CSD031
@@ -4110,7 +4150,24 @@
       *                                                                                       CSD031
      C           KLCHSI    KLIST                                                              CSD031
      C                     KFLD           AHFLNM           Filename                           CSD031
-     C           KLCHSI    CHAIN@AHREAU              9091  *                                  CSD031
+     C********** KLCHSI    CHAIN@AHREAU              9091  *                         CSD031 MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*RTV'    ZMODE   4                                         MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM 0         AHNORC                                            MD061007
+     C                     PARM 0         AHNOIN                                            MD061007
+     C                     PARM 0         AHNOAM                                            MD061007
+     C                     PARM 0         AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN 10                                         MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     9091                                   MD061007
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061007
+     C                     SETON                     90                                     MD061007
+     C                     ENDIF                                                            MD061007
+     C           ZRETRN    IFEQ '*ERROR'                                                    MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
       *                                                                                       CSD031
      C           *IN90     IFEQ '1'                                                           CSD031
       * Record not found                                                                      CSD031
@@ -4147,10 +4204,24 @@
      C                     END                                                                CSD031
       * If changed update record otherwise release record                                     CSD031
      C           YDRDC     IFEQ 'Y'                                                           CSD031
-     C                     UPDAT@AHREAU                91  *                                  CSD031
+     C**********           UPDAT@AHREAU                91  *                         CSD031 MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*UPD'    ZMODE                                             MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM           AHNORC                                            MD061007
+     C                     PARM           AHNOIN                                            MD061007
+     C                     PARM           AHNOAM                                            MD061007
+     C                     PARM           AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN                                            MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     91                                     MD061007
+     C           ZRETRN    IFNE *BLANKS                                                     MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
      C                     ELSE                                                               CSD031
       * Release record lock                                                                   CSD031
-     C                     UNLCKSDFCTLL0               91  *                                  CSD031
+     C**********           UNLCKSDFCTLL0               91  *                         CSD031 MD061007
      C                     END                                                                CSD031
      C           *IN91     IFEQ '1'                                                           CSD031
       * Change error detected                                                                 CSD031
@@ -4176,7 +4247,24 @@
       *                                                                                       CSD031
      C           KLCHSG    KLIST                                                              CSD031
      C                     KFLD           AHFLNM           Filename                           CSD031
-     C           KLCHSG    CHAIN@AHREAU              9091  *                                  CSD031
+     C********** KLCHSG    CHAIN@AHREAU              9091  *                         CSD031 MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*RTV'    ZMODE   4                                         MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM 0         AHNORC                                            MD061007
+     C                     PARM 0         AHNOIN                                            MD061007
+     C                     PARM 0         AHNOAM                                            MD061007
+     C                     PARM 0         AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN 10                                         MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     9091                                   MD061007
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061007
+     C                     SETON                     90                                     MD061007
+     C                     ENDIF                                                            MD061007
+     C           ZRETRN    IFEQ '*ERROR'                                                    MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
       *                                                                                       CSD031
      C           *IN90     IFEQ '1'                                                           CSD031
       * Record not found                                                                      CSD031
@@ -4213,10 +4301,24 @@
      C                     END                                                                CSD031
       * If changed update record otherwise release record                                     CSD031
      C           YBRDC     IFEQ 'Y'                                                           CSD031
-     C                     UPDAT@AHREAU                91  *                                  CSD031
+     C**********           UPDAT@AHREAU                91  *                         CSD031 MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*UPD'    ZMODE                                             MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM           AHNORC                                            MD061007
+     C                     PARM           AHNOIN                                            MD061007
+     C                     PARM           AHNOAM                                            MD061007
+     C                     PARM           AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN                                            MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     91                                     MD061007
+     C           ZRETRN    IFNE *BLANKS                                                     MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
      C                     ELSE                                                               CSD031
       * Release record lock                                                                   CSD031
-     C                     UNLCKSDFCTLL0               91  *                                  CSD031
+     C**********           UNLCKSDFCTLL0               91  *                         CSD031 MD061007
      C                     END                                                                CSD031
      C           *IN91     IFEQ '1'                                                           CSD031
       * Change error detected                                                                 CSD031

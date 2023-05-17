@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER045  *CREATE    Date 20Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER045 - German Features - Reporting Bundesbank              *
@@ -51,7 +53,7 @@
      FSDBSCCL0  IF   E           K DISK    INFSR(*PSSR)
       *
       ** Midas SD Standing Data Controls
-     FSDFCTLL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDFCTLL1* IF   E           K DISK    INFSR(*PSSR)                                    MD061007
       *
       ** Midas SD Borrower Sector Classification Code - List
      FSD000830P1O    E             PRINTER INFDS(SPOOL1)
@@ -128,6 +130,13 @@
       *
      D WFileName       C                   CONST('SDBSCCPD  ')
       *
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -290,17 +299,17 @@
      C                   WHEN      WNoRecA = 0
      C                   WRITE     NODTLS
      C                   ENDSL
- 
+
       ** Close printer files.
- 
+
      C                   IF        %OPEN(SD000830AU)
      C                   CLOSE     SD000830AU
      C                   ENDIF
- 
+
      C                   IF        %OPEN(SD000830P1)
      C                   CLOSE     SD000830P1
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *
@@ -324,9 +333,19 @@
      C                   WRITE     TRAILP1
      C                   ENDIF
       *
-     C     WFileName     CHAIN     SDFCTLL1
+     C*****WFileName     CHAIN     SDFCTLL1                                                 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      WFileName     AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
       *
-     C                   IF        NOT %FOUND(SDFCTLL1)
+     C**********         IF        NOT %FOUND(SDFCTLL1)                                     MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
       *
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = 'SDBSCCPD'

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CMG008             Date 20Feb20               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL146             Date 10Jul13               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CSD101 - Password Encryption (Recompile)                     *
@@ -59,8 +61,8 @@
       ** Midas GL Network Activity Control File
       *
 
-     FSDFCTLL0  UF A E           K DISK    INFSR(*PSSR) RENAME(@AHREAU:SDFCTLD0)
-     F                                     COMMIT
+     F*SDFCTLL0* UF A E           K DISK    INFSR(*PSSR) RENAME(@AHREAU:SDFCTLD0)           MD061007
+     F**********                           COMMIT                                           MD061007
       ** Midas SD Standing Data Controls
       *
      F/COPY OFCPYSRCZ,CGL146_027                                                              CGL146
@@ -137,6 +139,13 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
       ** Rundat DS
       *
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
      D/COPY OFCPYSRCZ,CGL146_028                                                              CGL146
 
       ** Declared variables
@@ -820,10 +829,24 @@
 
       ** Update of SDFCTLL0 - Midas SD Standing Data Controls
       *
-     C     'SDNWRKPD  '  CHAIN     SDFCTLD0                           99
+     C*****'SDNWRKPD  '  CHAIN     SDFCTLD0                           99                    MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      'SDNWRKPD  '  AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       99                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        99                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
 
      C                   IF        *IN99
-     C                   CLEAR                   SDFCTLD0
+     C**********         CLEAR                   SDFCTLD0                                   MD061007
      C                   MOVEL     'SDNWRKPD  '  AHFLNM
      C                   ENDIF
 
@@ -841,9 +864,18 @@
      C                   ENDSL
 
      C                   IF        *IN99
-     C                   WRITE     SDFCTLD0
+     C**********         WRITE     SDFCTLD0                                                 MD061007
      C                   ELSE
-     C                   UPDATE    SDFCTLD0
+     C**********         UPDATE    SDFCTLD0                                                 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
      C                   ENDIF
 
       ** Exit from the module

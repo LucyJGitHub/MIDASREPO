@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD048483           Date 08Dec17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD048483           Date 08Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 MD030956           Date 09Oct14               *
@@ -120,6 +121,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD048483 - Fix duplicate write error on RECCYDXC file.       *
       *  MD046248 - Finastra Rebranding                               *
@@ -318,10 +320,10 @@
       * UPD : Midas SD Currency codes update
       *
      F***SDFCTLL0UF  E           K        DISK                           UC                 MD025467
-     FSDFCTLL0  IF   E           K DISK    USROPN                                                 MD
-     F                                     COMMIT
-     F                                     INFDS(ID0006)
-     F                                     INFSR(*PSSR)
+     F*SDFCTLL0* IF   E           K DISK    USROPN                                       MD MD061007
+     F**********                           COMMIT                                           MD061007
+     F**********                           INFDS(ID0006)                                    MD061007
+     F**********                           INFSR(*PSSR)                                     MD061007
      FSDFCTZTD  IF A E             DISK    COMMIT                                                 MD
      F                                     INFDS(ID0009)                                          MD
      F                                     INFSR(*PSSR)                                           MD
@@ -515,7 +517,13 @@
      D YARDCS          DS          9999                                         CSD006
      D YBRDCS          DS          9999                                         CSD006
      D YCRDCS          DS          9999                                         CSD006
-     D QSDFC1        E DS                  EXTNAME(SDFCTLL0)
+     D*QSDFC1***     E DS                  EXTNAME(SDFCTLL0)                                MD061007
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
       * UPD : Midas SD Standing data controls update
      D YDRDCS          DS            22
      D**YERDCS******DS                            344                     CEU002
@@ -6468,7 +6476,21 @@
       ** otherwise, send message and prevent writing a record                               MD025467
       *                                                                                     MD025467
      C                   MOVEL(P)  'SDCURRPD'    AHFLNM
-     C     AHFLNM        CHAIN     @AHREAU                            90
+     C*****AHFLNM        CHAIN     @AHREAU                            90                    MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+                                                                                            MD061007
+     C                   SETOFF                                       90                    MD061007
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061007
+     C                   SETON                                        90                    MD061007
+     C                   ENDIF                                                              MD061007
+                                                                                            MD061007
      C     *IN90         IFEQ      *ON
      C                   MOVEL     'Y2U0009'     W0RTN
      C                   MOVEL     'Y2U0009'     ZAMSID
@@ -11855,7 +11877,7 @@
      C                   OPEN      SDDEALL1
      C                   OPEN      SDCURRL0
      C                   OPEN      SDCURRL7                                                    17923
-     C                   OPEN      SDFCTLL0
+     C**********         OPEN      SDFCTLL0                                                 MD061007
      C                   MOVEL     'N'           W0PMT             1
      C*****************************************************************   E21685
       * Select initial mode

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -82,10 +84,10 @@
      F**********                           INFSR(*PSSR)                                     MD058085
       * UPD : Midas SD Broker codes update
       *
-     FSDFCTLL0  UF   E           K DISK    USROPN
-     F                                     COMMIT
-     F                                     INFDS(ID0004)
-     F                                     INFSR(*PSSR)
+     F*SDFCTLL0* UF   E           K DISK    USROPN                                          MD061007
+     F**********                           COMMIT                                           MD061007
+     F**********                           INFDS(ID0004)                                    MD061007
+     F**********                           INFSR(*PSSR)                                     MD061007
       * UPD : Midas SD Standing data controls update
       *
      D* Description     : Copyright notice for inclusion in all programs
@@ -137,7 +139,13 @@
       * Stored master file format fields
      D  #1DB1                  1      1
       *
-     D QSDFC1        E DS                  EXTNAME(SDFCTLL0)
+     D*QSDFC1***     E DS                  EXTNAME(SDFCTLL0)                                MD061007
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
       * UPD : Midas SD Standing data controls update
      D YARDCS          DS            22
      D WUDELR          DS
@@ -1404,7 +1412,24 @@
       *
      C     KLCHSB        KLIST
      C                   KFLD                    AHFLNM                         Filename
-     C     KLCHSB        CHAIN     @AHREAU                            9091      *
+     C*****KLCHSB        CHAIN     @AHREAU                            9091      *           MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       9091                  MD061007
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061007
+     C                   SETON                                        90                    MD061007
+     C                   ENDIF                                                              MD061007
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061007
+     C                   SETON                                        91                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
       *
      C     *IN90         IFEQ      '1'
       * Record not found
@@ -1441,10 +1466,24 @@
      C                   END
       * If changed update record otherwise release record
      C     YARDC         IFEQ      'Y'
-     C                   UPDATE    @AHREAU                              91      *
+     C**********         UPDATE    @AHREAU                              91      *           MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
+     C                   SETOFF                                       91                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        91                    MD061007
+     C                   ENDIF                                                              MD061007
+                                                                                            MD061007
      C                   ELSE
       * Release record lock
-     C                   UNLOCK    SDFCTLL0                             91      *
+     C**********         UNLOCK    SDFCTLL0                             91      *           MD061007
      C                   END
      C     *IN91         IFEQ      '1'
       * Change error detected
@@ -1710,7 +1749,24 @@
       *
      C     KLCHSD        KLIST
      C                   KFLD                    AHFLNM                         Filename
-     C     KLCHSD        CHAIN     @AHREAU                            9091      *
+     C*****KLCHSD        CHAIN     @AHREAU                            9091      *           MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       9091                  MD061007
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061007
+     C                   SETON                                        90                    MD061007
+     C                   ENDIF                                                              MD061007
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061007
+     C                   SETON                                        91                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
       *
      C     *IN90         IFEQ      '1'
       * Record not found
@@ -1747,10 +1803,24 @@
      C                   END
       * If changed update record otherwise release record
      C     YBRDC         IFEQ      'Y'
-     C                   UPDATE    @AHREAU                              91      *
+     C**********         UPDATE    @AHREAU                              91      *           MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
+     C                   SETOFF                                       91                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        91                    MD061007
+     C                   ENDIF                                                              MD061007
+                                                                                            MD061007
      C                   ELSE
       * Release record lock
-     C                   UNLOCK    SDFCTLL0                             91      *
+     C**********         UNLOCK    SDFCTLL0                             91      *           MD061007
      C                   END
      C     *IN91         IFEQ      '1'
       * Change error detected
@@ -1998,7 +2068,24 @@
       *
      C     KLCHSF        KLIST
      C                   KFLD                    AHFLNM                         Filename
-     C     KLCHSF        CHAIN     @AHREAU                            9091      *
+     C*****KLCHSF        CHAIN     @AHREAU                            9091      *           MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       9091                  MD061007
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061007
+     C                   SETON                                        90                    MD061007
+     C                   ENDIF                                                              MD061007
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061007
+     C                   SETON                                        91                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
       *
      C     *IN90         IFEQ      '1'
       * Record not found
@@ -2035,10 +2122,24 @@
      C                   END
       * If changed update record otherwise release record
      C     YDRDC         IFEQ      'Y'
-     C                   UPDATE    @AHREAU                              91      *
+     C**********         UPDATE    @AHREAU                              91      *           MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
+     C                   SETOFF                                       91                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        91                    MD061007
+     C                   ENDIF                                                              MD061007
+                                                                                            MD061007
      C                   ELSE
       * Release record lock
-     C                   UNLOCK    SDFCTLL0                             91      *
+     C**********         UNLOCK    SDFCTLL0                             91      *           MD061007
      C                   END
      C     *IN91         IFEQ      '1'
       * Change error detected
@@ -2520,7 +2621,7 @@
      C                   OPEN      SDCURRL1
      C                   OPEN      SDMMODL1
      C**********         OPEN      SDBROKL0                                                 MD058085
-     C                   OPEN      SDFCTLL0
+     C**********         OPEN      SDFCTLL0                                                 MD061007
      C                   MOVEL     'N'           W0PMT             1
      C                   MOVEL     'CHG'         W0PMD             3
      C                   MOVEL     *BLANK        W0GRP             1

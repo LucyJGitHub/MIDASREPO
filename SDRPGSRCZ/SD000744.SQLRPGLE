@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD056555           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -130,8 +132,8 @@
      F                                     RENAME(SDHEDGD0:@HEDGD0)
       ** Hedging ICD File Update
 
-     FSDFCTLL0  UF   E           K DISK    COMMIT
-     F                                     INFSR(*PSSR)
+     F*SDFCTLL0* UF   E           K DISK    COMMIT                                          MD061007
+     F**********                           INFSR(*PSSR)                                     MD061007
       ** Standing Data Controls Update index
 
      F*SCSARPL1* IF   E           K DISK    INFSR(*PSSR)                             232348 MD056555
@@ -198,6 +200,13 @@
       ** Hedging ICD File
      D @1DBRC        E DS                  EXTNAME(SDHEDGL0)
 
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -1648,11 +1657,21 @@
      C                   EVAL      AHFLNM = *BLANKS
      C                   EVAL      AHFLNM = 'SDICDRPD'
 
-     C     AHFLNM        CHAIN     SDFCTLL0
+     C*****AHFLNM        CHAIN     SDFCTLL0                                                 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
 
       ** If not found, DB Error
 
-     C                   IF        NOT %FOUND(SDFCTLL0)
+     C**********         IF        NOT %FOUND(SDFCTLL0)                                     MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDFCTLPA'
      C                   EVAL      DBKEY = 'SDICDRPD'
@@ -1675,7 +1694,16 @@
      C                   Z-ADD     WNumAmd       AHNOAM
      C                   Z-ADD     WNumDel       AHNODL
 
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
      C                   ENDIF
 
      C                   ENDSR

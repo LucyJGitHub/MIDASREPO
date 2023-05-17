@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 BG26993            Date 26Jan10               *
       *                 CSM001 *C *CREATE  Date 14Oct02               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program CPBMIG10.                          *
@@ -33,7 +35,7 @@
       *
      FSMPBCYPD  IF   E             DISK    INFSR(*PSSR)
      FSDCURRL0  UF   E           K DISK    INFSR(*PSSR)
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061007
       *
       /EJECT
       *
@@ -143,13 +145,44 @@
      C                   ENDDO
       *
       * Update trailer
-     C     'SDCURRPD  '  CHAIN     @AHREAU                            4069
+     C*****'SDCURRPD  '  CHAIN     @AHREAU                            4069                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      'SDCURRPD'    AHFLNM           10                        MD061007
+     C                   PARM      0             AHNORC            5 0                      MD061007
+     C                   PARM      0             AHNOIN            5 0                      MD061007
+     C                   PARM      0             AHNOAM            5 0                      MD061007
+     C                   PARM      0             AHNODL            5 0                      MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       4069                  MD061007
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061007
+     C                   SETON                                        40                    MD061007
+     C                   ENDIF                                                              MD061007
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061007
+     C                   SETON                                        69                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
      C     *IN69         IFEQ      *ON
      C                   EXSR      *PSSR
      C                   ENDIF
      C     *IN40         IFEQ      *OFF
      C                   ADD       Amends        AHNOAM
-     C                   UPDATE    @AHREAU                              69
+     C**********         UPDATE    @AHREAU                              69                  MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
+     C                   SETOFF                                       69                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        69                    MD061007
+     C                   ENDIF                                                              MD061007
+                                                                                            MD061007
      C     *IN69         IFEQ      *ON
      C                   EXSR      *PSSR
      C                   ENDIF

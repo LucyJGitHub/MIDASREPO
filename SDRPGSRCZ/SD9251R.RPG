@@ -13,12 +13,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CSD003             Date 01Jul99               *
@@ -33,6 +34,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSD003 - Synon Closedown Project (SD):                       *
@@ -65,8 +67,8 @@
      F                                              KCOMIT
       * UPD : Microfiche Data           Update index
       *
-     FSDFCTLL0UF  E           K        DISK                           UC
-     F                                              KCOMIT
+     F*SDFCTLL0UF  E           K        DISK                           UC                   MD061007
+     F**********                                    KCOMIT                                  MD061007
       * UPD : Standing Data Controls    Update index
       *
      E* Description     : Copyright notice for inclusion in all programs
@@ -185,6 +187,13 @@
       * Message data for 'Invalid allow auto-clear'
       * Allow Auto-clear of OUTQs
      I                                        1   1 ZA0018
+     IQSDFC1      DS                                                                        MD061007
+     I                                        1  10 AHFLNM                                  MD061007
+     I                                    P  11  130AHNORC                                  MD061007
+     I                                    P  14  160AHNOIN                                  MD061007
+     I                                    P  17  190AHNOAM                                  MD061007
+     I                                    P  20  220AHNODL                                  MD061007
+      *                                                                                     MD061007
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -1488,7 +1497,24 @@
       *
      C           KLCHSB    KLIST
      C                     KFLD           AHFLNM           Filename
-     C           KLCHSB    CHAIN@AHREAU              9091  *
+     C********** KLCHSB    CHAIN@AHREAU              9091  *                                MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*RTV'    ZMODE   4                                         MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM 0         AHNORC                                            MD061007
+     C                     PARM 0         AHNOIN                                            MD061007
+     C                     PARM 0         AHNOAM                                            MD061007
+     C                     PARM 0         AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN 10                                         MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     9091                                   MD061007
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061007
+     C                     SETON                     90                                     MD061007
+     C                     ENDIF                                                            MD061007
+     C           ZRETRN    IFEQ '*ERROR'                                                    MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
       *
      C           *IN90     IFEQ '1'
       * Record not found
@@ -1517,7 +1543,21 @@
      C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
      C                     Z-ADDWUNODL    AHNODL           No. of Deletes
       *
-     C                     UPDAT@AHREAU                91  *
+     C**********           UPDAT@AHREAU                91  *                                MD061007
+     C                     CALL 'SD000119'                                                  MD061007
+     C                     PARM '*UPD'    ZMODE                                             MD061007
+     C                     PARM           AHFLNM                                            MD061007
+     C                     PARM           AHNORC                                            MD061007
+     C                     PARM           AHNOIN                                            MD061007
+     C                     PARM           AHNOAM                                            MD061007
+     C                     PARM           AHNODL                                            MD061007
+     C                     PARM *BLANKS   ZRETRN                                            MD061007
+      *                                                                                     MD061007
+     C                     SETOF                     91                                     MD061007
+     C           ZRETRN    IFNE *BLANKS                                                     MD061007
+     C                     SETON                     91                                     MD061007
+     C                     ENDIF                                                            MD061007
+      *                                                                                     MD061007
      C           *IN91     IFEQ '1'
       * Change error detected
      C                     MOVEL'Y2U0004' W0RTN   7
@@ -1856,7 +1896,7 @@
      C                     EXSR ZYEXPG
      C                     END
      C                     OPEN SDMCFCL0
-     C                     OPEN SDFCTLL0
+     C**********           OPEN SDFCTLL0                                                    MD061007
       * Set to *CHANGE mode
      C                     MOVEL'CHG'     W0PMD   3
       * USER: Initialise program

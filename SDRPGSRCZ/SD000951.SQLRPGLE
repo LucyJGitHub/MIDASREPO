@@ -13,12 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD050571           Date 23Apr18               *
-      *  Prev Amend No. CRE113CC1          Date 27Mar18               *
+      *  Last Amend No. MD061007           Date 31Dec21               *
+      *  Prev Amend No. MD050571           Date 23Apr18               *
+      *                 CRE113CC1          Date 27Mar18               *
       *                 CRE113  *CREATE    Date 05Feb18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD050571 - Adding an already deleted customer range is no    *
       *             longer accepted by the system.                    *
       *  CRE113CC1 - Include Audit Reports                            *
@@ -90,8 +92,8 @@
      F                                     INFDS(INFDS#)
      F                                     INFSR(*PSSR)
       ** Control File Update Index
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)                                    CRE113CC1
-     F                                     COMMIT                                          CRE113CC1
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                          CRE113CC1 MD061007
+     F**********                           COMMIT                                 CRE113CC1 MD061007
 
       *****************************************************************
       /EJECT
@@ -171,6 +173,13 @@
 
      D CusRangeDS    E DS                  EXTNAME(SDCUSRTD)
 
+     D QSDFC1          DS                                                                   MD061007
+     D  AHFLNM                 1     10                                                     MD061007
+     D  AHNORC                11     13P 0                                                  MD061007
+     D  AHNOIN                14     16P 0                                                  MD061007
+     D  AHNOAM                17     19P 0                                                  MD061007
+     D  AHNODL                20     22P 0                                                  MD061007
+                                                                                            MD061007
 
      D pSQL_RanOk      PR              N
      D  iSQLState                     5A   Const
@@ -1530,7 +1539,21 @@
      C     SRTrailer     BEGSR                                                             CRE113CC1
                                                                                            CRE113CC1
      C                   MOVEL     'SDCUSRTD'    WFNAM                                     CRE113CC1
-     C     WFNAM         CHAIN     SDFCTLL0                           60                   CRE113CC1
+     C*****WFNAM         CHAIN     SDFCTLL0                           60          CRE113CC1 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*RTV'        ZMODE             4                        MD061007
+     C                   PARM      WFNAM         AHFLNM                                     MD061007
+     C                   PARM      0             AHNORC                                     MD061007
+     C                   PARM      0             AHNOIN                                     MD061007
+     C                   PARM      0             AHNOAM                                     MD061007
+     C                   PARM      0             AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061007
+      *                                                                                     MD061007
+     C                   SETOFF                                       60                    MD061007
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061007
+     C                   SETON                                        60                    MD061007
+     C                   ENDIF                                                              MD061007
+      *                                                                                     MD061007
                                                                                            CRE113CC1
      C                   IF        *IN60 = *ON                                             CRE113CC1
      C     *LOCK         IN        LDA                                                     CRE113CC1
@@ -1556,7 +1579,16 @@
                                                                                            CRE113CC1
      C                   ENDIF                                                             CRE113CC1
                                                                                            CRE113CC1
-     C                   UPDATE    @AHREAU                                                 CRE113CC1
+     C**********         UPDATE    @AHREAU                                        CRE113CC1 MD061007
+     C                   CALL      'SD000119'                                               MD061007
+     C                   PARM      '*UPD'        ZMODE                                      MD061007
+     C                   PARM                    AHFLNM                                     MD061007
+     C                   PARM                    AHNORC                                     MD061007
+     C                   PARM                    AHNOIN                                     MD061007
+     C                   PARM                    AHNOAM                                     MD061007
+     C                   PARM                    AHNODL                                     MD061007
+     C                   PARM      *BLANKS       ZRETRN                                     MD061007
+                                                                                            MD061007
 
      C                   ENDSR
       *****************************************************************

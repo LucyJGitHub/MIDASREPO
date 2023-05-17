@@ -107,11 +107,11 @@
       *             principal amount is less than the ten billion     *
       *             threshold.Format the Ten Billion constant to      *
       *             consider the loan currency no. of decimal places. *
-      *             Applied for MD051151                              *
+      *             Applied for MD061151                              *
       *  MD057537 - Return a warning message when the total of        *
       *             principal amount and event amount exceeds ten     *
       *             billion.                                          *
-      *             Applied for MD051151                              *
+      *             Applied for MD061151                              *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *
       *           - DL ICD must not be used, removed unnecessary codes*

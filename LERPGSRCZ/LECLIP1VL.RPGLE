@@ -181,7 +181,7 @@
       *             Applied for MD051151                              *
       *  MD057537 - Return a warning message when principal amount    *
       *             exceeds ten billion.                              *
-      *             Applied for MD051151                              *
+      *             Applied for MD061151                              *
       *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
       *             the one sent in response. Amend to skip checking  *
       *             of Auto Loan allocate if loan is from 24X7.       *
@@ -8587,7 +8587,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     DDFMDT        WNUM7                                      MD029863
      C                   MOVEL     WNUM7         WALF6                                      MD029863
      C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
-     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863
       *                                                                                     MD055714
       ** Original Maturity Date                                                             MD055714
       *                                                                                     MD055714

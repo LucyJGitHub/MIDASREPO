@@ -29,7 +29,7 @@
       *             field BALSUS.                                     *
       *           - Split BALSUS to two or more amounts when contains *
       *             a number more than 13 digits.                     *
-      *             Applied for MD051151                              *
+      *             Applied for MD061151                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023377  - APOSTPD file has wrong source of posting (SPOS)  *
       *  AR589238  - Suspense postings should not refer to irrelevant *
@@ -69,7 +69,7 @@
       ** ! F-specs                              !
       ** ! =======                              !
       ** +--------------------------------------+
- 
+
      FGELEPSL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(APOSTPDF:APOSTF)
       ** Postings file
@@ -79,14 +79,14 @@
      FLEGELEL1  IF   E           K DISK    INFSR(*PSSR)                                     AR589238
      F                                     RENAME(APOSTPDF:APOSTLE)                         AR589238
      F                                     PREFIX(I_)                                       AR589238
- 
+
      FGELEPD    O    E             DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(APOSTPDF:GELEP)
       ** MIDAS Postings
- 
+
      FGELEZZ    UF   E             DISK    INFSR(*PSSR) COMMIT
       ** MIDAS Postings Trailer
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -95,7 +95,7 @@
       ** ! =======                              !
       ** +--------------------------------------+
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
@@ -104,18 +104,18 @@
       ** Defines:                     142 170 DBKEY
       ** 171 180 DBPGM
       ** 181 1830DBASE
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program Status Data Structure
- 
+
       ** General Ledger Details                                                             AR589238
      D SDGELR        E DS                  EXTNAME(SDGELRPD)                                AR589238
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)                                AR589238
@@ -131,17 +131,17 @@
       ** ! Named constants                      !
       ** ! ===============                      !
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ! Arrays and Data Structures           !
       ** ! ==========================           !
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ! Declared variables                   !
       ** ! ==================                   !
       ** +--------------------------------------+
- 
+
      D##CLIM           S             18A   Inz('CUS LEND IMBALANCE')                        AR589238
      D  WNSUS          DS                                                                   AR589238
      D  WNNAR                  1     18                                                     AR589238
@@ -149,13 +149,13 @@
      D  WNCCY                 26     28                                                     AR589238
      DWrkCntRec        S              7  0 Inz(0)
       ** Work - Record Count
- 
+
      DWrkPstTtl        S             18  0 Inz(0)
       ** Work - Total Posting Amount
- 
+
      DWrkHshTtl        S             18  0 Inz(0)
       ** Work - Hash Total
- 
+
      D @RUN            S              1
       ** Work variable used in *PSSR
                                                                                             AR589238
@@ -186,50 +186,50 @@
      D numDig          S              4  0                                                  MD057537
      D BALSUSP         S             15  0                                                  MD057537
      D BALSUS1         C                   CONST(9999999999999)                             MD057537
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** |                                                            |
       ** | Initial processing is performed automatically: the *INZSR  |
       ** | executed at program activation.                            |
       ** |                                                            |
       ** +------------------------------------------------------------+
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C     *DTAARA       DEFINE                  LDA
      C                   IN        RUNDAT
- 
+
       ** Set Date Format Indicator *IN98  on if date format is MMDDYY
- 
+
      C                   IF        AGDFF = 'M'
      C                   EVAL      *IN98 = *ON
      C                   ENDIF
- 
+
       ** Read a Record from postings file
- 
+
      C                   READ      GELEPSL1
- 
+
      C                   DOW       NOT %EOF(GELEPSL1)
                                                                                               262864
       ** do not process deleted postings                                                      262864
                                                                                               262864
      C                   IF        RECI = 'P'                                                 262864
- 
+
       ** Write in MIDAS Postings - GELEPD
- 
+
      C                   WRITE     GELEP
- 
+
      C                   EVAL      WRKCNTREC = WRKCNTREC + 1
      C                   EVAL      WRKPSTTTL = WRKPSTTTL + PSTA
      C                   ENDIF                                                                262864
- 
+
       ** Read Next Record from postings file
- 
+
      C                   READ      GELEPSL1
- 
+
      C                   ENDDO
- 
+
       ** Read a Record from second postings file                                            AR589238
                                                                                             AR589238
      C                   READ      GELEPSL2                                                 AR589238
@@ -315,43 +315,43 @@
       ** Set the pointer to the top of the file
                                                                                             AR589238
      C     0001          SETLL     GELEZZ
- 
+
       ** Read the file GELEZZ
- 
+
      C                   READ      GELEZZ
- 
+
      C                   IF        %EOF(GELEZZ)
- 
+
       ** No record present in file GELEZZ
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GELEZZ'
      C                   EVAL      DBASE = 001
      C                   EVAL      DBKEY = '*FIRST'
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
       ** Update the field values of GELEZZ file
- 
+
      C                   EVAL      WRKCNTREC = WRKCNTREC + NORE1
      C                   MOVE      WRKCNTREC     NORE1
- 
+
      C                   EVAL      WRKHSHTTL = (HRWN * 1000) + HRDC
      C                   EVAL      WRKHSHTTL = WRKHSHTTL + WRKPSTTTL
- 
+
      C                   MOVEL     WRKHSHTTL     HRWN
      C                   MOVE      WRKHSHTTL     HRDC
- 
+
       ** Update GELEZZ file
- 
+
      C                   UPDATE    APOSTZZF
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -360,9 +360,9 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Initializing the LDA information
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = *ZEROS
      C                   EVAL      DBFILE = *BLANKS
@@ -591,7 +591,7 @@
      C                   OUT       LDA                                                      AR589238
      C                   EXSR      *PSSR                                                    AR589238
      C                   ENDIF                                                              AR589238
- 
+
      C                   ENDSR                                                              AR589238
       *****************************************************************                     AR589238
       /EJECT                                                                                AR589238
@@ -642,22 +642,22 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -29,7 +29,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060326           Date 20Mar23               *
+      *  Last Amend No. CSW125             Date 20Mar23               *
       *  Prev Amend No. MD058137           Date 18May21               *
       *                 MD051624           Date 23Sep20               *
       *                 AR989496           Date 13Jun12               *
@@ -84,7 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060326 - MIR and MOR Sequence Generator                    *
+      *  CSW125 -  MIR and MOR Sequence Generator                     *
       *  MD058137 - Midas is not generating unique MQ MessageID if    *
       *             via MGOREF message generation                     *
       *  MD051624 - MT940's msgs found in the Outstanding Message     *
@@ -253,7 +253,7 @@
      D  w@96n                  1      2
      D  tme                    4      7
      D  MIR                    8     35
-     D  MirSeq                26     35                                                     MD060326
+     D  MirSeq                26     35                                                       CSW125
      D  w@sndad               14     21
      D  w@sndbr               23     25
      D  MODE                  36     41  0
@@ -266,7 +266,7 @@
      D  w@mord                 1      6
      D  w@dstad                7     14
      D  w@dstbr               16     18
-     D  MorSeq                19     28                                                     MD060326
+     D  MorSeq                19     28                                                       CSW125
      D  w@morr                 7     28
       ** Message Ouput Reference (MOR)
       *
@@ -468,18 +468,18 @@
      D PMDNO           S              5P 0                                                  MD051624
      D PDATE6          S              6  0                                                  MD051624
      D PDATE7          S              7                                                     MD051624
-      *                                                                                     MD060326
-      ** Entry Parameters for MS100003                                                      MD060326
-      *                                                                                     MD060326
-     DIN_MSGTYPE       S              3A                                                    MD060326
-     DIN_UETR          S             36A                                                    MD060326
-     DIN_MIR           S             28A                                                    MD060326
-     DIN_MOR           S             28A                                                    MD060326
-     DOUT_MIR          S             28A                                                    MD060326
-     DOUT_MOR          S             28A                                                    MD060326
-     DOUT_MORERR       S             10A                                                    MD060326
-     DOUT_MIRERR       S             10A                                                    MD060326
-      *                                                                                     MD060326
+      *                                                                                       CSW125
+      ** Entry Parameters for MS100003                                                        CSW125
+      *                                                                                       CSW125
+     DIN_MSGTYPE       S              3A                                                      CSW125
+     DIN_UETR          S             36A                                                      CSW125
+     DIN_MIR           S             28A                                                      CSW125
+     DIN_MOR           S             28A                                                      CSW125
+     DOUT_MIR          S             28A                                                      CSW125
+     DOUT_MOR          S             28A                                                      CSW125
+     DOUT_MORERR       S             10A                                                      CSW125
+     DOUT_MIRERR       S             10A                                                      CSW125
+      *                                                                                       CSW125
 
       /EJECT
       *****************************************************************
@@ -1474,68 +1474,80 @@
      C                   else                                                               AR976772
      C                   move      '19'          MODEC                                      AR976772
      C                   endif                                                              AR976772
-      *                                                                                     MD060326
-      ** If MirSeq is *blank                                                                MD060326
-      **  or MirSeq are '0000000000'                                                        MD060326
-      **                                                                                    MD060326
-      *                                                                                     MD060326
-     C                   eval      OUT_MIRERR = *blanks                                     MD060326
-     C                   eval      OUT_MORERR = *blanks                                     MD060326
-     C                   eval      IN_UETR = *blanks                                        MD060326
-      *                                                                                     MD060326
-     C                   if        MirSeq = *blanks                                         MD060326
-     C                             or MirSeq = '0000000000'                                 MD060326
-      *                                                                                     MD060326
-      ** Set up MOR                                                                         MD060326
-      ** Locate Block {1: of the message for the remaining                                  MD060326
-      ** components of the MOR                                                              MD060326
-      *                                                                                     MD060326
-     C                   move      MODE          w@mord                                     MD060326
-     C     '{1:'         scan      p@msgbuf      w@1                                        MD060326
-     C                   add       6             w@1                                        MD060326
-     C     22            subst     p@msgbuf:w@1  w@morr                                     MD060326
-      *                                                                                     MD060326
-      ** Populate IN_UETR                                                                   MD060326
-      *                                                                                     MD060326
-     C     '121:'        scan      p@msgbuf      w@9               7 0                      MD060326
-     C                   if        w@9 = 0                                                  MD060326
-     C                   eval      w_uetr = *BLANKS                                         MD060326
-     C                   else                                                               MD060326
-     C                   eval      w@9 = w@9 +4                                             MD060326
-     C     36            subst     p@msgbuf:w@9  w_uetr           36                        MD060326
-     C                   endif                                                              MD060326
-      *                                                                                     MD060326
-      ** Call the generator                                                                 MD060326
-      *                                                                                     MD060326
-     C                   call      'MS100003'                                               MD060326
-     C                   parm      w@mtpy        IN_MSGTYPE                                 MD060326
-     C                   parm      w_uetr        IN_UETR                                    MD060326
-     C                   parm      MIR           IN_MIR                                     MD060326
-     C                   parm      MOR           IN_MOR                                     MD060326
-     C                   parm      *blanks       OUT_MIR                                    MD060326
-     C                   parm      *blanks       OUT_MOR                                    MD060326
-     C                   parm      *blanks       OUT_MIRERR                                 MD060326
-     C                   parm      *blanks       OUT_MORERR                                 MD060326
-     C                   move      OUT_MIR       MIR                                        MD060326
-     C                   move      OUT_MOR       MOR                                        MD060326
-     C                   endif                                                              MD060326
+      *                                                                                       CSW125
+     C                   IF        CSW125 = 'Y'                                               CSW125
+      *                                                                                       CSW125
+      **  Initialize parameters                                                               CSW125
+      *                                                                                       CSW125
+     C                   eval      OUT_MIRERR = *blanks                                       CSW125
+     C                   eval      OUT_MORERR = *blanks                                       CSW125
+     C                   eval      IN_UETR = *blanks                                          CSW125
+      *                                                                                       CSW125
+      ** If MirSeq is *blank                                                                  CSW125
+      **  or MirSeq are '0000000000'                                                          CSW125
+      **                                                                                      CSW125
+      *                                                                                       CSW125
+     C                   if        MirSeq = *blanks                                           CSW125
+     C                             or MirSeq = '0000000000'                                   CSW125
+      *                                                                                       CSW125
+      ** Set up MOR                                                                           CSW125
+      ** Locate Block {1: of the message for the remaining                                    CSW125
+      ** components of the MOR                                                                CSW125
+      *                                                                                       CSW125
+     C                   move      MODE          w@mord                                       CSW125
+     C     '{1:'         scan      p@msgbuf      w@1                                          CSW125
+     C                   add       6             w@1                                          CSW125
+     C     22            subst     p@msgbuf:w@1  w@morr                                       CSW125
+      *                                                                                       CSW125
+      ** Populate IN_UETR                                                                     CSW125
+      *                                                                                       CSW125
+     C     '121:'        scan      p@msgbuf      w@9               7 0                        CSW125
+     C                   if        w@9 = 0                                                    CSW125
+     C                   eval      w_uetr = *BLANKS                                           CSW125
+     C                   else                                                                 CSW125
+     C                   eval      w@9 = w@9 +4                                               CSW125
+     C     36            subst     p@msgbuf:w@9  w_uetr           36                          CSW125
+     C                   endif                                                                CSW125
+      *                                                                                       CSW125
+      ** Call the generator                                                                   CSW125
+      *                                                                                       CSW125
+     C                   call      'MS100003'                                                 CSW125
+     C                   parm      w@mtpy        IN_MSGTYPE                                   CSW125
+     C                   parm      w_uetr        IN_UETR                                      CSW125
+     C                   parm      MIR           IN_MIR                                       CSW125
+     C                   parm      MOR           IN_MOR                                       CSW125
+     C                   parm      *blanks       OUT_MIR                                      CSW125
+     C                   parm      *blanks       OUT_MOR                                      CSW125
+     C                   parm      *blanks       OUT_MIRERR                                   CSW125
+     C                   parm      *blanks       OUT_MORERR                                   CSW125
+     C                   move      OUT_MIR       MIR                                          CSW125
+     C                   move      OUT_MOR       MOR                                          CSW125
+     C                   endif                                                                CSW125
+     C                   ENDIF                                                                CSW125
       *
      C     MIR           setll     msmsi2d9                               60
       *
       ** If message is not a duplicate and is of a recognised type update
       ** database
-      ** and no error in the MIR/MOR Seq Generator                                          MD060326
-      *                                                                                     MD060326
+      ** and no error in the MIR/MOR Seq Generator                                            CSW125
+      *                                                                                       CSW125
      C     *in60         ifeq      *off
      C     w@mtpy        andge     '100'
      C     w@mtpy        andle     '999'
      C     w@96n         andne     '96'
-     C     OUT_MIRERR    andeq     *blanks                                                  MD060326
-     C     OUT_MORERR    andeq     *blanks                                                  MD060326
-      *                                                                                     MD060326
-      ** If MOR was already setup above, do not repeat MOR setup                            MD060326
-      *                                                                                     MD060326
-     C                   if        MOR = *blanks                                            MD060326
+     C     CSW125        andeq     'N'                                                        CSW125
+      *                                                                                       CSW125
+     C     *in60         oreq      *off                                                       CSW125
+     C     w@mtpy        andge     '100'                                                      CSW125
+     C     w@mtpy        andle     '999'                                                      CSW125
+     C     w@96n         andne     '96'                                                       CSW125
+     C     OUT_MIRERR    andeq     *blanks                                                    CSW125
+     C     OUT_MORERR    andeq     *blanks                                                    CSW125
+     C     CSW125        andeq     'Y'                                                        CSW125
+      *                                                                                       CSW125
+      ** If MOR was already setup above, do not repeat MOR setup                              CSW125
+      *                                                                                       CSW125
+     C                   if        MOR = *blanks                                              CSW125
       *
       ** Set up the MOR date from the incoming date
      C                   move      MODE          w@mord
@@ -1545,7 +1557,7 @@
      C     '{1:'         scan      p@msgbuf      w@1
      C                   add       6             w@1
      C     22            subst     p@msgbuf:w@1  w@morr
-     C                   endif                                                              MD060326
+     C                   endif                                                                CSW125
       *
       ** Create message index
      C                   exsr      sr_ix
@@ -2370,6 +2382,19 @@
      C                   ELSE                                                   CSW025
      C                   MOVE      'N'           CSW025                         CSW025
      C                   ENDIF                                                  CSW025
+      *                                                                                       CSW125
+      ** Check if the MIR/MOR Generator feature is active                                     CSW125
+      *                                                                                       CSW125
+     C                   CALLB     'AOSARDR0'                                                 CSW125
+     C                   PARM      *BLANKS       @RTCD                                        CSW125
+     C                   PARM      '*VERIFY'     @OPTN                                        CSW125
+     C                   PARM      'CSW125'      @SARD                                        CSW125
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW125
+     C     @RTCD         IFEQ      *BLANKS                                                    CSW125
+     C                   MOVE      'Y'           CSW125            1                          CSW125
+     C                   ELSE                                                                 CSW125
+     C                   MOVE      'N'           CSW125                                       CSW125
+     C                   ENDIF                                                                CSW125
       *
       ** ... or not quite: if MMM (CSW025) is on, we check for CSW038;          CSW038
       ** if THAT is on we use MQSeries; but if it is off we use data            CSW038

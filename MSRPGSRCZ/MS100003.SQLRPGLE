@@ -16,12 +16,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD060326 *CREATE    Date 20Mar23              *
+      *  Last Amend No. CSW125 *CREATE      Date 20Mar23              *
       *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060326 - MIR and MOR Sequence Generator                    *
+      *  CSW125 - MIR and MOR Sequence Generator                      *
       *                                                               *
       *****************************************************************
       *                                                               *

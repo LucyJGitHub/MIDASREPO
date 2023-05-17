@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSD083             Date 27May10               *
+      *  Last Amend No. MD060181A          Date 05May23               *
+      *  Prev Amend No. MD060181           Date 05May23               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CSD083             Date 27May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -56,6 +58,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060181A - Trade cannot be inserted if Front-office ID has  *
+      *              been previously reversed.                        *
+      *            - When accessing Front office, cancelled trades    *
+      *              are not considered.                              *
+      *  MD060181 - Trade cannot be inserted if Front-office ID has   *
+      *             been previously reversed.                         *
+      *           - When accessing Front office, deleted trades.      *
+      *           - Multiple deletion from SOAP of same Front Office. *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD083 - Watch List Compliance Upgrade                       *
       *  CRE026 - Consumer Banking (Recompile)                        *
@@ -104,7 +114,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSETRADL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(TRADSDF:SETRDFOI)
      FTRADHS    IF   E           K DISK                                         E16096
@@ -113,7 +123,7 @@
      FTRADSDY1  IF   E           K DISK                                         S01401
      FBULKR     IF   E           K DISK                                         S01169
      FMUSER     IF   E           K DISK                                         S01269
- 
+
      FSDCWHTL1  IF   E           K DISK    INFSR(*PSSR)                                       CSD015
       ** Compliance Watch Hit List by Function                                                CSD015
                                                                                               CSD015
@@ -128,74 +138,74 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** EXTERNAL DS FOR SECURITIES TRADING DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       *                                                                                       CAP084
       ** DS for ZMUSER details                                                                CAP084
      D ZMUSER          DS            17                                                       CAP084
      D  PUSRID                 1     10                                                       CAP084
      D  PDBRN                 11     13                                                       CAP084
      D  PDPPT                 14     16                                                       CAP084
- 
+
       ** Trade in File Format
      D TradFilFmt    E DS                  EXTNAME(TRADSD)
       ** Trade Extension in File Format (A)
@@ -213,7 +223,7 @@
       ** External DS for SAR Details                                                          CSD015
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD015
      D                                     PREFIX(S_)                                         CSD015
- 
+
       ** 24X7 status data area                                                                CSD015
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSD015
                                                                                               CSD015
@@ -236,18 +246,18 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
      ITRAUTDF                                                                   158846
      I              RECI                        WURECI                          158846
- 
+
       *****************************************************************
       /EJECT
      C**************************************************************
@@ -437,6 +447,16 @@
       * ACCESS TRADE WITH FRONT OFFICE TRANSACTION ID
       *
      C     FOTRID        CHAIN     SETRDFOI                           99
+      *                                                                                     MD060181
+      ** If trade found is deleted, look for non-deleted trade                              MD060181
+      ** and non-cancelled trade                                                           MD060181A
+      *                                                                                     MD060181
+     C     *IN99         DOWEQ     '0'                                                      MD060181
+     C     RECI          ANDEQ     '*'                                                      MD060181
+     C     *IN99         OREQ      '0'                                                     MD060181A
+     C     RECI          ANDEQ     'C'                                                     MD060181A
+     C     FOTRID        READE     SETRDFOI                               99                MD060181
+     C                   ENDDO                                                              MD060181
       *
       * IF INSERT
       *
@@ -469,7 +489,7 @@
       * IF NOT INSERT, UPDATE MIDAS TRADE REFERENCE
       *
      C                   MOVEL     TDRF          DDTDRF
- 
+
      C                   END
       *
      C     EVFRNT        ENDSR
@@ -594,7 +614,7 @@
      C                   MOVEL     'MMA0103'     MsgIdArr(Ix)
      C                   END
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -694,7 +714,7 @@
      C                   MOVEL     'MMA0080'     MsgIdArr(Ix)
      C                   END
      C                   END
- 
+
      C     EVALAA        ENDSR
       *****************************************************************
       /EJECT
@@ -721,7 +741,7 @@
      C                   MOVEL     'DDTDRF'      FldNameArr(Ix)
      C                   MOVEL     'MMA0089'     MsgIdArr(Ix)
      C                   END
- 
+
      C     EVALAC        ENDSR
       *****************************************************************
       /EJECT
@@ -748,7 +768,7 @@
      C                   MOVEL     'DDTDRF'      FldNameArr(Ix)
      C                   MOVEL     'MMA0089'     MsgIdArr(Ix)
      C                   END
- 
+
      C     EVALAD        ENDSR
       *****************************************************************
       /EJECT
@@ -820,9 +840,9 @@
      C                   END
      C                   END
      C                   END
- 
+
       * Exit if trade not valid
- 
+
      C     OKTDRF        CABEQ     'N'           EVALAP
       *
       * Convert countervalue to base currency
@@ -842,7 +862,7 @@
      C                   MOVEL     'DDTDRF'      FldNameArr(Ix)
      C                   MOVEL     'MMA0097'     MsgIdArr(Ix)
      C                   END
- 
+
       ** Do not allow authorisation on an incomplete trade                                    215727
       *                                                                                       215727
      C     TINC          IFEQ      'I'                                                        215727
@@ -985,9 +1005,9 @@
      C                   END
      C*
      C                   END
- 
+
       * Exit if trade not valid
- 
+
      C     OKTDRF        CABEQ     'N'           EVALAY
       *
       * Convert countervalue to base currency
@@ -1033,7 +1053,7 @@
      C                   ENDIF                                                                CSD015
      C                   ENDIF                                                                CSD015
      C                   ENDIF                                                                CSD015
- 
+
       ** Do not allow authorisation on an incomplete trade                                    215727
       *                                                                                       215727
      C     TINC          IFEQ      'I'                                                        215727
@@ -1062,7 +1082,7 @@
      C                   MOVEL     'DDTDRF'      FldNameArr(Ix)
      C                   MOVEL     'MMA0091'     MsgIdArr(Ix)
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1173,9 +1193,9 @@
      C                   MOVEL     @AJCD         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Convert countervalue in nominal currency to base currency
- 
+
      C                   CALLB     'ZCONV'
      C                   PARM      TCTR          ZAMTCI           15 0
      C                   PARM      TBCR          ZEXCH            13 8
@@ -1185,7 +1205,7 @@
      C                   PARM      A6NBDP        ZCDPI             1 0
      C                   PARM      BasCcyDec     ZCDPO             1 0
      C                   PARM      *ZERO         ZAMTCO           15 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

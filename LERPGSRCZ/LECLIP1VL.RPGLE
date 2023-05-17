@@ -178,7 +178,7 @@
       *             principal amount is less than the ten billion     *
       *             threshold.Format the Ten Billion constant to      *
       *             consider the loan currency no. of decimal places. *
-      *             Applied for MD051151                              *
+      *             Applied for MD061151                              *
       *  MD057537 - Return a warning message when principal amount    *
       *             exceeds ten billion.                              *
       *             Applied for MD061151                              *

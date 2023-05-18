@@ -16,14 +16,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD023377           Date 25Apr14               *
+      *  Last Amend No. MD057537           Date 15May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD023377           Date 25Apr14               *
       *                 AR589238           Date 01Aug12               *
       *                 262864             Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057537 - Field PSTA cannot contain more than 13 digits from*
+      *             field BALSUS.                                     *
+      *           - Split BALSUS to two or more amounts when contains *
+      *             a number more than 13 digits.                     *
+      *             Applied for MD061151                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023377  - APOSTPD file has wrong source of posting (SPOS)  *
       *  AR589238  - Suspense postings should not refer to irrelevant *
@@ -63,7 +69,7 @@
       ** ! F-specs                              !
       ** ! =======                              !
       ** +--------------------------------------+
- 
+
      FGELEPSL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(APOSTPDF:APOSTF)
       ** Postings file
@@ -73,14 +79,14 @@
      FLEGELEL1  IF   E           K DISK    INFSR(*PSSR)                                     AR589238
      F                                     RENAME(APOSTPDF:APOSTLE)                         AR589238
      F                                     PREFIX(I_)                                       AR589238
- 
+
      FGELEPD    O    E             DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(APOSTPDF:GELEP)
       ** MIDAS Postings
- 
+
      FGELEZZ    UF   E             DISK    INFSR(*PSSR) COMMIT
       ** MIDAS Postings Trailer
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -89,7 +95,7 @@
       ** ! =======                              !
       ** +--------------------------------------+
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
@@ -98,18 +104,18 @@
       ** Defines:                     142 170 DBKEY
       ** 171 180 DBPGM
       ** 181 1830DBASE
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program Status Data Structure
- 
+
       ** General Ledger Details                                                             AR589238
      D SDGELR        E DS                  EXTNAME(SDGELRPD)                                AR589238
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)                                AR589238
@@ -125,17 +131,17 @@
       ** ! Named constants                      !
       ** ! ===============                      !
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ! Arrays and Data Structures           !
       ** ! ==========================           !
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ! Declared variables                   !
       ** ! ==================                   !
       ** +--------------------------------------+
- 
+
      D##CLIM           S             18A   Inz('CUS LEND IMBALANCE')                        AR589238
      D  WNSUS          DS                                                                   AR589238
      D  WNNAR                  1     18                                                     AR589238
@@ -143,13 +149,13 @@
      D  WNCCY                 26     28                                                     AR589238
      DWrkCntRec        S              7  0 Inz(0)
       ** Work - Record Count
- 
+
      DWrkPstTtl        S             18  0 Inz(0)
       ** Work - Total Posting Amount
- 
+
      DWrkHshTtl        S             18  0 Inz(0)
       ** Work - Hash Total
- 
+
      D @RUN            S              1
       ** Work variable used in *PSSR
                                                                                             AR589238
@@ -175,50 +181,55 @@
      D LEPNAR          S              1
      D BALSUS          S             15  0
      D WDRCR           S              1  0
- 
+                                                                                            MD057537
+      ** Work field for split suspense postings amount                                      MD057537
+     D numDig          S              4  0                                                  MD057537
+     D BALSUSP         S             15  0                                                  MD057537
+     D BALSUS1         C                   CONST(9999999999999)                             MD057537
+
       ** +--- Start of Main processing -------------------------------+
       ** |                                                            |
       ** | Initial processing is performed automatically: the *INZSR  |
       ** | executed at program activation.                            |
       ** |                                                            |
       ** +------------------------------------------------------------+
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C     *DTAARA       DEFINE                  LDA
      C                   IN        RUNDAT
- 
+
       ** Set Date Format Indicator *IN98  on if date format is MMDDYY
- 
+
      C                   IF        AGDFF = 'M'
      C                   EVAL      *IN98 = *ON
      C                   ENDIF
- 
+
       ** Read a Record from postings file
- 
+
      C                   READ      GELEPSL1
- 
+
      C                   DOW       NOT %EOF(GELEPSL1)
                                                                                               262864
       ** do not process deleted postings                                                      262864
                                                                                               262864
      C                   IF        RECI = 'P'                                                 262864
- 
+
       ** Write in MIDAS Postings - GELEPD
- 
+
      C                   WRITE     GELEP
- 
+
      C                   EVAL      WRKCNTREC = WRKCNTREC + 1
      C                   EVAL      WRKPSTTTL = WRKPSTTTL + PSTA
      C                   ENDIF                                                                262864
- 
+
       ** Read Next Record from postings file
- 
+
      C                   READ      GELEPSL1
- 
+
      C                   ENDDO
- 
+
       ** Read a Record from second postings file                                            AR589238
                                                                                             AR589238
      C                   READ      GELEPSL2                                                 AR589238
@@ -304,43 +315,43 @@
       ** Set the pointer to the top of the file
                                                                                             AR589238
      C     0001          SETLL     GELEZZ
- 
+
       ** Read the file GELEZZ
- 
+
      C                   READ      GELEZZ
- 
+
      C                   IF        %EOF(GELEZZ)
- 
+
       ** No record present in file GELEZZ
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GELEZZ'
      C                   EVAL      DBASE = 001
      C                   EVAL      DBKEY = '*FIRST'
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
       ** Update the field values of GELEZZ file
- 
+
      C                   EVAL      WRKCNTREC = WRKCNTREC + NORE1
      C                   MOVE      WRKCNTREC     NORE1
- 
+
      C                   EVAL      WRKHSHTTL = (HRWN * 1000) + HRDC
      C                   EVAL      WRKHSHTTL = WRKHSHTTL + WRKPSTTTL
- 
+
      C                   MOVEL     WRKHSHTTL     HRWN
      C                   MOVE      WRKHSHTTL     HRDC
- 
+
       ** Update GELEZZ file
- 
+
      C                   UPDATE    APOSTZZF
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -349,9 +360,9 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Initializing the LDA information
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = *ZEROS
      C                   EVAL      DBFILE = *BLANKS
@@ -444,6 +455,8 @@
                                                                                             AR589238
      C                   Z-ADD     0             BALSUS                                     AR589238
      C                   Z-ADD     0             WDRCR                                      AR589238
+     C                   Z-ADD     0             BALSUSP                                    MD057537
+     C                   Z-ADD     0             numDig                                     MD057537
                                                                                             AR589238
      C                   IF        WCRTOT < WDRTOT                                          AR589238
      C                   EVAL      BALSUS = WDRTOT - WCRTOT                                 AR589238
@@ -452,6 +465,19 @@
      C                   EVAL      BALSUS = WCRTOT - WDRTOT                                 AR589238
      C                   Z-ADD     0             WDRCR                                      AR589238
      C                   ENDIF                                                              AR589238
+      *                                                                                     MD057537
+      ** Get the number of digits of BALSUS                                                 MD057537
+      *                                                                                     MD057537
+     C                   EVAL      numDig = %len(%trim(%char(BALSUS)))                      MD057537
+      *                                                                                     MD057537
+      ** Check if BALSUS is geater than 13 digits long. If so split into two or more        MD057537
+      ** amounts.                                                                           MD057537
+      *                                                                                     MD057537
+     C                   IF        numDig > 13                                              MD057537
+     C                   EVAL      BALSUSP = BALSUS                                         MD057537
+     C                   EVAL      BALSUS = BALSUS1                                         MD057537
+     C                   EVAL      BALSUSP = BALSUSP - BALSUS                               MD057537
+     C                   ENDIF                                                              MD057537
                                                                                             AR589238
       ** Set fields                                                                         AR589238
                                                                                             AR589238
@@ -495,6 +521,44 @@
      C                   EVAL      WRKCNTREC = WRKCNTREC + 1                                AR589238
      C                   EVAL      WRKPSTTTL = WRKPSTTTL + PSTA                             AR589238
                                                                                             AR589238
+      *                                                                                     MD057537
+      ** If BALSUSP is not zero then process splitting of amounts.                          MD057537
+      *                                                                                     MD057537
+     C                   IF        BALSUSP <> 0                                             MD057537
+     C                   EVAL      numDig = %len(%trim(%char(BALSUSP)))                     MD057537
+      *                                                                                     MD057537
+     C                   IF        numDig <= 13                                             MD057537
+     C                   EVAL      PSTA = BALSUSP                                           MD057537
+     C                   WRITE     GELEP                                                    MD057537
+     C                   EVAL      WRKCNTREC = WRKCNTREC + 1                                MD057537
+     C                   EVAL      WRKPSTTTL = WRKPSTTTL + PSTA                             MD057537
+     C                   ELSE                                                               MD057537
+      *                                                                                     MD057537
+     C                   DOW       numDig > 13                                              MD057537
+      *                                                                                     MD057537
+     C                   EVAL      BALSUS = BALSUS1                                         MD057537
+      *                                                                                     MD057537
+     C                   EVAL      PSTA = BALSUS                                            MD057537
+     C                   WRITE     GELEP                                                    MD057537
+     C                   EVAL      WRKCNTREC = WRKCNTREC + 1                                MD057537
+     C                   EVAL      WRKPSTTTL = WRKPSTTTL + PSTA                             MD057537
+      *                                                                                     MD057537
+     C                   EVAL      BALSUSP = BALSUSP - BALSUS                               MD057537
+      *                                                                                     MD057537
+     C                   EVAL      numDig = %len(%trim(%char(BALSUSP)))                     MD057537
+     C                   IF        numDig <= 13                                             MD057537
+     C                   EVAL      BALSUS = BALSUSP                                         MD057537
+     C                   EVAL      PSTA = BALSUS                                            MD057537
+     C                   WRITE     GELEP                                                    MD057537
+     C                   EVAL      WRKCNTREC = WRKCNTREC + 1                                MD057537
+     C                   EVAL      WRKPSTTTL = WRKPSTTTL + PSTA                             MD057537
+     C                   ENDIF                                                              MD057537
+      *                                                                                     MD057537
+     C                   ENDDO                                                              MD057537
+      *                                                                                     MD057537
+     C                   ENDIF                                                              MD057537
+      *                                                                                     MD057537
+     C                   ENDIF                                                              MD057537
      C                   ENDSR                                                              AR589238
       *****************************************************************                     AR589238
       /EJECT                                                                                AR589238
@@ -527,7 +591,7 @@
      C                   OUT       LDA                                                      AR589238
      C                   EXSR      *PSSR                                                    AR589238
      C                   ENDIF                                                              AR589238
- 
+
      C                   ENDSR                                                              AR589238
       *****************************************************************                     AR589238
       /EJECT                                                                                AR589238
@@ -578,22 +642,22 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

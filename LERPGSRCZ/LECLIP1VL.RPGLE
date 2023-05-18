@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059046           Date 20Oct22               *
-      *  Prev Amend No. AR918361           Date 02Apr12               *
+      *  Last Amend No. MD060729           Date 15May23               *
+      *  Prev Amend No. MD057537           Date 15May23               *
+      *                 MD059046           Date 20Oct22               *
+      *                 AR918361           Date 02Apr12               *
       *                 MD029863           Date 18Jan18               *
       *                 MD055714           Date 06May20               *
       *                 MD055380           Date 17Apr20               *
@@ -172,6 +174,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060729 - Warning message is still displayed even if        *
+      *             principal amount is less than the ten billion     *
+      *             threshold.Format the Ten Billion constant to      *
+      *             consider the loan currency no. of decimal places. *
+      *             Applied for MD061151                              *
+      *  MD057537 - Return a warning message when principal amount    *
+      *             exceeds ten billion.                              *
+      *             Applied for MD061151                              *
       *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
       *             the one sent in response. Amend to skip checking  *
       *             of Auto Loan allocate if loan is from 24X7.       *
@@ -658,6 +668,8 @@
      D PEAInd          C                   CONST('PEAIndicator')                              CSC054
      D RateFixDays     C                   Const('RateFixingDaysDfault')                      256579
      D FctyNoDaysFwd   C                   Const('FctyExceedNoDaysFwd')                       CLE158
+      *                                                                                     MD057537
+     D TenBillion      C                   CONST(10000000000)                               MD057537
       *
       ** +--------------------------------------+
       ** | Arrays and Data Structures           |
@@ -1195,6 +1207,7 @@
      D @KEY2           S              2                                                       CLE134
      D WPEAInd         S              1A                                                      CSC054
      D CSC054          S              1A                                                      CSC054
+     D WrkTenB         S             15P 0                                                  MD060729
       ***  Work field for APR Required Flag warning message                                   CER050
      D WfAPRC          S              1                                                       CER050
      D CER050          S              1A                                                      CER050
@@ -3747,6 +3760,15 @@ E001 C                   ENDIF
      C                   ENDIF                                                                CLE106
      C                   ENDIF                                                                CLE106
       *
+     C                   EVAL      WrkTenB = TenBillion * (10**WCDPL)                       MD060729
+     C*****WSVAM         IFGT      TenBillion                                      MD057537 MD060729
+     C     WSVAM         IFGT      WrkTenB                                                  MD060729
+     C                   MOVE      'W'           DDCPAMOK                                   MD057537
+     C                   ADD       1             WId                                        MD057537
+     C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)                             MD057537
+     C                   MOVEL     '5049550'     WMsgIDXAr(WId)                             MD057537
+     C                   ENDIF                                                              MD057537
+      *                                                                                     MD057537
      C     DDCPAMOK      IFNE      'N'
      C                   Z-ADD     WSVAM         CCLCPAM
      C                   ENDIF
@@ -8565,7 +8587,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     DDFMDT        WNUM7                                      MD029863
      C                   MOVEL     WNUM7         WALF6                                      MD029863
      C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
-     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863
       *                                                                                     MD055714
       ** Original Maturity Date                                                             MD055714
       *                                                                                     MD055714

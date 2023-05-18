@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD060877             Date 01Jan23             *
-      *  Prev Amend No. CSW101               Date 03Feb23             *
+      *  Last Amend No. MD061274             Date 09May23             *
+      *  Prev Amend No. MD060877             Date 01Jan23             *
+      *                 CSW101               Date 03Feb23             *
       *                 MD060964             Date 24Jan23             *
       *                 MD060352             Date 22Aug22             *
       *                 MD058188             Date 11May21             *
@@ -104,6 +105,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+       *  MD061274 - Deliverable Data Split for SDARRTTD               *
       *  MD060877 - Deliverable Data Split for SMRLSLPD and SMBFPRTD  *
       *  CSW101 - PAYplus Interface.                                  *
       *  MD060964 - Program does not compile                          *
@@ -1350,6 +1352,7 @@
      C                             or ChkFile = 'SDIDCXTD'                                    CSW101
      C                             or ChkFile = 'SMBFPXTD'                                  MD060877
      C                             or ChkFile = 'SMRLSXTD'                                  MD060877
+     C                             or ChkFile = 'SDARRXTD'                                  MD061274
 
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText

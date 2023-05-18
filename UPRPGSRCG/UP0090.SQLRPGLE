@@ -105,7 +105,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-       *  MD061274 - Deliverable Data Split for SDARRTTD               *
+      *  MD061274 - Deliverable Data Split for SDARRTTD               *
       *  MD060877 - Deliverable Data Split for SMRLSLPD and SMBFPRTD  *
       *  CSW101 - PAYplus Interface.                                  *
       *  MD060964 - Program does not compile                          *
@@ -1338,6 +1338,7 @@
      C                             or ChkFile = 'SDNWKXTD'                                  MD058830
      C                             or ChkFile = 'SDNW1XTD'                                  MD058830
      C                             or ChkFile = 'SDLIBXTD'                                  MD060008
+     C                             or ChkFile = 'SDARRXTD'                                  MD061274
      C                             or ChkFile = 'GPACSXTD'                                  MD058188
      C                             or ChkFile = 'GPACXXTD'                                  MD058188
      C                             or ChkFile = 'GPCTRXTD'                                  MD058188
@@ -1352,7 +1353,6 @@
      C                             or ChkFile = 'SDIDCXTD'                                    CSW101
      C                             or ChkFile = 'SMBFPXTD'                                  MD060877
      C                             or ChkFile = 'SMRLSXTD'                                  MD060877
-     C                             or ChkFile = 'SDARRXTD'                                  MD061274
 
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
@@ -1720,6 +1720,7 @@
      C                             or Member = 'SDNWKCTD'                                   MD058830
      C                             or Member = 'SDNW1CTD'                                   MD058830
      C                             or Member = 'SDLIBCTD'                                   MD060008
+     C                             or Member = 'SDARRCTD'                                   MD061274
      C                             or Member = 'SCRELCTD'                                   MD060352
      C                             or Member = 'SDIDCCTD'                                     CSW101
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264

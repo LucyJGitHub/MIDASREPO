@@ -3,7 +3,7 @@
      H COPYRIGHT('(c) Finastra International Systems Ltd. 2022')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('LE Interest Calculation with ARR future rates')
+/*EXI *  TEXT('LE Interest Calculation with ARR future rates')        *
       *****************************************************************
       *                                                               *
       *  Midas - Customer Lending Module                              *
@@ -81,8 +81,8 @@
 
      C                   z-add     0             ZINTR
      C                   z-add     0             PInta
-     C                   z-add     0             ZIRate                                     MD061164
-     C                   z-add     0             AccInta                                    MD061164
+     C                   z-add     0             ZIRate
+     C                   z-add     0             AccInta
 
 s1   C     *In40         Ifeq      *Off
      C     PNIDT         andne     0
@@ -102,8 +102,7 @@ s2   C     *IN41         Doweq     *Off
      C                   z-add     BRVdat        ZIEND
 
      C                   Exsr      SRINTC
-     C**********         Add(H)    ZINTR         PInta                                      MD061164
-     C                   Add(H)    ZINTR         AccInta          13 0                      MD061164
+     C                   Add(H)    ZINTR         AccInta          13 0
 
      C                   Exsr      SRNEWI
      C                   Z-Add     BRVdat        ZIBEG
@@ -113,14 +112,13 @@ e2   C                   Enddo
 
      C                   z-add     PNIDT         ZIEND
      C                   Exsr      SRINTC
-     C**********         Add(H)    ZINTR         PInta                                      MD061164
-     C                   Add(H)    ZINTR         AccInta                                    MD061164
-                                                                                            MD061164
-     C     RDFC          Ifeq      'Y'                                                      MD061164
-     C                   z-add(H)  AccInta       PInta                                      MD061164
-     C                   Else                                                               MD061164
-     C                   Z-Add     AccInta       PInta                                      MD061164
-     C                   EndIf                                                              MD061164
+     C                   Add(H)    ZINTR         AccInta
+
+     C     RDFC          Ifeq      'Y'
+     C                   z-add(H)  AccInta       PInta
+     C                   Else
+     C                   Z-Add     AccInta       PInta
+     C                   EndIf
 
      C                   Add       AITC          PInta
      C     INTC          Ifeq      'Y'
@@ -169,16 +167,6 @@ e1   C                   Endif
       *
      C                   EXSR      GLINTC
       *
-      ** Round down interest if required
-      *
-     C*****RDFC*         Ifeq      'Y'                                                      MD061164
-     C**********         z-add     ZINTR         RDWORK           13 0                      MD061164
-     C**********         z-add     RDWORK        ZINTR                                      MD061164
-     C**********         Else                                                               MD061164
-     C**********         Z-add(H)  ZINTR         RUWORK           13 0                      MD061164
-     C**********         Z-Add     RUWORK        ZINTR                                      MD061164
-     C**********         EndIf                                                              MD061164
-      *
      C                   ENDSR
 
       *****************************************************************
@@ -194,7 +182,7 @@ e1   C                   Endif
      C                   PARM                    PRTCD             7
      C                   PARM                    PLoan
      C                   PARM                    PInta
-     C                   PARM                    ZIRate                                     MD061164
+     C                   PARM                    ZIRate
 
       ** Define Local Data Area for error handling
       *

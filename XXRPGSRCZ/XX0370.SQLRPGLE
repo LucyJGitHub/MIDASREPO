@@ -80,9 +80,7 @@
 s1   C     *In40         Doweq     *Off
 
 s2   C     RTKN          Ifeq      'Y'
-     C*****RECI*         andeq     'D'                                                      MD061164
-     C     MDAT          andge     BJDNWD                                                   MD061164
-     C*****NIDT          andne     0
+     C     MDAT          andge     BJDNWD
 
      C     NIDT          Ifne      0
      C                   z-add     NIDT          @@NIDT
@@ -106,10 +104,10 @@ s3   C     *IN41         Doweq     *Off
      C     Lnrf          andeq     CTRNID
      C     Count         andle     LBDY
 
-s4   C     Calm          Ifeq      'CCR'                                                    MD061164
-     C     CINPDT        andge     BJRDNB                                                   MD061164
-     C     Calm          orne      'CCR'                                                    MD061164
-                                                                                            MD061164
+s4   C     Calm          Ifeq      'CCR'
+     C     CINPDT        andge     BJRDNB
+     C     Calm          orne      'CCR'
+
      C                   z-add     CINPDT        KHISD
 
      C     KHISQ         Chain     XXHISTL3                           42
@@ -134,7 +132,7 @@ s5   C     *IN42         Ifeq      *On
      C     CDCMRT        add       BADJ          K_BRTE
      C     Calm          Wheneq    'CCR'
      C     CAVCRT        add       BADJ          K_BRTE
-     C                   z-add     SLID          K_VDAT                                     MD061164
+     C                   z-add     SLID          K_VDAT
      C     Calm          Wheneq    'SARR'
      C     CRTEAP        add       BADJ          K_BRTE
      C     Calm          Wheneq    'SAVG'
@@ -164,8 +162,8 @@ s5   C     *IN42         Ifeq      *On
 e5   C                   Endif
 
      C                   Add       1             Count
-                                                                                            MD061164
-e4   C                   Endif                                                              MD061164
+
+e4   C                   Endif
 
      C                   Readp     SDHSFWR                                41
 e3   C                   Enddo
@@ -213,7 +211,6 @@ e1   C                   Enddo
 
      C     KHSFW         KLIST
      C                   KFld                    LNRF
-     C**********         KFld                    NIDT
      C                   KFld                    @@NIDT
 
      C     KHISQ         KLIST

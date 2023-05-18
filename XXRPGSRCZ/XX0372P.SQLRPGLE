@@ -49,7 +49,7 @@
 
       ** Report File
      FXX0372P1  O    E             PRINTER USROPN
-     F                                     OFLIND(*IN01)                                    MD061164
+     F                                     OFLIND(*IN01)
      F                                     INFDS(SPOOL1)
 
       *****************************************************************
@@ -77,10 +77,10 @@
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
 
-     D/COPY ZSRSRC,ZINTDYZ1LE                                                               MD061164
-     D/COPY ZSRSRC,ZDATE9Z1LE                                                               MD061164
-     D/COPY ZSRSRC,ZDATE9Z2LE                                                               MD061164
-     D/COPY ZSRSRC,ZDAT10Z1LE                                                               MD061164
+     D/COPY ZSRSRC,ZINTDYZ1LE
+     D/COPY ZSRSRC,ZDATE9Z1LE
+     D/COPY ZSRSRC,ZDATE9Z2LE
+     D/COPY ZSRSRC,ZDAT10Z1LE
 
       ** Data Sructure for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -109,11 +109,11 @@
      D  DSMDAT                        5P 0
      D  DSINTR                       11P 7
      D  DSVDAT                        5P 0
-     D  DSCALM                        4A                                                    MD061164
-     D  DSICBS                        1S 0                                                  MD061164
-     D  DSBADJ                       11P 7                                                  MD061164
-     D  DSRTSP                       11P 7                                                  MD061164
-     D  DSSPIN                        1A                                                    MD061164
+     D  DSCALM                        4A
+     D  DSICBS                        1S 0
+     D  DSBADJ                       11P 7
+     D  DSRTSP                       11P 7
+     D  DSSPIN                        1A
 
      D DSDate          DS             7
      D  DSDy1                  1      1
@@ -121,20 +121,20 @@
      D  DSMth                  3      5
      D  DSYear                 6      7
 
-      ** Temporary DS for SDHSDRTD                                                          MD061164
-     D DlyDS           DS                                                                   MD061164
-     D DintStart                      5p 0                                                  MD061164
-     D DintEnd                        5p 0                                                  MD061164
-     D Dintd                          5p 0                                                  MD061164
-     D Dindy                          5p 0                                                  MD061164
-     D Dobdt                          5p 0                                                  MD061164
-     D Dobdy                          5p 0                                                  MD061164
-     D Dbrfr                         17p12                                                  MD061164
-     D Drtap                         17p12                                                  MD061164
-     D Dcalm                          4a                                                    MD061164
-     D Davcr                         17p12                                                  MD061164
-     D Dcmrt                         17p12                                                  MD061164
-     D Dsmav                         17p12                                                  MD061164
+      ** Temporary DS for SDHSDRTD
+     D DlyDS           DS
+     D DintStart                      5p 0
+     D DintEnd                        5p 0
+     D Dintd                          5p 0
+     D Dindy                          5p 0
+     D Dobdt                          5p 0
+     D Dobdy                          5p 0
+     D Dbrfr                         17p12
+     D Drtap                         17p12
+     D Dcalm                          4a
+     D Davcr                         17p12
+     D Dcmrt                         17p12
+     D Dsmav                         17p12
 
       ** Parameters for ZDATE2
      D ZDayNo          S              5P 0
@@ -171,10 +171,10 @@
      D WWNrdy          S              4S 0
      D WWNrdyChar      S              4A
      D WWIndyChar      S              5A
-     D XCINPDT         S              5  0                                                  MD061164
-     D XCINPSD         S              5  0                                                  MD061164
-     D XFTRNID         S              6                                                     MD061164
-     D Prv_ZIEND       S              5P 0                                                  MD061164
+     D XCINPDT         S              5  0
+     D XCINPSD         S              5  0
+     D XFTRNID         S              6
+     D Prv_ZIEND       S              5P 0
 
       *****************************************************************
       /EJECT
@@ -201,11 +201,11 @@
      C+ , MDAT
      C+ , INTR
      C+ , VDAT
-     C+ , CALM                                                                              MD061164
-     C+ , ICBS                                                                              MD061164
-     C+ , BADJ                                                                              MD061164
-     C+ , RTSP                                                                              MD061164
-     C+ , SPIN                                                                              MD061164
+     C+ , CALM
+     C+ , ICBS
+     C+ , BADJ
+     C+ , RTSP
+     C+ , SPIN
      C+ from CLOANCL
      C+ where
      C+     LNRF = :FTRNID
@@ -339,7 +339,7 @@
      C                   Parm      *BLANKS       PRTCD
      C                   Parm                    FTRNID
      C                   Parm                    PInta
-     C                   Parm                    PZIRate          11 7                      MD061164
+     C                   Parm                    PZIRate          11 7
 
      C                   Eval      ZFLD15 = PInta
 
@@ -354,9 +354,8 @@
       *
       ** Interest Rate
 
-     C     DSCalm        Ifeq      'CCR'                                                    MD061164
-     C**********         Move      DSIntr        ZFLD15                                     MD061164
-     C                   Move      PZIRate       ZFLD15                                     MD061164
+     C     DSCalm        Ifeq      'CCR'
+     C                   Move      PZIRate       ZFLD15
      C                   Eval      ZDECS = 7
 
      C                   Call      'ZSEDIT'
@@ -366,9 +365,9 @@
      C                   Parm                    ZOUT21
 
      C                   Eval      P1INTR  = (%trim(ZOUT21)) + ' % P.A.'
-     C                   else                                                               MD061164
-     C                   Eval      P1INTR  = *Blanks                                        MD061164
-     C                   Endif                                                              MD061164
+     C                   else
+     C                   Eval      P1INTR  = *Blanks
+     C                   Endif
 
      C/exec SQL
      C+ close CLOA
@@ -376,12 +375,11 @@
 
       ** Write Detail
      C                   EXSR      SRReportP1
-     C     DSCalm        Ifeq      'NCCR'                                                   MD061164
-     C                   EXSR      SRReportP2                                               MD061164
-     C                   Endif                                                              MD061164
+     C     DSCalm        Ifeq      'NCCR'
+     C                   EXSR      SRReportP2
+     C                   Endif
 
-      ***Write*Report*Trailer*and*close*file                                                MD061164
-      ** Close file                                                                         MD061164
+      ** Close file
      C                   EXSR      SREndRPT
 
      C                   Read      XXRTKNTD                               40
@@ -405,338 +403,338 @@
      C                   OPEN      XX0372P1
      C                   EVAL      WOPNP1 = 'Y'
      C                   ENDIF
-                                                                                            MD061164
-     C                   Z-Add     SFNUM1        ZSNUM             6 0                      MD061164
-     C                   Move      *Blanks       @Brca             3                        MD061164
-      *                                                                                     MD061164
-     C                   Call      'ZSFILE'                                                 MD061164
-     C                   Parm                    SEQR              5                        MD061164
-     C                   Parm      @Brca         SENTY             3                        MD061164
-     C                   Parm                    SFILE1                                     MD061164
-     C                   Parm                    ZSNUM                                      MD061164
-     C                   Parm                    ZSERR             1                        MD061164
-      *                                                                                     MD061164
-      ** Error during ZSFILE processing, end pgm.                                           MD061164
-      *                                                                                     MD061164
-     C     ZSERR         Ifne      ' '                                                      MD061164
-     C                   Eval      *InU7 = *On                                              MD061164
-     C                   Eval      *InU8 = *On                                              MD061164
-     C                   Eval      *InLR = *On                                              MD061164
-     C                   Return                                                             MD061164
-     C                   Endif                                                              MD061164
+
+     C                   Z-Add     SFNUM1        ZSNUM             6 0
+     C                   Move      *Blanks       @Brca             3
+      *
+     C                   Call      'ZSFILE'
+     C                   Parm                    SEQR              5
+     C                   Parm      @Brca         SENTY             3
+     C                   Parm                    SFILE1
+     C                   Parm                    ZSNUM
+     C                   Parm                    ZSERR             1
+      *
+      ** Error during ZSFILE processing, end pgm.
+      *
+     C     ZSERR         Ifne      ' '
+     C                   Eval      *InU7 = *On
+     C                   Eval      *InU8 = *On
+     C                   Eval      *InLR = *On
+     C                   Return
+     C                   Endif
       *
       ** Write out Detail Record
      C                   WRITE     DETLP1
-                                                                                            MD061164
-      ** Write out Trailer Format                                                           MD061164
-     C                   WRITE     TRAILP1                                                  MD061164
+
+      ** Write out Trailer Format
+     C                   WRITE     TRAILP1
 
      C                   ENDSR
 
-      *****************************************************************                     MD061164
-      /EJECT                                                                                MD061164
-      *****************************************************************                     MD061164
-      *                                                               *                     MD061164
-      * SRReportP2 - Period detail page                               *                     MD061164
-      *                                                               *                     MD061164
-      *****************************************************************                     MD061164
-     C     SRReportP2    Begsr                                                              MD061164
-                                                                                            MD061164
-     C                   z-add     0             XCINPSD                                    MD061164
-     C                   z-add     DSICBS        ZICALC                                     MD061164
-     C                   z-add     DSCPAM        ZIAMT                                      MD061164
-     C                   z-add     DSINTR        ZIRATE                                     MD061164
-     C/exec SQL                                                                             MD061164
-     C+ declare SDHS cursor for                                                             MD061164
-     C+ select                                                                              MD061164
-     C+   CINPSD                                                                            MD061164
-     C+ , CINPED                                                                            MD061164
-     C+ , CINPDT                                                                            MD061164
-     C+ , CINPDY                                                                            MD061164
-     C+ , COBPDT                                                                            MD061164
-     C+ , COBPDY                                                                            MD061164
-     C+ , CPBRFR                                                                            MD061164
-     C+ , CRTEAP                                                                            MD061164
-     C+ , CCALCM                                                                            MD061164
-     C+ , CAVCRT                                                                            MD061164
-     C+ , CDCMRT                                                                            MD061164
-     C+ , CSMPAV                                                                            MD061164
-     C+ from SDHSDRTD                                                                       MD061164
-     C+ where                                                                               MD061164
-     C+     CMODID = 'LE'                                                                   MD061164
-     C+ and CTRNID = :FTRNID                                                                MD061164
-     C+ and CINFLG = 'Y'                                                                    MD061164
-     C+ order by                                                                            MD061164
-     C+     CINPDT asc                                                                      MD061164
-     C/end-exec                                                                             MD061164
-                                                                                            MD061164
-     C/exec SQL                                                                             MD061164
-     C+ open SDHS                                                                           MD061164
-     C/end-exec                                                                             MD061164
-                                                                                            MD061164
-     C/exec SQL                                                                             MD061164
-     C+ fetch next                                                                          MD061164
-     C+ from SDHS                                                                           MD061164
-     C+ into :DlyDS                                                                         MD061164
-     C/end-exec                                                                             MD061164
-                                                                                            MD061164
-     C                   If        SQLCOD <> 100                                            MD061164
-     C                   eval      XCINPSD = DintStart                                      MD061164
-     C                   WRITE     HEADP2                                                   MD061164
-     C                   Endif                                                              MD061164
-                                                                                            MD061164
-     C                   DOW       SQLCOD <> 100                                            MD061164
-     C                   eval      XCINPDT = Dintd                                          MD061164
-                                                                                            MD061164
-      **  Interest Period Date                                                              MD061164
-     C                   Move      Dintd         ZDayNo                                     MD061164
-     C                   Call      'ZDATE2'                                                 MD061164
-     C                   Parm                    ZDayNo                                     MD061164
-     C                   Parm                    BJDFIN                                     MD061164
-     C                   Parm      *Zero         ZDate                                      MD061164
-     C                   Parm      *BLanks       ZADate                                     MD061164
-      *                                                                                     MD061164
-     C                   Eval      DSDATE = ZADate                                          MD061164
-     C     DSDy1         Ifeq      ' '                                                      MD061164
-     C                   Eval      DSDy1 = '0'                                              MD061164
-     C                   Endif                                                              MD061164
-     C                   Eval      P2INTD = DSDay + '-' + DSMth + '-' + DSYear              MD061164
-                                                                                            MD061164
-      **  Interest Period Days                                                              MD061164
-     C                   Move      Dindy         WWIndyChar                                 MD061164
-     C                   Eval      P2INDY =  %triml(WWIndyChar:'0')                         MD061164
-                                                                                            MD061164
-      **  Published Risk Free Rate                                                          MD061164
-     C                   z-add     Dbrfr         WrkRate          11 7                      MD061164
-     C                   z-add     0             ZFLD15                                     MD061164
-     C                   Move      WrkRate       ZFLD15                                     MD061164
-     C                   Eval      ZDECS = 7                                                MD061164
-     C                   Call      'ZSEDIT'                                                 MD061164
-     C                   Parm                    ZFLD15                                     MD061164
-     C                   Parm                    ZDECS                                      MD061164
-     C                   Parm      'J'           ZECODE                                     MD061164
-     C                   Parm                    ZOUT21                                     MD061164
-     C                   Eval      P2BRFR  = (%trim(ZOUT21))                                MD061164
-                                                                                            MD061164
-      **  Rate Applied (calculated)                                                         MD061164
-     C                   Exsr      SRNEWI                                                   MD061164
-     C                   z-add     0             ZFLD15                                     MD061164
-     C                   Move      ZIRATE        ZFLD15                                     MD061164
-     C                   Eval      ZDECS = 7                                                MD061164
-     C                   Call      'ZSEDIT'                                                 MD061164
-     C                   Parm                    ZFLD15                                     MD061164
-     C                   Parm                    ZDECS                                      MD061164
-     C                   Parm      'J'           ZECODE                                     MD061164
-     C                   Parm                    ZOUT21                                     MD061164
-     C                   Eval      P2RTAP  = (%trim(ZOUT21))                                MD061164
-                                                                                            MD061164
-      *                                                                                     MD061164
-      ** Interest amount                                                                    MD061164
-                                                                                            MD061164
-     C                   z-add     0             PInta                                      MD061164
-     C                   z-add     DIntd         ZIBEG                                      MD061164
-                                                                                            MD061164
-     C     DIntd         add       DIndy         ZIEND                                      MD061164
-     C                   Exsr      GLINTC                                                   MD061164
-     C                   Add(H)    ZINTR         PInta                                      MD061164
-                                                                                            MD061164
-     C                   z-add     0             ZFLD15                                     MD061164
-     C                   Eval      ZFLD15 = PInta                                           MD061164
-     C                   Eval      ZDECS = A6NBDP                                           MD061164
-                                                                                            MD061164
-     C                   Call      'ZSEDIT'                                                 MD061164
-     C                   Parm                    ZFLD15                                     MD061164
-     C                   Parm                    ZDECS                                      MD061164
-     C                   Parm      'J'           ZECODE                                     MD061164
-     C                   Parm                    ZOUT21                                     MD061164
-     C                   Eval      P2INTA  = %trim(ZOUT21)                                  MD061164
-      *                                                                                     MD061164
-      ** Write out Detail Record                                                            MD061164
-      *                                                                                     MD061164
-     C                   Z-Add     1             RQDLN1            3 0                      MD061164
-     C     OFLLN1        Sub       PRTLN1        DIFLN1            3 0                      MD061164
-     C     DIFLN1        Ifle      RQDLN1                                                   MD061164
-     C     *IN01         oreq      *On                                                      MD061164
-     C                   Write     HeadP2                                                   MD061164
-     C                   move      *Off          *IN01                                      MD061164
-     C                   Endif                                                              MD061164
-     C                   WRITE     DETLP2                                                   MD061164
-                                                                                            MD061164
-     C/exec SQL                                                                             MD061164
-     C+ fetch next                                                                          MD061164
-     C+ from SDHS                                                                           MD061164
-     C+ into :DlyDS                                                                         MD061164
-     C/end-exec                                                                             MD061164
-                                                                                            MD061164
-     C                   ENDDO                                                              MD061164
-                                                                                            MD061164
-     C/exec SQL                                                                             MD061164
-     C+ close SDHS                                                                          MD061164
-     C/end-exec                                                                             MD061164
-                                                                                            MD061164
-      ** Process ARR forward rates                                                          MD061164
-     C                   eval      XCINPDT = 0                                              MD061164
-     C/exec SQL                                                                             MD061164
-     C+ declare SDFW cursor for                                                             MD061164
-     C+ select                                                                              MD061164
-     C+   FINPSD                                                                            MD061164
-     C+ , FINPED                                                                            MD061164
-     C+ , FINPDT                                                                            MD061164
-     C+ , FINPDY                                                                            MD061164
-     C+ , FOBPDT                                                                            MD061164
-     C+ , FOBPDY                                                                            MD061164
-     C+ , FPBRFR                                                                            MD061164
-     C+ , FRTEAP                                                                            MD061164
-     C+ , FCALCM                                                                            MD061164
-     C+ , FAVCRT                                                                            MD061164
-     C+ , FDCMRT                                                                            MD061164
-     C+ , FSMPAV                                                                            MD061164
-     C+ from SDFWDRTD                                                                       MD061164
-     C+ where                                                                               MD061164
-     C+     FMODID = 'LE'                                                                   MD061164
-     C+ and FTRNID = :FTRNID                                                                MD061164
-     C+ and FINPSD = :XCINPSD                                                               MD061164
-     C+ order by                                                                            MD061164
-     C+     FINPDT asc                                                                      MD061164
-     C/end-exec                                                                             MD061164
-                                                                                            MD061164
-     C/exec SQL                                                                             MD061164
-     C+ open SDFW                                                                           MD061164
-     C/end-exec                                                                             MD061164
-                                                                                            MD061164
-     C/exec SQL                                                                             MD061164
-     C+ fetch next                                                                          MD061164
-     C+ from SDFW                                                                           MD061164
-     C+ into :DlyDS                                                                         MD061164
-     C/end-exec                                                                             MD061164
-                                                                                            MD061164
-     C                   DOW       SQLCOD <> 100                                            MD061164
-     C                   eval      XCINPDT = Dintd                                          MD061164
-                                                                                            MD061164
-      **  Interest Period Date                                                              MD061164
-     C                   Move      Dintd         ZDayNo                                     MD061164
-     C                   Call      'ZDATE2'                                                 MD061164
-     C                   Parm                    ZDayNo                                     MD061164
-     C                   Parm                    BJDFIN                                     MD061164
-     C                   Parm      *Zero         ZDate                                      MD061164
-     C                   Parm      *BLanks       ZADate                                     MD061164
-      *                                                                                     MD061164
-     C                   Eval      DSDATE = ZADate                                          MD061164
-     C     DSDy1         Ifeq      ' '                                                      MD061164
-     C                   Eval      DSDy1 = '0'                                              MD061164
-     C                   Endif                                                              MD061164
-     C                   Eval      P2INTD = DSDay + '-' + DSMth + '-' + DSYear              MD061164
-      *                                                                                     MD061164
-      **  Interest Period Days                                                              MD061164
-     C                   Move      Dindy         WWIndyChar                                 MD061164
-     C                   Eval      P2INDY =  %triml(WWIndyChar:'0')                         MD061164
-                                                                                            MD061164
-      **  Published Risk Free Rate                                                          MD061164
-     C                   Z-Add     Dbrfr         WrkRate                                    MD061164
-     C                   Z-Add     0             ZFLD15                                     MD061164
-     C                   Move      WrkRate       ZFLD15                                     MD061164
-     C                   Eval      ZDECS = 7                                                MD061164
-     C                   Call      'ZSEDIT'                                                 MD061164
-     C                   Parm                    ZFLD15                                     MD061164
-     C                   Parm                    ZDECS                                      MD061164
-     C                   Parm      'J'           ZECODE                                     MD061164
-     C                   Parm                    ZOUT21                                     MD061164
-     C                   Eval      P2BRFR  = (%trim(ZOUT21))                                MD061164
-                                                                                            MD061164
-      **  Rate Applied (calculated)                                                         MD061164
-     C                   Exsr      SRNEWI                                                   MD061164
-     C                   Z-Add     0             ZFLD15                                     MD061164
-     C                   Move      ZIRATE        ZFLD15                                     MD061164
-     C                   Eval      ZDECS = 7                                                MD061164
-     C                   Call      'ZSEDIT'                                                 MD061164
-     C                   Parm                    ZFLD15                                     MD061164
-     C                   Parm                    ZDECS                                      MD061164
-     C                   Parm      'J'           ZECODE                                     MD061164
-     C                   Parm                    ZOUT21                                     MD061164
-     C                   Eval      P2RTAP  = (%trim(ZOUT21))                                MD061164
-                                                                                            MD061164
-      *                                                                                     MD061164
-      ** Interest amount                                                                    MD061164
-                                                                                            MD061164
-     C                   z-add     0             PInta                                      MD061164
-     C                   z-add     DIntd         ZIBEG                                      MD061164
-                                                                                            MD061164
-     C     DIntd         add       DIndy         ZIEND                                      MD061164
-     C                   Exsr      GLINTC                                                   MD061164
-     C                   Add(H)    ZINTR         PInta                                      MD061164
-                                                                                            MD061164
-     C                   Z-Add     0             ZFLD15                                     MD061164
-     C                   Eval      ZFLD15 = PInta                                           MD061164
-     C                   Eval      ZDECS = A6NBDP                                           MD061164
-                                                                                            MD061164
-     C                   Call      'ZSEDIT'                                                 MD061164
-     C                   Parm                    ZFLD15                                     MD061164
-     C                   Parm                    ZDECS                                      MD061164
-     C                   Parm      'J'           ZECODE                                     MD061164
-     C                   Parm                    ZOUT21                                     MD061164
-     C                   Eval      P2INTA  = %trim(ZOUT21)                                  MD061164
-      *                                                                                     MD061164
-      ** Write out Detail Record                                                            MD061164
-      *                                                                                     MD061164
-     C                   Z-Add     1             RQDLN1            3 0                      MD061164
-     C     OFLLN1        Sub       PRTLN1        DIFLN1            3 0                      MD061164
-     C     DIFLN1        Ifle      RQDLN1                                                   MD061164
-     C     *IN01         oreq      *On                                                      MD061164
-     C                   Write     HeadP2                                                   MD061164
-     C                   move      *Off          *IN01                                      MD061164
-     C                   Endif                                                              MD061164
-     C                   WRITE     DETLP2                                                   MD061164
-                                                                                            MD061164
-     C/exec SQL                                                                             MD061164
-     C+ fetch next                                                                          MD061164
-     C+ from SDFW                                                                           MD061164
-     C+ into :DlyDS                                                                         MD061164
-     C/end-exec                                                                             MD061164
-                                                                                            MD061164
-     C                   ENDDO                                                              MD061164
-                                                                                            MD061164
-     C/exec SQL                                                                             MD061164
-     C+ close SDFW                                                                          MD061164
-     C/end-exec                                                                             MD061164
-     C                   Endsr                                                              MD061164
-                                                                                            MD061164
-      *****************************************************************                     MD061164
-      /EJECT                                                                                MD061164
-      *****************************************************************                     MD061164
-      *                                                               *                     MD061164
-      *  SRNEWI - Calculate Rate                                      *                     MD061164
-      *                                                               *                     MD061164
-      *****************************************************************                     MD061164
-     C     SRNEWI        BEGSR                                                              MD061164
-      *                                                                                     MD061164
-     C                   Z-Add     0             ZIRATE                                     MD061164
-      *                                                                                     MD061164
-     C                   Select                                                             MD061164
-     C     DSCalm        Wheneq    'NCCR'                                                   MD061164
-     C                   Z-Add     DCmrt         WrkRate                                    MD061164
-     C     WrkRate       add       DSBadj        ZIRATE                                     MD061164
-     C     DSCalm        Wheneq    'CCR'                                                    MD061164
-     C                   Z-Add     DAvcr         WrkRate                                    MD061164
-     C     WrkRate       add       DSBadj        ZIRATE                                     MD061164
-     C     DSCalm        Wheneq    'SARR'                                                   MD061164
-     C                   Z-Add     DRtap         WrkRate                                    MD061164
-     C     WrKRate       add       DSBadj        ZIRATE                                     MD061164
-     C     DSCalm        Wheneq    'SAVG'                                                   MD061164
-     C                   Z-Add     DSmav         WrkRate                                    MD061164
-     C     WrkRate       add       DSBadj        ZIRATE                                     MD061164
-     C                   Endsl                                                              MD061164
-                                                                                            MD061164
-     C                   Select                                                             MD061164
-     C                   When      DSSPIN ='A'                                              MD061164
-     C     ZIRATE        ADD       DSRTSP        ZIRATE                                     MD061164
-     C                   When      DSSPIN ='S'                                              MD061164
-     C     ZIRATE        SUB       DSRTSP        ZIRATE                                     MD061164
-     C                   When      DSSPIN ='P'                                              MD061164
-     C     DSRTSP        DIV       100           WWORK            11 9                      MD061164
-     C     ZIRATE        MULT      WWORK         ZIRATE                                     MD061164
-     C                   Endsl                                                              MD061164
-      *                                                                                     MD061164
-     C                   ENDSR                                                              MD061164
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRReportP2 - Period detail page                               *
+      *                                                               *
+      *****************************************************************
+     C     SRReportP2    Begsr
+
+     C                   z-add     0             XCINPSD
+     C                   z-add     DSICBS        ZICALC
+     C                   z-add     DSCPAM        ZIAMT
+     C                   z-add     DSINTR        ZIRATE
+     C/exec SQL
+     C+ declare SDHS cursor for
+     C+ select
+     C+   CINPSD
+     C+ , CINPED
+     C+ , CINPDT
+     C+ , CINPDY
+     C+ , COBPDT
+     C+ , COBPDY
+     C+ , CPBRFR
+     C+ , CRTEAP
+     C+ , CCALCM
+     C+ , CAVCRT
+     C+ , CDCMRT
+     C+ , CSMPAV
+     C+ from SDHSDRTD
+     C+ where
+     C+     CMODID = 'LE'
+     C+ and CTRNID = :FTRNID
+     C+ and CINFLG = 'Y'
+     C+ order by
+     C+     CINPDT asc
+     C/end-exec
+
+     C/exec SQL
+     C+ open SDHS
+     C/end-exec
+
+     C/exec SQL
+     C+ fetch next
+     C+ from SDHS
+     C+ into :DlyDS
+     C/end-exec
+
+     C                   If        SQLCOD <> 100
+     C                   eval      XCINPSD = DintStart
+     C                   WRITE     HEADP2
+     C                   Endif
+
+     C                   DOW       SQLCOD <> 100
+     C                   eval      XCINPDT = Dintd
+
+      **  Interest Period Date
+     C                   Move      Dintd         ZDayNo
+     C                   Call      'ZDATE2'
+     C                   Parm                    ZDayNo
+     C                   Parm                    BJDFIN
+     C                   Parm      *Zero         ZDate
+     C                   Parm      *BLanks       ZADate
+      *
+     C                   Eval      DSDATE = ZADate
+     C     DSDy1         Ifeq      ' '
+     C                   Eval      DSDy1 = '0'
+     C                   Endif
+     C                   Eval      P2INTD = DSDay + '-' + DSMth + '-' + DSYear
+
+      **  Interest Period Days
+     C                   Move      Dindy         WWIndyChar
+     C                   Eval      P2INDY =  %triml(WWIndyChar:'0')
+
+      **  Published Risk Free Rate
+     C                   z-add     Dbrfr         WrkRate          11 7
+     C                   z-add     0             ZFLD15
+     C                   Move      WrkRate       ZFLD15
+     C                   Eval      ZDECS = 7
+     C                   Call      'ZSEDIT'
+     C                   Parm                    ZFLD15
+     C                   Parm                    ZDECS
+     C                   Parm      'J'           ZECODE
+     C                   Parm                    ZOUT21
+     C                   Eval      P2BRFR  = (%trim(ZOUT21))
+
+      **  Rate Applied (calculated)
+     C                   Exsr      SRNEWI
+     C                   z-add     0             ZFLD15
+     C                   Move      ZIRATE        ZFLD15
+     C                   Eval      ZDECS = 7
+     C                   Call      'ZSEDIT'
+     C                   Parm                    ZFLD15
+     C                   Parm                    ZDECS
+     C                   Parm      'J'           ZECODE
+     C                   Parm                    ZOUT21
+     C                   Eval      P2RTAP  = (%trim(ZOUT21))
+
+      *
+      ** Interest amount
+
+     C                   z-add     0             PInta
+     C                   z-add     DIntd         ZIBEG
+
+     C     DIntd         add       DIndy         ZIEND
+     C                   Exsr      GLINTC
+     C                   Add(H)    ZINTR         PInta
+
+     C                   z-add     0             ZFLD15
+     C                   Eval      ZFLD15 = PInta
+     C                   Eval      ZDECS = A6NBDP
+
+     C                   Call      'ZSEDIT'
+     C                   Parm                    ZFLD15
+     C                   Parm                    ZDECS
+     C                   Parm      'J'           ZECODE
+     C                   Parm                    ZOUT21
+     C                   Eval      P2INTA  = %trim(ZOUT21)
+      *
+      ** Write out Detail Record
+      *
+     C                   Z-Add     1             RQDLN1            3 0
+     C     OFLLN1        Sub       PRTLN1        DIFLN1            3 0
+     C     DIFLN1        Ifle      RQDLN1
+     C     *IN01         oreq      *On
+     C                   Write     HeadP2
+     C                   move      *Off          *IN01
+     C                   Endif
+     C                   WRITE     DETLP2
+
+     C/exec SQL
+     C+ fetch next
+     C+ from SDHS
+     C+ into :DlyDS
+     C/end-exec
+
+     C                   ENDDO
+
+     C/exec SQL
+     C+ close SDHS
+     C/end-exec
+
+      ** Process ARR forward rates
+     C                   eval      XCINPDT = 0
+     C/exec SQL
+     C+ declare SDFW cursor for
+     C+ select
+     C+   FINPSD
+     C+ , FINPED
+     C+ , FINPDT
+     C+ , FINPDY
+     C+ , FOBPDT
+     C+ , FOBPDY
+     C+ , FPBRFR
+     C+ , FRTEAP
+     C+ , FCALCM
+     C+ , FAVCRT
+     C+ , FDCMRT
+     C+ , FSMPAV
+     C+ from SDFWDRTD
+     C+ where
+     C+     FMODID = 'LE'
+     C+ and FTRNID = :FTRNID
+     C+ and FINPSD = :XCINPSD
+     C+ order by
+     C+     FINPDT asc
+     C/end-exec
+
+     C/exec SQL
+     C+ open SDFW
+     C/end-exec
+
+     C/exec SQL
+     C+ fetch next
+     C+ from SDFW
+     C+ into :DlyDS
+     C/end-exec
+
+     C                   DOW       SQLCOD <> 100
+     C                   eval      XCINPDT = Dintd
+
+      **  Interest Period Date
+     C                   Move      Dintd         ZDayNo
+     C                   Call      'ZDATE2'
+     C                   Parm                    ZDayNo
+     C                   Parm                    BJDFIN
+     C                   Parm      *Zero         ZDate
+     C                   Parm      *BLanks       ZADate
+      *
+     C                   Eval      DSDATE = ZADate
+     C     DSDy1         Ifeq      ' '
+     C                   Eval      DSDy1 = '0'
+     C                   Endif
+     C                   Eval      P2INTD = DSDay + '-' + DSMth + '-' + DSYear
+      *
+      **  Interest Period Days
+     C                   Move      Dindy         WWIndyChar
+     C                   Eval      P2INDY =  %triml(WWIndyChar:'0')
+
+      **  Published Risk Free Rate
+     C                   Z-Add     Dbrfr         WrkRate
+     C                   Z-Add     0             ZFLD15
+     C                   Move      WrkRate       ZFLD15
+     C                   Eval      ZDECS = 7
+     C                   Call      'ZSEDIT'
+     C                   Parm                    ZFLD15
+     C                   Parm                    ZDECS
+     C                   Parm      'J'           ZECODE
+     C                   Parm                    ZOUT21
+     C                   Eval      P2BRFR  = (%trim(ZOUT21))
+
+      **  Rate Applied (calculated)
+     C                   Exsr      SRNEWI
+     C                   Z-Add     0             ZFLD15
+     C                   Move      ZIRATE        ZFLD15
+     C                   Eval      ZDECS = 7
+     C                   Call      'ZSEDIT'
+     C                   Parm                    ZFLD15
+     C                   Parm                    ZDECS
+     C                   Parm      'J'           ZECODE
+     C                   Parm                    ZOUT21
+     C                   Eval      P2RTAP  = (%trim(ZOUT21))
+
+      *
+      ** Interest amount
+
+     C                   z-add     0             PInta
+     C                   z-add     DIntd         ZIBEG
+
+     C     DIntd         add       DIndy         ZIEND
+     C                   Exsr      GLINTC
+     C                   Add(H)    ZINTR         PInta
+
+     C                   Z-Add     0             ZFLD15
+     C                   Eval      ZFLD15 = PInta
+     C                   Eval      ZDECS = A6NBDP
+
+     C                   Call      'ZSEDIT'
+     C                   Parm                    ZFLD15
+     C                   Parm                    ZDECS
+     C                   Parm      'J'           ZECODE
+     C                   Parm                    ZOUT21
+     C                   Eval      P2INTA  = %trim(ZOUT21)
+      *
+      ** Write out Detail Record
+      *
+     C                   Z-Add     1             RQDLN1            3 0
+     C     OFLLN1        Sub       PRTLN1        DIFLN1            3 0
+     C     DIFLN1        Ifle      RQDLN1
+     C     *IN01         oreq      *On
+     C                   Write     HeadP2
+     C                   move      *Off          *IN01
+     C                   Endif
+     C                   WRITE     DETLP2
+
+     C/exec SQL
+     C+ fetch next
+     C+ from SDFW
+     C+ into :DlyDS
+     C/end-exec
+
+     C                   ENDDO
+
+     C/exec SQL
+     C+ close SDFW
+     C/end-exec
+     C                   Endsr
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNEWI - Calculate Rate                                      *
+      *                                                               *
+      *****************************************************************
+     C     SRNEWI        BEGSR
+      *
+     C                   Z-Add     0             ZIRATE
+      *
+     C                   Select
+     C     DSCalm        Wheneq    'NCCR'
+     C                   Z-Add     DCmrt         WrkRate
+     C     WrkRate       add       DSBadj        ZIRATE
+     C     DSCalm        Wheneq    'CCR'
+     C                   Z-Add     DAvcr         WrkRate
+     C     WrkRate       add       DSBadj        ZIRATE
+     C     DSCalm        Wheneq    'SARR'
+     C                   Z-Add     DRtap         WrkRate
+     C     WrKRate       add       DSBadj        ZIRATE
+     C     DSCalm        Wheneq    'SAVG'
+     C                   Z-Add     DSmav         WrkRate
+     C     WrkRate       add       DSBadj        ZIRATE
+     C                   Endsl
+
+     C                   Select
+     C                   When      DSSPIN ='A'
+     C     ZIRATE        ADD       DSRTSP        ZIRATE
+     C                   When      DSSPIN ='S'
+     C     ZIRATE        SUB       DSRTSP        ZIRATE
+     C                   When      DSSPIN ='P'
+     C     DSRTSP        DIV       100           WWORK            11 9
+     C     ZIRATE        MULT      WWORK         ZIRATE
+     C                   Endsl
+      *
+     C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -750,7 +748,6 @@
      C                   IF        WOPNP1 = 'Y'
 
       ** Write out Trailer Format
-     C**********         WRITE     TRAILP1                                                  MD061164
      C                   Close     XX0372P1
      C                   EVAL      WOPNP1 = 'N'
 
@@ -819,7 +816,7 @@
 
      C                   ENDSR
       *****************************************************************
-     C/COPY ZSRSRC,GLINTCZ1LE                                                               MD061164
-     C/COPY ZSRSRC,ZINTDYZ2LE                                                               MD061164
-     C/COPY ZSRSRC,ZDATE9Z3LE                                                               MD061164
-     C/COPY ZSRSRC,ZDAT10Z2LE                                                               MD061164
+     C/COPY ZSRSRC,GLINTCZ1LE
+     C/COPY ZSRSRC,ZINTDYZ2LE
+     C/COPY ZSRSRC,ZDATE9Z3LE
+     C/COPY ZSRSRC,ZDAT10Z2LE

@@ -274,7 +274,7 @@
      D KRFRR           S                   LIKE(SCRFLD)
      D RPubLag         S                   LIKE(PUBLAG)
      D RPubTim         S                   LIKE(PUBTIM)
-     D SysDate         S               D   DATFMT(*ISO)                                     MDNNNNNN
+     D SysDate         S               D   DATFMT(*ISO)                                     MD061164
 
       *****************************************************************
       /EJECT

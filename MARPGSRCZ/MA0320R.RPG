@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. BA6019             Date 09Feb23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -36,6 +37,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  BA6019 - Accomodate retention years and 'CONFIDENTIAL'       *
+      *           in Description field.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,MAH00006                                 *
@@ -159,6 +162,11 @@
      I* EXTERNAL DATA STRUCTURE FOR ACCESS TO MIDAS MODULES FILE          LN1049
      I*
      I/COPY WNCPYSRC,MAH00006
+     I*                                                                                       BA6019
+     I** MIDAS Switchable Features Accessed Via Access Program                                BA6019
+     ISCSARD    E DSSCSARDPD                                                                  BA6019
+     I              LCD                             XLCD                                      BA6019
+     I*                                                                                       BA6019
      IRUNDAT      DS
      I                                        1   7 RUNA
      I                                    P   8  100RUND
@@ -540,6 +548,32 @@
      C                     EXSR ZASNMS                     Send message   LN1148
      C                     END                             FI             LN1148
      C/COPY WNCPYSRC,MAH00007
+      *                                                                                       BA6019
+     C           BA6019    IFEQ 'Y'                                                           BA6019
+      *                                                                                       BA6019
+      ** Validate 'CONFIDENTIAL'                                                              BA6019
+      *                                                                                       BA6019
+     C           12        SUBST#1ADSC:11 CONFTL 12                                           BA6019
+     C           CONFTL    IFNE CONFID                                                        BA6019
+     C           CONFTL    ANDNEOPENNN                                                        BA6019
+     C           CONFTL    ANDNEINTERN                                                        BA6019
+     C           CONFTL    ANDNESENSIT                                                        BA6019
+     C                     MOVE #1ADSC    DESC20 20                                           BA6019
+     C                     MOVELSENSIT    DESC20                                              BA6019
+     C                     MOVE DESC20    #1ADSC                                              BA6019
+     C                     END                                                                BA6019
+      *                                                                                       BA6019
+      ** Validate Retention years                                                             BA6019
+      *                                                                                       BA6019
+     C           2         SUBST#1ADSC:23 RETAIN  2                                           BA6019
+     C           RETAIN    IFLT '01'                                                          BA6019
+     C           RETAIN    ORGT '99'                                                          BA6019
+     C                     MOVE #1ADSC    DESC08  8                                           BA6019
+     C                     MOVEL'11'      DESC08                                              BA6019
+     C                     MOVE DESC08    #1ADSC                                              BA6019
+     C                     END                                                                BA6019
+     C                     END                                                                BA6019
+      *                                                                                       BA6019
       * Validate Medium
       * Name search required ?
      C                     MOVEL#1MEDM    W0NSRQ  1        Medium
@@ -1370,6 +1404,40 @@
      C                     MOVE *BLANK    P0RTN
      C                     MOVE *BLANK    W0RTN   7
      C/COPY WNCPYSRC,MAH00008
+      *                                                                                       BA6019
+      * Check if BA6019 - Archiving RPT sep. Arch is ON                                       BA6019
+      *                                                                                       BA6019
+     C                     MOVE 'N'       BA6019  1                                           BA6019
+      *                                                                                       BA6019
+     C                     CALL 'AOSARDR0'                                                    BA6019
+     C                     PARM *BLANKS   @RTCD   7                                           BA6019
+     C                     PARM '*VERIFY' @OPTN   7                                           BA6019
+     C                     PARM 'BA6019'  @SARD   6                                           BA6019
+     C           SCSARD    PARM SCSARD    DSSDY                                               BA6019
+      *                                                                                       BA6019
+      *  If feature BA6019 is active                                                          BA6019
+      *                                                                                       BA6019
+     C           @RTCD     IFEQ *BLANKS                                                       BA6019
+     C                     MOVE 'Y'       BA6019                                              BA6019
+      *                                                                                       BA6019
+      * Set up 'CONFIDENTIAL' field.                                                          BA6019
+     C                     MOVEL'CONFIDEN'CONFID 12                                           BA6019
+     C                     MOVE 'TIAL'    CONFID 12                                           BA6019
+      *                                                                                       BA6019
+      * Set up 'OPEN        ' field.                                                          BA6019
+     C                     MOVEL'OPEN    'OPENNN 12                                           BA6019
+     C                     MOVE '    '    OPENNN 12                                           BA6019
+      *                                                                                       BA6019
+      * Set up 'SENSITIVE   ' field.                                                          BA6019
+     C                     MOVEL'SENSITIV'SENSIT 12                                           BA6019
+     C                     MOVE 'E   '    SENSIT 12                                           BA6019
+      *                                                                                       BA6019
+      * Set up 'INTERNAL    ' field.                                                          BA6019
+     C                     MOVEL'INTERNAL'INTERN 12                                           BA6019
+     C                     MOVE '    '    INTERN 12                                           BA6019
+      *                                                                                       BA6019
+     C                     END                                                                BA6019
+      *                                                                                       BA6019
       * Setup job date/time.
      C                     Z-ADDUDATE     ##JDT            Job date.
      C                     TIME           ##JTM            Job time.

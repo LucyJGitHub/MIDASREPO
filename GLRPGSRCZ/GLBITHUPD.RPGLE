@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL082             Date 02Nov21               *
-      *  Prev Amend No. CGL118             Date 02Nov21               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. CGL082             Date 02Nov21               *
+      *                 CGL118             Date 02Nov21               *
       *                 MD057429           Date 17Jun21               *
       *                 254657             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
@@ -91,6 +92,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
+      *           Include MD-54571                                    *
       *  CGL082 - Journal Entry User Audit                            *
       *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD057429 - Check for and delete any items in repair if the   *
@@ -259,6 +262,12 @@
      FMSRPRQL4  UF A E           K DISK    INFSR(*PSSR)                                     MD057429
      F                                     COMMIT                                           MD057429
      F/COPY WNCPYSRC,GLBITHDF01
+      ** Timestamp Extension file - Index                                                     CGL200
+     FGLJENP01  UF   E           K DISK    INFSR(*PSSR)                                       CGL200
+     F                                     RENAME(GLJEIPD0:GLJENPD1)                          CGL200
+     F                                     USROPN                                             CGL200
+     F                                     COMMIT                                             CGL200
+      *                                                                                       CGL200
       ** IBLC Journal Entry Details                                                           CER001
      FGLJPX1L0  UF A E           K DISK    INFSR(*PSSR)                                       CER001
      F                                     COMMIT                                             CER001
@@ -752,6 +761,15 @@
      C     *IN99         IFEQ      *OFF                                                      BUG3500
      C     BRBTNB        READE     @BTREAK                                98                 BUG3500
      C     *IN98         DOWEQ     *OFF                                                      BUG3500
+      *                                                                                       CGL200
+     C                   IF        CGL200 = 'Y'                                               CGL200
+      *                                                                                       CGL200
+     C     GLJENP        CHAIN     GLJENP01                           90                      CGL200
+     C                   IF        *IN90 = *OFF                                               CGL200
+     C                   DELETE    GLJENPD1                                                   CGL200
+     C                   ENDIF                                                                CGL200
+      *                                                                                       CGL200
+     C                   ENDIF                                                                CGL200
                                                                                            AR792734A
      C**********         Move      'N'           OUTWRD            1              MD033630 MD033630A
      C*****CRE023        IFEQ      'Y'                                            AR792734A MD036967
@@ -1536,6 +1554,26 @@
      C                   ENDIF                                                              MD057429
                                                                                             AR992022
      C/COPY WNCPYSRC,GLBITHDC02                                                               GOC001
+      *                                                                                       CGL200
+      * Access SAR details for CGL200                                                         CGL200
+      *                                                                                       CGL200
+     C                   MOVEL     'N'           CGL200            1                          CGL200
+     C                   CALLB     'AOSARDR0'                                                 CGL200
+     C                   Parm      *BLANKS       PRTNC                                        CGL200
+     C                   Parm      '*VERIFY'     POPTN                                        CGL200
+     C                   Parm      'CGL200'      PSARD                                        CGL200
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CGL200
+      *                                                                                       CGL200
+     C     PRTNC         IFEQ      *BLANK                                                     CGL200
+     C                   MOVEL     'Y'           CGL200                                       CGL200
+     C                   Open      GLJENP01                                                   CGL200
+     C                   ENDIF                                                                CGL200
+      *                                                                                       CGL200
+     C     GLJENP        KLIST                                                                CGL200
+     C                   KFLD                    BTPTDT                                       CGL200
+     C                   KFLD                    BTBTNB                                       CGL200
+     C                   KFLD                    BTBINB                                       CGL200
+      *                                                                                       CGL200
       ** Check if enhancement CSC024 (Open Month End) is on                                   CAP086
                                                                                               CAP086
      C                   CALLB     'AOSARDR0'                                                 CAP086

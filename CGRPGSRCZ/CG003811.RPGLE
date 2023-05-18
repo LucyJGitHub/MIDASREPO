@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CER055             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -45,6 +46,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
+      *           Add parameters to MG001901 call.                    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -283,6 +286,11 @@
      D CER055          S              1A                                                      CER055
      D CFT004          S              1A                                                      CER055
       *                                                                                     BUG23445
+     D PPNarr          S             30A                                                      BA6026
+     D PNaty           S              1A                                                      BA6026
+     D PDstn           S             11A                                                      BA6026
+     D PPNar2          S             30A                                                      BA6026
+      *
      D/COPY CGCPYSRC,CGPACKDLE
       ** Data pack arrays and data structures
 
@@ -1170,6 +1178,9 @@
      C                   PARM                    PAcSq                                      BUG23742
      C                   PARM                    PDCin                                      BUG23742
      C                   PARM                    PTranTp                                    BUG23742
+     C                   PARM                    PPNarr                                       BA6026
+     C                   PARM                    PNaty                                        BA6026
+     C                   PARM                    PDstn                                        BA6026
       *                                                                                     BUG23742
       ** Extended Narratives of length 22 * 35                                              BUG23742
       *                                                                                     BUG23742
@@ -1204,6 +1215,7 @@
      C                   PARM                    WFldNmXAr                                  BUG23742
      C                   PARM                    WMsgIDXAr                                  BUG23742
      C                   PARM                    WMsgDtXAr                                  BUG23742
+     C                   PARM                    PPNar2                                       BA6026
       *                                                                                     BUG23742
      C                   IF        PRtcd2 = *BLANKS                                         BUG23742
      C                             OR PRtcd2 = '*FORMAT'                                    BUG23742
@@ -1445,6 +1457,9 @@
      C                   PARM                    PAcSq                                      BUG23742
      C                   PARM                    PDCin                                      BUG23742
      C                   PARM                    PTranTp                                    BUG23742
+     C                   PARM                    PPNarr                                       BA6026
+     C                   PARM                    PNaty                                        BA6026
+     C                   PARM                    PDstn                                        BA6026
       *                                                                                     BUG23742
       ** Extended Narratives of length 22 * 35                                              BUG23742
       *                                                                                     BUG23742
@@ -1479,6 +1494,7 @@
      C                   PARM                    WFldNmXAr                                  BUG23742
      C                   PARM                    WMsgIDXAr                                  BUG23742
      C                   PARM                    WMsgDtXAr                                  BUG23742
+     C                   PARM                    PPNar2                                       BA6026
       *                                                                                     BUG23742
      C                   IF        PRtcd2 = *BLANKS                                         BUG23742
      C                             OR PRtcd2 = '*FORMAT'                                    BUG23742

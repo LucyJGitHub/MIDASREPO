@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL120             Date 06Aug12               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL120             Date 06Aug12               *
       *                 BUG27914           Date 09Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP203             Date 05Feb10               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL120 - GL COB Components Task Split                        *
       *         - Incorporate 261036A and CGL103                      *
@@ -58,6 +60,11 @@
      FAPOSTPD   O    E             DISK
      F                                     COMMIT                                             CGL120
      FGLEODPPD  IF   E             DISK    INFSR(*PSSR)                                       CGL120
+      *                                                                         CGL200
+     FGLEODP00  IF   E           K DISK    USROPN                               CGL200
+     F                                     RENAME(GLAPOSD0:GLEODPD0)            CGL200
+     FGLAPOSX0  O    E             DISK    USROPN                               CGL200
+      *                                                                         CGL200
       /EJECT
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
       *
@@ -74,6 +81,11 @@
      D  WSID                 244    253
      D  USER                 254    263
       *
+      *                                                                         CGL200
+     D DSFDY         E DS                  EXTNAME(DSFDY)                       CGL200
+     D* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                      CGL200
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CGL200
+      *                                                                         CGL200
      I***WAPOST*   E DSAPOSTPD                                                       CAP203 BUG27914
       ***APOSTPD*data*structure                                                      CAP203 BUG27914
      I***DSFDY**   E DSDSFDY                                                         CAP203 BUG27914
@@ -91,6 +103,32 @@
       ** Set up copyright parameter
       *
      C                   MOVEA     CPY@          CPY2@            80
+      *                                                                         CGL200
+     ** Access SAR details for CGL200                                           CGL200
+      *                                                                         CGL200
+     C                   MOVEL     'N'           CGL200            1            CGL200
+     C                   CALL      'AOSARDR0'                                   CGL200
+     C                   PARM      *BLANKS       @RTCD             7            CGL200
+     C                   PARM      '*VERIFY'     @OPTN             7            CGL200
+     C                   PARM      'CGL200'      @SARD             6            CGL200
+     C     SCSARD        PARM      SCSARD        DSFDY                          CGL200
+      *                                                                         CGL200
+     C     @RTCD         IFEQ      *BLANK                                       CGL200
+     C                   MOVEL     'Y'           CGL200                         CGL200
+     C                   OPEN      GLEODP00                                     CGL200
+     C                   OPEN      GLAPOSX0                                     CGL200
+     C                   ENDIF                                                  CGL200
+      *                                                                         CGL200
+     C     KEY002        KLIST                                                  CGL200
+     C                   KFLD                    XXBRCA                         CGL200
+     C                   KFLD                    XXCNUM                         CGL200
+     C                   KFLD                    XXCCY                          CGL200
+     C                   KFLD                    XXACOD                         CGL200
+     C                   KFLD                    XXACSQ                         CGL200
+     C                   KFLD                    XXPSTD                         CGL200
+     C                   KFLD                    XXVALD                         CGL200
+     C                   KFLD                    XXUNQK                         CGL200
+      *                                                                         CGL200
      C                   READ      GLEODPPD                               90                  CGL120
       **********                                                                     CAP203 BUG27914
       ***Access*SAR*details*file*to*determine*if*Retail*Account                      CAP203 BUG27914
@@ -127,6 +165,22 @@
       ** If bit 6 is not set, the record is not a 'dummy' posting for
       ** Real Time Posting, so copy to APOSTPD.
      C     *IN81         IFEQ      '0'
+      *                                                                         CGL200
+     C     CGL200        IFEQ      'Y'                                          CGL200
+     C                   MOVE      BRCA          XXBRCA                         CGL200
+     C                   MOVE      CNUM          XXCNUM                         CGL200
+     C                   MOVE      CCY           XXCCY                          CGL200
+     C                   MOVE      ACOD          XXACOD                         CGL200
+     C                   MOVE      ACSQ          XXACSQ                         CGL200
+     C                   MOVE      PSTD          XXPSTD                         CGL200
+     C                   MOVE      VALD          XXVALD                         CGL200
+     C                   MOVEL(P)  ZZ009         XXUNQK                         CGL200
+     C     KEY002        CHAIN     GLEODPD0                           90        CGL200
+     C     *IN90         IFEQ      *OFF                                         CGL200
+     C                   WRITE     GLAPOSD0                                     CGL200
+     C                   ENDIF                                                  CGL200
+     C                   ENDIF                                                  CGL200
+      *                                                                         CGL200
      C                   WRITE     APOSTPDF
      C********** CAP203    IFEQ 'Y'                                                  CAP203 BUG27914
      C**********           CALL 'GP003006'                                           CAP203 BUG27914

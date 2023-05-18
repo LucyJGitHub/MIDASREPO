@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR992380A          Date 26Jan23               *
-      *  Prev Amend No. AR992380           Date 26Jan23               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. AR992380A          Date 26Jan23               *
+      *                 AR992380           Date 26Jan23               *
       *                 249385             Date 01Aug22               *
       *                 AR700044           Date 04Mar22               *
       *                 CGL077             Date 02Nov21               *
@@ -198,6 +199,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
+      *           Include MD054543                                    *
       *  AR992380A- Initialize FRNT and REPA. (Child: AR993207)       *
       *  AR992380 - Issues encountered when system opens an account.  *
       *             FRNT, REPA are not initialised and TMST has       *
@@ -702,6 +705,15 @@
      FGL0600AU  O    E             PRINTER USROPN                                           MD021994
 
       ** Core hook for externalisation.
+      *                                                                                       CGL200
+     FSACPOX    IF   F   72    45AIDISK    KEYLOC(1)                                          CGL200
+     F                                     USROPN                                             CGL200
+     F                                                                                        CGL200
+      *  RTV: Sorted Account Postings Extension file                                          CGL200
+      *                                                                                       CGL200
+     FGLCLEAX0  O    F   72        DISK    EXTIND(*INU5)                                      CGL200
+      *  OUT: Items-in-Clearing Extension file                                                CGL200
+      *                                                                                       CGL200
      F/COPY WNCPYSRC,GL0600FFPG
      FREACX1PD  IF   E           K DISK
      F                                     COMMIT
@@ -972,6 +984,17 @@
      D  CRMT                 677    683
      D  CRFD                 684    687
 
+     D                 DS                                                                     CGL200
+     D  GEKEY                  1     45                                                       CGL200
+     D  XXBRCA                 1      3                                                       CGL200
+     D  XXCNUM                 4      9                                                       CGL200
+     D  XXCCY                 10     12                                                       CGL200
+     D  XXACOD                13     22  0                                                    CGL200
+     D  XXACSQ                23     24  0                                                    CGL200
+     D  XXPSTD                25     27P 0                                                    CGL200
+     D  XXVALD                28     30P 0                                                    CGL200
+     D  XXUNQK                31     45                                                       CGL200
+      *                                                                                       CGL200
      D/COPY WNCPYSRC,GL0600IIP2
 
      D PSYSVL          C                   CONST('AllowCOBGLTlrImblnce')
@@ -1316,6 +1339,7 @@
      I                                 81   81 0DRCR
      I                                 96  102  SPOS
      I                                103  105  BRCDP             05
+     I                                115  123  ZZ009                                         CGL200
      I**********                      106  106 0RIND                               MD037555 MD045515
      I                                124  124  ATYPP
      I                                128  128  PRIN
@@ -1470,6 +1494,19 @@
      I          NS
      I                                  1    1  RECI
 
+     ISACPOX    NS                                                                            CGL200
+     I                                  1    3  XXBRCA                                        CGL200
+     I                                  4    9  XXCNUM                                        CGL200
+     I                                 10   12  XXCCY                                         CGL200
+     I                                 13   22 0XXACOD                                        CGL200
+     I                                 23   24 0XXACSQ                                        CGL200
+     I                             P   25   27 0XXPSTD                                        CGL200
+     I                             P   28   30 0XXVALD                                        CGL200
+     I                                 31   45  XXUNQK                                        CGL200
+     I                                 46   46  XXGETP                                        CGL200
+     I                                 47   72  XXTMST                                        CGL200
+     I                                  1   72  LOTX                                          CGL200
+      *                                                                                       CGL200
      IGLSYSOXF
      I              NORE1                       NORESY
 
@@ -2273,6 +2310,24 @@
      C   88
      CAN U5              EXCEPT    EXCPT4
 
+     C     CGL200        IFEQ      'Y'                                                        CGL200
+     C                   SETON                                        87                      CGL200
+     C   88              MOVE      BRCDP         XXBRCA                                       CGL200
+     C   88              MOVE      CNUM          XXCNUM                                       CGL200
+     C   88              MOVE      CCY           XXCCY                                        CGL200
+     C   88              MOVE      ACOD          XXACOD                                       CGL200
+     C   88              MOVE      ACSQ          XXACSQ                                       CGL200
+     C   88              MOVE      PSTD          XXPSTD                                       CGL200
+     C   88              MOVE      VALD          XXVALD                                       CGL200
+     C   88              MOVEL(P)  ZZ009         XXUNQK                                       CGL200
+      *                                                                                       CGL200
+     C   88GEKEY         CHAIN     SACPOX                             87                      CGL200
+     C   88                                                                                   CGL200
+     CANN87                                                                                   CGL200
+     CAN U5              EXCEPT    EXCPT7                                                     CGL200
+      *                                                                                       CGL200
+     C                   ENDIF                                                                CGL200
+      *                                                                                       CGL200
      C/COPY WNCPYSRC,GL0600CP22
 
       ** File controls for last posting for this account, or account with
@@ -2963,6 +3018,20 @@
      C                   MOVE      'Y'           CGL148                                       CGL077
      C                   ENDIF                                                                CGL077
 
+     C                   MOVE      'N'           CGL200            1                          CGL200
+     C                   SETON                                        87                      CGL200
+     C                   CALL      'AOSARDR0'                                                 CGL200
+     C                   PARM      *BLANKS       @RTCD             7                          CGL200
+     C                   PARM      '*VERIFY'     @OPTN             7                          CGL200
+     C                   PARM      'CGL200'      @SARD             6                          CGL200
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL200
+      *                                                                                       CGL200
+     C     @RTCD         IFEQ      *BLANK                                                     CGL200
+     C                   MOVE      'Y'           CGL200                                       CGL200
+     C                   SETOFF                                       87                      CGL200
+     C                   OPEN      SACPOX                                                     CGL200
+     C                   ENDIF                                                                CGL200
+      *                                                                                       CGL200
      C/COPY WNCPYSRC,GL0600CCP3
 
      C     *INU4         IFEQ      *ON
@@ -4282,6 +4351,7 @@
      O                       LOTSA2             331
      O                       ACODQQ              14
      O                       BRCA               105
+     O                       ZZ009              123                                           CGL200
      O                       PRIN               128
      O                       PRFC               134
      O                       LTAI               147
@@ -4319,6 +4389,9 @@
      O                       ACOD               599
      O                       OTRF               620
 
+     OGLCLEAX0  E   N87 88 U5EXCPT7                                                           CGL200
+     O                       LOTX                72                                           CGL200
+      *                                                                                       CGL200
      O/COPY WNCPYSRC,GL0600OOP5
 
       ** Core hook for externalisation.

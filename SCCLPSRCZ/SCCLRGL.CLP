@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL027             Date 04Apr17              */
+/*       Last Amend No. CGL200             Date 17Feb23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL027             Date 04Apr17              */
 /*                      MD031966           Date 27Jul15              */
 /*                      CGL158            Date 20Aug14               */
 /*                      CSC056            Date 06Aug12               */
@@ -55,6 +56,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       CGL200 - Timestamp on Batch Items and Related Postings     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL027 - Shadow Postings and Sufficient Funds Check        */
 /*       MD031966 - BFM GL3572P1 issue                              */
@@ -119,11 +121,14 @@
              DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*S01421*/
              DCL        VAR(&CRT001) TYPE(*CHAR) LEN(7)               /*CRT001*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*CMC001*/
+             DCL        VAR(&CGL200) TYPE(*CHAR) LEN(7)               /*CGL200*/
 /*/COPY WNCPYSRC,SCCLRGL006                                          */
 /**/
              SNDPGMMSG  TOMSGQ(MRUNQ) +
                          MSG('Clear General Ledger Daily Files')
 /**/                                                                  /*S01408*/
+             CALL       PGM(AOSARDR0) PARM(&CGL200 '*VERIFY' +
+                          'CGL200' &AOFMT)
 /*/COPY WNCPYSRC,SCCLRGLMPS                                           /*S01408*/
 /**/                                                                  /*S01408*/
 /**/
@@ -259,6 +264,12 @@
              CLRPFM     FILE(GEAA2HH)                               /* 122794*/
              CLRPFM     FILE(GEAA2PD)                               /* 122794*/
              CLRPFM     FILE(GEAA2ZZ)                               /* 122794*/
+             IF         COND(&CGL200 *EQ '       ') THEN(DO)          /*CGL200*/
+             CLRPFM     FILE(GLCLEAX2)                                /*CGL200*/
+             CLRPFM     FILE(GLCLEAXO)                                /*CGL200*/
+             CLRPFM     FILE(GLEODPX0)                                /*CGL200*/
+             CLRPFM     FILE(GLMANPX0)                                /*CGL200*/
+             ENDDO                                                    /*CGL200*/
 /*/COPY WNCPYSRC,SCCLRGL010                                          */
 /************                                               /*S10736* *048237*/
 /************DLTF       FILE(GLPOSTL5X)                     /*S10736* *048237*/
@@ -420,7 +431,7 @@
              CLRPFM     FILE(GETX2ZZ)                                                     /*CAP204*/
              ENDDO                                                                        /*CAP204*/
 /*/COPY OFCPYSRCZ,CGL158_006                                         */                   /*CGL158*/
- 
+
 /**/                                                                                      /*CGL027*/
 /* Check if CGL027 is ON                                            */                    /*CGL027*/
 /**/                                                                                      /*CGL027*/
@@ -434,10 +445,10 @@
                 CLRPFM     FILE(SHDOUTTD)                                                 /*CGL027*/
              ENDDO                                                                        /*CGL027*/
 /**/                                                                                      /*CGL027*/
- 
+
              SNDPGMMSG  TOMSGQ(MRUNQ) +
                                MSG('General Ledger Daily Files Cleared')
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              ENDPGM     /* END CL PGM */

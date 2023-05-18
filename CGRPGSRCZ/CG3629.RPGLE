@@ -15,18 +15,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA6020             Date 20Jan23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSD053             Date 07Jul06               *
+      *                 CSD053             Date 07Jul06               *
       *                 CCG015  *CREATE    Date 07Mar02               *
       *  Prev Amend No.                    Date ddmmmyy               *
       *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6020 - Add specific header field to CM XML                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade.       *
       *         - Recompile due to SDCORMPD.                          *
@@ -52,7 +54,7 @@
       ** +--------------------------------------+
      FCGUDCLL3  IF   E           K DISK
      FCGXDCLL2  IF   E           K DISK
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -65,7 +67,7 @@
       * +--------------------------------------+
       /COPY CGCPYSRC,IFSPROTO
       /COPY CGCPYSRC,OPENDFN
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       *
       ** Local data area for database error details
@@ -83,11 +85,11 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -102,37 +104,38 @@
       ** +--------------------------------------+
       * Events array
      D Events          S             10    DIM(10)
- 
+
       * Log file data structure
      D W0FMT         E DS                  EXTNAME(CGUDCLPD)
- 
+
       * Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * Correspondence details
      D SDCORM        E DS                  EXTNAME(SDCORMPD)
- 
+
       * Dummy DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       * Entry parameters
      D RtnCde          S             10
-     D PathName        S            100
- 
+     D*PathName***     S            100                                                       BA6020
+     D PathName        S            150                                                       BA6020
+
       * Return code for CG3613
      D Return          S             10
- 
+
       * Application Name
      D ApplName        S             10
- 
+
       * Parameters for OPEN() API
      D FDescDat        S             10I 0
      D FDescCtl        S             10I 0
@@ -140,41 +143,41 @@
      D Oflag           S             10I 0 INZ                                                CSD053
      D Mode1           S             10I 0 INZ                                                CSD053
      D Ccsid           S              5  0                                                    CSD053
- 
+
       * Return code for UNLINK() API
      D RC              S             10I 0
- 
+
       * Parameters for LINK() API
      D RC2             S             10I 0
      D NewPth          S            105
- 
+
       * Return code for CLOSE() API
      D RC3             S             10I 0
- 
+
       * Return code for OPENDIR() API
      D pDir            S               *
- 
+
       * Parameters for MKDIR() API
      D RC4             S             10I 0
      D Mode            S             10I 0
- 
+
       * Return code for CLOSEDIR() API
      D RC5             S             10I 0
- 
+
       * Return code for CHGMOD() API
      D RC6             S             10I 0
- 
+
       * Parameters for CG9030/CG9050
      D W0RTN           S              7
      D W0ACT           S              8
      D W0TITL          S              7
      D W0ULIN          S              7
      D W0CMT           S              3
- 
+
       * Parameters for Acces Object
      D P@RTCD          S              7
      D P@OPTN          S              7
- 
+
       * Parameters for ZA0140M
      D SSRTN           S              1
      D SSDAYN          S              5  0
@@ -183,32 +186,50 @@
      D SSDATA          S              7
      D SSDAT8          S              8  0
      D SSDAT8F         S              8  0
- 
+
       * Stream file name
-     D StreamF         S             16
- 
+     D*StreamF***      S             16                                                       BA6020
+     D StreamF         S             70                                                       BA6020
+     D SStreamF        S             16                                                       BA6020
+      *                                                                                       BA6020
+     D BA6020          S              1A   INZ('N')                                           BA6020
+     D PRTCD           S              7A                                                      BA6020
+     D POPTN           S              7A                                                      BA6020
+     D PSARD           S                   LIKE(SARN)                                         BA6020
+      *                                                                                       BA6020
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  BA6020
+      ** Externally described DS for SAR Details                                              BA6020
+      *                                                                                       BA6020
+
       * Message ID
      D WMSID           S                   LIKE(DLMSID)
- 
+
       * Message ID
      D WriteEvent      S                   LIKE(DLMSID) INZ('CGD2538')
- 
+
       * Control file path name
-     D CtlPathName     S            100
- 
+     D*CtlPathName***  S            100                                                       BA6020
+     D CtlPathName     S            150                                                       BA6020
+
       * Backup directory name
      D BackupDirName   S             84
- 
+
       * Procedures interfaces
-     D StreamFile      PR            16
-     D FullPathName                 100    VALUE
- 
-     D ControlFile     PR           100
-     D FullPathName                 100    VALUE
- 
-     D BackupPath      PR           105
+     D*StreamFile****  PR            16                                                       BA6020
+     D*FullPathName**               100    VALUE                                              BA6020
+     D StreamFile      PR            70                                                       BA6020
+     D FullPathName                 150    VALUE                                              BA6020
+
+     D*ControlFile***  PR           100                                                       BA6020
+     D*FullPathName**               100    VALUE                                              BA6020
+     D ControlFile     PR           150                                                       BA6020
+     D FullPathName                 150    VALUE                                              BA6020
+
+     D*BackupPath****  PR           105                                                       BA6020
+     D BackupPath      PR           155                                                       BA6020
      D BckUpDrNm                           VALUE LIKE(BackupDirName)
-     D StrmFile                      16    VALUE
+     D*StrmFile******                16    VALUE                                              BA6020
+     D StrmFile                      70    VALUE                                              BA6020
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -219,20 +240,20 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       * Initialisation
      C                   EXSR      Init
- 
+
       * Check the events of the FTP transmission
      C                   EXSR      ChkEvnts
- 
+
       *If the FTP transmission is successsful: backup stream file
      C                   EXSR      Backup
- 
+
      C                   SETON                                        LR
       **********************************************************************
       /EJECT
@@ -245,9 +266,9 @@
       * Calls: Logging                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     Backup        BEGSR
- 
+
       * Try to open stream file (.dat) in exclusive mode
      C                   EVAL      Oflag = O_RDONLY +
      C**********                           O_TEXTDATA + O_SHARE_NONE                          CSD053
@@ -261,33 +282,40 @@
      C**********         EVAL      FDescDat = OPEN(%TRIMR(PathName):Oflag)                    CSD053
      C                   EVAL      FDescDat = OPEN(%TRIMR(PathName):Oflag :                   CSD053
      C                                                          Mode1 : Ccsid)                CSD053
- 
+
      C                   IF        FDescDat <> -1
       * Try to open stream file (.ctl) in exclusive mode
      C                   EVAL      CtlPathName = ControlFile(PathName)
      C**********         EVAL      FDescCtl = OPEN(%TRIMR(CtlPathName):Oflag)                 CSD053
      C                   EVAL      FDescCtl = OPEN(%TRIMR(CtlPathName):Oflag :                CSD053
      C                                                          Mode1 : Ccsid)                CSD053
- 
+
      C                   IF        FDescCtl <> -1
       * Check if backup directory exists
      C                   EVAL      pDir = OPENDIR(%TRIMR(BackupDirName))
- 
+
       * Create backup directory if it doesn't exist
      C                   IF        pDir = *NULL
- 
+
       *  Set file mode parameter
      C                   EVAL      Mode = S_IRWXU + S_IRWXG +
      C                                    S_IRWXO
- 
+
      C                   EVAL      RC4 = MKDIR(%TRIMR(BackupDirName):Mode)
+      *                                                                                       BA6020
+     C     BA6020        IFeq      'Y'                                                        BA6020
+     C                   MOVEL     BackupDirName WrkPath         150                          BA6020
+     C                   CALL      'A6C000003'                                                BA6020
+     C                   PARM                    WrkPath                                      BA6020
+     C                   EndIF                                                                BA6020
+      *                                                                                       BA6020
      C                   ENDIF
- 
+
       * Create link to stream file
      C                   EVAL      NewPth = BackUpPath(BackUpDirName
      C                                       :StreamF)
      C                   EVAL      RC2 = LINK(%TRIMR(PathName):(%TRIMR(NewPth)))
- 
+
      C                   IF        RC2 <> -1
       * Remove link to stream file
      C                   EVAL      RC = UNLINK(%TRIMR(PathName))
@@ -297,23 +325,23 @@
      C                   EVAL      Mode = S_IRWXU + S_IRWXG + S_IRWXO
      C                   EVAL      RC6 = CHMOD(%TRIMR(NewPth):Mode)
      C                   ENDIF
- 
+
       * Close stream file
      C                   EVAL      RC3 = CLOSE(FDescDat)
      C                   EVAL      RC3 = CLOSE(FDescCtl)
- 
+
       * Close directory
      C                   EVAL      RC5 = CLOSEDIR(pDir)
      C                   ENDIF
      C                   ENDIF
- 
+
       * Log 'stream file back up  fails' into log file
      C                   IF        FDescDat = -1 OR FDescCtl = -1 OR
      C                             RC = -1 OR RC2 = -1 OR RC6 = -1
      C                   EVAL      WMSID = BackupFail
      C                   EXSR      Logging
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -326,25 +354,25 @@
       *        CG3613                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkEvnts      BEGSR
- 
+
       * Define application name
      C                   EVAL      ApplName = 'CM_FTP'
- 
+
       * Check the events of the FTP transmission
      C                   CALLB     'CG3613'
      C                   PARM                    ApplName
      C                   PARM      *BLANKS       Return
      C                   PARM      *BLANKS       Events
- 
+
       * Error in connecting to host
      C                   IF        Return = '*ERROR'
- 
+
       * Log 'stream file not transmitted' into log file
      C                   EVAL      WMSID = FtpNotOk
      C                   EXSR      Logging
- 
+
      C                   EVAL      RtnCde = '*ERROR'
      C                   EVAL      DBFILE =  'CG3613'
      C                   EVAL      DBPGM  =  PSProcPgm
@@ -352,45 +380,45 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C     '*LOGINOK  '  LOOKUP    Events                                 01
- 
+
       * Logging in is successful
      C                   IF        %EQUAL
      C     '*TRANSFER '  LOOKUP    Events                                 01
- 
+
       * Transferring the data is successful
      C                   IF        %EQUAL
- 
+
       * Log 'stream file transmitted' into log file
      C                   EVAL      WMSID = FtpOk
      C                   EXSR      Logging
- 
+
      C                   ELSE
- 
+
      C     '*UNKDSTPTH'  LOOKUP    Events                                 01
- 
+
       * Problem with path of destination directory
      C                   IF        %EQUAL
- 
+
       * Log 'stream file not transmitted' into log file
      C                   EVAL      WMSID = FtpNotOk
      C                   EXSR      Logging
- 
+
      C                   EVAL      RtnCde = '*UNKDSTPTH'
      C                   EVAL      DBFILE =  'CG3613'
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   EVAL      DBASE  =  002
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
       * Other errors
- 
+
       * Log 'stream file not transmitted' into log file
      C                   EVAL      WMSID = FtpNotOk
      C                   EXSR      Logging
- 
+
      C                   EVAL      RtnCde = '*ERROR'
      C                   EVAL      DBFILE =  'CG3613'
      C                   EVAL      DBPGM  =  PSProcPgm
@@ -400,48 +428,48 @@
      C                   ENDIF
      C                   ENDIF
      C                   ELSE
- 
+
      C     '*LOGINFAIL'  LOOKUP    Events                                 01
- 
+
       * Problem with logging in
      C                   IF        %EQUAL
- 
+
       * Log 'stream file not transmitted' into log file
      C                   EVAL      WMSID = FtpNotOk
      C                   EXSR      Logging
- 
+
      C                   EVAL      RtnCde = '*LOGINFAIL'
      C                   EVAL      DBFILE =  'CG3613'
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   EVAL      DBASE  =  003
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
      C     '*UNKWNHOST'  LOOKUP    Events                                 01
- 
+
       * Problem with authority to host
      C                   IF        %EQUAL
- 
+
       * Log 'stream file not transmitted' into log file
      C                   EVAL      WMSID = FtpNotOk
      C                   EXSR      Logging
- 
+
      C                   EVAL      RtnCde = '*UNKWNHOST'
      C                   EVAL      DBFILE =  'CG3613'
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   EVAL      DBASE  =  004
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
       * Other errors
- 
+
       * Log 'stream file not transmitted' into log file
      C                   EVAL      WMSID = FtpNotOk
      C                   EXSR      Logging
- 
+
      C                   EVAL      RtnCde = '*ERROR'
      C                   EVAL      DBFILE =  'CG3613'
      C                   EVAL      DBPGM  =  PSProcPgm
@@ -452,7 +480,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -466,24 +494,37 @@
       *        CG9050                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     Logging       BEGSR
- 
+
      C     keyLog        KLIST
-     C                   KFLD                    StreamF
-     C                   KFLD                    WriteEvent
- 
+     C***********        KFLD                    StreamF                                      BA6020
+     C***********        KFLD                    WriteEvent                                   BA6020
+     C                   KFLD                    SStreamF                                     BA6020
+     C                   KFLD                    WriteEvent                                   BA6020
+      *                                                                                       BA6020
+     C                   Z-ADD     *ZEROS        LENGTH            3 0                        BA6020
+     C                   EVAL      LENGTH = %LEN(%TRIM(StreamF))                              BA6020
+     C                   EVAL      SStreamF = %SUBST(                                         BA6020
+     C                                      %TRIM(StreamF):LENGTH-15:16)                      BA6020
+
       * Check whether record with stream file name exists on log file,
       * if not check whether it exists on archive log file,otherwise dump
      C     keyLog        SETLL     CGUDCLL3
- 
+
       * Log status on log file
      C                   IF        %EQUAL
- 
+
      C                   CLEAR                   W0FMT
+      *                                                                                       BA6020
+     C                   IF        BA6020 = 'Y'                                               BA6020
+     C                   EVAL      DLSTFN = SStreamF                                          BA6020
+     C                   ELSE                                                                 BA6020
      C                   EVAL      DLSTFN = StreamF
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
      C                   EVAL      DLMSID = WMSID
- 
+
      C                   CALL      'CG9030'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*WRITE'      W0ACT
@@ -491,18 +532,24 @@
      C                   PARM      *BLANKS       W0TITL
      C                   PARM      *BLANKS       W0ULIN
      C                   PARM      'YES'         W0CMT
- 
+
      C                   ELSE
- 
+
      C     keyLog        SETLL     CGXDCLL2
- 
+
       * Log status on archive log file
      C                   IF        %EQUAL
- 
+
      C                   CLEAR                   W0FMT
+      *                                                                                       BA6020
+     C                   IF        BA6020 = 'Y'                                               BA6020
+     C                   EVAL      DLSTFN = SStreamF                                          BA6020
+     C                   ELSE                                                                 BA6020
      C                   EVAL      DLSTFN = StreamF
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
      C                   EVAL      DLMSID = WMSID
- 
+
      C                   CALL      'CG9050'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*WRITE'      W0ACT
@@ -510,9 +557,9 @@
      C                   PARM      *BLANKS       W0TITL
      C                   PARM      *BLANKS       W0ULIN
      C                   PARM      'YES'         W0CMT
- 
+
      C                   ELSE
- 
+
      C                   EVAL      RtnCde = '*ERROR'
      C                   EVAL      DBFILE =  'CG9050'
      C                   EVAL      DBPGM  =  PSProcPgm
@@ -521,10 +568,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
       * Comit changes to log file
      C                   COMMIT
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -537,20 +584,20 @@
       *        ZA0140M                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     Init          BEGSR
- 
+
       * Retrieve stream file name from full path name
      C                   EVAL      StreamF = StreamFile(PathName)
- 
+
       * Retrieve bank details
      C                   CALLB     'AOBANKR0'
      C                   PARM                    P@RTCD
      C                   PARM      '*FIRST'      P@OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Convert run day number to YYYYMMDD format
- 
+
      C                   CALLB     'ZA0140M'
      C                   PARM                    SSRTN
      C                   PARM      BJRDNB        SSDAYN
@@ -559,12 +606,12 @@
      C                   PARM                    SSDATA
      C                   PARM                    SSDAT8
      C                   PARM                    SSDAT8F
- 
+
       * Backup directory name
      C                   MOVE      SSDAT8        TempAlpha8        8
      C                   EVAL      BackupDirName  = %TRIMR(CMLODI)
      C                             + '/' + TempAlpha8
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -576,19 +623,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RtnCde
      C                   PARM                    PathName
- 
+
       *  Retrieve Correspondence Manager ICD
      C                   CALLB(E)  'AOCORMR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN
      C     SDCORM        PARM      *BLANKS       DSLDY
- 
+
       * Error calling AOCORMR0
      C                   IF        %ERROR OR P@RTCD <> *BLANK
      C                   EVAL      DBFILE =  'SDCORMPD'
@@ -597,11 +644,22 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+      *
+     C                   CALLB     'AOSARDR0'                                                 BA6020
+     C                   PARM      *BLANKS       PRTCD                                        BA6020
+     C                   PARM      '*VERIFY'     POPTN                                        BA6020
+     C                   PARM      'BA6020'      PSARD                                        BA6020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6020
+      *                                                                                       BA6020
+     C                   IF        PRTCD = *Blanks                                            BA6020
+     C                   EVAL      BA6020 = 'Y'                                               BA6020
+     C                   ENDIF                                                                BA6020
+      *                                                                                       BA6020
+
      C                   ENDSR
- 
+
       *****************************************************************
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -616,23 +674,23 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -641,51 +699,54 @@
       *                                                               *
       *****************************************************************
      PStreamFile       B
- 
-     D StreamFile      PI            16
-     D  FullPathName                100    VALUE
- 
+
+     D*StreamFile****  PI            16                                                       BA6020
+     D**FullPathName*               100    VALUE                                              BA6020
+     D StreamFile      PI            70                                                       BA6020
+     D  FullPathName                150    VALUE                                              BA6020
+
       * Stream file
-     D StreamFile      S             16
- 
+     D*StreamFile****  S             16                                                       BA6020
+     D StreamFile      S             70                                                       BA6020
+
       * Unix style directory
      D Unix            C                   '/'
- 
+
       * Dot
      D Dot             C                   '.'
- 
+
       * Position of '/' / '.' in directory
      D Pos             S              5U 0
- 
+
       * Variable used for scan of '/'
      D x               S              3  0
- 
+
       * Variable used for scan of '.'
      D y               S              3  0
- 
+
       * x gives you the position after the last '/'
      C                   EVAL      x=1
      C                   EVAL      Pos = %SCAN(Unix:FullPathName:x)
- 
+
      C                   DOW       Pos <> 0
      C                   EVAL      x=Pos+1
      C                   EVAL      Pos = %SCAN(Unix:FullPathName:x)
      C                   ENDDO
- 
+
       * y gives you the position after the last '.'
      C                   EVAL      y=1
      C                   EVAL      Pos = %SCAN(Dot:FullPathName:y)
- 
+
      C                   DOW       Pos <> 0
      C                   EVAL      y=Pos+1
      C                   EVAL      Pos = %SCAN(Dot:FullPathName:y)
      C                   ENDDO
- 
+
       * Stream file name
      C                   IF        (y-x-1) >= 0
      C                   EVAL      StreamFile = %SUBST(FullPathName:x:y-x-1)
      C                   ENDIF
- 
+
      C                   RETURN    StreamFile
      P                 E
       /EJECT
@@ -695,37 +756,40 @@
       *               name                                            *
       *****************************************************************
      PControlFile      B
-     D ControlFile     PI           100
-     D  FullPathName                100    VALUE
- 
+     D*ControlFile***  PI           100                                                       BA6020
+     D**FullPathName*               100    VALUE                                              BA6020
+     D ControlFile     PI           150                                                       BA6020
+     D  FullPathName                150    VALUE                                              BA6020
+
       * Path of control file
-     D ControlFile     S            100
- 
+     D*ControlFile***  S            100                                                       BA6020
+     D ControlFile     S            150                                                       BA6020
+
       * Dot
      D Dot             C                   '.'
- 
+
       * ctl extension
      D ctl             C                   'ctl'
- 
+
       * Variable used for scan of '.'
      D y               S              3  0
- 
+
       * Position of '.' in directory
      D Pos             S              5U 0
- 
+
       * y gives you the position after the last '.'
      C                   EVAL      y=1
      C                   EVAL      Pos = %SCAN(Dot:FullPathName:y)
- 
+
      C                   DOW       Pos <> 0
      C                   EVAL      y=Pos+1
      C                   EVAL      Pos = %SCAN(Dot:FullPathName:y)
      C                   ENDDO
- 
+
       * Control file path
      C                   EVAL      ControlFile = FullPathName
      C                   EVAL      %SUBST(ControlFile:y:3)=ctl
- 
+
      C                   RETURN    ControlFile
      P                 E
       /EJECT
@@ -735,23 +799,26 @@
       *              stream file                                      *
       *****************************************************************
      PBackupPath       B
-     D BackupPath      PI           105
+     D*BackupPath**    PI           105                                                       BA6020
+     D BackupPath      PI           155                                                       BA6020
      D  BckUpDrNm                          VALUE LIKE(BackupDirName)
-     D  StrmFile                     16    VALUE
+     D**StrmFile***                  16    VALUE                                              BA6020
+     D  StrmFile                     70    VALUE                                              BA6020
       *
       * Backup directory pathname
-     D BackupPath      S            105
- 
+     D*BackupPath***   S            105                                                       BA6020
+     D BackupPath      S            155                                                       BA6020
+
       * Unix style directory
      D Unix            C                   '/'
- 
+
       * .dat extension
      D Dat             C                   '.DAT'
- 
+
       * Backup directory pathname
      C                   EVAL      BackupPath = %TRIMR(BckUpDrNM) +
      C                                          Unix + %TRIMR(StrmFile)+
      C                                          Dat
- 
+
      C                   RETURN    BackupPath
      P                 E

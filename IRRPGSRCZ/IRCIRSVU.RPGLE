@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058556           Date 16Aug21               *
-      *  Prev Amend No. MD058492           Date 06Aug21               *
+      *  Last Amend No. MD058398           Date 12Apr23               *
+      *  Prev Amend No. MD058556           Date 16Aug21               *
+      *                 MD058492           Date 06Aug21               *
       *                 MD053572           Date 29May19               *
       *                 MD049387           Date 19Jan18               *
       *                 MD047859           Date 19Sep17               *
@@ -114,6 +115,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058398 - Value Date Settelment error on Our Nostro Receipt *
+      *             and Payment fields when data is defaulted from    *
+      *             Extended Settlement details setup.                *
+      *             Applied for MD061145.                             *
       *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
       *             behavior.                                         *
       *           - Recompile all objects affected by AR933170.       *
@@ -7966,6 +7971,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      PPCcy = STCUCY
      C                   EVAL      PCalp = 'CXSV'
      C                   EXSR      SrDftExS
+     C                   EVAL      PRCcy = SUCUCY                                           MD058398
+     C                   EVAL      PPCcy = STCUCY                                           MD058398
      C                   EXSR      SrValExS
      C                   EVAL      InRecStmtV = InRecStmtE
      C                   EVAL      InPayStmtV = InPayStmtE

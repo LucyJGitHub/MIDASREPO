@@ -13,12 +13,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD060246A          Date 04Aug22               *
-      *  Prev Amend No. MD060246           Date 21Jul22               *
+      *  Last Amend No. MD061339           Date 26Apr23               *
+      *  Prev Amend No. MD061298           Date 26Apr23               *
+      *                 MD060246A          Date 04Aug22               *
+      *                 MD060246           Date 21Jul22               *
       *                 CSW122 *CREATE     Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061339 - Dump generated due to duplicate records in pacs   *
+      *             messages having same UETR values.                 *
+      *  MD061298 - Camt.108.001.01 displays truncated MX Element     *
+      *             Value in ISO MX Enquiry                           *
       *  MD060246A- Increase field length value for MX Element Value  *
       *             changed from 120A to 500A.                        *
       *  MD060246 - Increase field length value for MX Element Value  *
@@ -42,6 +48,8 @@
      FMEDESCL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MEDESCD0:MEDESCD1)
      FMSMXISOL1 IF   E           K DISK    INFSR(*PSSR)
+     FMEISOML2  IF   E           K DISK    INFSR(*PSSR)                                     MD061339
+     F                                     RENAME(MEISOMD0:MEISOMD1)                        MD061339
 
      FME20022AU O    E             PRINTER USROPN INFSR(*PSSR)
 
@@ -90,17 +98,20 @@
 
       ** Work Variables
      D WrkMSID         S             36A
-     D WLastElem       S            100A
+     D***WLastElem       S              100A                                                MD061298
+     D WLastElem       S            256A                                                    MD061298
      D WStrPos         S              3S 0
      D WCRLFPos        S              3S 0
      D WCRpos          S              3S 0
      D WrkLF           S              1A
-     D WElement        S            220A
+     D***WElement        S              220A                                                MD061298
+     D WElement        S            600A                                                    MD061298
      D WEqPos          S              3S 0
      D WEName          S            100A
      D*WEValue**       S            120A                                                   MD060246A
      D WEValue         S            500A                                                   MD060246A
      D WrkLen          S              3S 0
+     D WrkDup          S              1A                                                    MD061339
       /EJECT
       *****************************************************************
       *                 M A I N L I N E
@@ -112,12 +123,18 @@
      C                   READ      MSIXISOL1                              99
 
      C                   DOW       *IN99 = '0'
+                                                                                            MD061339
+     C                   EXSR      SrScanDupl                                               MD061339
+                                                                                            MD061339
+     C     WrkDup        IFEQ      'N'                                                      MD061339
 
      C                   EXSR      SrNewRef
 
      C                   EXSR      SrDetail
 
      C                   EXSR      SrHeader
+                                                                                            MD061339
+     C                   ENDIF                                                              MD061339
 
      C                   READ      MSIXISOL1                              99
      C                   ENDDO
@@ -308,7 +325,7 @@
      C                   MOVEL     'ERROR   '    DBKEY
      C                   MOVEL     'MEISOMPD'    DBFILE
      C                   OUT       LDA
-     C                   EXSR      *PSSR
+     C****               EXSR      *PSSR                                                    MD061339
      C                   ENDIF
 
       ** Update status flag to 'Y in MSMXISOPD
@@ -357,6 +374,27 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
+      **********************************************************************                MD061339
+      *                                                                    *                MD061339
+      * SrScanDupl     : Scan for Duplicate Key Values                     *                MD061339
+      *                                                                    *                MD061339
+      **********************************************************************                MD061339
+      *                                                                                     MD061339
+     C     SrScanDupl    BEGSR                                                              MD061339
+                                                                                            MD061339
+     C     IUETR         CHAIN     MEISOML2                                                 MD061339
+     C                   IF        %FOUND                                                   MD061339
+                                                                                            MD061339
+      ** If UETR already exists in MEISOMPD, read the next                                  MD061339
+      ** record from MSIXISOPD for processing.                                              MD061339
+                                                                                            MD061339
+     C                   EVAL      WrkDup = 'Y'                                             MD061339
+     C                   ELSE                                                               MD061339
+     C                   EVAL      WrkDup = 'N'                                             MD061339
+     C                   ENDIF                                                              MD061339
+     C                   ENDSR                                                              MD061339
+      *****************************************************************                     MD061339
+      /EJECT                                                                                MD061339
       *****************************************************************
       *                                                               *
       * *INZSR - Program initialisation routine                       *

@@ -17,14 +17,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060441            Date 01Feb23              *
-      *  Prev Amend No. MD061006            Date 02Feb23              *
+      *  Last Amend No. MD061274            Date 09May23              *
+      *  Prev Amend No. MD060441            Date 01Feb23              *
+      *                 MD061006            Date 02Feb23              *
       *                 MD060824            Date 10Jan23              *
       *                 MD060897            Date 10Jan23              *
       *                 MD058517 *CREATE    Date 17Oct22              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061274 - Deliverable Data Split for SDARRTTD               *
       *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
       *             backward looking rate                             *
       *  MD061006 - Compilation failed on LE000372 due to SDLIBRTD    *
@@ -67,9 +69,9 @@
      F***SDRTKNTD  UF   E             DISK    INFSR(*PSSR)                                  MD060441
      FSDRTKNL0  UF   E             DISK    INFSR(*PSSR)                                     MD060441
      F                                     COMMIT
-      *
-      ** Midas SD Array of Text Table
-     FSDARRTTD  IF   E           K DISK    INFSR(*PSSR)
+      *****************************************************************                     MD061274
+      ***Midas*SD*Array*of*Text*Table**********************************                     MD061274
+     F***SDARRTTD  IF   E           K DISK    INFSR(*PSSR)                                  MD061274
       *
       ** Midas SD ARR Calculator Parameter Details
      F***SDLIBRTD  IF   E           K DISK    INFSR(*PSSR)                                  MD061006
@@ -246,6 +248,8 @@
      D wrkDec          S              1S 0 INZ(0)                                           MD060441
      D wrkVDAT         S              5P 0 INZ(0)                                           MD060441
      D isManualComp    S              1N   INZ(*OFF)                                        MD060441
+     D SDARRT        E DS                  EXTNAME(SDARRJW0)                                MD061274
+     D PCALLER         S             10A   INZ(*BLANKS)                                     MD061274
 
       *****************************************************************
       /EJECT
@@ -593,7 +597,17 @@ I    C                   ENDIF
      C                   WRITE     DETLP1
 
       ** Write out trailer format
-     C     'LE000372  '  CHAIN     SDARRTTD                           41
+     C*****'LE000372  '  CHAIN     SDARRTTD                           41                    MD061274
+     C                   EVAL      PCALLER = 'LE000372'                                     MD061274
+     C/EXEC SQL                                                                             MD061274
+     C+ SELECT *                                                                            MD061274
+     C+ into :SDARRT                                                                        MD061274
+     C+ from SDARRJW0                                                                       MD061274
+     C+ where CALLER = :PCALLER                                                             MD061274
+     C/END-EXEC                                                                             MD061274
+     C                   IF        SQLCODE = 100                                            MD061274
+     C                   SETON                                        41                    MD061274
+     C                   ENDIF                                                              MD061274
      C                   WRITE     TRAILP1
 
      C                   ENDSR

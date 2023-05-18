@@ -1,6 +1,8 @@
      H        1
       *****************************************************************
-/*STD *  RPGBASE                                                      *
+/**** *  RPGBASE                                                      *                     MD061274
+/*STD *  RPGSQL                                                       *                     MD061274
+/*EXI *  COMPILEOPT('IGNDECERR(*YES)')                                *                     MD061274
 /*EXI *  TEXT('Midas LE Input cycle confirmations print')             *
 /*OVRF*: OVRDBF FILE(CLOAN2) TOFILE(CLOAN) SHARE(*NO)               : *
      F*****************************************************************
@@ -23,8 +25,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058517           Date 17Oct22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD061274           Date 09May23               *
+      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056750           Date 04Nov20               *
@@ -130,6 +133,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD061274 - Deliverable Data Split for SDARRTTD               *
       *  MD058517 - CLE172 LIBOR Lending - Change Control CC3.1       *
       *             Interest Projection Using Known Rates             *
       *             CC10 CLE172 Spool File Correspondence (MD059817)  *
@@ -354,7 +358,7 @@
      F***LOAMS** IF  F    1230 14AI     2 DISK                                         CGL029 CLE036
      F*LOAMS***IF**F****1268 14AI     2 DISK                                           CLE036 CLE042
      FLOAMS   IF  F    1291 14AI     2 DISK                                                   CLE036
-     FSDARRTTDIF  E           K        DISK                                                 MD058517
+     F***SDARRTTDIF  E           K        DISK                                     MD058517 MD061274
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE1150FFP1                                           S01408
      F*                                                                   S01408
@@ -1263,7 +1267,8 @@
      ISCSARD    E DSSCSARDPD                                              S01518
      I** SAR Details                                                      S01518
      I              LCD                             LCDX                  S01518
-     ISDARRT    E DSSDARRTTD                                                                MD058517
+     I***SDARRT    E DSSDARRTTD                                                    MD058517 MD061274
+     ISDARRT    E DSSDARRJW0                                                                MD061274
       ** Array of Text Table                                                                MD058517
      I*                                                                   S01408
      I/COPY WNCPYSRC,LE1150IIP2                                           S01408
@@ -1276,8 +1281,8 @@
      I/COPY ZSRSRC,ZDATE9Z2
      I/COPY ZSRSRC,ZDAT10Z1                                               126017
       /EJECT
-     C*
      C** Copyright Statement
+     C*
      C*
      C                     MOVEACPY@      BIS@   80
      C*
@@ -3001,7 +3006,17 @@
      C           BLRT      ANDEQ'Y'                                                         MD058517
      C                     CLEARSDARRT                                                      MD058517
      C                     MOVEL'LOANCONF'WCALLP 10                                         MD058517
-     C           WCALLP    CHAINSDARRTTD             99                                     MD058517
+     C********** WCALLP    CHAINSDARRTTD             99                            MD058517 MD061274
+     C/EXEC SQL                                                                             MD061274
+     C+ SELECT *                                                                            MD061274
+     C+ into :SDARRT                                                                        MD061274
+     C+ from SDARRJW0                                                                       MD061274
+     C+ where CALLER = :WCALLP                                                              MD061274
+     C/END-EXEC                                                                             MD061274
+     C                     SETOF                     99                                     MD061274
+     C           SQLCOD    IFEQ 100                                                         MD061274
+     C                     SETON                     99                                     MD061274
+     C                     ENDIF                                                            MD061274
      C           *IN99     IFEQ '0'                                                         MD058517
 I    C                     MOVE '1'       *IN29                                             MD058517
      C                     ENDIF                                                            MD058517

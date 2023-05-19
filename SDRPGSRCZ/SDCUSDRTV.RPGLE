@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056548           Date 10Sep20               *      
-      *  Prev Amend No. 254109             Date 01Jun20               *
+      *  Last Amend No. HUT122             Date 10May23               *
+      *  Prev Amend No. MD056548           Date 10Sep20               *
+      *                 254109             Date 01Jun20               *
       *                 AR1088819          Date 03Jun20               *
       *                 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *
@@ -154,6 +155,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT122 - Deletion of PMPORTPD SDEXSTPD and STDSED Details    *
       *  MD056548 - Customer Fees Maintenance is missing              *
       *  254109 - Introduce new err msgs; one for the 'D' action code *
       *           and another one for 'C' and 'R' action codes ( when *
@@ -169,8 +171,8 @@
       *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *
       *             customer.                                         *
-      *  MD053634 - Requested Customer “Authority Holders Link Report *
-      *             for KWG$24c” not generated.                       *
+      *  MD053634 - Requested Customer "Authority Holders Link Report *
+      *             for KWG$24c" not generated.                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - Customer deletion: Issue detailed error message   *
@@ -2880,6 +2882,9 @@
       * Customer has extended settlements defined on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 008 is Do not delete
      C     WDS1008       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_009                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2889,6 +2894,9 @@
       * Customer is receipt ordering customer on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 009 is Do not delete
      C     WDS1009       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_010                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2898,6 +2906,9 @@
       * Customer is receipt ordering bank on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 010 is Do not delete
      C     WDS1010       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_011                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2907,6 +2918,9 @@
       * Customer is receipt intermediary bank on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 011 is Do not delete
      C     WDS1011       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_012                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2916,6 +2930,9 @@
       * Customer is pay ordering customer on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 012 is Do not delete
      C     WDS1012       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_013                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2925,6 +2942,9 @@
       * Customer is pay ordering bank on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 013 is Do not delete
      C     WDS1013       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_014                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2934,6 +2954,9 @@
       * Customer is pay intermediary bank on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 014 is Do not delete
      C     WDS1014       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_015                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2943,6 +2966,9 @@
       * Customer is receiver correspondant on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 015 is Do not delete
      C     WDS1015       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_016                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2952,6 +2978,9 @@
       * Customer is receiver number on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 016 is Do not delete
      C     WDS1016       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_017                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2961,6 +2990,9 @@
       * Customer is an account with Bank on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 017 is Do not delete
      C     WDS1017       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_018                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2970,6 +3002,9 @@
       * Customer is a beneficiary number on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 018 is Do not delete
      C     WDS1018       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_019                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2979,6 +3014,9 @@
       * Customer is our receive nostro on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 019 is Do not delete
      C     WDS1019       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_020                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -2988,6 +3026,9 @@
       * Customer is our payment nostro on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 020 is Do not delete
      C     WDS1020       IFEQ      'F'
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_021                                                               HUT122
+      *                                                                                       HUT122
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -5360,6 +5401,9 @@
      C                   ELSE                                                              AR1086546
      C                   EVAL      CDL025 = 'N'                                            AR1086546
      C                   ENDIF                                                             AR1086546
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_008                                                               HUT122
+      *                                                                                       HUT122
                                                                                               CSD079
       ** Portfolios Supported is Customer                                                     CSD079
                                                                                               CSD079

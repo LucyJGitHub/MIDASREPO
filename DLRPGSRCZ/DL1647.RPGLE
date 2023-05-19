@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD061156           Date 19May23               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD058815           Date 28Sep21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD056644A          Date 26Jul21               *
       *                 CSD103             Date 10Aug20               *
@@ -58,6 +59,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061156 - Ensure that SETTLE record will be generated with  *
+      *             Maturity falling on holiday and the current ANWD  *
+      *             is 1.                                             *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
@@ -698,6 +702,10 @@
      C                             UNIPD <> MDAT) OR                                        MD056644
      C                             (WOTIN = 'THEIR' AND WDAYS = TNIPD AND                   MD056644
      C                             TNIPD <> MDAT)                                           MD056644
+     C                             OR (WOTIN = 'OUR' AND WDAYS = UNIPD AND                  MD061156
+     C                             UNIPD = MDAT AND BKANWD='1')                             MD061156
+     C                             OR (WOTIN = 'THEIR' AND WDAYS = TNIPD AND                MD061156
+     C                             TNIPD = MDAT AND BKANWD='1')                             MD061156
      C                   EVAL      PHDAY = 'Y'                                              MD056644
      C                   EVAL      PDATE = WDAYS                                            MD056644
      C                   EXSR      SRSTAN                                                   MD056644

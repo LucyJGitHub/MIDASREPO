@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057083           Date 20Jan21               *
+      *  Last Amend No. AR1091401          Date 19May23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057083           Date 20Jan21               *
       *                 MD046248           Date 27Oct17               *
       *                 MD024980           Date 26Mar14               *
       *                 MD000091           Date 08May13               *
@@ -44,6 +45,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1091401 - Incorrect validation of journal entry overrides. *
+      *              Do not allow insert of batch item when block     *
+      *              debits/credits = 'N' on journal entry overrides  *
+      *              and CGL002 is ON. (Child: AR1091402)             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057083 - Journal entry overrides for Retail accounts not   *
@@ -273,8 +278,12 @@
      C                   TESTB     '0'           F1RETB            1      01
      C     *IN01         IFEQ      *ON
      C                   MOVE      'Refer Dr'    WError
-     C     WRRE01        IFNE      'Y'
-     C     WUAUTH        ANDNE     'Y'                                                        238884
+     C*****WRRE01        IFNE      'Y'                                                     AR1091401
+     C*****WUAUTH        ANDNE     'Y'                                              238884 AR1091401
+     C     WRRE01        IFEQ      'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     WRRE01        ORNE      'Y'                                                     AR1091401
+     C     WUAUTH        ANDNE     'Y'                                                     AR1091401
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
      C     CGL002        ANDEQ     'Y'                                                      MD057083
      C     WRRE01        ORNE      'Y'                                                      MD057083
@@ -295,8 +304,12 @@
      C                   TESTB     '1'           F1RETB                   01
      C     *IN01         IFEQ      *ON
      C                   MOVE      'Refer Cr'    WError
-     C     WRRE02        IFNE      'Y'
-     C     WUAUTH        ANDNE     'Y'                                                        238884
+     C*****WRRE02        IFNE      'Y'                                                     AR1091401
+     C*****WUAUTH        ANDNE     'Y'                                              238884 AR1091401
+     C     WRRE02        IFEQ      'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     WRRE02        ORNE      'Y'                                                     AR1091401
+     C     WUAUTH        ANDNE     'Y'                                                     AR1091401
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
      C     CGL002        ANDEQ     'Y'                                                      MD057083
      C     WRRE02        ORNE      'Y'                                                      MD057083
@@ -317,8 +330,12 @@
      C                   TESTB     '2'           F1RETB                   01
      C     *IN01         IFEQ      *ON
      C                   MOVE      'Block Dr'    WError
-     C     WRRE03        IFNE      'Y'
-     C     WUAUTH        ANDNE     'Y'                                                        238884
+     C*****WRRE03        IFNE      'Y'                                                     AR1091401
+     C*****WUAUTH        ANDNE     'Y'                                              238884 AR1091401
+     C     WRRE03        IFEQ      'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     WRRE03        ORNE      'Y'                                                     AR1091401
+     C     WUAUTH        ANDNE     'Y'                                                     AR1091401
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
      C     CGL002        ANDEQ     'Y'                                                      MD057083
      C     WRRE03        ORNE      'Y'                                                      MD057083
@@ -333,14 +350,19 @@
      C                   ENDIF
      C                   ENDIF
       *
-      ** Check Block Credits.
+      ** Check Block Credits.                                     DDE'D/D/
+      *
       *
      C     B2DCIN        IFEQ      'C'
      C                   TESTB     '3'           F1RETB                   01
      C     *IN01         IFEQ      *ON
      C                   MOVE      'Block Cr'    WError
-     C     WRRE04        IFNE      'Y'
-     C     WUAUTH        ANDNE     'Y'                                                        238884
+     C*****WRRE04        IFNE      'Y'                                                     AR1091401
+     C*****WUAUTH        ANDNE     'Y'                                              238884 AR1091401
+     C     WRRE04        IFEQ      'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     WRRE04        ORNE      'Y'                                                     AR1091401
+     C     WUAUTH        ANDNE     'Y'                                                     AR1091401
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
      C     CGL002        ANDEQ     'Y'                                                      MD057083
      C     WRRE04        ORNE      'Y'                                                      MD057083
